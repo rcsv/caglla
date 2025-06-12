@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= album.title %></title>
+</head>
+<body>
+  <p><a href="/albums">Back</a> | <a href="/logout">Logout</a></p>
+  <h1><%= album.title %></h1>
+  <a href="/albums/<%= album.id %>/edit">Edit</a>
+  <form action="/albums/<%= album.id %>/delete" method="post" style="display:inline">
+    <button type="submit">Delete</button>
+  </form>
+  <h2>Pages</h2>
+  <a href="/albums/<%= album.id %>/pages/new">Add Page</a>
+  <ul>
+    <% album.pages.forEach(function(page){ %>
+      <li><a href="/albums/<%= album.id %>/pages/<%= page.id %>"><%= page.title %></a></li>
+    <% }); %>
+  </ul>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Album</title>
+</head>
+<body>
+  <h1>Edit Album</h1>
+  <form action="/albums/<%= album.id %>/edit" method="post">
+    <input type="text" name="title" value="<%= album.title %>" required>
+    <button type="submit">Save</button>
+  </form>
+  <p><a href="/albums/<%= album.id %>">Back</a></p>
+</body>
+</html>
