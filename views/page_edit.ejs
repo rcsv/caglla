@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Page</title>
+</head>
+<body>
+  <h1>Edit Page</h1>
+  <form action="/albums/<%= albumId %>/pages/<%= page.id %>/edit" method="post">
+    <input type="text" name="title" value="<%= page.title %>" required><br>
+    <textarea name="content" required><%= page.content %></textarea><br>
+    <button type="submit">Save</button>
+  </form>
+  <p><a href="/albums/<%= albumId %>/pages/<%= page.id %>">Back</a></p>
+</body>
+</html>

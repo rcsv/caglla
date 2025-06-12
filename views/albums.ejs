@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Your Albums</title>
+</head>
+<body>
+  <p><a href="/">Home</a> | <a href="/logout">Logout</a></p>
+  <h1>Albums</h1>
+  <a href="/albums/new">Create Album</a>
+  <ul>
+    <% albums.forEach(function(album){ %>
+      <li><a href="/albums/<%= album.id %>"><%= album.title %></a></li>
+    <% }); %>
+  </ul>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Web Album</title>
+</head>
+<body>
+  <% if (user) { %>
+    <p>Hello <%= user.displayName %> | <a href="/logout">Logout</a></p>
+    <a href="/albums">Your Albums</a>
+  <% } else { %>
+    <a href="/auth/google">Login with Google</a>
+  <% } %>
+</body>
+</html>
