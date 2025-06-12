@@ -22,10 +22,14 @@ export GOOGLE_CLIENT_SECRET=your-client-secret
 You can obtain these credentials from the [Google Developer Console](https://console.developers.google.com/).
 Set the OAuth callback URL to `http://localhost:3000/auth/google/callback`.
 
-3. Start the server:
-
+3. Build the project:
 ```bash
-node index.js
+npm run build
+```
+
+4. Start the server:
+```bash
+npm start
 ```
 
 Then open `http://localhost:3000` in your browser.
