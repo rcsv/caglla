@@ -32,6 +32,21 @@ npm run build
 npm start
 ```
 
+5. For testing builds that also compile SCSS, use the batch files under
+   `scripts`:
+
+   - **Unix-like systems**
+     ```bash
+     ./scripts/test_unix.sh
+     ```
+   - **Windows**
+     ```bat
+     scripts\test_windows.bat
+     ```
+
+   These scripts run TypeScript compilation, compile SCSS files in the
+   `scss` directory (if present) and then execute `npm run build && npm start`.
+
 Then open `http://localhost:3000` in your browser.
 
 ## Features
