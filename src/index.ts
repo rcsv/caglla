@@ -1,8 +1,12 @@
+require('dotenv').config(); // Ensure to install dotenv package if not already installed
+
 import express from 'express';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import bodyParser from 'body-parser';
+
+
 
 interface Page { id: string; title: string; content: string; }
 interface Album { id: string; title: string; pages: Page[]; }
@@ -15,19 +19,30 @@ const store: Store = {
 };
 
 passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID || 'your_client_id',
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'your_client_secret',
-  callbackURL: '/auth/google/callback'
-}, (accessToken, refreshToken, profile, cb) => {
-  store.users[profile.id] = profile;
+  clientID:     process.env.GOOGLE_CLIENT_ID!, // Ensure to set GOOGLE_CLIENT_ID in your .env file
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET!, // || 'your_client_secret',
+  callbackURL:  '/auth/google/callback'
+}, (accessToken, refreshToken, profile, cb) => {  
+  // store.users[profile.id] = profile;
+  store.users[profile.id] = {
+    profile,
+    accessToken,
+    refreshToken: refreshToken || store.users[profile.id]?.refreshToken
+  };
+
   if (!store.albums[profile.id]) {
     store.albums[profile.id] = [];
   }
   return cb(null, profile);
 }));
 
-passport.serializeUser((user: any, cb) => cb(null, user.id));
-passport.deserializeUser((id: string, cb) => cb(null, store.users[id]));
+passport.serializeUser((user: any, cb)    => cb(null, user.id));
+//passport.deserializeUser((id: string, cb) => cb(null, store.users[id]));
+passport.deserializeUser((id: string, cb) => {
+  const userData = store.users[id];
+  if (!userData) return cb(new Error('User not found'));
+  cb(null, userData.profile);
+});
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -36,7 +51,7 @@ app.use(session({ secret: 'secret', resave: false, saveUninitialized: false }));
 app.use(passport.initialize());
 app.use(passport.session());
 
-function ensureAuth(req: any, res: any, next) {
+function ensureAuth(req: any, res: any, next: any) {
   if (req.isAuthenticated()) return next();
   res.redirect('/');
 }
@@ -45,7 +60,13 @@ app.get('/', (req: any, res: any) => {
   res.render('index', { user: req.user });
 });
 
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+app.get('/auth/google',
+  passport.authenticate('google', {
+    scope: ['profile'],
+    accessType: 'offline', // Request offline access to get refresh token
+    prompt: 'consent' // Ensure consent screen is shown to get refresh token
+    }));
+
 app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req: any, res: any) => {
