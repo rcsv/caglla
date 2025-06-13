@@ -52,6 +52,7 @@ passport.deserializeUser((id: string, cb) => {
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(session({ secret: 'secret', resave: false, saveUninitialized: false }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -94,8 +95,12 @@ app.get('/albums/new', ensureAuth, (req: any, res: any) => {
 });
 
 app.post('/albums', ensureAuth, (req: any, res: any) => {
-  createAlbum(req.user.id, req.body.title);
-  res.redirect('/albums');
+  const album = createAlbum(req.user.id, req.body.title);
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    res.json(album);
+  } else {
+    res.redirect('/albums');
+  }
 });
 
 app.get('/albums/:id', ensureAuth, (req: any, res: any) => {

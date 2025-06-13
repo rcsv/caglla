@@ -6,11 +6,21 @@
 <body>
   <p><a href="/">Home</a> | <a href="/logout">Logout</a></p>
   <h1>Albums</h1>
-  <a href="/albums/new">Create Album</a>
-  <ul>
+  <button id="openAddDialog">Create Album</button>
+
+  <dialog id="addDialog">
+    <form id="addAlbumForm" method="dialog">
+      <input type="text" name="title" placeholder="Title" required>
+      <button type="submit">Create</button>
+      <button type="button" id="cancelAdd">Cancel</button>
+    </form>
+  </dialog>
+
+  <ul id="albumList">
     <% albums.forEach(function(album){ %>
       <li><a href="/albums/<%= album.id %>"><%= album.title %></a></li>
     <% }); %>
   </ul>
+  <script src="/scripts/albums.js"></script>
 </body>
 </html>
