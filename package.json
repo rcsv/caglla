@@ -19,6 +19,7 @@
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
+    "better-sqlite3": "^9.4.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "typescript": "^5.8.3"
@@ -32,6 +33,7 @@
     "@types/passport-google-oauth20": "^2.0.16",
     "nodemon": "^3.1.10",
     "sass": "^1.89.2",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "@types/better-sqlite3": "^7.6.13"
   }
 }

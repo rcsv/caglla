@@ -12,6 +12,9 @@ albums and album pages.
 npm install
 ```
 
+This will also install the `better-sqlite3` package used for persisting data in
+`store.db`.
+
 2. Set the Google OAuth credentials as environment variables:
 
 ```bash
@@ -55,4 +58,5 @@ Then open `http://localhost:3000` in your browser.
 - Create, read, update and delete albums
 - Create, read, update and delete pages within an album
 
-Data is stored in memory for simplicity, so it will be reset when the server restarts.
+Album and page data are stored in a local SQLite database (`store.db`), so your
+changes persist across server restarts.
