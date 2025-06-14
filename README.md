@@ -64,5 +64,8 @@ Then open `http://localhost:3000` in your browser.
 - Create, read, update and delete travels
 - Create, read, update and delete itineraries within a travel
 
+User preferences such as the Google account ID, preferred currency, and whether
+to skip deletion confirmations are stored in a `users` table.
+
 Travel and itinerary data are stored in a MySQL database configured via the
 `DB_*` environment variables.

@@ -2,6 +2,11 @@ import { createPool, Pool } from 'mysql2/promise';
 
 export interface Itinerary { id: string; title: string; content: string; }
 export interface Travel { id: string; title: string; itineraries: Itinerary[]; }
+export interface UserSettings {
+  google_id: string;
+  preferred_currency: string | null;
+  skip_confirm_delete: boolean;
+}
 
 let pool: Pool;
 
@@ -41,6 +46,12 @@ export async function initDb() {
     travel_id VARCHAR(255),
     title VARCHAR(255),
     content TEXT
+  )`);
+
+  await p.query(`CREATE TABLE IF NOT EXISTS users (
+    google_id VARCHAR(255) PRIMARY KEY,
+    preferred_currency VARCHAR(10),
+    skip_confirm_delete BOOLEAN DEFAULT FALSE
   )`);
 }
 
@@ -176,4 +187,48 @@ export async function updateItinerary(itineraryId: string, title: string, conten
 export async function deleteItinerary(itineraryId: string) {
   const p = getPool();
   await p.query('DELETE FROM itineraries WHERE id = ?', [itineraryId]);
+}
+
+/**
+ * Creates a user record if it does not already exist.
+ *
+ * @param googleId - The Google account ID for the user.
+ */
+export async function createUserIfNotExists(googleId: string) {
+  const p = getPool();
+  await p.query(
+    'INSERT IGNORE INTO users (google_id, preferred_currency, skip_confirm_delete) VALUES (?, NULL, FALSE)',
+    [googleId]
+  );
+}
+
+/**
+ * Retrieves settings for a user by Google ID.
+ *
+ * @param googleId - The Google account ID of the user.
+ * @returns The user settings or `undefined` if not found.
+ */
+export async function getUserSettings(googleId: string): Promise<UserSettings | undefined> {
+  const p = getPool();
+  const [rows] = await p.query<any[]>(
+    'SELECT google_id, preferred_currency, skip_confirm_delete FROM users WHERE google_id = ?',
+    [googleId]
+  );
+  const row = rows[0];
+  if (!row) return undefined;
+  return {
+    google_id: row.google_id,
+    preferred_currency: row.preferred_currency,
+    skip_confirm_delete: !!row.skip_confirm_delete,
+  };
+}
+
+export async function setUserCurrency(googleId: string, currency: string) {
+  const p = getPool();
+  await p.query('UPDATE users SET preferred_currency = ? WHERE google_id = ?', [currency, googleId]);
+}
+
+export async function setSkipConfirmDelete(googleId: string, skip: boolean) {
+  const p = getPool();
+  await p.query('UPDATE users SET skip_confirm_delete = ? WHERE google_id = ?', [skip, googleId]);
 }
