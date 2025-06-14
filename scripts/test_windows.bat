@@ -15,7 +15,7 @@ IF EXIST scss (
 echo Setting up MySQL tables...
 where mysql >nul 2>&1
 IF %ERRORLEVEL%==0 (
-    mysql -h %DB_HOST% -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% -e "CREATE TABLE IF NOT EXISTS albums (id VARCHAR(255) PRIMARY KEY, user_id VARCHAR(255), title VARCHAR(255)); CREATE TABLE IF NOT EXISTS pages (id VARCHAR(255) PRIMARY KEY, album_id VARCHAR(255), title VARCHAR(255), content TEXT);"
+    mysql -h %DB_HOST% -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% -e "CREATE TABLE IF NOT EXISTS travels (id VARCHAR(255) PRIMARY KEY, user_id VARCHAR(255), title VARCHAR(255)); CREATE TABLE IF NOT EXISTS itineraries (id VARCHAR(255) PRIMARY KEY, travel_id VARCHAR(255), title VARCHAR(255), content TEXT);"
 ) ELSE (
     echo mysql command not found, skipping database setup.
 )

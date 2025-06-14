@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Web Album</title>
+  <title>Travel Manager</title>
 </head>
 <body>
   <% if (user) { %>
     <p>Hello <%= user.displayName %> | <a href="/logout">Logout</a></p>
-    <a href="/albums">Your Albums</a>
+    <a href="/travels">Your Travels</a>
   <% } else { %>
     <a href="/auth/google">Login with Google</a>
   <% } %>

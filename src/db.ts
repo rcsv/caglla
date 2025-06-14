@@ -1,7 +1,7 @@
 import { createPool, Pool } from 'mysql2/promise';
 
-export interface Page { id: string; title: string; content: string; }
-export interface Album { id: string; title: string; pages: Page[]; }
+export interface Itinerary { id: string; title: string; content: string; }
+export interface Travel { id: string; title: string; itineraries: Itinerary[]; }
 
 let pool: Pool;
 
@@ -23,157 +23,157 @@ function getPool(): Pool {
 }
 
 /**
- * Initializes the database by creating the `albums` and `pages` tables if they do not already exist.
+ * Initializes the database by creating the `travels` and `itineraries` tables if they do not already exist.
  *
  * @remark
  * This function is idempotent and can be safely called multiple times; it will not overwrite existing tables.
  */
 export async function initDb() {
   const p = getPool();
-  await p.query(`CREATE TABLE IF NOT EXISTS albums (
+  await p.query(`CREATE TABLE IF NOT EXISTS travels (
     id VARCHAR(255) PRIMARY KEY,
     user_id VARCHAR(255),
     title VARCHAR(255)
   )`);
 
-  await p.query(`CREATE TABLE IF NOT EXISTS pages (
+  await p.query(`CREATE TABLE IF NOT EXISTS itineraries (
     id VARCHAR(255) PRIMARY KEY,
-    album_id VARCHAR(255),
+    travel_id VARCHAR(255),
     title VARCHAR(255),
     content TEXT
   )`);
 }
 
 /**
- * Retrieves all albums for a specified user, including their associated pages.
+ * Retrieves all travels for a specified user, including their associated itineraries.
  *
- * @param userId - The ID of the user whose albums are to be fetched.
- * @returns A promise that resolves to an array of albums, each containing its pages.
+ * @param userId - The ID of the user whose travels are to be fetched.
+ * @returns A promise that resolves to an array of travels, each containing its itineraries.
  */
-export async function getAlbums(userId: string): Promise<Album[]> {
+export async function getTravels(userId: string): Promise<Travel[]> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    'SELECT id, title FROM albums WHERE user_id = ?',
+    'SELECT id, title FROM travels WHERE user_id = ?',
     [userId]
   );
-  const albums: Album[] = [];
+  const travels: Travel[] = [];
   for (const row of rows) {
-    const [pages] = await p.query<any[]>(
-      'SELECT id, title, content FROM pages WHERE album_id = ?',
+    const [itineraries] = await p.query<any[]>(
+      'SELECT id, title, content FROM itineraries WHERE travel_id = ?',
       [row.id]
     );
-    albums.push({ id: row.id, title: row.title, pages });
+    travels.push({ id: row.id, title: row.title, itineraries });
   }
-  return albums;
+  return travels;
 }
 
 /**
- * Retrieves a specific album and its pages for a given user.
+ * Retrieves a specific travel and its itineraries for a given user.
  *
- * @param userId - The ID of the user who owns the album.
- * @param albumId - The ID of the album to retrieve.
- * @returns The album with its pages, or `undefined` if not found.
+ * @param userId - The ID of the user who owns the travel.
+ * @param travelId - The ID of the travel to retrieve.
+ * @returns The travel with its itineraries, or `undefined` if not found.
  */
-export async function getAlbum(userId: string, albumId: string): Promise<Album | undefined> {
+export async function getTravel(userId: string, travelId: string): Promise<Travel | undefined> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    'SELECT id, title FROM albums WHERE user_id = ? AND id = ?',
-    [userId, albumId]
+    'SELECT id, title FROM travels WHERE user_id = ? AND id = ?',
+    [userId, travelId]
   );
-  const albumRow = rows[0];
-  if (!albumRow) return undefined;
-  const [pages] = await p.query<any[]>(
-    'SELECT id, title, content FROM pages WHERE album_id = ?',
-    [albumId]
+  const travelRow = rows[0];
+  if (!travelRow) return undefined;
+  const [itineraries] = await p.query<any[]>(
+    'SELECT id, title, content FROM itineraries WHERE travel_id = ?',
+    [travelId]
   );
-  return { id: albumRow.id, title: albumRow.title, pages };
+  return { id: travelRow.id, title: travelRow.title, itineraries };
 }
 
 /**
- * Creates a new album for the specified user with the given title.
+ * Creates a new travel for the specified user with the given title.
  *
- * @param userId - The ID of the user who owns the album.
- * @param title - The title of the new album.
- * @returns The created album object with an empty pages array.
+ * @param userId - The ID of the user who owns the travel.
+ * @param title - The title of the new travel.
+ * @returns The created travel object with an empty itineraries array.
  */
-export async function createAlbum(userId: string, title: string): Promise<Album> {
+export async function createTravel(userId: string, title: string): Promise<Travel> {
   const p = getPool();
   const id = Date.now().toString();
-  await p.query('INSERT INTO albums (id, user_id, title) VALUES (?, ?, ?)', [id, userId, title]);
-  return { id, title, pages: [] };
+  await p.query('INSERT INTO travels (id, user_id, title) VALUES (?, ?, ?)', [id, userId, title]);
+  return { id, title, itineraries: [] };
 }
 
 /**
- * Updates the title of an album identified by its ID.
+ * Updates the title of a travel identified by its ID.
  *
- * @param albumId - The unique identifier of the album to update.
- * @param title - The new title for the album.
+ * @param travelId - The unique identifier of the travel to update.
+ * @param title - The new title for the travel.
  */
-export async function updateAlbumTitle(albumId: string, title: string) {
+export async function updateTravelTitle(travelId: string, title: string) {
   const p = getPool();
-  await p.query('UPDATE albums SET title = ? WHERE id = ?', [title, albumId]);
+  await p.query('UPDATE travels SET title = ? WHERE id = ?', [title, travelId]);
 }
 
 /**
- * Deletes an album and all its associated pages from the database.
+ * Deletes a travel and all its associated itineraries from the database.
  *
- * @param albumId - The ID of the album to delete.
+ * @param travelId - The ID of the travel to delete.
  */
-export async function deleteAlbum(albumId: string) {
+export async function deleteTravel(travelId: string) {
   const p = getPool();
-  await p.query('DELETE FROM pages WHERE album_id = ?', [albumId]);
-  await p.query('DELETE FROM albums WHERE id = ?', [albumId]);
+  await p.query('DELETE FROM itineraries WHERE travel_id = ?', [travelId]);
+  await p.query('DELETE FROM travels WHERE id = ?', [travelId]);
 }
 
 /**
- * Creates a new page in the specified album and returns the created page.
+ * Creates a new itinerary in the specified travel and returns the created itinerary.
  *
- * @param albumId - The ID of the album to which the page will be added.
- * @param title - The title of the new page.
- * @param content - The content of the new page.
- * @returns The created {@link Page} object.
+ * @param travelId - The ID of the travel to which the itinerary will be added.
+ * @param title - The title of the new itinerary.
+ * @param content - The content of the new itinerary.
+ * @returns The created {@link Itinerary} object.
  */
-export async function createPage(albumId: string, title: string, content: string): Promise<Page> {
+export async function createItinerary(travelId: string, title: string, content: string): Promise<Itinerary> {
   const p = getPool();
   const id = Date.now().toString();
-  await p.query('INSERT INTO pages (id, album_id, title, content) VALUES (?, ?, ?, ?)', [id, albumId, title, content]);
+  await p.query('INSERT INTO itineraries (id, travel_id, title, content) VALUES (?, ?, ?, ?)', [id, travelId, title, content]);
   return { id, title, content };
 }
 
 /**
- * Retrieves a page by album ID and page ID.
+ * Retrieves a itinerary by travel ID and itinerary ID.
  *
- * @param albumId - The ID of the album containing the page.
- * @param pageId - The ID of the page to retrieve.
- * @returns The page if found, or `undefined` if no matching page exists.
+ * @param travelId - The ID of the travel containing the itinerary.
+ * @param itineraryId - The ID of the itinerary to retrieve.
+ * @returns The itinerary if found, or `undefined` if no matching itinerary exists.
  */
-export async function getPage(albumId: string, pageId: string): Promise<Page | undefined> {
+export async function getItinerary(travelId: string, itineraryId: string): Promise<Itinerary | undefined> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    'SELECT id, title, content FROM pages WHERE album_id = ? AND id = ?',
-    [albumId, pageId]
+    'SELECT id, title, content FROM itineraries WHERE travel_id = ? AND id = ?',
+    [travelId, itineraryId]
   );
   return rows[0];
 }
 
 /**
- * Updates the title and content of a page identified by its ID.
+ * Updates the title and content of a itinerary identified by its ID.
  *
- * @param pageId - The unique identifier of the page to update.
- * @param title - The new title for the page.
- * @param content - The new content for the page.
+ * @param itineraryId - The unique identifier of the itinerary to update.
+ * @param title - The new title for the itinerary.
+ * @param content - The new content for the itinerary.
  */
-export async function updatePage(pageId: string, title: string, content: string) {
+export async function updateItinerary(itineraryId: string, title: string, content: string) {
   const p = getPool();
-  await p.query('UPDATE pages SET title = ?, content = ? WHERE id = ?', [title, content, pageId]);
+  await p.query('UPDATE itineraries SET title = ?, content = ? WHERE id = ?', [title, content, itineraryId]);
 }
 
 /**
- * Deletes a page from the database by its ID.
+ * Deletes a itinerary from the database by its ID.
  *
- * @param pageId - The unique identifier of the page to delete.
+ * @param itineraryId - The unique identifier of the itinerary to delete.
  */
-export async function deletePage(pageId: string) {
+export async function deleteItinerary(itineraryId: string) {
   const p = getPool();
-  await p.query('DELETE FROM pages WHERE id = ?', [pageId]);
+  await p.query('DELETE FROM itineraries WHERE id = ?', [itineraryId]);
 }

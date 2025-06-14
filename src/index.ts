@@ -4,17 +4,17 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { configureGoogleAuth, authRouter, ensureAuth } from './gAuth';
 import {
-  Album,
-  Page,
-  getAlbums,
-  getAlbum,
-  createAlbum,
-  updateAlbumTitle,
-  deleteAlbum,
-  createPage,
-  getPage,
-  updatePage,
-  deletePage,
+  Travel,
+  Itinerary,
+  getTravels,
+  getTravel,
+  createTravel,
+  updateTravelTitle,
+  deleteTravel,
+  createItinerary,
+  getItinerary,
+  updateItinerary,
+  deleteItinerary,
   initDb
 } from './db';
 
@@ -34,109 +34,109 @@ app.get('/', (req: any, res: any) => {
 });
 
 
-app.get('/albums', ensureAuth, async (req: any, res: any) => {
-  const albums = await getAlbums(req.user.id);
-  res.render('albums', { user: req.user, albums });
+app.get('/travels', ensureAuth, async (req: any, res: any) => {
+  const travels = await getTravels(req.user.id);
+  res.render('travels', { user: req.user, travels });
 });
 
-app.get('/albums/new', ensureAuth, (req: any, res: any) => {
-  res.render('album_new');
+app.get('/travels/new', ensureAuth, (req: any, res: any) => {
+  res.render('travel_new');
 });
 
-app.post('/albums', ensureAuth, async (req: any, res: any) => {
-  const album = await createAlbum(req.user.id, req.body.title);
+app.post('/travels', ensureAuth, async (req: any, res: any) => {
+  const travel = await createTravel(req.user.id, req.body.title);
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
-    res.json(album);
+    res.json(travel);
   } else {
-    res.redirect('/albums');
+    res.redirect('/travels');
   }
 });
 
-app.get('/albums/:id', ensureAuth, async (req: any, res: any) => {
-  const album = await getAlbum(req.user.id, req.params.id);
-  if (!album) return res.sendStatus(404);
-  res.render('album_show', { album });
+app.get('/travels/:id', ensureAuth, async (req: any, res: any) => {
+  const travel = await getTravel(req.user.id, req.params.id);
+  if (!travel) return res.sendStatus(404);
+  res.render('travel_show', { travel });
 });
 
-app.get('/albums/:id/edit', ensureAuth, async (req: any, res: any) => {
-  const album = await getAlbum(req.user.id, req.params.id);
-  if (!album) return res.sendStatus(404);
-  res.render('album_edit', { album });
+app.get('/travels/:id/edit', ensureAuth, async (req: any, res: any) => {
+  const travel = await getTravel(req.user.id, req.params.id);
+  if (!travel) return res.sendStatus(404);
+  res.render('travel_edit', { travel });
 });
 
-app.post('/albums/:id/edit', ensureAuth, async (req: any, res: any) => {
-  const album = await getAlbum(req.user.id, req.params.id);
-  if (!album) return res.sendStatus(404);
-  await updateAlbumTitle(album.id, req.body.title);
-  res.redirect('/albums/' + album.id);
+app.post('/travels/:id/edit', ensureAuth, async (req: any, res: any) => {
+  const travel = await getTravel(req.user.id, req.params.id);
+  if (!travel) return res.sendStatus(404);
+  await updateTravelTitle(travel.id, req.body.title);
+  res.redirect('/travels/' + travel.id);
 });
 
-app.post('/albums/:id/delete', ensureAuth, async (req: any, res: any) => {
-  await deleteAlbum(req.params.id);
-  res.redirect('/albums');
+app.post('/travels/:id/delete', ensureAuth, async (req: any, res: any) => {
+  await deleteTravel(req.params.id);
+  res.redirect('/travels');
 });
 
-// Pages
-app.get('/albums/:albumId/pages/new', ensureAuth, async (req: any, res: any) => {
-  const album = await getAlbum(req.user.id, req.params.albumId);
-  if (!album) return res.sendStatus(404);
-  res.render('page_new', { albumId: req.params.albumId });
+// Itineraries
+app.get('/travels/:travelId/itineraries/new', ensureAuth, async (req: any, res: any) => {
+  const travel = await getTravel(req.user.id, req.params.travelId);
+  if (!travel) return res.sendStatus(404);
+  res.render('itinerary_new', { travelId: req.params.travelId });
 });
 
-app.post('/albums/:albumId/pages', ensureAuth, async (req: any, res: any) => {
-  const album = await getAlbum(req.user.id, req.params.albumId);
-  if (!album) return res.sendStatus(404);
-  const page = await createPage(album.id, req.body.title, req.body.content);
+app.post('/travels/:travelId/itineraries', ensureAuth, async (req: any, res: any) => {
+  const travel = await getTravel(req.user.id, req.params.travelId);
+  if (!travel) return res.sendStatus(404);
+  const itinerary = await createItinerary(travel.id, req.body.title, req.body.content);
 
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
-    res.json(page);
+    res.json(itinerary);
   } else {
-    res.redirect('/albums/' + album.id);
+    res.redirect('/travels/' + travel.id);
   }
 });
 
-app.get('/albums/:albumId/pages/:pageId', ensureAuth, async (req: any, res: any) => {
-  const album = await getAlbum(req.user.id, req.params.albumId);
-  if (!album) return res.sendStatus(404);
-  const page = await getPage(album.id, req.params.pageId);
-  if (!page) return res.sendStatus(404);
+app.get('/travels/:travelId/itineraries/:itineraryId', ensureAuth, async (req: any, res: any) => {
+  const travel = await getTravel(req.user.id, req.params.travelId);
+  if (!travel) return res.sendStatus(404);
+  const itinerary = await getItinerary(travel.id, req.params.itineraryId);
+  if (!itinerary) return res.sendStatus(404);
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
-    res.json(page);
+    res.json(itinerary);
   } else {
-    res.render('page_show', { album, page });
+    res.render('itinerary_show', { travel, itinerary });
   }
 });
 
-app.get('/albums/:albumId/pages/:pageId/edit', ensureAuth, async (req: any, res: any) => {
-  const album = await getAlbum(req.user.id, req.params.albumId);
-  if (!album) return res.sendStatus(404);
-  const page = await getPage(album.id, req.params.pageId);
-  if (!page) return res.sendStatus(404);
-  res.render('page_edit', { albumId: album.id, page });
+app.get('/travels/:travelId/itineraries/:itineraryId/edit', ensureAuth, async (req: any, res: any) => {
+  const travel = await getTravel(req.user.id, req.params.travelId);
+  if (!travel) return res.sendStatus(404);
+  const itinerary = await getItinerary(travel.id, req.params.itineraryId);
+  if (!itinerary) return res.sendStatus(404);
+  res.render('itinerary_edit', { travelId: travel.id, itinerary });
 });
 
-app.post('/albums/:albumId/pages/:pageId/edit', ensureAuth, async (req: any, res: any) => {
-  const album = await getAlbum(req.user.id, req.params.albumId);
-  if (!album) return res.sendStatus(404);
-  const page = await getPage(album.id, req.params.pageId);
-  if (!page) return res.sendStatus(404);
-  await updatePage(page.id, req.body.title, req.body.content);
+app.post('/travels/:travelId/itineraries/:itineraryId/edit', ensureAuth, async (req: any, res: any) => {
+  const travel = await getTravel(req.user.id, req.params.travelId);
+  if (!travel) return res.sendStatus(404);
+  const itinerary = await getItinerary(travel.id, req.params.itineraryId);
+  if (!itinerary) return res.sendStatus(404);
+  await updateItinerary(itinerary.id, req.body.title, req.body.content);
 
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
-    res.json({ id: page.id, title: req.body.title, content: req.body.content });
+    res.json({ id: itinerary.id, title: req.body.title, content: req.body.content });
   } else {
-    res.redirect('/albums/' + album.id + '/pages/' + page.id);
+    res.redirect('/travels/' + travel.id + '/itineraries/' + itinerary.id);
   }
 });
 
-app.post('/albums/:albumId/pages/:pageId/delete', ensureAuth, async (req: any, res: any) => {
-  const album = await getAlbum(req.user.id, req.params.albumId);
-  if (!album) return res.sendStatus(404);
-  await deletePage(req.params.pageId);
+app.post('/travels/:travelId/itineraries/:itineraryId/delete', ensureAuth, async (req: any, res: any) => {
+  const travel = await getTravel(req.user.id, req.params.travelId);
+  if (!travel) return res.sendStatus(404);
+  await deleteItinerary(req.params.itineraryId);
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
     res.json({ success: true });
   } else {
-    res.redirect('/albums/' + album.id);
+    res.redirect('/travels/' + travel.id);
   }
 });
 

@@ -2,8 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const openBtn = document.getElementById('openAddDialog');
   const dialog = document.getElementById('addDialog');
   const cancelBtn = document.getElementById('cancelAdd');
-  const form = document.getElementById('addAlbumForm');
-  const albumList = document.getElementById('albumList');
+  const form = document.getElementById('addTravelForm');
+  const travelList = document.getElementById('travelList');
 
   openBtn?.addEventListener('click', () => {
     dialog.showModal();
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const titleInput = form.querySelector('input[name="title"]');
     const title = titleInput.value.trim();
     if (!title) return;
-    const res = await fetch('/albums', {
+    const res = await fetch('/travels', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -27,17 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
       body: JSON.stringify({ title })
     });
     if (res.ok) {
-      const album = await res.json();
+      const travel = await res.json();
       const li = document.createElement('li');
       const link = document.createElement('a');
-      link.href = `/albums/${album.id}`;
-      link.textContent = album.title;
+      link.href = `/travels/${travel.id}`;
+      link.textContent = travel.title;
       li.appendChild(link);
-      albumList.appendChild(li);
+      travelList.appendChild(li);
       form.reset();
       dialog.close();
     } else {
-      alert('Failed to create album');
+      alert('Failed to create travel');
     }
   });
 });

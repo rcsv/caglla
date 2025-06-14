@@ -48,7 +48,7 @@ authRouter.get('/auth/google', passport.authenticate('google', {
 authRouter.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/' }),
   (req: any, res: any) => {
-    res.redirect('/albums');
+    res.redirect('/travels');
   });
 
 authRouter.get('/logout', (req: any, res: any) => {

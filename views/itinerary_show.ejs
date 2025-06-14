@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= itinerary.title %></title>
+</head>
+<body>
+  <p><a href="/travels/<%= travel.id %>">Back</a> | <a href="/logout">Logout</a></p>
+  <h1><%= itinerary.title %></h1>
+  <p><%= itinerary.content %></p>
+  <a href="/travels/<%= travel.id %>/itineraries/<%= itinerary.id %>/edit">Edit</a>
+  <form action="/travels/<%= travel.id %>/itineraries/<%= itinerary.id %>/delete" method="post" style="display:inline">
+    <button type="submit">Delete</button>
+  </form>
+</body>
+</html>
