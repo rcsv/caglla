@@ -8,14 +8,11 @@
   <form action="/travels" method="post">
     <input type="text" name="name" placeholder="Name" required><br>
     <textarea name="description" placeholder="Description"></textarea><br>
-    <input type="text" id="mainVenueInput" list="venueSuggestions" placeholder="Main Venue"><br>
-    <input type="hidden" name="main_venue">
-    <datalist id="venueSuggestions"></datalist>
+    <input type="text" name="main_venue" placeholder="Main Venue ID"><br>
     <input type="date" name="date_start"><br>
     <input type="date" name="date_end"><br>
     <button type="submit">Create</button>
   </form>
   <p><a href="/travels">Back</a></p>
-  <script src="/scripts/autocomplete.js"></script>
 </body>
 </html>

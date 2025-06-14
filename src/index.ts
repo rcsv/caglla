@@ -17,7 +17,6 @@ import {
   deleteItinerary,
   initDb
 } from './db';
-import { getPlacePredictions, findOrCreatePlace } from './places';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,17 +28,6 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(authRouter);
-
-app.get('/places/autocomplete', ensureAuth, async (req: any, res: any) => {
-  if (!req.query.input) return res.json([]);
-  try {
-    const predictions = await getPlacePredictions(String(req.query.input));
-    res.json(predictions);
-  } catch (err) {
-    console.error('autocomplete error', err);
-    res.status(500).json({ error: 'Failed to fetch predictions' });
-  }
-});
 
 app.get('/', (req: any, res: any) => {
   res.render('index', { user: req.user });
@@ -56,23 +44,11 @@ app.get('/travels/new', ensureAuth, (req: any, res: any) => {
 });
 
 app.post('/travels', ensureAuth, async (req: any, res: any) => {
-  let mainVenue: number | null = null;
-  if (req.body.main_venue) {
-    if (/^\d+$/.test(req.body.main_venue)) {
-      mainVenue = parseInt(req.body.main_venue, 10);
-    } else {
-      try {
-        mainVenue = await findOrCreatePlace(req.body.main_venue);
-      } catch (err) {
-        console.error('Failed to create place', err);
-      }
-    }
-  }
   const travel = await createTravel(
     req.user.id,
     req.body.name,
     req.body.description || '',
-    mainVenue,
+    req.body.main_venue ? parseInt(req.body.main_venue) : null,
     req.body.date_start || null,
     req.body.date_end || null
   );
@@ -98,23 +74,11 @@ app.get('/travels/:id/edit', ensureAuth, async (req: any, res: any) => {
 app.post('/travels/:id/edit', ensureAuth, async (req: any, res: any) => {
   const travel = await getTravel(req.user.id, req.params.id);
   if (!travel) return res.sendStatus(404);
-  let mainVenue: number | null = null;
-  if (req.body.main_venue) {
-    if (/^\d+$/.test(req.body.main_venue)) {
-      mainVenue = parseInt(req.body.main_venue, 10);
-    } else {
-      try {
-        mainVenue = await findOrCreatePlace(req.body.main_venue);
-      } catch (err) {
-        console.error('Failed to create place', err);
-      }
-    }
-  }
   await updateTravel(
     travel.id,
     req.body.name,
     req.body.description || '',
-    mainVenue,
+    req.body.main_venue ? parseInt(req.body.main_venue) : null,
     req.body.date_start || null,
     req.body.date_end || null
   );
