@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Travel</title>
+</head>
+<body>
+  <h1>Edit Travel</h1>
+  <form action="/travels/<%= travel.id %>/edit" method="post">
+    <input type="text" name="title" value="<%= travel.title %>" required>
+    <button type="submit">Save</button>
+  </form>
+  <p><a href="/travels/<%= travel.id %>">Back</a></p>
+</body>
+</html>

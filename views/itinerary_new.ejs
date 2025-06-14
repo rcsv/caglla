@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>New Page</title>
+  <title>New Itinerary</title>
 </head>
 <body>
-  <h1>Add Page</h1>
-  <form action="/albums/<%= albumId %>/pages" method="post">
+  <h1>Add Itinerary</h1>
+  <form action="/travels/<%= travelId %>/itineraries" method="post">
     <input type="text" name="title" placeholder="Title" required><br>
     <textarea name="content" placeholder="Content" required></textarea><br>
     <button type="submit">Create</button>
   </form>
-  <p><a href="/albums/<%= albumId %>">Back</a></p>
+  <p><a href="/travels/<%= travelId %>">Back</a></p>
 </body>
 </html>

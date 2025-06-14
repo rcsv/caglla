@@ -1,8 +1,8 @@
-# Caglla Web Album
+# Caglla Travel Manager
 
-This is a simple Node.js web application that provides a personal web album for each user.
+This is a simple Node.js web application that provides personal travel management for each user.
 Authentication is handled via Google OAuth 2.0 and users can perform CRUD operations on
-albums and album pages.
+travels and their itineraries.
 
 ## Setup
 
@@ -61,8 +61,8 @@ Then open `http://localhost:3000` in your browser.
 ## Features
 
 - Login with Google OAuth 2.0
-- Create, read, update and delete albums
-- Create, read, update and delete pages within an album
+- Create, read, update and delete travels
+- Create, read, update and delete itineraries within a travel
 
-Album and page data are stored in a MySQL database configured via the
+Travel and itinerary data are stored in a MySQL database configured via the
 `DB_*` environment variables.
