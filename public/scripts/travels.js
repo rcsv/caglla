@@ -15,23 +15,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const titleInput = form.querySelector('input[name="title"]');
-    const title = titleInput.value.trim();
-    if (!title) return;
+    const nameInput = form.querySelector('input[name="name"]');
+    const name = nameInput.value.trim();
+    if (!name) return;
+    const description = form.querySelector('textarea[name="description"]').value.trim();
+    const mainVenue = form.querySelector('input[name="main_venue"]').value.trim();
+    const dateStart = form.querySelector('input[name="date_start"]').value;
+    const dateEnd = form.querySelector('input[name="date_end"]').value;
     const res = await fetch('/travels', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ title })
+      body: JSON.stringify({
+        name,
+        description,
+        main_venue: mainVenue || null,
+        date_start: dateStart || null,
+        date_end: dateEnd || null
+      })
     });
     if (res.ok) {
       const travel = await res.json();
       const li = document.createElement('li');
       const link = document.createElement('a');
       link.href = `/travels/${travel.id}`;
-      link.textContent = travel.title;
+      link.textContent = travel.name;
       li.appendChild(link);
       travelList.appendChild(li);
       form.reset();

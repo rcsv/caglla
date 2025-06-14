@@ -9,7 +9,7 @@ import {
   getTravels,
   getTravel,
   createTravel,
-  updateTravelTitle,
+  updateTravel,
   deleteTravel,
   createItinerary,
   getItinerary,
@@ -44,7 +44,14 @@ app.get('/travels/new', ensureAuth, (req: any, res: any) => {
 });
 
 app.post('/travels', ensureAuth, async (req: any, res: any) => {
-  const travel = await createTravel(req.user.id, req.body.title);
+  const travel = await createTravel(
+    req.user.id,
+    req.body.name,
+    req.body.description || '',
+    req.body.main_venue ? parseInt(req.body.main_venue) : null,
+    req.body.date_start || null,
+    req.body.date_end || null
+  );
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
     res.json(travel);
   } else {
@@ -67,7 +74,14 @@ app.get('/travels/:id/edit', ensureAuth, async (req: any, res: any) => {
 app.post('/travels/:id/edit', ensureAuth, async (req: any, res: any) => {
   const travel = await getTravel(req.user.id, req.params.id);
   if (!travel) return res.sendStatus(404);
-  await updateTravelTitle(travel.id, req.body.title);
+  await updateTravel(
+    travel.id,
+    req.body.name,
+    req.body.description || '',
+    req.body.main_venue ? parseInt(req.body.main_venue) : null,
+    req.body.date_start || null,
+    req.body.date_end || null
+  );
   res.redirect('/travels/' + travel.id);
 });
 
