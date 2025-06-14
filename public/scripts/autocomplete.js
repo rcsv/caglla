@@ -15,14 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     try {
-      const res = await fetch(`/places/autocomplete?input=${encodeURIComponent(term)}`);
+      const res = await fetch('/places/autocomplete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: term, languageCode: document.documentElement.lang })
+      });
       if (!res.ok) return;
       const predictions = await res.json();
       datalist.innerHTML = '';
       predictions.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.description;
-        opt.setAttribute('data-place-id', p.place_id);
+        opt.dataset.placeId = p.place_id;
         datalist.appendChild(opt);
       });
     } catch (err) {
@@ -32,6 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   input.addEventListener('change', () => {
     const option = datalist.querySelector(`option[value="${input.value}"]`);
-    hidden.value = option ? option.getAttribute('data-place-id') || '' : '';
+    hidden.value = option ? option.dataset.placeId || '' : '';
   });
 });

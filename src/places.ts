@@ -18,20 +18,41 @@ function getPool(): Pool {
   return pool;
 }
 
-export async function getPlacePredictions(input: string) {
+
+/**
+ * Fetches place autocomplete suggestions using the Places API (New).
+ *
+ * @param input The text input from the user.
+ * @param languageCode Optional IETF language code (e.g. "en").
+ * @returns Array of objects containing place_id and description.
+ */
+export async function getAutocompleteSuggestions(
+  input: string,
+  languageCode?: string
+) {
   try {
-    const response = await axios.get(
-      'https://maps.googleapis.com/maps/api/place/autocomplete/json',
+    const response = await axios.post(
+      'https://places.googleapis.com/v1/places:autocomplete',
       {
-        params: {
-          input,
-          key: process.env.GOOGLE_API_KEY,
+        input,
+        ...(languageCode ? { languageCode } : {}),
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': process.env.GOOGLE_API_KEY || '',
+          'X-Goog-FieldMask':
+            'suggestions.placePrediction.displayName.text,suggestions.placePrediction.placeId',
         },
       }
     );
-    return response.data.predictions;
+    const suggestions = response.data.suggestions || [];
+    return suggestions.map((s: any) => ({
+      place_id: s.placePrediction.placeId,
+      description: s.placePrediction.displayName.text,
+    }));
   } catch (err: any) {
-    console.error('Error fetching place predictions:', err.response?.data || err);
+    console.error('Error fetching place autocomplete:', err.response?.data || err);
     throw err;
   }
 }
