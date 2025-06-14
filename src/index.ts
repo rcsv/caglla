@@ -138,8 +138,13 @@ app.get('/albums/:albumId/pages/new', ensureAuth, async (req: any, res: any) => 
 app.post('/albums/:albumId/pages', ensureAuth, async (req: any, res: any) => {
   const album = await getAlbum(req.user.id, req.params.albumId);
   if (!album) return res.sendStatus(404);
-  await createPage(album.id, req.body.title, req.body.content);
-  res.redirect('/albums/' + album.id);
+  const page = await createPage(album.id, req.body.title, req.body.content);
+
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    res.json(page);
+  } else {
+    res.redirect('/albums/' + album.id);
+  }
 });
 
 app.get('/albums/:albumId/pages/:pageId', ensureAuth, async (req: any, res: any) => {
@@ -147,7 +152,11 @@ app.get('/albums/:albumId/pages/:pageId', ensureAuth, async (req: any, res: any)
   if (!album) return res.sendStatus(404);
   const page = await getPage(album.id, req.params.pageId);
   if (!page) return res.sendStatus(404);
-  res.render('page_show', { album, page });
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    res.json(page);
+  } else {
+    res.render('page_show', { album, page });
+  }
 });
 
 app.get('/albums/:albumId/pages/:pageId/edit', ensureAuth, async (req: any, res: any) => {
@@ -164,14 +173,23 @@ app.post('/albums/:albumId/pages/:pageId/edit', ensureAuth, async (req: any, res
   const page = await getPage(album.id, req.params.pageId);
   if (!page) return res.sendStatus(404);
   await updatePage(page.id, req.body.title, req.body.content);
-  res.redirect('/albums/' + album.id + '/pages/' + page.id);
+
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    res.json({ id: page.id, title: req.body.title, content: req.body.content });
+  } else {
+    res.redirect('/albums/' + album.id + '/pages/' + page.id);
+  }
 });
 
 app.post('/albums/:albumId/pages/:pageId/delete', ensureAuth, async (req: any, res: any) => {
   const album = await getAlbum(req.user.id, req.params.albumId);
   if (!album) return res.sendStatus(404);
   await deletePage(req.params.pageId);
-  res.redirect('/albums/' + album.id);
+  if (req.headers.accept && req.headers.accept.includes('application/json')) {
+    res.json({ success: true });
+  } else {
+    res.redirect('/albums/' + album.id);
+  }
 });
 
 async function start() {
