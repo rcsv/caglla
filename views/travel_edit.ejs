@@ -6,7 +6,11 @@
 <body>
   <h1>Edit Travel</h1>
   <form action="/travels/<%= travel.id %>/edit" method="post">
-    <input type="text" name="title" value="<%= travel.title %>" required>
+    <input type="text" name="name" value="<%= travel.name %>" required><br>
+    <textarea name="description"><%= travel.description %></textarea><br>
+    <input type="text" name="main_venue" value="<%= travel.main_venue %>"><br>
+    <input type="date" name="date_start" value="<%= travel.date_start %>"><br>
+    <input type="date" name="date_end" value="<%= travel.date_end %>"><br>
     <button type="submit">Save</button>
   </form>
   <p><a href="/travels/<%= travel.id %>">Back</a></p>

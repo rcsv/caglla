@@ -10,7 +10,11 @@
 
   <dialog id="addDialog">
     <form id="addTravelForm" method="dialog">
-      <input type="text" name="title" placeholder="Title" required>
+      <input type="text" name="name" placeholder="Name" required><br>
+      <textarea name="description" placeholder="Description"></textarea><br>
+      <input type="text" name="main_venue" placeholder="Main Venue ID"><br>
+      <input type="date" name="date_start"><br>
+      <input type="date" name="date_end"><br>
       <button type="submit">Create</button>
       <button type="button" id="cancelAdd">Cancel</button>
     </form>
@@ -18,7 +22,7 @@
 
   <ul id="travelList">
     <% travels.forEach(function(travel){ %>
-      <li><a href="/travels/<%= travel.id %>"><%= travel.title %></a></li>
+      <li><a href="/travels/<%= travel.id %>"><%= travel.name %></a></li>
     <% }); %>
   </ul>
   <script src="/scripts/travels.js"></script>
