@@ -16,7 +16,8 @@ import {
   createPage,
   getPage,
   updatePage,
-  deletePage
+  deletePage,
+  initDb
 } from './db';
 
 interface Store { users: Record<string, any>; }
@@ -85,8 +86,8 @@ app.get('/logout', (req: any, res: any) => {
   });
 });
 
-app.get('/albums', ensureAuth, (req: any, res: any) => {
-  const albums = getAlbums(req.user.id);
+app.get('/albums', ensureAuth, async (req: any, res: any) => {
+  const albums = await getAlbums(req.user.id);
   res.render('albums', { user: req.user, albums });
 });
 
@@ -94,8 +95,8 @@ app.get('/albums/new', ensureAuth, (req: any, res: any) => {
   res.render('album_new');
 });
 
-app.post('/albums', ensureAuth, (req: any, res: any) => {
-  const album = createAlbum(req.user.id, req.body.title);
+app.post('/albums', ensureAuth, async (req: any, res: any) => {
+  const album = await createAlbum(req.user.id, req.body.title);
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
     res.json(album);
   } else {
@@ -103,77 +104,82 @@ app.post('/albums', ensureAuth, (req: any, res: any) => {
   }
 });
 
-app.get('/albums/:id', ensureAuth, (req: any, res: any) => {
-  const album = getAlbum(req.user.id, req.params.id);
+app.get('/albums/:id', ensureAuth, async (req: any, res: any) => {
+  const album = await getAlbum(req.user.id, req.params.id);
   if (!album) return res.sendStatus(404);
   res.render('album_show', { album });
 });
 
-app.get('/albums/:id/edit', ensureAuth, (req: any, res: any) => {
-  const album = getAlbum(req.user.id, req.params.id);
+app.get('/albums/:id/edit', ensureAuth, async (req: any, res: any) => {
+  const album = await getAlbum(req.user.id, req.params.id);
   if (!album) return res.sendStatus(404);
   res.render('album_edit', { album });
 });
 
-app.post('/albums/:id/edit', ensureAuth, (req: any, res: any) => {
-  const album = getAlbum(req.user.id, req.params.id);
+app.post('/albums/:id/edit', ensureAuth, async (req: any, res: any) => {
+  const album = await getAlbum(req.user.id, req.params.id);
   if (!album) return res.sendStatus(404);
-  updateAlbumTitle(album.id, req.body.title);
+  await updateAlbumTitle(album.id, req.body.title);
   res.redirect('/albums/' + album.id);
 });
 
-app.post('/albums/:id/delete', ensureAuth, (req: any, res: any) => {
-  deleteAlbum(req.params.id);
+app.post('/albums/:id/delete', ensureAuth, async (req: any, res: any) => {
+  await deleteAlbum(req.params.id);
   res.redirect('/albums');
 });
 
 // Pages
-app.get('/albums/:albumId/pages/new', ensureAuth, (req: any, res: any) => {
-  const album = getAlbum(req.user.id, req.params.albumId);
+app.get('/albums/:albumId/pages/new', ensureAuth, async (req: any, res: any) => {
+  const album = await getAlbum(req.user.id, req.params.albumId);
   if (!album) return res.sendStatus(404);
   res.render('page_new', { albumId: req.params.albumId });
 });
 
-app.post('/albums/:albumId/pages', ensureAuth, (req: any, res: any) => {
-  const album = getAlbum(req.user.id, req.params.albumId);
+app.post('/albums/:albumId/pages', ensureAuth, async (req: any, res: any) => {
+  const album = await getAlbum(req.user.id, req.params.albumId);
   if (!album) return res.sendStatus(404);
-  createPage(album.id, req.body.title, req.body.content);
+  await createPage(album.id, req.body.title, req.body.content);
   res.redirect('/albums/' + album.id);
 });
 
-app.get('/albums/:albumId/pages/:pageId', ensureAuth, (req: any, res: any) => {
-  const album = getAlbum(req.user.id, req.params.albumId);
+app.get('/albums/:albumId/pages/:pageId', ensureAuth, async (req: any, res: any) => {
+  const album = await getAlbum(req.user.id, req.params.albumId);
   if (!album) return res.sendStatus(404);
-  const page = getPage(album.id, req.params.pageId);
+  const page = await getPage(album.id, req.params.pageId);
   if (!page) return res.sendStatus(404);
   res.render('page_show', { album, page });
 });
 
-app.get('/albums/:albumId/pages/:pageId/edit', ensureAuth, (req: any, res: any) => {
-  const album = getAlbum(req.user.id, req.params.albumId);
+app.get('/albums/:albumId/pages/:pageId/edit', ensureAuth, async (req: any, res: any) => {
+  const album = await getAlbum(req.user.id, req.params.albumId);
   if (!album) return res.sendStatus(404);
-  const page = getPage(album.id, req.params.pageId);
+  const page = await getPage(album.id, req.params.pageId);
   if (!page) return res.sendStatus(404);
   res.render('page_edit', { albumId: album.id, page });
 });
 
-app.post('/albums/:albumId/pages/:pageId/edit', ensureAuth, (req: any, res: any) => {
-  const album = getAlbum(req.user.id, req.params.albumId);
+app.post('/albums/:albumId/pages/:pageId/edit', ensureAuth, async (req: any, res: any) => {
+  const album = await getAlbum(req.user.id, req.params.albumId);
   if (!album) return res.sendStatus(404);
-  const page = getPage(album.id, req.params.pageId);
+  const page = await getPage(album.id, req.params.pageId);
   if (!page) return res.sendStatus(404);
-  updatePage(page.id, req.body.title, req.body.content);
+  await updatePage(page.id, req.body.title, req.body.content);
   res.redirect('/albums/' + album.id + '/pages/' + page.id);
 });
 
-app.post('/albums/:albumId/pages/:pageId/delete', ensureAuth, (req: any, res: any) => {
-  const album = getAlbum(req.user.id, req.params.albumId);
+app.post('/albums/:albumId/pages/:pageId/delete', ensureAuth, async (req: any, res: any) => {
+  const album = await getAlbum(req.user.id, req.params.albumId);
   if (!album) return res.sendStatus(404);
-  deletePage(req.params.pageId);
+  await deletePage(req.params.pageId);
   res.redirect('/albums/' + album.id);
 });
 
-app.listen(PORT, () => {
-  console.log(`Listening on http://localhost:${PORT}`);
-});
+async function start() {
+  await initDb();
+  app.listen(PORT, () => {
+    console.log(`Listening on http://localhost:${PORT}`);
+  });
+}
+
+start();
 
