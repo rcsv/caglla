@@ -103,64 +103,19 @@ export async function updatePlaceDetails(placeId: string) {
   }
 }
 
-export async function findOrCreatePlace(placeId: string): Promise<number> {
-  const p = getPool();
-  const [rows] = await p.query<any[]>(
-    'SELECT id FROM places WHERE google_place_id = ?',
-    [placeId]
-  );
-  if (rows.length > 0) return rows[0].id;
+// Sample usage
+(async () => {
+  await upsertPlacePrediction({
+    place_id: 'ChIJ...kqX',
+    description: '東京タワー, 東京都, 日本',
+    structured_formatting: {
+      main_text: '東京タワー',
+      secondary_text: '東京都, 日本',
+    },
+    types: ['tourist_attraction', 'point_of_interest'],
+    matched_substrings: [{ length: 2, offset: 0 }],
+  });
 
-  try {
-    const response = await axios.get(
-      'https://maps.googleapis.com/maps/api/place/details/json',
-      {
-        params: {
-          place_id: placeId,
-          key: process.env.GOOGLE_API_KEY,
-        },
-      }
-    );
-    const r = response.data.result;
-    const description = r.name && r.formatted_address
-      ? `${r.name}, ${r.formatted_address}`
-      : r.name || r.formatted_address || '';
-    const [result] = await p.query<any>(
-      `INSERT INTO places (
-         google_place_id,
-         description,
-         main_text,
-         secondary_text,
-         types,
-         matched_substrings,
-         formatted_address,
-         latitude,
-         longitude,
-         name,
-         rating,
-         international_phone_number,
-         website
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        placeId,
-        description,
-        r.name || '',
-        r.formatted_address || '',
-        JSON.stringify(r.types || []),
-        '[]',
-        r.formatted_address || '',
-        r.geometry?.location?.lat || null,
-        r.geometry?.location?.lng || null,
-        r.name || '',
-        r.rating || null,
-        r.international_phone_number || null,
-        r.website || null,
-      ]
-    );
-    return result.insertId as number;
-  } catch (err: any) {
-    console.error('Error creating place from id:', err.response?.data || err);
-    throw err;
-  }
-}
+  await updatePlaceDetails('ChIJ...kqX');
+})();
 
