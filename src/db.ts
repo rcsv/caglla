@@ -53,6 +53,25 @@ export async function initDb() {
     preferred_currency VARCHAR(10),
     skip_confirm_delete BOOLEAN DEFAULT FALSE
   )`);
+
+  await p.query(`CREATE TABLE IF NOT EXISTS places (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    google_place_id VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT NOT NULL,
+    main_text VARCHAR(255) NOT NULL,
+    secondary_text VARCHAR(255),
+    types JSON,
+    matched_substrings JSON,
+    formatted_address VARCHAR(255),
+    latitude DECIMAL(9,6),
+    longitude DECIMAL(9,6),
+    name VARCHAR(255),
+    rating DECIMAL(2,1),
+    international_phone_number VARCHAR(50),
+    website VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )`);
 }
 
 /**
