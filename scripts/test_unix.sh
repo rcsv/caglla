@@ -3,6 +3,15 @@
 # Compiles TypeScript and SCSS, then runs npm build and start.
 set -e
 
+# Load environment variables from .env if it exists
+if [ -f .env ]; then
+  echo "Loading environment variables from .env"
+  # export variables defined in .env
+  set -a
+  . ./.env
+  set +a
+fi
+
 echo "Compiling TypeScript..."
 # compile TypeScript source
 npx tsc
