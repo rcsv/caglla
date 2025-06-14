@@ -12,18 +12,24 @@ albums and album pages.
 npm install
 ```
 
-This will also install the `better-sqlite3` package used for persisting data in
-`store.db`.
+This will also install the `mysql2` package used for connecting to MySQL.
 
 2. Set the Google OAuth credentials as environment variables:
 
 ```bash
 export GOOGLE_CLIENT_ID=your-client-id
 export GOOGLE_CLIENT_SECRET=your-client-secret
+export DB_HOST=localhost
+export DB_USER=db-user
+export DB_PASSWORD=db-password
+export DB_NAME=caglla
 ```
 
 You can obtain these credentials from the [Google Developer Console](https://console.developers.google.com/).
 Set the OAuth callback URL to `http://localhost:3000/auth/google/callback`.
+
+Ensure you have a running MySQL server and create a database and user with
+permissions. Set the `DB_*` variables above to point to this server.
 
 3. Build the project:
 ```bash
@@ -58,5 +64,5 @@ Then open `http://localhost:3000` in your browser.
 - Create, read, update and delete albums
 - Create, read, update and delete pages within an album
 
-Album and page data are stored in a local SQLite database (`store.db`), so your
-changes persist across server restarts.
+Album and page data are stored in a MySQL database configured via the
+`DB_*` environment variables.
