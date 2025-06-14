@@ -174,6 +174,11 @@ app.post('/albums/:albumId/pages/:pageId/delete', ensureAuth, async (req: any, r
   res.redirect('/albums/' + album.id);
 });
 
+/**
+ * Initializes the database and starts the Express server.
+ *
+ * The server begins listening for incoming requests only after the database has been successfully initialized.
+ */
 async function start() {
   await initDb();
   app.listen(PORT, () => {
