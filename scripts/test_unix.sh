@@ -15,6 +15,25 @@ else
   echo "No scss directory found, skipping SCSS compilation."
 fi
 
+echo "Setting up MySQL tables..."
+if command -v mysql >/dev/null; then
+  mysql -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" <<'EOF'
+CREATE TABLE IF NOT EXISTS albums (
+  id VARCHAR(255) PRIMARY KEY,
+  user_id VARCHAR(255),
+  title VARCHAR(255)
+);
+CREATE TABLE IF NOT EXISTS pages (
+  id VARCHAR(255) PRIMARY KEY,
+  album_id VARCHAR(255),
+  title VARCHAR(255),
+  content TEXT
+);
+EOF
+else
+  echo "mysql command not found, skipping database setup."
+fi
+
 echo "Running build and starting server..."
 # Build the project (again, to ensure dist is up to date) and start
 npm run build && npm start

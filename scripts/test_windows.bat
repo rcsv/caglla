@@ -12,5 +12,13 @@ IF EXIST scss (
     echo No scss directory found, skipping SCSS compilation.
 )
 
+echo Setting up MySQL tables...
+where mysql >nul 2>&1
+IF %ERRORLEVEL%==0 (
+    mysql -h %DB_HOST% -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% -e "CREATE TABLE IF NOT EXISTS albums (id VARCHAR(255) PRIMARY KEY, user_id VARCHAR(255), title VARCHAR(255)); CREATE TABLE IF NOT EXISTS pages (id VARCHAR(255) PRIMARY KEY, album_id VARCHAR(255), title VARCHAR(255), content TEXT);"
+) ELSE (
+    echo mysql command not found, skipping database setup.
+)
+
 echo Running build and starting server...
 call npm run build && npm start
