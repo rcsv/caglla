@@ -17,7 +17,7 @@ import {
   deleteItinerary,
   initDb
 } from './db';
-import { getPlacePredictions, findOrCreatePlace } from './places';
+import { findOrCreatePlace, getAutocompleteSuggestions } from './places';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,13 +30,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(authRouter);
 
-app.get('/places/autocomplete', ensureAuth, async (req: any, res: any) => {
-  if (!req.query.input) return res.json([]);
+app.post('/places/autocomplete', ensureAuth, async (req: any, res: any) => {
+  const { input, languageCode } = req.body;
+  if (!input) return res.json([]);
   try {
-    const predictions = await getPlacePredictions(String(req.query.input));
+    const predictions = await getAutocompleteSuggestions(String(input), languageCode);
     res.json(predictions);
-  } catch (err) {
-    console.error('autocomplete error', err);
+  } catch (err: any) {
+    console.error('autocomplete error', err.response?.data || err);
     res.status(500).json({ error: 'Failed to fetch predictions' });
   }
 });
