@@ -2,6 +2,15 @@
 REM Build and run the application for testing on Windows.
 REM Compiles TypeScript and SCSS, then runs npm build and start.
 
+REM Clean existing modules and reinstall dependencies
+IF EXIST node_modules (
+    echo Removing existing node_modules directory...
+    rmdir /s /q node_modules
+)
+
+echo Installing dependencies...
+call npm install
+
 echo Compiling TypeScript...
 call npx tsc
 
