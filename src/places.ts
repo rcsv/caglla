@@ -41,8 +41,8 @@ export async function getAutocompleteSuggestions(
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': process.env.GOOGLE_API_KEY || '',
-          'X-Goog-FieldMask':
-            'suggestions.placePrediction.displayName.text,suggestions.placePrediction.placeId',
+          'X-Goog-FieldMask': '*',
+            // 'suggestions.placePrediction.displayName.text,suggestions.placePrediction.placeId',
         },
       }
     );
