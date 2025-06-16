@@ -1,9 +1,13 @@
-DROP TABLE IF EXISTS itineraries;
+
 
 CREATE TABLE itineraries (
 	id          SERIAL PRIMARY KEY,
-	travel_id   INTEGER NOT NULL REFERENCES travels(id) ON DELETE CASCADE,
-	user_id     VARCHAR(255) NOT NULL REFERENCES users(google_id) ON DELETE CASCADE,
+
+	travel_id   BIGINT UNSIGNED NOT NULL,
+	FOREIGN KEY (travel_id) REFERENCES travels(id) ON DELETE CASCADE,
+
+	user_id     VARCHAR(255) NOT NULL,
+	FOREIGN KEY (user_id) REFERENCES users(google_id) ON DELETE CASCADE,
 
 	name        VARCHAR(255) NOT NULL,
 	start_date  DATE NOT NULL,

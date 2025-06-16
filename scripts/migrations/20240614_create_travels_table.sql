@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS travels;
 
 CREATE TABLE travels (
 	id          SERIAL PRIMARY KEY,
