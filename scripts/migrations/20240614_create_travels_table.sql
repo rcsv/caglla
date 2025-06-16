@@ -1,4 +1,6 @@
 
+DROP TABLE IF EXISTS travels;
+
 CREATE TABLE travels (
 	id          SERIAL PRIMARY KEY,
 	user_id     VARCHAR(255) NOT NULL REFERENCES users(google_id) ON DELETE CASCADE,

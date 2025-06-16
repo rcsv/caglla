@@ -1,5 +1,7 @@
 
 
+DROP TABLE IF EXISTS users;
+
 CREATE TABLE users (
   id        SERIAL NOT NULL PRIMARY KEY,  -- Bubble の internal ID（UUID相当）
 

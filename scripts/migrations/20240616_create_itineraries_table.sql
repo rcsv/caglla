@@ -1,5 +1,7 @@
 
 
+DROP TABLE IF EXISTS itineraries;
+
 CREATE TABLE itineraries (
 	id          SERIAL PRIMARY KEY,
 
