@@ -1,8 +1,8 @@
 // Autocomplete functionality for venue input
 
 document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('mainVenueInput');
-  const hidden = document.querySelector('input[name="main_venue"]');
+  const input = document.getElementById('destinationInput');
+  const hidden = document.querySelector('input[name="destination"]');
   const datalist = document.getElementById('venueSuggestions');
 
   if (!input || !hidden || !datalist) return;
