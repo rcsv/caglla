@@ -1,5 +1,7 @@
 
 
+DROP TABLE IF EXISTS days;
+
 CREATE TABLE days (
 	id          SERIAL PRIMARY KEY,
 	travel_id   BIGINT UNSIGNED NOT NULL,
