@@ -17,7 +17,7 @@ import {
   deleteItinerary,
   initDb
 } from './db';
-import { findOrCreatePlace, getAutocompleteSuggestions } from './places';
+import { getAutocompleteSuggestions } from './places';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -57,23 +57,12 @@ app.get('/travels/new', ensureAuth, (req: any, res: any) => {
 });
 
 app.post('/travels', ensureAuth, async (req: any, res: any) => {
-  let mainVenue: number | null = null;
-  if (req.body.main_venue) {
-    if (/^\d+$/.test(req.body.main_venue)) {
-      mainVenue = parseInt(req.body.main_venue, 10);
-    } else {
-      try {
-        mainVenue = await findOrCreatePlace(req.body.main_venue);
-      } catch (err) {
-        console.error('Failed to create place', err);
-      }
-    }
-  }
+  const destination: string | null = req.body.destination || null;
   const travel = await createTravel(
     req.user.id,
     req.body.name,
     req.body.description || '',
-    mainVenue,
+    destination,
     req.body.date_start || null,
     req.body.date_end || null
   );
@@ -99,23 +88,12 @@ app.get('/travels/:id/edit', ensureAuth, async (req: any, res: any) => {
 app.post('/travels/:id/edit', ensureAuth, async (req: any, res: any) => {
   const travel = await getTravel(req.user.id, req.params.id);
   if (!travel) return res.sendStatus(404);
-  let mainVenue: number | null = null;
-  if (req.body.main_venue) {
-    if (/^\d+$/.test(req.body.main_venue)) {
-      mainVenue = parseInt(req.body.main_venue, 10);
-    } else {
-      try {
-        mainVenue = await findOrCreatePlace(req.body.main_venue);
-      } catch (err) {
-        console.error('Failed to create place', err);
-      }
-    }
-  }
+  const destination: string | null = req.body.destination || null;
   await updateTravel(
     travel.id,
     req.body.name,
     req.body.description || '',
-    mainVenue,
+    destination,
     req.body.date_start || null,
     req.body.date_end || null
   );

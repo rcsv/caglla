@@ -7,7 +7,7 @@
   <p><a href="/travels">Back</a> | <a href="/logout">Logout</a></p>
   <h1><%= travel.name %></h1>
   <p><%= travel.description %></p>
-  <p>Main Venue ID: <%= travel.main_venue %></p>
+  <p>Destination ID: <%= travel.destination %></p>
   <p>Start: <%= travel.date_start %> End: <%= travel.date_end %></p>
   <a href="/travels/<%= travel.id %>/edit">Edit</a>
   <form action="/travels/<%= travel.id %>/delete" method="post" style="display:inline">

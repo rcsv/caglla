@@ -5,7 +5,7 @@ export interface Travel {
   id: string;
   name: string;
   description: string | null;
-  main_venue: number | null;
+  destination: string | null;
   date_start: string | null;
   date_end: string | null;
   created_date: Date;
@@ -49,7 +49,7 @@ export async function initDb() {
   await p.query(`CREATE TABLE IF NOT EXISTS travels (
     id VARCHAR(255) PRIMARY KEY,
     user_id VARCHAR(255),
-    main_venue INT,
+    destination VARCHAR(255),
     name VARCHAR(255),
     description TEXT,
     date_start DATE,
@@ -101,7 +101,7 @@ export async function initDb() {
 export async function getTravels(userId: string): Promise<Travel[]> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    `SELECT id, name, description, main_venue, date_start, date_end, created_date, created_by, modified_date
+    `SELECT id, name, description, destination, date_start, date_end, created_date, created_by, modified_date
      FROM travels WHERE user_id = ?`,
     [userId]
   );
@@ -115,7 +115,7 @@ export async function getTravels(userId: string): Promise<Travel[]> {
       id: row.id,
       name: row.name,
       description: row.description,
-      main_venue: row.main_venue,
+      destination: row.destination,
       date_start: row.date_start,
       date_end: row.date_end,
       created_date: row.created_date,
@@ -137,7 +137,7 @@ export async function getTravels(userId: string): Promise<Travel[]> {
 export async function getTravel(userId: string, travelId: string): Promise<Travel | undefined> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    `SELECT id, name, description, main_venue, date_start, date_end, created_date, created_by, modified_date
+    `SELECT id, name, description, destination, date_start, date_end, created_date, created_by, modified_date
      FROM travels WHERE user_id = ? AND id = ?`,
     [userId, travelId]
   );
@@ -151,7 +151,7 @@ export async function getTravel(userId: string, travelId: string): Promise<Trave
     id: travelRow.id,
     name: travelRow.name,
     description: travelRow.description,
-    main_venue: travelRow.main_venue,
+    destination: travelRow.destination,
     date_start: travelRow.date_start,
     date_end: travelRow.date_end,
     created_date: travelRow.created_date,
@@ -172,7 +172,7 @@ export async function createTravel(
   userId: string,
   name: string,
   description: string,
-  mainVenue: number | null,
+  destination: string | null,
   dateStart: string | null,
   dateEnd: string | null
 ): Promise<Travel> {
@@ -180,14 +180,14 @@ export async function createTravel(
   const id = Date.now().toString();
   const now = new Date();
   await p.query(
-    'INSERT INTO travels (id, user_id, main_venue, name, description, date_start, date_end, created_date, created_by, modified_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [id, userId, mainVenue, name, description, dateStart, dateEnd, now, userId, now]
+    'INSERT INTO travels (id, user_id, destination, name, description, date_start, date_end, created_date, created_by, modified_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, userId, destination, name, description, dateStart, dateEnd, now, userId, now]
   );
   return {
     id,
     name,
     description,
-    main_venue: mainVenue,
+    destination,
     date_start: dateStart,
     date_end: dateEnd,
     created_date: now,
@@ -207,14 +207,14 @@ export async function updateTravel(
   travelId: string,
   name: string,
   description: string,
-  mainVenue: number | null,
+  destination: string | null,
   dateStart: string | null,
   dateEnd: string | null
 ) {
   const p = getPool();
   await p.query(
-    'UPDATE travels SET name = ?, description = ?, main_venue = ?, date_start = ?, date_end = ?, modified_date = ? WHERE id = ?',
-    [name, description, mainVenue, dateStart, dateEnd, new Date(), travelId]
+    'UPDATE travels SET name = ?, description = ?, destination = ?, date_start = ?, date_end = ?, modified_date = ? WHERE id = ?',
+    [name, description, destination, dateStart, dateEnd, new Date(), travelId]
   );
 }
 
