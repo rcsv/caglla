@@ -89,18 +89,34 @@ if exist "scss" (
 :: ───────────────────────────────
 :: MySQL migrations
 :: ───────────────────────────────
-where mysql >nul 2>nul
-if %errorlevel%==0 (
-  echo %echoprefix% Running migrations... >> "%LOGFILE%"
-  for %%F in ("%SCRIPT_DIR%migrations\*.sql") do (
-    if exist "%%F" (
-      echo %echoprefix% → %%F >> "%LOGFILE%"
-      mysql -h %DB_HOST% -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% < "%%F" >> "%LOGFILE%" 2>&1
+set "MYSQL_CMD="
+
+:: 優先：.envで指定されたMYSQL_PATH
+if defined MYSQL_PATH (
+  set "MYSQL_CMD=%MYSQL_PATH%"
+) else (
+  :: フォールバック：where mysql で探す
+  for /f "delims=" %%X in ('where mysql 2^>nul') do (
+    if not defined MYSQL_CMD (
+      set "MYSQL_CMD=%%X"
     )
   )
-) else (
-  echo %echoprefix% mysql not found. Skipping DB migration. >> "%LOGFILE%"
 )
+
+if not defined MYSQL_CMD (
+  echo %echoprefix% mysql not found and MYSQL_PATH not set. Skipping DB migration. >> "%LOGFILE%"
+  goto :nomysql
+)
+
+echo %echoprefix% Running migrations... >> "%LOGFILE%"
+for %%F in ("%SCRIPT_DIR%migrations\*.sql") do (
+  if exist "%%F" (
+    echo %echoprefix% → %%F >> "%LOGFILE%"
+    "%MYSQL_CMD%" -h %DB_HOST% -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% < "%%F" >> "%LOGFILE%" 2>&1
+  )
+)
+
+:nomysql
 
 :: ───────────────────────────────
 :: Final build and run
