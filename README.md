@@ -12,9 +12,7 @@ travels and their itineraries.
 npm install
 ```
 
-This will also install the `mysql2` package used for connecting to MySQL.
-
-2. Set the Google OAuth credentials as environment variables:
+2. Set the Google OAuth credentials and DB settings:
 
 ```bash
 export GOOGLE_CLIENT_ID=your-client-id
@@ -25,47 +23,106 @@ export DB_PASSWORD=db-password
 export DB_NAME=caglla
 ```
 
-You can obtain these credentials from the [Google Developer Console](https://console.developers.google.com/).
-Set the OAuth callback URL to `http://localhost:3000/auth/google/callback`.
+3. Build and run:
 
-Ensure you have a running MySQL server and create a database and user with
-permissions. Set the `DB_*` variables above to point to this server.
-
-3. Build the project:
 ```bash
 npm run build
-```
-
-4. Start the server:
-```bash
 npm start
 ```
-
-5. For testing builds that also compile SCSS, use the batch files under
-   `scripts`:
-
-   - **Unix-like systems**
-     ```bash
-     ./scripts/test_unix.sh
-     ```
-   - **Windows**
-     ```bat
-     scripts\test_windows.bat
-     ```
-
-   These scripts run TypeScript compilation, compile SCSS files in the
-   `scss` directory (if present) and then execute `npm run build && npm start`.
-
-Then open `http://localhost:3000` in your browser.
 
 ## Features
 
 - Login with Google OAuth 2.0
 - Create, read, update and delete travels
-- Create, read, update and delete itineraries within a travel
+- Create, read, update and delete itineraries (activities) within a travel
 
-User preferences such as the Google account ID, preferred currency, and whether
-to skip deletion confirmations are stored in a `users` table.
+---
 
-Travel and itinerary data are stored in a MySQL database configured via the
-`DB_*` environment variables.
+## 📘 Data Schema Overview
+
+The application follows the same data structure as the original [tabi4.me](https://tabi4.me) project.
+
+### 🧳 travels (旅行情報)
+
+| Field               | Type          | Description                            |
+|--------------------|---------------|----------------------------------------|
+| `id`               | UUID / INT    | Primary key                            |
+| `title`            | TEXT          | Trip name                              |
+| `trip_purpose`     | TEXT          | Purpose of trip (shown in PDF)         |
+| `start_date`       | DATE          | Start date                             |
+| `end_date`         | DATE          | End date                               |
+| `primary_transportation` | ENUM     | 徒歩 / バス / 電車 / 車 / 飛行機 / フェリー / 自転車 / その他 |
+| `allowed_users`    | JSON or FK[]  | Users with access permissions          |
+
+---
+
+### 📅 activities (旅程アクティビティ = itinerary)
+
+All types of travel plans are unified here.
+
+| Field           | Type       | Description                                |
+|----------------|------------|--------------------------------------------|
+| `id`           | UUID       | Primary key                                |
+| `trip_id`      | FK         | Linked trip                                |
+| `title`        | TEXT       | Activity title                             |
+| `start_time`   | DATETIME   | Start time                                 |
+| `end_time`     | DATETIME   | End time                                   |
+| `location_name`| TEXT       | Display name of location                   |
+| `place_id`     | TEXT       | Google Place ID                            |
+| `category`     | ENUM       | flight / car_rental / hotel / dining / etc |
+| `cost_amount`  | DECIMAL    | Expense amount (in local currency)         |
+| `cost_currency`| TEXT       | ISO currency code (e.g., JPY, USD)         |
+
+---
+
+### 🧑‍🤝‍🧑 companions (同行者)
+
+| Field         | Type     | Description                            |
+|--------------|----------|----------------------------------------|
+| `id`         | UUID     | Primary key                            |
+| `trip_id`    | FK       | Related trip                           |
+| `person_id`  | FK       | Linked to `persons` table              |
+
+---
+
+### 🧑 persons (人物プロフィール)
+
+| Field            | Type     | Description                         |
+|------------------|----------|-------------------------------------|
+| `id`             | UUID     | Primary key                         |
+| `first_name`     | TEXT     | First name                          |
+| `last_name`      | TEXT     | Last name                           |
+| `date_of_birth`  | DATE     | DOB (for age-based checklist)       |
+| `passport_code`  | TEXT     | Passport number                     |
+| `it_is_myself`   | BOOLEAN  | If this is the logged-in user       |
+
+---
+
+## 📄 Page Layouts (UI 構成)
+
+### index / home / dashboard
+
+- Status grouping:
+  - **BOARDING**: 次に出発する旅行（直前チェックリストあり）
+  - **ITINERARY INK**: 未来の旅行（一覧形式）
+  - **MEMORIES**: 過去の旅行（カード形式）
+
+### Trip Detail
+
+- 旅行名、目的、期間、主な交通手段（with icon）
+- 同行者一覧
+- 旅程（日毎、時系列表示）
+
+### PDF Output (旅のしおり)
+
+- 表紙、目次、チェックリスト、予約情報、日程表、緊急連絡先、メモページを含む構成
+- SelectPDF による WYSIWYG レンダリング（1024×1449px）
+
+---
+
+## ✈️ Future Extensions
+
+- Google Calendar 同期（手動 → 自動化予定）
+- Place API による POI 情報補完
+- Trip invitation / 共有機能
+- 迷子札生成（PDF付録）

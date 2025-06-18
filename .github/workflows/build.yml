@@ -1,0 +1,66 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: caglla
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Wait for MySQL to be ready
+        run: |
+          echo "Waiting for MySQL..."
+          for i in {30..0}; do
+            if mysql -h 127.0.0.1 -P 3306 -uroot -proot -e "SELECT 1" caglla &> /dev/null; then
+              echo "MySQL is up!"
+              break
+            fi
+            echo "Waiting... $i"
+            sleep 1
+          done
+          if [ "$i" = 0 ]; then
+            echo "MySQL did not start in time" >&2
+            exit 1
+          fi
+
+      - name: Run DB migrations
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -uroot -proot caglla < src/migrations/000_reset.sql
+          for file in src/migrations/*.sql; do
+            mysql -h 127.0.0.1 -P 3306 -uroot -proot caglla < "$file"
+          done
+
+      - name: Run build_and_run (test server start)
+        run: |
+          npm run dev &
+          sleep 5
+          curl -I http://localhost:3000 || (echo "Server failed to start" && exit 1)
