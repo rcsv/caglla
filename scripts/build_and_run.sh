@@ -1,8 +1,21 @@
 #!/bin/sh
-# Build and run the application safely from any working directory (macOS compatible).
+# Build and run the application safely from any working directory (macOS/Linux).
 set -e
 
 echoprefix="[build & run] "
+
+# ───────────────────────────────
+# Prepare logs directory and logfile
+# ───────────────────────────────
+timestamp=$(date +"%Y%m%d_%H%M")
+logdir="logs"
+logfile="$logdir/build_${timestamp}.log"
+
+mkdir -p "$logdir"
+
+echo "$echoprefix Logging to $logfile..."
+exec > >(tee -i "$logfile") 2>&1
+
 echo "$echoprefix Starting build and run script..."
 
 # ───────────────────────────────
@@ -14,16 +27,14 @@ cd "$PROJECT_ROOT"
 echo "$echoprefix Working from: $PROJECT_ROOT"
 
 # ───────────────────────────────
-# Load environment variables (.env, no `export`, supports quotes/whitespace)
+# Load environment variables (.env)
 # ───────────────────────────────
 load_dotenv() {
   echo "$echoprefix Loading environment variables from $1"
   while IFS='=' read -r key value; do
-    # Skip blank or comment lines
-    if [ -z "$key" ] || printf '%s' "$key" | grep -qE '^\s*#'; then
+    if [ -z "$key" ] || echo "$key" | grep -qE '^\s*#'; then
       continue
     fi
-    # Remove surrounding quotes
     value=$(printf '%s' "$value" | sed -E 's/^"(.*)"$/\1/')
     value=$(printf '%s' "$value" | sed -E "s/^'(.*)'$/\1/")
     export "$key=$value"
@@ -68,7 +79,6 @@ if command -v mysql >/dev/null; then
   for file in "$SCRIPT_DIR"/migrations/*.sql; do
     if [ -f "$file" ]; then
       echo "$echoprefix → $file"
-      echo "$echoprefix mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < $file"
       mysql --host="$DB_HOST" -u "$DB_USER" -p"$DB_PASSWORD" "$DB_NAME" < "$file"
     fi
   done
