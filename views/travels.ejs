@@ -2,31 +2,45 @@
 <html>
 <head>
   <title>Your Travels</title>
+  <link rel="stylesheet" href="/styles/travels.css">
 </head>
 <body>
-  <p><a href="/">Home</a> | <a href="/logout">Logout</a></p>
-  <h1>Travels</h1>
-  <button id="openAddDialog">Create Travel</button>
+  <div class="page-layout">
+    <aside class="sidebar--left">
+      <button id="closeSidebarBtn" class="close-btn">&times;</button>
+      <p><a href="/">Home</a> | <a href="/logout">Logout</a></p>
+    </aside>
 
-  <dialog id="addDialog">
-    <form id="addTravelForm" method="dialog">
-      <input type="text" name="name" placeholder="Name" required><br>
-      <textarea name="description" placeholder="Description"></textarea><br>
-      <input type="text" id="destinationInput" list="venueSuggestions" placeholder="Destination"><br>
-      <input type="hidden" name="destination">
-      <datalist id="venueSuggestions"></datalist>
-      <input type="date" name="date_start"><br>
-      <input type="date" name="date_end"><br>
-      <button type="submit">Create</button>
-      <button type="button" id="cancelAdd">Cancel</button>
-    </form>
-  </dialog>
+    <main class="main">
+      <button id="openSidebarBtn">Menu</button>
+      <h1>Travels</h1>
+      <button id="openAddDialog">Create Travel</button>
 
-  <ul id="travelList">
-    <% travels.forEach(function(travel){ %>
-      <li><a href="/travels/<%= travel.id %>"><%= travel.name %></a></li>
-    <% }); %>
-  </ul>
+      <dialog id="addDialog">
+        <form id="addTravelForm" method="dialog">
+          <input type="text" name="name" placeholder="Name" required><br>
+          <textarea name="description" placeholder="Description"></textarea><br>
+          <input type="text" id="destinationInput" list="venueSuggestions" placeholder="Destination"><br>
+          <input type="hidden" name="destination">
+          <datalist id="venueSuggestions"></datalist>
+          <input type="date" name="date_start"><br>
+          <input type="date" name="date_end"><br>
+          <button type="submit">Create</button>
+          <button type="button" id="cancelAdd">Cancel</button>
+        </form>
+      </dialog>
+
+      <ul id="travelList">
+        <% travels.forEach(function(travel){ %>
+          <li><a href="/travels/<%= travel.id %>"><%= travel.name %></a></li>
+        <% }); %>
+      </ul>
+    </main>
+
+    <aside class="sidebar--right">
+      <div id="map"></div>
+    </aside>
+  </div>
   <script src="/scripts/autocomplete.js"></script>
   <script src="/scripts/travels.js"></script>
 </body>

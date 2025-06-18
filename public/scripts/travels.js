@@ -4,6 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelBtn = document.getElementById('cancelAdd');
   const form = document.getElementById('addTravelForm');
   const travelList = document.getElementById('travelList');
+  const sidebar = document.querySelector('.sidebar--left');
+  const openSidebarBtn = document.getElementById('openSidebarBtn');
+  const closeSidebarBtn = document.getElementById('closeSidebarBtn');
 
   openBtn?.addEventListener('click', () => {
     dialog.showModal();
@@ -49,5 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       alert('Failed to create travel');
     }
+  });
+
+  openSidebarBtn?.addEventListener('click', () => {
+    sidebar?.classList.add('open');
+  });
+
+  closeSidebarBtn?.addEventListener('click', () => {
+    sidebar?.classList.remove('open');
   });
 });
