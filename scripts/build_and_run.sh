@@ -35,6 +35,11 @@ load_dotenv() {
     if [ -z "$key" ] || echo "$key" | grep -qE '^\s*#'; then
       continue
     fi
+    # export しない行をスキップ（keyが空とかスペースのみ）
+    if ! echo "$key" | grep -qE '^[A-Za-z_][A-Za-z0-9_]*$'; then
+      echo "$echoprefix ⚠ Invalid .env line skipped: $key"
+      continue
+    fi
     value=$(printf '%s' "$value" | sed -E 's/^"(.*)"$/\1/')
     value=$(printf '%s' "$value" | sed -E "s/^'(.*)'$/\1/")
     export "$key=$value"

@@ -6,8 +6,8 @@ export interface Travel {
   name: string;
   description: string | null;
   destination: string | null;
-  date_start: string | null;
-  date_end: string | null;
+  start_date: Date | null;
+  end_date: Date | null;
   created_at: Date;
   updated_at: Date;
   itineraries: Itinerary[];
@@ -114,8 +114,8 @@ export async function getTravels(userId: string): Promise<Travel[]> {
       name: row.name,
       description: row.description,
       destination: row.destination,
-      date_start: row.date_start,
-      date_end: row.date_end,
+      start_date: row.start_date,
+      end_date: row.end_date,
       created_at: row.created_at,
       updated_at: row.updated_at,
       itineraries,
@@ -149,8 +149,8 @@ export async function getTravel(userId: string, travelId: string): Promise<Trave
     name: travelRow.name,
     description: travelRow.description,
     destination: travelRow.destination,
-    date_start: travelRow.date_start,
-    date_end: travelRow.date_end,
+    start_date: travelRow.start_date,
+    end_date: travelRow.end_date,
     created_at: travelRow.created_at,
     updated_at: travelRow.updated_at,
     itineraries,
@@ -169,23 +169,40 @@ export async function createTravel(
   name: string,
   description: string,
   destination: string | null,
-  dateStart: string | null,
-  dateEnd: string | null
+  start_date: Date | null,
+  end_date: Date | null
 ): Promise<Travel> {
   const p = getPool();
   const id = Date.now().toString();
   const now = new Date();
-  await p.query(
-    'INSERT INTO travels (id, user_id, destination, name, description, date_start, date_end, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [id, userId, destination, name, description, dateStart, dateEnd, now, now]
-  );
+
+  // create param
+  const str_sql = `
+    INSERT INTO travels (
+      id, user_id, destination, name, description,
+      start_date, end_date, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  const params = [
+    id, userId, destination,
+    name, description,
+    start_date, end_date,
+    now, now
+  ];
+  // ① mysql2.format で完全に置換された SQL を作ってログに出す
+  const escaped = mysql.format(str_sql, params);
+  console.log('▶︎ Executing SQL:', escaped);
+
+  // ② そのまま実行
+  await p.query(str_sql, params);
   return {
     id,
     name,
     description,
     destination,
-    date_start: dateStart,
-    date_end: dateEnd,
+    start_date: start_date,
+    end_date: end_date,
     created_at: now,
     updated_at: now,
     itineraries: [],
@@ -203,13 +220,13 @@ export async function updateTravel(
   name: string,
   description: string,
   destination: string | null,
-  dateStart: string | null,
-  dateEnd: string | null
+  start_date: Date | null,
+  end_date: Date | null
 ) {
   const p = getPool();
   await p.query(
-    'UPDATE travels SET name = ?, description = ?, destination = ?, date_start = ?, date_end = ?, updated_at = ? WHERE id = ?',
-    [name, description, destination, dateStart, dateEnd, new Date(), travelId]
+    'UPDATE travels SET name = ?, description = ?, destination = ?, start_date = ?, end_date = ?, updated_at = ? WHERE id = ?',
+    [name, description, destination, start_date, end_date, new Date(), travelId]
   );
 }
 

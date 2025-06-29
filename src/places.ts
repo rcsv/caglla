@@ -42,15 +42,22 @@ export async function getAutocompleteSuggestions(
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': process.env.GOOGLE_API_KEY || '',
           'X-Goog-FieldMask': '*',
-            // 'suggestions.placePrediction.displayName.text,suggestions.placePrediction.placeId',
         },
       }
     );
+
     const suggestions = response.data.suggestions || [];
-    return suggestions.map((s: any) => ({
-      place_id: s.placePrediction.placeId,
-      description: s.placePrediction.displayName.text,
-    }));
+
+    return suggestions
+      .filter(
+        (s: any) =>
+          s?.placePrediction?.placeId &&
+          s?.placePrediction?.displayName?.text
+      )
+      .map((s: any) => ({
+        place_id: s.placePrediction.placeId,
+        description: s.placePrediction.displayName.text,
+      }));
   } catch (err: any) {
     console.error('Error fetching place autocomplete:', err.response?.data || err);
     throw err;

@@ -1,4 +1,4 @@
-@echo off
+:: @echo off
 chcp 65001 >nul
 setlocal EnableDelayedExpansion
 
@@ -112,7 +112,7 @@ echo %echoprefix% Running migrations... >> "%LOGFILE%"
 for %%F in ("%SCRIPT_DIR%migrations\*.sql") do (
   if exist "%%F" (
     echo %echoprefix% → %%F >> "%LOGFILE%"
-    "%MYSQL_CMD%" -h %DB_HOST% -u %DB_USER% -p%DB_PASSWORD% %DB_NAME% < "%%F" >> "%LOGFILE%" 2>&1
+    "%MYSQL_CMD%" -h %DB_HOST% -u %DB_USER% -p %DB_PASSWORD% %DB_NAME% < "%%F" >> "%LOGFILE%" 2>&1
   )
 )
 

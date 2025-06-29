@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const name = nameInput.value.trim();
     if (!name) return;
     const description = form.querySelector('textarea[name="description"]').value.trim();
-    const destination = form.querySelector('input[name="destination"]').value.trim();
+    const destinationInput = form.querySelector('input[name="destination"]');
+    const destination = destinationInput.value.trim();
     const start_date = form.querySelector('input[name="start_date"]').value;
     const end_date = form.querySelector('input[name="end_date"]').value;
     const res = await fetch('/travels', {
@@ -36,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         description,
         destination: destination || null,
         start_date: start_date || null,
-        end_date: start_date || null
+        end_date: end_date || null
       })
     });
     if (res.ok) {
