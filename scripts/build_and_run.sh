@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Build and run the application safely from any working directory (macOS/Linux).
 set -e
 
