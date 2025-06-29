@@ -63,8 +63,8 @@ app.post('/travels', ensureAuth, async (req: any, res: any) => {
     req.body.name,
     req.body.description || '',
     destination,
-    req.body.date_start || null,
-    req.body.date_end || null
+    req.body.start_date || null,
+    req.body.end_date || null
   );
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
     res.json(travel);
@@ -94,8 +94,8 @@ app.post('/travels/:id/edit', ensureAuth, async (req: any, res: any) => {
     req.body.name,
     req.body.description || '',
     destination,
-    req.body.date_start || null,
-    req.body.date_end || null
+    req.body.start_date || null,
+    req.body.end_date || null
   );
   res.redirect('/travels/' + travel.id);
 });

@@ -9,8 +9,8 @@
     <input type="text" name="name" value="<%= travel.name %>" required><br>
     <textarea name="description"><%= travel.description %></textarea><br>
     <input type="text" name="destination" value="<%= travel.destination %>"><br>
-    <input type="date" name="date_start" value="<%= travel.date_start %>"><br>
-    <input type="date" name="date_end" value="<%= travel.date_end %>"><br>
+    <input type="date" name="start_date" value="<%= travel.start_date %>"><br>
+    <input type="date" name="end_date" value="<%= travel.end_date %>"><br>
     <button type="submit">Save</button>
   </form>
   <p><a href="/travels/<%= travel.id %>">Back</a></p>

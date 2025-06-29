@@ -8,7 +8,7 @@
   <h1><%= travel.name %></h1>
   <p><%= travel.description %></p>
   <p>Destination ID: <%= travel.destination %></p>
-  <p>Start: <%= travel.date_start %> End: <%= travel.date_end %></p>
+  <p>Start: <%= travel.start_date %> End: <%= travel.end_date %></p>
   <a href="/travels/<%= travel.id %>/edit">Edit</a>
   <form action="/travels/<%= travel.id %>/delete" method="post" style="display:inline">
     <button type="submit">Delete</button>
