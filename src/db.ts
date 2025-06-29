@@ -8,9 +8,8 @@ export interface Travel {
   destination: string | null;
   date_start: string | null;
   date_end: string | null;
-  created_date: Date;
-  created_by: string;
-  modified_date: Date;
+  created_at: Date;
+  updated_at: Date;
   itineraries: Itinerary[];
 }
 export interface UserSettings {
@@ -52,11 +51,10 @@ export async function initDb() {
     destination VARCHAR(255),
     name VARCHAR(255),
     description TEXT,
-    date_start DATE,
-    date_end DATE,
-    created_date DATETIME,
-    created_by VARCHAR(255),
-    modified_date DATETIME
+    start_date DATE,
+    end_date DATE,
+    created_at DATETIME,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   )`);
 
   await p.query(`CREATE TABLE IF NOT EXISTS itineraries (
@@ -101,7 +99,7 @@ export async function initDb() {
 export async function getTravels(userId: string): Promise<Travel[]> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    `SELECT id, name, description, destination, date_start, date_end, created_date, created_by, modified_date
+    `SELECT id, name, description, destination, start_date, end_date, created_at, updated_at
      FROM travels WHERE user_id = ?`,
     [userId]
   );
@@ -118,9 +116,8 @@ export async function getTravels(userId: string): Promise<Travel[]> {
       destination: row.destination,
       date_start: row.date_start,
       date_end: row.date_end,
-      created_date: row.created_date,
-      created_by: row.created_by,
-      modified_date: row.modified_date,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
       itineraries,
     });
   }
@@ -137,7 +134,7 @@ export async function getTravels(userId: string): Promise<Travel[]> {
 export async function getTravel(userId: string, travelId: string): Promise<Travel | undefined> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    `SELECT id, name, description, destination, date_start, date_end, created_date, created_by, modified_date
+    `SELECT id, name, description, destination, date_start, date_end, created_at, updated_at
      FROM travels WHERE user_id = ? AND id = ?`,
     [userId, travelId]
   );
@@ -154,9 +151,8 @@ export async function getTravel(userId: string, travelId: string): Promise<Trave
     destination: travelRow.destination,
     date_start: travelRow.date_start,
     date_end: travelRow.date_end,
-    created_date: travelRow.created_date,
-    created_by: travelRow.created_by,
-    modified_date: travelRow.modified_date,
+    created_at: travelRow.created_at,
+    updated_at: travelRow.updated_at,
     itineraries,
   };
 }
@@ -180,8 +176,8 @@ export async function createTravel(
   const id = Date.now().toString();
   const now = new Date();
   await p.query(
-    'INSERT INTO travels (id, user_id, destination, name, description, date_start, date_end, created_date, created_by, modified_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [id, userId, destination, name, description, dateStart, dateEnd, now, userId, now]
+    'INSERT INTO travels (id, user_id, destination, name, description, date_start, date_end, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, userId, destination, name, description, dateStart, dateEnd, now, now]
   );
   return {
     id,
@@ -190,9 +186,8 @@ export async function createTravel(
     destination,
     date_start: dateStart,
     date_end: dateEnd,
-    created_date: now,
-    created_by: userId,
-    modified_date: now,
+    created_at: now,
+    updated_at: now,
     itineraries: [],
   };
 }
@@ -213,7 +208,7 @@ export async function updateTravel(
 ) {
   const p = getPool();
   await p.query(
-    'UPDATE travels SET name = ?, description = ?, destination = ?, date_start = ?, date_end = ?, modified_date = ? WHERE id = ?',
+    'UPDATE travels SET name = ?, description = ?, destination = ?, date_start = ?, date_end = ?, updated_at = ? WHERE id = ?',
     [name, description, destination, dateStart, dateEnd, new Date(), travelId]
   );
 }
