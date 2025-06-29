@@ -1,3 +1,4 @@
+import * as mysql from 'mysql2';
 import { createPool, Pool } from 'mysql2/promise';
 
 export interface Itinerary { id: string; title: string; content: string; }
