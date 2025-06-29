@@ -6,8 +6,8 @@ export interface Travel {
   name: string;
   description: string | null;
   destination: string | null;
-  date_start: string | null;
-  date_end: string | null;
+  start_date: string | null;
+  end_date: string | null;
   created_date: Date;
   created_by: string;
   modified_date: Date;
@@ -52,8 +52,8 @@ export async function initDb() {
     destination VARCHAR(255),
     name VARCHAR(255),
     description TEXT,
-    date_start DATE,
-    date_end DATE,
+    start_date DATE,
+    end_date DATE,
     created_date DATETIME,
     created_by VARCHAR(255),
     modified_date DATETIME
@@ -101,7 +101,7 @@ export async function initDb() {
 export async function getTravels(userId: string): Promise<Travel[]> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    `SELECT id, name, description, destination, date_start, date_end, created_date, created_by, modified_date
+    `SELECT id, name, description, destination, start_date, end_date, created_date, created_by, modified_date
      FROM travels WHERE user_id = ?`,
     [userId]
   );
@@ -116,8 +116,8 @@ export async function getTravels(userId: string): Promise<Travel[]> {
       name: row.name,
       description: row.description,
       destination: row.destination,
-      date_start: row.date_start,
-      date_end: row.date_end,
+      start_date: row.start_date,
+      end_date: row.end_date,
       created_date: row.created_date,
       created_by: row.created_by,
       modified_date: row.modified_date,
@@ -137,7 +137,7 @@ export async function getTravels(userId: string): Promise<Travel[]> {
 export async function getTravel(userId: string, travelId: string): Promise<Travel | undefined> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    `SELECT id, name, description, destination, date_start, date_end, created_date, created_by, modified_date
+    `SELECT id, name, description, destination, start_date, end_date, created_date, created_by, modified_date
      FROM travels WHERE user_id = ? AND id = ?`,
     [userId, travelId]
   );
@@ -152,8 +152,8 @@ export async function getTravel(userId: string, travelId: string): Promise<Trave
     name: travelRow.name,
     description: travelRow.description,
     destination: travelRow.destination,
-    date_start: travelRow.date_start,
-    date_end: travelRow.date_end,
+    start_date: travelRow.start_date,
+    end_date: travelRow.end_date,
     created_date: travelRow.created_date,
     created_by: travelRow.created_by,
     modified_date: travelRow.modified_date,
@@ -173,23 +173,23 @@ export async function createTravel(
   name: string,
   description: string,
   destination: string | null,
-  dateStart: string | null,
-  dateEnd: string | null
+  startDate: string | null,
+  endDate: string | null
 ): Promise<Travel> {
   const p = getPool();
   const id = Date.now().toString();
   const now = new Date();
   await p.query(
-    'INSERT INTO travels (id, user_id, destination, name, description, date_start, date_end, created_date, created_by, modified_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [id, userId, destination, name, description, dateStart, dateEnd, now, userId, now]
+    'INSERT INTO travels (id, user_id, destination, name, description, start_date, end_date, created_date, created_by, modified_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, userId, destination, name, description, startDate, endDate, now, userId, now]
   );
   return {
     id,
     name,
     description,
     destination,
-    date_start: dateStart,
-    date_end: dateEnd,
+    start_date: startDate,
+    end_date: endDate,
     created_date: now,
     created_by: userId,
     modified_date: now,
@@ -208,13 +208,13 @@ export async function updateTravel(
   name: string,
   description: string,
   destination: string | null,
-  dateStart: string | null,
-  dateEnd: string | null
+  startDate: string | null,
+  endDate: string | null
 ) {
   const p = getPool();
   await p.query(
-    'UPDATE travels SET name = ?, description = ?, destination = ?, date_start = ?, date_end = ?, modified_date = ? WHERE id = ?',
-    [name, description, destination, dateStart, dateEnd, new Date(), travelId]
+    'UPDATE travels SET name = ?, description = ?, destination = ?, start_date = ?, end_date = ?, modified_date = ? WHERE id = ?',
+    [name, description, destination, startDate, endDate, new Date(), travelId]
   );
 }
 
