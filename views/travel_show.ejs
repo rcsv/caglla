@@ -13,6 +13,20 @@
   <form action="/travels/<%= travel.id %>/delete" method="post" style="display:inline">
     <button type="submit">Delete</button>
   </form>
+
+  <% if (travel.days && travel.days.length) { %>
+    <h2>Days</h2>
+    <ul>
+      <% travel.days.forEach(function(day) { %>
+        <li>
+          Day <%= day.day_number %>: <%= day.date.toISOString().slice(0, 10) %>
+          <% if (day.description) { %>
+            - <%= day.description %>
+          <% } %>
+        </li>
+      <% }); %>
+    </ul>
+  <% } %>
   <h2>Itineraries</h2>
   <button id="openAddItineraryDialog">Add Itinerary</button>
 

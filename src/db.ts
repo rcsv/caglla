@@ -12,6 +12,7 @@ export interface Travel {
   created_at: Date;
   updated_at: Date;
   itineraries: Itinerary[];
+  days?: Day[];
 }
 
 export interface Day {
@@ -197,6 +198,7 @@ export async function getTravel(userId: string, travelId: string): Promise<Trave
     'SELECT id, name, destination FROM itineraries WHERE travel_id = ?',
     [travelId]
   );
+  const days = await getDays(travelId, userId);
   return {
     id: travelRow.id,
     name: travelRow.name,
@@ -207,6 +209,7 @@ export async function getTravel(userId: string, travelId: string): Promise<Trave
     created_at: travelRow.created_at,
     updated_at: travelRow.updated_at,
     itineraries,
+    days,
   };
 }
 
@@ -324,6 +327,24 @@ export async function getItinerary(travelId: string, itineraryId: string): Promi
     [travelId, itineraryId]
   );
   return rows[0];
+}
+
+export async function getDays(travelId: string, userId: string): Promise<Day[]> {
+  const p = getPool();
+  const [rows] = await p.query<any[]>(
+    'SELECT id, travel_id, user_id, day_number, date, description, created_at, updated_at FROM days WHERE travel_id = ? AND user_id = ? ORDER BY day_number',
+    [travelId, userId]
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    travel_id: row.travel_id,
+    user_id: row.user_id,
+    day_number: row.day_number,
+    date: row.date,
+    description: row.description,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }));
 }
 
 /**
