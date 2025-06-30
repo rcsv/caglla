@@ -1,7 +1,7 @@
 import * as mysql from 'mysql2';
 import { createPool, Pool } from 'mysql2/promise';
 
-export interface Itinerary { id: string; title: string; content: string; }
+export interface Itinerary { id: string; name: string; destination: string; }
 export interface Travel {
   id: string;
   name: string;
@@ -61,8 +61,8 @@ export async function initDb() {
   await p.query(`CREATE TABLE IF NOT EXISTS itineraries (
     id VARCHAR(255) PRIMARY KEY,
     travel_id VARCHAR(255),
-    title VARCHAR(255),
-    content TEXT
+    name VARCHAR(255),
+    destination TEXT
   )`);
 
   await p.query(`CREATE TABLE IF NOT EXISTS users (
@@ -107,7 +107,7 @@ export async function getTravels(userId: string): Promise<Travel[]> {
   const travels: Travel[] = [];
   for (const row of rows) {
     const [itineraries] = await p.query<any[]>(
-      'SELECT id, title, content FROM itineraries WHERE travel_id = ?',
+      'SELECT id, name, destination FROM itineraries WHERE travel_id = ?',
       [row.id]
     );
     travels.push({
@@ -135,14 +135,14 @@ export async function getTravels(userId: string): Promise<Travel[]> {
 export async function getTravel(userId: string, travelId: string): Promise<Travel | undefined> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    `SELECT id, name, description, destination, date_start, date_end, created_at, updated_at
+    `SELECT id, name, description, destination, start_date, end_date, created_at, updated_at
      FROM travels WHERE user_id = ? AND id = ?`,
     [userId, travelId]
   );
   const travelRow = rows[0];
   if (!travelRow) return undefined;
   const [itineraries] = await p.query<any[]>(
-    'SELECT id, title, content FROM itineraries WHERE travel_id = ?',
+    'SELECT id, name, destination FROM itineraries WHERE travel_id = ?',
     [travelId]
   );
   return {
@@ -246,15 +246,15 @@ export async function deleteTravel(travelId: string) {
  * Creates a new itinerary in the specified travel and returns the created itinerary.
  *
  * @param travelId - The ID of the travel to which the itinerary will be added.
- * @param title - The title of the new itinerary.
- * @param content - The content of the new itinerary.
+ * @param name - The title of the new itinerary.
+ * @param destination - The content of the new itinerary.
  * @returns The created {@link Itinerary} object.
  */
-export async function createItinerary(travelId: string, title: string, content: string): Promise<Itinerary> {
+export async function createItinerary(travelId: string, name: string, destination: string): Promise<Itinerary> {
   const p = getPool();
   const id = Date.now().toString();
-  await p.query('INSERT INTO itineraries (id, travel_id, title, content) VALUES (?, ?, ?, ?)', [id, travelId, title, content]);
-  return { id, title, content };
+  await p.query('INSERT INTO itineraries (id, travel_id, name, destination) VALUES (?, ?, ?, ?)', [id, travelId, name, destination]);
+  return { id, name, destination };
 }
 
 /**
@@ -267,22 +267,22 @@ export async function createItinerary(travelId: string, title: string, content: 
 export async function getItinerary(travelId: string, itineraryId: string): Promise<Itinerary | undefined> {
   const p = getPool();
   const [rows] = await p.query<any[]>(
-    'SELECT id, title, content FROM itineraries WHERE travel_id = ? AND id = ?',
+    'SELECT id, name, destination FROM itineraries WHERE travel_id = ? AND id = ?',
     [travelId, itineraryId]
   );
   return rows[0];
 }
 
 /**
- * Updates the title and content of a itinerary identified by its ID.
+ * Updates the name and destination of a itinerary identified by its ID.
  *
  * @param itineraryId - The unique identifier of the itinerary to update.
- * @param title - The new title for the itinerary.
- * @param content - The new content for the itinerary.
+ * @param name - The new title for the itinerary.
+ * @param destination - The new content for the itinerary.
  */
-export async function updateItinerary(itineraryId: string, title: string, content: string) {
+export async function updateItinerary(itineraryId: string, name: string, destination: string) {
   const p = getPool();
-  await p.query('UPDATE itineraries SET title = ?, content = ? WHERE id = ?', [title, content, itineraryId]);
+  await p.query('UPDATE itineraries SET name = ?, destination = ? WHERE id = ?', [name, destination, itineraryId]);
 }
 
 /**

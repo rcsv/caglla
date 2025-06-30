@@ -117,7 +117,7 @@ app.get('/travels/:travelId/itineraries/new', ensureAuth, async (req: any, res: 
 app.post('/travels/:travelId/itineraries', ensureAuth, async (req: any, res: any) => {
   const travel = await getTravel(req.user.id, req.params.travelId);
   if (!travel) return res.sendStatus(404);
-  const itinerary = await createItinerary(travel.id, req.body.title, req.body.content);
+  const itinerary = await createItinerary(travel.id, req.body.name, req.body.destination);
 
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
     res.json(itinerary);
@@ -151,10 +151,10 @@ app.post('/travels/:travelId/itineraries/:itineraryId/edit', ensureAuth, async (
   if (!travel) return res.sendStatus(404);
   const itinerary = await getItinerary(travel.id, req.params.itineraryId);
   if (!itinerary) return res.sendStatus(404);
-  await updateItinerary(itinerary.id, req.body.title, req.body.content);
+  await updateItinerary(itinerary.id, req.body.name, req.body.content);
 
   if (req.headers.accept && req.headers.accept.includes('application/json')) {
-    res.json({ id: itinerary.id, title: req.body.title, content: req.body.content });
+    res.json({ id: itinerary.id, name: req.body.name, destination: req.body.destination });
   } else {
     res.redirect('/travels/' + travel.id + '/itineraries/' + itinerary.id);
   }

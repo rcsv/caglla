@@ -22,16 +22,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   addForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const title = addForm.querySelector('input[name="title"]').value.trim();
-    const content = addForm.querySelector('textarea[name="content"]').value.trim();
-    if (!title || !content) return;
+    const name = addForm.querySelector('input[name="name"]').value.trim();
+    const destination = addForm.querySelector('textarea[name="destination"]').value.trim();
+    if (!name || !destination) return;
     const res = await fetch(`/travels/${travelId}/itineraries`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ title, content })
+      body: JSON.stringify({ name, destination })
     });
     if (res.ok) {
       const itinerary = await res.json();
@@ -90,15 +90,15 @@ document.addEventListener('DOMContentLoaded', () => {
   editForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!currentEditId) return;
-    const title = editForm.querySelector('input[name="title"]').value.trim();
-    const content = editForm.querySelector('textarea[name="content"]').value.trim();
+    const name = editForm.querySelector('input[name="name"]').value.trim();
+    const destination = editForm.querySelector('textarea[name="destination"]').value.trim();
     const res = await fetch(`/travels/${travelId}/itineraries/${currentEditId}/edit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      body: JSON.stringify({ title, content })
+      body: JSON.stringify({ name, destination })
     });
     if (res.ok) {
       const itinerary = await res.json();
