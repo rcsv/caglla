@@ -130,13 +130,15 @@ export async function initDb() {
   )`);
 
   await p.query(`CREATE TABLE IF NOT EXISTS days (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    travel_id VARCHAR(255) NOT NULL,
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    travel_id BIGINT UNSIGNED NOT NULL,
+    FOREIGN KEY (travel_id) REFERENCES travels(id) ON DELETE CASCADE,
     user_id VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(google_id) ON DELETE CASCADE,
     day_number INT NOT NULL,
     date DATE NOT NULL,
     description TEXT,
-    created_at DATETIME,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   )`);
 }
