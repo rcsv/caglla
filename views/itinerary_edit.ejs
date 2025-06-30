@@ -6,8 +6,8 @@
 <body>
   <h1>Edit Itinerary</h1>
   <form action="/travels/<%= travelId %>/itineraries/<%= itinerary.id %>/edit" method="post">
-    <input type="text" name="title" value="<%= itinerary.title %>" required><br>
-    <textarea name="content" required><%= itinerary.content %></textarea><br>
+    <input type="text" name="name" value="<%= itinerary.name %>" required><br>
+    <textarea name="destination" required><%= itinerary.destination %></textarea><br>
     <button type="submit">Save</button>
   </form>
   <p><a href="/travels/<%= travelId %>/itineraries/<%= itinerary.id %>">Back</a></p>
