@@ -13,6 +13,45 @@ export interface Travel {
   updated_at: Date;
   itineraries: Itinerary[];
 }
+
+export interface Day {
+  id: number;
+  travel_id: string;
+  user_id: string;
+  day_number: number;
+  date: Date;
+  description: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+async function createDaysForTravel(
+  travelId: string,
+  userId: string,
+  startDate: Date | null,
+  endDate: Date | null
+) {
+  if (!startDate || !endDate) return;
+  const p = getPool();
+  let current = new Date(startDate);
+  let day = 1;
+  while (current <= endDate) {
+    await p.query(
+      'INSERT INTO days (travel_id, user_id, day_number, date, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [
+        travelId,
+        userId,
+        day,
+        current,
+        null,
+        new Date(),
+        new Date(),
+      ]
+    );
+    current.setDate(current.getDate() + 1);
+    day += 1;
+  }
+}
 export interface UserSettings {
   google_id: string;
   preferred_currency: string | null;
@@ -87,6 +126,17 @@ export async function initDb() {
     international_phone_number VARCHAR(50),
     website VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  )`);
+
+  await p.query(`CREATE TABLE IF NOT EXISTS days (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    travel_id VARCHAR(255) NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
+    day_number INT NOT NULL,
+    date DATE NOT NULL,
+    description TEXT,
+    created_at DATETIME,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   )`);
 }
@@ -197,6 +247,7 @@ export async function createTravel(
 
   // ② そのまま実行
   await p.query(str_sql, params);
+  await createDaysForTravel(id, userId, start_date, end_date);
   return {
     id,
     name,
