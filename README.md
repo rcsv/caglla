@@ -1,40 +1,148 @@
 # Caglla Travel Manager
 
-This is a simple Node.js web application that provides personal travel management for each user.
-Authentication is handled via Google OAuth 2.0 and users can perform CRUD operations on
-travels and their itineraries.
+Next.js + TypeScript + Firebase で構築された旅行管理アプリケーションです。
+wanderlogのような機能を提供し、個人の旅行計画を管理できます。
 
-## Setup
+## 🚀 技術スタック
 
-1. Install dependencies:
+- **フロントエンド**: Next.js 14 (App Router), React 18, TypeScript
+- **認証**: Firebase Authentication (Google OAuth)
+- **データベース**: MySQL
+- **スタイリング**: Tailwind CSS
+- **デプロイ**: Vercel (推奨)
+
+## 📋 機能
+
+- 🔐 Firebase Google OAuth認証
+- ✈️ 旅行の作成・編集・削除
+- 📅 日程管理（日別スケジュール）
+- 🗺️ 旅程管理（アクティビティ）
+- 👥 旅行の共有機能（公開/非公開）
+- 📱 レスポンシブデザイン
+- ⚡ SPA機能（リアルタイム編集）
+
+## 🛠️ セットアップ
+
+### 1. 依存関係のインストール
 
 ```bash
 npm install
 ```
 
-2. Set the Google OAuth credentials and DB settings:
+### 2. 環境変数の設定
+
+`.env.local` ファイルを作成し、以下の変数を設定してください：
 
 ```bash
-export GOOGLE_CLIENT_ID=your-client-id
-export GOOGLE_CLIENT_SECRET=your-client-secret
-export DB_HOST=localhost
-export DB_USER=db-user
-export DB_PASSWORD=db-password
-export DB_NAME=caglla
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+
+# Database Configuration
+DB_HOST=localhost
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=caglla_db
 ```
 
-3. Build and run:
+### 3. データベースの初期化
 
 ```bash
-npm run build
-npm start
+# マイグレーションの実行
+curl -X POST http://localhost:3000/api/migrate
 ```
 
-## Features
+### 4. 開発サーバーの起動
 
-- Login with Google OAuth 2.0
-- Create, read, update and delete travels
-- Create, read, update and delete itineraries (activities) within a travel
+```bash
+npm run dev
+```
+
+アプリケーションは http://localhost:3000 で起動します。
+
+## 📁 プロジェクト構造
+
+```
+├── app/                    # Next.js App Router
+│   ├── api/               # API ルート
+│   ├── home/              # ホームページ
+│   ├── trip/              # 旅行管理ページ
+│   └── user/              # ユーザープロフィール
+├── components/             # React コンポーネント
+├── lib/                   # ユーティリティ・設定
+│   ├── auth-context.tsx   # 認証コンテキスト
+│   ├── database.ts        # データベース接続
+│   └── firebase.ts        # Firebase設定
+└── scripts/migrations/    # データベースマイグレーション
+```
+
+## 🗄️ データベーススキーマ
+
+### users (ユーザー)
+- `google_id`: GoogleアカウントID
+- `name`: ユーザー名
+- `email`: メールアドレス
+- `preferred_currency`: 通貨設定
+- `skip_confirm_delete`: 削除確認スキップ設定
+
+### trips (旅行)
+- `id`: 旅行ID
+- `user_id`: ユーザーID
+- `title`: 旅行タイトル
+- `description`: 説明
+- `destination`: 目的地
+- `start_date`: 出発日
+- `end_date`: 帰宅日
+- `access_level`: 公開レベル (private/public)
+
+### days (日程)
+- `id`: 日程ID
+- `trip_id`: 旅行ID
+- `day_number`: 日数
+- `date`: 日付
+- `description`: 説明
+
+### itineraries (旅程)
+- `id`: 旅程ID
+- `day_id`: 日程ID
+- `sort_number`: 並び順
+- `title`: タイトル
+- `description`: 説明
+- `location`: 場所
+- `start_time`: 開始時間
+- `end_time`: 終了時間
+
+### trip_user (旅行共有)
+- `trip_id`: 旅行ID
+- `user_id`: ユーザーID
+
+## 🔗 API エンドポイント
+
+- `GET /api/trips` - 旅行一覧取得
+- `POST /api/trips` - 旅行作成
+- `GET /api/trip/[id]` - 旅行詳細取得
+- `PUT /api/trip/[id]` - 旅行更新
+- `DELETE /api/trip/[id]` - 旅行削除
+- `GET /api/trip/[id]/day` - 日程一覧取得
+- `POST /api/trip/[id]/day` - 日程作成
+
+## 🚀 デプロイ
+
+### Vercel (推奨)
+
+1. GitHubリポジトリをVercelに接続
+2. 環境変数を設定
+3. 自動デプロイが開始されます
+
+### その他のプラットフォーム
+
+- **Netlify**: Next.js対応
+- **Railway**: データベース込みでデプロイ可能
+- **AWS/GCP**: カスタムサーバー環境
 
 ---
 
