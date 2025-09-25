@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection rules
+    match /users/{userId} {
+      // Users can read and write their own data
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.google_id;
+      // Allow creation for new users
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.google_id;
+    }
+    
+    // Trips collection rules
+    match /trips/{tripId} {
+      // Trip owner can read and write
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.user_id || 
+         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         request.auth.uid == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.google_id);
+      
+      // Allow creation for authenticated users
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.user_id;
+      
+      // Public trips can be read by anyone
+      allow read: if resource.data.access_level == 'public';
+      
+      // Check if user has access through trip_users collection
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/trip_users/$(tripId + '_' + request.auth.uid));
+    }
+    
+    // Days collection rules
+    match /days/{dayId} {
+      // Users can access days if they have access to the parent trip
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/trips/$(resource.data.trip_id)) &&
+        (request.auth.uid == get(/databases/$(database)/documents/trips/$(resource.data.trip_id)).data.user_id ||
+         get(/databases/$(database)/documents/trips/$(resource.data.trip_id)).data.access_level == 'public' ||
+         exists(/databases/$(database)/documents/trip_users/$(resource.data.trip_id + '_' + request.auth.uid)));
+      
+      // Allow creation for trip owners
+      allow create: if request.auth != null && 
+        exists(/databases/$(database)/documents/trips/$(request.resource.data.trip_id)) &&
+        request.auth.uid == get(/databases/$(database)/documents/trips/$(request.resource.data.trip_id)).data.user_id;
+    }
+    
+    // Itineraries collection rules
+    match /itineraries/{itineraryId} {
+      // Users can access itineraries if they have access to the parent day's trip
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/days/$(resource.data.day_id)) &&
+        exists(/databases/$(database)/documents/trips/$(get(/databases/$(database)/documents/days/$(resource.data.day_id)).data.trip_id)) &&
+        (request.auth.uid == get(/databases/$(database)/documents/trips/$(get(/databases/$(database)/documents/days/$(resource.data.day_id)).data.trip_id)).data.user_id ||
+         get(/databases/$(database)/documents/trips/$(get(/databases/$(database)/documents/days/$(resource.data.day_id)).data.trip_id)).data.access_level == 'public' ||
+         exists(/databases/$(database)/documents/trip_users/$(get(/databases/$(database)/documents/days/$(resource.data.day_id)).data.trip_id + '_' + request.auth.uid)));
+      
+      // Allow creation for trip owners
+      allow create: if request.auth != null && 
+        exists(/databases/$(database)/documents/days/$(request.resource.data.day_id)) &&
+        exists(/databases/$(database)/documents/trips/$(get(/databases/$(database)/documents/days/$(request.resource.data.day_id)).data.trip_id)) &&
+        request.auth.uid == get(/databases/$(database)/documents/trips/$(get(/databases/$(database)/documents/days/$(request.resource.data.day_id)).data.trip_id)).data.user_id;
+    }
+    
+    // Trip users collection rules (for sharing)
+    match /trip_users/{tripUserId} {
+      // Trip owners can manage shared users
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/trips/$(resource.data.trip_id)) &&
+        request.auth.uid == get(/databases/$(database)/documents/trips/$(resource.data.trip_id)).data.user_id;
+      
+      // Allow creation for trip owners
+      allow create: if request.auth != null && 
+        exists(/databases/$(database)/documents/trips/$(request.resource.data.trip_id)) &&
+        request.auth.uid == get(/databases/$(database)/documents/trips/$(request.resource.data.trip_id)).data.user_id;
+      
+      // Shared users can read their own access records
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.user_id;
+    }
+  }
+}
