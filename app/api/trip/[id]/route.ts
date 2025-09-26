@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { tripOperations, dayOperations, itineraryOperations } from '@/lib/firestore-operations'
+import { adminTripOperations, adminDayOperations, adminItineraryOperations } from '@/lib/firestore-admin-operations'
+import { adminAuth } from '@/lib/firebase-admin'
 
 export async function GET(
   request: NextRequest,
@@ -9,18 +10,18 @@ export async function GET(
     const tripId = params.id
 
     // Get trip details
-    const trip = await tripOperations.getTripById(tripId)
+    const trip = await adminTripOperations.getTripById(tripId)
     if (!trip) {
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
     }
 
     // Get days for this trip
-    const days = await dayOperations.getDaysByTripId(tripId)
+    const days = await adminDayOperations.getDaysByTripId(tripId)
 
     // Get itineraries for each day
     const daysWithItineraries = await Promise.all(
       days.map(async (day) => {
-        const itineraries = await itineraryOperations.getItinerariesByDayId(day.id)
+        const itineraries = await adminItineraryOperations.getItinerariesByDayId(day.id)
         return {
           ...day,
           itineraries
@@ -46,6 +47,18 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Get authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    }
+
+    const idToken = authHeader.split('Bearer ')[1]
+    
+    // Verify the ID token
+    const decodedToken = await adminAuth.verifyIdToken(idToken)
+    const userId = decodedToken.uid
+
     const tripId = params.id
     const body = await request.json()
     
@@ -55,16 +68,24 @@ export async function PUT(
       destination,
       startDate,
       endDate,
-      accessLevel
+      accessLevel,
+      imageUrl
     } = body
 
-    await tripOperations.updateTrip(tripId, {
+    // Verify user owns this trip
+    const trip = await adminTripOperations.getTripById(tripId)
+    if (!trip || trip.user_id !== userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    await adminTripOperations.updateTrip(tripId, {
       title,
       description,
       destination,
       start_date: startDate ? new Date(startDate) : undefined,
       end_date: endDate ? new Date(endDate) : undefined,
-      access_level: accessLevel
+      access_level: accessLevel,
+      image_url: imageUrl || undefined
     })
 
     return NextResponse.json({ success: true })
@@ -82,10 +103,28 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Get authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    }
+
+    const idToken = authHeader.split('Bearer ')[1]
+    
+    // Verify the ID token
+    const decodedToken = await adminAuth.verifyIdToken(idToken)
+    const userId = decodedToken.uid
+
     const tripId = params.id
 
+    // Verify user owns this trip
+    const trip = await adminTripOperations.getTripById(tripId)
+    if (!trip || trip.user_id !== userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
     // Delete trip (this will also delete related days and itineraries)
-    await tripOperations.deleteTrip(tripId)
+    await adminTripOperations.deleteTrip(tripId)
 
     return NextResponse.json({ success: true })
   } catch (error) {

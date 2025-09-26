@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { tripOperations, dayOperations } from '@/lib/firestore-operations'
+import { adminTripOperations, adminDayOperations } from '@/lib/firestore-admin-operations'
+import { adminAuth } from '@/lib/firebase-admin'
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID from query parameter (in real app, this would come from auth)
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId')
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
+    // Get authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
     }
 
-    const trips = await tripOperations.getTripsByUserId(userId)
+    const idToken = authHeader.split('Bearer ')[1]
+    
+    // Verify the ID token
+    const decodedToken = await adminAuth.verifyIdToken(idToken)
+    const userId = decodedToken.uid
+
+    const trips = await adminTripOperations.getTripsByUserId(userId)
     return NextResponse.json({ trips })
   } catch (error) {
     console.error('Error fetching trips:', error)
@@ -24,34 +29,47 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    }
+
+    const idToken = authHeader.split('Bearer ')[1]
+    
+    // Verify the ID token
+    const decodedToken = await adminAuth.verifyIdToken(idToken)
+    const userId = decodedToken.uid
+
     const body = await request.json()
     
     const {
-      userId,
       title,
       description,
       destination,
       startDate,
       endDate,
-      accessLevel = 'private'
+      accessLevel = 'private',
+      imageUrl
     } = body
 
-    if (!userId || !title) {
+    if (!title) {
       return NextResponse.json(
-        { error: 'User ID and title are required' },
+        { error: 'Title is required' },
         { status: 400 }
       )
     }
 
     // Create trip
-    const trip = await tripOperations.createTrip({
+    const trip = await adminTripOperations.createTrip({
       user_id: userId,
       title,
       description,
       destination,
       start_date: startDate ? new Date(startDate) : undefined,
       end_date: endDate ? new Date(endDate) : undefined,
-      access_level: accessLevel
+      access_level: accessLevel,
+      image_url: imageUrl || undefined
     })
 
     // Create days if start and end dates are provided
@@ -76,7 +94,7 @@ async function createDaysForTrip(tripId: string, startDate: string, endDate: str
   let dayNumber = 1
 
   while (current <= end) {
-    await dayOperations.createDay({
+    await adminDayOperations.createDay({
       trip_id: tripId,
       day_number: dayNumber,
       date: new Date(current)
