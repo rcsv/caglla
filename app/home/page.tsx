@@ -4,6 +4,8 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { makeAuthenticatedRequest } from '@/lib/api-helpers'
+import { dateUtils } from '@/lib/date-utils'
 
 interface Trip {
   id: string
@@ -13,6 +15,7 @@ interface Trip {
   start_date?: string
   end_date?: string
   access_level: 'private' | 'public'
+  image_url?: string
   created_at: string
   updated_at: string
 }
@@ -37,10 +40,15 @@ export default function HomePage() {
 
   const fetchTrips = async () => {
     try {
-      const response = await fetch('/api/trips')
+      const response = await makeAuthenticatedRequest('/api/trips')
       if (response.ok) {
         const data = await response.json()
         setTrips(data.trips || [])
+      } else if (response.status === 401) {
+        console.error('Authentication failed')
+        router.push('/')
+      } else {
+        console.error('Failed to fetch trips:', response.status)
       }
     } catch (error) {
       console.error('Failed to fetch trips:', error)
@@ -126,6 +134,16 @@ export default function HomePage() {
                 href={`/trip/${trip.id}`}
                 className="bg-white rounded-lg shadow-sm hover:shadow-md transition duration-200 p-6"
               >
+                {trip.image_url && (
+                  <div className="mb-4">
+                    <img
+                      src={trip.image_url}
+                      alt={trip.title}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+                
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
                     {trip.title}
@@ -153,7 +171,7 @@ export default function HomePage() {
                 
                 {trip.start_date && trip.end_date && (
                   <p className="text-gray-500 text-sm">
-                    📅 {new Date(trip.start_date).toLocaleDateString('ja-JP')} - {new Date(trip.end_date).toLocaleDateString('ja-JP')}
+                    📅 {dateUtils.formatDateRange(trip.start_date, trip.end_date)}
                   </p>
                 )}
               </Link>

@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { makeAuthenticatedRequest } from '@/lib/api-helpers'
+import { dateUtils } from '@/lib/date-utils'
+import ImageUpload from './ImageUpload'
 
 interface Trip {
   id: string
@@ -11,6 +14,7 @@ interface Trip {
   start_date?: string
   end_date?: string
   access_level: 'private' | 'public'
+  image_url?: string
   created_at: string
   updated_at: string
 }
@@ -28,18 +32,16 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
     destination: trip.destination || '',
     startDate: trip.start_date || '',
     endDate: trip.end_date || '',
-    accessLevel: trip.access_level
+    accessLevel: trip.access_level,
+    imageUrl: trip.image_url || ''
   })
   const [saving, setSaving] = useState(false)
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      const response = await fetch(`/api/trip/${trip.id}`, {
+      const response = await makeAuthenticatedRequest(`/api/trip/${trip.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           title: formData.title,
           description: formData.description,
@@ -47,6 +49,7 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
           startDate: formData.startDate || null,
           endDate: formData.endDate || null,
           accessLevel: formData.accessLevel,
+          imageUrl: formData.imageUrl || null,
         }),
       })
 
@@ -59,6 +62,7 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
           start_date: formData.startDate,
           end_date: formData.endDate,
           access_level: formData.accessLevel,
+          image_url: formData.imageUrl,
           updated_at: new Date().toISOString()
         }
         onUpdate(updatedTrip)
@@ -80,7 +84,8 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
       destination: trip.destination || '',
       startDate: trip.start_date || '',
       endDate: trip.end_date || '',
-      accessLevel: trip.access_level
+      accessLevel: trip.access_level,
+      imageUrl: trip.image_url || ''
     })
     setIsEditing(false)
   }
@@ -187,6 +192,13 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
               <option value="public">公開（誰でも閲覧可能）</option>
             </select>
           </div>
+
+          <ImageUpload
+            currentImageUrl={formData.imageUrl}
+            onImageChange={(imageUrl) => setFormData(prev => ({ ...prev, imageUrl: imageUrl || '' }))}
+            tripId={trip.id}
+            disabled={saving}
+          />
         </div>
 
         <div className="mt-6 flex justify-end space-x-4">
@@ -213,7 +225,7 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex justify-between items-start mb-4">
-        <div>
+        <div className="flex-1">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">{trip.title}</h2>
           {trip.description && (
             <p className="text-gray-600 mb-2">{trip.description}</p>
@@ -223,7 +235,7 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
           )}
           {trip.start_date && trip.end_date && (
             <p className="text-gray-500">
-              📅 {new Date(trip.start_date).toLocaleDateString('ja-JP')} - {new Date(trip.end_date).toLocaleDateString('ja-JP')}
+              📅 {dateUtils.formatDateRange(trip.start_date, trip.end_date)}
             </p>
           )}
         </div>
@@ -234,6 +246,16 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
           編集
         </button>
       </div>
+      
+      {trip.image_url && (
+        <div className="mb-4">
+          <img
+            src={trip.image_url}
+            alt={trip.title}
+            className="w-full h-48 object-cover rounded-lg"
+          />
+        </div>
+      )}
     </div>
   )
 }

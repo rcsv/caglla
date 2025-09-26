@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import TripEditor from '@/components/TripEditor'
+import { dateUtils } from '@/lib/date-utils'
+import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 
 interface Itinerary {
   id: string
@@ -39,6 +41,7 @@ interface Trip {
   start_date?: string
   end_date?: string
   access_level: 'private' | 'public'
+  image_url?: string
   created_at: string
   updated_at: string
   days: Day[]
@@ -64,7 +67,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
 
   const fetchTrip = async () => {
     try {
-      const response = await fetch(`/api/trip/${params.id}`)
+      const response = await makeAuthenticatedRequest(`/api/trip/${params.id}`)
       if (response.ok) {
         const data = await response.json()
         setTrip(data)
@@ -84,7 +87,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
     }
 
     try {
-      const response = await fetch(`/api/trip/${params.id}`, {
+      const response = await makeAuthenticatedRequest(`/api/trip/${params.id}`, {
         method: 'DELETE',
       })
 
@@ -168,12 +171,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
                     第{day.day_number}日目
                   </h3>
                   <span className="text-gray-500">
-                    {new Date(day.date).toLocaleDateString('ja-JP', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      weekday: 'long'
-                    })}
+                    {dateUtils.formatDate(day.date)}
                   </span>
                 </div>
                 

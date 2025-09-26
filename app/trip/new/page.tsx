@@ -3,6 +3,8 @@
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { makeAuthenticatedRequest } from '@/lib/api-helpers'
+import ImageUpload from '@/components/ImageUpload'
 
 export default function NewTripPage() {
   const { user, loading } = useAuth()
@@ -13,7 +15,8 @@ export default function NewTripPage() {
     destination: '',
     startDate: '',
     endDate: '',
-    accessLevel: 'private' as 'private' | 'public'
+    accessLevel: 'private' as 'private' | 'public',
+    imageUrl: ''
   })
   const [submitting, setSubmitting] = useState(false)
 
@@ -29,16 +32,16 @@ export default function NewTripPage() {
 
     setSubmitting(true)
     try {
-      const response = await fetch('/api/trips', {
+      const response = await makeAuthenticatedRequest('/api/trips', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
-          userId: user.uid,
-          ...formData,
+          title: formData.title,
+          description: formData.description,
+          destination: formData.destination,
           startDate: formData.startDate || null,
           endDate: formData.endDate || null,
+          accessLevel: formData.accessLevel,
+          imageUrl: formData.imageUrl || null,
         }),
       })
 
@@ -193,6 +196,12 @@ export default function NewTripPage() {
                   <option value="public">公開（誰でも閲覧可能）</option>
                 </select>
               </div>
+
+              <ImageUpload
+                currentImageUrl={formData.imageUrl}
+                onImageChange={(imageUrl) => setFormData(prev => ({ ...prev, imageUrl: imageUrl || '' }))}
+                disabled={submitting}
+              />
             </div>
 
             <div className="mt-8 flex justify-end space-x-4">
