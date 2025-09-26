@@ -103,3 +103,6 @@ dist
 # Temporary folders
 tmp/
 temp/
+
+# private key
+docs/firebase/*.json
