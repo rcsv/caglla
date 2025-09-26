@@ -125,7 +125,7 @@ export const adminDayOperations = {
   async getDaysByTripId(tripId: string): Promise<Day[]> {
     const querySnapshot = await adminDb.collection(COLLECTIONS.DAYS)
       .where('trip_id', '==', tripId)
-      .orderBy('day_number', 'desc')
+      .orderBy('day_number', 'asc')
       .get()
     
     return querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Day>(doc))

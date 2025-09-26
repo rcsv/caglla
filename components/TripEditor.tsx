@@ -5,6 +5,30 @@ import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { dateUtils } from '@/lib/date-utils'
 import ImageUpload from './ImageUpload'
 
+interface Itinerary {
+  id: string
+  day_id: string
+  sort_number: number
+  title: string
+  description?: string
+  location?: string
+  start_time?: string
+  end_time?: string
+  created_at: string
+  updated_at: string
+}
+
+interface Day {
+  id: string
+  trip_id: string
+  day_number: number
+  date: string
+  description?: string
+  created_at: string
+  updated_at: string
+  itineraries: Itinerary[]
+}
+
 interface Trip {
   id: string
   user_id: string
@@ -17,6 +41,7 @@ interface Trip {
   image_url?: string
   created_at: string
   updated_at: string
+  days: Day[]
 }
 
 interface TripEditorProps {
