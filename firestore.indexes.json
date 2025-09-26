@@ -38,7 +38,7 @@
         },
         {
           "fieldPath": "day_number",
-          "order": "ASCENDING"
+          "order": "DESCENDING"
         }
       ]
     },
@@ -52,7 +52,7 @@
         },
         {
           "fieldPath": "sort_number",
-          "order": "ASCENDING"
+          "order": "DESCENDING"
         }
       ]
     },
