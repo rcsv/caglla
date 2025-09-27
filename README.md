@@ -7,7 +7,8 @@ wanderlogのような機能を提供し、個人の旅行計画を管理でき�
 
 - **フロントエンド**: Next.js 14 (App Router), React 18, TypeScript
 - **認証**: Firebase Authentication (Google OAuth)
-- **データベース**: MySQL
+- **データベース**: Firebase Firestore
+- **ストレージ**: Firebase Storage
 - **スタイリング**: Tailwind CSS
 - **デプロイ**: Vercel (推奨)
 
@@ -17,6 +18,9 @@ wanderlogのような機能を提供し、個人の旅行計画を管理でき�
 - ✈️ 旅行の作成・編集・削除
 - 📅 日程管理（日別スケジュール）
 - 🗺️ 旅程管理（アクティビティ）
+- 📍 Google Places API連携（場所検索・詳細情報取得）
+- 👤 ユーザープロフィール管理
+- 🖼️ 画像アップロード（Firebase Storage）
 - 👥 旅行の共有機能（公開/非公開）
 - 📱 レスポンシブデザイン
 - ⚡ SPA機能（リアルタイム編集）
@@ -42,19 +46,22 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
-# Database Configuration
-DB_HOST=localhost
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
-DB_NAME=caglla_db
+# Firebase Admin SDK Configuration
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_CLIENT_EMAIL=your_service_account_email
+FIREBASE_PRIVATE_KEY=your_service_account_private_key
+
+# Google Places API
+NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your_google_places_api_key_here
 ```
 
-### 3. データベースの初期化
+### 3. Firebase プロジェクトの設定
 
-```bash
-# マイグレーションの実行
-curl -X POST http://localhost:3000/api/migrate
-```
+1. [Firebase Console](https://console.firebase.google.com/) でプロジェクトを作成
+2. Authentication で Google プロバイダーを有効化
+3. Firestore Database を作成
+4. Storage を有効化
+5. サービスアカウントキーをダウンロードして環境変数に設定
 
 ### 4. 開発サーバーの起動
 
@@ -69,59 +76,83 @@ npm run dev
 ```
 ├── app/                    # Next.js App Router
 │   ├── api/               # API ルート
+│   │   ├── migrate/       # マイグレーション
+│   │   ├── places/        # Google Places API
+│   │   ├── trip/          # 旅行管理API
+│   │   ├── trips/         # 旅行一覧API
+│   │   └── users/         # ユーザーAPI
 │   ├── home/              # ホームページ
 │   ├── trip/              # 旅行管理ページ
-│   └── user/              # ユーザープロフィール
+│   ├── user/              # ユーザープロフィール
+│   └── user-settings/     # ユーザー設定
 ├── components/             # React コンポーネント
+│   ├── AvatarUpload.tsx   # アバターアップロード
+│   ├── ImageUpload.tsx    # 画像アップロード
+│   ├── PlaceSearchInput.tsx # 場所検索
+│   ├── TripEditor.tsx     # 旅行編集
+│   └── UserSettingsModal.tsx # ユーザー設定モーダル
 ├── lib/                   # ユーティリティ・設定
 │   ├── auth-context.tsx   # 認証コンテキスト
-│   ├── database.ts        # データベース接続
-│   └── firebase.ts        # Firebase設定
-└── scripts/migrations/    # データベースマイグレーション
+│   ├── firebase.ts        # Firebase設定
+│   ├── firebase-admin.ts  # Firebase Admin設定
+│   ├── firestore.ts       # Firestore操作
+│   ├── firestore-admin-operations.ts # Admin操作
+│   ├── places-api.ts      # Google Places API
+│   └── image-upload.ts    # 画像アップロード
+├── docs/                  # ドキュメント
+└── firebase.json          # Firebase設定
 ```
 
-## 🗄️ データベーススキーマ
+## 🗄️ Firestore コレクション構造
 
 ### users (ユーザー)
-- `google_id`: GoogleアカウントID
+- `uid`: Firebase UID
 - `name`: ユーザー名
 - `email`: メールアドレス
-- `preferred_currency`: 通貨設定
-- `skip_confirm_delete`: 削除確認スキップ設定
+- `photoURL`: プロフィール画像URL
+- `preferredCurrency`: 通貨設定
+- `createdAt`: 作成日時
+- `updatedAt`: 更新日時
 
 ### trips (旅行)
 - `id`: 旅行ID
-- `user_id`: ユーザーID
+- `userId`: ユーザーID
 - `title`: 旅行タイトル
 - `description`: 説明
 - `destination`: 目的地
-- `start_date`: 出発日
-- `end_date`: 帰宅日
-- `access_level`: 公開レベル (private/public)
+- `destinationPlace`: 目的地のPlace情報
+- `startDate`: 出発日
+- `endDate`: 帰宅日
+- `accessLevel`: 公開レベル (private/public)
+- `imageUrl`: 旅行画像URL
+- `createdAt`: 作成日時
+- `updatedAt`: 更新日時
 
 ### days (日程)
 - `id`: 日程ID
-- `trip_id`: 旅行ID
-- `day_number`: 日数
+- `tripId`: 旅行ID
+- `dayNumber`: 日数
 - `date`: 日付
 - `description`: 説明
+- `createdAt`: 作成日時
+- `updatedAt`: 更新日時
 
 ### itineraries (旅程)
 - `id`: 旅程ID
-- `day_id`: 日程ID
-- `sort_number`: 並び順
+- `dayId`: 日程ID
+- `sortNumber`: 並び順
 - `title`: タイトル
 - `description`: 説明
 - `location`: 場所
-- `start_time`: 開始時間
-- `end_time`: 終了時間
-
-### trip_user (旅行共有)
-- `trip_id`: 旅行ID
-- `user_id`: ユーザーID
+- `placeId`: Google Place ID
+- `startTime`: 開始時間
+- `endTime`: 終了時間
+- `createdAt`: 作成日時
+- `updatedAt`: 更新日時
 
 ## 🔗 API エンドポイント
 
+### 旅行管理
 - `GET /api/trips` - 旅行一覧取得
 - `POST /api/trips` - 旅行作成
 - `GET /api/trip/[id]` - 旅行詳細取得
@@ -129,6 +160,17 @@ npm run dev
 - `DELETE /api/trip/[id]` - 旅行削除
 - `GET /api/trip/[id]/day` - 日程一覧取得
 - `POST /api/trip/[id]/day` - 日程作成
+
+### 場所検索
+- `GET /api/places/search` - 場所検索
+- `GET /api/places/details` - 場所詳細情報取得
+
+### ユーザー管理
+- `GET /api/users` - ユーザー情報取得
+- `PUT /api/users` - ユーザー情報更新
+
+### マイグレーション
+- `POST /api/migrate` - データベース初期化
 
 ## 🚀 デプロイ
 
@@ -144,93 +186,47 @@ npm run dev
 - **Railway**: データベース込みでデプロイ可能
 - **AWS/GCP**: カスタムサーバー環境
 
----
+## 🔧 開発・デバッグ
 
-## 📘 Data Schema Overview
+### Firebase エミュレーター
 
-The application follows the same data structure as the original [tabi4.me](https://tabi4.me) project.
+```bash
+# Firebase エミュレーターの起動
+firebase emulators:start
+```
 
-### 🧳 travels (旅行情報)
+### ログ確認
 
-| Field               | Type          | Description                            |
-|--------------------|---------------|----------------------------------------|
-| `id`               | UUID / INT    | Primary key                            |
-| `title`            | TEXT          | Trip name                              |
-| `trip_purpose`     | TEXT          | Purpose of trip (shown in PDF)         |
-| `start_date`       | DATE          | Start date                             |
-| `end_date`         | DATE          | End date                               |
-| `primary_transportation` | ENUM     | 徒歩 / バス / 電車 / 車 / 飛行機 / フェリー / 自転車 / その他 |
-| `allowed_users`    | JSON or FK[]  | Users with access permissions          |
+```bash
+# 開発サーバーのログ
+npm run dev
 
----
+# Firebase ログ
+firebase functions:log
+```
 
-### 📅 activities (旅程アクティビティ = itinerary)
+## 📱 主要機能
 
-All types of travel plans are unified here.
+### 認証フロー
+1. Google OAuth でログイン
+2. Firebase Authentication でユーザー管理
+3. Firestore でユーザー情報を保存
 
-| Field           | Type       | Description                                |
-|----------------|------------|--------------------------------------------|
-| `id`           | UUID       | Primary key                                |
-| `trip_id`      | FK         | Linked trip                                |
-| `title`        | TEXT       | Activity title                             |
-| `start_time`   | DATETIME   | Start time                                 |
-| `end_time`     | DATETIME   | End time                                   |
-| `location_name`| TEXT       | Display name of location                   |
-| `place_id`     | TEXT       | Google Place ID                            |
-| `category`     | ENUM       | flight / car_rental / hotel / dining / etc |
-| `cost_amount`  | DECIMAL    | Expense amount (in local currency)         |
-| `cost_currency`| TEXT       | ISO currency code (e.g., JPY, USD)         |
+### 旅行管理フロー
+1. 旅行の作成（タイトル、目的地、期間）
+2. 日程の自動生成（開始日〜終了日）
+3. 旅程の追加・編集
+4. Google Places API で場所情報を取得
 
----
+### 画像管理
+1. Firebase Storage で画像をアップロード
+2. 旅行画像・プロフィール画像の管理
+3. 自動リサイズ・最適化
 
-### 🧑‍🤝‍🧑 companions (同行者)
+## 🚀 今後の拡張予定
 
-| Field         | Type     | Description                            |
-|--------------|----------|----------------------------------------|
-| `id`         | UUID     | Primary key                            |
-| `trip_id`    | FK       | Related trip                           |
-| `person_id`  | FK       | Linked to `persons` table              |
-
----
-
-### 🧑 persons (人物プロフィール)
-
-| Field            | Type     | Description                         |
-|------------------|----------|-------------------------------------|
-| `id`             | UUID     | Primary key                         |
-| `first_name`     | TEXT     | First name                          |
-| `last_name`      | TEXT     | Last name                           |
-| `date_of_birth`  | DATE     | DOB (for age-based checklist)       |
-| `passport_code`  | TEXT     | Passport number                     |
-| `it_is_myself`   | BOOLEAN  | If this is the logged-in user       |
-
----
-
-## 📄 Page Layouts (UI 構成)
-
-### index / home / dashboard
-
-- Status grouping:
-  - **BOARDING**: 次に出発する旅行（直前チェックリストあり）
-  - **ITINERARY INK**: 未来の旅行（一覧形式）
-  - **MEMORIES**: 過去の旅行（カード形式）
-
-### Trip Detail
-
-- 旅行名、目的、期間、主な交通手段（with icon）
-- 同行者一覧
-- 旅程（日毎、時系列表示）
-
-### PDF Output (旅のしおり)
-
-- 表紙、目次、チェックリスト、予約情報、日程表、緊急連絡先、メモページを含む構成
-- SelectPDF による WYSIWYG レンダリング（1024×1449px）
-
----
-
-## ✈️ Future Extensions
-
-- Google Calendar 同期（手動 → 自動化予定）
-- Place API による POI 情報補完
-- Trip invitation / 共有機能
-- 迷子札生成（PDF付録）
+- Google Calendar 同期
+- 旅行の共有・招待機能
+- PDF エクスポート機能
+- モバイルアプリ対応
+- リアルタイム協力編集
