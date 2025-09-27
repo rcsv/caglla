@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminTripOperations, adminDayOperations } from '@/lib/firestore-admin-operations'
 import { adminAuth } from '@/lib/firebase-admin'
+import { groupTripsByCountry } from '@/lib/country-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +17,23 @@ export async function GET(request: NextRequest) {
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
+    // Get query parameters
+    const { searchParams } = new URL(request.url)
+    const groupByCountry = searchParams.get('groupByCountry') === 'true'
+
     const trips = await adminTripOperations.getTripsByUserId(userId)
+
+    if (groupByCountry) {
+      // Group trips by country
+      const countryGroups = groupTripsByCountry(trips)
+      return NextResponse.json({ 
+        trips: countryGroups,
+        grouped: true,
+        totalTrips: trips.length,
+        totalCountries: countryGroups.length
+      })
+    }
+
     return NextResponse.json({ trips })
   } catch (error) {
     console.error('Error fetching trips:', error)
