@@ -122,6 +122,11 @@ export const placesApiHelpers = {
         place_id: result.place_id,
         name: result.name,
         formatted_address: result.formatted_address,
+        address_components: result.address_components?.map((component: any) => ({
+          long_name: component.long_name,
+          short_name: component.short_name,
+          types: component.types || []
+        })),
         geometry: {
           location: {
             lat: result.geometry.location.lat,

@@ -30,6 +30,11 @@ export interface PlaceData {
   place_id: string
   name: string
   formatted_address: string
+  address_components?: Array<{
+    long_name: string
+    short_name: string
+    types: string[]
+  }>
   geometry: {
     location: {
       lat: number

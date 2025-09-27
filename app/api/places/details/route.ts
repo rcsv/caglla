@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       'place_id',
       'name',
       'formatted_address',
+      'address_components',
       'geometry',
       'types',
       'rating',
