@@ -38,7 +38,7 @@
         },
         {
           "fieldPath": "day_number",
-          "order": "DESCENDING"
+          "order": "ASCENDING"
         }
       ]
     },

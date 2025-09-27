@@ -85,6 +85,13 @@ export const imageUploadHelpers = {
     return `trips/${tripId}/images/${timestamp}.${extension}`
   },
 
+  // Generate unique path for user avatar images
+  generateAvatarImagePath(userId: string, fileName: string): string {
+    const timestamp = Date.now()
+    const extension = fileName.split('.').pop()
+    return `users/${userId}/avatar/${timestamp}.${extension}`
+  },
+
   // Validate image file
   validateImageFile(file: File): { valid: boolean; error?: string } {
     const maxSize = 5 * 1024 * 1024 // 5MB

@@ -13,12 +13,10 @@ interface ImageUploadProps {
 export default function ImageUpload({ currentImageUrl, onImageChange, tripId, disabled }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
+  const processFile = async (file: File) => {
     // Validate file
     const validation = imageUploadHelpers.validateImageFile(file)
     if (!validation.valid) {
@@ -52,6 +50,12 @@ export default function ImageUpload({ currentImageUrl, onImageChange, tripId, di
     }
   }
 
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    await processFile(file)
+  }
+
   const handleRemoveImage = async () => {
     if (currentImageUrl) {
       try {
@@ -67,6 +71,35 @@ export default function ImageUpload({ currentImageUrl, onImageChange, tripId, di
   const handleButtonClick = () => {
     if (!disabled) {
       fileInputRef.current?.click()
+    }
+  }
+
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!disabled) {
+      setIsDragOver(true)
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragOver(false)
+
+    if (disabled) return
+
+    const files = e.dataTransfer.files
+    if (files.length > 0) {
+      const file = files[0]
+      await processFile(file)
     }
   }
 
@@ -112,7 +145,14 @@ export default function ImageUpload({ currentImageUrl, onImageChange, tripId, di
         ) : (
           <div
             onClick={handleButtonClick}
-            className={`w-full h-48 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition duration-200 ${
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`w-full h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition duration-200 ${
+              isDragOver 
+                ? 'border-blue-400 bg-blue-50' 
+                : 'border-gray-300 hover:border-gray-400'
+            } ${
               disabled ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
@@ -120,7 +160,7 @@ export default function ImageUpload({ currentImageUrl, onImageChange, tripId, di
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <p className="text-gray-500 text-sm">
-              {uploading ? 'アップロード中...' : '画像をクリックしてアップロード'}
+              {uploading ? 'アップロード中...' : isDragOver ? 'ここに画像をドロップ' : '画像をクリックまたはドラッグ&ドロップしてアップロード'}
             </p>
             <p className="text-gray-400 text-xs mt-1">
               JPEG、PNG、WebP形式（5MB以下）
