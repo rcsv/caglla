@@ -66,6 +66,7 @@ export async function PUT(
       title,
       description,
       destination,
+      destinationPlace,
       startDate,
       endDate,
       accessLevel,
@@ -78,12 +79,30 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
+    // 日程が変更されたかチェック
+    const originalTrip = await adminTripOperations.getTripById(tripId)
+    const originalStartDate = originalTrip?.start_date
+    const originalEndDate = originalTrip?.end_date
+    const newStartDate = startDate ? new Date(startDate) : undefined
+    const newEndDate = endDate ? new Date(endDate) : undefined
+    
+    // 日程が変更された場合、dayドキュメントを更新
+    const datesChanged = (
+      (originalStartDate?.getTime() !== newStartDate?.getTime()) ||
+      (originalEndDate?.getTime() !== newEndDate?.getTime())
+    )
+    
+    if (datesChanged && newStartDate && newEndDate) {
+      await adminDayOperations.updateDaysForTripAtomic(tripId, newStartDate, newEndDate)
+    }
+
     await adminTripOperations.updateTrip(tripId, {
       title,
       description,
       destination,
-      start_date: startDate ? new Date(startDate) : undefined,
-      end_date: endDate ? new Date(endDate) : undefined,
+      destination_place: destinationPlace,
+      start_date: newStartDate,
+      end_date: newEndDate,
       access_level: accessLevel,
       image_url: imageUrl || undefined
     })
