@@ -1,6 +1,6 @@
 import { adminDb } from './firebase-admin'
-import { COLLECTIONS } from './firestore'
-import type { User, Trip, Day, Itinerary, TripUser } from './firestore'
+import { COLLECTIONS } from '@/lib/firestore'
+import type { User, Trip, Day, Itinerary, TripUser } from '@/lib/firestore'
 
 // Helper functions for Firestore Admin operations
 const adminFirestoreHelpers = {
@@ -15,6 +15,7 @@ const adminFirestoreHelpers = {
       start_date: data.start_date?.toDate ? data.start_date.toDate() : data.start_date,
       end_date: data.end_date?.toDate ? data.end_date.toDate() : data.end_date,
       date: data.date?.toDate ? data.date.toDate() : data.date,
+      // destination_place is already an object, no conversion needed
     } as T
   }
 }
@@ -48,6 +49,36 @@ export const adminUserOperations = {
       ...userData,
       updated_at: new Date()
     })
+  },
+
+  async createOrUpdateUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
+    // 既存のユーザーを検索
+    const existingUser = await this.getUserByGoogleId(userData.google_id)
+    
+    if (existingUser) {
+      // 既存ユーザーの場合、preferencesのみ更新
+      const updatedPreferences = {
+        ...existingUser.preferences,
+        ...userData.preferences
+      }
+      
+      await this.updateUser(existingUser.id, {
+        preferences: updatedPreferences,
+        name: userData.name,
+        email: userData.email,
+        profile_image_url: userData.profile_image_url
+      })
+      
+      return {
+        ...existingUser,
+        ...userData,
+        preferences: updatedPreferences,
+        updated_at: new Date()
+      }
+    } else {
+      // 新規ユーザーの場合、作成
+      return await this.createUser(userData)
+    }
   }
 }
 
@@ -67,10 +98,12 @@ export const adminTripOperations = {
   async getTripsByUserId(userId: string): Promise<Trip[]> {
     const querySnapshot = await adminDb.collection(COLLECTIONS.TRIPS)
       .where('user_id', '==', userId)
-      .orderBy('created_at', 'desc')
       .get()
     
-    return querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Trip>(doc))
+    const trips = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Trip>(doc))
+    
+    // Sort by created_at on the client side (descending)
+    return trips.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
   },
 
   async getTripById(tripId: string): Promise<Trip | null> {
@@ -102,18 +135,25 @@ export const adminTripOperations = {
   async getPublicTrips(): Promise<Trip[]> {
     const querySnapshot = await adminDb.collection(COLLECTIONS.TRIPS)
       .where('access_level', '==', 'public')
-      .orderBy('created_at', 'desc')
       .get()
     
-    return querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Trip>(doc))
+    const trips = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Trip>(doc))
+    
+    // Sort by created_at on the client side (descending)
+    return trips.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
   }
 }
 
 // Day operations (Admin SDK version)
 export const adminDayOperations = {
   async createDay(dayData: Omit<Day, 'id' | 'created_at' | 'updated_at'>): Promise<Day> {
+    // undefined値をフィルタリング
+    const cleanDayData = Object.fromEntries(
+      Object.entries(dayData).filter(([_, value]) => value !== undefined)
+    )
+    
     const docRef = await adminDb.collection(COLLECTIONS.DAYS).add({
-      ...dayData,
+      ...cleanDayData,
       created_at: new Date(),
       updated_at: new Date()
     })
@@ -125,10 +165,12 @@ export const adminDayOperations = {
   async getDaysByTripId(tripId: string): Promise<Day[]> {
     const querySnapshot = await adminDb.collection(COLLECTIONS.DAYS)
       .where('trip_id', '==', tripId)
-      .orderBy('day_number', 'asc')
       .get()
     
-    return querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Day>(doc))
+    const days = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Day>(doc))
+    
+    // Sort by day_number on the client side
+    return days.sort((a, b) => a.day_number - b.day_number)
   },
 
   async updateDay(dayId: string, dayData: Partial<Day>): Promise<void> {
@@ -150,6 +192,78 @@ export const adminDayOperations = {
       const dayRef = adminDb.collection(COLLECTIONS.DAYS).doc(day.id)
       await dayRef.delete()
     }
+  },
+
+  async updateDaysForTrip(tripId: string, startDate: Date, endDate: Date): Promise<void> {
+    // 既存のdayドキュメントを削除
+    await this.deleteDaysByTripId(tripId)
+    
+    // 新しい日程でdayドキュメントを作成
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const days: Omit<Day, 'id' | 'created_at' | 'updated_at'>[] = []
+    
+    let currentDate = new Date(start)
+    let dayNumber = 1
+    
+    while (currentDate <= end) {
+      const dayData: Omit<Day, 'id' | 'created_at' | 'updated_at'> = {
+        trip_id: tripId,
+        day_number: dayNumber,
+        date: new Date(currentDate)
+      }
+      
+      // descriptionは省略（undefinedではなく存在しないフィールドとして扱う）
+      days.push(dayData)
+      
+      currentDate.setDate(currentDate.getDate() + 1)
+      dayNumber++
+    }
+    
+    // 新しいdayドキュメントを作成
+    for (const dayData of days) {
+      await this.createDay(dayData)
+    }
+  },
+
+  async updateDaysForTripAtomic(tripId: string, startDate: Date, endDate: Date): Promise<void> {
+    // トランザクションを使用してアトミックに更新
+    await adminDb.runTransaction(async (transaction) => {
+      // 既存のdayドキュメントを取得
+      const existingDaysQuery = adminDb.collection(COLLECTIONS.DAYS)
+        .where('trip_id', '==', tripId)
+      
+      const existingDaysSnapshot = await transaction.get(existingDaysQuery)
+      
+      // 既存のdayドキュメントを削除
+      existingDaysSnapshot.docs.forEach(doc => {
+        transaction.delete(doc.ref)
+      })
+      
+      // 新しい日程でdayドキュメントを作成
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      
+      let currentDate = new Date(start)
+      let dayNumber = 1
+      
+      while (currentDate <= end) {
+        const dayRef = adminDb.collection(COLLECTIONS.DAYS).doc()
+        
+        const dayData = {
+          trip_id: tripId,
+          day_number: dayNumber,
+          date: new Date(currentDate),
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+        
+        transaction.set(dayRef, dayData)
+        
+        currentDate.setDate(currentDate.getDate() + 1)
+        dayNumber++
+      }
+    })
   }
 }
 
@@ -169,10 +283,12 @@ export const adminItineraryOperations = {
   async getItinerariesByDayId(dayId: string): Promise<Itinerary[]> {
     const querySnapshot = await adminDb.collection(COLLECTIONS.ITINERARIES)
       .where('day_id', '==', dayId)
-      .orderBy('sort_number', 'desc')
       .get()
     
-    return querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Itinerary>(doc))
+    const itineraries = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Itinerary>(doc))
+    
+    // Sort by sort_number on the client side (descending)
+    return itineraries.sort((a, b) => b.sort_number - a.sort_number)
   },
 
   async updateItinerary(itineraryId: string, itineraryData: Partial<Itinerary>): Promise<void> {
@@ -224,7 +340,10 @@ export const adminTripUserOperations = {
       .where('user_id', '==', userId)
       .get()
     
-    return querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<TripUser>(doc))
+    const tripUsers = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<TripUser>(doc))
+    
+    // Sort by created_at on the client side (descending)
+    return tripUsers.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
   },
 
   async removeUserFromTrip(tripId: string, userId: string): Promise<void> {

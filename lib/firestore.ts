@@ -14,8 +14,42 @@ export interface User {
   name: string
   email: string
   profile_image_url?: string
+  preferences?: {
+    currency?: string
+    home_address?: string
+    timezone?: string
+    language?: string
+    theme?: 'light' | 'dark'
+    notifications?: boolean
+  }
   created_at: Date
   updated_at: Date
+}
+
+export interface PlaceData {
+  place_id: string
+  name: string
+  formatted_address: string
+  geometry: {
+    location: {
+      lat: number
+      lng: number
+    }
+  }
+  types: string[]
+  photos?: Array<{
+    photo_reference: string
+    height: number
+    width: number
+  }>
+  rating?: number
+  price_level?: number
+  opening_hours?: {
+    open_now: boolean
+    weekday_text: string[]
+  }
+  international_phone_number?: string
+  website?: string
 }
 
 export interface Trip {
@@ -23,7 +57,8 @@ export interface Trip {
   user_id: string
   title: string
   description?: string
-  destination?: string
+  destination?: string // 後方互換性のため残す
+  destination_place?: PlaceData // 新しいGoogle Places API連携フィールド
   start_date?: Date
   end_date?: Date
   access_level: 'private' | 'public'
