@@ -99,7 +99,7 @@ export default function NewTripPage() {
         console.error('Failed to delete cancelled image:', error)
       }
     }
-    router.back()
+    router.push('/home')
   }
 
   if (loading) {
@@ -125,7 +125,7 @@ export default function NewTripPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.back()}
+                onClick={() => router.push('/home')}
                 className="text-gray-600 hover:text-gray-900"
               >
                 ← 戻る
