@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import ImageUpload from '@/components/ImageUpload'
+import { imageUploadHelpers } from '@/lib/image-upload'
+import PlaceSearchInput from '@/components/PlaceSearchInput'
+import { PlaceData } from '@/lib/firestore'
 
 export default function NewTripPage() {
   const { user, loading } = useAuth()
@@ -13,6 +16,7 @@ export default function NewTripPage() {
     title: '',
     description: '',
     destination: '',
+    destinationPlace: undefined as PlaceData | undefined,
     startDate: '',
     endDate: '',
     accessLevel: 'private' as 'private' | 'public',
@@ -38,6 +42,7 @@ export default function NewTripPage() {
           title: formData.title,
           description: formData.description,
           destination: formData.destination,
+          destinationPlace: formData.destinationPlace,
           startDate: formData.startDate || null,
           endDate: formData.endDate || null,
           accessLevel: formData.accessLevel,
@@ -49,9 +54,27 @@ export default function NewTripPage() {
         const trip = await response.json()
         router.push(`/trip/${trip.id}`)
       } else {
+        // 作成に失敗した場合、アップロードした画像を削除
+        if (formData.imageUrl) {
+          try {
+            await imageUploadHelpers.deleteImage(formData.imageUrl)
+            console.log('Failed creation image deleted:', formData.imageUrl)
+          } catch (error) {
+            console.error('Failed to delete image after creation failure:', error)
+          }
+        }
         console.error('Failed to create trip')
       }
     } catch (error) {
+      // エラーが発生した場合、アップロードした画像を削除
+      if (formData.imageUrl) {
+        try {
+          await imageUploadHelpers.deleteImage(formData.imageUrl)
+          console.log('Error image deleted:', formData.imageUrl)
+        } catch (deleteError) {
+          console.error('Failed to delete image after error:', deleteError)
+        }
+      }
       console.error('Error creating trip:', error)
     } finally {
       setSubmitting(false)
@@ -64,6 +87,19 @@ export default function NewTripPage() {
       ...prev,
       [name]: value
     }))
+  }
+
+  const handleCancel = async () => {
+    // キャンセル時にアップロードした画像を削除
+    if (formData.imageUrl) {
+      try {
+        await imageUploadHelpers.deleteImage(formData.imageUrl)
+        console.log('Cancelled image deleted:', formData.imageUrl)
+      } catch (error) {
+        console.error('Failed to delete cancelled image:', error)
+      }
+    }
+    router.back()
   }
 
   if (loading) {
@@ -140,15 +176,31 @@ export default function NewTripPage() {
                 <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
                   目的地
                 </label>
-                <input
-                  type="text"
-                  id="destination"
-                  name="destination"
-                  value={formData.destination}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="例: 沖縄県那覇市"
+                <PlaceSearchInput
+                  currentPlace={formData.destinationPlace}
+                  onPlaceSelect={(place) => setFormData(prev => ({ 
+                    ...prev, 
+                    destinationPlace: place,
+                    destination: place.name // 後方互換性のため
+                  }))}
+                  placeholder="目的地を検索..."
+                  disabled={submitting}
                 />
+                {/* 従来のテキスト入力も残す（フォールバック用） */}
+                <div className="mt-2">
+                  <label htmlFor="destinationText" className="block text-xs text-gray-500 mb-1">
+                    または手動で入力
+                  </label>
+                  <input
+                    type="text"
+                    id="destinationText"
+                    name="destination"
+                    value={formData.destination}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    placeholder="例: 沖縄県那覇市"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -207,7 +259,7 @@ export default function NewTripPage() {
             <div className="mt-8 flex justify-end space-x-4">
               <button
                 type="button"
-                onClick={() => router.back()}
+                onClick={handleCancel}
                 className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
               >
                 キャンセル

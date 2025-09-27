@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { dateUtils } from '@/lib/date-utils'
 import ImageUpload from './ImageUpload'
+import { imageUploadHelpers } from '@/lib/image-upload'
+import PlaceSearchInput from './PlaceSearchInput'
+import { PlaceData } from '@/lib/firestore'
 
 interface Itinerary {
   id: string
@@ -35,6 +38,7 @@ interface Trip {
   title: string
   description?: string
   destination?: string
+  destination_place?: PlaceData
   start_date?: string
   end_date?: string
   access_level: 'private' | 'public'
@@ -51,19 +55,60 @@ interface TripEditorProps {
 
 export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
   const [isEditing, setIsEditing] = useState(false)
+  const formatDateForInput = (date: any): string => {
+    if (!date) return ''
+    
+    try {
+      const d = new Date(date)
+      if (isNaN(d.getTime())) return ''
+      
+      // タイムゾーンオフセットを考慮してローカル日付を取得
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      
+      return `${year}-${month}-${day}`
+    } catch (error) {
+      console.error('Error formatting date:', error)
+      return ''
+    }
+  }
+
   const [formData, setFormData] = useState({
     title: trip.title,
     description: trip.description || '',
     destination: trip.destination || '',
-    startDate: trip.start_date || '',
-    endDate: trip.end_date || '',
+    destinationPlace: trip.destination_place,
+    startDate: formatDateForInput(trip.start_date),
+    endDate: formatDateForInput(trip.end_date),
     accessLevel: trip.access_level,
     imageUrl: trip.image_url || ''
   })
   const [saving, setSaving] = useState(false)
+  const [originalImageUrl, setOriginalImageUrl] = useState(trip.image_url || '')
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false)
+
+  // tripが変更された時にformDataを更新（編集モードでない場合のみ）
+  useEffect(() => {
+    if (!isEditing) {
+      setFormData({
+        title: trip.title,
+        description: trip.description || '',
+        destination: trip.destination || '',
+        destinationPlace: trip.destination_place,
+        startDate: formatDateForInput(trip.start_date),
+        endDate: formatDateForInput(trip.end_date),
+        accessLevel: trip.access_level,
+        imageUrl: trip.image_url || ''
+      })
+      setOriginalImageUrl(trip.image_url || '')
+    }
+  }, [trip, isEditing])
 
   const handleSave = async () => {
     setSaving(true)
+    setShowLoadingOverlay(true)
+    
     try {
       const response = await makeAuthenticatedRequest(`/api/trip/${trip.id}`, {
         method: 'PUT',
@@ -71,6 +116,7 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
           title: formData.title,
           description: formData.description,
           destination: formData.destination,
+          destinationPlace: formData.destinationPlace,
           startDate: formData.startDate || null,
           endDate: formData.endDate || null,
           accessLevel: formData.accessLevel,
@@ -79,18 +125,42 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
       })
 
       if (response.ok) {
-        const updatedTrip = {
-          ...trip,
-          title: formData.title,
-          description: formData.description,
-          destination: formData.destination,
-          start_date: formData.startDate,
-          end_date: formData.endDate,
-          access_level: formData.accessLevel,
-          image_url: formData.imageUrl,
-          updated_at: new Date().toISOString()
+        // 古い画像を削除（新しい画像がアップロードされた場合）
+        if (originalImageUrl && originalImageUrl !== formData.imageUrl) {
+          try {
+            await imageUploadHelpers.deleteImage(originalImageUrl)
+            console.log('Old image deleted:', originalImageUrl)
+          } catch (error) {
+            console.error('Failed to delete old image:', error)
+            // エラーが発生しても処理は続行
+          }
         }
-        onUpdate(updatedTrip)
+
+        // 最新のtripデータを取得
+        const tripResponse = await makeAuthenticatedRequest(`/api/trip/${trip.id}`)
+        if (tripResponse.ok) {
+          const latestTripData = await tripResponse.json()
+          
+          // 最新データで一括更新
+          onUpdate(latestTripData)
+          setOriginalImageUrl(formData.imageUrl)
+        } else {
+          // フォールバック: ローカルデータで更新
+          const updatedTrip = {
+            ...trip,
+            title: formData.title,
+            description: formData.description,
+            destination: formData.destination,
+            start_date: formData.startDate,
+            end_date: formData.endDate,
+            access_level: formData.accessLevel,
+            image_url: formData.imageUrl,
+            updated_at: new Date().toISOString()
+          }
+          onUpdate(updatedTrip)
+        }
+        
+        // 編集モードを終了
         setIsEditing(false)
       } else {
         console.error('Failed to update trip')
@@ -99,16 +169,28 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
       console.error('Error updating trip:', error)
     } finally {
       setSaving(false)
+      setShowLoadingOverlay(false)
     }
   }
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
+    // キャンセル時に新しくアップロードされた画像を削除
+    if (formData.imageUrl && formData.imageUrl !== originalImageUrl) {
+      try {
+        await imageUploadHelpers.deleteImage(formData.imageUrl)
+        console.log('Cancelled image deleted:', formData.imageUrl)
+      } catch (error) {
+        console.error('Failed to delete cancelled image:', error)
+      }
+    }
+
     setFormData({
       title: trip.title,
       description: trip.description || '',
       destination: trip.destination || '',
-      startDate: trip.start_date || '',
-      endDate: trip.end_date || '',
+      destinationPlace: trip.destination_place,
+      startDate: formatDateForInput(trip.start_date),
+      endDate: formatDateForInput(trip.end_date),
       accessLevel: trip.access_level,
       imageUrl: trip.image_url || ''
     })
@@ -125,8 +207,26 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
 
   if (isEditing) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">旅行情報を編集</h2>
+      <>
+        {/* 画面全体のローディングオーバーレイ */}
+        {showLoadingOverlay && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-8 flex flex-col items-center space-y-4 shadow-xl">
+              {/* 回転プログレスバー */}
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-gray-200 rounded-full"></div>
+                <div className="absolute top-0 left-0 w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <div className="text-center">
+                <p className="text-gray-900 font-medium text-lg">保存中...</p>
+                <p className="text-gray-600 text-sm">日程を更新しています</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">旅行情報を編集</h2>
         
         <div className="space-y-4">
           <div>
@@ -162,14 +262,31 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
             <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
               目的地
             </label>
-            <input
-              type="text"
-              id="destination"
-              name="destination"
-              value={formData.destination}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <PlaceSearchInput
+              currentPlace={formData.destinationPlace}
+              onPlaceSelect={(place) => setFormData(prev => ({ 
+                ...prev, 
+                destinationPlace: place,
+                destination: place.name // 後方互換性のため
+              }))}
+              placeholder="目的地を検索..."
+              disabled={saving}
             />
+            {/* 従来のテキスト入力も残す（フォールバック用） */}
+            <div className="mt-2">
+              <label htmlFor="destinationText" className="block text-xs text-gray-500 mb-1">
+                または手動で入力
+              </label>
+              <input
+                type="text"
+                id="destinationText"
+                name="destination"
+                value={formData.destination}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                placeholder="例: 沖縄県那覇市"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -243,7 +360,8 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
             {saving ? '保存中...' : '保存'}
           </button>
         </div>
-      </div>
+        </div>
+      </>
     )
   }
 
