@@ -1,3 +1,5 @@
+import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore'
+
 // Firestore collection names
 export const COLLECTIONS = {
   USERS: 'users',
@@ -80,6 +82,7 @@ export interface Day {
   description?: string
   created_at: Date
   updated_at: Date
+  itineraries?: Itinerary[]
 }
 
 export interface Itinerary {
@@ -100,4 +103,28 @@ export interface TripUser {
   trip_id: string
   user_id: string
   created_at: Date
+}
+
+// Update day function
+export async function updateDay(dayId: string, updates: Partial<Day>): Promise<Day> {
+  const db = getFirestore()
+  const dayRef = doc(db, COLLECTIONS.DAYS, dayId)
+  
+  const updateData = {
+    ...updates,
+    updated_at: new Date()
+  }
+  
+  await updateDoc(dayRef, updateData)
+  
+  // Return updated day data
+  const updatedDoc = await getDoc(dayRef)
+  if (!updatedDoc.exists()) {
+    throw new Error('Day not found')
+  }
+  
+  return {
+    id: updatedDoc.id,
+    ...updatedDoc.data()
+  } as Day
 }

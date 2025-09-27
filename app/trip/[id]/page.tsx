@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import TripEditor from '@/components/TripEditor'
+import DayEditor from '@/components/DayEditor'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 
@@ -175,9 +176,20 @@ export default function TripPage({ params }: { params: { id: string } }) {
                   </span>
                 </div>
                 
-                {day.description && (
-                  <p className="text-gray-600 mb-4">{day.description}</p>
-                )}
+                <div className="mb-4">
+                  <DayEditor 
+                    day={day} 
+                    onUpdate={(updatedDay) => {
+                      setTrip(prevTrip => {
+                        if (!prevTrip) return prevTrip
+                        return {
+                          ...prevTrip,
+                          days: prevTrip.days?.map(d => d.id === updatedDay.id ? updatedDay : d) || []
+                        }
+                      })
+                    }} 
+                  />
+                </div>
 
                 {day.itineraries && day.itineraries.length > 0 ? (
                   <div className="space-y-3">
