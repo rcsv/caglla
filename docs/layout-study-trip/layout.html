@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wanderlog風 2ペイン骨格（Grid + Vanilla CSS）</title>
+  <link rel="stylesheet" href="./layout.css" />
+  <link rel="stylesheet" href="./zIdx.css" />
+  <link rel="stylesheet" href="./map-component.css" />
+</head>
+
+<body class="has-leftnav-collapsed">
+  <div class="appgrid">
+    <!-- 左ペイン -->
+    <section class="left-pane">
+      <header class="left-header">
+        <button class="btn-leftnav-toggle" aria-label="Toggle left menu">☰</button>
+        <div class="left-header__title">Trip Planner</div>
+        <div class="left-header__spacer"></div>
+        <button class="btn-map-toggle" aria-label="Show map (mobile)">🗺️</button>
+      </header>
+
+      <div class="left-body">
+        <!-- 左メニュー（48px / 188px） -->
+        <nav class="leftnav" aria-label="Sidebar navigation">
+          <ul class="leftnav__items">
+            <li class="item" title="Dashboard">🏠<span class="label">Summary</span></li>
+            <li class="item" title="Trips">🧳<span class="label">Itinerary</span></li>
+            <li class="item" title="Checklist">✅<span class="label">Checklist</span></li>
+          </ul>
+        </nav>
+
+        <!-- メイン -->
+        <main class="main">
+          <article class="card">
+            <h1 class="card__title">Welcome to Your Trip Planner</h1>
+            <p class="card__description">Plan your trips efficiently with our intuitive interface.</p>
+            <button class="card__action">Get Started</button>
+          </article>
+          <article class="card">
+          </article>
+          <article class="card">
+          </article>
+         </article>
+        </main>
+      </div>
+    </section>
+
+    <!-- 右ペイン（マップ） -->
+    <aside class="right-pane" aria-label="Map">
+      <div class="map">
+        <div class="map-canvas">MAP AREA</div>
+
+        <!-- ← これを .map の『内側』に置く -->
+        <div class="map-overlay">
+          <div class="top">
+            <div class="cols flex">
+              <input class="poi-input" placeholder="Search Spot..."/>
+              <div class="chip">Filter: ALL</div>
+            </div>
+            <div class="cols right">
+              <button class="icon-btn" aria-label="Zoom In">+</button>
+            </div>
+            <div class="cols right">
+              <button class="icon-btn" aria-label="Zoom Out">-</button>
+            </div>
+            <div class="cols right">
+              <button class="icon-btn" aria-label="Current">X</button>
+            </div>
+          </div>
+
+          <div class="bottom">
+            <div class="cols flex">
+              <div class="chip">&lt; 1 of 13 &gt;</div>
+              <div class="chip">import</div>
+              <div class="chip">X</div>
+            </div>
+            <div class="map-dialog">
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>
+              <h1>Dialog</h1>              
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- モバイル時の黒背景（Offcanvas用） -->
+  <div class="backdrop" aria-hidden="true"></div>
+
+  <script>
+    const body = document.body;
+    const btnNav = document.querySelector('.btn-leftnav-toggle');
+    const btnMap = document.querySelector('.btn-map-toggle');
+    const backdrop = document.querySelector('.backdrop');
+
+    // ≥992px：48px/188px の切替（常時2カラム）
+    btnNav?.addEventListener('click', () => {
+      const w = window.innerWidth;
+      if (w >= 992) {
+        body.classList.toggle('has-leftnav-expanded');
+        body.classList.toggle('has-leftnav-collapsed');
+      } else if (w >= 768) {
+        // 768–991px：左メニューはオーバーレイ（140pxがメインに被さる）
+        body.classList.toggle('overlay-leftnav-open'); // backdropは出さない
+      } else {
+        // <768px：Offcanvas でスライドイン＋黒背景
+        body.classList.toggle('offcanvas-open');
+      }
+    });
+
+    // モバイルで地図全画面トグル（任意）
+    btnMap?.addEventListener('click', () => {
+      const w = window.innerWidth;
+      if (w < 768) {
+        body.classList.toggle('show-map-fullscreen');
+      }
+    });
+
+    // Offcanvas の黒背景クリックで閉じる
+    backdrop?.addEventListener('click', () => {
+      body.classList.remove('offcanvas-open');
+    });
+
+    // 画面幅が変わった時に余計な状態を掃除
+    const cleanState = () => {
+      const w = window.innerWidth;
+      if (w >= 992) {
+        body.classList.remove('overlay-leftnav-open', 'offcanvas-open');
+      } else if (w >= 768) {
+        body.classList.remove('offcanvas-open');
+      } else {
+        body.classList.remove('overlay-leftnav-open');
+      }
+    };
+    window.addEventListener('resize', cleanState);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,164 @@
+/* ===== Bootstrap互換ブレークポイント ===== */
+@media (min-width: 576px) { /* sm */ }
+@media (min-width: 768px) { /* md */ }
+@media (min-width: 992px) { /* lg */ }
+@media (min-width:1200px) { /* xl */ }
+
+:root{
+  --leftnav-width-collapsed: 48px;
+  --leftnav-width-expanded: 188px;
+  --main-min: 385px;
+  --main-max: 740px;
+  --map-min-md: 335px;   /* 768–991px */
+  --map-min-lg: 400px;   /* ≥992px */
+  --header-h: 64px;
+  --bg: #f6f7f9;
+  --card: #fff;
+  --border: #e5e7eb;
+  --shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: #111;
+  font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", sans-serif;
+  overflow: hidden; /* スクロールは main だけ */
+}
+
+/* ===============================
+   アプリ全体の2ペイングリッド
+   =============================== */
+.appgrid{ height: 100vh; display: grid; grid-template-columns: 1fr; }
+
+/* 768–991px：左+map（335px） */
+@media (min-width:768px) and (max-width:991.98px){
+  .appgrid{ grid-template-columns: 1fr var(--map-min-md); }
+}
+
+/* ≥992px：左(48/188 + main) + map(400) → 状態別に器を分岐 */
+@media (min-width:992px){
+  /* 折りたたみ時（48px） */
+  .appgrid{
+    grid-template-columns:
+      minmax(calc(var(--leftnav-width-collapsed) + var(--main-min)),
+             calc(var(--leftnav-width-collapsed) + var(--main-max)))
+      var(--map-min-lg);
+  }
+  /* 展開時（188px） */
+  body.has-leftnav-expanded .appgrid{
+    grid-template-columns:
+      minmax(calc(var(--leftnav-width-expanded) + var(--main-min)),
+             calc(var(--leftnav-width-expanded) + var(--main-max)))
+      var(--map-min-lg);
+  }
+}
+
+/* ≥1200px：map を可変に */
+@media (min-width:1200px){
+  .appgrid{
+    grid-template-columns:
+      minmax(calc(var(--leftnav-width-collapsed) + var(--main-min)),
+             calc(var(--leftnav-width-collapsed) + var(--main-max)))
+      minmax(var(--map-min-lg), 1fr);
+  }
+  body.has-leftnav-expanded .appgrid{
+    grid-template-columns:
+      minmax(calc(var(--leftnav-width-expanded) + var(--main-min)),
+             calc(var(--leftnav-width-expanded) + var(--main-max)))
+      minmax(var(--map-min-lg), 1fr);
+  }
+}
+
+/* ===============================
+   左ペイン（ヘッダー + ボディ）
+   =============================== */
+.left-pane{ display: grid; grid-template-rows: var(--header-h) 1fr; min-width: 0; height: 100vh; }
+.left-header{
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 8px;
+  height: var(--header-h); padding: 0 8px; background: #fff; border-bottom: 1px solid var(--border);
+}
+.left-header__spacer{ flex: 1; }
+.btn-leftnav-toggle, .btn-map-toggle{
+  border: 1px solid var(--border); 
+  background: #fff; padding: 6px 10px; border-radius: 8px; cursor: pointer;
+}
+@media (min-width:768px){ .btn-map-toggle{ display: none; } }
+
+/* 左ボディ：スクロールは main のみ */
+.left-body{
+  display: grid;
+  grid-template-columns: var(--leftnav-width-collapsed) minmax(var(--main-min), var(--main-max));
+  gap: 0; padding: 0; position: relative; height: calc(100vh - var(--header-h));
+}
+
+/* md以上は列の割当を明示（main を2列目固定） */
+@media (min-width:768px){ .leftnav{ grid-column: 1; } .main{ grid-column: 2 / -1; } }
+
+/* ≥992px：常時2カラム（被さりなし）。展開時は列幅そのものを188pxへ */
+@media (min-width:992px){
+  .left-body{ 
+    grid-template-columns: var(--leftnav-width-collapsed) minmax(var(--main-min), var(--main-max)); }
+  body.has-leftnav-expanded .left-body{ 
+    grid-template-columns: var(--leftnav-width-expanded) minmax(var(--main-min), var(--main-max)); }
+}
+
+/* ===============================
+   左ナビ
+   =============================== */
+.leftnav{
+  position: sticky; 
+  top: var(--header-h);
+  background: #fff; 
+  border: 1px solid var(--border); 
+  /* border-radius: 12px; */
+  overflow: hidden; width: var(--leftnav-width-collapsed);
+  height: calc(100vh - var(--header-h)); transition: width .2s ease;
+  /* z-index: 40; */
+}
+.leftnav__items{ list-style: none; margin: 0; padding: 8px; display: grid; gap: 8px; }
+.leftnav .label{ display: none; }
+@media (min-width:992px){ body.has-leftnav-expanded .leftnav{ width: var(--leftnav-width-expanded); } body.has-leftnav-expanded .leftnav .label{ display: inline; } }
+
+/* 768–991px：展開時だけオーバーレイ（横に拡大）。ヘッダー下から開始 */
+@media (min-width:768px) and (max-width:991.98px){
+  body.overlay-leftnav-open .leftnav{
+    position: fixed; top: var(--header-h); left: 0; height: calc(100vh - var(--header-h)); width: var(--leftnav-width-expanded);
+    box-shadow: var(--shadow); z-index: 80;
+  }
+  body.overlay-leftnav-open .leftnav .label{ display: inline; }
+}
+
+/* ===============================
+   メイン（唯一のスクロール領域）
+   =============================== */
+.main{ min-width: 0; height: calc(100vh - var(--header-h)); overflow-y: auto; padding: 16px; }
+.card{ background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+
+/* ===============================
+   右ペイン（mapは固定）
+   =============================== */
+.right-pane{ display: none; position: sticky; top: 0; height: 100vh; background: #e8eef9; }
+@media (min-width:768px){ .right-pane{ display: block; min-width: var(--map-min-md); } }
+@media (min-width:992px){ .right-pane{ min-width: var(--map-min-lg); } }
+.map{ position: absolute; inset: 0; display: grid; place-items: center; font-weight: 600; color: #334155; }
+
+/* ===============================
+   <768px: Offcanvas（ヘッダー含めて最上部から）
+   =============================== */
+@media (max-width:767.98px){
+  .left-body{ display: block; height: calc(100vh - var(--header-h)); overflow: hidden; }
+  .main{ display:block; width:100%; min-width:0; height:100%; overflow:auto; }
+
+  .leftnav{
+    position: fixed; top: 0; left: 0; height: 100vh; width: var(--leftnav-width-expanded);
+    transform: translateX(-100%); transition: transform .25s ease; z-index: 80; box-shadow: var(--shadow);
+  }
+  .leftnav .label{ display: inline; }
+  body.offcanvas-open .leftnav{ transform: translateX(0%); }
+
+  .backdrop{ position: fixed; inset: 0; background: rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 70; }
+  body.offcanvas-open .backdrop{ opacity: 1; pointer-events: auto; }
+}
