@@ -5,6 +5,7 @@ import { placesApiHelpers } from '@/lib/places-api'
 import { PlaceData } from '@/lib/firestore'
 import { timezoneUtils } from '@/lib/timezone-utils'
 import { currencyUtils } from '@/lib/currency-utils'
+import VenueDistance from './VenueDistance'
 
 interface ScheduleCardProps {
   itinerary: {
@@ -23,6 +24,8 @@ interface ScheduleCardProps {
     created_at: string
     updated_at: string
   }
+  previousPlace?: PlaceData
+  nextPlace?: PlaceData
   onUpdate?: (updatedItinerary: any) => void
   onMoveUp?: () => void
   onMoveDown?: () => void
@@ -32,6 +35,8 @@ interface ScheduleCardProps {
 
 export default function ScheduleCard({ 
   itinerary, 
+  previousPlace,
+  nextPlace,
   onUpdate, 
   onMoveUp, 
   onMoveDown, 
@@ -378,7 +383,7 @@ export default function ScheduleCard({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-visible">
+    <div className="relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-visible">
       <div className="flex">
         {/* 左側: ソート番号とコンテンツ */}
         <div className="flex-1 p-4">
@@ -735,6 +740,9 @@ export default function ScheduleCard({
           </div>
         </div>
       </div>
+      
+      {/* Gitタイムライン風の接続点（カードの下端） */}
+      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300"></div>
     </div>
   )
 }

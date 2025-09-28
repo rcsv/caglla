@@ -8,6 +8,7 @@ import TripEditor from '@/components/TripEditor'
 import DayEditor from '@/components/DayEditor'
 import AddScheduleModal from '@/components/AddScheduleModal'
 import ScheduleCard from '@/components/ScheduleCard'
+import VenueDistance from '@/components/VenueDistance'
 import TripCostDisplay from '@/components/TripCostDisplay'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
@@ -560,17 +561,36 @@ export default function TripPage({ params }: { params: { id: string } }) {
                               Venue / Point of Interest を追加
                             </button>
                           </div>
-                          <div className="space-y-3">
-                            {day.itineraries.map((itinerary, index) => (
-                              <ScheduleCard
-                                key={itinerary.id}
-                                itinerary={itinerary}
-                                onUpdate={handleScheduleUpdated}
-                                onMoveUp={() => handleMoveUp(itinerary.id, day.id)}
-                                onMoveDown={() => handleMoveDown(itinerary.id, day.id)}
-                                onDelete={handleScheduleDelete}
-                              />
-                            ))}
+                          <div className="space-y-0">
+                            {day.itineraries.map((itinerary, index) => {
+                              const previousItinerary = index > 0 ? day.itineraries[index - 1] : null
+                              const nextItinerary = index < day.itineraries.length - 1 ? day.itineraries[index + 1] : null
+                              
+                              return (
+                                <div key={itinerary.id} className="relative">
+                                  <ScheduleCard
+                                    itinerary={itinerary}
+                                    previousPlace={previousItinerary?.place_data}
+                                    nextPlace={nextItinerary?.place_data}
+                                    onUpdate={handleScheduleUpdated}
+                                    onMoveUp={() => handleMoveUp(itinerary.id, day.id)}
+                                    onMoveDown={() => handleMoveDown(itinerary.id, day.id)}
+                                    onDelete={handleScheduleDelete}
+                                  />
+                                  
+                                  {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}
+                                  {itinerary.place_data && 
+                                   nextItinerary?.place_data && 
+                                   itinerary.place_data.place_id !== nextItinerary.place_data.place_id && (
+                                    <VenueDistance 
+                                      fromPlace={itinerary.place_data}
+                                      toPlace={nextItinerary.place_data}
+                                      mode="driving"
+                                    />
+                                  )}
+                                </div>
+                              )
+                            })}
                           </div>
                         </div>
                       ) : (
