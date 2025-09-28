@@ -3,6 +3,13 @@ export const dateUtils = {
   // Check if a date is valid
   isValidDate: (date: any): boolean => {
     if (!date) return false
+    
+    // Handle Firestore Timestamp objects
+    if (date && typeof date === 'object' && date.toDate && typeof date.toDate === 'function') {
+      const d = date.toDate()
+      return !isNaN(d.getTime())
+    }
+    
     const d = new Date(date)
     return !isNaN(d.getTime())
   },
@@ -13,7 +20,14 @@ export const dateUtils = {
       return '日付が設定されていません'
     }
     
-    const d = new Date(date)
+    // Handle Firestore Timestamp objects
+    let d: Date
+    if (date && typeof date === 'object' && date.toDate && typeof date.toDate === 'function') {
+      d = date.toDate()
+    } else {
+      d = new Date(date)
+    }
+    
     return d.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'long',
@@ -29,8 +43,19 @@ export const dateUtils = {
       return '日付が設定されていません'
     }
     
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    // Handle Firestore Timestamp objects
+    let start: Date, end: Date
+    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
+      start = startDate.toDate()
+    } else {
+      start = new Date(startDate)
+    }
+    
+    if (endDate && typeof endDate === 'object' && endDate.toDate && typeof endDate.toDate === 'function') {
+      end = endDate.toDate()
+    } else {
+      end = new Date(endDate)
+    }
     
     return `${start.toLocaleDateString('ja-JP')} - ${end.toLocaleDateString('ja-JP')}`
   },
@@ -45,7 +70,15 @@ export const dateUtils = {
   // Check if a trip is in the future (start date is today or later)
   isFutureTrip: (startDate: any): boolean => {
     if (!dateUtils.isValidDate(startDate)) return false
-    const tripStart = new Date(startDate)
+    
+    // Handle Firestore Timestamp objects
+    let tripStart: Date
+    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
+      tripStart = startDate.toDate()
+    } else {
+      tripStart = new Date(startDate)
+    }
+    
     tripStart.setHours(0, 0, 0, 0)
     const today = dateUtils.getToday()
     return tripStart >= today
@@ -54,7 +87,15 @@ export const dateUtils = {
   // Check if a trip is in the past (start date is before today)
   isPastTrip: (startDate: any): boolean => {
     if (!dateUtils.isValidDate(startDate)) return false
-    const tripStart = new Date(startDate)
+    
+    // Handle Firestore Timestamp objects
+    let tripStart: Date
+    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
+      tripStart = startDate.toDate()
+    } else {
+      tripStart = new Date(startDate)
+    }
+    
     tripStart.setHours(0, 0, 0, 0)
     const today = dateUtils.getToday()
     return tripStart < today
@@ -68,14 +109,44 @@ export const dateUtils = {
       .filter(trip => dateUtils.isFutureTrip(trip.start_date))
       .sort((a, b) => {
         if (!a.start_date || !b.start_date) return 0
-        return new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+        
+        // Handle Firestore Timestamp objects
+        let dateA: Date, dateB: Date
+        if (a.start_date && typeof a.start_date === 'object' && a.start_date.toDate && typeof a.start_date.toDate === 'function') {
+          dateA = a.start_date.toDate()
+        } else {
+          dateA = new Date(a.start_date)
+        }
+        
+        if (b.start_date && typeof b.start_date === 'object' && b.start_date.toDate && typeof b.start_date.toDate === 'function') {
+          dateB = b.start_date.toDate()
+        } else {
+          dateB = new Date(b.start_date)
+        }
+        
+        return dateA.getTime() - dateB.getTime()
       })
     
     const pastTrips = trips
       .filter(trip => dateUtils.isPastTrip(trip.start_date))
       .sort((a, b) => {
         if (!a.start_date || !b.start_date) return 0
-        return new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
+        
+        // Handle Firestore Timestamp objects
+        let dateA: Date, dateB: Date
+        if (a.start_date && typeof a.start_date === 'object' && a.start_date.toDate && typeof a.start_date.toDate === 'function') {
+          dateA = a.start_date.toDate()
+        } else {
+          dateA = new Date(a.start_date)
+        }
+        
+        if (b.start_date && typeof b.start_date === 'object' && b.start_date.toDate && typeof b.start_date.toDate === 'function') {
+          dateB = b.start_date.toDate()
+        } else {
+          dateB = new Date(b.start_date)
+        }
+        
+        return dateB.getTime() - dateA.getTime()
       })
     
     return { futureTrips, pastTrips }
@@ -87,8 +158,20 @@ export const dateUtils = {
       return '日付が設定されていません'
     }
     
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    // Handle Firestore Timestamp objects
+    let start: Date, end: Date
+    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
+      start = startDate.toDate()
+    } else {
+      start = new Date(startDate)
+    }
+    
+    if (endDate && typeof endDate === 'object' && endDate.toDate && typeof endDate.toDate === 'function') {
+      end = endDate.toDate()
+    } else {
+      end = new Date(endDate)
+    }
+    
     const today = dateUtils.getToday()
     
     // Calculate days until trip
@@ -110,8 +193,14 @@ export const dateUtils = {
       return '日付が設定されていません'
     }
     
-    const start = new Date(startDate)
-    const end = new Date(endDate)
+    // Handle Firestore Timestamp objects
+    let start: Date
+    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
+      start = startDate.toDate()
+    } else {
+      start = new Date(startDate)
+    }
+    
     const today = dateUtils.getToday()
     
     // Calculate years and months difference

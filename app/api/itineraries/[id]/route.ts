@@ -1,0 +1,100 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { adminDb } from '@/lib/firebase-admin'
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await request.json()
+    
+    // reorderリクエストかどうかを判定
+    if (body.day_id !== undefined && body.sort_number !== undefined) {
+      // reorderリクエスト
+      const { day_id, sort_number } = body
+      
+      const itineraryRef = adminDb.collection('itineraries').doc(params.id)
+      
+      const updateData = {
+        day_id,
+        sort_number,
+        updated_at: new Date()
+      }
+      
+      await itineraryRef.update(updateData)
+      
+      const updatedDoc = await itineraryRef.get()
+      if (!updatedDoc.exists) {
+        return NextResponse.json(
+          { error: 'Itinerary not found' },
+          { status: 404 }
+        )
+      }
+      
+      const updatedItinerary = {
+        id: updatedDoc.id,
+        ...updatedDoc.data()
+      }
+
+      return NextResponse.json(updatedItinerary)
+    } else {
+      // 通常の更新リクエスト
+      const { description, start_time, end_time } = body
+      
+      const itineraryRef = adminDb.collection('itineraries').doc(params.id)
+      
+      const updateData: any = {
+        updated_at: new Date()
+      }
+      
+      if (description !== undefined) updateData.description = description
+      if (start_time !== undefined) updateData.start_time = start_time
+      if (end_time !== undefined) updateData.end_time = end_time
+      
+      await itineraryRef.update(updateData)
+      
+      const updatedDoc = await itineraryRef.get()
+      if (!updatedDoc.exists) {
+        return NextResponse.json(
+          { error: 'Itinerary not found' },
+          { status: 404 }
+        )
+      }
+      
+      const updatedItinerary = {
+        id: updatedDoc.id,
+        ...updatedDoc.data()
+      }
+
+      return NextResponse.json(updatedItinerary)
+    }
+  } catch (error) {
+    console.error('Error updating itinerary:', error)
+    return NextResponse.json(
+      { error: 'Failed to update itinerary' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const itineraryRef = adminDb.collection('itineraries').doc(params.id)
+    
+    // ドキュメントを削除
+    await itineraryRef.update({
+      deleted_at: new Date()
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting itinerary:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete itinerary' },
+      { status: 500 }
+    )
+  }
+}

@@ -20,4 +20,12 @@ export const adminDb = getFirestore(app)
 // Auth Admin インスタンス
 export const adminAuth = getAuth(app)
 
+// 初期化関数（既に初期化済みの場合は何もしない）
+export async function initializeFirebaseAdmin() {
+  if (getApps().length === 0) {
+    initializeApp(firebaseAdminConfig)
+  }
+  return app
+}
+
 export default app
