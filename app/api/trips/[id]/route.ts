@@ -39,6 +39,15 @@ export async function GET(
       )
     }
 
+    // Convert Firestore Timestamps to Date objects
+    const convertedTripData = {
+      ...tripData,
+      created_at: tripData.created_at?.toDate ? tripData.created_at.toDate() : tripData.created_at,
+      updated_at: tripData.updated_at?.toDate ? tripData.updated_at.toDate() : tripData.updated_at,
+      start_date: tripData.start_date?.toDate ? tripData.start_date.toDate() : tripData.start_date,
+      end_date: tripData.end_date?.toDate ? tripData.end_date.toDate() : tripData.end_date,
+    }
+
     // Daysを取得
     const daysSnapshot = await adminDb
       .collection(COLLECTIONS.DAYS)
@@ -50,6 +59,14 @@ export async function GET(
     for (const dayDoc of daysSnapshot.docs) {
       const dayData = dayDoc.data()
       
+      // Convert Firestore Timestamps to Date objects for day data
+      const convertedDayData = {
+        ...dayData,
+        created_at: dayData.created_at?.toDate ? dayData.created_at.toDate() : dayData.created_at,
+        updated_at: dayData.updated_at?.toDate ? dayData.updated_at.toDate() : dayData.updated_at,
+        date: dayData.date?.toDate ? dayData.date.toDate() : dayData.date,
+      }
+      
       // 各DayのItinerariesを取得
       const itinerariesSnapshot = await adminDb
         .collection(COLLECTIONS.ITINERARIES)
@@ -57,23 +74,28 @@ export async function GET(
         .get()
 
       const itineraries = itinerariesSnapshot.docs
-        .map(itineraryDoc => ({
-          id: itineraryDoc.id,
-          ...itineraryDoc.data()
-        }))
+        .map(itineraryDoc => {
+          const itineraryData = itineraryDoc.data()
+          return {
+            id: itineraryDoc.id,
+            ...itineraryData,
+            created_at: itineraryData.created_at?.toDate ? itineraryData.created_at.toDate() : itineraryData.created_at,
+            updated_at: itineraryData.updated_at?.toDate ? itineraryData.updated_at.toDate() : itineraryData.updated_at,
+          }
+        })
         .filter(itinerary => !itinerary.deleted_at) // 削除されていないもののみ
         .sort((a, b) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
 
       days.push({
         id: dayDoc.id,
-        ...dayData,
+        ...convertedDayData,
         itineraries
       })
     }
 
     const trip = {
       id: tripDoc.id,
-      ...tripData,
+      ...convertedTripData,
       days
     }
 
@@ -121,9 +143,20 @@ export async function PUT(
     await tripRef.update(updateData)
 
     const updatedDoc = await tripRef.get()
+    const updatedTripData = updatedDoc.data()
+    
+    // Convert Firestore Timestamps to Date objects
+    const convertedUpdatedTripData = {
+      ...updatedTripData,
+      created_at: updatedTripData.created_at?.toDate ? updatedTripData.created_at.toDate() : updatedTripData.created_at,
+      updated_at: updatedTripData.updated_at?.toDate ? updatedTripData.updated_at.toDate() : updatedTripData.updated_at,
+      start_date: updatedTripData.start_date?.toDate ? updatedTripData.start_date.toDate() : updatedTripData.start_date,
+      end_date: updatedTripData.end_date?.toDate ? updatedTripData.end_date.toDate() : updatedTripData.end_date,
+    }
+    
     const updatedTrip = {
       id: updatedDoc.id,
-      ...updatedDoc.data()
+      ...convertedUpdatedTripData
     }
 
     return NextResponse.json(updatedTrip)
