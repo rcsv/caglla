@@ -14,7 +14,7 @@ import TripDistanceDisplay from '@/components/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/TripWeatherDisplay'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
-import { Trip, Day, Itinerary, User } from '@/lib/types'
+import { Trip, Day, Itinerary, User } from '@/lib/firestore'
 
 export default function TripPage({ params }: { params: { id: string } }) {
   const { user, loading } = useAuth()
@@ -479,7 +479,11 @@ export default function TripPage({ params }: { params: { id: string } }) {
               </svg>
               戻る
             </Link>
-            <TripEditor trip={trip as any} onUpdate={(updatedTrip: any) => setTrip(updatedTrip)} />
+            <TripEditor 
+              trip={trip as any} 
+              onUpdate={(updatedTrip: any) => setTrip(updatedTrip)} 
+              onDelete={() => router.push('/')}
+            />
           </div>
           
           {/* Main Content - Positioned higher */}

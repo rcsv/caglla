@@ -51,10 +51,13 @@ interface Trip {
 interface TripEditorProps {
   trip: Trip
   onUpdate: (updatedTrip: Trip) => void
+  onDelete?: () => void
 }
 
-export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
+export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps) {
   const [isEditing, setIsEditing] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const formatDateForInput = (date: any): string => {
     if (!date) return ''
     
@@ -195,6 +198,30 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
       imageUrl: trip.image_url || ''
     })
     setIsEditing(false)
+  }
+
+  const handleDelete = async () => {
+    if (!onDelete) return
+    
+    setDeleting(true)
+    try {
+      const response = await makeAuthenticatedRequest(`/api/trip/${trip.id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        onDelete()
+      } else {
+        console.error('Failed to delete trip')
+        alert('旅行の削除に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error deleting trip:', error)
+      alert('旅行の削除中にエラーが発生しました')
+    } finally {
+      setDeleting(false)
+      setShowDeleteConfirm(false)
+    }
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -365,6 +392,14 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
           </button>
           <button
             type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={saving}
+            className="px-4 py-2 text-red-600 hover:text-red-900 font-medium disabled:opacity-50"
+          >
+            削除
+          </button>
+          <button
+            type="button"
             onClick={handleSave}
             disabled={saving || !formData.title}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
@@ -374,6 +409,36 @@ export default function TripEditor({ trip, onUpdate }: TripEditorProps) {
         </div>
           </div>
         </div>
+
+        {/* 削除確認ダイアログ */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                旅行を削除しますか？
+              </h3>
+              <p className="text-gray-600 mb-6">
+                「{trip.title}」を削除します。この操作は取り消せません。
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={deleting}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                >
+                  {deleting ? '削除中...' : '削除'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     )
   }
