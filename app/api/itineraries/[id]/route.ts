@@ -39,7 +39,7 @@ export async function PUT(
       return NextResponse.json(updatedItinerary)
     } else {
       // 通常の更新リクエスト
-      const { description, start_time, end_time } = body
+      const { description, start_time, end_time, timezone, cost_amount, cost_currency } = body
       
       const itineraryRef = adminDb.collection('itineraries').doc(params.id)
       
@@ -50,6 +50,9 @@ export async function PUT(
       if (description !== undefined) updateData.description = description
       if (start_time !== undefined) updateData.start_time = start_time
       if (end_time !== undefined) updateData.end_time = end_time
+      if (timezone !== undefined) updateData.timezone = timezone
+      if (cost_amount !== undefined) updateData.cost_amount = cost_amount
+      if (cost_currency !== undefined) updateData.cost_currency = cost_currency
       
       await itineraryRef.update(updateData)
       
