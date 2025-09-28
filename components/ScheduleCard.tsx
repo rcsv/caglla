@@ -39,6 +39,7 @@ export default function ScheduleCard({
   const [endTime, setEndTime] = useState(itinerary.end_time || '')
   const [isSaving, setIsSaving] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
@@ -152,11 +153,22 @@ export default function ScheduleCard({
 
   const photoUrl = getPhotoUrl()
 
+  // 説明文の展開/折りたたみロジック
+  const MAX_CHARS = 150
+  const shouldTruncate = description.length > MAX_CHARS
+  const displayText = shouldTruncate && !isExpanded 
+    ? description.substring(0, MAX_CHARS) + '...'
+    : description
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded)
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden h-40">
-      <div className="flex h-full">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="flex">
         {/* 左側: ソート番号とコンテンツ */}
-        <div className="flex-1 p-4 flex flex-col justify-between">
+        <div className="flex-1 p-4">
           <div className="flex items-start justify-between">
             {/* ソート番号 */}
             <div className="flex-shrink-0 mr-4">
@@ -203,9 +215,24 @@ export default function ScheduleCard({
                 ) : (
                   <div
                     onClick={handleDescriptionClick}
-                    className="cursor-pointer text-sm text-gray-700 hover:bg-gray-50 p-2 rounded border border-transparent hover:border-gray-200 min-h-[2.5rem] flex items-center"
+                    className="cursor-pointer text-sm text-gray-700 hover:bg-gray-50 p-2 rounded border border-transparent hover:border-gray-200 min-h-[2.5rem]"
                   >
-                    {description || (
+                    {description ? (
+                      <div>
+                        <div className="whitespace-pre-wrap">{displayText}</div>
+                        {shouldTruncate && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleExpanded()
+                            }}
+                            className="text-blue-600 hover:text-blue-800 underline text-xs mt-1"
+                          >
+                            {isExpanded ? '折りたたむ' : '続きを読む'}
+                          </button>
+                        )}
+                      </div>
+                    ) : (
                       <span className="text-gray-400 italic">Memo: メモを追加してください</span>
                     )}
                   </div>
@@ -312,24 +339,26 @@ export default function ScheduleCard({
           </div>
         </div>
 
-        {/* 右側: 写真 */}
-        <div className="flex-shrink-0 w-32 h-full">
-          {photoUrl ? (
-            <img
-              src={photoUrl}
-              alt={itinerary.title}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-              </svg>
-            </div>
-          )}
+        {/* 右側: 写真（スクエア型で浮かぶデザイン） */}
+        <div className="flex-shrink-0 p-4">
+          <div className="w-24 h-24 rounded-lg overflow-hidden shadow-md">
+            {photoUrl ? (
+              <img
+                src={photoUrl}
+                alt={itinerary.title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
