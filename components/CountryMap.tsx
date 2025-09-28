@@ -13,7 +13,7 @@ interface CountryMapProps {
 export default function CountryMap({ countryGroups, className = '' }: CountryMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<google.maps.Map | null>(null)
-  const [markers, setMarkers] = useState<google.maps.Marker[]>([])
+  const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -26,7 +26,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         const loader = new Loader({
           apiKey: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || '',
           version: 'weekly',
-          libraries: ['places']
+          libraries: ['places', 'marker']
         })
 
         await loader.load()
@@ -38,6 +38,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
           zoom: 2,
           center: { lat: 20, lng: 0 }, // 世界地図の中心
           mapTypeId: google.maps.MapTypeId.ROADMAP,
+          mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || '6d1d86ef84ec9c9071f1b459', // Google Maps Platformで作成したMapID
           // すべてのコントロールを無効化
           disableDefaultUI: true, // デフォルトのUIを無効化
           zoomControl: false, // ズームコントロールも無効化
@@ -45,34 +46,18 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
           scaleControl: false, // スケールコントロールを無効化
           streetViewControl: false, // ストリートビューコントロールを無効化
           rotateControl: false, // 回転コントロールを無効化
-          fullscreenControl: false, // フルスクリーンコントロールを無効化
-          styles: [
-            {
-              featureType: 'all',
-              elementType: 'labels.text.fill',
-              stylers: [{ color: '#333333' }]
-            },
-            {
-              featureType: 'water',
-              elementType: 'geometry.fill',
-              stylers: [{ color: '#e6f3ff' }]
-            },
-            // Googleのクレジット情報を最小限に
-            {
-              featureType: 'all',
-              elementType: 'labels.text',
-              stylers: [{ visibility: 'simplified' }]
-            }
-          ]
+          fullscreenControl: false // フルスクリーンコントロールを無効化
+          // MapID使用時はstylesプロパティを設定しない
+          // スタイルはGoogle Cloud Consoleで管理
         })
 
         setMap(newMap)
 
         // 既存のマーカーをクリア
-        markers.forEach(marker => marker.setMap(null))
+        markers.forEach(marker => marker.map = null)
 
         // 新しいマーカーを作成
-        const newMarkers: google.maps.Marker[] = []
+        const newMarkers: google.maps.marker.AdvancedMarkerElement[] = []
 
         countryGroups.forEach((group, index) => {
           const coordinate = getCountryCoordinate(group.countryCode)
@@ -86,18 +71,21 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
             
             console.log(`Creating marker for ${group.countryNameJa} at ${coordinate.lat}, ${coordinate.lng}`)
             
-            const marker = new google.maps.Marker({
+            // カスタムマーカー要素を作成
+            const markerElement = document.createElement('div')
+            markerElement.style.width = `${8 + (group.tripCount * 2)}px`
+            markerElement.style.height = `${8 + (group.tripCount * 2)}px`
+            markerElement.style.borderRadius = '50%'
+            markerElement.style.backgroundColor = colors[colorIndex]
+            markerElement.style.border = '2px solid #ffffff'
+            markerElement.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)'
+            markerElement.style.cursor = 'pointer'
+            markerElement.title = `${group.countryNameJa} (${group.tripCount}回)`
+            
+            const marker = new google.maps.marker.AdvancedMarkerElement({
               position: { lat: coordinate.lat, lng: coordinate.lng },
               map: newMap,
-              title: `${group.countryNameJa} (${group.tripCount}回)`,
-              icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 8 + (group.tripCount * 2), // 旅行回数に応じてサイズを変更
-                fillColor: colors[colorIndex],
-                fillOpacity: 0.8,
-                strokeColor: '#ffffff',
-                strokeWeight: 2
-              }
+              content: markerElement
             })
 
             // 情報ウィンドウを作成
@@ -128,7 +116,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         if (newMarkers.length > 0) {
           const bounds = new google.maps.LatLngBounds()
           newMarkers.forEach(marker => {
-            const position = marker.getPosition()
+            const position = marker.position
             if (position) {
               bounds.extend(position)
             }
