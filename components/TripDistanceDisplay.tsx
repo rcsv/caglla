@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { distanceApiHelpers } from '@/lib/distance-api'
-import { Itinerary } from '@/lib/types'
+import { Itinerary } from '@/lib/firestore'
 
 interface TripDistanceDisplayProps {
   itineraries: Itinerary[]
@@ -47,7 +47,11 @@ export default function TripDistanceDisplay({
 
       try {
         const result = await distanceApiHelpers.calculateTotalDistance(placesWithLocation, 'driving')
-        setDistanceData(result)
+        if (result) {
+          setDistanceData(result)
+        } else {
+          setError('距離計算に失敗しました')
+        }
       } catch (err) {
         console.error('Error calculating total distance:', err)
         setError('総移動距離の計算に失敗しました')
@@ -62,6 +66,15 @@ export default function TripDistanceDisplay({
   if (isLoading) {
     return (
       <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            総移動距離
+          </h3>
+        </div>
         <div className="flex items-center justify-center py-4">
           <div className="flex items-center space-x-2 text-gray-500">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
@@ -75,16 +88,64 @@ export default function TripDistanceDisplay({
   if (error) {
     return (
       <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
-        <div className="flex items-center justify-center py-4">
-          <div className="text-red-500 text-sm">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            総移動距離
+          </h3>
+        </div>
+        <div className="text-center py-4">
+          <div className="text-red-500 text-sm mb-2">
             {error}
           </div>
+          <p className="text-gray-500 text-xs">
+            距離計算に失敗しました
+          </p>
         </div>
       </div>
     )
   }
 
   if (!distanceData) {
+    // place_dataがあるitineraryの数をチェック
+    const placesWithLocation = itineraries.filter(itinerary => itinerary.place_data?.geometry?.location)
+    
+    if (placesWithLocation.length < 2) {
+      return (
+        <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              総移動距離
+            </h3>
+          </div>
+          
+          <div className="text-center py-8">
+            <div className="text-gray-500 mb-2">
+              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 text-sm">
+              {placesWithLocation.length === 0 
+                ? '場所情報が設定されたスケジュールがありません' 
+                : '移動距離を計算するには、場所情報が設定されたスケジュールが2つ以上必要です'
+              }
+            </p>
+            <p className="text-gray-500 text-xs mt-2">
+              各スケジュールに場所を設定すると、総移動距離が表示されます
+            </p>
+          </div>
+        </div>
+      )
+    }
+    
     return null
   }
 
