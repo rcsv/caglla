@@ -1,0 +1,99 @@
+/*
+ * Z-Index / Border / Dropshadow CSS
+ *
+ * This file defines each z-index/dropshadow value used in TABI NO SHIORI.
+ *
+ * carriage return by 80 characters
+ * --------------------------------------------------------------------- */
+
+
+:root {
+    --z-index-google-map:    10 !important; /* Google Map */
+    --z-index-main-content:  20 !important; /* Main content area */
+    --z-index-leftnav-trigger-button: 25 !important; /* Left navigation trigger button */
+    --z-index-left-menu:     30 !important; /* Left navigation menu */
+    --z-index-sticky-header: 40 !important; /* Sticky header */
+    --z-index-map-overlay:   50 !important; /* Map overlay */
+    --z-index-modal:         60 !important; /* Modal dialogs */
+    --z-index-tooltip:       70 !important; /* Tooltips */
+}
+
+/* Part I: Z-Index Definitions */
+
+/* --- 1. Google Map --- */
+/* Google Map の z-index は 10 で、他の要素よりも下に配置されます。
+   これにより、地図が他のコンテンツの下に表示されることを保証します。 */
+.map {
+    z-index: var(--z-index-google-map);
+}
+
+/* --- 2. Main Content Area --- */
+/* メインコンテンツエリアの z-index は 20 で、Map よりも上に配置されます。
+   これにより、地図の上にメインコンテンツが表示されることを保証します。 */
+.main {
+    z-index: var(--z-index-main-content);
+}
+
+/* --- 3. Left Navigation Trigger Button --- */
+/* 左ナビゲーションのトリガーボタンの z-index は 25 で、メインコンテンツよりも上に配置されます。
+   これにより、ボタンが常にクリック可能であることを保証します。 */
+.btn-leftnav-toggle {
+    z-index: var(--z-index-leftnav-trigger-button);
+}
+
+/* --- 4. Left Navigation Menu --- */
+/* 左ナビゲーションメニューの z-index は 30 で、トリガーボタンよりも上に配置されます。
+   これにより、メニューが常にトリガーボタンの上に表示されることを保証します。 */
+.leftnav {
+    z-index: var(--z-index-left-menu);
+}
+
+/* --- 5. Sticky Header --- */
+/* スティッキーヘッダーの z-index は 40 で、左ナビゲーションメニューよりも上に配置されます。
+   これにより、ヘッダーが常にナビゲーションメニューの上に表示されることを保証します。 */
+.left-header {
+    z-index: var(--z-index-sticky-header);
+}
+
+/* --- 6. Map Overlay --- */
+/* マップオーバーレイの z-index は 50 で、スティッキーヘッダーよりも上に配置されます。
+   これにより、オーバーレイが常にヘッダーの上に表示されることを保証します。 */
+.map-overlay {
+    z-index: var(--z-index-map-overlay);
+}
+
+/* --- 7. Modal Dialogs --- */
+/* モーダルダイアログの z-index は 60 で、マップオーバーレイよりも上に配置されます。
+   これにより、ダイアログが常にオーバーレイの上に表示されることを保証します。 */
+.modal {
+    z-index: var(--z-index-modal);
+}
+
+/* --- 8. Tooltips --- */
+/* ツールチップの z-index は 70 で、モーダルダイアログよりも上に配置されます。
+   これにより、ツールチップが常にダイアログの上に表示されることを保証します。 */
+.tooltip {
+    z-index: var(--z-index-tooltip);
+}
+
+/* Part II: Dropshadow Definitions */
+
+:root {
+    --dropshadow-default: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --dropshadow-elevated: 0 4px 8px rgba(0, 0, 0, 0.15);
+    --dropshadow-modal: 0 6px 12px rgba(0, 0, 0, 0.2);
+
+    --border: #eee; /* Default border color */
+}
+
+/* 1. main content area: drop shadow to right-side */
+.left-header, .main, .leftnav {
+    box-shadow: var(--dropshadow-default);
+    border-right: 1px solid var(--border);
+}
+
+/* 2. map-overlay, modal, tooltip: drop shadow to right-side */
+.map-overlay .visual-parts, .modal, .tooltip {
+    box-shadow: var(--dropshadow-elevated);
+    border: 1px solid var(--border);
+}
