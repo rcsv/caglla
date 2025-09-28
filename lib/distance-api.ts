@@ -132,10 +132,22 @@ export const distanceApiHelpers = {
       })
 
       if (!response.ok) {
-        throw new Error(`Batch distance API error: ${response.status}`)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Batch distance API error:', {
+          status: response.status,
+          error: errorData.error || 'Unknown error'
+        })
+        return null
       }
 
       const data = await response.json()
+      
+      // エラーレスポンスの場合はnullを返す
+      if (data.error) {
+        console.error('Batch distance calculation error:', data.error)
+        return null
+      }
+      
       return data
     } catch (error) {
       console.error('Error calculating total distance:', error)

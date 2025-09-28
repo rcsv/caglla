@@ -88,9 +88,25 @@ export async function POST(request: NextRequest) {
             distance: element.distance,
             duration: element.duration
           })
+        } else {
+          // 距離計算に失敗した区間をログに記録
+          console.warn(`Distance calculation failed for segment ${rowIndex}-${elementIndex}:`, {
+            from: places[rowIndex]?.name || 'Unknown',
+            to: places[rowIndex + 1]?.name || 'Unknown',
+            status: element.status,
+            error_message: element.error_message || 'Unknown error'
+          })
         }
       })
     })
+
+    // 成功した区間がない場合はエラーを返す
+    if (segments.length === 0) {
+      return NextResponse.json(
+        { error: 'All distance calculations failed' },
+        { status: 400 }
+      )
+    }
 
     return NextResponse.json({
       totalDistance: {
