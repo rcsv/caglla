@@ -75,7 +75,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchTrip = async () => {
       try {
-        const response = await makeAuthenticatedRequest(`/api/trips/${params.id}`)
+        const response = await makeAuthenticatedRequest(`/api/trip/${params.id}`)
         if (response.ok) {
           const tripData = await response.json()
           setTrip(tripData)

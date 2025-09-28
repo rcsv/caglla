@@ -162,6 +162,89 @@ export async function PUT(
       )
     }
 
+    const tripData = tripDoc.data()
+    if (!tripData) {
+      return NextResponse.json(
+        { error: 'Trip data not found' },
+        { status: 404 }
+      )
+    }
+
+    // 日程が変更されたかチェック
+    const originalStartDate = tripData.start_date?.toDate ? tripData.start_date.toDate() : tripData.start_date
+    const originalEndDate = tripData.end_date?.toDate ? tripData.end_date.toDate() : tripData.end_date
+    const newStartDate = body.startDate ? new Date(body.startDate) : undefined
+    const newEndDate = body.endDate ? new Date(body.endDate) : undefined
+    
+    // 日付比較のヘルパー関数
+    const compareDates = (date1: Date | undefined, date2: Date | undefined): boolean => {
+      if (!date1 && !date2) return true // 両方ともundefined
+      if (!date1 || !date2) return false // 片方だけundefined
+      
+      // 日付のみを比較（時刻は無視）
+      const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate())
+      const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate())
+      
+      return d1.getTime() === d2.getTime()
+    }
+    
+    // 日程が変更された場合のみ、dayドキュメントを更新
+    const datesChanged = !(
+      compareDates(originalStartDate, newStartDate) &&
+      compareDates(originalEndDate, newEndDate)
+    )
+    
+    if (datesChanged && newStartDate && newEndDate) {
+      console.log('日程が変更されました。daysドキュメントを更新します。')
+      
+      // 既存のdayドキュメントを削除
+      const daysSnapshot = await adminDb
+        .collection(COLLECTIONS.DAYS)
+        .where('trip_id', '==', tripId)
+        .get()
+      
+      for (const dayDoc of daysSnapshot.docs) {
+        // 関連するitinerariesを削除
+        const itinerariesSnapshot = await adminDb
+          .collection(COLLECTIONS.ITINERARIES)
+          .where('day_id', '==', dayDoc.id)
+          .get()
+        
+        for (const itineraryDoc of itinerariesSnapshot.docs) {
+          await itineraryDoc.ref.delete()
+        }
+        
+        // dayドキュメントを削除
+        await dayDoc.ref.delete()
+      }
+      
+      // 新しい日程でdayドキュメントを作成
+      const start = new Date(newStartDate)
+      const end = new Date(newEndDate)
+      
+      let currentDate = new Date(start)
+      let dayNumber = 1
+      
+      while (currentDate <= end) {
+        const dayRef = adminDb.collection(COLLECTIONS.DAYS).doc()
+        
+        const dayData = {
+          trip_id: tripId,
+          day_number: dayNumber,
+          date: new Date(currentDate),
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+        
+        await dayRef.set(dayData)
+        
+        currentDate.setDate(currentDate.getDate() + 1)
+        dayNumber++
+      }
+    } else {
+      console.log('日程に変更はありません。daysドキュメントは更新しません。')
+    }
+
     const updateData = {
       ...body,
       updated_at: new Date()

@@ -181,6 +181,15 @@ export const adminDayOperations = {
     })
   },
 
+  async deleteDay(dayId: string): Promise<void> {
+    // Delete related itineraries first
+    await adminItineraryOperations.deleteItinerariesByDayId(dayId)
+    
+    // Delete day
+    const dayRef = adminDb.collection(COLLECTIONS.DAYS).doc(dayId)
+    await dayRef.delete()
+  },
+
   async deleteDaysByTripId(tripId: string): Promise<void> {
     const days = await this.getDaysByTripId(tripId)
     

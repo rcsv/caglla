@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminTripOperations, adminDayOperations, adminItineraryOperations } from '@/lib/firestore-admin-operations'
-import { adminAuth } from '@/lib/firebase-admin'
+import { adminAuth, adminDb } from '@/lib/firebase-admin'
+import { COLLECTIONS } from '@/lib/firestore'
 
 export async function GET(
   request: NextRequest,
@@ -98,15 +99,152 @@ export async function PUT(
       return d1.getTime() === d2.getTime()
     }
     
-    // 日程が変更された場合のみ、dayドキュメントを更新
-    const datesChanged = !(
-      compareDates(originalStartDate, newStartDate) &&
-      compareDates(originalEndDate, newEndDate)
-    )
+    // 日付を正規化するヘルパー関数
+    const normalizeDate = (date: Date): Date => {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    }
     
-    if (datesChanged && newStartDate && newEndDate) {
+    // 日付のキーを生成するヘルパー関数
+    const getDateKey = (date: Date): string => {
+      const normalized = normalizeDate(date)
+      return normalized.toISOString().split('T')[0] // YYYY-MM-DD形式
+    }
+    
+    // 日程が変更された場合の処理
+    const startDateChanged = !compareDates(originalStartDate, newStartDate)
+    const endDateChanged = !compareDates(originalEndDate, newEndDate)
+    
+    if ((startDateChanged || endDateChanged) && newStartDate && newEndDate) {
       console.log('日程が変更されました。daysドキュメントを更新します。')
-      await adminDayOperations.updateDaysForTripAtomic(tripId, newStartDate, newEndDate)
+      console.log('元の日程:', originalStartDate, '→', originalEndDate)
+      console.log('新しい日程:', newStartDate, '→', newEndDate)
+      
+      // 新しい日程範囲を計算
+      const start = new Date(newStartDate)
+      const end = new Date(newEndDate)
+      
+      // 開始日が終了日より後の場合はエラー
+      if (start > end) {
+        console.error('開始日が終了日より後です:', start, '>', end)
+        return NextResponse.json({ error: '開始日は終了日より前である必要があります' }, { status: 400 })
+      }
+      
+      try {
+        console.log('日程更新処理を開始します...')
+        
+        // 既存のdaysを取得
+        const existingDays = await adminDayOperations.getDaysByTripId(tripId)
+        console.log('既存のdays:', existingDays.map(d => ({ id: d.id, date: d.date, day_number: d.day_number })))
+        
+        // 新しい日程範囲を計算
+        const start = new Date(newStartDate)
+        const end = new Date(newEndDate)
+        
+        // 既存のdaysを日付でマップ（正規化された日付キーを使用）
+        const existingDaysByDate = new Map<string, any>()
+        existingDays.forEach(day => {
+          if (day.date) {
+            const dateKey = getDateKey(day.date)
+            existingDaysByDate.set(dateKey, day)
+            console.log(`既存dayマップ: ${dateKey} -> ${day.id}`)
+          }
+        })
+        
+        // 新しい日程でdaysを更新（既存のものを保持しつつ、必要に応じて追加・削除）
+        const daysToDelete: string[] = []
+        const daysToCreate: any[] = []
+        const daysToUpdate: { id: string, day_number: number }[] = []
+        
+        // 新しい日程範囲の各日付を処理
+        const startNormalized = normalizeDate(start)
+        const endNormalized = normalizeDate(end)
+        
+        console.log(`新しい日程範囲: ${getDateKey(startNormalized)} から ${getDateKey(endNormalized)}`)
+        
+        let currentDate = new Date(startNormalized)
+        let dayNumber = 1
+        
+        // 同じ日付の場合の特別処理
+        const isSameDay = startNormalized.getTime() === endNormalized.getTime()
+        if (isSameDay) {
+          console.log('同じ日付のtripです')
+        }
+        
+        while (currentDate <= endNormalized) {
+          const dateKey = getDateKey(currentDate)
+          const existingDay = existingDaysByDate.get(dateKey)
+          
+          console.log(`処理中の日付: ${dateKey}, dayNumber: ${dayNumber}, 既存day: ${existingDay ? existingDay.id : 'なし'}`)
+          
+          if (existingDay) {
+            // 既存のdayが新しい日程範囲内にある場合、day_numberを更新
+            if (existingDay.day_number !== dayNumber) {
+              console.log(`day_numberを更新: ${existingDay.day_number} -> ${dayNumber}`)
+              daysToUpdate.push({ id: existingDay.id, day_number: dayNumber })
+            } else {
+              console.log(`day_numberは変更なし: ${dayNumber}`)
+            }
+          } else {
+            // 新しいdayを作成
+            console.log(`新しいdayを作成: ${dateKey}`)
+            daysToCreate.push({
+              trip_id: tripId,
+              day_number: dayNumber,
+              date: new Date(currentDate),
+              created_at: new Date(),
+              updated_at: new Date()
+            })
+          }
+          
+          // 日付を安全に進める（新しいDateオブジェクトを作成）
+          currentDate = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000)
+          dayNumber++
+          
+          // 同じ日付の場合は1回だけループを実行
+          if (isSameDay) {
+            break
+          }
+        }
+        
+        // day_numberの更新を実行
+        for (const update of daysToUpdate) {
+          console.log(`day_numberを更新: ${update.id} -> ${update.day_number}`)
+          await adminDayOperations.updateDay(update.id, { 
+            day_number: update.day_number,
+            updated_at: new Date()
+          })
+        }
+        
+        // 新しい日程範囲外のdaysを特定（正規化された日付で比較）
+        existingDays.forEach(day => {
+          if (day.date) {
+            const dayDateNormalized = normalizeDate(day.date)
+            if (dayDateNormalized < startNormalized || dayDateNormalized > endNormalized) {
+              console.log(`削除対象のday: ${getDateKey(day.date)} (${day.id})`)
+              daysToDelete.push(day.id)
+            }
+          }
+        })
+        
+        // 不要なdaysとそのitinerariesを削除
+        for (const dayId of daysToDelete) {
+          console.log(`dayを削除: ${dayId}`)
+          await adminDayOperations.deleteDay(dayId)
+        }
+        
+        // 新しいdaysを作成
+        for (const dayData of daysToCreate) {
+          console.log(`新しいdayを作成: ${dayData.date.toDateString()}`)
+          await adminDayOperations.createDay(dayData)
+        }
+        
+        console.log(`更新されたdays: ${daysToUpdate.length}, 削除されたdays: ${daysToDelete.length}, 作成されたdays: ${daysToCreate.length}`)
+        console.log('日程更新処理が完了しました')
+        
+      } catch (error) {
+        console.error('日程更新中にエラーが発生しました:', error)
+        return NextResponse.json({ error: '日程の更新に失敗しました' }, { status: 500 })
+      }
     } else {
       console.log('日程に変更はありません。daysドキュメントは更新しません。')
     }
