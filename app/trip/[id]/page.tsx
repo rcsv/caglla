@@ -10,6 +10,7 @@ import AddScheduleModal from '@/components/AddScheduleModal'
 import ScheduleCard from '@/components/ScheduleCard'
 import VenueDistance from '@/components/VenueDistance'
 import TripCostDisplay from '@/components/TripCostDisplay'
+import TripDistanceDisplay from '@/components/TripDistanceDisplay'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 
@@ -450,9 +451,15 @@ export default function TripPage({ params }: { params: { id: string } }) {
         </div>
       </header>
 
-      {/* Cost Summary */}
+      {/* Summary Section */}
       <div className="container mx-auto px-4 py-6">
-        <TripCostDisplay itineraries={getAllItineraries()} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Cost Summary */}
+          <TripCostDisplay itineraries={getAllItineraries()} />
+          
+          {/* Distance Summary */}
+          <TripDistanceDisplay itineraries={getAllItineraries()} />
+        </div>
       </div>
 
       {/* Main Content */}

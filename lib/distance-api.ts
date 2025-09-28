@@ -105,5 +105,39 @@ export const distanceApiHelpers = {
     const duration = this.formatDuration(distance.duration.value)
     
     return `${km}km / ${duration}`
+  },
+
+  // 複数の地点間の総距離をバッチ計算
+  async calculateTotalDistance(
+    places: Array<{ geometry?: { location: { lat: number; lng: number } }; name: string }>,
+    mode: 'driving' | 'walking' | 'bicycling' | 'transit' = 'driving'
+  ): Promise<{
+    totalDistance: { meters: number; kilometers: number; text: string }
+    totalDuration: { seconds: number; minutes: number; hours: number; text: string }
+    segments: Array<{ from: string; to: string; distance: any; duration: any }>
+    segmentCount: number
+  } | null> {
+    try {
+      const response = await fetch('/api/distance/batch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          places,
+          mode
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Batch distance API error: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('Error calculating total distance:', error)
+      return null
+    }
   }
 }

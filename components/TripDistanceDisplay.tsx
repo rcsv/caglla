@@ -1,0 +1,150 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { distanceApiHelpers } from '@/lib/distance-api'
+
+interface TripDistanceDisplayProps {
+  itineraries: Array<{
+    place_data?: {
+      geometry?: { location: { lat: number; lng: number } }
+      name: string
+    }
+  }>
+  className?: string
+}
+
+export default function TripDistanceDisplay({ 
+  itineraries, 
+  className = '' 
+}: TripDistanceDisplayProps) {
+  const [distanceData, setDistanceData] = useState<{
+    totalDistance: { meters: number; kilometers: number; text: string }
+    totalDuration: { seconds: number; minutes: number; hours: number; text: string }
+    segments: Array<{ from: string; to: string; distance: any; duration: any }>
+    segmentCount: number
+  } | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const calculateTotalDistance = async () => {
+      // place_dataがあるitineraryのみを抽出
+      const placesWithLocation = itineraries
+        .filter(itinerary => itinerary.place_data?.geometry?.location)
+        .map(itinerary => itinerary.place_data!)
+
+      if (placesWithLocation.length < 2) {
+        setDistanceData(null)
+        return
+      }
+
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        const result = await distanceApiHelpers.calculateTotalDistance(placesWithLocation, 'driving')
+        setDistanceData(result)
+      } catch (err) {
+        console.error('Error calculating total distance:', err)
+        setError('総移動距離の計算に失敗しました')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    calculateTotalDistance()
+  }, [itineraries])
+
+  if (isLoading) {
+    return (
+      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+        <div className="flex items-center justify-center py-4">
+          <div className="flex items-center space-x-2 text-gray-500">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+            <span>総移動距離を計算中...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+        <div className="flex items-center justify-center py-4">
+          <div className="text-red-500 text-sm">
+            {error}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!distanceData) {
+    return null
+  }
+
+  return (
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+          <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          総移動距離
+        </h3>
+      </div>
+      
+      <div className="space-y-3">
+        {/* 総距離と総時間 */}
+        <div className="flex items-center justify-between py-3 px-4 bg-blue-50 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {distanceData.totalDistance.text}
+              </div>
+              <div className="text-xs text-gray-500">総距離</div>
+            </div>
+            <div className="w-px h-8 bg-gray-300"></div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {distanceData.totalDuration.text}
+              </div>
+              <div className="text-xs text-gray-500">総時間</div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-600">
+              {distanceData.segmentCount}区間
+            </div>
+            <div className="text-xs text-gray-500">移動</div>
+          </div>
+        </div>
+
+        {/* 詳細情報 */}
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="bg-gray-50 rounded-md p-3">
+            <div className="text-gray-600 mb-1">平均距離</div>
+            <div className="font-medium">
+              {Math.round(distanceData.totalDistance.kilometers / distanceData.segmentCount * 10) / 10}km/区間
+            </div>
+          </div>
+          <div className="bg-gray-50 rounded-md p-3">
+            <div className="text-gray-600 mb-1">平均時間</div>
+            <div className="font-medium">
+              {Math.round(distanceData.totalDuration.minutes / distanceData.segmentCount)}分/区間
+            </div>
+          </div>
+        </div>
+
+        {/* ヒント */}
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          <p className="text-xs text-gray-500">
+            💡 各Venue間の詳細な距離・時間はスケジュール内で確認できます
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
