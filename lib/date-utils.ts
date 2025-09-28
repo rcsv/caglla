@@ -232,5 +232,50 @@ export const dateUtils = {
       const yearName = start.toLocaleDateString('ja-JP', { year: 'numeric' })
       return `${yearDiff}年前 (${yearName})`
     }
+  },
+
+  // Format trip date range in compact format
+  formatTripDateRange: (startDate: any, endDate: any): string => {
+    if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
+      return '日付が設定されていません'
+    }
+    
+    // Handle Firestore Timestamp objects
+    let start: Date, end: Date
+    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
+      start = startDate.toDate()
+    } else {
+      start = new Date(startDate)
+    }
+    
+    if (endDate && typeof endDate === 'object' && endDate.toDate && typeof endDate.toDate === 'function') {
+      end = endDate.toDate()
+    } else {
+      end = new Date(endDate)
+    }
+    
+    const startYear = start.getFullYear()
+    const startMonth = start.getMonth() + 1
+    const startDay = start.getDate()
+    const startWeekday = start.toLocaleDateString('ja-JP', { weekday: 'short' })
+    
+    const endYear = end.getFullYear()
+    const endMonth = end.getMonth() + 1
+    const endDay = end.getDate()
+    const endWeekday = end.toLocaleDateString('ja-JP', { weekday: 'short' })
+    
+    // Same year
+    if (startYear === endYear) {
+      // Same month
+      if (startMonth === endMonth) {
+        return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endDay} (${endWeekday})`
+      } else {
+        // Different months
+        return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endMonth}月${endDay}日(${endWeekday})`
+      }
+    } else {
+      // Different years
+      return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endYear}年${endMonth}月${endDay}日 (${endWeekday})`
+    }
   }
 }

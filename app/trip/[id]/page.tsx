@@ -312,27 +312,77 @@ export default function TripPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{trip.title}</h1>
-              <p className="text-gray-600 mt-1">
-                {trip.start_date && trip.end_date 
-                  ? `${dateUtils.formatDate(trip.start_date)} - ${dateUtils.formatDate(trip.end_date)}`
-                  : '日付が設定されていません'
-                }
-              </p>
-            </div>
-            <div className="flex space-x-3">
-              <Link
-                href="/"
-                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                戻る
-              </Link>
-              <TripEditor trip={trip as any} onUpdate={(updatedTrip: any) => setTrip(updatedTrip)} />
+      {/* Hero Header with Background Image */}
+      <header className="relative h-[300px] md:h-[360px] overflow-hidden">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: trip.image_url 
+              ? `url(${trip.image_url})` 
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+          }}
+        >
+          {/* Dark Overlay for better text readability */}
+          <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        </div>
+        
+        {/* Content Overlay */}
+        <div className="relative h-full flex flex-col">
+          {/* Top Navigation */}
+          <div className="flex justify-between items-start p-6">
+            <Link
+              href="/"
+              className="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              戻る
+            </Link>
+            <TripEditor trip={trip as any} onUpdate={(updatedTrip: any) => setTrip(updatedTrip)} />
+          </div>
+          
+          {/* Main Content - Positioned higher */}
+          <div className="flex-1 flex items-start pt-20">
+            <div className="w-full px-6">
+              <div className="max-w-4xl">
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
+                  {trip.title}
+                </h1>
+                
+                {/* Date and Location */}
+                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+                  <div className="flex items-center text-white">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-lg font-medium">
+                      {trip.start_date && trip.end_date 
+                        ? dateUtils.formatTripDateRange(trip.start_date, trip.end_date)
+                        : '日付が設定されていません'
+                      }
+                    </span>
+                  </div>
+                  
+                  {trip.destination && (
+                    <div className="flex items-center text-white">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="text-lg font-medium">{trip.destination}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Description */}
+                {trip.description && (
+                  <p className="text-white text-lg md:text-xl leading-relaxed drop-shadow-md max-w-2xl">
+                    {trip.description}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -340,14 +390,6 @@ export default function TripPage({ params }: { params: { id: string } }) {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Trip Description */}
-        {trip.description && (
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">旅行の説明</h2>
-            <p className="text-gray-700">{trip.description}</p>
-          </div>
-        )}
-
         {/* Days */}
         {trip.days && trip.days.length > 0 ? (
           <div className="space-y-6">
@@ -363,9 +405,11 @@ export default function TripPage({ params }: { params: { id: string } }) {
                   </h3>
                   <span className="text-gray-500">
                     {trip.start_date 
-                      ? dateUtils.formatDate(
-                          new Date(trip.start_date).getTime() + (day.day_number - 1) * 24 * 60 * 60 * 1000
-                        )
+                      ? (() => {
+                          const dayDate = new Date(trip.start_date)
+                          dayDate.setDate(dayDate.getDate() + (day.day_number - 1))
+                          return dateUtils.formatDate(dayDate)
+                        })()
                       : '日付が設定されていません'
                     }
                   </span>
