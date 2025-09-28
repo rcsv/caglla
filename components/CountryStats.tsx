@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CountryGroup } from '@/lib/country-utils'
+import CountryMap from './CountryMap'
 
 interface CountryStatsProps {
   userId: string
@@ -102,45 +103,54 @@ export default function CountryStats({ userId, className = '' }: CountryStatsPro
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-800">国別統計</h3>
-        <div className="text-sm text-gray-500">
-          {totalTrips}回の旅行 • {totalCountries}カ国
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {countryGroups.map((group, index) => (
-          <div key={group.countryCode} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full text-sm font-semibold">
-                {index + 1}
-              </div>
-              <div>
-                <div className="font-medium text-gray-800">{group.countryNameJa}</div>
-                <div className="text-sm text-gray-500">{group.countryName}</div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-lg font-bold text-blue-600">{group.tripCount}</span>
-              <span className="text-sm text-gray-500">回</span>
+    <div className={`${className}`}>
+      {/* デスクトップでは横並び、モバイルでは縦並び */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 国別統計リスト */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-800">国別統計</h3>
+            <div className="text-sm text-gray-500">
+              {totalTrips}回の旅行 • {totalCountries}カ国
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* 詳細表示ボタン */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <button
-          onClick={() => {
-            // 詳細表示のロジックをここに追加
-            console.log('Show detailed country stats')
-          }}
-          className="w-full text-center text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          詳細を見る →
-        </button>
+          <div className="space-y-4">
+            {countryGroups.map((group, index) => (
+              <div key={group.countryCode} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full text-sm font-semibold">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-800">{group.countryNameJa}</div>
+                    <div className="text-sm text-gray-500">{group.countryName}</div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-lg font-bold text-blue-600">{group.tripCount}</span>
+                  <span className="text-sm text-gray-500">回</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 詳細表示ボタン */}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <button
+              onClick={() => {
+                // 詳細表示のロジックをここに追加
+                console.log('Show detailed country stats')
+              }}
+              className="w-full text-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              詳細を見る →
+            </button>
+          </div>
+        </div>
+
+        {/* Google Map */}
+        <CountryMap countryGroups={countryGroups} />
       </div>
     </div>
   )
