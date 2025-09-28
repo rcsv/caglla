@@ -52,7 +52,7 @@
         },
         {
           "fieldPath": "sort_number",
-          "order": "DESCENDING"
+          "order": "ASCENDING"
         }
       ]
     },

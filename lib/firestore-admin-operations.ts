@@ -296,8 +296,8 @@ export const adminItineraryOperations = {
     
     const itineraries = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Itinerary>(doc))
     
-    // Sort by sort_number on the client side (descending)
-    return itineraries.sort((a, b) => b.sort_number - a.sort_number)
+    // Sort by sort_number on the client side (ascending)
+    return itineraries.sort((a, b) => a.sort_number - b.sort_number)
   },
 
   async updateItinerary(itineraryId: string, itineraryData: Partial<Itinerary>): Promise<void> {
