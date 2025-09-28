@@ -106,6 +106,37 @@ export default function TripPage({ params }: { params: { id: string } }) {
     setShowAddScheduleModal(true)
   }
 
+  const handleAddDay = async () => {
+    if (!trip) return
+    
+    try {
+      const response = await makeAuthenticatedRequest(`/api/trip/${trip.id}/day`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+      })
+
+      if (response.ok) {
+        const newDay = await response.json()
+        setTrip(prevTrip => {
+          if (!prevTrip) return prevTrip
+          return {
+            ...prevTrip,
+            days: [...(prevTrip.days || []), newDay]
+          }
+        })
+      } else {
+        console.error('Failed to add day')
+        alert('日程の追加に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error adding day:', error)
+      alert('日程の追加に失敗しました')
+    }
+  }
+
   const toggleDayCollapse = (dayId: string) => {
     setCollapsedDays(prev => {
       const newSet = new Set(prev)
@@ -752,12 +783,34 @@ export default function TripPage({ params }: { params: { id: string } }) {
                 </div>
               )
             })}
+            
+            {/* 日程追加ボタン */}
+            <div className="mt-6 text-center">
+              <button
+                onClick={handleAddDay}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 mx-auto"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                日程を追加
+              </button>
+            </div>
           </div>
         ) : (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📅</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">まだ日程がありません</h3>
             <p className="text-gray-600 mb-6">旅行の日程を追加して、詳細な計画を立てましょう！</p>
+            <button
+              onClick={handleAddDay}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 mx-auto"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              日程を追加
+            </button>
           </div>
         )}
       </main>
