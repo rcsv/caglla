@@ -46,7 +46,8 @@ export const distanceApiHelpers = {
           origins: originStr,
           destinations: destinationStr,
           mode
-        })
+        }),
+        signal: AbortSignal.timeout(10000) // 10秒でタイムアウト
       })
 
       if (!response.ok) {
@@ -126,7 +127,8 @@ export const distanceApiHelpers = {
         body: JSON.stringify({
           places,
           mode
-        })
+        }),
+        signal: AbortSignal.timeout(15000) // 15秒でタイムアウト（バッチ処理は時間がかかるため）
       })
 
       if (!response.ok) {

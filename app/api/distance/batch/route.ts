@@ -52,7 +52,9 @@ export async function POST(request: NextRequest) {
       key: GOOGLE_PLACES_API_KEY
     })
 
-    const response = await fetch(`${GOOGLE_DISTANCE_MATRIX_API_URL}?${params}`)
+    const response = await fetch(`${GOOGLE_DISTANCE_MATRIX_API_URL}?${params}`, {
+      signal: AbortSignal.timeout(15000) // 15秒でタイムアウト（バッチ処理は時間がかかるため）
+    })
 
     if (!response.ok) {
       throw new Error(`Google Distance Matrix API error: ${response.status}`)

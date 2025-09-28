@@ -2,30 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers } from '@/lib/places-api'
-import { PlaceData } from '@/lib/firestore'
+import { PlaceData, Itinerary } from '@/lib/types'
 import { timezoneUtils } from '@/lib/timezone-utils'
 import { currencyUtils } from '@/lib/currency-utils'
 import VenueDistance from './VenueDistance'
 
 interface ScheduleCardProps {
-  itinerary: {
-    id: string
-    day_id: string
-    sort_number: number
-    title: string
-    description?: string
-    location?: string
-    place_data?: PlaceData
-    start_time?: string
-    end_time?: string
-    timezone?: string
-    cost_amount?: number
-    cost_currency?: string
-    created_at: string
-    updated_at: string
-  }
-  previousPlace?: PlaceData
-  nextPlace?: PlaceData
+  itinerary: Itinerary
+  previousPlace?: PlaceData | null
+  nextPlace?: PlaceData | null
   onUpdate?: (updatedItinerary: any) => void
   onMoveUp?: () => void
   onMoveDown?: () => void
@@ -65,7 +50,7 @@ export default function ScheduleCard({
   const [isEditingTime, setIsEditingTime] = useState(false)
   const [tempStartTime, setTempStartTime] = useState(itinerary.start_time || '')
   const [tempEndTime, setTempEndTime] = useState(itinerary.end_time || '')
-  const [destinationTimezone, setDestinationTimezone] = useState(itinerary.timezone || 'UTC')
+  const [destinationTimezone, setDestinationTimezone] = useState('UTC')
   const [userTimezone, setUserTimezone] = useState('UTC')
   const [isEditingCost, setIsEditingCost] = useState(false)
   const [tempCostAmount, setTempCostAmount] = useState(itinerary.cost_amount?.toString() || '')
@@ -97,8 +82,8 @@ export default function ScheduleCard({
     setEndTime(itinerary.end_time || '')
     setTempStartTime(itinerary.start_time || '')
     setTempEndTime(itinerary.end_time || '')
-    setDestinationTimezone(itinerary.timezone || 'UTC')
-  }, [itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.timezone])
+    setDestinationTimezone('UTC')
+  }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time]) // itinerary.idを追加してオブジェクト参照の変更に対応
 
   // ブラウザのタイムゾーンを取得
   useEffect(() => {
@@ -107,15 +92,15 @@ export default function ScheduleCard({
 
   // 場所情報からタイムゾーンを自動取得
   useEffect(() => {
-    if (itinerary.place_data && !itinerary.timezone) {
+    if (itinerary.place_data) {
       const detectedTimezone = timezoneUtils.getTimezoneFromPlace(itinerary.place_data)
       if (detectedTimezone !== 'UTC') {
         setDestinationTimezone(detectedTimezone)
-        // タイムゾーンを保存
-        handleTimezoneUpdate(detectedTimezone)
+        // タイムゾーンの保存は手動で行う（自動保存を無効化）
+        // handleTimezoneUpdate(detectedTimezone)
       }
     }
-  }, [itinerary.place_data, itinerary.timezone])
+  }, [itinerary.place_data?.place_id]) // place_idを使用して無限ループを防ぐ
 
   // 場所情報から通貨を自動取得
   useEffect(() => {
@@ -123,11 +108,11 @@ export default function ScheduleCard({
       const detectedCurrency = currencyUtils.getCurrencyFromPlace(itinerary.place_data)
       if (detectedCurrency !== 'JPY') {
         setTempCostCurrency(detectedCurrency)
-        // 通貨を保存
-        handleCurrencyUpdate(detectedCurrency)
+        // 通貨の保存は手動で行う（自動保存を無効化）
+        // handleCurrencyUpdate(detectedCurrency)
       }
     }
-  }, [itinerary.place_data, itinerary.cost_currency])
+  }, [itinerary.place_data?.place_id, itinerary.cost_currency]) // place_idを使用して無限ループを防ぐ
 
   // 写真のURLを取得
   const getPhotoUrl = () => {
