@@ -86,14 +86,29 @@ export async function PUT(
     const newStartDate = startDate ? new Date(startDate) : undefined
     const newEndDate = endDate ? new Date(endDate) : undefined
     
-    // 日程が変更された場合、dayドキュメントを更新
-    const datesChanged = (
-      (originalStartDate?.getTime() !== newStartDate?.getTime()) ||
-      (originalEndDate?.getTime() !== newEndDate?.getTime())
+    // 日付比較のヘルパー関数
+    const compareDates = (date1: Date | undefined, date2: Date | undefined): boolean => {
+      if (!date1 && !date2) return true // 両方ともundefined
+      if (!date1 || !date2) return false // 片方だけundefined
+      
+      // 日付のみを比較（時刻は無視）
+      const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate())
+      const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate())
+      
+      return d1.getTime() === d2.getTime()
+    }
+    
+    // 日程が変更された場合のみ、dayドキュメントを更新
+    const datesChanged = !(
+      compareDates(originalStartDate, newStartDate) &&
+      compareDates(originalEndDate, newEndDate)
     )
     
     if (datesChanged && newStartDate && newEndDate) {
+      console.log('日程が変更されました。daysドキュメントを更新します。')
       await adminDayOperations.updateDaysForTripAtomic(tripId, newStartDate, newEndDate)
+    } else {
+      console.log('日程に変更はありません。daysドキュメントは更新しません。')
     }
 
     await adminTripOperations.updateTrip(tripId, {

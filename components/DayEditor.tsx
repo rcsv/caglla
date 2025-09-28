@@ -6,9 +6,10 @@ import { updateDay, Day } from '@/lib/firestore'
 interface DayEditorProps {
   day: Day
   onUpdate: (updatedDay: Day) => void
+  itinerarySummary?: string
 }
 
-export default function DayEditor({ day, onUpdate }: DayEditorProps) {
+export default function DayEditor({ day, onUpdate, itinerarySummary }: DayEditorProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [description, setDescription] = useState(day.description || '')
   const [isLoading, setIsLoading] = useState(false)
@@ -54,7 +55,7 @@ export default function DayEditor({ day, onUpdate }: DayEditorProps) {
           onChange={(e) => setDescription(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          placeholder="この日は何をする日？"
+          placeholder={itinerarySummary || "この日は何をする日？"}
           className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           rows={3}
           autoFocus
@@ -86,7 +87,7 @@ export default function DayEditor({ day, onUpdate }: DayEditorProps) {
           className="cursor-pointer hover:bg-gray-50 p-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors"
           onClick={() => setIsEditing(true)}
         >
-          <p className="text-gray-400 italic">この日は何をする日？</p>
+          <p className="text-gray-400 italic">{itinerarySummary || "この日は何をする日？"}</p>
         </div>
       )}
     </div>

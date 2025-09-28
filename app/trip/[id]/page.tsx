@@ -64,6 +64,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
   const [tripLoading, setTripLoading] = useState(true)
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
+  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!loading && !user) {
@@ -96,6 +97,38 @@ export default function TripPage({ params }: { params: { id: string } }) {
   const handleAddSchedule = (dayId: string) => {
     setSelectedDayId(dayId)
     setShowAddScheduleModal(true)
+  }
+
+  const toggleDayCollapse = (dayId: string) => {
+    setCollapsedDays(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(dayId)) {
+        newSet.delete(dayId)
+      } else {
+        newSet.add(dayId)
+      }
+      return newSet
+    })
+  }
+
+  const collapseAllDays = () => {
+    if (!trip?.days) return
+    const allDayIds = new Set(trip.days.map(day => day.id))
+    setCollapsedDays(allDayIds)
+  }
+
+  const expandAllDays = () => {
+    setCollapsedDays(new Set())
+  }
+
+  // itinerariesのタイトルを生成する関数
+  const generateItinerarySummary = (day: TripPageDay): string => {
+    if (!day.itineraries || day.itineraries.length === 0) {
+      return ''
+    }
+    
+    const sortedItineraries = [...day.itineraries].sort((a, b) => a.sort_number - b.sort_number)
+    return sortedItineraries.map(itinerary => itinerary.title).join(' → ')
   }
 
   const handleScheduleAdded = async (newItinerary: any) => {
@@ -405,77 +438,136 @@ export default function TripPage({ params }: { params: { id: string } }) {
         {/* Days */}
         {trip.days && trip.days.length > 0 ? (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">日程</h2>
-            {trip.days.map((day) => (
-              <div
-                key={day.id}
-                className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
-              >
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    第{day.day_number}日目
-                  </h3>
-                  <span className="text-gray-500">
-                    {trip.start_date 
-                      ? (() => {
-                          const dayDate = new Date(trip.start_date)
-                          dayDate.setDate(dayDate.getDate() + (day.day_number - 1))
-                          return dateUtils.formatDate(dayDate)
-                        })()
-                      : '日付が設定されていません'
-                    }
-                  </span>
-                </div>
-
-                <DayEditor day={day as any} onUpdate={(updatedDay: any) => {
-                  setTrip(prevTrip => {
-                    if (!prevTrip) return prevTrip
-                    return {
-                      ...prevTrip,
-                      days: prevTrip.days?.map(d => 
-                        d.id === updatedDay.id ? updatedDay as any : d
-                      ) || []
-                    }
-                  })
-                }} />
-
-                {day.itineraries && day.itineraries.length > 0 ? (
-                  <div className="mt-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="font-medium text-gray-900">スケジュール</h4>
-                      <button
-                        onClick={() => handleAddSchedule(day.id)}
-                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                      >
-                        Venue / Point of Interest を追加
-                      </button>
-                    </div>
-                    <div className="space-y-3">
-                      {day.itineraries.map((itinerary, index) => (
-                        <ScheduleCard
-                          key={itinerary.id}
-                          itinerary={itinerary}
-                          onUpdate={handleScheduleUpdated}
-                          onMoveUp={() => handleMoveUp(itinerary.id, day.id)}
-                          onMoveDown={() => handleMoveDown(itinerary.id, day.id)}
-                          onDelete={handleScheduleDelete}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>まだスケジュールがありません</p>
-                    <button
-                      onClick={() => handleAddSchedule(day.id)}
-                      className="text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      Venue / Point of Interest を追加
-                    </button>
-                  </div>
-                )}
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">日程</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={expandAllDays}
+                  className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  全て展開
+                </button>
+                <button
+                  onClick={collapseAllDays}
+                  className="px-3 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                >
+                  全て折りたたみ
+                </button>
               </div>
-            ))}
+            </div>
+            {trip.days.map((day) => {
+              const isCollapsed = collapsedDays.has(day.id)
+              const itinerarySummary = generateItinerarySummary(day)
+              
+              return (
+                <div
+                  key={day.id}
+                  className="bg-white rounded-lg shadow-sm border border-gray-200"
+                >
+                  {/* ヘッダー部分 - 常に表示 */}
+                  <div 
+                    className="flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => toggleDayCollapse(day.id)}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          第{day.day_number}日目
+                        </h3>
+                        <span className="text-gray-500">
+                          {trip.start_date 
+                            ? (() => {
+                                const dayDate = new Date(trip.start_date)
+                                dayDate.setDate(dayDate.getDate() + (day.day_number - 1))
+                                return dateUtils.formatDate(dayDate)
+                              })()
+                            : '日付が設定されていません'
+                          }
+                        </span>
+                        {/* 折りたたみアイコン */}
+                        <svg 
+                          className={`w-5 h-5 text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                      
+                      {/* 縮小表示時の情報 */}
+                      {isCollapsed && (
+                        <div className="text-sm text-gray-600">
+                          {day.description && (
+                            <p className="mb-1">{day.description}</p>
+                          )}
+                          {itinerarySummary && (
+                            <p className="text-gray-500">{itinerarySummary}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 詳細部分 - 折りたたまれていない時のみ表示 */}
+                  {!isCollapsed && (
+                    <div className="px-6 pb-6">
+                      <DayEditor 
+                        day={day as any} 
+                        itinerarySummary={itinerarySummary}
+                        onUpdate={(updatedDay: any) => {
+                          setTrip(prevTrip => {
+                            if (!prevTrip) return prevTrip
+                            return {
+                              ...prevTrip,
+                              days: prevTrip.days?.map(d => 
+                                d.id === updatedDay.id ? updatedDay as any : d
+                              ) || []
+                            }
+                          })
+                        }} 
+                      />
+
+                      {day.itineraries && day.itineraries.length > 0 ? (
+                        <div className="mt-6">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="font-medium text-gray-900">スケジュール</h4>
+                            <button
+                              onClick={() => handleAddSchedule(day.id)}
+                              className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            >
+                              Venue / Point of Interest を追加
+                            </button>
+                          </div>
+                          <div className="space-y-3">
+                            {day.itineraries.map((itinerary, index) => (
+                              <ScheduleCard
+                                key={itinerary.id}
+                                itinerary={itinerary}
+                                onUpdate={handleScheduleUpdated}
+                                onMoveUp={() => handleMoveUp(itinerary.id, day.id)}
+                                onMoveDown={() => handleMoveDown(itinerary.id, day.id)}
+                                onDelete={handleScheduleDelete}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500">
+                          <p>まだスケジュールがありません</p>
+                          <button
+                            onClick={() => handleAddSchedule(day.id)}
+                            className="text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            Venue / Point of Interest を追加
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
