@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers } from '@/lib/places-api'
 import { PlaceData } from '@/lib/firestore'
+import { timezoneUtils } from '@/lib/timezone-utils'
+import { currencyUtils } from '@/lib/currency-utils'
 
 interface ScheduleCardProps {
   itinerary: {
@@ -15,6 +17,9 @@ interface ScheduleCardProps {
     place_data?: PlaceData
     start_time?: string
     end_time?: string
+    timezone?: string
+    cost_amount?: number
+    cost_currency?: string
     created_at: string
     updated_at: string
   }
@@ -40,6 +45,14 @@ export default function ScheduleCard({
   const [isSaving, setIsSaving] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isEditingTime, setIsEditingTime] = useState(false)
+  const [tempStartTime, setTempStartTime] = useState(itinerary.start_time || '')
+  const [tempEndTime, setTempEndTime] = useState(itinerary.end_time || '')
+  const [destinationTimezone, setDestinationTimezone] = useState(itinerary.timezone || 'UTC')
+  const [userTimezone, setUserTimezone] = useState('UTC')
+  const [isEditingCost, setIsEditingCost] = useState(false)
+  const [tempCostAmount, setTempCostAmount] = useState(itinerary.cost_amount?.toString() || '')
+  const [tempCostCurrency, setTempCostCurrency] = useState(itinerary.cost_currency || 'JPY')
   const menuRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
@@ -56,6 +69,44 @@ export default function ScheduleCard({
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
+
+  // itineraryの変更時に時間を更新
+  useEffect(() => {
+    setStartTime(itinerary.start_time || '')
+    setEndTime(itinerary.end_time || '')
+    setTempStartTime(itinerary.start_time || '')
+    setTempEndTime(itinerary.end_time || '')
+    setDestinationTimezone(itinerary.timezone || 'UTC')
+  }, [itinerary.start_time, itinerary.end_time, itinerary.timezone])
+
+  // ブラウザのタイムゾーンを取得
+  useEffect(() => {
+    setUserTimezone(timezoneUtils.getBrowserTimezone())
+  }, [])
+
+  // 場所情報からタイムゾーンを自動取得
+  useEffect(() => {
+    if (itinerary.place_data && !itinerary.timezone) {
+      const detectedTimezone = timezoneUtils.getTimezoneFromPlace(itinerary.place_data)
+      if (detectedTimezone !== 'UTC') {
+        setDestinationTimezone(detectedTimezone)
+        // タイムゾーンを保存
+        handleTimezoneUpdate(detectedTimezone)
+      }
+    }
+  }, [itinerary.place_data, itinerary.timezone])
+
+  // 場所情報から通貨を自動取得
+  useEffect(() => {
+    if (itinerary.place_data && !itinerary.cost_currency) {
+      const detectedCurrency = currencyUtils.getCurrencyFromPlace(itinerary.place_data)
+      if (detectedCurrency !== 'JPY') {
+        setTempCostCurrency(detectedCurrency)
+        // 通貨を保存
+        handleCurrencyUpdate(detectedCurrency)
+      }
+    }
+  }, [itinerary.place_data, itinerary.cost_currency])
 
   // 写真のURLを取得
   const getPhotoUrl = () => {
@@ -126,6 +177,160 @@ export default function ScheduleCard({
     } catch (error) {
       console.error('Error updating time:', error)
     }
+  }
+
+  // タイムゾーンの更新
+  const handleTimezoneUpdate = async (timezone: string) => {
+    try {
+      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          timezone
+        })
+      })
+
+      if (response.ok) {
+        const updatedItinerary = await response.json()
+        onUpdate?.(updatedItinerary)
+      }
+    } catch (error) {
+      console.error('Error updating timezone:', error)
+    }
+  }
+
+  // 通貨の更新
+  const handleCurrencyUpdate = async (currency: string) => {
+    try {
+      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cost_currency: currency
+        })
+      })
+
+      if (response.ok) {
+        const updatedItinerary = await response.json()
+        onUpdate?.(updatedItinerary)
+      }
+    } catch (error) {
+      console.error('Error updating currency:', error)
+    }
+  }
+
+  // 時間編集を開始
+  const handleTimeEditStart = () => {
+    setTempStartTime(startTime)
+    setTempEndTime(endTime)
+    setIsEditingTime(true)
+  }
+
+  // 時間編集を保存
+  const handleTimeSave = async () => {
+    setIsSaving(true)
+    try {
+      // 開始時間と終了時間を同時に更新
+      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          start_time: tempStartTime,
+          end_time: tempEndTime,
+          timezone: destinationTimezone
+        })
+      })
+
+      if (response.ok) {
+        const updatedItinerary = await response.json()
+        setStartTime(tempStartTime)
+        setEndTime(tempEndTime)
+        onUpdate?.(updatedItinerary)
+        setIsEditingTime(false)
+      } else {
+        console.error('Failed to update time')
+        alert('時間の更新に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error updating time:', error)
+      alert('時間の更新に失敗しました')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // 時間編集をキャンセル
+  const handleTimeCancel = () => {
+    setTempStartTime(startTime)
+    setTempEndTime(endTime)
+    setIsEditingTime(false)
+  }
+
+  // 時間フォーマットのバリデーション
+  const isValidTimeFormat = (time: string) => {
+    if (!time) return true // 空の場合は有効
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
+    return timeRegex.test(time)
+  }
+
+  // 費用編集を開始
+  const handleCostEditStart = () => {
+    setTempCostAmount(itinerary.cost_amount?.toString() || '')
+    setTempCostCurrency(itinerary.cost_currency || 'JPY')
+    setIsEditingCost(true)
+  }
+
+  // 費用編集を保存
+  const handleCostSave = async () => {
+    setIsSaving(true)
+    try {
+      const costAmount = tempCostAmount ? parseFloat(tempCostAmount) : undefined
+      
+      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cost_amount: costAmount,
+          cost_currency: tempCostCurrency
+        })
+      })
+
+      if (response.ok) {
+        const updatedItinerary = await response.json()
+        onUpdate?.(updatedItinerary)
+        setIsEditingCost(false)
+      } else {
+        console.error('Failed to update cost')
+        alert('費用の更新に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error updating cost:', error)
+      alert('費用の更新に失敗しました')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // 費用編集をキャンセル
+  const handleCostCancel = () => {
+    setTempCostAmount(itinerary.cost_amount?.toString() || '')
+    setTempCostCurrency(itinerary.cost_currency || 'JPY')
+    setIsEditingCost(false)
+  }
+
+  // 数値のバリデーション
+  const isValidAmount = (amount: string) => {
+    if (!amount) return true // 空の場合は有効
+    const num = parseFloat(amount)
+    return !isNaN(num) && num >= 0
   }
 
   // メニューアイテムのクリック処理
@@ -239,35 +444,219 @@ export default function ScheduleCard({
                 )}
               </div>
 
+              {/* 時間表示・編集エリア */}
+              <div className="mb-4">
+                {isEditingTime ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-gray-700">開始時間:</label>
+                      <input
+                        type="time"
+                        value={tempStartTime}
+                        onChange={(e) => setTempStartTime(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleTimeSave()
+                          } else if (e.key === 'Escape') {
+                            handleTimeCancel()
+                          }
+                        }}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        autoFocus
+                      />
+                      <label className="text-sm font-medium text-gray-700">終了時間:</label>
+                      <input
+                        type="time"
+                        value={tempEndTime}
+                        onChange={(e) => setTempEndTime(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleTimeSave()
+                          } else if (e.key === 'Escape') {
+                            handleTimeCancel()
+                          }
+                        }}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-gray-700">タイムゾーン:</label>
+                      <select
+                        value={destinationTimezone}
+                        onChange={(e) => setDestinationTimezone(e.target.value)}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="UTC">UTC</option>
+                        <option value="Asia/Tokyo">Asia/Tokyo (日本)</option>
+                        <option value="America/New_York">America/New_York (ニューヨーク)</option>
+                        <option value="America/Los_Angeles">America/Los_Angeles (ロサンゼルス)</option>
+                        <option value="Europe/London">Europe/London (ロンドン)</option>
+                        <option value="Europe/Paris">Europe/Paris (パリ)</option>
+                        <option value="Asia/Seoul">Asia/Seoul (ソウル)</option>
+                        <option value="Asia/Shanghai">Asia/Shanghai (上海)</option>
+                        <option value="Asia/Hong_Kong">Asia/Hong_Kong (香港)</option>
+                        <option value="Asia/Singapore">Asia/Singapore (シンガポール)</option>
+                        <option value="Asia/Bangkok">Asia/Bangkok (バンコク)</option>
+                        <option value="Asia/Kolkata">Asia/Kolkata (インド)</option>
+                        <option value="Australia/Sydney">Australia/Sydney (シドニー)</option>
+                        <option value="Pacific/Honolulu">Pacific/Honolulu (ハワイ)</option>
+                        <option value="Pacific/Guam">Pacific/Guam (グアム)</option>
+                        <option value="Pacific/Saipan">Pacific/Saipan (サイパン)</option>
+                      </select>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={handleTimeSave}
+                        disabled={isSaving || !isValidTimeFormat(tempStartTime) || !isValidTimeFormat(tempEndTime)}
+                        className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      >
+                        {isSaving ? '保存中...' : '保存'}
+                      </button>
+                      <button
+                        onClick={handleTimeCancel}
+                        disabled={isSaving}
+                        className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                    {(!isValidTimeFormat(tempStartTime) || !isValidTimeFormat(tempEndTime)) && (
+                      <p className="text-xs text-red-500">正しい時間形式で入力してください (例: 16:00)</p>
+                    )}
+                    <p className="text-xs text-gray-400">
+                      Enterで保存、Escapeでキャンセル
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1">
+                      <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm font-medium text-gray-700">時間:</span>
+                    </div>
+                    {startTime || endTime ? (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600 bg-gray-50 px-2 py-1 rounded">
+                          {startTime || '--:--'} - {endTime || '--:--'}
+                        </span>
+                        <span className="text-xs text-gray-500 bg-blue-50 px-2 py-1 rounded">
+                          {destinationTimezone}
+                        </span>
+                        <button
+                          onClick={handleTimeEditStart}
+                          className="text-blue-500 hover:text-blue-700 text-sm underline"
+                        >
+                          編集
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleTimeEditStart}
+                        className="text-blue-500 hover:text-blue-700 text-sm underline bg-blue-50 px-2 py-1 rounded hover:bg-blue-100"
+                      >
+                        時間を設定
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 費用表示・編集エリア */}
+              <div className="mb-4">
+                {isEditingCost ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-gray-700">金額:</label>
+                      <input
+                        type="number"
+                        value={tempCostAmount}
+                        onChange={(e) => setTempCostAmount(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleCostSave()
+                          } else if (e.key === 'Escape') {
+                            handleCostCancel()
+                          }
+                        }}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-24"
+                        placeholder="0"
+                        min="0"
+                        step="0.01"
+                        autoFocus
+                      />
+                      <label className="text-sm font-medium text-gray-700">通貨:</label>
+                      <select
+                        value={tempCostCurrency}
+                        onChange={(e) => setTempCostCurrency(e.target.value)}
+                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      >
+                        {currencyUtils.getAvailableCurrencies().map((currency) => (
+                          <option key={currency.code} value={currency.code}>
+                            {currency.code} ({currency.name})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={handleCostSave}
+                        disabled={isSaving || !isValidAmount(tempCostAmount)}
+                        className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      >
+                        {isSaving ? '保存中...' : '保存'}
+                      </button>
+                      <button
+                        onClick={handleCostCancel}
+                        disabled={isSaving}
+                        className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      >
+                        キャンセル
+                      </button>
+                    </div>
+                    {!isValidAmount(tempCostAmount) && (
+                      <p className="text-xs text-red-500">正しい金額を入力してください</p>
+                    )}
+                    <p className="text-xs text-gray-400">
+                      Enterで保存、Escapeでキャンセル
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1">
+                      <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm font-medium text-gray-700">費用:</span>
+                    </div>
+                    {itinerary.cost_amount ? (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-600 bg-green-50 px-2 py-1 rounded">
+                          {currencyUtils.formatAmount(itinerary.cost_amount, itinerary.cost_currency || 'JPY')}
+                        </span>
+                        <button
+                          onClick={handleCostEditStart}
+                          className="text-green-500 hover:text-green-700 text-sm underline"
+                        >
+                          編集
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleCostEditStart}
+                        className="text-green-500 hover:text-green-700 text-sm underline bg-green-50 px-2 py-1 rounded hover:bg-green-100"
+                      >
+                        費用を設定
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* アクションボタン */}
               <div className="flex space-x-2">
-                {/* 時間ボタン */}
-                <button
-                  onClick={() => {
-                    const newTime = prompt('滞在時間を入力してください (例: 16:00 - 16:30)', 
-                      startTime && endTime ? `${startTime} - ${endTime}` : '')
-                    if (newTime) {
-                      const [start, end] = newTime.split(' - ')
-                      if (start) handleTimeUpdate('start_time', start.trim())
-                      if (end) handleTimeUpdate('end_time', end.trim())
-                    }
-                  }}
-                  className="flex items-center space-x-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm">時間</span>
-                </button>
 
-                {/* コストボタン */}
-                <button className="flex items-center space-x-1 px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm">費用</span>
-                </button>
 
                 {/* 予約ボタン */}
                 <button className="flex items-center space-x-1 px-3 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors">
