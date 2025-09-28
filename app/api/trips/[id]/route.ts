@@ -93,10 +93,37 @@ export async function GET(
       })
     }
 
+    // 作成者情報を取得（google_idで検索）
+    let creator = null
+    if (convertedTripData.user_id) {
+      try {
+        // google_idでusersコレクションを検索
+        const usersSnapshot = await adminDb
+          .collection('users')
+          .where('google_id', '==', convertedTripData.user_id)
+          .limit(1)
+          .get()
+        
+        if (!usersSnapshot.empty) {
+          const userDoc = usersSnapshot.docs[0]
+          const userData = userDoc.data()
+          creator = {
+            id: userDoc.id,
+            name: userData?.name || 'Unknown User',
+            email: userData?.email || '',
+            avatar_url: userData?.avatar_url || null
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching creator:', error)
+      }
+    }
+
     const trip = {
       id: tripDoc.id,
       ...convertedTripData,
-      days
+      days,
+      creator
     }
 
     return NextResponse.json(trip)

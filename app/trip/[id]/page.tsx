@@ -36,6 +36,13 @@ type TripPageDay = {
   itineraries?: TripPageItinerary[]
 }
 
+type TripPageCreator = {
+  id: string
+  name: string
+  email: string
+  avatar_url?: string
+}
+
 type TripPageTrip = {
   id: string
   user_id: string
@@ -47,6 +54,7 @@ type TripPageTrip = {
   created_at: string
   updated_at: string
   days?: TripPageDay[]
+  creator?: TripPageCreator
 }
 
 export default function TripPage({ params }: { params: { id: string } }) {
@@ -69,9 +77,6 @@ export default function TripPage({ params }: { params: { id: string } }) {
         const response = await makeAuthenticatedRequest(`/api/trips/${params.id}`)
         if (response.ok) {
           const tripData = await response.json()
-          console.log('Fetched trip data:', tripData)
-          console.log('Start date:', tripData.start_date)
-          console.log('End date:', tripData.end_date)
           setTrip(tripData)
         } else {
           console.error('Failed to fetch trip')
@@ -344,7 +349,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
           </div>
           
           {/* Main Content - Positioned higher */}
-          <div className="flex-1 flex items-start pt-20">
+          <div className="flex-1 flex items-start pt-8">
             <div className="w-full px-6">
               <div className="max-w-4xl">
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
@@ -378,8 +383,15 @@ export default function TripPage({ params }: { params: { id: string } }) {
                 
                 {/* Description */}
                 {trip.description && (
-                  <p className="text-white text-lg md:text-xl leading-relaxed drop-shadow-md max-w-2xl">
+                  <p className="text-white text-lg md:text-xl leading-relaxed drop-shadow-md max-w-2xl mb-2">
                     {trip.description}
+                  </p>
+                )}
+                
+                {/* Creator Info */}
+                {trip.creator && (
+                  <p className="text-white text-sm opacity-80 drop-shadow-md">
+                    by {trip.creator.name}
                   </p>
                 )}
               </div>
