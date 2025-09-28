@@ -80,7 +80,6 @@ const COUNTRY_TIMEZONE_MAP: Record<string, string[]> = {
   'TW': ['Asia/Taipei'],
   'AU': ['Australia/Sydney', 'Australia/Melbourne'],
   'NZ': ['Pacific/Auckland'],
-  'US': ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'Pacific/Honolulu'],
   'GU': ['Pacific/Guam'],
   'MP': ['Pacific/Saipan'],
   'IN': ['Asia/Kolkata'],

@@ -1,5 +1,5 @@
 // 国名抽出とグループ化のユーティリティ関数
-import { PlaceData } from './firestore'
+import { PlaceData } from './types'
 
 // 国名のマッピング（英語→日本語）
 const COUNTRY_NAMES: { [key: string]: string } = {
@@ -103,36 +103,10 @@ const COUNTRY_NAMES: { [key: string]: string } = {
   'Bahrain': 'バーレーン',
   'Oman': 'オマーン',
   'Yemen': 'イエメン',
-  'Iraq': 'イラク',
-  'Syria': 'シリア',
-  'Lebanon': 'レバノン',
-  'Jordan': 'ヨルダン',
-  'Israel': 'イスラエル',
-  'Palestine': 'パレスチナ',
   'Cyprus': 'キプロス',
-  'Turkey': 'トルコ',
-  'Georgia': 'ジョージア',
-  'Armenia': 'アルメニア',
-  'Azerbaijan': 'アゼルバイジャン',
-  'Iran': 'イラン',
-  'Iraq': 'イラク',
-  'Syria': 'シリア',
-  'Lebanon': 'レバノン',
-  'Jordan': 'ヨルダン',
-  'Israel': 'イスラエル',
-  'Palestine': 'パレスチナ',
-  'Saudi Arabia': 'サウジアラビア',
-  'United Arab Emirates': 'アラブ首長国連邦',
-  'Qatar': 'カタール',
-  'Kuwait': 'クウェート',
-  'Bahrain': 'バーレーン',
-  'Oman': 'オマーン',
-  'Yemen': 'イエメン',
-  'Egypt': 'エジプト',
   'Libya': 'リビア',
   'Tunisia': 'チュニジア',
   'Algeria': 'アルジェリア',
-  'Morocco': 'モロッコ',
   'Sudan': 'スーダン',
   'South Sudan': '南スーダン',
   'Ethiopia': 'エチオピア',
@@ -173,20 +147,6 @@ const COUNTRY_NAMES: { [key: string]: string } = {
   'Zimbabwe': 'ジンバブエ',
   'Botswana': 'ボツワナ',
   'Namibia': 'ナミビア',
-  'South Africa': '南アフリカ',
-  'Lesotho': 'レソト',
-  'Swaziland': 'スワジランド',
-  'Madagascar': 'マダガスカル',
-  'Mauritius': 'モーリシャス',
-  'Seychelles': 'セーシェル',
-  'Comoros': 'コモロ',
-  'Malawi': 'マラウイ',
-  'Mozambique': 'モザンビーク',
-  'Zambia': 'ザンビア',
-  'Zimbabwe': 'ジンバブエ',
-  'Botswana': 'ボツワナ',
-  'Namibia': 'ナミビア',
-  'South Africa': '南アフリカ',
   'Lesotho': 'レソト',
   'Swaziland': 'スワジランド',
   'Madagascar': 'マダガスカル',
@@ -205,7 +165,7 @@ export interface CountryGroup {
   trips: Array<{
     id: string
     title: string
-    destination: string
+    destination?: string
     startDate?: Date
     endDate?: Date
     imageUrl?: string
@@ -215,7 +175,11 @@ export interface CountryGroup {
 /**
  * Google Places APIのaddress_componentsから国名を抽出する
  */
-export function extractCountryFromAddressComponents(addressComponents: any[]): { countryCode: string; countryName: string } {
+export function extractCountryFromAddressComponents(addressComponents: Array<{
+  long_name: string
+  short_name: string
+  types: string[]
+}>): { countryCode: string; countryName: string } {
   if (!addressComponents || addressComponents.length === 0) {
     return { countryCode: 'unknown', countryName: '不明' }
   }
@@ -381,8 +345,8 @@ export function extractCountryFromAddress(formattedAddress: string): { countryCo
 export function groupTripsByCountry(trips: Array<{
   id: string
   title: string
-  destination: string
-  destinationPlace?: PlaceData & { address_components?: any[] }
+  destination?: string
+  destinationPlace?: PlaceData
   startDate?: Date
   endDate?: Date
   imageUrl?: string

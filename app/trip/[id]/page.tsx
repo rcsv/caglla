@@ -14,60 +14,12 @@ import TripDistanceDisplay from '@/components/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/TripWeatherDisplay'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
-
-// TripPage専用の型定義
-type TripPageItinerary = {
-  id: string
-  day_id: string
-  sort_number: number
-  title: string
-  description?: string
-  location?: string
-  place_data?: any
-  start_time?: string
-  end_time?: string
-  cost_amount?: number
-  cost_currency?: string
-  created_at: string
-  updated_at: string
-}
-
-type TripPageDay = {
-  id: string
-  trip_id: string
-  day_number: number
-  description?: string
-  created_at: string
-  updated_at: string
-  itineraries?: TripPageItinerary[]
-}
-
-type TripPageCreator = {
-  id: string
-  name: string
-  email: string
-  avatar_url?: string
-}
-
-type TripPageTrip = {
-  id: string
-  user_id: string
-  title: string
-  description?: string
-  start_date: string
-  end_date: string
-  status: string
-  access_level: 'private' | 'public'
-  created_at: string
-  updated_at: string
-  days?: TripPageDay[]
-  creator?: TripPageCreator
-}
+import { Trip, Day, Itinerary, User } from '@/lib/types'
 
 export default function TripPage({ params }: { params: { id: string } }) {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [trip, setTrip] = useState<TripPageTrip | null>(null)
+  const [trip, setTrip] = useState<Trip | null>(null)
   const [tripLoading, setTripLoading] = useState(true)
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
@@ -160,7 +112,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
   }
 
   // itinerariesのタイトルを生成する関数
-  const generateItinerarySummary = (day: TripPageDay): string => {
+  const generateItinerarySummary = (day: Day): string => {
     if (!day.itineraries || day.itineraries.length === 0) {
       return ''
     }
@@ -170,10 +122,10 @@ export default function TripPage({ params }: { params: { id: string } }) {
   }
 
   // すべてのItinerariesを収集する関数
-  const getAllItineraries = (): TripPageItinerary[] => {
+  const getAllItineraries = (): Itinerary[] => {
     if (!trip || !trip.days) return []
     
-    const allItineraries: TripPageItinerary[] = []
+    const allItineraries: Itinerary[] = []
     trip.days.forEach(day => {
       if (day.itineraries) {
         allItineraries.push(...day.itineraries)
@@ -291,7 +243,6 @@ export default function TripPage({ params }: { params: { id: string } }) {
                   place_data: originalItinerary.place_data || null,
                   start_time: originalItinerary.start_time || '',
                   end_time: originalItinerary.end_time || '',
-                  timezone: originalItinerary.timezone || 'UTC',
                   cost_amount: originalItinerary.cost_amount || null,
                   cost_currency: originalItinerary.cost_currency || 'JPY',
                   created_at: new Date().toISOString(),
@@ -354,7 +305,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
   }
 
   // 特定のitineraryをIDで検索
-  const findItineraryById = (id: string): TripPageItinerary | null => {
+  const findItineraryById = (id: string): Itinerary | null => {
     if (!trip) return null
     
     for (const day of trip.days || []) {
@@ -730,8 +681,8 @@ export default function TripPage({ params }: { params: { id: string } }) {
                           </div>
                           <div className="space-y-0">
                             {day.itineraries.map((itinerary, index) => {
-                              const previousItinerary = index > 0 ? day.itineraries[index - 1] : null
-                              const nextItinerary = index < day.itineraries.length - 1 ? day.itineraries[index + 1] : null
+                              const previousItinerary = index > 0 ? day.itineraries?.[index - 1] : null
+                              const nextItinerary = index < (day.itineraries?.length || 0) - 1 ? day.itineraries?.[index + 1] : null
                               
                               return (
                                 <div key={itinerary.id} className="relative">
@@ -748,7 +699,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
                                     availableDays={trip.days?.map(d => ({
                                       id: d.id,
                                       day_number: d.day_number,
-                                      date: d.date
+                                      date: '' // Day型にdateプロパティがないため空文字列を設定
                                     })) || []}
                                   />
                                   

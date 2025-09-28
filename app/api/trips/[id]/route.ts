@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
+import { Trip, Day, Itinerary, User } from '@/lib/types'
 
 const COLLECTIONS = {
   TRIPS: 'trips',
@@ -81,10 +82,9 @@ export async function GET(
             ...itineraryData,
             created_at: itineraryData.created_at?.toDate ? itineraryData.created_at.toDate() : itineraryData.created_at,
             updated_at: itineraryData.updated_at?.toDate ? itineraryData.updated_at.toDate() : itineraryData.updated_at,
-          }
+          } as Itinerary
         })
-        .filter(itinerary => !itinerary.deleted_at) // 削除されていないもののみ
-        .sort((a, b) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
+        .sort((a: Itinerary, b: Itinerary) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
 
       days.push({
         id: dayDoc.id,
@@ -95,12 +95,12 @@ export async function GET(
 
     // 作成者情報を取得（google_idで検索）
     let creator = null
-    if (convertedTripData.user_id) {
+    if ((convertedTripData as Trip).user_id) {
       try {
         // google_idでusersコレクションを検索
         const usersSnapshot = await adminDb
           .collection('users')
-          .where('google_id', '==', convertedTripData.user_id)
+          .where('google_id', '==', (convertedTripData as Trip).user_id)
           .limit(1)
           .get()
         
@@ -254,6 +254,10 @@ export async function PUT(
 
     const updatedDoc = await tripRef.get()
     const updatedTripData = updatedDoc.data()
+    
+    if (!updatedTripData) {
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    }
     
     // Convert Firestore Timestamps to Date objects
     const convertedUpdatedTripData = {

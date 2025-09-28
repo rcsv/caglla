@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { distanceApiHelpers, DistanceMatrixResult } from '@/lib/distance-api'
-import { PlaceData } from '@/lib/firestore'
+import { PlaceData } from '@/lib/types'
 
 interface VenueDistanceProps {
-  fromPlace?: PlaceData
-  toPlace?: PlaceData
+  fromPlace?: PlaceData | null
+  toPlace?: PlaceData | null
   mode?: 'driving' | 'walking' | 'bicycling' | 'transit'
   className?: string
 }
@@ -20,6 +20,14 @@ export default function VenueDistance({
   const [distanceInfo, setDistanceInfo] = useState<DistanceMatrixResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // 場所の座標をメモ化して、不要な再計算を防ぐ
+  const placesKey = useMemo(() => {
+    if (!fromPlace?.geometry?.location || !toPlace?.geometry?.location) {
+      return null
+    }
+    return `${fromPlace.geometry.location.lat},${fromPlace.geometry.location.lng}|${toPlace.geometry.location.lat},${toPlace.geometry.location.lng}|${mode}`
+  }, [fromPlace?.geometry?.location, toPlace?.geometry?.location, mode])
 
   useEffect(() => {
     const calculateDistance = async () => {
@@ -57,7 +65,7 @@ export default function VenueDistance({
     }
 
     calculateDistance()
-  }, [fromPlace, toPlace, mode])
+  }, [placesKey])
 
   if (!fromPlace || !toPlace) {
     return null

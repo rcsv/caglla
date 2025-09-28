@@ -1,15 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { distanceApiHelpers } from '@/lib/distance-api'
+import { Itinerary } from '@/lib/types'
 
 interface TripDistanceDisplayProps {
-  itineraries: Array<{
-    place_data?: {
-      geometry?: { location: { lat: number; lng: number } }
-      name: string
-    }
-  }>
+  itineraries: Itinerary[]
   className?: string
 }
 
@@ -25,6 +21,14 @@ export default function TripDistanceDisplay({
   } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // 場所の座標をメモ化して、不要な再計算を防ぐ
+  const placesKey = useMemo(() => {
+    return itineraries
+      .filter(itinerary => itinerary.place_data?.geometry?.location)
+      .map(itinerary => `${itinerary.place_data!.geometry!.location!.lat},${itinerary.place_data!.geometry!.location!.lng}`)
+      .join('|')
+  }, [itineraries])
 
   useEffect(() => {
     const calculateTotalDistance = async () => {
@@ -53,7 +57,7 @@ export default function TripDistanceDisplay({
     }
 
     calculateTotalDistance()
-  }, [itineraries])
+  }, [placesKey])
 
   if (isLoading) {
     return (

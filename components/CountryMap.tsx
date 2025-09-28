@@ -3,6 +3,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader } from '@googlemaps/js-api-loader'
 import { CountryGroup } from '@/lib/country-utils'
+
+// Google Maps APIの型定義
+declare global {
+  interface Window {
+    google: any
+  }
+}
 import { getCountryCoordinate } from '@/lib/country-coordinates'
 
 interface CountryMapProps {
@@ -12,8 +19,8 @@ interface CountryMapProps {
 
 export default function CountryMap({ countryGroups, className = '' }: CountryMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
-  const [map, setMap] = useState<google.maps.Map | null>(null)
-  const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([])
+  const [map, setMap] = useState<any>(null)
+  const [markers, setMarkers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -34,10 +41,10 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         if (!mapRef.current) return
 
         // 地図を初期化
-        const newMap = new google.maps.Map(mapRef.current, {
+        const newMap = new window.google.maps.Map(mapRef.current, {
           zoom: 2,
           center: { lat: 20, lng: 0 }, // 世界地図の中心
-          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          mapTypeId: window.google.maps.MapTypeId.ROADMAP,
           mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || '6d1d86ef84ec9c9071f1b459', // Google Maps Platformで作成したMapID
           // すべてのコントロールを無効化
           disableDefaultUI: true, // デフォルトのUIを無効化
@@ -57,7 +64,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         markers.forEach(marker => marker.map = null)
 
         // 新しいマーカーを作成
-        const newMarkers: google.maps.marker.AdvancedMarkerElement[] = []
+        const newMarkers: any[] = []
 
         countryGroups.forEach((group, index) => {
           const coordinate = getCountryCoordinate(group.countryCode)
@@ -82,14 +89,14 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
             markerElement.style.cursor = 'pointer'
             markerElement.title = `${group.countryNameJa} (${group.tripCount}回)`
             
-            const marker = new google.maps.marker.AdvancedMarkerElement({
+            const marker = new window.google.maps.marker.AdvancedMarkerElement({
               position: { lat: coordinate.lat, lng: coordinate.lng },
               map: newMap,
               content: markerElement
             })
 
             // 情報ウィンドウを作成
-            const infoWindow = new google.maps.InfoWindow({
+            const infoWindow = new window.google.maps.InfoWindow({
               content: `
                 <div class="p-2">
                   <h3 class="font-semibold text-gray-800">${group.countryNameJa}</h3>
@@ -114,7 +121,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
 
         // すべてのマーカーが表示されるように地図の境界を調整
         if (newMarkers.length > 0) {
-          const bounds = new google.maps.LatLngBounds()
+          const bounds = new window.google.maps.LatLngBounds()
           newMarkers.forEach(marker => {
             const position = marker.position
             if (position) {
@@ -124,7 +131,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
           newMap.fitBounds(bounds)
           
           // ズームレベルが大きすぎる場合は制限
-          google.maps.event.addListenerOnce(newMap, 'bounds_changed', () => {
+          window.google.maps.event.addListenerOnce(newMap, 'bounds_changed', () => {
             if (newMap.getZoom() && newMap.getZoom()! > 10) {
               newMap.setZoom(10)
             }
