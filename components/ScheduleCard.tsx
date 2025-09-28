@@ -30,7 +30,13 @@ interface ScheduleCardProps {
   onMoveUp?: () => void
   onMoveDown?: () => void
   onMoveToDay?: (itineraryId: string, targetDayId: string) => void
+  onDuplicateToDay?: (itineraryId: string, targetDayId: string) => void
   onDelete?: (itineraryId: string) => void
+  availableDays?: Array<{
+    id: string
+    day_number: number
+    date: string
+  }>
 }
 
 export default function ScheduleCard({ 
@@ -41,14 +47,20 @@ export default function ScheduleCard({
   onMoveUp, 
   onMoveDown, 
   onMoveToDay, 
-  onDelete 
+  onDuplicateToDay,
+  onDelete,
+  availableDays = []
 }: ScheduleCardProps) {
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [description, setDescription] = useState(itinerary.description || '')
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [title, setTitle] = useState(itinerary.title || '')
   const [startTime, setStartTime] = useState(itinerary.start_time || '')
   const [endTime, setEndTime] = useState(itinerary.end_time || '')
   const [isSaving, setIsSaving] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const [showDaySelector, setShowDaySelector] = useState(false)
+  const [showDuplicateSelector, setShowDuplicateSelector] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const [isEditingTime, setIsEditingTime] = useState(false)
   const [tempStartTime, setTempStartTime] = useState(itinerary.start_time || '')
@@ -60,12 +72,15 @@ export default function ScheduleCard({
   const [tempCostCurrency, setTempCostCurrency] = useState(itinerary.cost_currency || 'JPY')
   const menuRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
+  const titleRef = useRef<HTMLInputElement>(null)
 
   // メニューの外側クリックで閉じる
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowMenu(false)
+        setShowDaySelector(false)
+        setShowDuplicateSelector(false)
       }
     }
 
@@ -75,14 +90,15 @@ export default function ScheduleCard({
     }
   }, [])
 
-  // itineraryの変更時に時間を更新
+  // itineraryの変更時にタイトルと時間を更新
   useEffect(() => {
+    setTitle(itinerary.title || '')
     setStartTime(itinerary.start_time || '')
     setEndTime(itinerary.end_time || '')
     setTempStartTime(itinerary.start_time || '')
     setTempEndTime(itinerary.end_time || '')
     setDestinationTimezone(itinerary.timezone || 'UTC')
-  }, [itinerary.start_time, itinerary.end_time, itinerary.timezone])
+  }, [itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.timezone])
 
   // ブラウザのタイムゾーンを取得
   useEffect(() => {
@@ -119,6 +135,47 @@ export default function ScheduleCard({
       return placesApiHelpers.getPhotoUrl(itinerary.place_data.photos[0].photo_reference, 300)
     }
     return null
+  }
+
+  // タイトルの編集を開始
+  const handleTitleClick = () => {
+    setIsEditingTitle(true)
+  }
+
+  // タイトルの編集を保存
+  const handleTitleSave = async () => {
+    if (title !== itinerary.title) {
+      setIsSaving(true)
+      try {
+        const response = await fetch(`/api/itineraries/${itinerary.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title
+          })
+        })
+
+        if (response.ok) {
+          const updatedItinerary = await response.json()
+          onUpdate?.(updatedItinerary)
+        } else {
+          console.error('Failed to update title')
+        }
+      } catch (error) {
+        console.error('Error updating title:', error)
+      } finally {
+        setIsSaving(false)
+      }
+    }
+    setIsEditingTitle(false)
+  }
+
+  // タイトルの編集をキャンセル
+  const handleTitleCancel = () => {
+    setTitle(itinerary.title || '')
+    setIsEditingTitle(false)
   }
 
   // メモの編集を開始
@@ -340,26 +397,97 @@ export default function ScheduleCard({
 
   // メニューアイテムのクリック処理
   const handleMenuAction = (action: string) => {
-    setShowMenu(false)
-    
     switch (action) {
       case 'moveUp':
+        setShowMenu(false)
         onMoveUp?.()
         break
       case 'moveDown':
+        setShowMenu(false)
         onMoveDown?.()
         break
       case 'moveToDay':
-        // TODO: 日付選択モーダルを表示
-        console.log('Move to different day')
+        setShowDaySelector(true)
+        break
+      case 'duplicateToDay':
+        setShowDuplicateSelector(true)
         break
       case 'delete':
+        setShowMenu(false)
         if (confirm('このVenueを削除しますか？')) {
           onDelete?.(itinerary.id)
         }
         break
     }
   }
+
+  // 日程選択の処理
+  const handleDaySelect = async (targetDayId: string) => {
+    setShowDaySelector(false)
+    setShowMenu(false)
+    
+    if (targetDayId === itinerary.day_id) {
+      return // 同じ日程の場合は何もしない
+    }
+
+    try {
+      const response = await fetch('/api/itineraries/move-to-day', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          itinerary_id: itinerary.id,
+          target_day_id: targetDayId
+        })
+      })
+
+      if (response.ok) {
+        const updatedItinerary = await response.json()
+        onMoveToDay?.(itinerary.id, targetDayId)
+      } else {
+        console.error('Failed to move itinerary')
+        alert('日程の移動に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error moving itinerary:', error)
+      alert('日程の移動に失敗しました')
+    }
+  }
+
+  // 日程複製の処理
+  const handleDuplicateSelect = async (targetDayId: string) => {
+    setShowDuplicateSelector(false)
+    setShowMenu(false)
+    
+    try {
+      const response = await fetch('/api/itineraries/duplicate-to-day', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          itinerary_id: itinerary.id,
+          target_day_id: targetDayId
+        })
+      })
+
+      if (response.ok) {
+        const duplicatedItinerary = await response.json()
+        onDuplicateToDay?.(itinerary.id, targetDayId)
+      } else {
+        console.error('Failed to duplicate itinerary')
+        alert('日程の複製に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error duplicating itinerary:', error)
+      alert('日程の複製に失敗しました')
+    }
+  }
+
+  // 利用可能な日程をフィルタリング（移動時は自身の日程を除外、複製時は全て表示）
+  const filteredDaysForMove = availableDays.filter(day => day.id !== itinerary.day_id)
+  const filteredDaysForDuplicate = availableDays
 
   const photoUrl = getPhotoUrl()
 
@@ -399,9 +527,30 @@ export default function ScheduleCard({
             <div className="flex-1 min-w-0">
               {/* タイトルとStar Rating */}
               <div className="flex items-center space-x-2 mb-3">
-                <h4 className="font-semibold text-gray-900 text-lg">
-                  {itinerary.title}
-                </h4>
+                {isEditingTitle ? (
+                  <input
+                    ref={titleRef}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="font-semibold text-gray-900 text-lg bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 flex-1"
+                    autoFocus
+                    onBlur={handleTitleSave}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleTitleSave()
+                      } else if (e.key === 'Escape') {
+                        handleTitleCancel()
+                      }
+                    }}
+                  />
+                ) : (
+                  <h4 
+                    className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                    onClick={handleTitleClick}
+                  >
+                    {itinerary.title}
+                  </h4>
+                )}
                 {itinerary.place_data?.rating && (
                   <div className="flex items-center">
                     <span className="text-yellow-400 mr-1">★</span>
@@ -691,15 +840,91 @@ export default function ScheduleCard({
                       </svg>
                       <span>下に移動</span>
                     </button>
-                    <button
-                      onClick={() => handleMenuAction('moveToDay')}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
-                      </svg>
-                      <span>別の日程に移動</span>
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => handleMenuAction('moveToDay')}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
+                          </svg>
+                          <span>別の日程に移動</span>
+                        </div>
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      
+                      {/* 日程選択のカスケードメニュー */}
+                      {showDaySelector && (
+                        <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[10000]">
+                          <div className="py-1">
+                            {filteredDaysForMove.length > 0 ? (
+                              filteredDaysForMove.map((day) => (
+                                <button
+                                  key={day.id}
+                                  onClick={() => handleDaySelect(day.id)}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                  </svg>
+                                  <span>日程 {day.day_number}</span>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-4 py-2 text-sm text-gray-500">
+                                移動可能な日程がありません
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <button
+                        onClick={() => handleMenuAction('duplicateToDay')}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
+                            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
+                          </svg>
+                          <span>別の日程に複製</span>
+                        </div>
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      
+                      {/* 複製用のカスケードメニュー */}
+                      {showDuplicateSelector && (
+                        <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[10000]">
+                          <div className="py-1">
+                            {filteredDaysForDuplicate.length > 0 ? (
+                              filteredDaysForDuplicate.map((day) => (
+                                <button
+                                  key={day.id}
+                                  onClick={() => handleDuplicateSelect(day.id)}
+                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                                  </svg>
+                                  <span>日程 {day.day_number}</span>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-4 py-2 text-sm text-gray-500">
+                                複製可能な日程がありません
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <hr className="my-1" />
                     <button
                       onClick={() => handleMenuAction('delete')}

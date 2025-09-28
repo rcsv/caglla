@@ -223,6 +223,105 @@ export default function TripPage({ params }: { params: { id: string } }) {
     }
   }
 
+  // 日程複製の処理
+  const handleDuplicateToDay = async (itineraryId: string, targetDayId: string) => {
+    if (!trip) return
+
+    // 元のitineraryを検索
+    const sourceDay = trip.days?.find(d => d.itineraries?.some(item => item.id === itineraryId))
+    const targetDay = trip.days?.find(d => d.id === targetDayId)
+    
+    if (!sourceDay || !targetDay) return
+
+    const originalItinerary = sourceDay.itineraries?.find(item => item.id === itineraryId)
+    if (!originalItinerary) return
+
+    // UIを更新（複製されたitineraryを移動先に追加）
+    setTrip(prevTrip => {
+      if (!prevTrip) return prevTrip
+      return {
+        ...prevTrip,
+        days: prevTrip.days?.map(d => {
+          if (d.id === targetDayId) {
+            // 移動先に追加（最後のsort_number + 1）
+            const maxSortNumber = d.itineraries?.reduce((max, item) => 
+              Math.max(max, item.sort_number), 0) || 0
+            return {
+              ...d,
+              itineraries: [
+                ...(d.itineraries || []),
+                {
+                  id: `temp-${Date.now()}`, // 一時的なID（APIレスポンスで更新される）
+                  day_id: targetDayId,
+                  sort_number: maxSortNumber + 1,
+                  title: `${originalItinerary.title} (複製)`,
+                  description: originalItinerary.description || '',
+                  location: originalItinerary.location || '',
+                  place_data: originalItinerary.place_data || null,
+                  start_time: originalItinerary.start_time || '',
+                  end_time: originalItinerary.end_time || '',
+                  timezone: originalItinerary.timezone || 'UTC',
+                  cost_amount: originalItinerary.cost_amount || null,
+                  cost_currency: originalItinerary.cost_currency || 'JPY',
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                }
+              ]
+            }
+          }
+          return d
+        }) || []
+      }
+    })
+  }
+
+  // 日程移動の処理
+  const handleMoveToDay = async (itineraryId: string, targetDayId: string) => {
+    if (!trip) return
+
+    // 移動元の日程からitineraryを削除
+    const sourceDay = trip.days?.find(d => d.itineraries?.some(item => item.id === itineraryId))
+    const targetDay = trip.days?.find(d => d.id === targetDayId)
+    
+    if (!sourceDay || !targetDay) return
+
+    const itineraryToMove = sourceDay.itineraries?.find(item => item.id === itineraryId)
+    if (!itineraryToMove) return
+
+    // UIを更新
+    setTrip(prevTrip => {
+      if (!prevTrip) return prevTrip
+      return {
+        ...prevTrip,
+        days: prevTrip.days?.map(d => {
+          if (d.id === sourceDay.id) {
+            // 移動元から削除
+            return {
+              ...d,
+              itineraries: d.itineraries?.filter(item => item.id !== itineraryId) || []
+            }
+          } else if (d.id === targetDayId) {
+            // 移動先に追加（最後のsort_number + 1）
+            const maxSortNumber = d.itineraries?.reduce((max, item) => 
+              Math.max(max, item.sort_number), 0) || 0
+            return {
+              ...d,
+              itineraries: [
+                ...(d.itineraries || []),
+                {
+                  ...itineraryToMove,
+                  day_id: targetDayId,
+                  sort_number: maxSortNumber + 1
+                }
+              ]
+            }
+          }
+          return d
+        }) || []
+      }
+    })
+  }
+
   // 特定のitineraryをIDで検索
   const findItineraryById = (id: string): TripPageItinerary | null => {
     if (!trip) return null
@@ -612,7 +711,14 @@ export default function TripPage({ params }: { params: { id: string } }) {
                                     onUpdate={handleScheduleUpdated}
                                     onMoveUp={() => handleMoveUp(itinerary.id, day.id)}
                                     onMoveDown={() => handleMoveDown(itinerary.id, day.id)}
+                                    onMoveToDay={handleMoveToDay}
+                                    onDuplicateToDay={handleDuplicateToDay}
                                     onDelete={handleScheduleDelete}
+                                    availableDays={trip.days?.map(d => ({
+                                      id: d.id,
+                                      day_number: d.day_number,
+                                      date: d.date
+                                    })) || []}
                                   />
                                   
                                   {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}
