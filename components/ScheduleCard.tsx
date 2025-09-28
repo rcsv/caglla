@@ -369,8 +369,16 @@ export default function ScheduleCard({
     setIsExpanded(!isExpanded)
   }
 
+  // 時刻フォーマットを一般ユーザー向けに変更（08:00 → 8:00）
+  const formatTimeForDisplay = (time: string): string => {
+    if (!time) return '--:--'
+    const [hours, minutes] = time.split(':')
+    const hour = parseInt(hours, 10)
+    return `${hour}:${minutes}`
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-visible">
       <div className="flex">
         {/* 左側: ソート番号とコンテンツ */}
         <div className="flex-1 p-4">
@@ -444,7 +452,7 @@ export default function ScheduleCard({
                 )}
               </div>
 
-              {/* 時間表示・編集エリア */}
+              {/* 時間・費用・予約を1行にインラインで配置 */}
               <div className="mb-4">
                 {isEditingTime ? (
                   <div className="space-y-2">
@@ -527,44 +535,7 @@ export default function ScheduleCard({
                       Enterで保存、Escapeでキャンセル
                     </p>
                   </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1">
-                      <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-sm font-medium text-gray-700">時間:</span>
-                    </div>
-                    {startTime || endTime ? (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600 bg-gray-50 px-2 py-1 rounded">
-                          {startTime || '--:--'} - {endTime || '--:--'}
-                        </span>
-                        <span className="text-xs text-gray-500 bg-blue-50 px-2 py-1 rounded">
-                          {destinationTimezone}
-                        </span>
-                        <button
-                          onClick={handleTimeEditStart}
-                          className="text-blue-500 hover:text-blue-700 text-sm underline"
-                        >
-                          編集
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={handleTimeEditStart}
-                        className="text-blue-500 hover:text-blue-700 text-sm underline bg-blue-50 px-2 py-1 rounded hover:bg-blue-100"
-                      >
-                        時間を設定
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* 費用表示・編集エリア */}
-              <div className="mb-4">
-                {isEditingCost ? (
+                ) : isEditingCost ? (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <label className="text-sm font-medium text-gray-700">金額:</label>
@@ -622,49 +593,63 @@ export default function ScheduleCard({
                     </p>
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-4">
+                    {/* 時間要素 */}
+                    <div className="flex items-center space-x-1">
+                      <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                      </svg>
+                      {startTime || endTime ? (
+                        <span 
+                          className="text-sm text-gray-600 cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                          onClick={handleTimeEditStart}
+                        >
+                          {formatTimeForDisplay(startTime)} - {formatTimeForDisplay(endTime)}
+                        </span>
+                      ) : (
+                        <span 
+                          className="text-sm text-gray-500 cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                          onClick={handleTimeEditStart}
+                        >
+                          時間
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 費用要素 */}
                     <div className="flex items-center space-x-1">
                       <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                       </svg>
-                      <span className="text-sm font-medium text-gray-700">費用:</span>
-                    </div>
-                    {itinerary.cost_amount ? (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600 bg-green-50 px-2 py-1 rounded">
+                      {itinerary.cost_amount ? (
+                        <span 
+                          className="text-sm text-gray-600 cursor-pointer hover:text-green-600 hover:bg-green-50 px-2 py-1 rounded transition-colors"
+                          onClick={handleCostEditStart}
+                        >
                           {currencyUtils.formatAmount(itinerary.cost_amount, itinerary.cost_currency || 'JPY')}
                         </span>
-                        <button
+                      ) : (
+                        <span 
+                          className="text-sm text-gray-500 cursor-pointer hover:text-green-600 hover:bg-green-50 px-2 py-1 rounded transition-colors"
                           onClick={handleCostEditStart}
-                          className="text-green-500 hover:text-green-700 text-sm underline"
                         >
-                          編集
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={handleCostEditStart}
-                        className="text-green-500 hover:text-green-700 text-sm underline bg-green-50 px-2 py-1 rounded hover:bg-green-100"
-                      >
-                        費用を設定
-                      </button>
-                    )}
+                          費用
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 予約要素 */}
+                    <div className="flex items-center space-x-1">
+                      <svg className="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8 0a2 2 0 114 0 2 2 0 01-4 0z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm text-gray-500 cursor-pointer hover:text-purple-600 hover:bg-purple-50 px-2 py-1 rounded transition-colors">
+                        予約
+                      </span>
+                    </div>
                   </div>
                 )}
-              </div>
-
-              {/* アクションボタン */}
-              <div className="flex space-x-2">
-
-
-                {/* 予約ボタン */}
-                <button className="flex items-center space-x-1 px-3 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8 0a2 2 0 114 0 2 2 0 01-4 0z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm">予約</span>
-                </button>
               </div>
             </div>
 
@@ -681,7 +666,7 @@ export default function ScheduleCard({
 
               {/* ドロップダウンメニュー */}
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[9999]">
                   <div className="py-1">
                     <button
                       onClick={() => handleMenuAction('moveUp')}
