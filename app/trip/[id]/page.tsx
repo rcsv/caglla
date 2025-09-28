@@ -11,6 +11,7 @@ import ScheduleCard from '@/components/ScheduleCard'
 import VenueDistance from '@/components/VenueDistance'
 import TripCostDisplay from '@/components/TripCostDisplay'
 import TripDistanceDisplay from '@/components/TripDistanceDisplay'
+import TripWeatherDisplay from '@/components/TripWeatherDisplay'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 
@@ -453,12 +454,19 @@ export default function TripPage({ params }: { params: { id: string } }) {
 
       {/* Summary Section */}
       <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Cost Summary */}
           <TripCostDisplay itineraries={getAllItineraries()} />
           
           {/* Distance Summary */}
           <TripDistanceDisplay itineraries={getAllItineraries()} />
+          
+          {/* Weather Summary */}
+          <TripWeatherDisplay 
+            destination={trip.destination}
+            startDate={trip.start_date}
+            endDate={trip.end_date}
+          />
         </div>
       </div>
 
