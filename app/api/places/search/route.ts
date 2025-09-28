@@ -24,25 +24,57 @@ export async function POST(request: NextRequest) {
     console.log('API Key (first 10 chars):', GOOGLE_PLACES_API_KEY.substring(0, 10))
     console.log('Query:', query)
 
-    // Google Places APIを呼び出し
-    // 日本語検索の精度を向上させるため、typeパラメータを追加
-    const apiUrl = `${GOOGLE_PLACES_API_URL}/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}&language=ja&region=jp&type=establishment`
-    console.log('API URL:', apiUrl.replace(GOOGLE_PLACES_API_KEY, 'API_KEY_HIDDEN'))
-    
-    const response = await fetch(apiUrl)
+    // 複数の検索戦略を試行
+    const searchStrategies = [
+      // 1. 元のクエリで検索
+      `${GOOGLE_PLACES_API_URL}/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}&language=ja&region=jp`,
+      // 2. 英語でも検索してみる
+      `${GOOGLE_PLACES_API_URL}/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}&language=en`,
+      // 3. 地域制限なしで検索
+      `${GOOGLE_PLACES_API_URL}/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}&language=ja`
+    ]
 
-    if (!response.ok) {
-      throw new Error(`Google Places API error: ${response.status}`)
+    let lastError: Error | null = null
+    
+    for (let i = 0; i < searchStrategies.length; i++) {
+      const apiUrl = searchStrategies[i]
+      console.log(`Trying search strategy ${i + 1}:`, apiUrl.replace(GOOGLE_PLACES_API_KEY, 'API_KEY_HIDDEN'))
+      
+      try {
+        const response = await fetch(apiUrl)
+
+        if (!response.ok) {
+          throw new Error(`Google Places API error: ${response.status}`)
+        }
+
+        const data = await response.json()
+        
+        // ZERO_RESULTSは正常なレスポンス（検索結果なし）
+        if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
+          throw new Error(`Google Places API error: ${data.status}`)
+        }
+
+        // 結果が見つかった場合、または最後の戦略の場合は返す
+        if (data.status === 'OK' || i === searchStrategies.length - 1) {
+          return NextResponse.json(data)
+        }
+        
+        // ZERO_RESULTSの場合は次の戦略を試す
+        lastError = new Error(`No results found with strategy ${i + 1}`)
+        
+      } catch (error) {
+        console.log(`Search strategy ${i + 1} failed:`, error)
+        lastError = error instanceof Error ? error : new Error('Unknown error')
+        
+        // 最後の戦略でない場合は次の戦略を試す
+        if (i < searchStrategies.length - 1) {
+          continue
+        }
+      }
     }
 
-    const data = await response.json()
-    
-    // ZERO_RESULTSは正常なレスポンス（検索結果なし）
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      throw new Error(`Google Places API error: ${data.status}`)
-    }
-
-    return NextResponse.json(data)
+    // すべての戦略が失敗した場合
+    throw lastError || new Error('All search strategies failed')
   } catch (error) {
     console.error('Error in places search proxy:', error)
     return NextResponse.json(

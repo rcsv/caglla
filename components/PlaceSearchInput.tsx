@@ -77,8 +77,16 @@ export default function PlaceSearchInput({
     } catch (error) {
       console.error('Search error:', error)
       const errorMessage = error instanceof Error ? error.message : '場所の検索に失敗しました'
-      setError(`検索エラー: ${errorMessage}`)
-      setSearchResults([])
+      
+      // ZERO_RESULTSの場合はエラーではなく、結果なしとして扱う
+      if (errorMessage.includes('ZERO_RESULTS')) {
+        setError(null)
+        setSearchResults([])
+        setShowResults(true) // 結果なしメッセージを表示
+      } else {
+        setError(`検索エラー: ${errorMessage}`)
+        setSearchResults([])
+      }
     } finally {
       setIsSearching(false)
     }
@@ -209,6 +217,9 @@ export default function PlaceSearchInput({
             <div className="mb-2">該当する場所が見つかりませんでした</div>
             <div className="text-xs text-gray-400">
               英語での検索や、より具体的な地名を試してみてください
+            </div>
+            <div className="mt-2 text-xs text-gray-400">
+              または手動で入力
             </div>
           </div>
         </div>

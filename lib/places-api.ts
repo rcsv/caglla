@@ -62,7 +62,8 @@ export const placesApiHelpers = {
 
       const data = await response.json()
       
-      if (data.status !== 'OK') {
+      // ZERO_RESULTSは正常なレスポンス（検索結果なし）
+      if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
         throw new Error(`Places API error: ${data.status}`)
       }
 
@@ -113,7 +114,8 @@ export const placesApiHelpers = {
 
       const data = await response.json()
       
-      if (data.status !== 'OK') {
+      // ZERO_RESULTSは正常なレスポンス（検索結果なし）
+      if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
         throw new Error(`Places API error: ${data.status}`)
       }
 
