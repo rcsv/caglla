@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { distanceApiHelpers, DistanceMatrixResult } from '@/lib/distance-api'
-import { PlaceData } from '@/lib/types'
+import { PlaceData } from '@/lib/firestore'
 
 interface VenueDistanceProps {
   fromPlace?: PlaceData | null

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers } from '@/lib/places-api'
-import { PlaceData, Itinerary } from '@/lib/types'
+import { PlaceData, Itinerary } from '@/lib/firestore'
 import { timezoneUtils } from '@/lib/timezone-utils'
 import { currencyUtils } from '@/lib/currency-utils'
 import VenueDistance from './VenueDistance'

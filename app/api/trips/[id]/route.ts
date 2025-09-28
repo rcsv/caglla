@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
-import { Trip, Day, Itinerary, User } from '@/lib/types'
+import { Trip, Day, Itinerary, User } from '@/lib/firestore'
 
 const COLLECTIONS = {
   TRIPS: 'trips',

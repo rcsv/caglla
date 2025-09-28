@@ -21,8 +21,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('API Key (first 10 chars):', GOOGLE_PLACES_API_KEY.substring(0, 10))
-    console.log('Query:', query)
+    console.log('Searching for:', query)
 
     // 複数の検索戦略を試行
     const searchStrategies = [
@@ -38,7 +37,7 @@ export async function POST(request: NextRequest) {
     
     for (let i = 0; i < searchStrategies.length; i++) {
       const apiUrl = searchStrategies[i]
-      console.log(`Trying search strategy ${i + 1}:`, apiUrl.replace(GOOGLE_PLACES_API_KEY, 'API_KEY_HIDDEN'))
+      console.log(`Trying search strategy ${i + 1}`)
       
       try {
         const response = await fetch(apiUrl)

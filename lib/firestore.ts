@@ -32,25 +32,26 @@ export interface PlaceData {
   place_id: string
   name: string
   formatted_address: string
-  address_components?: Array<{
-    long_name: string
-    short_name: string
-    types: string[]
-  }>
   geometry: {
     location: {
       lat: number
       lng: number
     }
   }
-  types: string[]
+  address_components?: Array<{
+    long_name: string
+    short_name: string
+    types: string[]
+  }>
   photos?: Array<{
     photo_reference: string
     height: number
     width: number
   }>
   rating?: number
+  user_ratings_total?: number
   price_level?: number
+  types?: string[]
   opening_hours?: {
     open_now: boolean
     weekday_text: string[]
@@ -68,10 +69,13 @@ export interface Trip {
   destination_place?: PlaceData // 新しいGoogle Places API連携フィールド
   start_date?: Date
   end_date?: Date
+  status: string
   access_level: 'private' | 'public'
   image_url?: string
   created_at: Date
   updated_at: Date
+  days?: Day[]
+  creator?: User
 }
 
 export interface Day {
@@ -92,8 +96,11 @@ export interface Itinerary {
   title: string
   description?: string
   location?: string
+  place_data?: PlaceData | null
   start_time?: string
   end_time?: string
+  cost_amount?: number | null
+  cost_currency?: string
   created_at: Date
   updated_at: Date
 }
@@ -103,6 +110,46 @@ export interface TripUser {
   trip_id: string
   user_id: string
   created_at: Date
+}
+
+// APIレスポンス用の型
+export interface TripResponse extends Trip {
+  // APIから返される追加フィールドがあればここに追加
+}
+
+export interface ItineraryResponse extends Itinerary {
+  // APIから返される追加フィールドがあればここに追加
+}
+
+export interface DayResponse extends Day {
+  // APIから返される追加フィールドがあればここに追加
+}
+
+// フォーム用の型（オプショナルフィールドを必須にする）
+export interface TripFormData {
+  title: string
+  description?: string
+  start_date: string
+  end_date: string
+  access_level: 'private' | 'public'
+  image_url?: string
+  destination?: string
+}
+
+export interface ItineraryFormData {
+  title: string
+  description?: string
+  location?: string
+  place_data?: PlaceData | null
+  start_time?: string
+  end_time?: string
+  cost_amount?: number | null
+  cost_currency?: string
+}
+
+export interface DayFormData {
+  day_number: number
+  description?: string
 }
 
 // Update day function
