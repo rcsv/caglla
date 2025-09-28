@@ -8,6 +8,7 @@ import TripEditor from '@/components/TripEditor'
 import DayEditor from '@/components/DayEditor'
 import AddScheduleModal from '@/components/AddScheduleModal'
 import ScheduleCard from '@/components/ScheduleCard'
+import TripCostDisplay from '@/components/TripCostDisplay'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 
@@ -22,6 +23,8 @@ type TripPageItinerary = {
   place_data?: any
   start_time?: string
   end_time?: string
+  cost_amount?: number
+  cost_currency?: string
   created_at: string
   updated_at: string
 }
@@ -129,6 +132,19 @@ export default function TripPage({ params }: { params: { id: string } }) {
     
     const sortedItineraries = [...day.itineraries].sort((a, b) => a.sort_number - b.sort_number)
     return sortedItineraries.map(itinerary => itinerary.title).join(' → ')
+  }
+
+  // すべてのItinerariesを収集する関数
+  const getAllItineraries = (): TripPageItinerary[] => {
+    if (!trip || !trip.days) return []
+    
+    const allItineraries: TripPageItinerary[] = []
+    trip.days.forEach(day => {
+      if (day.itineraries) {
+        allItineraries.push(...day.itineraries)
+      }
+    })
+    return allItineraries
   }
 
   const handleScheduleAdded = async (newItinerary: any) => {
@@ -432,6 +448,11 @@ export default function TripPage({ params }: { params: { id: string } }) {
           </div>
         </div>
       </header>
+
+      {/* Cost Summary */}
+      <div className="container mx-auto px-4 py-6">
+        <TripCostDisplay itineraries={getAllItineraries()} />
+      </div>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
