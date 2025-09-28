@@ -57,6 +57,7 @@ type TripPageTrip = {
   start_date: string
   end_date: string
   status: string
+  access_level: 'private' | 'public'
   created_at: string
   updated_at: string
   days?: TripPageDay[]
@@ -439,6 +440,27 @@ export default function TripPage({ params }: { params: { id: string } }) {
                     {trip.description}
                   </p>
                 )}
+                
+                {/* Privacy Status */}
+                <div className="flex items-center text-white text-sm opacity-80 drop-shadow-md mb-2">
+                  <svg 
+                    className="w-4 h-4 mr-2" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    {trip.access_level === 'private' ? (
+                      // Locked icon for private
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    ) : (
+                      // Unlocked icon for public
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                    )}
+                  </svg>
+                  <span>
+                    {trip.access_level === 'private' ? '非公開' : '公開'}
+                  </span>
+                </div>
                 
                 {/* Creator Info */}
                 {trip.creator && (
