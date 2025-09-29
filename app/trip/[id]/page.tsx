@@ -12,6 +12,7 @@ import VenueDistance from '@/components/VenueDistance'
 import TripCostDisplay from '@/components/TripCostDisplay'
 import TripDistanceDisplay from '@/components/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/TripWeatherDisplay'
+import TripMap from '@/components/TripMap'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { Trip, Day, Itinerary, User } from '@/lib/firestore'
@@ -24,12 +25,15 @@ export default function TripPage({ params }: { params: { id: string } }) {
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set())
+  const [leftNavExpanded, setLeftNavExpanded] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/')
     }
   }, [user, loading, router])
+
 
   useEffect(() => {
     const fetchTrip = async () => {
@@ -450,135 +454,234 @@ export default function TripPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Header with Background Image */}
-      <header className="relative h-[300px] md:h-[360px] overflow-hidden">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: trip.image_url 
-              ? `url(${trip.image_url})` 
-              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-          }}
-        >
-          {/* Dark Overlay for better text readability */}
-          <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-        </div>
-        
-        {/* Content Overlay */}
-        <div className="relative h-full flex flex-col">
-          {/* Top Navigation */}
-          <div className="flex justify-between items-start p-6">
-            <Link
-              href="/"
-              className="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30"
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
+      {/* Left Navigation Menu (viewport縦いっぱい) */}
+      <nav className={`hidden md:block bg-white border-r border-gray-200 transition-all duration-200 ${
+        leftNavExpanded ? 'w-48' : 'w-12'
+      }`}>
+        <div className="h-full flex flex-col">
+          {/* Toggle Button */}
+          <div className="p-2 border-b border-gray-200">
+            <button
+              onClick={() => setLeftNavExpanded(!leftNavExpanded)}
+              className="w-full p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              title={leftNavExpanded ? 'メニューを縮小' : 'メニューを展開'}
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
-              戻る
-            </Link>
-            <TripEditor 
-              trip={trip as any} 
-              onUpdate={(updatedTrip: any) => setTrip(updatedTrip)} 
-              onDelete={() => router.push('/')}
-            />
+            </button>
           </div>
           
-          {/* Main Content - Positioned higher */}
-          <div className="flex-1 flex items-start pt-8">
-            <div className="w-full px-6">
-              <div className="max-w-4xl">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
-                  {trip.title}
-                </h1>
+          {/* Menu Items */}
+          <ul className="flex-1 p-2 space-y-2">
+            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer group" title="Summary">
+              <span className="text-lg">🏠</span>
+              {leftNavExpanded && (
+                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Summary</span>
+              )}
+            </li>
+            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer group" title="Itinerary">
+              <span className="text-lg">🧳</span>
+              {leftNavExpanded && (
+                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Itinerary</span>
+              )}
+            </li>
+            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer group" title="Checklist">
+              <span className="text-lg">✅</span>
+              {leftNavExpanded && (
+                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Checklist</span>
+              )}
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Slide Menu */}
+      <nav className={`fixed top-0 left-0 h-full w-48 bg-white border-r border-gray-200 transform transition-transform duration-300 z-50 md:hidden ${
+        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="h-full flex flex-col">
+          {/* Close Button */}
+          <div className="p-4 border-b border-gray-200">
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Menu Items */}
+          <ul className="flex-1 p-4 space-y-2">
+            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+              <span className="text-lg">🏠</span>
+              <span className="ml-3 text-sm font-medium text-gray-700">Summary</span>
+            </li>
+            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+              <span className="text-lg">🧳</span>
+              <span className="ml-3 text-sm font-medium text-gray-700">Itinerary</span>
+            </li>
+            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+              <span className="text-lg">✅</span>
+              <span className="ml-3 text-sm font-medium text-gray-700">Checklist</span>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      {/* Main Content Pane - Scrollable */}
+      <div className="flex-1 overflow-y-auto main-content-scrollable">
+        {/* Hero Header with Background Image */}
+        <header className="relative h-[200px] md:h-[240px] overflow-hidden">
+          {/* Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: trip.image_url 
+                ? `url(${trip.image_url})` 
+                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            }}
+          >
+            {/* Dark Overlay for better text readability */}
+            <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+          </div>
+          
+          {/* Content Overlay */}
+          <div className="relative h-full flex flex-col">
+            {/* Top Navigation */}
+            <div className="flex justify-between items-start p-6">
+              <div className="flex items-center gap-4">
+                {/* ハンバーガーボタン（768px以下） */}
+                <button
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  className="md:hidden inline-flex items-center px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
                 
-                {/* Date and Location */}
-                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
-                  <div className="flex items-center text-white">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <Link
+                  href="/"
+                  className="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  戻る
+                </Link>
+              </div>
+              <TripEditor 
+                trip={trip as any} 
+                onUpdate={(updatedTrip: any) => setTrip(updatedTrip)} 
+                onDelete={() => router.push('/')}
+              />
+            </div>
+            
+            {/* Main Content - Positioned higher */}
+            <div className="flex-1 flex items-start pt-8">
+              <div className="w-full px-6">
+                <div className="max-w-4xl">
+                  <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
+                    {trip.title}
+                  </h1>
+                  
+                  {/* Date and Location */}
+                  <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+                    <div className="flex items-center text-white">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-lg font-medium">
+                        {trip.start_date && trip.end_date 
+                          ? dateUtils.formatTripDateRange(trip.start_date, trip.end_date)
+                          : '日付が設定されていません'
+                        }
+                      </span>
+                    </div>
+                    
+                    {trip.destination && (
+                      <div className="flex items-center text-white">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className="text-lg font-medium">{trip.destination}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Description */}
+                  {trip.description && (
+                    <p className="text-white text-lg md:text-xl leading-relaxed drop-shadow-md max-w-2xl mb-2">
+                      {trip.description}
+                    </p>
+                  )}
+                  
+                  {/* Privacy Status */}
+                  <div className="flex items-center text-white text-sm opacity-80 drop-shadow-md mb-2">
+                    <svg 
+                      className="w-4 h-4 mr-2" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      {trip.access_level === 'private' ? (
+                        // Locked icon for private
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      ) : (
+                        // Unlocked icon for public
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                      )}
                     </svg>
-                    <span className="text-lg font-medium">
-                      {trip.start_date && trip.end_date 
-                        ? dateUtils.formatTripDateRange(trip.start_date, trip.end_date)
-                        : '日付が設定されていません'
-                      }
+                    <span>
+                      {trip.access_level === 'private' ? '非公開' : '公開'}
                     </span>
                   </div>
                   
-                  {trip.destination && (
-                    <div className="flex items-center text-white">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="text-lg font-medium">{trip.destination}</span>
-                    </div>
+                  {/* Creator Info */}
+                  {trip.creator && (
+                    <p className="text-white text-sm opacity-80 drop-shadow-md">
+                      by {trip.creator.name}
+                    </p>
                   )}
                 </div>
-                
-                {/* Description */}
-                {trip.description && (
-                  <p className="text-white text-lg md:text-xl leading-relaxed drop-shadow-md max-w-2xl mb-2">
-                    {trip.description}
-                  </p>
-                )}
-                
-                {/* Privacy Status */}
-                <div className="flex items-center text-white text-sm opacity-80 drop-shadow-md mb-2">
-                  <svg 
-                    className="w-4 h-4 mr-2" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    {trip.access_level === 'private' ? (
-                      // Locked icon for private
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    ) : (
-                      // Unlocked icon for public
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                    )}
-                  </svg>
-                  <span>
-                    {trip.access_level === 'private' ? '非公開' : '公開'}
-                  </span>
-                </div>
-                
-                {/* Creator Info */}
-                {trip.creator && (
-                  <p className="text-white text-sm opacity-80 drop-shadow-md">
-                    by {trip.creator.name}
-                  </p>
-                )}
               </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Summary Section */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Cost Summary */}
-          <TripCostDisplay itineraries={getAllItineraries()} />
-          
-          {/* Distance Summary */}
-          <TripDistanceDisplay itineraries={getAllItineraries()} />
-          
-          {/* Weather Summary */}
-          <TripWeatherDisplay 
-            destination={trip.destination}
-            startDate={trip.start_date ? (trip.start_date instanceof Date ? trip.start_date.toISOString().split('T')[0] : trip.start_date) : undefined}
-            endDate={trip.end_date ? (trip.end_date instanceof Date ? trip.end_date.toISOString().split('T')[0] : trip.end_date) : undefined}
-          />
+        {/* Summary Section */}
+        <div className="px-4 py-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Cost Summary */}
+            <TripCostDisplay itineraries={getAllItineraries()} />
+            
+            {/* Distance Summary */}
+            <TripDistanceDisplay itineraries={getAllItineraries()} />
+            
+            {/* Weather Summary */}
+            <TripWeatherDisplay 
+              destination={trip.destination}
+              startDate={trip.start_date ? (trip.start_date instanceof Date ? trip.start_date.toISOString().split('T')[0] : trip.start_date) : undefined}
+              endDate={trip.end_date ? (trip.end_date instanceof Date ? trip.end_date.toISOString().split('T')[0] : trip.end_date) : undefined}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+        {/* Main Content */}
+        <main className="px-4 pb-4">
         {/* Days */}
         {trip.days && trip.days.length > 0 ? (
           <div className="space-y-6">
@@ -768,7 +871,19 @@ export default function TripPage({ params }: { params: { id: string } }) {
             </button>
           </div>
         )}
-      </main>
+        </main>
+      </div>
+
+      {/* Right Pane - Map Only (layout.cssのブレークポイントに準拠) */}
+      <div className="hidden md:block md:w-[335px] lg:w-[400px] xl:flex-1 flex-shrink-0">
+        <div className="h-full bg-gray-100">
+          <TripMap 
+            itineraries={getAllItineraries()} 
+            className="h-full"
+          />
+        </div>
+      </div>
+
 
       {/* Add Schedule Modal */}
       {showAddScheduleModal && selectedDayId && (
