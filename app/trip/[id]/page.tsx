@@ -649,7 +649,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
       </nav>
 
       {/* Main Content Pane - Scrollable */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide main-content-scrollable left-pane-shadow">
+      <div className="flex-1 overflow-y-auto scrollbar-hide main-content-scrollable main-content-shadow">
         {/* Hero Header with Background Image */}
         <header className="relative h-[200px] md:h-[240px] overflow-hidden">
           {/* Background Image */}

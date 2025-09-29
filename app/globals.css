@@ -58,14 +58,26 @@ body {
   z-index: 10;
 }
 
-/* 左メニューからメインコンテンツへのドロップシャドウ効果 */
-.left-nav-shadow {
+/* メインコンテンツ用のゆったりとした影 */
+.main-content-shadow {
   box-shadow: 
-    8px 0 16px rgba(0, 0, 0, 0.12),
-    4px 0 8px rgba(0, 0, 0, 0.08),
-    0 4px 8px rgba(0, 0, 0, 0.08);
+    16px 0 32px rgba(0, 0, 0, 0.12),
+    8px 0 16px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.08);
   position: relative;
-  z-index: 20;
+  z-index: 10;
+}
+
+/* 左メニューからメインコンテンツへのドロップシャドウ効果（768px以下限定） */
+@media (max-width: 768px) {
+  .left-nav-shadow {
+    box-shadow: 
+      8px 0 16px rgba(0, 0, 0, 0.12),
+      4px 0 8px rgba(0, 0, 0, 0.08),
+      0 4px 8px rgba(0, 0, 0, 0.08);
+    position: relative;
+    z-index: 20;
+  }
 }
 
 /* メインコンテンツエリアの最大幅制限 */
