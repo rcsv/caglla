@@ -9,13 +9,17 @@ interface VenueDistanceProps {
   toPlace?: PlaceData | null
   mode?: 'driving' | 'walking' | 'bicycling' | 'transit'
   className?: string
+  onInsertVenue?: () => void // 挿入ボタンのコールバック
+  showInsertButton?: boolean // 挿入ボタンを表示するかどうか
 }
 
 export default function VenueDistance({ 
   fromPlace, 
   toPlace, 
   mode = 'driving',
-  className = '' 
+  className = '',
+  onInsertVenue,
+  showInsertButton = false
 }: VenueDistanceProps) {
   const [distanceInfo, setDistanceInfo] = useState<DistanceMatrixResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -101,8 +105,9 @@ export default function VenueDistance({
       {/* Gitタイムライン風の縦線 */}
       <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-gray-300"></div>
       
-      {/* 距離・時間表示（中央の丸いアイコン） */}
-      <div className="relative z-10 flex items-center justify-center">
+      {/* 距離・時間表示と挿入ボタンを横並びに配置 */}
+      <div className="relative z-10 flex items-center space-x-3">
+        {/* 距離・時間表示 */}
         <div className="bg-white border-2 border-gray-300 rounded-full p-2 shadow-sm">
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,6 +129,25 @@ export default function VenueDistance({
             )}
           </div>
         </div>
+        
+        {/* 挿入ボタン */}
+        {showInsertButton && onInsertVenue && (
+          <button
+            onClick={onInsertVenue}
+            className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
+            title="間にVenueを追加"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C13.1 2 14 2.9 14 4V10H20C21.1 10 22 10.9 22 12S21.1 14 20 14H14V20C14 21.1 13.1 22 12 22S10 21.1 10 20V14H4C2.9 14 2 13.1 2 12S2.9 10 4 10H10V4C10 2.9 10.9 2 12 2Z" />
+              <path 
+                d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z" 
+                fill="white"
+                opacity="0.8"
+                transform="scale(0.3) translate(20, 20)"
+              />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   )

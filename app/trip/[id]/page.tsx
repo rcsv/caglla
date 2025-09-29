@@ -8,6 +8,8 @@ import TripEditor from '@/components/TripEditor'
 import DayEditor from '@/components/DayEditor'
 import AddScheduleModal from '@/components/AddScheduleModal'
 import ScheduleCard from '@/components/ScheduleCard'
+import SortableItineraryCard from '@/components/SortableItineraryCard'
+import VenueInsertButton from '@/components/VenueInsertButton'
 import VenueDistance from '@/components/VenueDistance'
 import TripCostDisplay from '@/components/TripCostDisplay'
 import TripDistanceDisplay from '@/components/TripDistanceDisplay'
@@ -18,6 +20,10 @@ import NavigationMenu from '@/components/NavigationMenu'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { Trip, Day, Itinerary, User } from '@/lib/firestore'
+import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 export default function TripPage({ params }: { params: { id: string } }) {
   const { user, loading } = useAuth()
@@ -26,6 +32,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
   const [tripLoading, setTripLoading] = useState(true)
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
+  const [insertAfterIndex, setInsertAfterIndex] = useState<number | undefined>(undefined)
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set())
   const [leftNavExpanded, setLeftNavExpanded] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -73,6 +80,13 @@ export default function TripPage({ params }: { params: { id: string } }) {
 
   const handleAddSchedule = (dayId: string) => {
     setSelectedDayId(dayId)
+    setInsertAfterIndex(undefined) // 最後に追加
+    setShowAddScheduleModal(true)
+  }
+
+  const handleInsertSchedule = (dayId: string, afterIndex: number) => {
+    setSelectedDayId(dayId)
+    setInsertAfterIndex(afterIndex) // 指定位置に挿入
     setShowAddScheduleModal(true)
   }
 
@@ -171,15 +185,31 @@ export default function TripPage({ params }: { params: { id: string } }) {
         ...prevTrip,
         days: prevTrip.days?.map(day => {
           if (day.id === newItinerary.day_id) {
-            return {
-              ...day,
-              itineraries: [...(day.itineraries || []), newItinerary]
+            const currentItineraries = day.itineraries || []
+            
+            if (insertAfterIndex !== undefined && insertAfterIndex >= 0) {
+              // 指定位置に挿入
+              const newItineraries = [...currentItineraries]
+              newItineraries.splice(insertAfterIndex + 1, 0, newItinerary)
+              return {
+                ...day,
+                itineraries: newItineraries
+              }
+            } else {
+              // 最後に追加
+              return {
+                ...day,
+                itineraries: [...currentItineraries, newItinerary]
+              }
             }
           }
           return day
         }) || []
       }
     })
+    
+    // 挿入位置をリセット
+    setInsertAfterIndex(undefined)
   }
 
   const handleScheduleUpdated = async (updatedItinerary: any) => {
@@ -340,6 +370,91 @@ export default function TripPage({ params }: { params: { id: string } }) {
       if (itinerary) return itinerary
     }
     return null
+  }
+
+  // Drag and Drop ハンドラー
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+    
+    if (!over || !trip) return
+    
+    const activeId = active.id as string
+    const overId = over.id as string
+    
+    // 同じ要素の場合は何もしない
+    if (activeId === overId) return
+    
+    // アクティブなitineraryを検索
+    const activeItinerary = findItineraryById(activeId)
+    if (!activeItinerary) return
+    
+    // オーバーしたitineraryを検索
+    const overItinerary = findItineraryById(overId)
+    if (!overItinerary) return
+    
+    // 同じ日程内での移動のみ許可
+    if (activeItinerary.day_id !== overItinerary.day_id) return
+    
+    const dayId = activeItinerary.day_id
+    const day = trip.days?.find(d => d.id === dayId)
+    if (!day || !day.itineraries) return
+    
+    // 現在の順序を取得
+    const sortedItineraries = [...day.itineraries].sort((a, b) => a.sort_number - b.sort_number)
+    const activeIndex = sortedItineraries.findIndex(item => item.id === activeId)
+    const overIndex = sortedItineraries.findIndex(item => item.id === overId)
+    
+    if (activeIndex === -1 || overIndex === -1) return
+    
+    // 新しい順序を作成
+    const newItineraries = [...sortedItineraries]
+    const [removed] = newItineraries.splice(activeIndex, 1)
+    newItineraries.splice(overIndex, 0, removed)
+    
+    // sort_numberを更新
+    const updates = newItineraries.map((item, index) => ({
+      id: item.id,
+      day_id: dayId,
+      sort_number: index + 1
+    }))
+    
+    try {
+      const response = await makeAuthenticatedRequest('/api/itineraries/reorder', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ updates })
+      })
+      
+      if (response.ok) {
+        // UIを更新
+        setTrip(prevTrip => {
+          if (!prevTrip) return prevTrip
+          return {
+            ...prevTrip,
+            days: prevTrip.days?.map(d => {
+              if (d.id === dayId) {
+                return {
+                  ...d,
+                  itineraries: newItineraries.map((item, index) => ({
+                    ...item,
+                    sort_number: index + 1
+                  }))
+                }
+              }
+              return d
+            }) || []
+          }
+        })
+      } else {
+        console.error('Failed to reorder itineraries')
+        alert('順序の更新に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error reordering itineraries:', error)
+      alert('順序の更新に失敗しました')
+    }
   }
 
   // 上下移動の処理
@@ -821,44 +936,90 @@ export default function TripPage({ params }: { params: { id: string } }) {
                               Venue / Point of Interest を追加
                             </button>
                           </div>
-                          <div className="space-y-0">
-                            {day.itineraries.map((itinerary, index) => {
-                              const previousItinerary = index > 0 ? day.itineraries?.[index - 1] : null
-                              const nextItinerary = index < (day.itineraries?.length || 0) - 1 ? day.itineraries?.[index + 1] : null
-                              
-                              return (
-                                <div key={itinerary.id} className="relative">
-                                  <ScheduleCard
-                                    itinerary={itinerary}
-                                    previousPlace={previousItinerary?.place_data}
-                                    nextPlace={nextItinerary?.place_data}
-                                    onUpdate={handleScheduleUpdated}
-                                    onMoveUp={() => handleMoveUp(itinerary.id, day.id)}
-                                    onMoveDown={() => handleMoveDown(itinerary.id, day.id)}
-                                    onMoveToDay={handleMoveToDay}
-                                    onDuplicateToDay={handleDuplicateToDay}
-                                    onDelete={handleScheduleDelete}
-                                    availableDays={trip.days?.map(d => ({
-                                      id: d.id,
-                                      day_number: d.day_number,
-                                      date: '' // Day型にdateプロパティがないため空文字列を設定
-                                    })) || []}
-                                  />
+                          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                            <SortableContext 
+                              items={day.itineraries.map(i => i.id)} 
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <div className="space-y-0">
+                                {day.itineraries.map((itinerary, index) => {
+                                  const previousItinerary = index > 0 ? day.itineraries?.[index - 1] : null
+                                  const nextItinerary = index < (day.itineraries?.length || 0) - 1 ? day.itineraries?.[index + 1] : null
                                   
-                                  {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}
-                                  {itinerary.place_data && 
-                                   nextItinerary?.place_data && 
-                                   itinerary.place_data.place_id !== nextItinerary.place_data.place_id && (
-                                    <VenueDistance 
-                                      fromPlace={itinerary.place_data}
-                                      toPlace={nextItinerary.place_data}
-                                      mode="driving"
-                                    />
-                                  )}
-                                </div>
-                              )
-                            })}
-                          </div>
+                                  return (
+                                    <div key={itinerary.id} className="relative">
+                                      <SortableItineraryCard
+                                        itinerary={itinerary}
+                                        previousPlace={previousItinerary?.place_data}
+                                        nextPlace={nextItinerary?.place_data}
+                                        onUpdate={handleScheduleUpdated}
+                                        onMoveUp={() => handleMoveUp(itinerary.id, day.id)}
+                                        onMoveDown={() => handleMoveDown(itinerary.id, day.id)}
+                                        onMoveToDay={handleMoveToDay}
+                                        onDuplicateToDay={handleDuplicateToDay}
+                                        onDelete={handleScheduleDelete}
+                                        availableDays={trip.days?.map(d => ({
+                                          id: d.id,
+                                          day_number: d.day_number,
+                                          date: '' // Day型にdateプロパティがないため空文字列を設定
+                                        })) || []}
+                                      />
+                                      
+                                      {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}
+                                      {itinerary.place_data && 
+                                       nextItinerary?.place_data && 
+                                       itinerary.place_data.place_id !== nextItinerary.place_data.place_id && (
+                                        <VenueDistance 
+                                          fromPlace={itinerary.place_data}
+                                          toPlace={nextItinerary.place_data}
+                                          mode="driving"
+                                          showInsertButton={true}
+                                          onInsertVenue={() => handleInsertSchedule(day.id, index)}
+                                        />
+                                      )}
+                                      
+                                      {/* Venue間の挿入ボタン（距離表示がない場合のみ） */}
+                                      {index < day.itineraries.length - 1 && 
+                                       (!itinerary.place_data || !nextItinerary?.place_data || 
+                                        itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
+                                        <VenueInsertButton
+                                          onInsert={() => handleInsertSchedule(day.id, index)}
+                                          dayId={day.id}
+                                        />
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                                
+                                {/* 最後のVenueの後に挿入ボタンを表示 */}
+                                {day.itineraries.length > 0 && (
+                                  <div className="flex justify-center py-4">
+                                    <div className="relative flex items-center justify-center">
+                                      {/* Gitタイムライン風の縦線（上側のみ） */}
+                                      <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300 top-0"></div>
+                                      
+                                      {/* 挿入ボタン */}
+                                      <button
+                                        onClick={() => handleInsertSchedule(day.id, day.itineraries.length - 1)}
+                                        className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
+                                        title="最後にVenueを追加"
+                                      >
+                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                          <path d="M12 2C13.1 2 14 2.9 14 4V10H20C21.1 10 22 10.9 22 12S21.1 14 20 14H14V20C14 21.1 13.1 22 12 22S10 21.1 10 20V14H4C2.9 14 2 13.1 2 12S2.9 10 4 10H10V4C10 2.9 10.9 2 12 2Z" />
+                                          <path 
+                                            d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z" 
+                                            fill="white"
+                                            opacity="0.8"
+                                            transform="scale(0.3) translate(20, 20)"
+                                          />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </SortableContext>
+                          </DndContext>
                         </div>
                       ) : (
                         <div className="text-center py-8 text-gray-500">
@@ -928,8 +1089,10 @@ export default function TripPage({ params }: { params: { id: string } }) {
           onClose={() => {
             setShowAddScheduleModal(false)
             setSelectedDayId(null)
+            setInsertAfterIndex(undefined)
           }}
           onScheduleAdded={handleScheduleAdded}
+          insertAfterIndex={insertAfterIndex}
         />
       )}
     </div>

@@ -9,13 +9,15 @@ interface AddScheduleModalProps {
   onClose: () => void
   dayId: string
   onScheduleAdded: (schedule: any) => void
+  insertAfterIndex?: number // 挿入位置を指定（undefinedの場合は最後に追加）
 }
 
 export default function AddScheduleModal({ 
   isOpen, 
   onClose, 
   dayId, 
-  onScheduleAdded 
+  onScheduleAdded,
+  insertAfterIndex
 }: AddScheduleModalProps) {
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([])

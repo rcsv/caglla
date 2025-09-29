@@ -22,6 +22,11 @@ interface ScheduleCardProps {
     day_number: number
     date: string
   }>
+  dragHandleProps?: {
+    attributes: any
+    listeners: any
+  }
+  isDragging?: boolean
 }
 
 export default function ScheduleCard({ 
@@ -34,7 +39,9 @@ export default function ScheduleCard({
   onMoveToDay, 
   onDuplicateToDay,
   onDelete,
-  availableDays = []
+  availableDays = [],
+  dragHandleProps,
+  isDragging = false
 }: ScheduleCardProps) {
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [description, setDescription] = useState(itinerary.description || '')
@@ -501,11 +508,24 @@ export default function ScheduleCard({
         {/* 左側: ソート番号とコンテンツ */}
         <div className="flex-1 p-4">
           <div className="flex items-start justify-between">
-            {/* ソート番号 */}
+            {/* ソート番号 / ドラッグハンドル */}
             <div className="flex-shrink-0 mr-4">
-              <div className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                {itinerary.sort_number}
-              </div>
+              {dragHandleProps ? (
+                <div 
+                  {...dragHandleProps.attributes}
+                  {...dragHandleProps.listeners}
+                  className={`w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-grab active:cursor-grabbing hover:bg-blue-600 transition-colors ${isDragging ? 'opacity-50' : ''}`}
+                  title="ドラッグして順序を変更"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M7 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM7 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM7 14a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 14a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                  {itinerary.sort_number}
+                </div>
+              )}
             </div>
 
             {/* メインコンテンツ */}
