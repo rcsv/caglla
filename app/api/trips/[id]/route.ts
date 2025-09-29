@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { Trip, Day, Itinerary, User } from '@/lib/firestore'
 
-const COLLECTIONS = {
-  TRIPS: 'trips',
-  DAYS: 'days',
-  ITINERARIES: 'itineraries'
-} as const
+import { COLLECTIONS } from '@/lib/firestore'
 
 export async function GET(
   request: NextRequest,

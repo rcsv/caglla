@@ -1,11 +1,6 @@
 // タイムゾーン関連のユーティリティ関数
 
-export interface TimezoneInfo {
-  timezone: string
-  offset: number // UTCからのオフセット（分）
-  city: string
-  country: string
-}
+import type { TimezoneInfo } from './types'
 
 // 主要都市のタイムゾーンマッピング
 const CITY_TIMEZONE_MAP: Record<string, string> = {

@@ -115,24 +115,29 @@ export async function PUT(
     const newEndDate = endDate ? new Date(endDate) : undefined
     
     // 日付比較のヘルパー関数
-    const compareDates = (date1: Date | undefined, date2: Date | undefined): boolean => {
+    const compareDates = (date1: Date | string | undefined, date2: Date | string | undefined): boolean => {
       if (!date1 && !date2) return true // 両方ともundefined
       if (!date1 || !date2) return false // 片方だけundefined
       
-      // 日付のみを比較（時刻は無視）
-      const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate())
-      const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate())
+      // 文字列の場合はDateに変換
+      const d1 = typeof date1 === 'string' ? new Date(date1) : date1
+      const d2 = typeof date2 === 'string' ? new Date(date2) : date2
       
-      return d1.getTime() === d2.getTime()
+      // 日付のみを比較（時刻は無視）
+      const normalized1 = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate())
+      const normalized2 = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate())
+      
+      return normalized1.getTime() === normalized2.getTime()
     }
     
     // 日付を正規化するヘルパー関数
-    const normalizeDate = (date: Date): Date => {
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const normalizeDate = (date: Date | string): Date => {
+      const d = typeof date === 'string' ? new Date(date) : date
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate())
     }
     
     // 日付のキーを生成するヘルパー関数
-    const getDateKey = (date: Date): string => {
+    const getDateKey = (date: Date | string): string => {
       const normalized = normalizeDate(date)
       return normalized.toISOString().split('T')[0] // YYYY-MM-DD形式
     }

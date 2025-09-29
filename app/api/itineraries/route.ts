@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { PlaceData } from '@/lib/firestore'
 
-// Firestore collection names
-const COLLECTIONS = {
-  ITINERARIES: 'itineraries',
-  DAYS: 'days'
-} as const
+import { COLLECTIONS } from '@/lib/firestore'
 
 export async function POST(request: NextRequest) {
   try {

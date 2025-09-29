@@ -103,7 +103,11 @@ export const adminTripOperations = {
     const trips = querySnapshot.docs.map((doc: any) => adminFirestoreHelpers.docToObject<Trip>(doc))
     
     // Sort by created_at on the client side (descending)
-    return trips.sort((a: Trip, b: Trip) => b.created_at.getTime() - a.created_at.getTime())
+    return trips.sort((a: Trip, b: Trip) => {
+      const aTime = typeof a.created_at === 'string' ? new Date(a.created_at).getTime() : a.created_at.getTime()
+      const bTime = typeof b.created_at === 'string' ? new Date(b.created_at).getTime() : b.created_at.getTime()
+      return bTime - aTime
+    })
   },
 
   async getTripById(tripId: string): Promise<Trip | null> {
@@ -140,7 +144,11 @@ export const adminTripOperations = {
     const trips = querySnapshot.docs.map((doc: any) => adminFirestoreHelpers.docToObject<Trip>(doc))
     
     // Sort by created_at on the client side (descending)
-    return trips.sort((a: Trip, b: Trip) => b.created_at.getTime() - a.created_at.getTime())
+    return trips.sort((a: Trip, b: Trip) => {
+      const aTime = typeof a.created_at === 'string' ? new Date(a.created_at).getTime() : a.created_at.getTime()
+      const bTime = typeof b.created_at === 'string' ? new Date(b.created_at).getTime() : b.created_at.getTime()
+      return bTime - aTime
+    })
   }
 }
 
@@ -352,7 +360,11 @@ export const adminTripUserOperations = {
     const tripUsers = querySnapshot.docs.map((doc: any) => adminFirestoreHelpers.docToObject<TripUser>(doc))
     
     // Sort by created_at on the client side (descending)
-    return tripUsers.sort((a: TripUser, b: TripUser) => b.created_at.getTime() - a.created_at.getTime())
+    return tripUsers.sort((a: TripUser, b: TripUser) => {
+      const aTime = typeof a.created_at === 'string' ? new Date(a.created_at).getTime() : a.created_at.getTime()
+      const bTime = typeof b.created_at === 'string' ? new Date(b.created_at).getTime() : b.created_at.getTime()
+      return bTime - aTime
+    })
   },
 
   async removeUserFromTrip(tripId: string, userId: string): Promise<void> {

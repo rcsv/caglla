@@ -12,12 +12,7 @@ import { auth } from './firebase'
 import { getBrowserInfo } from './browser-info'
 import { makeAuthenticatedRequest } from './api-helpers'
 
-interface AuthContextType {
-  user: User | null
-  loading: boolean
-  signInWithGoogle: () => Promise<void>
-  logout: () => Promise<void>
-}
+import type { AuthContextType } from './types'
 
 const AuthContext = createContext<AuthContextType>({
   user: null,

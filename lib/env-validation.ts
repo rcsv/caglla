@@ -1,30 +1,6 @@
 // 環境変数の検証とバリデーション
 
-interface RequiredEnvVars {
-  // Firebase Configuration
-  NEXT_PUBLIC_FIREBASE_API_KEY: string
-  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: string
-  NEXT_PUBLIC_FIREBASE_PROJECT_ID: string
-  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: string
-  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: string
-  NEXT_PUBLIC_FIREBASE_APP_ID: string
-  
-  // Firebase Admin SDK Configuration
-  FIREBASE_PROJECT_ID: string
-  FIREBASE_CLIENT_EMAIL: string
-  FIREBASE_PRIVATE_KEY: string
-  
-  // Google Places API
-  NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: string
-}
-
-interface OptionalEnvVars {
-  NEXT_PUBLIC_GOOGLE_MAP_ID?: string
-  DB_HOST?: string
-  DB_USER?: string
-  DB_PASSWORD?: string
-  DB_NAME?: string
-}
+import type { RequiredEnvVars, OptionalEnvVars } from './types'
 
 export class EnvValidationError extends Error {
   constructor(message: string) {

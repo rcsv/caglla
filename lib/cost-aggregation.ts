@@ -1,23 +1,10 @@
 // 旅行費用集計ユーティリティ
 
 import { currencyUtils } from './currency-utils'
+import type { CostSummary, TripCostSummary } from './types'
 
-export interface CostSummary {
-  currency: string
-  total: number
-  count: number
-  currencyInfo: {
-    code: string
-    name: string
-    symbol: string
-    country: string
-  }
-}
-
-export interface TripCostSummary {
-  totalCosts: CostSummary[]
-  hasCosts: boolean
-}
+// Re-export types for backward compatibility
+export type { CostSummary, TripCostSummary }
 
 /**
  * Itinerariesの配列から通貨単位毎の費用を集計する

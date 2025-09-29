@@ -8,19 +8,7 @@ import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { dateUtils } from '@/lib/date-utils'
 import UserSettingsModal from '@/components/UserSettingsModal'
 import CountryStats from '@/components/CountryStats'
-
-interface Trip {
-  id: string
-  title: string
-  description?: string
-  destination?: string
-  start_date?: string
-  end_date?: string
-  access_level: 'private' | 'public'
-  image_url?: string
-  created_at: string
-  updated_at: string
-}
+import type { Trip } from '@/lib/types'
 
 export default function HomePage() {
   const { user, loading, logout } = useAuth()

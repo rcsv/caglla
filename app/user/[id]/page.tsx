@@ -4,19 +4,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-
-interface Trip {
-  id: string
-  user_id: string
-  title: string
-  description?: string
-  destination?: string
-  start_date?: string
-  end_date?: string
-  access_level: 'private' | 'public'
-  created_at: string
-  updated_at: string
-}
+import type { Trip } from '@/lib/types'
 
 export default function UserProfilePage({ params }: { params: { id: string } }) {
   const { user, loading } = useAuth()

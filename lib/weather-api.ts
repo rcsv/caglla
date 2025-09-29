@@ -9,50 +9,10 @@
  * - No rate limits
  */
 
-export interface WeatherData {
-  date: string
-  temperature_2m_max: number
-  temperature_2m_min: number
-  weathercode: number
-  precipitation_sum: number
-  windspeed_10m_max: number
-  winddirection_10m_dominant: number
-}
+import type { WeatherData, WeatherForecast, WeatherSummary } from './types'
 
-export interface WeatherForecast {
-  latitude: number
-  longitude: number
-  daily: {
-    time: string[]
-    temperature_2m_max: number[]
-    temperature_2m_min: number[]
-    weathercode: number[]
-    precipitation_sum: number[]
-    windspeed_10m_max: number[]
-    winddirection_10m_dominant: number[]
-  }
-  daily_units: {
-    temperature_2m_max: string
-    temperature_2m_min: string
-    weathercode: string
-    precipitation_sum: string
-    windspeed_10m_max: string
-    winddirection_10m_dominant: string
-  }
-}
-
-export interface WeatherSummary {
-  averageTemp: number
-  minTemp: number
-  maxTemp: number
-  rainyDays: number
-  totalPrecipitation: number
-  averageWindSpeed: number
-  dominantWeather: string
-  forecastDays: number
-  availableDays: number
-  isPartialForecast: boolean
-}
+// Re-export types for backward compatibility
+export type { WeatherData, WeatherForecast, WeatherSummary }
 
 // Weather code to description mapping
 const WEATHER_CODES: Record<number, string> = {

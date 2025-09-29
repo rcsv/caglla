@@ -1,31 +1,10 @@
 // Google Geocoding API integration utilities
 import { PlaceData } from './firestore'
+import type { GeocodingResult, GeocodingResponse } from './types'
 
 // Google Geocoding API configuration
 const GOOGLE_GEOCODING_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY // 同じAPIキーを使用
 const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode'
-
-export interface GeocodingResult {
-  place_id: string
-  formatted_address: string
-  address_components: Array<{
-    long_name: string
-    short_name: string
-    types: string[]
-  }>
-  geometry: {
-    location: {
-      lat: number
-      lng: number
-    }
-  }
-  types: string[]
-}
-
-export interface GeocodingResponse {
-  results: GeocodingResult[]
-  status: string
-}
 
 export const geocodingApiHelpers = {
   // 住所から地理情報を取得する

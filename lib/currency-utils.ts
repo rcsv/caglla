@@ -58,12 +58,7 @@ const COUNTRY_CURRENCY_MAP: Record<string, string> = {
 }
 
 // 通貨の詳細情報
-export interface CurrencyInfo {
-  code: string
-  name: string
-  symbol: string
-  country: string
-}
+import type { CurrencyInfo } from './types'
 
 const CURRENCY_INFO: Record<string, CurrencyInfo> = {
   'JPY': { code: 'JPY', name: '日本円', symbol: '¥', country: '日本' },

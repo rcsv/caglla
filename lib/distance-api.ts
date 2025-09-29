@@ -1,24 +1,8 @@
 // Distance Matrix API integration utilities
-export interface DistanceMatrixResult {
-  distance: {
-    text: string
-    value: number // meters
-  }
-  duration: {
-    text: string
-    value: number // seconds
-  }
-  status: string
-}
+import type { DistanceMatrixResult, DistanceMatrixResponse } from './types'
 
-export interface DistanceMatrixResponse {
-  destination_addresses: string[]
-  origin_addresses: string[]
-  rows: Array<{
-    elements: DistanceMatrixResult[]
-  }>
-  status: string
-}
+// Re-export types for backward compatibility
+export type { DistanceMatrixResult, DistanceMatrixResponse }
 
 export const distanceApiHelpers = {
   // 2つの地点間の距離と時間を計算する

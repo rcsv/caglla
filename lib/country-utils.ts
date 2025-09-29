@@ -158,20 +158,10 @@ const COUNTRY_NAMES: { [key: string]: string } = {
   'Mozambique': 'モザンビーク'
 }
 
-export interface CountryGroup {
-  countryCode: string
-  countryName: string
-  countryNameJa: string
-  tripCount: number
-  trips: Array<{
-    id: string
-    title: string
-    destination?: string
-    startDate?: Date
-    endDate?: Date
-    imageUrl?: string
-  }>
-}
+import type { CountryGroup } from './types'
+
+// Re-export types for backward compatibility
+export type { CountryGroup }
 
 /**
  * Google Places APIのaddress_componentsから国名を抽出する

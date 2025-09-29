@@ -3,31 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import AvatarUpload from './AvatarUpload'
-
-interface UserPreferences {
-  currency?: string
-  home_address?: string
-  timezone?: string
-  language?: string
-  theme?: 'light' | 'dark'
-  notifications?: boolean
-}
-
-interface User {
-  id: string
-  google_id: string
-  name: string
-  email: string
-  profile_image_url?: string
-  preferences?: UserPreferences
-  created_at: string
-  updated_at: string
-}
-
-interface UserSettingsModalProps {
-  isOpen: boolean
-  onClose: () => void
-}
+import type { User, UserPreferences, UserSettingsModalProps } from '@/lib/types'
 
 export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
   const { user } = useAuth()

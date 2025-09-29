@@ -1,12 +1,6 @@
 // 各国の座標データとマッピング機能
 
-export interface CountryCoordinate {
-  countryCode: string
-  countryName: string
-  countryNameJa: string
-  lat: number
-  lng: number
-}
+import type { CountryCoordinate } from './types'
 
 // 主要国の座標データ
 export const COUNTRY_COORDINATES: CountryCoordinate[] = [

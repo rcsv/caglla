@@ -1,11 +1,6 @@
 // ブラウザ情報を取得するユーティリティ関数
 
-export interface BrowserInfo {
-  currency: string
-  timezone: string
-  language: string
-  homeAddress?: string
-}
+import type { BrowserInfo } from './types'
 
 // 通貨コードを取得（Intl.NumberFormatを使用）
 export function getCurrencyFromLocale(): string {

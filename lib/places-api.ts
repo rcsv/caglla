@@ -1,38 +1,13 @@
 // Google Places API integration utilities
 import { PlaceData } from './firestore'
+import type { PlaceSearchResult, PlaceDetailsResult } from './types'
+
+// Re-export types for backward compatibility
+export type { PlaceSearchResult, PlaceDetailsResult }
 
 // Google Places API configuration
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place'
-
-export interface PlaceSearchResult {
-  place_id: string
-  name: string
-  formatted_address: string
-  geometry: {
-    location: {
-      lat: number
-      lng: number
-    }
-  }
-  types: string[]
-  rating?: number
-  price_level?: number
-  photos?: Array<{
-    photo_reference: string
-    height: number
-    width: number
-  }>
-}
-
-export interface PlaceDetailsResult extends PlaceData {
-  opening_hours?: {
-    open_now: boolean
-    weekday_text: string[]
-  }
-  international_phone_number?: string
-  website?: string
-}
 
 export const placesApiHelpers = {
   // 場所を検索する
