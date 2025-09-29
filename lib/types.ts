@@ -322,6 +322,50 @@ export interface TimezoneInfo {
   country: string
 }
 
+// タイムゾーン推定失敗ログ
+export interface TimezoneFailureLog {
+  id: string
+  place_data: PlaceData
+  failure_reason: 'city_not_found' | 'country_not_found' | 'address_parse_failed'
+  detected_city?: string
+  detected_country?: string
+  formatted_address: string
+  created_at: Date | string
+  user_id?: string
+  status: 'pending' | 'processed' | 'ignored'
+}
+
+// バッチ更新用のタイムゾーンマッピング
+export interface TimezoneMappingUpdate {
+  city_name: string
+  timezone: string
+  confidence: 'high' | 'medium' | 'low'
+  source: 'user_feedback' | 'batch_analysis' | 'manual'
+  created_at: Date | string
+}
+
+// 通貨推定失敗ログ
+export interface CurrencyFailureLog {
+  id: string
+  place_data: PlaceData
+  failure_reason: 'country_not_found' | 'city_not_found' | 'address_parse_failed'
+  detected_city?: string
+  detected_country?: string
+  formatted_address: string
+  created_at: Date | string
+  user_id?: string
+  status: 'pending' | 'processed' | 'ignored'
+}
+
+// バッチ更新用の通貨マッピング
+export interface CurrencyMappingUpdate {
+  city_name: string
+  currency: string
+  confidence: 'high' | 'medium' | 'low'
+  source: 'user_feedback' | 'batch_analysis' | 'manual'
+  created_at: Date | string
+}
+
 export interface CountryCoordinate {
   countryCode: string
   countryName: string
