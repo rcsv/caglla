@@ -503,33 +503,57 @@ export default function ScheduleCard({
   }
 
   return (
-    <div className="relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-visible">
-      <div className="flex">
-        {/* 左側: ソート番号とコンテンツ */}
-        <div className="flex-1 p-4">
-          <div className="flex items-start justify-between">
-            {/* ソート番号 / ドラッグハンドル */}
-            <div className="flex-shrink-0 mr-4">
-              {dragHandleProps ? (
-                <div 
-                  {...dragHandleProps.attributes}
-                  {...dragHandleProps.listeners}
-                  className={`w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm cursor-grab active:cursor-grabbing hover:bg-blue-600 transition-colors ${isDragging ? 'opacity-50' : ''}`}
-                  title="ドラッグして順序を変更"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M7 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM7 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM7 14a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 14a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
-                  </svg>
-                </div>
+    <div className="relative overflow-visible">
+      <div className="flex items-start space-x-3">
+        {/* ドラッグハンドル（アイコンのみ） */}
+        {dragHandleProps && (
+          <div 
+            {...dragHandleProps.attributes}
+            {...dragHandleProps.listeners}
+            className={`p-1 cursor-grab active:cursor-grabbing hover:bg-gray-100 rounded transition-colors mt-4 ${isDragging ? 'opacity-50' : ''}`}
+            title="ドラッグして順序を変更"
+          >
+            <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M7 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM7 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM7 14a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 14a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
+            </svg>
+          </div>
+        )}
+
+        {/* ソート番号（ティアドロップ形状） */}
+        <div className="relative mt-3">
+          <svg width="30" height="40" viewBox="0 0 30 40" className="text-red-500">
+            <path d="M15 0C6.72 0 0 6.72 0 15c0 8.28 15 25 15 25s15-16.72 15-25c0-8.28-6.72-15-15-15z" fill="currentColor"/>
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center" style={{ transform: 'translateY(-4px)' }}>
+            <span className="text-white font-bold text-sm">{itinerary.sort_number}</span>
+          </div>
+        </div>
+
+        {/* カード本体 */}
+        <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="flex">
+            {/* 左側: 画像（16:9アスペクト比） */}
+            <div className="flex-shrink-0 w-32 h-18">
+              {photoUrl ? (
+                <img
+                  src={photoUrl}
+                  alt={itinerary.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
               ) : (
-                <div className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                  {itinerary.sort_number}
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                  </svg>
                 </div>
               )}
             </div>
 
-            {/* メインコンテンツ */}
-            <div className="flex-1 min-w-0">
+            {/* 中央: メインコンテンツ */}
+            <div className="flex-1 p-4 min-w-0">
               {/* タイトルとStar Rating */}
               <div className="flex items-center space-x-2 mb-3">
                 {isEditingTitle ? (
@@ -612,7 +636,7 @@ export default function ScheduleCard({
               </div>
 
               {/* 時間・費用・予約を1行にインラインで配置 */}
-              <div className="mb-4">
+              <div className="mb-4 p-2">
                 {isEditingTime ? (
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
@@ -812,16 +836,17 @@ export default function ScheduleCard({
               </div>
             </div>
 
-            {/* ハンバーガーメニュー */}
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setShowMenu(!showMenu)}
-                className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-              </button>
+            {/* 右側: ハンバーガーメニュー */}
+            <div className="flex-shrink-0 p-4">
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                  </svg>
+                </button>
 
               {/* ドロップダウンメニュー */}
               {showMenu && (
@@ -944,35 +969,18 @@ export default function ScheduleCard({
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* 右側: 写真（スクエア型で浮かぶデザイン） */}
-        <div className="flex-shrink-0 p-4">
-          <div className="w-24 h-24 rounded-lg overflow-hidden shadow-md">
-            {photoUrl ? (
-              <img
-                src={photoUrl}
-                alt={itinerary.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none'
-                }}
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                </svg>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
       
-      {/* Gitタイムライン風の接続点（カードの下端） */}
-      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300"></div>
+      {/* ティアドロップ形状の接続点（カードの下端） */}
+      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+        <svg width="8" height="12" viewBox="0 0 8 12" className="text-gray-300">
+          <path d="M4 0C1.79 0 0 1.79 0 4c0 2.21 4 8 4 8s4-5.79 4-8c0-2.21-1.79-4-4-4z" fill="currentColor"/>
+        </svg>
+      </div>
     </div>
   )
 }
