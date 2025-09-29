@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タイムゾーン推定実験</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-3xl font-bold mb-8">タイムゾーン推定実験 🌍</h1>
+            
+            <!-- 操作ボタン -->
+            <div class="flex gap-4 mb-8">
+                <button id="testBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold">
+                    タイムゾーン推定テスト実行
+                </button>
+                <button id="addPlaceBtn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold">
+                    カスタム場所追加
+                </button>
+                <button id="batchBtn" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold">
+                    バッチ処理実行 (<span id="logCount">0</span>件)
+                </button>
+                <button id="clearBtn" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold">
+                    ログクリア
+                </button>
+            </div>
+
+            <!-- 結果表示 -->
+            <div id="results" class="mb-8"></div>
+
+            <!-- ログ表示 -->
+            <div id="logs" class="mb-8"></div>
+
+            <!-- 説明 -->
+            <div class="bg-blue-50 p-6 rounded-lg">
+                <h3 class="text-lg font-semibold text-blue-800 mb-3">実験の流れ</h3>
+                <ol class="text-blue-700 space-y-2">
+                    <li>1. 「タイムゾーン推定テスト実行」で既存の場所をテスト</li>
+                    <li>2. 赤い枠の場所は推定失敗（UTCにフォールバック）</li>
+                    <li>3. 失敗した場所は自動的にログに記録される</li>
+                    <li>4. 「カスタム場所追加」で新しい場所を追加してテスト</li>
+                    <li>5. ログが50件以上になったら「バッチ処理実行」</li>
+                    <li>6. バッチ処理で新しいマッピングが自動追加される</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // セルフテーブル（都市名マッピング）
+        const CITY_TIMEZONE_MAP = {
+            'tokyo': 'Asia/Tokyo',
+            'osaka': 'Asia/Tokyo',
+            'new york': 'America/New_York',
+            'los angeles': 'America/Los_Angeles',
+            'london': 'Europe/London',
+            'paris': 'Europe/Paris',
+            'seoul': 'Asia/Seoul',
+            'beijing': 'Asia/Shanghai',
+            'hong kong': 'Asia/Hong_Kong',
+            'singapore': 'Asia/Singapore',
+            'sydney': 'Australia/Sydney'
+        };
+
+        // 国コードマッピング
+        const COUNTRY_TIMEZONE_MAP = {
+            'JP': ['Asia/Tokyo'],
+            'US': ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles'],
+            'GB': ['Europe/London'],
+            'FR': ['Europe/Paris'],
+            'KR': ['Asia/Seoul'],
+            'CN': ['Asia/Shanghai'],
+            'HK': ['Asia/Hong_Kong'],
+            'SG': ['Asia/Singapore'],
+            'AU': ['Australia/Sydney'],
+            'PE': ['America/Lima'],
+            'GR': ['Europe/Athens'],
+            'ID': ['Asia/Jakarta']
+        };
+
+        // テスト用の場所データ
+        const testPlaces = [
+            {
+                place_id: 'test_1',
+                name: 'Shibuya Sky',
+                formatted_address: '2-1-1 Shibuya, Shibuya City, Tokyo 150-0002, Japan',
+                address_components: [
+                    { long_name: 'Japan', short_name: 'JP', types: ['country'] }
+                ]
+            },
+            {
+                place_id: 'test_2',
+                name: 'Times Square',
+                formatted_address: 'Times Square, New York, NY 10036, USA',
+                address_components: [
+                    { long_name: 'United States', short_name: 'US', types: ['country'] }
+                ]
+            },
+            {
+                place_id: 'test_3',
+                name: 'Machu Picchu',
+                formatted_address: 'Machu Picchu, 08680, Peru',
+                address_components: [
+                    { long_name: 'Peru', short_name: 'PE', types: ['country'] }
+                ]
+            },
+            {
+                place_id: 'test_4',
+                name: 'Santorini',
+                formatted_address: 'Santorini, Greece',
+                address_components: [
+                    { long_name: 'Greece', short_name: 'GR', types: ['country'] }
+                ]
+            },
+            {
+                place_id: 'test_5',
+                name: 'Bali',
+                formatted_address: 'Bali, Indonesia',
+                address_components: [
+                    { long_name: 'Indonesia', short_name: 'ID', types: ['country'] }
+                ]
+            }
+        ];
+
+        // タイムゾーン推定関数
+        function getTimezoneFromPlace(placeData) {
+            if (!placeData) return 'UTC';
+            
+            let detectedCity = null;
+            let detectedCountry = null;
+            let failureReason = null;
+            
+            // 1. 都市名から推定
+            const cityName = placeData.name?.toLowerCase();
+            if (cityName && CITY_TIMEZONE_MAP[cityName]) {
+                return CITY_TIMEZONE_MAP[cityName];
+            }
+            detectedCity = cityName;
+            
+            // 2. 住所から都市名を抽出して推定
+            const address = placeData.formatted_address || '';
+            const addressLower = address.toLowerCase();
+            
+            for (const [city, timezone] of Object.entries(CITY_TIMEZONE_MAP)) {
+                if (addressLower.includes(city)) {
+                    return timezone;
+                }
+            }
+            
+            // 3. 国コードから推定
+            const countryCode = placeData.address_components?.find(
+                component => component.types.includes('country')
+            )?.short_name;
+            
+            if (countryCode && COUNTRY_TIMEZONE_MAP[countryCode]) {
+                return COUNTRY_TIMEZONE_MAP[countryCode][0];
+            }
+            detectedCountry = countryCode;
+            
+            // 4. 推定失敗 - ログに記録
+            if (!detectedCity && !detectedCountry) {
+                failureReason = 'address_parse_failed';
+            } else if (!detectedCity) {
+                failureReason = 'city_not_found';
+            } else {
+                failureReason = 'country_not_found';
+            }
+            
+            // 失敗ログを保存
+            saveFailureLog({
+                place_data: placeData,
+                failure_reason: failureReason,
+                detected_city: detectedCity,
+                detected_country: detectedCountry,
+                formatted_address: address,
+                created_at: new Date(),
+                status: 'pending'
+            });
+            
+            return 'UTC';
+        }
+
+        // ログ管理
+        function saveFailureLog(log) {
+            const logs = getFailureLogs();
+            log.id = `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            logs.push(log);
+            localStorage.setItem('timezone_failure_logs', JSON.stringify(logs));
+            updateLogCount();
+        }
+
+        function getFailureLogs() {
+            try {
+                const logs = localStorage.getItem('timezone_failure_logs');
+                return logs ? JSON.parse(logs) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function clearFailureLogs() {
+            localStorage.removeItem('timezone_failure_logs');
+            updateLogCount();
+        }
+
+        function updateLogCount() {
+            const logs = getFailureLogs();
+            document.getElementById('logCount').textContent = logs.length;
+        }
+
+        // バッチ処理
+        function processBatchUpdate() {
+            const logs = getFailureLogs();
+            const pendingLogs = logs.filter(log => log.status === 'pending');
+            
+            if (pendingLogs.length < 10) { // テスト用に閾値を下げる
+                alert(`処理対象のログが不足しています（${pendingLogs.length}/10件）`);
+                return;
+            }
+            
+            // 都市名の出現頻度を集計
+            const cityCounts = {};
+            pendingLogs.forEach(log => {
+                if (log.detected_city) {
+                    cityCounts[log.detected_city] = (cityCounts[log.detected_city] || 0) + 1;
+                }
+            });
+            
+            // 高頻度の都市名を抽出（2回以上出現）
+            const updates = [];
+            Object.entries(cityCounts)
+                .filter(([_, count]) => count >= 2)
+                .forEach(([city, count]) => {
+                    const countryLogs = pendingLogs.filter(log => log.detected_city === city);
+                    const countryCode = countryLogs[0]?.detected_country;
+                    
+                    if (countryCode && COUNTRY_TIMEZONE_MAP[countryCode]) {
+                        updates.push({
+                            city_name: city,
+                            timezone: COUNTRY_TIMEZONE_MAP[countryCode][0],
+                            confidence: count >= 5 ? 'high' : count >= 3 ? 'medium' : 'low'
+                        });
+                    }
+                });
+            
+            // マッピングを更新
+            updates.forEach(update => {
+                if (update.confidence === 'high' || update.confidence === 'medium') {
+                    CITY_TIMEZONE_MAP[update.city_name.toLowerCase()] = update.timezone;
+                    console.log(`Updated: ${update.city_name} -> ${update.timezone}`);
+                }
+            });
+            
+            // ログを処理済みにマーク
+            const updatedLogs = logs.map(log => 
+                pendingLogs.some(pl => pl.id === log.id)
+                    ? { ...log, status: 'processed' }
+                    : log
+            );
+            localStorage.setItem('timezone_failure_logs', JSON.stringify(updatedLogs));
+            
+            alert(`${pendingLogs.length}件のログを処理し、${updates.length}件のマッピングを更新しました。`);
+            updateLogCount();
+        }
+
+        // テスト実行
+        function runTest() {
+            const results = testPlaces.map(place => {
+                const timezone = getTimezoneFromPlace(place);
+                return {
+                    place,
+                    timezone,
+                    isSuccess: timezone !== 'UTC'
+                };
+            });
+            
+            displayResults(results);
+            displayLogs();
+        }
+
+        // 結果表示
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-4">推定結果</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    ${results.map(result => `
+                        <div class="p-4 rounded-lg border-2 ${result.isSuccess ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}">
+                            <h3 class="font-semibold text-lg">${result.place.name}</h3>
+                            <p class="text-sm text-gray-600 mb-2">${result.place.formatted_address}</p>
+                            <span class="px-2 py-1 rounded text-sm font-medium ${result.isSuccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${result.timezone}
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // ログ表示
+        function displayLogs() {
+            const logs = getFailureLogs();
+            const logsDiv = document.getElementById('logs');
+            
+            if (logs.length === 0) return;
+            
+            logsDiv.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-4">失敗ログ (${logs.length}件)</h2>
+                <div class="bg-white rounded-lg border p-4 max-h-96 overflow-y-auto">
+                    ${logs.slice(0, 10).map(log => `
+                        <div class="border-b pb-3 mb-3 last:border-b-0">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-semibold">${log.place_data.name}</h4>
+                                    <p class="text-sm text-gray-600">${log.formatted_address}</p>
+                                </div>
+                                <span class="px-2 py-1 rounded text-xs ${log.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
+                                    ${log.status}
+                                </span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                <p>失敗理由: ${log.failure_reason}</p>
+                                ${log.detected_city ? `<p>検出都市: ${log.detected_city}</p>` : ''}
+                                ${log.detected_country ? `<p>検出国: ${log.detected_country}</p>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                    ${logs.length > 10 ? `<p class="text-center text-gray-500">他 ${logs.length - 10} 件のログがあります</p>` : ''}
+                </div>
+            `;
+        }
+
+        // カスタム場所追加
+        function addCustomPlace() {
+            const name = prompt('場所名を入力してください:');
+            const address = prompt('住所を入力してください:');
+            const country = prompt('国コードを入力してください (例: JP, US, FR):');
+            
+            if (name && address && country) {
+                const newPlace = {
+                    place_id: `custom_${Date.now()}`,
+                    name,
+                    formatted_address: address,
+                    address_components: [
+                        { long_name: country, short_name: country, types: ['country'] }
+                    ]
+                };
+                
+                testPlaces.push(newPlace);
+                alert('場所を追加しました。テストを実行してください。');
+            }
+        }
+
+        // イベントリスナー
+        document.getElementById('testBtn').addEventListener('click', runTest);
+        document.getElementById('addPlaceBtn').addEventListener('click', addCustomPlace);
+        document.getElementById('batchBtn').addEventListener('click', processBatchUpdate);
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (confirm('すべてのログを削除しますか？')) {
+                clearFailureLogs();
+                document.getElementById('logs').innerHTML = '';
+            }
+        });
+
+        // 初期化
+        updateLogCount();
+    </script>
+</body>
+</html>
