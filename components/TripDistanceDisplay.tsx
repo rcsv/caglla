@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { distanceApiHelpers } from '@/lib/distance-api'
+import { dateUtils } from '@/lib/date-utils'
 import { Itinerary } from '@/lib/firestore'
 
 interface TripDistanceDisplayProps {
@@ -199,7 +200,7 @@ export default function TripDistanceDisplay({
             {/* 総時間 */}
             <div className="text-center flex-1">
               <div className="text-2xl font-bold text-blue-600">
-                {distanceData.totalDuration.text}
+                {dateUtils.formatDurationCompact(distanceData.totalDuration.minutes)}
               </div>
               <div className="text-xs text-gray-500">総時間</div>
             </div>

@@ -277,5 +277,26 @@ export const dateUtils = {
       // Different years
       return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endYear}年${endMonth}月${endDay}日 (${endWeekday})`
     }
+  },
+
+  // Format duration in a compact way (e.g., 32h32m -> 32.5h)
+  formatDurationCompact: (totalMinutes: number): string => {
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+    
+    // Round minutes to nearest 15-minute interval
+    const roundedMinutes = Math.round(minutes / 15) * 15
+    
+    // Convert to decimal hours
+    const decimalHours = hours + (roundedMinutes / 60)
+    
+    // Format with appropriate decimal places
+    if (roundedMinutes === 0) {
+      return `${hours}h`
+    } else if (roundedMinutes === 60) {
+      return `${hours + 1}h`
+    } else {
+      return `${decimalHours}h`
+    }
   }
 }
