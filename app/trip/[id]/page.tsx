@@ -14,6 +14,7 @@ import TripDistanceDisplay from '@/components/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/TripWeatherDisplay'
 import TripHotelDisplay from '@/components/TripHotelDisplay'
 import TripMap from '@/components/TripMap'
+import NavigationMenu from '@/components/NavigationMenu'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { Trip, Day, Itinerary, User } from '@/lib/firestore'
@@ -28,6 +29,17 @@ export default function TripPage({ params }: { params: { id: string } }) {
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set())
   const [leftNavExpanded, setLeftNavExpanded] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // セクションへのナビゲーション機能
+  const navigateToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      })
+    }
+  }
 
   useEffect(() => {
     if (!loading && !user) {
@@ -456,47 +468,15 @@ export default function TripPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
-      {/* Left Navigation Menu (viewport縦いっぱい) */}
-      <nav className={`hidden md:block bg-white border-r border-gray-200 transition-all duration-200 left-nav-shadow ${
-        leftNavExpanded ? 'w-48' : 'w-12'
-      }`}>
-        <div className="h-full flex flex-col">
-          {/* Toggle Button */}
-          <div className="p-2 border-b border-gray-200">
-            <button
-              onClick={() => setLeftNavExpanded(!leftNavExpanded)}
-              className="w-full p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              title={leftNavExpanded ? 'メニューを縮小' : 'メニューを展開'}
-            >
-              <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-          
-          {/* Menu Items */}
-          <ul className="flex-1 p-2 space-y-2">
-            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer group" title="Summary">
-              <span className="text-lg">🏠</span>
-              {leftNavExpanded && (
-                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Summary</span>
-              )}
-            </li>
-            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer group" title="Itinerary">
-              <span className="text-lg">🧳</span>
-              {leftNavExpanded && (
-                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Itinerary</span>
-              )}
-            </li>
-            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer group" title="Checklist">
-              <span className="text-lg">✅</span>
-              {leftNavExpanded && (
-                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Checklist</span>
-              )}
-            </li>
-          </ul>
-        </div>
-      </nav>
+      {/* Left Navigation Menu */}
+      {trip && (
+        <NavigationMenu 
+          trip={trip} 
+          onNavigateToSection={navigateToSection}
+          isCollapsed={!leftNavExpanded}
+          onToggleCollapse={() => setLeftNavExpanded(!leftNavExpanded)}
+        />
+      )}
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
@@ -666,7 +646,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
         {/* Summary Section */}
         <div className="px-4 py-4 space-y-6">
           {/* Summary - 総移動距離と天気予報 */}
-          <div>
+          <div id="at-a-glance">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Summary</h2>
             <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
               {/* Distance Summary - 6/10 (60%) */}
@@ -686,7 +666,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
           </div>
 
           {/* Budget - 旅行費用とホテル情報 */}
-          <div>
+          <div id="budget-reservation">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Budget</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Cost Summary */}
@@ -727,6 +707,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
               return (
                 <div
                   key={day.id}
+                  id={`day-${day.id}`}
                   className="bg-white rounded-lg shadow-sm border border-gray-200"
                 >
                   {/* ヘッダー部分 - 常に表示 */}
