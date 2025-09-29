@@ -12,6 +12,7 @@ import VenueDistance from '@/components/VenueDistance'
 import TripCostDisplay from '@/components/TripCostDisplay'
 import TripDistanceDisplay from '@/components/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/TripWeatherDisplay'
+import TripHotelDisplay from '@/components/TripHotelDisplay'
 import TripMap from '@/components/TripMap'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
@@ -663,20 +664,37 @@ export default function TripPage({ params }: { params: { id: string } }) {
         </header>
 
         {/* Summary Section */}
-        <div className="px-4 py-4">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Cost Summary */}
-            <TripCostDisplay itineraries={getAllItineraries()} />
-            
-            {/* Distance Summary */}
-            <TripDistanceDisplay itineraries={getAllItineraries()} />
-            
-            {/* Weather Summary */}
-            <TripWeatherDisplay 
-              destination={trip.destination}
-              startDate={trip.start_date ? (trip.start_date instanceof Date ? trip.start_date.toISOString().split('T')[0] : trip.start_date) : undefined}
-              endDate={trip.end_date ? (trip.end_date instanceof Date ? trip.end_date.toISOString().split('T')[0] : trip.end_date) : undefined}
-            />
+        <div className="px-4 py-4 space-y-6">
+          {/* Summary - 総移動距離と天気予報 */}
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Summary</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
+              {/* Distance Summary - 6/10 (60%) */}
+              <div className="lg:col-span-6">
+                <TripDistanceDisplay itineraries={getAllItineraries()} />
+              </div>
+              
+              {/* Weather Summary - 4/10 (40%) */}
+              <div className="lg:col-span-4">
+                <TripWeatherDisplay 
+                  destination={trip.destination}
+                  startDate={trip.start_date ? (trip.start_date instanceof Date ? trip.start_date.toISOString().split('T')[0] : trip.start_date) : undefined}
+                  endDate={trip.end_date ? (trip.end_date instanceof Date ? trip.end_date.toISOString().split('T')[0] : trip.end_date) : undefined}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Budget - 旅行費用とホテル情報 */}
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Budget</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Cost Summary */}
+              <TripCostDisplay itineraries={getAllItineraries()} />
+              
+              {/* Hotel Summary */}
+              <TripHotelDisplay />
+            </div>
           </div>
         </div>
 

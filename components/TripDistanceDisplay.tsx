@@ -18,6 +18,7 @@ export default function TripDistanceDisplay({
     totalDuration: { seconds: number; minutes: number; hours: number; text: string }
     segments: Array<{ from: string; to: string; distance: any; duration: any }>
     segmentCount: number
+    poiCount: number
   } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -48,7 +49,15 @@ export default function TripDistanceDisplay({
       try {
         const result = await distanceApiHelpers.calculateTotalDistance(placesWithLocation, 'driving')
         if (result) {
-          setDistanceData(result)
+          // POI数を計算（place_dataがあるitineraryの数）
+          const poiCount = itineraries.filter(itinerary => 
+            itinerary.place_data?.geometry?.location
+          ).length
+          
+          setDistanceData({
+            ...result,
+            poiCount
+          })
         } else {
           setError('距離計算に失敗しました')
         }
@@ -157,33 +166,43 @@ export default function TripDistanceDisplay({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          総移動距離
+          移動情報
         </h3>
       </div>
       
       <div className="space-y-3">
-        {/* 総距離と総時間 */}
-        <div className="flex items-center justify-between py-3 px-4 bg-blue-50 rounded-lg">
-          <div className="flex items-center space-x-3">
-            <div className="text-center">
+        {/* メイン情報 - 1行レイアウト */}
+        <div className="py-3 px-4 bg-blue-50 rounded-lg">
+          <div className="flex items-center justify-between">
+            {/* 訪問地数 */}
+            <div className="text-center flex-1">
+              <div className="text-2xl font-bold text-blue-600">
+                {distanceData.poiCount}
+              </div>
+              <div className="text-xs text-gray-500">訪問地</div>
+            </div>
+            
+            {/* 区切り線 */}
+            <div className="w-px h-8 bg-gray-300 mx-4"></div>
+            
+            {/* 総距離 */}
+            <div className="text-center flex-1">
               <div className="text-2xl font-bold text-blue-600">
                 {distanceData.totalDistance.text}
               </div>
               <div className="text-xs text-gray-500">総距離</div>
             </div>
-            <div className="w-px h-8 bg-gray-300"></div>
-            <div className="text-center">
+            
+            {/* 区切り線 */}
+            <div className="w-px h-8 bg-gray-300 mx-4"></div>
+            
+            {/* 総時間 */}
+            <div className="text-center flex-1">
               <div className="text-2xl font-bold text-blue-600">
                 {distanceData.totalDuration.text}
               </div>
               <div className="text-xs text-gray-500">総時間</div>
             </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-600">
-              {distanceData.segmentCount}区間
-            </div>
-            <div className="text-xs text-gray-500">移動</div>
           </div>
         </div>
 
@@ -192,13 +211,13 @@ export default function TripDistanceDisplay({
           <div className="bg-gray-50 rounded-md p-3">
             <div className="text-gray-600 mb-1">平均距離</div>
             <div className="font-medium">
-              {Math.round(distanceData.totalDistance.kilometers / distanceData.segmentCount * 10) / 10}km/区間
+              {distanceData.segmentCount > 0 ? Math.round(distanceData.totalDistance.kilometers / distanceData.segmentCount * 10) / 10 : 0}km/区間
             </div>
           </div>
           <div className="bg-gray-50 rounded-md p-3">
             <div className="text-gray-600 mb-1">平均時間</div>
             <div className="font-medium">
-              {Math.round(distanceData.totalDuration.minutes / distanceData.segmentCount)}分/区間
+              {distanceData.segmentCount > 0 ? Math.round(distanceData.totalDuration.minutes / distanceData.segmentCount) : 0}分/区間
             </div>
           </div>
         </div>
