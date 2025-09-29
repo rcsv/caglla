@@ -593,9 +593,9 @@ export default function TripPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
-      {/* Left Navigation Menu */}
+      {/* Left Navigation Menu - 768px以上のみ表示 */}
       {trip && (
-        <div className="flex-shrink-0">
+        <div className="hidden md:block flex-shrink-0">
           <NavigationMenu 
             trip={trip} 
             onNavigateToSection={navigateToSection}
@@ -613,39 +613,24 @@ export default function TripPage({ params }: { params: { id: string } }) {
         />
       )}
 
-      {/* Mobile Slide Menu */}
-      <nav className={`fixed top-0 left-0 h-full w-48 bg-white border-r border-gray-200 transform transition-transform duration-300 z-50 md:hidden ${
+      {/* Mobile Slide Menu - 188px固定幅 */}
+      <nav className={`fixed top-0 left-0 h-full w-[188px] bg-white border-r border-gray-200 transform transition-transform duration-300 z-50 md:hidden ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="h-full flex flex-col">
-          {/* Close Button */}
-          <div className="p-4 border-b border-gray-200">
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        {/* NavigationMenuと同じ内容を表示 - 幅を制限 */}
+        {trip && (
+          <div className="w-full h-full overflow-hidden">
+            <NavigationMenu 
+              trip={trip} 
+              onNavigateToSection={(sectionId) => {
+                navigateToSection(sectionId)
+                setMobileMenuOpen(false) // メニューを閉じる
+              }}
+              isCollapsed={false} // モバイルでは常に展開
+              onToggleCollapse={() => setMobileMenuOpen(false)} // 折りたたみボタンでメニューを閉じる
+            />
           </div>
-          
-          {/* Menu Items */}
-          <ul className="flex-1 p-4 space-y-2">
-            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
-              <span className="text-lg">🏠</span>
-              <span className="ml-3 text-sm font-medium text-gray-700">Summary</span>
-            </li>
-            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
-              <span className="text-lg">🧳</span>
-              <span className="ml-3 text-sm font-medium text-gray-700">Itinerary</span>
-            </li>
-            <li className="flex items-center p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
-              <span className="text-lg">✅</span>
-              <span className="ml-3 text-sm font-medium text-gray-700">Checklist</span>
-            </li>
-          </ul>
-        </div>
+        )}
       </nav>
 
       {/* Main Content Pane - Scrollable */}
@@ -670,10 +655,10 @@ export default function TripPage({ params }: { params: { id: string } }) {
             {/* Top Navigation */}
             <div className="flex justify-between items-start p-6">
               <div className="flex items-center gap-4">
-                {/* ハンバーガーボタン（768px以下） */}
+                {/* ハンバーガーボタン（768px以下）- 左端フロート */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="md:hidden inline-flex items-center px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30"
+                  className="md:hidden fixed top-4 left-4 z-30 inline-flex items-center px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -1070,7 +1055,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
         </main>
       </div>
 
-      {/* Right Pane - Map Only (layout.cssのブレークポイントに準拠) */}
+      {/* Right Pane - Map Only (768px以上のみ表示) */}
       <div className="hidden md:block md:w-[335px] lg:w-[400px] xl:flex-1 flex-shrink-0">
         <div className="h-full bg-gray-100">
           <TripMap 

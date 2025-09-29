@@ -180,8 +180,8 @@ export default function NavigationMenu({ trip, onNavigateToSection, isCollapsed 
 
   return (
     <div className={`bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-200 relative z-30 left-nav-shadow ${
-      isCollapsed ? 'w-12' : 'w-64'
-    }`} style={{ maxWidth: isCollapsed ? '48px' : '788px' }}>
+      isCollapsed ? 'w-12' : 'w-[188px]'
+    }`} style={{ maxWidth: isCollapsed ? '48px' : '188px' }}>
       {/* メニューヘッダー */}
       <div className={`border-b border-gray-200 ${isCollapsed ? 'p-2' : 'p-4'}`}>
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
