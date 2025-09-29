@@ -457,7 +457,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Left Navigation Menu (viewport縦いっぱい) */}
-      <nav className={`hidden md:block bg-white border-r border-gray-200 transition-all duration-200 ${
+      <nav className={`hidden md:block bg-white border-r border-gray-200 transition-all duration-200 left-nav-shadow ${
         leftNavExpanded ? 'w-48' : 'w-12'
       }`}>
         <div className="h-full flex flex-col">
@@ -542,7 +542,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
       </nav>
 
       {/* Main Content Pane - Scrollable */}
-      <div className="flex-1 overflow-y-auto main-content-scrollable">
+      <div className="flex-1 overflow-y-auto scrollbar-hide main-content-scrollable left-pane-shadow">
         {/* Hero Header with Background Image */}
         <header className="relative h-[200px] md:h-[240px] overflow-hidden">
           {/* Background Image */}

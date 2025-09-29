@@ -37,3 +37,33 @@ body {
   max-width: 100vw;
   overflow-x: hidden;
 }
+
+/* スクロールバーを非表示にする */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* 左ペインから右ペインへのドロップシャドウ効果 */
+.left-pane-shadow {
+  box-shadow: 
+    12px 0 24px rgba(0, 0, 0, 0.15),
+    6px 0 12px rgba(0, 0, 0, 0.1),
+    0 6px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
+}
+
+/* 左メニューからメインコンテンツへのドロップシャドウ効果 */
+.left-nav-shadow {
+  box-shadow: 
+    8px 0 16px rgba(0, 0, 0, 0.12),
+    4px 0 8px rgba(0, 0, 0, 0.08),
+    0 4px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 20;
+}
