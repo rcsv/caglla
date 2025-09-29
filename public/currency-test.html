@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通貨推定実験</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-6">
+        <div class="max-w-6xl mx-auto">
+            <h1 class="text-3xl font-bold mb-8">通貨推定実験 💰</h1>
+            
+            <!-- 操作ボタン -->
+            <div class="flex gap-4 mb-8">
+                <button id="testBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold">
+                    通貨推定テスト実行
+                </button>
+                <button id="addPlaceBtn" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold">
+                    カスタム場所追加
+                </button>
+                <button id="batchBtn" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold">
+                    バッチ処理実行 (<span id="logCount">0</span>件)
+                </button>
+                <button id="clearBtn" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-semibold">
+                    ログクリア
+                </button>
+            </div>
+
+            <!-- 結果表示 -->
+            <div id="results" class="mb-8"></div>
+
+            <!-- ログ表示 -->
+            <div id="logs" class="mb-8"></div>
+
+            <!-- 説明 -->
+            <div class="bg-blue-50 p-6 rounded-lg">
+                <h3 class="text-lg font-semibold text-blue-800 mb-3">実験の流れ</h3>
+                <ol class="text-blue-700 space-y-2">
+                    <li>1. 「通貨推定テスト実行」で既存の場所をテスト</li>
+                    <li>2. 赤い枠の場所は推定失敗（JPYにフォールバック）</li>
+                    <li>3. 失敗した場所は自動的にログに記録される</li>
+                    <li>4. 「カスタム場所追加」で新しい場所を追加してテスト</li>
+                    <li>5. ログが50件以上になったら「バッチ処理実行」</li>
+                    <li>6. バッチ処理で新しいマッピングが自動追加される</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 国コードから通貨を推定するマッピング
+        const COUNTRY_CURRENCY_MAP = {
+            'JP': 'JPY', 'KR': 'KRW', 'CN': 'CNY', 'HK': 'HKD', 'SG': 'SGD',
+            'TH': 'THB', 'TW': 'TWD', 'IN': 'INR', 'MY': 'MYR', 'ID': 'IDR',
+            'PH': 'PHP', 'VN': 'VND', 'US': 'USD', 'CA': 'CAD', 'MX': 'MXN',
+            'GB': 'GBP', 'FR': 'EUR', 'DE': 'EUR', 'IT': 'EUR', 'ES': 'EUR',
+            'NL': 'EUR', 'CH': 'CHF', 'AT': 'EUR', 'BE': 'EUR', 'SE': 'SEK',
+            'NO': 'NOK', 'DK': 'DKK', 'FI': 'EUR', 'PL': 'PLN', 'CZ': 'CZK',
+            'HU': 'HUF', 'RU': 'RUB', 'AU': 'AUD', 'NZ': 'NZD', 'AE': 'AED',
+            'SA': 'SAR', 'IL': 'ILS', 'TR': 'TRY', 'ZA': 'ZAR', 'BR': 'BRL',
+            'AR': 'ARS', 'CL': 'CLP', 'CO': 'COP', 'PE': 'PEN'
+        };
+
+        // 都市名から国を推定するマッピング
+        const CITY_COUNTRY_MAP = {
+            'tokyo': 'JP', 'osaka': 'JP', 'kyoto': 'JP',
+            'seoul': 'KR', 'busan': 'KR', 'beijing': 'CN', 'shanghai': 'CN',
+            'hong kong': 'HK', 'singapore': 'SG', 'bangkok': 'TH', 'taipei': 'TW',
+            'mumbai': 'IN', 'delhi': 'IN', 'sydney': 'AU', 'melbourne': 'AU',
+            'new york': 'US', 'los angeles': 'US', 'london': 'GB', 'paris': 'FR',
+            'berlin': 'DE', 'rome': 'IT', 'madrid': 'ES', 'amsterdam': 'NL',
+            'zurich': 'CH', 'geneva': 'CH', 'dubai': 'AE', 'abu dhabi': 'AE'
+        };
+
+        // 通貨情報
+        const CURRENCY_INFO = {
+            'JPY': { code: 'JPY', name: '日本円', symbol: '¥' },
+            'USD': { code: 'USD', name: '米ドル', symbol: '$' },
+            'EUR': { code: 'EUR', name: 'ユーロ', symbol: '€' },
+            'GBP': { code: 'GBP', name: '英ポンド', symbol: '£' },
+            'CHF': { code: 'CHF', name: 'スイスフラン', symbol: 'CHF' },
+            'AED': { code: 'AED', name: 'UAEディルハム', symbol: 'د.إ' },
+            'CNY': { code: 'CNY', name: '中国元', symbol: '¥' },
+            'KRW': { code: 'KRW', name: '韓国ウォン', symbol: '₩' },
+            'AUD': { code: 'AUD', name: '豪ドル', symbol: 'A$' },
+            'CAD': { code: 'CAD', name: 'カナダドル', symbol: 'C$' },
+            'HKD': { code: 'HKD', name: '香港ドル', symbol: 'HK$' },
+            'SGD': { code: 'SGD', name: 'シンガポールドル', symbol: 'S$' },
+            'THB': { code: 'THB', name: 'タイバーツ', symbol: '฿' },
+            'TWD': { code: 'TWD', name: '台湾ドル', symbol: 'NT$' }
+        };
+
+        // テスト用の場所データ
+        const testPlaces = [
+            {
+                place_id: 'test_1',
+                name: 'Tokyo Tower',
+                formatted_address: '4-2-8 Shibakoen, Minato City, Tokyo 105-0011, Japan',
+                address_components: [
+                    { long_name: 'Japan', short_name: 'JP', types: ['country'] }
+                ]
+            },
+            {
+                place_id: 'test_2',
+                name: 'Statue of Liberty',
+                formatted_address: 'New York, NY 10004, USA',
+                address_components: [
+                    { long_name: 'United States', short_name: 'US', types: ['country'] }
+                ]
+            },
+            {
+                place_id: 'test_3',
+                name: 'Zurich Central Station',
+                formatted_address: 'Bahnhofplatz 15, 8001 Zürich, Switzerland',
+                address_components: [
+                    { long_name: 'Switzerland', short_name: 'CH', types: ['country'] }
+                ]
+            },
+            {
+                place_id: 'test_4',
+                name: 'Burj Khalifa',
+                formatted_address: '1 Sheikh Mohammed bin Rashid Blvd - Downtown Dubai - Dubai - United Arab Emirates',
+                address_components: [
+                    { long_name: 'United Arab Emirates', short_name: 'AE', types: ['country'] }
+                ]
+            },
+            {
+                place_id: 'test_5',
+                name: 'Great Wall of China',
+                formatted_address: 'Huairou, China',
+                address_components: [
+                    { long_name: 'China', short_name: 'CN', types: ['country'] }
+                ]
+            },
+            {
+                place_id: 'test_6',
+                name: 'Hallstatt Village',
+                formatted_address: 'Hallstatt, Austria',
+                address_components: [
+                    { long_name: 'Austria', short_name: 'AT', types: ['country'] }
+                ]
+            },
+            {
+                place_id: 'test_7',
+                name: 'Blue Lagoon',
+                formatted_address: 'Norðurljósavegur 9, 240 Grindavík, Iceland',
+                address_components: [
+                    { long_name: 'Iceland', short_name: 'IS', types: ['country'] }
+                ]
+            }
+        ];
+
+        // 通貨推定関数
+        function getCurrencyFromPlace(placeData) {
+            if (!placeData) return 'JPY';
+            
+            let detectedCity = null;
+            let detectedCountry = null;
+            let failureReason = null;
+            
+            // 1. 国コードから推定
+            const countryCode = placeData.address_components?.find(
+                component => component.types.includes('country')
+            )?.short_name;
+            
+            if (countryCode && COUNTRY_CURRENCY_MAP[countryCode]) {
+                return COUNTRY_CURRENCY_MAP[countryCode];
+            }
+            detectedCountry = countryCode;
+            
+            // 2. 住所から都市名を抽出して推定
+            const address = placeData.formatted_address || '';
+            const addressLower = address.toLowerCase();
+            
+            for (const [city, country] of Object.entries(CITY_COUNTRY_MAP)) {
+                if (addressLower.includes(city)) {
+                    return COUNTRY_CURRENCY_MAP[country] || 'JPY';
+                }
+            }
+            
+            // 3. 都市名検出
+            const cityName = placeData.name?.toLowerCase();
+            detectedCity = cityName;
+            
+            // 4. 推定失敗 - ログに記録
+            if (!detectedCity && !detectedCountry) {
+                failureReason = 'address_parse_failed';
+            } else if (!detectedCountry) {
+                failureReason = 'country_not_found';
+            } else {
+                failureReason = 'city_not_found';
+            }
+            
+            // 失敗ログを保存
+            saveCurrencyFailureLog({
+                place_data: placeData,
+                failure_reason: failureReason,
+                detected_city: detectedCity,
+                detected_country: detectedCountry,
+                formatted_address: address,
+                created_at: new Date(),
+                status: 'pending'
+            });
+            
+            return 'JPY';
+        }
+
+        // ログ管理
+        function saveCurrencyFailureLog(log) {
+            const logs = getCurrencyFailureLogs();
+            log.id = `currency_log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            logs.push(log);
+            localStorage.setItem('currency_failure_logs', JSON.stringify(logs));
+            updateLogCount();
+        }
+
+        function getCurrencyFailureLogs() {
+            try {
+                const logs = localStorage.getItem('currency_failure_logs');
+                return logs ? JSON.parse(logs) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function clearCurrencyFailureLogs() {
+            localStorage.removeItem('currency_failure_logs');
+            updateLogCount();
+        }
+
+        function updateLogCount() {
+            const logs = getCurrencyFailureLogs();
+            document.getElementById('logCount').textContent = logs.length;
+        }
+
+        // バッチ処理
+        function processCurrencyBatchUpdate() {
+            const logs = getCurrencyFailureLogs();
+            const pendingLogs = logs.filter(log => log.status === 'pending');
+            
+            if (pendingLogs.length < 10) { // テスト用に閾値を下げる
+                alert(`処理対象のログが不足しています（${pendingLogs.length}/10件）`);
+                return;
+            }
+            
+            // 都市名の出現頻度を集計
+            const cityCounts = {};
+            pendingLogs.forEach(log => {
+                if (log.detected_city) {
+                    cityCounts[log.detected_city] = (cityCounts[log.detected_city] || 0) + 1;
+                }
+            });
+            
+            // 高頻度の都市名を抽出（2回以上出現）
+            const updates = [];
+            Object.entries(cityCounts)
+                .filter(([_, count]) => count >= 2)
+                .forEach(([city, count]) => {
+                    const countryLogs = pendingLogs.filter(log => log.detected_city === city);
+                    const countryCode = countryLogs[0]?.detected_country;
+                    
+                    if (countryCode && COUNTRY_CURRENCY_MAP[countryCode]) {
+                        updates.push({
+                            city_name: city,
+                            currency: COUNTRY_CURRENCY_MAP[countryCode],
+                            confidence: count >= 5 ? 'high' : count >= 3 ? 'medium' : 'low'
+                        });
+                    }
+                });
+            
+            // マッピングを更新
+            updates.forEach(update => {
+                if (update.confidence === 'high' || update.confidence === 'medium') {
+                    CITY_COUNTRY_MAP[update.city_name.toLowerCase()] = 
+                        Object.keys(COUNTRY_CURRENCY_MAP).find(key => 
+                            COUNTRY_CURRENCY_MAP[key] === update.currency
+                        );
+                    console.log(`Updated: ${update.city_name} -> ${update.currency}`);
+                }
+            });
+            
+            // ログを処理済みにマーク
+            const updatedLogs = logs.map(log => 
+                pendingLogs.some(pl => pl.id === log.id)
+                    ? { ...log, status: 'processed' }
+                    : log
+            );
+            localStorage.setItem('currency_failure_logs', JSON.stringify(updatedLogs));
+            
+            alert(`${pendingLogs.length}件のログを処理し、${updates.length}件のマッピングを更新しました。`);
+            updateLogCount();
+        }
+
+        // テスト実行
+        function runCurrencyTest() {
+            const results = testPlaces.map(place => {
+                const currency = getCurrencyFromPlace(place);
+                const currencyInfo = CURRENCY_INFO[currency] || { code: currency, name: currency, symbol: currency };
+                return {
+                    place,
+                    currency,
+                    currencyInfo,
+                    isSuccess: currency !== 'JPY' || place.address_components?.[0]?.short_name === 'JP'
+                };
+            });
+            
+            displayCurrencyResults(results);
+            displayCurrencyLogs();
+        }
+
+        // 結果表示
+        function displayCurrencyResults(results) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-4">通貨推定結果</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    ${results.map(result => `
+                        <div class="p-4 rounded-lg border-2 ${result.isSuccess ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}">
+                            <h3 class="font-semibold text-lg">${result.place.name}</h3>
+                            <p class="text-sm text-gray-600 mb-2">${result.place.formatted_address}</p>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded text-sm font-medium ${result.isSuccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${result.currencyInfo.symbol} ${result.currencyInfo.code}
+                                </span>
+                                <span class="text-xs text-gray-500">${result.currencyInfo.name}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // ログ表示
+        function displayCurrencyLogs() {
+            const logs = getCurrencyFailureLogs();
+            const logsDiv = document.getElementById('logs');
+            
+            if (logs.length === 0) return;
+            
+            logsDiv.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-4">通貨推定失敗ログ (${logs.length}件)</h2>
+                <div class="bg-white rounded-lg border p-4 max-h-96 overflow-y-auto">
+                    ${logs.slice(0, 10).map(log => `
+                        <div class="border-b pb-3 mb-3 last:border-b-0">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-semibold">${log.place_data.name}</h4>
+                                    <p class="text-sm text-gray-600">${log.formatted_address}</p>
+                                </div>
+                                <span class="px-2 py-1 rounded text-xs ${log.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
+                                    ${log.status}
+                                </span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                <p>失敗理由: ${log.failure_reason}</p>
+                                ${log.detected_city ? `<p>検出都市: ${log.detected_city}</p>` : ''}
+                                ${log.detected_country ? `<p>検出国: ${log.detected_country}</p>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                    ${logs.length > 10 ? `<p class="text-center text-gray-500">他 ${logs.length - 10} 件のログがあります</p>` : ''}
+                </div>
+            `;
+        }
+
+        // カスタム場所追加
+        function addCustomPlace() {
+            const name = prompt('場所名を入力してください:');
+            const address = prompt('住所を入力してください:');
+            const country = prompt('国コードを入力してください (例: JP, US, CH):');
+            
+            if (name && address && country) {
+                const newPlace = {
+                    place_id: `custom_${Date.now()}`,
+                    name,
+                    formatted_address: address,
+                    address_components: [
+                        { long_name: country, short_name: country, types: ['country'] }
+                    ]
+                };
+                
+                testPlaces.push(newPlace);
+                alert('場所を追加しました。テストを実行してください。');
+            }
+        }
+
+        // イベントリスナー
+        document.getElementById('testBtn').addEventListener('click', runCurrencyTest);
+        document.getElementById('addPlaceBtn').addEventListener('click', addCustomPlace);
+        document.getElementById('batchBtn').addEventListener('click', processCurrencyBatchUpdate);
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (confirm('すべてのログを削除しますか？')) {
+                clearCurrencyFailureLogs();
+                document.getElementById('logs').innerHTML = '';
+            }
+        });
+
+        // 初期化
+        updateLogCount();
+    </script>
+</body>
+</html>
