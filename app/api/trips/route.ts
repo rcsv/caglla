@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
     if (groupByCountry) {
       // Group trips by country
-      const countryGroups = groupTripsByCountry(trips)
+      const countryGroups = await groupTripsByCountry(trips)
       return NextResponse.json({ 
         trips: countryGroups,
         grouped: true,

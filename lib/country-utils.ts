@@ -1,5 +1,6 @@
 // 国名抽出とグループ化のユーティリティ関数
-import { PlaceData } from './types'
+import { PlaceData } from './firestore'
+import { geocodingApiHelpers } from './geocoding-api'
 
 // 国名のマッピング（英語→日本語）
 const COUNTRY_NAMES: { [key: string]: string } = {
@@ -199,150 +200,48 @@ export function extractCountryFromAddressComponents(addressComponents: Array<{
   return { countryCode: 'unknown', countryName: '不明' }
 }
 
-// 地名から国を推測するマッピング
-const LOCATION_TO_COUNTRY: { [key: string]: string } = {
-  // ハワイ関連
-  'ラニカイ': 'United States',
-  'ワイキキ': 'United States', 
-  'ホノルル': 'United States',
-  'ハワイ': 'United States',
-  'オアフ島': 'United States',
-  'マウイ島': 'United States',
-  'ハワイ島': 'United States',
-  'カウアイ島': 'United States',
-  'Lanikai': 'United States',
-  'Waikiki': 'United States',
-  'Honolulu': 'United States',
-  'Hawaii': 'United States',
-  'Oahu': 'United States',
-  'Maui': 'United States',
-  'Kauai': 'United States',
-  
-  // 日本関連
-  '知立市': 'Japan',
-  '知立': 'Japan',
-  'Chiryu': 'Japan',
-  '東京': 'Japan',
-  '大阪': 'Japan',
-  '京都': 'Japan',
-  '名古屋': 'Japan',
-  '横浜': 'Japan',
-  '神戸': 'Japan',
-  '福岡': 'Japan',
-  '札幌': 'Japan',
-  '沖縄': 'Japan',
-  '那覇': 'Japan',
-  'Tokyo': 'Japan',
-  'Osaka': 'Japan',
-  'Kyoto': 'Japan',
-  'Nagoya': 'Japan',
-  'Yokohama': 'Japan',
-  'Kobe': 'Japan',
-  'Fukuoka': 'Japan',
-  'Sapporo': 'Japan',
-  'Okinawa': 'Japan',
-  'Naha': 'Japan',
-  
-  // その他の主要都市
-  'New York': 'United States',
-  'Los Angeles': 'United States',
-  'San Francisco': 'United States',
-  'Las Vegas': 'United States',
-  'Miami': 'United States',
-  'Chicago': 'United States',
-  'Boston': 'United States',
-  'Seattle': 'United States',
-  'London': 'United Kingdom',
-  'Paris': 'France',
-  'Rome': 'Italy',
-  'Barcelona': 'Spain',
-  'Berlin': 'Germany',
-  'Amsterdam': 'Netherlands',
-  'Vienna': 'Austria',
-  'Prague': 'Czech Republic',
-  'Budapest': 'Hungary',
-  'Warsaw': 'Poland',
-  'Moscow': 'Russia',
-  'Istanbul': 'Turkey',
-  'Dubai': 'United Arab Emirates',
-  'Singapore': 'Singapore',
-  'Hong Kong': 'Hong Kong',
-  'Seoul': 'South Korea',
-  'Bangkok': 'Thailand',
-  'Kuala Lumpur': 'Malaysia',
-  'Jakarta': 'Indonesia',
-  'Manila': 'Philippines',
-  'Ho Chi Minh City': 'Vietnam',
-  'Hanoi': 'Vietnam',
-  'Mumbai': 'India',
-  'Delhi': 'India',
-  'Sydney': 'Australia',
-  'Melbourne': 'Australia',
-  'Auckland': 'New Zealand',
-  'Toronto': 'Canada',
-  'Vancouver': 'Canada',
-  'São Paulo': 'Brazil',
-  'Rio de Janeiro': 'Brazil',
-  'Mexico City': 'Mexico',
-  'Buenos Aires': 'Argentina',
-  'Santiago': 'Chile',
-  'Lima': 'Peru',
-  'Cape Town': 'South Africa',
-  'Cairo': 'Egypt',
-  'Marrakech': 'Morocco',
-  'Casablanca': 'Morocco'
-}
+// 手動マッピングは不要になりました
+// Google Places API + Geocoding APIで自動的に国情報を取得します
 
 /**
- * Google Places APIのformatted_addressから国名を抽出する（フォールバック用）
+ * Google Places APIのformatted_addressから国名を抽出する
+ * Geocoding APIを使用してaddress_componentsを取得し、国情報を抽出します
  */
-export function extractCountryFromAddress(formattedAddress: string): { countryCode: string; countryName: string } {
+export async function extractCountryFromAddress(formattedAddress: string): Promise<{ countryCode: string; countryName: string }> {
   if (!formattedAddress) {
     return { countryCode: 'unknown', countryName: '不明' }
   }
 
   console.log('extractCountryFromAddress input:', formattedAddress)
 
-  // 住所の最後の部分（通常は国名）を取得
-  const addressParts = formattedAddress.split(',').map(part => part.trim())
-  const lastPart = addressParts[addressParts.length - 1]
-
-  console.log('Address parts:', addressParts)
-  console.log('Last part:', lastPart)
-
-  // 国名のマッピングから検索
-  for (const [englishName, japaneseName] of Object.entries(COUNTRY_NAMES)) {
-    if (lastPart.includes(englishName)) {
-      console.log('Found country by English name:', englishName)
-      return { countryCode: englishName.toLowerCase().replace(/\s+/g, '-'), countryName: englishName }
+  try {
+    // Geocoding APIを使用してaddress_componentsを取得
+    const geocodingResults = await geocodingApiHelpers.geocodeAddress(formattedAddress)
+    
+    if (geocodingResults.length > 0) {
+      const result = geocodingResults[0]
+      console.log('Geocoding result:', result)
+      
+      // address_componentsから国を抽出
+      const countryInfo = extractCountryFromAddressComponents(result.address_components)
+      if (countryInfo.countryCode !== 'unknown') {
+        console.log('Found country via Geocoding API:', countryInfo)
+        return countryInfo
+      }
     }
+  } catch (error) {
+    console.warn('Geocoding API failed:', error)
   }
 
-  // 日本語名で検索
-  for (const [englishName, japaneseName] of Object.entries(COUNTRY_NAMES)) {
-    if (lastPart.includes(japaneseName)) {
-      console.log('Found country by Japanese name:', japaneseName)
-      return { countryCode: englishName.toLowerCase().replace(/\s+/g, '-'), countryName: englishName }
-    }
-  }
-
-  // 地名から国を推測
-  for (const [location, country] of Object.entries(LOCATION_TO_COUNTRY)) {
-    if (formattedAddress.includes(location)) {
-      console.log('Found country by location:', location, '->', country)
-      return { countryCode: country.toLowerCase().replace(/\s+/g, '-'), countryName: country }
-    }
-  }
-
-  // 見つからない場合は最後の部分をそのまま使用
-  console.log('No country found, using last part:', lastPart)
-  return { countryCode: lastPart.toLowerCase().replace(/\s+/g, '-'), countryName: lastPart }
+  // Geocoding APIが失敗した場合は「不明」として扱う
+  console.log('No country found for:', formattedAddress, 'using unknown')
+  return { countryCode: 'unknown', countryName: '不明' }
 }
 
 /**
  * 旅行データを国別にグループ化する
  */
-export function groupTripsByCountry(trips: Array<{
+export async function groupTripsByCountry(trips: Array<{
   id: string
   title: string
   destination?: string
@@ -350,7 +249,7 @@ export function groupTripsByCountry(trips: Array<{
   startDate?: Date
   endDate?: Date
   imageUrl?: string
-}>): CountryGroup[] {
+}>): Promise<CountryGroup[]> {
   const countryMap = new Map<string, CountryGroup>()
 
   console.log('=== groupTripsByCountry Debug ===')
@@ -367,7 +266,8 @@ export function groupTripsByCountry(trips: Array<{
     })
   })
 
-  trips.forEach(trip => {
+  // 各旅行を順次処理（非同期処理のため）
+  for (const trip of trips) {
     let countryCode = 'unknown'
     let countryName = '不明'
     let countryNameJa = '不明'
@@ -386,18 +286,18 @@ export function groupTripsByCountry(trips: Array<{
         countryNameJa = COUNTRY_NAMES[countryName] || countryName
         console.log('Country from address_components:', countryInfo)
       } else if (trip.destinationPlace.formatted_address) {
-        console.log('Using formatted_address')
-        // address_componentsがない場合はformatted_addressから推測
-        const countryInfo = extractCountryFromAddress(trip.destinationPlace.formatted_address)
+        console.log('Using formatted_address with Geocoding API')
+        // address_componentsがない場合はformatted_addressから推測（Geocoding API使用）
+        const countryInfo = await extractCountryFromAddress(trip.destinationPlace.formatted_address)
         countryCode = countryInfo.countryCode
         countryName = countryInfo.countryName
         countryNameJa = COUNTRY_NAMES[countryName] || countryName
         console.log('Country from formatted_address:', countryInfo)
       }
     } else if (trip.destination) {
-      console.log('Using destination string')
-      // destinationPlaceがない場合は、destinationから推測
-      const countryInfo = extractCountryFromAddress(trip.destination)
+      console.log('Using destination string with Geocoding API')
+      // destinationPlaceがない場合は、destinationから推測（Geocoding API使用）
+      const countryInfo = await extractCountryFromAddress(trip.destination)
       countryCode = countryInfo.countryCode
       countryName = countryInfo.countryName
       countryNameJa = COUNTRY_NAMES[countryName] || countryName
@@ -426,7 +326,7 @@ export function groupTripsByCountry(trips: Array<{
       endDate: trip.endDate,
       imageUrl: trip.imageUrl
     })
-  })
+  }
 
   console.log('Final country groups:', Array.from(countryMap.values()))
 
