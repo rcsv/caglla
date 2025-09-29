@@ -59,6 +59,9 @@ export interface PlaceData {
   }
   international_phone_number?: string
   website?: string
+  editorial_summary?: {
+    overview: string
+  }
 }
 
 // ============================================================================

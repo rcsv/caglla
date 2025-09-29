@@ -90,7 +90,14 @@ export default function ScheduleCard({
     setTempStartTime(itinerary.start_time || '')
     setTempEndTime(itinerary.end_time || '')
     setDestinationTimezone('UTC')
-  }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time]) // itinerary.idを追加してオブジェクト参照の変更に対応
+    
+    // 説明欄の初期値を設定（editorial_summaryがあれば使用、なければ既存のdescription）
+    if (itinerary.place_data?.editorial_summary?.overview && !itinerary.description) {
+      setDescription(itinerary.place_data.editorial_summary.overview)
+    } else {
+      setDescription(itinerary.description || '')
+    }
+  }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.description, itinerary.place_data?.editorial_summary?.overview]) // itinerary.idを追加してオブジェクト参照の変更に対応
 
   // ブラウザのタイムゾーンを取得
   useEffect(() => {
@@ -629,7 +636,12 @@ export default function ScheduleCard({
                         )}
                       </div>
                     ) : (
-                      <span className="text-gray-400 italic">Memo: メモを追加してください</span>
+                      <span className="text-gray-400 italic">
+                        {itinerary.place_data?.editorial_summary?.overview 
+                          ? 'Memo: 場所の説明が表示されています。クリックして編集できます。' 
+                          : 'Memo: メモを追加してください'
+                        }
+                      </span>
                     )}
                   </div>
                 )}

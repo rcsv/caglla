@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
       'photos',
       'opening_hours',
       'international_phone_number',
-      'website'
+      'website',
+      'editorial_summary'
     ].join(',')
 
     // Google Places APIを呼び出し

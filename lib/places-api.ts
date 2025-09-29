@@ -123,7 +123,10 @@ export const placesApiHelpers = {
           weekday_text: result.opening_hours.weekday_text || []
         } : undefined,
         international_phone_number: result.international_phone_number,
-        website: result.website
+        website: result.website,
+        editorial_summary: result.editorial_summary ? {
+          overview: result.editorial_summary.overview
+        } : undefined
       }
     } catch (error) {
       console.error('Error getting place details:', error)
