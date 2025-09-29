@@ -89,13 +89,22 @@ export default function TripPage({ params }: { params: { id: string } }) {
 
       if (response.ok) {
         const newDay = await response.json()
-        setTrip(prevTrip => {
-          if (!prevTrip) return prevTrip
-          return {
-            ...prevTrip,
-            days: [...(prevTrip.days || []), newDay]
-          }
-        })
+        
+        // tripの情報を再取得してend_dateの更新を反映
+        const tripResponse = await makeAuthenticatedRequest(`/api/trip/${trip.id}`)
+        if (tripResponse.ok) {
+          const updatedTripData = await tripResponse.json()
+          setTrip(updatedTripData)
+        } else {
+          // 再取得に失敗した場合は、ローカルで日程のみ追加
+          setTrip(prevTrip => {
+            if (!prevTrip) return prevTrip
+            return {
+              ...prevTrip,
+              days: [...(prevTrip.days || []), newDay]
+            }
+          })
+        }
       } else {
         console.error('Failed to add day')
         alert('日程の追加に失敗しました')
@@ -718,18 +727,19 @@ export default function TripPage({ params }: { params: { id: string } }) {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">
-                          第{day.day_number}日目
-                        </h3>
-                        <span className="text-gray-500">
-                          {trip.start_date 
+                          #{day.day_number} | {trip.start_date 
                             ? (() => {
                                 const dayDate = new Date(trip.start_date)
                                 dayDate.setDate(dayDate.getDate() + (day.day_number - 1))
-                                return dateUtils.formatDate(dayDate)
+                                const month = dayDate.getMonth() + 1
+                                const dayNum = dayDate.getDate()
+                                const dayNames = ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.']
+                                const dayName = dayNames[dayDate.getDay()]
+                                return `${month}/${dayNum} ${dayName}`
                               })()
                             : '日付が設定されていません'
                           }
-                        </span>
+                        </h3>
                         {/* 折りたたみアイコン */}
                         <svg 
                           className={`w-5 h-5 text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}

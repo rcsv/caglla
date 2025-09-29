@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth } from '@/lib/firebase-admin'
-import { adminDayOperations } from '@/lib/firestore-admin-operations'
+import { adminDayOperations, adminTripOperations } from '@/lib/firestore-admin-operations'
 
 export async function POST(
   request: NextRequest,
@@ -47,6 +47,11 @@ export async function POST(
       trip_id: tripId,
       day_number: nextDayNumber,
       date: newDate
+    })
+
+    // tripのend_dateを新しい日程の日付に更新
+    await adminTripOperations.updateTrip(tripId, {
+      end_date: newDate
     })
 
     return NextResponse.json(newDay)

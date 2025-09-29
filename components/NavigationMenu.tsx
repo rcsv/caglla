@@ -29,7 +29,7 @@ interface MenuItem {
 }
 
 export default function NavigationMenu({ trip, onNavigateToSection, isCollapsed = false, onToggleCollapse }: NavigationMenuProps) {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['summary', 'itinerary']))
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['itinerary']))
 
   // メニューセクションの定義
   const menuSections: MenuSection[] = [
@@ -91,23 +91,43 @@ export default function NavigationMenu({ trip, onNavigateToSection, isCollapsed 
     }
   ]
 
-  // 日付のタイトルを生成
+  // 日付のタイトルを生成（簡潔版）
   function getDayTitle(day: Day): string {
     const date = new Date(day.date)
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-    return dayNames[date.getDay()]
+    const month = date.getMonth() + 1
+    const dayNum = date.getDate()
+    const dayNames = ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.']
+    const dayName = dayNames[date.getDay()]
+    
+    return `${month}/${dayNum} ${dayName}`
   }
 
-  // 日付のサブタイトルを生成
+  // 日付のサブタイトルを生成（daysのdescriptionを優先）
   function getDaySubtitle(day: Day): string {
+    // daysのdescriptionがある場合はそれを優先的に表示
+    if (day.description && day.description.trim()) {
+      return day.description.trim()
+    }
+    
+    // descriptionがない場合は、最初の2つのitineraryの場所を取得して矢印で繋ぐ
+    const locations = day.itineraries?.slice(0, 2).map(itinerary => {
+      return itinerary.location || itinerary.place_data?.name || ''
+    }).filter(Boolean) || []
+    
+    if (locations.length === 0) return ''
+    if (locations.length === 1) return locations[0]
+    
+    return `${locations[0]} → ${locations[1]}${locations.length > 2 ? ' ...' : ''}`
+  }
+
+  // 曜日の色を取得
+  function getDayColor(day: Day): string {
     const date = new Date(day.date)
-    const formattedDate = dateUtils.formatDate(date, { month: 'numeric', day: 'numeric' })
+    const dayOfWeek = date.getDay()
     
-    // 最初のitineraryの場所を取得
-    const firstLocation = day.itineraries?.[0]?.location || day.itineraries?.[0]?.place_data?.name
-    const locationText = firstLocation ? `[${firstLocation}]` : ''
-    
-    return `${formattedDate} ${locationText}`
+    if (dayOfWeek === 6) return 'text-blue-600' // 土曜日
+    if (dayOfWeek === 0) return 'text-red-600'   // 日曜日
+    return 'text-gray-900'                       // 平日
   }
 
   // セクションの展開/折りたたみを切り替え
@@ -191,7 +211,9 @@ export default function NavigationMenu({ trip, onNavigateToSection, isCollapsed 
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-gray-900 truncate">
+                          <div className={`text-sm font-medium truncate ${
+                            item.id.startsWith('day-') ? getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day) : 'text-gray-900'
+                          }`}>
                             {item.title}
                           </div>
                           {item.subtitle && (
