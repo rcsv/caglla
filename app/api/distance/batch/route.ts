@@ -90,12 +90,50 @@ export async function POST(request: NextRequest) {
           })
         } else {
           // 距離計算に失敗した区間をログに記録
+          const fromPlace = places[rowIndex]
+          const toPlace = places[rowIndex + 1]
+          
           console.warn(`Distance calculation failed for segment ${rowIndex}-${elementIndex}:`, {
-            from: places[rowIndex]?.name || 'Unknown',
-            to: places[rowIndex + 1]?.name || 'Unknown',
+            from: fromPlace?.name || 'Unknown',
+            to: toPlace?.name || 'Unknown',
+            from_coords: fromPlace?.geometry?.location ? 
+              `${fromPlace.geometry.location.lat},${fromPlace.geometry.location.lng}` : 'No coordinates',
+            to_coords: toPlace?.geometry?.location ? 
+              `${toPlace.geometry.location.lat},${toPlace.geometry.location.lng}` : 'No coordinates',
             status: element.status,
             error_message: element.error_message || 'Unknown error'
           })
+          
+          // ZERO_RESULTSの場合は直線距離を計算してフォールバック
+          if (element.status === 'ZERO_RESULTS' && 
+              fromPlace?.geometry?.location && 
+              toPlace?.geometry?.location) {
+            
+            const fallbackDistance = calculateStraightLineDistance(
+              fromPlace.geometry.location,
+              toPlace.geometry.location
+            )
+            
+            console.log(`Using fallback straight-line distance: ${fallbackDistance.toFixed(2)}km`)
+            
+            // フォールバック距離を追加（徒歩時間を推定）
+            const estimatedWalkingTime = Math.round(fallbackDistance * 12) // 時速5kmで計算
+            totalDistance += fallbackDistance * 1000 // kmをmに変換
+            totalDuration += estimatedWalkingTime * 60 // 分を秒に変換
+            
+            segments.push({
+              from: fromPlace.name,
+              to: toPlace.name,
+              distance: {
+                text: `${fallbackDistance.toFixed(2)}km (推定)`,
+                value: fallbackDistance * 1000
+              },
+              duration: {
+                text: `${estimatedWalkingTime}分 (推定)`,
+                value: estimatedWalkingTime * 60
+              }
+            })
+          }
         }
       })
     })
@@ -146,4 +184,28 @@ function formatDuration(seconds: number): string {
   } else {
     return `${minutes}分`
   }
+}
+
+// 2点間の直線距離を計算する関数（ハヴァサイン公式）
+function calculateStraightLineDistance(
+  point1: { lat: number; lng: number },
+  point2: { lat: number; lng: number }
+): number {
+  const R = 6371 // 地球の半径（km）
+  const dLat = toRadians(point2.lat - point1.lat)
+  const dLng = toRadians(point2.lng - point1.lng)
+  
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(point1.lat)) * Math.cos(toRadians(point2.lat)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2)
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  const distance = R * c
+  
+  return distance
+}
+
+// 度をラジアンに変換する関数
+function toRadians(degrees: number): number {
+  return degrees * (Math.PI / 180)
 }
