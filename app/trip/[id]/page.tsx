@@ -480,12 +480,14 @@ export default function TripPage({ params }: { params: { id: string } }) {
     <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Left Navigation Menu */}
       {trip && (
-        <NavigationMenu 
-          trip={trip} 
-          onNavigateToSection={navigateToSection}
-          isCollapsed={!leftNavExpanded}
-          onToggleCollapse={() => setLeftNavExpanded(!leftNavExpanded)}
-        />
+        <div className="flex-shrink-0">
+          <NavigationMenu 
+            trip={trip} 
+            onNavigateToSection={navigateToSection}
+            isCollapsed={!leftNavExpanded}
+            onToggleCollapse={() => setLeftNavExpanded(!leftNavExpanded)}
+          />
+        </div>
       )}
 
       {/* Mobile Menu Overlay */}

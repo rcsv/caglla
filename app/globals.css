@@ -67,3 +67,8 @@ body {
   position: relative;
   z-index: 20;
 }
+
+/* メインコンテンツエリアの最大幅制限 */
+.main-content-scrollable {
+  max-width: 877px;
+}
