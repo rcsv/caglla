@@ -245,8 +245,8 @@ export default function TripPage({ params }: { params: { id: string } }) {
                   end_time: originalItinerary.end_time || '',
                   cost_amount: originalItinerary.cost_amount || null,
                   cost_currency: originalItinerary.cost_currency || 'JPY',
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString()
+                  created_at: new Date(),
+                  updated_at: new Date()
                 }
               ]
             }
@@ -571,8 +571,8 @@ export default function TripPage({ params }: { params: { id: string } }) {
           {/* Weather Summary */}
           <TripWeatherDisplay 
             destination={trip.destination}
-            startDate={trip.start_date}
-            endDate={trip.end_date}
+            startDate={trip.start_date ? (trip.start_date instanceof Date ? trip.start_date.toISOString().split('T')[0] : trip.start_date) : undefined}
+            endDate={trip.end_date ? (trip.end_date instanceof Date ? trip.end_date.toISOString().split('T')[0] : trip.end_date) : undefined}
           />
         </div>
       </div>

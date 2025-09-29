@@ -35,7 +35,7 @@ export class EnvValidationError extends Error {
 
 // 開発環境では環境変数の検証を緩和
 function isDevelopment(): boolean {
-  return process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'dev'
+  return process.env.NODE_ENV === 'development'
 }
 
 export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
@@ -94,7 +94,7 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
   }
 
   return {
-    ...process.env as RequiredEnvVars & OptionalEnvVars
+    ...process.env as unknown as RequiredEnvVars & OptionalEnvVars
   }
 }
 

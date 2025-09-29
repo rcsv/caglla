@@ -100,7 +100,9 @@ export default function TripWeatherDisplay({
           <p className="text-gray-600 text-sm">
             {!destination || !startDate || !endDate 
               ? '旅行の日程と目的地を設定すると天気予報が表示されます'
-              : '天気情報を取得できませんでした'
+              : (weatherData as any)?.dominantWeather === 'データなし'
+                ? '天気情報を取得できませんでした（16日以内の日程のみ対応）'
+                : '天気情報を取得できませんでした'
             }
           </p>
         </div>

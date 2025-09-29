@@ -100,10 +100,10 @@ export const adminTripOperations = {
       .where('user_id', '==', userId)
       .get()
     
-    const trips = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Trip>(doc))
+    const trips = querySnapshot.docs.map((doc: any) => adminFirestoreHelpers.docToObject<Trip>(doc))
     
     // Sort by created_at on the client side (descending)
-    return trips.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+    return trips.sort((a: Trip, b: Trip) => b.created_at.getTime() - a.created_at.getTime())
   },
 
   async getTripById(tripId: string): Promise<Trip | null> {
@@ -137,10 +137,10 @@ export const adminTripOperations = {
       .where('access_level', '==', 'public')
       .get()
     
-    const trips = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Trip>(doc))
+    const trips = querySnapshot.docs.map((doc: any) => adminFirestoreHelpers.docToObject<Trip>(doc))
     
     // Sort by created_at on the client side (descending)
-    return trips.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+    return trips.sort((a: Trip, b: Trip) => b.created_at.getTime() - a.created_at.getTime())
   }
 }
 
@@ -167,10 +167,10 @@ export const adminDayOperations = {
       .where('trip_id', '==', tripId)
       .get()
     
-    const days = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Day>(doc))
+    const days = querySnapshot.docs.map((doc: any) => adminFirestoreHelpers.docToObject<Day>(doc))
     
     // Sort by day_number on the client side
-    return days.sort((a, b) => a.day_number - b.day_number)
+    return days.sort((a: Day, b: Day) => a.day_number - b.day_number)
   },
 
   async updateDay(dayId: string, dayData: Partial<Day>): Promise<void> {
@@ -237,7 +237,7 @@ export const adminDayOperations = {
 
   async updateDaysForTripAtomic(tripId: string, startDate: Date, endDate: Date): Promise<void> {
     // トランザクションを使用してアトミックに更新
-    await adminDb.runTransaction(async (transaction) => {
+    await adminDb.runTransaction(async (transaction: any) => {
       // 既存のdayドキュメントを取得
       const existingDaysQuery = adminDb.collection(COLLECTIONS.DAYS)
         .where('trip_id', '==', tripId)
@@ -245,7 +245,7 @@ export const adminDayOperations = {
       const existingDaysSnapshot = await transaction.get(existingDaysQuery)
       
       // 既存のdayドキュメントを削除
-      existingDaysSnapshot.docs.forEach(doc => {
+      existingDaysSnapshot.docs.forEach((doc: any) => {
         transaction.delete(doc.ref)
       })
       
@@ -294,10 +294,10 @@ export const adminItineraryOperations = {
       .where('day_id', '==', dayId)
       .get()
     
-    const itineraries = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<Itinerary>(doc))
+    const itineraries = querySnapshot.docs.map((doc: any) => adminFirestoreHelpers.docToObject<Itinerary>(doc))
     
     // Sort by sort_number on the client side (ascending)
-    return itineraries.sort((a, b) => a.sort_number - b.sort_number)
+    return itineraries.sort((a: Itinerary, b: Itinerary) => a.sort_number - b.sort_number)
   },
 
   async updateItinerary(itineraryId: string, itineraryData: Partial<Itinerary>): Promise<void> {
@@ -341,7 +341,7 @@ export const adminTripUserOperations = {
       .where('trip_id', '==', tripId)
       .get()
     
-    return querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<TripUser>(doc))
+    return querySnapshot.docs.map((doc: any) => adminFirestoreHelpers.docToObject<TripUser>(doc))
   },
 
   async getTripsByUserId(userId: string): Promise<TripUser[]> {
@@ -349,10 +349,10 @@ export const adminTripUserOperations = {
       .where('user_id', '==', userId)
       .get()
     
-    const tripUsers = querySnapshot.docs.map(doc => adminFirestoreHelpers.docToObject<TripUser>(doc))
+    const tripUsers = querySnapshot.docs.map((doc: any) => adminFirestoreHelpers.docToObject<TripUser>(doc))
     
     // Sort by created_at on the client side (descending)
-    return tripUsers.sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+    return tripUsers.sort((a: TripUser, b: TripUser) => b.created_at.getTime() - a.created_at.getTime())
   },
 
   async removeUserFromTrip(tripId: string, userId: string): Promise<void> {

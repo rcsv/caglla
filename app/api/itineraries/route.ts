@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       .orderBy('sort_number', 'asc')
       .get()
     
-    const itineraries = itinerariesSnapshot.docs.map(doc => ({
+    const itineraries = itinerariesSnapshot.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data()
     }))

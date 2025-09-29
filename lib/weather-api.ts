@@ -106,9 +106,23 @@ export class WeatherApiHelpers {
       throw new Error('Invalid date format. Expected YYYY-MM-DD')
     }
 
+    // Limit date range to 16 days from today (Open-Meteo limitation)
+    const today = new Date()
+    const maxDate = new Date(today)
+    maxDate.setDate(today.getDate() + 16)
+    
+    // Adjust dates if they exceed the allowed range
+    const adjustedStartDate = startDateObj > today ? startDateObj : today
+    const adjustedEndDate = endDateObj > maxDate ? maxDate : endDateObj
+    
+    // Check if the date range is valid
+    if (adjustedStartDate > adjustedEndDate) {
+      throw new Error('Weather forecast is only available for dates within 16 days from today')
+    }
+
     // Format dates properly
-    const formattedStartDate = startDateObj.toISOString().split('T')[0]
-    const formattedEndDate = endDateObj.toISOString().split('T')[0]
+    const formattedStartDate = adjustedStartDate.toISOString().split('T')[0]
+    const formattedEndDate = adjustedEndDate.toISOString().split('T')[0]
 
     const params = new URLSearchParams({
       latitude: latitude.toString(),
@@ -127,7 +141,26 @@ export class WeatherApiHelpers {
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Weather API error response:', errorText)
-      throw new Error(`Weather API error: ${response.status} ${response.statusText}`)
+      
+      // Parse error response for better error messages
+      try {
+        const errorData = JSON.parse(errorText)
+        if (errorData.reason) {
+          throw new Error(`Weather API error: ${errorData.reason}`)
+        }
+      } catch (parseError) {
+        // If parsing fails, use the original error text
+      }
+      
+      if (response.status === 400) {
+        throw new Error('Weather API request error: Invalid parameters or date range')
+      } else if (response.status === 429) {
+        throw new Error('Weather API rate limit exceeded. Please try again later.')
+      } else if (response.status >= 500) {
+        throw new Error('Weather API server error. Please try again later.')
+      } else {
+        throw new Error(`Weather API error: ${response.status} ${response.statusText}`)
+      }
     }
 
     const data = await response.json()
@@ -136,7 +169,7 @@ export class WeatherApiHelpers {
   }
 
   /**
-   * Get weather forecast for a trip destination
+   * Get weather forecast for a trip destination with fallback mechanisms
    */
   static async getTripWeather(
     destination: string,
@@ -151,7 +184,8 @@ export class WeatherApiHelpers {
       
       if (!coordinates) {
         console.warn(`Could not find coordinates for destination: ${destination}`)
-        return null
+        // Return a fallback summary indicating no weather data available
+        return this.createFallbackWeatherSummary(destination, startDate, endDate)
       }
 
       console.log('Using coordinates:', coordinates)
@@ -168,32 +202,99 @@ export class WeatherApiHelpers {
       return summary
     } catch (error) {
       console.error('Error fetching weather data:', error)
-      return null
+      
+      // Return a fallback summary with error information
+      return this.createFallbackWeatherSummary(destination, startDate, endDate, error as Error)
     }
   }
 
   /**
-   * Get coordinates for a destination using Open-Meteo's geocoding API
+   * Create a fallback weather summary when weather data is unavailable
+   */
+  private static createFallbackWeatherSummary(
+    destination: string,
+    startDate: string,
+    endDate: string,
+    error?: Error
+  ): WeatherSummary {
+    const startDateObj = new Date(startDate)
+    const endDateObj = new Date(endDate)
+    const days = Math.ceil((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    
+    return {
+      averageTemp: 0,
+      minTemp: 0,
+      maxTemp: 0,
+      rainyDays: 0,
+      totalPrecipitation: 0,
+      averageWindSpeed: 0,
+      dominantWeather: 'データなし',
+      forecastDays: 0,
+      availableDays: 0,
+      isPartialForecast: true
+    }
+  }
+
+  /**
+   * Get coordinates for a destination using Google Geocoding API with fallback to Open-Meteo
    */
   private static async getCoordinatesForDestination(destination: string): Promise<{latitude: number, longitude: number} | null> {
+    // Try Google Geocoding API first
+    const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+    if (googleApiKey) {
+      try {
+        const googleGeocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(destination)}&key=${googleApiKey}&language=ja`
+        console.log('Google Geocoding API request URL:', googleGeocodingUrl.replace(googleApiKey, '***'))
+        
+        const response = await fetch(googleGeocodingUrl)
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Google Geocoding API response status:', data.status)
+          
+          if (data.status === 'OK' && data.results && data.results.length > 0) {
+            const result = data.results[0]
+            const location = result.geometry.location
+            console.log('Found coordinates via Google:', location.lat, location.lng, 'for:', result.formatted_address)
+            return {
+              latitude: location.lat,
+              longitude: location.lng
+            }
+          } else {
+            console.warn('Google Geocoding API returned no results:', data.status)
+          }
+        } else {
+          console.warn('Google Geocoding API request failed:', response.status)
+        }
+      } catch (error) {
+        console.error('Error with Google Geocoding API:', error)
+      }
+    } else {
+      console.warn('Google Places API key not found, falling back to Open-Meteo')
+    }
+
+    // Fallback to Open-Meteo Geocoding API
     try {
       const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination)}&count=1&language=ja&format=json`
-      console.log('Geocoding API request URL:', geocodingUrl)
+      console.log('Open-Meteo Geocoding API request URL:', geocodingUrl)
       
       const response = await fetch(geocodingUrl)
       
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Geocoding API error response:', errorText)
-        throw new Error(`Geocoding API error: ${response.status}`)
+        console.error('Open-Meteo Geocoding API error response:', errorText)
+        if (response.status === 403) {
+          throw new Error('Open-Meteo Geocoding API access denied. Please check rate limits or try again later.')
+        }
+        throw new Error(`Open-Meteo Geocoding API error: ${response.status}`)
       }
 
       const data = await response.json()
-      console.log('Geocoding API response:', data)
+      console.log('Open-Meteo Geocoding API response:', data)
       
       if (data.results && data.results.length > 0) {
         const result = data.results[0]
-        console.log('Found coordinates:', result.latitude, result.longitude, 'for:', result.name)
+        console.log('Found coordinates via Open-Meteo:', result.latitude, result.longitude, 'for:', result.name)
         return {
           latitude: result.latitude,
           longitude: result.longitude
@@ -203,7 +304,7 @@ export class WeatherApiHelpers {
       console.warn('No coordinates found for destination:', destination)
       return null
     } catch (error) {
-      console.error('Error geocoding destination:', error)
+      console.error('Error geocoding destination with Open-Meteo:', error)
       return null
     }
   }

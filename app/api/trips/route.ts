@@ -88,7 +88,8 @@ export async function POST(request: NextRequest) {
       start_date: startDate ? new Date(startDate) : undefined,
       end_date: endDate ? new Date(endDate) : undefined,
       access_level: accessLevel,
-      image_url: imageUrl || undefined
+      image_url: imageUrl || undefined,
+      status: 'PLANNING' as const
     })
 
     // Create days if start and end dates are provided

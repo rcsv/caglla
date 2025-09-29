@@ -75,7 +75,7 @@ export async function GET(
         .get()
 
       const itineraries = itinerariesSnapshot.docs
-        .map(itineraryDoc => {
+        .map((itineraryDoc: any) => {
           const itineraryData = itineraryDoc.data()
           return {
             id: itineraryDoc.id,
