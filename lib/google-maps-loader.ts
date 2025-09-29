@@ -1,0 +1,59 @@
+import { Loader } from '@googlemaps/js-api-loader'
+
+// Google Maps APIのシングルトンインスタンス
+let loaderInstance: Loader | null = null
+let isLoaded = false
+let loadPromise: Promise<void> | null = null
+
+/**
+ * Google Maps APIを一度だけ読み込む共通ローダー
+ * 複数のコンポーネントから呼び出されても重複読み込みを防ぐ
+ */
+export async function loadGoogleMapsAPI(): Promise<void> {
+  // 既に読み込み済みの場合は即座に返す
+  if (isLoaded) {
+    return Promise.resolve()
+  }
+
+  // 読み込み中の場合は同じPromiseを返す
+  if (loadPromise) {
+    return loadPromise
+  }
+
+  // 新しいローダーインスタンスを作成
+  if (!loaderInstance) {
+    loaderInstance = new Loader({
+      apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || '',
+      version: 'weekly',
+      libraries: ['places', 'marker', 'geometry']
+    })
+  }
+
+  // APIを読み込み
+  loadPromise = loaderInstance.load().then(() => {
+    isLoaded = true
+  }).catch((error) => {
+    // エラーが発生した場合は状態をリセット
+    isLoaded = false
+    loadPromise = null
+    throw error
+  })
+
+  return loadPromise
+}
+
+/**
+ * Google Maps APIが読み込み済みかどうかを確認
+ */
+export function isGoogleMapsLoaded(): boolean {
+  return isLoaded && typeof window !== 'undefined' && !!window.google
+}
+
+/**
+ * Google Maps APIの読み込み状態をリセット（テスト用）
+ */
+export function resetGoogleMapsLoader(): void {
+  loaderInstance = null
+  isLoaded = false
+  loadPromise = null
+}

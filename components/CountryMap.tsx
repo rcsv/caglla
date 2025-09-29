@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Loader } from '@googlemaps/js-api-loader'
 import { CountryGroup } from '@/lib/country-utils'
+import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
 
 // Google Maps APIの型定義
 declare global {
@@ -30,13 +30,8 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         setLoading(true)
         setError(null)
 
-        const loader = new Loader({
-          apiKey: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || '',
-          version: 'weekly',
-          libraries: ['places', 'marker']
-        })
-
-        await loader.load()
+        // 共通ローダーを使用してAPIを読み込み
+        await loadGoogleMapsAPI()
 
         if (!mapRef.current) return
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Itinerary } from '@/lib/firestore'
+import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
 
 interface TripMapProps {
   itineraries: Itinerary[]
@@ -24,53 +25,46 @@ export default function TripMap({ itineraries, className = '' }: TripMapProps) {
 
   // Google Maps API の読み込み
   useEffect(() => {
-    const loadGoogleMaps = () => {
-      if (window.google) {
-        initializeMap()
-        return
+    const initializeMap = async () => {
+      try {
+        // 共通ローダーを使用してAPIを読み込み
+        await loadGoogleMapsAPI()
+        
+        if (!mapRef.current || !window.google) return
+
+        const defaultCenter = { lat: 35.6762, lng: 139.6503 } // 東京
+        const newMap = new window.google.maps.Map(mapRef.current, {
+          zoom: 10,
+          center: defaultCenter,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          zoomControl: true,
+          zoomControlOptions: {
+            position: window.google.maps.ControlPosition.TOP_RIGHT,
+          },
+        })
+
+        const newDirectionsService = new window.google.maps.DirectionsService()
+        const newDirectionsRenderer = new window.google.maps.DirectionsRenderer({
+          suppressMarkers: true,
+          polylineOptions: {
+            strokeColor: '#3B82F6',
+            strokeWeight: 4,
+          },
+        })
+
+        newDirectionsRenderer.setMap(newMap)
+
+        setMap(newMap)
+        setDirectionsService(newDirectionsService)
+        setDirectionsRenderer(newDirectionsRenderer)
+      } catch (error) {
+        console.error('Google Maps APIの読み込みに失敗しました:', error)
       }
-
-      const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
-      script.async = true
-      script.defer = true
-      script.onload = initializeMap
-      document.head.appendChild(script)
     }
 
-    const initializeMap = () => {
-      if (!mapRef.current || !window.google) return
-
-      const defaultCenter = { lat: 35.6762, lng: 139.6503 } // 東京
-      const newMap = new window.google.maps.Map(mapRef.current, {
-        zoom: 10,
-        center: defaultCenter,
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        zoomControl: true,
-        zoomControlOptions: {
-          position: window.google.maps.ControlPosition.TOP_RIGHT,
-        },
-      })
-
-      const newDirectionsService = new window.google.maps.DirectionsService()
-      const newDirectionsRenderer = new window.google.maps.DirectionsRenderer({
-        suppressMarkers: true,
-        polylineOptions: {
-          strokeColor: '#3B82F6',
-          strokeWeight: 4,
-        },
-      })
-
-      newDirectionsRenderer.setMap(newMap)
-
-      setMap(newMap)
-      setDirectionsService(newDirectionsService)
-      setDirectionsRenderer(newDirectionsRenderer)
-    }
-
-    loadGoogleMaps()
+    initializeMap()
   }, [])
 
   // itineraries が変更された時にマーカーとルートを更新
