@@ -129,6 +129,25 @@ export default function ScheduleCard({
     }
   }, [])
 
+  // メニューが開いている時にスクロールやリサイズで位置を更新
+  useEffect(() => {
+    if (!showMenu) return
+
+    const updateMenuPosition = () => {
+      // メニューの位置を再計算するために強制的に再レンダリング
+      setShowMenu(false)
+      setTimeout(() => setShowMenu(true), 0)
+    }
+
+    window.addEventListener('scroll', updateMenuPosition, true)
+    window.addEventListener('resize', updateMenuPosition)
+
+    return () => {
+      window.removeEventListener('scroll', updateMenuPosition, true)
+      window.removeEventListener('resize', updateMenuPosition)
+    }
+  }, [showMenu])
+
   // itineraryの変更時にタイトルと時間を更新
   useEffect(() => {
     setTitle(itinerary.title || '')
@@ -923,7 +942,12 @@ export default function ScheduleCard({
 
               {/* ドロップダウンメニュー */}
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[9999]">
+                <div className="fixed bg-white rounded-md shadow-lg border border-gray-200 z-[9999]" 
+                     style={{
+                       top: menuRef.current ? menuRef.current.getBoundingClientRect().bottom + 4 : 0,
+                       left: menuRef.current ? menuRef.current.getBoundingClientRect().left : 0,
+                       width: '192px' // w-48 = 12rem = 192px
+                     }}>
                   <div className="py-1">
                     <button
                       onClick={() => handleMenuAction('moveUp')}

@@ -38,6 +38,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [summaryCollapsed, setSummaryCollapsed] = useState(false)
   const [selectedItineraryId, setSelectedItineraryId] = useState<string | null>(null)
+  const [mapFocusMode, setMapFocusMode] = useState<'all' | 'day' | 'single'>('all') // マップフォーカスモード
 
   // セクションへのナビゲーション機能
   const navigateToSection = (sectionId: string) => {
@@ -53,6 +54,9 @@ export default function TripPage({ params }: { params: { id: string } }) {
   // Itineraryクリック時のハンドラー
   const handleItineraryClick = (itineraryId: string) => {
     setSelectedItineraryId(itineraryId)
+    
+    // 個別フォーカスモードに切り替え
+    setMapFocusMode('single')
     
     // 該当するItineraryが含まれる日程を探して展開
     if (trip?.days) {
@@ -72,6 +76,9 @@ export default function TripPage({ params }: { params: { id: string } }) {
   // 地図マーカークリック時のハンドラー
   const handleMapMarkerClick = (itineraryId: string) => {
     setSelectedItineraryId(itineraryId)
+    
+    // 個別フォーカスモードに切り替え
+    setMapFocusMode('single')
     
     // 該当するItineraryが含まれる日程を探して展開・スクロール
     if (trip?.days) {
@@ -201,9 +208,11 @@ export default function TripPage({ params }: { params: { id: string } }) {
     if (selectedDayId === dayId) {
       // 同じ日程をクリックした場合はフィルタを解除
       setSelectedDayId(null)
+      setMapFocusMode('all') // 全体表示に戻す
     } else {
       // 新しい日程を選択
       setSelectedDayId(dayId)
+      setMapFocusMode('day') // 日程表示モードに切り替え
     }
     // Itinerary選択状態もリセット
     setSelectedItineraryId(null)
@@ -1055,7 +1064,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
                                       )}
                                       
                                       {/* Venue間の挿入ボタン（距離表示がない場合のみ） */}
-                                      {index < day.itineraries.length - 1 && 
+                                      {index < (day.itineraries?.length || 0) - 1 && 
                                        (!itinerary.place_data || !nextItinerary?.place_data || 
                                         itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
                                         <VenueInsertButton
@@ -1076,7 +1085,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
                                       
                                       {/* 挿入ボタン */}
                                       <button
-                                        onClick={() => handleInsertSchedule(day.id, day.itineraries.length - 1)}
+                                        onClick={() => handleInsertSchedule(day.id, (day.itineraries?.length || 0) - 1)}
                                         className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
                                         title="最後にVenueを追加"
                                       >
@@ -1155,6 +1164,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
             selectedDayId={selectedDayId}
             onItineraryClick={handleMapMarkerClick}
             className="h-full"
+            focusMode={mapFocusMode}
           />
         </div>
       </div>

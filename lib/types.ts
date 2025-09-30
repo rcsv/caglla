@@ -414,6 +414,9 @@ export interface RequiredEnvVars {
   
   // Google Places API
   NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: string
+  
+  // Google Maps API
+  NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: string
 }
 
 export interface OptionalEnvVars {

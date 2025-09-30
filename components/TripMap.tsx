@@ -59,6 +59,7 @@ interface TripMapProps {
   selectedDayId?: string | null
   onItineraryClick?: (itineraryId: string) => void
   className?: string
+  focusMode?: 'all' | 'day' | 'single' // フォーカスモードを追加
 }
 
 declare global {
@@ -73,22 +74,36 @@ export default function TripMap({
   selectedItineraryId = null,
   selectedDayId = null,
   onItineraryClick,
-  className = '' 
+  className = '',
+  focusMode = 'all' // デフォルトは全体表示
 }: TripMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<any>(null)
   const [markers, setMarkers] = useState<any[]>([])
   const [directionsService, setDirectionsService] = useState<any>(null)
   const [directionsRenderer, setDirectionsRenderer] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Google Maps API の読み込み
   useEffect(() => {
     const initializeMap = async () => {
       try {
+        setLoading(true)
+        setError(null)
+        
+        // APIキーの確認
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+        if (!apiKey) {
+          throw new Error('Google Maps APIキーが設定されていません。.env.localファイルでNEXT_PUBLIC_GOOGLE_MAPS_API_KEYまたはNEXT_PUBLIC_GOOGLE_PLACES_API_KEYを設定してください。')
+        }
+        
         // 共通ローダーを使用してAPIを読み込み
         await loadGoogleMapsAPI()
         
-        if (!mapRef.current || !window.google) return
+        if (!mapRef.current || !window.google) {
+          throw new Error('Google Maps APIの読み込みに失敗しました')
+        }
 
         // CSSスタイルをDOMに追加
         const styleElement = document.createElement('style')
@@ -124,8 +139,11 @@ export default function TripMap({
         setMap(newMap)
         setDirectionsService(newDirectionsService)
         setDirectionsRenderer(newDirectionsRenderer)
+        setLoading(false)
       } catch (error) {
         console.error('Google Maps APIの読み込みに失敗しました:', error)
+        setError(error instanceof Error ? error.message : '地図の読み込みに失敗しました')
+        setLoading(false)
       }
     }
 
@@ -202,6 +220,23 @@ export default function TripMap({
         if (onItineraryClick) {
           onItineraryClick(itinerary.id)
         }
+        
+        // 個別フォーカスモードの場合、選択された場所にフォーカス
+        if (focusMode === 'single') {
+          const position = {
+            lat: itinerary.place_data!.geometry!.location.lat,
+            lng: itinerary.place_data!.geometry!.location.lng,
+          }
+          
+          // DirectionsRendererを一時的に非表示にして、ズームが正常に動作するようにする
+          if (directionsRenderer) {
+            directionsRenderer.setMap(null)
+          }
+          
+          // 地図を選択された場所にフォーカス
+          map.setCenter(position)
+          map.setZoom(17)
+        }
       })
 
       return { marker, element: teardropElement, itineraryId: itinerary.id }
@@ -249,14 +284,37 @@ export default function TripMap({
       )
     }
 
-    // マップのビューを調整
-    if (validItineraries.length === 1) {
+    // マップのビューを調整（フォーカスモードに応じて）
+    if (focusMode === 'single' && selectedItineraryId) {
+      // 個別フォーカスモード：選択されたItineraryのみにフォーカス
+      const selectedItinerary = validItineraries.find(it => it.id === selectedItineraryId)
+      if (selectedItinerary) {
+        // DirectionsRendererを一時的に非表示にして、ズームが正常に動作するようにする
+        if (directionsRenderer) {
+          directionsRenderer.setMap(null)
+        }
+        
+        const position = {
+          lat: selectedItinerary.place_data!.geometry!.location.lat,
+          lng: selectedItinerary.place_data!.geometry!.location.lng,
+        }
+        map.setCenter(position)
+        map.setZoom(17)
+      }
+    } else if (validItineraries.length === 1) {
+      // 単一のItineraryの場合
       map.setCenter({
         lat: validItineraries[0].place_data!.geometry!.location.lat,
         lng: validItineraries[0].place_data!.geometry!.location.lng,
       })
-      map.setZoom(15)
+      map.setZoom(17)
     } else if (validItineraries.length > 1) {
+      // 複数のItineraryの場合：全体を表示
+      // DirectionsRendererを再表示
+      if (directionsRenderer) {
+        directionsRenderer.setMap(map)
+      }
+      
       const bounds = new window.google.maps.LatLngBounds()
       validItineraries.forEach(itinerary => {
         bounds.extend({
@@ -266,7 +324,7 @@ export default function TripMap({
       })
       map.fitBounds(bounds)
     }
-  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId])
+  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId])
 
   // 選択されたItineraryにフォーカスする機能
   useEffect(() => {
@@ -280,9 +338,14 @@ export default function TripMap({
       lng: selectedItinerary.place_data.geometry.location.lng,
     }
 
-    // 地図を選択されたVenueにズーム・フォーカス
+    // 選択されたVenueにズーム・フォーカス
+    // DirectionsRendererを一時的に非表示にして、ズームが正常に動作するようにする
+    if (directionsRenderer) {
+      directionsRenderer.setMap(null)
+    }
+    
     map.setCenter(position)
-    map.setZoom(16)
+    map.setZoom(17)
 
     // 該当するマーカーをハイライト
     markers.forEach((markerData) => {
@@ -298,6 +361,30 @@ export default function TripMap({
 
   return (
     <div className={`relative ${className}`}>
+      {loading && (
+        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+            <p className="text-sm text-gray-600">地図を読み込み中...</p>
+          </div>
+        </div>
+      )}
+      
+      {error && (
+        <div className="absolute inset-0 bg-red-50 flex items-center justify-center z-10">
+          <div className="text-center p-4">
+            <div className="text-red-500 text-lg mb-2">⚠️ 地図の読み込みに失敗しました</div>
+            <p className="text-sm text-red-600 mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+            >
+              ページを再読み込み
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div ref={mapRef} className="w-full h-full" />
       
       {/* マップのオーバーレイ情報 */}
