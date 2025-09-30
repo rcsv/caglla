@@ -4,6 +4,54 @@ import { useEffect, useRef, useState } from 'react'
 import { Itinerary } from '@/lib/firestore'
 import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
 
+// ティアドロップ形状のマーカースタイル
+const teardropStyles = `
+  .teardrop-marker {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    background-color: #3B82F6;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .teardrop-marker:hover {
+    transform: rotate(-45deg) scale(1.1);
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+  }
+  .teardrop-marker::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    margin: 9px 0 0 9px;
+    position: absolute;
+    border-radius: 50%;
+    background-color: #fff;
+    display: none; /* 白抜きを非表示 */
+  }
+  .teardrop-marker.selected {
+    background-color: #EF4444;
+    transform: rotate(-45deg) scale(1.2);
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+  }
+  .teardrop-marker.selected::after {
+    background-color: #fff;
+    display: none; /* 選択時も白抜きを非表示 */
+  }
+  .teardrop-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    pointer-events: none;
+  }
+`
+
 interface TripMapProps {
   itineraries: Itinerary[]
   selectedItineraryId?: string | null
@@ -41,6 +89,12 @@ export default function TripMap({
         
         if (!mapRef.current || !window.google) return
 
+        // CSSスタイルをDOMに追加
+        const styleElement = document.createElement('style')
+        styleElement.textContent = teardropStyles
+        document.head.appendChild(styleElement)
+
+        // AdvancedMarkerElement用のmapIdを設定
         const defaultCenter = { lat: 35.6762, lng: 139.6503 } // 東京
         const newMap = new window.google.maps.Map(mapRef.current, {
           zoom: 10,
@@ -52,6 +106,7 @@ export default function TripMap({
           zoomControlOptions: {
             position: window.google.maps.ControlPosition.TOP_RIGHT,
           },
+          mapId: 'trip-map-teardrop-markers', // AdvancedMarkerElement用のmapId
         })
 
         const newDirectionsService = new window.google.maps.DirectionsService()
@@ -81,7 +136,7 @@ export default function TripMap({
     if (!map || !directionsService || !directionsRenderer) return
 
     // 既存のマーカーをクリア
-    markers.forEach(marker => marker.setMap(null))
+    markers.forEach(markerData => markerData.marker.map = null)
     setMarkers([])
 
     // 位置情報がある itineraries をフィルタリング
@@ -91,30 +146,41 @@ export default function TripMap({
 
     if (validItineraries.length === 0) return
 
-    // マーカーを作成
+    // 日程ごとの番号を計算するためのマップを作成
+    const dayNumberMap = new Map<string, number>()
+    
+    // ティアドロップ形状のマーカーを作成
     const newMarkers = validItineraries.map((itinerary, index) => {
       const position = {
         lat: itinerary.place_data!.geometry!.location.lat,
         lng: itinerary.place_data!.geometry!.location.lng,
       }
 
-      const marker = new window.google.maps.Marker({
-        position,
+      // 日程ごとの番号を計算
+      const dayId = itinerary.day_id
+      if (!dayNumberMap.has(dayId)) {
+        dayNumberMap.set(dayId, 1)
+      } else {
+        dayNumberMap.set(dayId, dayNumberMap.get(dayId)! + 1)
+      }
+      const dayNumber = dayNumberMap.get(dayId)!
+
+      // ティアドロップ形状のマーカー要素を作成
+      const teardropElement = document.createElement('div')
+      teardropElement.className = 'teardrop-marker'
+      
+      // ラベル（番号）を追加 - 日程ごとの番号を使用
+      const labelElement = document.createElement('div')
+      labelElement.className = 'teardrop-label'
+      labelElement.textContent = dayNumber.toString()
+      teardropElement.appendChild(labelElement)
+
+      // AdvancedMarkerElementを作成
+      const marker = new window.google.maps.marker.AdvancedMarkerElement({
         map,
+        position,
         title: itinerary.title,
-        label: {
-          text: (index + 1).toString(),
-          color: 'white',
-          fontWeight: 'bold',
-        },
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 20,
-          fillColor: '#3B82F6',
-          fillOpacity: 1,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 2,
-        },
+        content: teardropElement,
       })
 
       // インフォウィンドウを作成
@@ -137,7 +203,7 @@ export default function TripMap({
         }
       })
 
-      return marker
+      return { marker, element: teardropElement, itineraryId: itinerary.id }
     })
 
     setMarkers(newMarkers)
@@ -208,28 +274,13 @@ export default function TripMap({
     map.setZoom(16)
 
     // 該当するマーカーをハイライト
-    markers.forEach((marker, index) => {
-      const itinerary = itineraries.find(i => i.place_data?.geometry?.location)
-      if (itinerary?.id === selectedItineraryId) {
+    markers.forEach((markerData) => {
+      if (markerData.itineraryId === selectedItineraryId) {
         // 選択されたマーカーをハイライト
-        marker.setIcon({
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 25,
-          fillColor: '#EF4444', // 赤色でハイライト
-          fillOpacity: 1,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 3,
-        })
+        markerData.element.className = 'teardrop-marker selected'
       } else {
         // 他のマーカーは通常の色
-        marker.setIcon({
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 20,
-          fillColor: '#3B82F6',
-          fillOpacity: 1,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 2,
-        })
+        markerData.element.className = 'teardrop-marker'
       }
     })
   }, [selectedItineraryId, map, markers, itineraries])

@@ -7,6 +7,35 @@ import { timezoneUtils } from '@/lib/timezone-utils'
 import { currencyUtils } from '@/lib/currency-utils'
 import VenueDistance from './VenueDistance'
 
+// ティアドロップ形状のマーカースタイル（左ペイン用）
+const teardropStyles = `
+  .teardrop-marker-left {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    background-color: #3B82F6;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
+  }
+  .teardrop-marker-left.selected {
+    background-color: #EF4444;
+    transform: rotate(-45deg) scale(1.1);
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+  }
+  .teardrop-label-left {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    pointer-events: none;
+  }
+`
+
 interface ScheduleCardProps {
   itinerary: Itinerary
   previousPlace?: PlaceData | null
@@ -47,6 +76,20 @@ export default function ScheduleCard({
   isDragging = false,
   isSelected = false
 }: ScheduleCardProps) {
+  
+  // CSSスタイルをDOMに追加
+  useEffect(() => {
+    const styleElement = document.createElement('style')
+    styleElement.textContent = teardropStyles
+    document.head.appendChild(styleElement)
+    
+    return () => {
+      // クリーンアップ時にスタイルを削除
+      if (document.head.contains(styleElement)) {
+        document.head.removeChild(styleElement)
+      }
+    }
+  }, [])
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [description, setDescription] = useState(itinerary.description || '')
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -538,11 +581,10 @@ export default function ScheduleCard({
 
         {/* ソート番号（ティアドロップ形状） */}
         <div className="relative mt-3">
-          <svg width="30" height="40" viewBox="0 0 30 40" className="text-red-500">
-            <path d="M15 0C6.72 0 0 6.72 0 15c0 8.28 15 25 15 25s15-16.72 15-25c0-8.28-6.72-15-15-15z" fill="currentColor"/>
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center" style={{ transform: 'translateY(-4px)' }}>
-            <span className="text-white font-bold text-sm">{itinerary.sort_number}</span>
+          <div className={`teardrop-marker-left ${isSelected ? 'selected' : ''}`}>
+            <div className="teardrop-label-left">
+              {itinerary.sort_number}
+            </div>
           </div>
         </div>
 
