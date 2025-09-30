@@ -100,6 +100,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
     }
   }
 
+
   useEffect(() => {
     if (!loading && !user) {
       router.push('/')
