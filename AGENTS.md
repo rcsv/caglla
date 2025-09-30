@@ -94,6 +94,94 @@ const subMenuClass = getZIndexClass('POPUP_MENU', 1) // 'z-[41]'
 const menuClass = 'z-[9999]' // Don't use hardcoded values
 ```
 
+### Environment Variable Management System:
+- **ALWAYS** use the centralized environment validation in `lib/env-validation.ts`
+- **NEVER** access `process.env` directly without validation
+- Use `validateClientEnvironment()` for client-side validation
+- Use `validateServerEnvironment()` for server-side validation
+
+**Required Environment Variables:**
+- Firebase: `NEXT_PUBLIC_FIREBASE_*` (API_KEY, AUTH_DOMAIN, PROJECT_ID, etc.)
+- Google APIs: `NEXT_PUBLIC_GOOGLE_PLACES_API_KEY`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+- Firebase Admin: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`
+
+**Usage Examples:**
+```typescript
+// ✅ Correct
+import { validateClientEnvironment } from '@/lib/env-validation'
+const env = validateClientEnvironment()
+const apiKey = env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+
+// ❌ Wrong
+const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY // Direct access
+```
+
+### Type Definition Management System:
+- **ALWAYS** use centralized type definitions in `lib/types.ts`
+- **NEVER** define duplicate interfaces across files
+- All shared types should be exported from `lib/types.ts`
+
+**Key Type Categories:**
+- User & Authentication: `User`, `UserPreferences`
+- Travel Data: `Trip`, `Day`, `Itinerary`, `PlaceData`
+- API Responses: `PlaceSearchResult`, `GeocodingResult`, `WeatherData`
+- Environment: `RequiredEnvVars`, `OptionalEnvVars`
+
+### API Integration Management System:
+- **ALWAYS** use centralized API helpers instead of direct API calls
+- **NEVER** make direct API calls to external services
+
+**Available API Helpers:**
+- `placesApiHelpers` (`lib/places-api.ts`): Google Places API integration
+- `geocodingApiHelpers` (`lib/geocoding-api.ts`): Google Geocoding API integration
+- `weatherApiHelpers` (`lib/weather-api.ts`): Weather API integration
+- `makeAuthenticatedRequest` (`lib/api-helpers.ts`): Authenticated API requests
+
+**Usage Examples:**
+```typescript
+// ✅ Correct
+import { placesApiHelpers } from '@/lib/places-api'
+const results = await placesApiHelpers.searchPlaces('Tokyo')
+
+// ❌ Wrong
+const response = await fetch('https://maps.googleapis.com/maps/api/place/...')
+```
+
+### Subscription & Plan Management System:
+- **ALWAYS** use the centralized subscription system in `lib/subscription-context.tsx`
+- **NEVER** hardcode plan limits or features
+- Use `PlanLimitChecker` (`lib/plan-limits.ts`) for limit validation
+
+**Available Plans:**
+- `season_traveler`: 無料プラン（基本機能）
+- `backpacker`: 月額480円（ルート最適化、カスタム機能）
+- `globetrotter`: 月額980円（全機能、無制限）
+
+**Usage Examples:**
+```typescript
+// ✅ Correct
+import { useSubscription } from '@/lib/subscription-context'
+const { canUseRouteOptimization, checkPlanLimits } = useSubscription()
+
+// ❌ Wrong
+const canOptimize = user.plan === 'premium' // Hardcoded check
+```
+
+### Timezone Management System:
+- **ALWAYS** use the centralized timezone utilities in `lib/timezone-utils.ts`
+- **NEVER** hardcode timezone mappings
+- Use `CITY_TIMEZONE_MAP` for city-to-timezone conversion
+
+**Usage Examples:**
+```typescript
+// ✅ Correct
+import { timezoneUtils } from '@/lib/timezone-utils'
+const timezone = timezoneUtils.getTimezoneFromCity('Tokyo')
+
+// ❌ Wrong
+const timezone = 'Asia/Tokyo' // Hardcoded timezone
+```
+
 ---
 
 ## 📦 Setup Notes
