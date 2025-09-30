@@ -59,7 +59,8 @@ export default function TripWeatherDisplay({
 
   if (error) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 relative min-h-[200px] ${className}`}>
+        {/* 通常の天気予報レイアウトを維持 */}
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-gray-800 flex items-center">
             <svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,21 +69,29 @@ export default function TripWeatherDisplay({
             天気予報
           </h3>
         </div>
-        <div className="text-center py-4">
-          <div className="text-red-500 text-sm mb-2">
-            {error}
+        
+        {/* エラーオーバーレイ */}
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
+          <div className="text-center p-4">
+            <div className="text-red-500 text-sm mb-2 font-medium">
+              {error}
+            </div>
+            <p className="text-gray-500 text-xs">
+              天気情報の取得に失敗しました
+            </p>
+            <div className="mt-3 text-xs text-gray-400">
+              <p>💡 天気予報は16日以内の日程のみ対応</p>
+            </div>
           </div>
-          <p className="text-gray-500 text-xs">
-            天気情報の取得に失敗しました
-          </p>
         </div>
       </div>
     )
   }
 
-  if (!weatherData) {
+  if (!weatherData || weatherData.dominantWeather === 'データなし') {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 relative min-h-[200px] ${className}`}>
+        {/* 通常の天気予報レイアウトを維持 */}
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-gray-800 flex items-center">
             <svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,20 +100,25 @@ export default function TripWeatherDisplay({
             天気予報
           </h3>
         </div>
-        <div className="text-center py-4">
-          <div className="text-gray-500 mb-2">
-            <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p className="text-gray-600 text-sm">
-            {!destination || !startDate || !endDate 
-              ? '旅行の日程と目的地を設定すると天気予報が表示されます'
-              : (weatherData as any)?.dominantWeather === 'データなし'
-                ? '天気情報を取得できませんでした（16日以内の日程のみ対応）'
+        
+        {/* データなしオーバーレイ */}
+        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
+          <div className="text-center p-4">
+            <div className="text-gray-500 mb-3">
+              <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 text-sm mb-2">
+              {!destination || !startDate || !endDate 
+                ? '旅行の日程と目的地を設定すると天気予報が表示されます'
                 : '天気情報を取得できませんでした'
-            }
-          </p>
+              }
+            </p>
+            <div className="text-xs text-gray-400">
+              <p>💡 天気予報は16日以内の日程のみ対応</p>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -131,7 +145,7 @@ export default function TripWeatherDisplay({
   )
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 min-h-[200px] ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-semibold text-gray-800 flex items-center">
           <svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
