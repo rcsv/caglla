@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { dummyPaymentService, SubscriptionPlan, Subscription, PaymentMethod } from './dummy-payment-service'
+import { PlanLimitChecker, UsageStats } from './plan-limits'
 
 export interface SubscriptionPlan {
   id: string
@@ -32,6 +33,12 @@ interface SubscriptionContextType {
   cancelSubscription: () => Promise<boolean>
   getPlans: () => Promise<SubscriptionPlan[]>
   getPaymentMethods: () => Promise<PaymentMethod[]>
+  // プラン制限チェック機能
+  checkPlanLimits: (usage: UsageStats) => ReturnType<typeof PlanLimitChecker.checkAllLimits>
+  canCreateTravel: (currentCount: number) => boolean
+  canAddTravelDays: (totalDays: number) => boolean
+  canUploadFiles: (storageUsedGB: number) => boolean
+  canUploadPhotos: (photosPerTrip: number) => boolean
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
@@ -202,6 +209,45 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     return await dummyPaymentService.getPaymentMethods('demo_user')
   }
 
+  // プラン制限チェック機能
+  const checkPlanLimits = (usage: UsageStats) => {
+    if (!subscriptionStatus.plan) {
+      // プランがない場合は制限なし
+      return {
+        travelCount: { isAllowed: true, currentUsage: 0, limit: -1, remaining: -1, message: 'プラン未設定' },
+        travelDays: { isAllowed: true, currentUsage: 0, limit: -1, remaining: -1, message: 'プラン未設定' },
+        storage: { isAllowed: true, currentUsage: 0, limit: -1, remaining: -1, message: 'プラン未設定' },
+        photos: { isAllowed: true, currentUsage: 0, limit: -1, remaining: -1, message: 'プラン未設定' },
+        hasAnyLimitExceeded: false
+      }
+    }
+    return PlanLimitChecker.checkAllLimits(subscriptionStatus.plan, usage)
+  }
+
+  const canCreateTravel = (currentCount: number): boolean => {
+    if (!subscriptionStatus.plan) return true
+    const check = PlanLimitChecker.checkTravelCountLimit(subscriptionStatus.plan, currentCount)
+    return check.isAllowed
+  }
+
+  const canAddTravelDays = (totalDays: number): boolean => {
+    if (!subscriptionStatus.plan) return true
+    const check = PlanLimitChecker.checkTravelDaysLimit(subscriptionStatus.plan, totalDays)
+    return check.isAllowed
+  }
+
+  const canUploadFiles = (storageUsedGB: number): boolean => {
+    if (!subscriptionStatus.plan) return true
+    const check = PlanLimitChecker.checkStorageLimit(subscriptionStatus.plan, storageUsedGB)
+    return check.isAllowed
+  }
+
+  const canUploadPhotos = (photosPerTrip: number): boolean => {
+    if (!subscriptionStatus.plan) return true
+    const check = PlanLimitChecker.checkPhotosLimit(subscriptionStatus.plan, photosPerTrip)
+    return check.isAllowed
+  }
+
   useEffect(() => {
     checkSubscription()
   }, [])
@@ -215,7 +261,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     subscribeToPlan,
     cancelSubscription,
     getPlans,
-    getPaymentMethods
+    getPaymentMethods,
+    checkPlanLimits,
+    canCreateTravel,
+    canAddTravelDays,
+    canUploadFiles,
+    canUploadPhotos
   }
 
   return (
