@@ -44,6 +44,21 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
   const [saving, setSaving] = useState(false)
   const [originalImageUrl, setOriginalImageUrl] = useState(trip.image_url || '')
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false)
+  const [dateError, setDateError] = useState('')
+
+  // 日付のバリデーション
+  const validateDates = (startDate: string, endDate: string): string => {
+    if (!startDate || !endDate) return ''
+    
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    
+    if (start > end) {
+      return '出発日は帰宅日より前の日付を選択してください'
+    }
+    
+    return ''
+  }
 
   // tripが変更された時にformDataを更新（編集モードでない場合のみ）
   useEffect(() => {
@@ -63,6 +78,14 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
   }, [trip, isEditing])
 
   const handleSave = async () => {
+    // 日付のバリデーション
+    const dateValidationError = validateDates(formData.startDate, formData.endDate)
+    if (dateValidationError) {
+      setDateError(dateValidationError)
+      return
+    }
+    setDateError('')
+
     setSaving(true)
     setShowLoadingOverlay(true)
     
@@ -184,6 +207,13 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
       ...prev,
       [name]: value
     }))
+    
+    // 日付が変更された場合は即座にバリデーションを実行
+    if (name === 'startDate' || name === 'endDate') {
+      const newFormData = { ...formData, [name]: value }
+      const dateValidationError = validateDates(newFormData.startDate, newFormData.endDate)
+      setDateError(dateValidationError)
+    }
   }
 
   if (isEditing) {
@@ -293,7 +323,9 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  dateError ? 'border-red-300' : 'border-gray-300'
+                }`}
               />
             </div>
 
@@ -307,10 +339,28 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  dateError ? 'border-red-300' : 'border-gray-300'
+                }`}
               />
             </div>
           </div>
+
+          {/* 日付エラーメッセージ */}
+          {dateError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-800">{dateError}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <label htmlFor="accessLevel" className="block text-sm font-medium text-gray-700 mb-2">
@@ -355,7 +405,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving || !formData.title}
+            disabled={saving || !formData.title || dateError}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
           >
             {saving ? '保存中...' : '保存'}
