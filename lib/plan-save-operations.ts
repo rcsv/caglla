@@ -308,6 +308,7 @@ export class PlanSaveOperations {
       place_data: itineraryData.place_data,
       start_time: itineraryData.start_time,
       end_time: itineraryData.end_time,
+      timezone: itineraryData.timezone,
       cost_amount: itineraryData.cost_amount,
       cost_currency: itineraryData.cost_currency,
       created_at: new Date(),

@@ -78,6 +78,7 @@ export interface Itinerary {
   place_data?: PlaceData | null
   start_time?: string
   end_time?: string
+  timezone?: string
   cost_amount?: number | null
   cost_currency?: string
   created_at: Date | string
@@ -157,6 +158,7 @@ export interface ItineraryFormData {
   place_data?: PlaceData | null
   start_time?: string
   end_time?: string
+  timezone?: string
   cost_amount?: number | null
   cost_currency?: string
 }
