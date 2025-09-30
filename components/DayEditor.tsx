@@ -1,15 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { updateDay, Day } from '@/lib/firestore'
+import { updateDay, Day, Itinerary } from '@/lib/firestore'
+import DailyRouteOptimizer from './DailyRouteOptimizer'
 
 interface DayEditorProps {
   day: Day
   onUpdate: (updatedDay: Day) => void
   itinerarySummary?: string
+  itineraries?: Itinerary[]
+  onReorderItineraries?: (dayId: string, reorderedItineraries: Itinerary[]) => void
 }
 
-export default function DayEditor({ day, onUpdate, itinerarySummary }: DayEditorProps) {
+export default function DayEditor({ 
+  day, 
+  onUpdate, 
+  itinerarySummary, 
+  itineraries = [], 
+  onReorderItineraries 
+}: DayEditorProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [description, setDescription] = useState(day.description || '')
   const [isLoading, setIsLoading] = useState(false)
@@ -71,23 +80,37 @@ export default function DayEditor({ day, onUpdate, itinerarySummary }: DayEditor
   }
 
   return (
-    <div className="space-y-2">
-      {day.description ? (
-        <div 
-          className="group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
-          onClick={() => setIsEditing(true)}
-        >
-          <p className="text-gray-600 whitespace-pre-wrap">{day.description}</p>
-          <p className="mt-1 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-            クリックして編集
-          </p>
-        </div>
-      ) : (
-        <div 
-          className="cursor-pointer hover:bg-gray-50 p-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors"
-          onClick={() => setIsEditing(true)}
-        >
-          <p className="text-gray-400 italic">{itinerarySummary || "この日は何をする日？"}</p>
+    <div className="space-y-4">
+      {/* 既存の編集機能 */}
+      <div className="space-y-2">
+        {day.description ? (
+          <div 
+            className="group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+            onClick={() => setIsEditing(true)}
+          >
+            <p className="text-gray-600 whitespace-pre-wrap">{day.description}</p>
+            <p className="mt-1 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              クリックして編集
+            </p>
+          </div>
+        ) : (
+          <div 
+            className="cursor-pointer hover:bg-gray-50 p-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors"
+            onClick={() => setIsEditing(true)}
+          >
+            <p className="text-gray-400 italic">{itinerarySummary || "この日は何をする日？"}</p>
+          </div>
+        )}
+      </div>
+
+      {/* ルート最適化機能 */}
+      {itineraries.length >= 2 && onReorderItineraries && (
+        <div className="border-t pt-4">
+          <DailyRouteOptimizer
+            dayId={day.id}
+            itineraries={itineraries}
+            onReorderItineraries={onReorderItineraries}
+          />
         </div>
       )}
     </div>

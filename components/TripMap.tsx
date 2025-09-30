@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Itinerary } from '@/lib/firestore'
 import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
+import { routeOptimizer } from '@/lib/route-optimization'
 
 // ティアドロップ形状のマーカースタイル
 const teardropStyles = `
@@ -231,11 +232,21 @@ export default function TripMap({
         optimizeWaypoints: true,
       }
 
-      directionsService.route(request, (result: any, status: any) => {
-        if (status === 'OK') {
-          directionsRenderer.setDirections(result)
+      // ルート最適化を使用してルートを計算
+      routeOptimizer.calculateRouteDebounced(
+        {
+          origin: `${validItineraries[0].place_data!.geometry!.location.lat},${validItineraries[0].place_data!.geometry!.location.lng}`,
+          destination: `${validItineraries[validItineraries.length - 1].place_data!.geometry!.location.lat},${validItineraries[validItineraries.length - 1].place_data!.geometry!.location.lng}`,
+          waypoints: waypoints.map(wp => `${wp.location.lat},${wp.location.lng}`),
+          travelMode: 'DRIVING'
+        },
+        directionsService,
+        (result: any, status: any) => {
+          if (status === 'OK') {
+            directionsRenderer.setDirections(result)
+          }
         }
-      })
+      )
     }
 
     // マップのビューを調整
