@@ -47,6 +47,22 @@ export default function POIDialog({ poiData, onClose, className = '' }: POIDialo
         const cachedData = await getCachedPlace(poiData.placeId)
         if (cachedData) {
           console.log('✅ Found cached data:', cachedData.name)
+          
+          // キャッシュデータにopen_nowがない場合、最新の営業状態を取得
+          if (cachedData.opening_hours && cachedData.opening_hours.open_now === undefined) {
+            console.log('🔄 Fetching current open_now status...')
+            try {
+              const currentDetails = await placesApiHelpers.getPlaceDetails(poiData.placeId)
+              if (currentDetails.opening_hours?.open_now !== undefined) {
+                // キャッシュデータに最新のopen_nowを追加
+                cachedData.opening_hours.open_now = currentDetails.opening_hours.open_now
+                console.log('✅ Updated open_now status:', currentDetails.opening_hours.open_now)
+              }
+            } catch (err) {
+              console.warn('⚠️ Failed to fetch current open_now status:', err)
+            }
+          }
+          
           setPlaceDetails(cachedData)
           setLoading(false)
           return

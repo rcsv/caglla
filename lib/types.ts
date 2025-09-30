@@ -69,6 +69,8 @@ export interface PlaceData {
 // ============================================================================
 
 export interface PlacesCache {
+  // スキーマバージョン管理
+  format_version: string
   place_id: string
   name: string
   formatted_address: string
@@ -93,8 +95,8 @@ export interface PlacesCache {
   price_level?: number
   types?: string[]
   opening_hours?: {
-    open_now: boolean
-    weekday_text: string[]
+    open_now?: boolean // 動的情報なのでキャッシュから除外
+    weekday_text: string[] // 静的情報なのでキャッシュ可能
   }
   international_phone_number?: string
   website?: string

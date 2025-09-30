@@ -137,6 +137,7 @@ export default function TripMap({
             position: window.google.maps.ControlPosition.TOP_RIGHT,
           },
           mapId: 'trip-map-teardrop-markers', // AdvancedMarkerElement用のmapId
+          clickableIcons: false, // POIのクリックを無効化
         })
 
         const newDirectionsService = new window.google.maps.DirectionsService()
@@ -270,20 +271,21 @@ export default function TripMap({
         content: teardropElement,
       })
 
-      // インフォウィンドウを作成
-      const infoWindow = new window.google.maps.InfoWindow({
-        content: `
-          <div class="p-2">
-            <h3 class="font-semibold text-gray-900">${itinerary.title}</h3>
-            ${itinerary.description ? `<p class="text-sm text-gray-600 mt-1">${itinerary.description}</p>` : ''}
-            ${itinerary.start_time ? `<p class="text-xs text-gray-500 mt-1">開始: ${itinerary.start_time}</p>` : ''}
-            ${itinerary.end_time ? `<p class="text-xs text-gray-500">終了: ${itinerary.end_time}</p>` : ''}
-          </div>
-        `,
-      })
+      // インフォウィンドウを作成（非表示）
+      // const infoWindow = new window.google.maps.InfoWindow({
+      //   content: `
+      //     <div class="p-2">
+      //       <h3 class="font-semibold text-gray-900">${itinerary.title}</h3>
+      //       ${itinerary.description ? `<p class="text-sm text-gray-600 mt-1">${itinerary.description}</p>` : ''}
+      //       ${itinerary.start_time ? `<p class="text-xs text-gray-500 mt-1">開始: ${itinerary.start_time}</p>` : ''}
+      //       ${itinerary.end_time ? `<p class="text-xs text-gray-500">終了: ${itinerary.end_time}</p>` : ''}
+      //     </div>
+      //   `,
+      // })
 
       marker.addListener('click', () => {
-        infoWindow.open(map, marker)
+        // 通常のInfoWindowは非表示（カスタムPOIダイアログのみ表示）
+        // infoWindow.open(map, marker)
         
         // POIダイアログを表示（place_idがある場合）
         if (itinerary.place_data?.place_id) {

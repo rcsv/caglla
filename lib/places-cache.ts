@@ -21,6 +21,10 @@ const CACHE_EXPIRY = {
   PHOTOS_DAYS: 30
 } as const
 
+// キャッシュフォーマットバージョン管理
+const CACHE_FORMAT_VERSION = '1.0.0' // メジャー.マイナー.パッチ
+const SUPPORTED_VERSIONS = ['1.0.0'] // サポート対象バージョン
+
 export class PlacesCacheManager {
   private db = getFirestore()
   private auth = getAuth()
@@ -41,9 +45,17 @@ export class PlacesCacheManager {
         console.log('❌ No cached document found for:', placeId)
         return null
       }
-      
+
       const data = docSnap.data() as PlacesCache
       console.log('✅ Found cached data:', data.name)
+      
+      // バージョン互換性をチェック
+      if (!this.isCacheVersionCompatible(data)) {
+        console.log('⚠️ Incompatible cache version for:', placeId)
+        // 互換性のないキャッシュは削除（非同期）
+        this.deleteIncompatibleCache(placeId).catch(console.error)
+        return null
+      }
       
       // キャッシュの有効期限をチェック
       if (this.isCacheExpired(data)) {
@@ -76,6 +88,7 @@ export class PlacesCacheManager {
       
       // PlacesCache形式に変換（undefined値を除外）
       const cacheData: any = {
+        format_version: CACHE_FORMAT_VERSION,
         place_id: placeData.place_id,
         name: placeData.name,
         formatted_address: placeData.formatted_address,
@@ -93,7 +106,13 @@ export class PlacesCacheManager {
       if (placeData.user_ratings_total !== undefined) cacheData.user_ratings_total = placeData.user_ratings_total
       if (placeData.price_level !== undefined) cacheData.price_level = placeData.price_level
       if (placeData.types) cacheData.types = placeData.types
-      if (placeData.opening_hours) cacheData.opening_hours = placeData.opening_hours
+      if (placeData.opening_hours) {
+        // open_nowは動的情報なので除外、weekday_textのみキャッシュ
+        cacheData.opening_hours = {
+          weekday_text: placeData.opening_hours.weekday_text
+          // open_nowは除外（リアルタイム情報のため）
+        }
+      }
       if (placeData.international_phone_number) cacheData.international_phone_number = placeData.international_phone_number
       if (placeData.website) cacheData.website = placeData.website
       if (placeData.editorial_summary) cacheData.editorial_summary = placeData.editorial_summary
@@ -145,6 +164,27 @@ export class PlacesCacheManager {
     
     await Promise.all(promises)
     return results
+  }
+
+  /**
+   * キャッシュのバージョン互換性をチェック
+   * @param cacheData キャッシュデータ
+   * @returns 互換性があるかどうか
+   */
+  private isCacheVersionCompatible(cacheData: PlacesCache): boolean {
+    if (!cacheData.format_version) {
+      console.log('⚠️ No format_version found, treating as incompatible')
+      return false
+    }
+    
+    const isCompatible = SUPPORTED_VERSIONS.includes(cacheData.format_version)
+    if (!isCompatible) {
+      console.log(`⚠️ Incompatible format_version: ${cacheData.format_version}`)
+    } else {
+      console.log(`✅ Compatible format_version: ${cacheData.format_version}`)
+    }
+    
+    return isCompatible
   }
 
   /**
@@ -203,6 +243,20 @@ export class PlacesCacheManager {
       })
     } catch (error) {
       console.error('Error updating access stats:', error)
+    }
+  }
+
+  /**
+   * 互換性のないキャッシュを削除
+   * @param placeId place_id
+   */
+  private async deleteIncompatibleCache(placeId: string): Promise<void> {
+    try {
+      const docRef = doc(this.db, COLLECTIONS.PLACES_CACHE, placeId)
+      await setDoc(docRef, {}, { merge: false }) // 完全削除
+      console.log(`🗑️ Deleted incompatible cache for: ${placeId}`)
+    } catch (error) {
+      console.error('Error deleting incompatible cache:', error)
     }
   }
 
@@ -349,6 +403,11 @@ export const placesCacheManager = new PlacesCacheManager()
 // 便利な関数
 export const getCachedPlace = (placeId: string) => placesCacheManager.getCachedPlace(placeId)
 export const getCachedPlaces = (placeIds: string[]) => placesCacheManager.getPlaces(placeIds)
+
+// バージョン管理ユーティリティ
+export const getCacheFormatVersion = () => CACHE_FORMAT_VERSION
+export const getSupportedVersions = () => [...SUPPORTED_VERSIONS]
+export const isVersionSupported = (version: string) => SUPPORTED_VERSIONS.includes(version)
 export const getPopularPlaces = (limit?: number) => placesCacheManager.getPopularPlaces(limit)
 export const getRecentlyAccessedPlaces = (limit?: number) => placesCacheManager.getRecentlyAccessedPlaces(limit)
 export const getCacheStats = () => placesCacheManager.getCacheStats()
