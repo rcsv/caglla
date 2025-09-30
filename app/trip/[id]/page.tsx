@@ -195,6 +195,19 @@ export default function TripPage({ params }: { params: { id: string } }) {
     setSelectedItineraryId(null)
   }
 
+  // 日程クリック時の地図フィルタリング機能
+  const handleDayClick = (dayId: string) => {
+    if (selectedDayId === dayId) {
+      // 同じ日程をクリックした場合はフィルタを解除
+      setSelectedDayId(null)
+    } else {
+      // 新しい日程を選択
+      setSelectedDayId(dayId)
+    }
+    // Itinerary選択状態もリセット
+    setSelectedItineraryId(null)
+  }
+
   const collapseAllDays = () => {
     if (!trip?.days) return
     const allDayIds = new Set(trip.days.map(day => day.id))
@@ -226,6 +239,20 @@ export default function TripPage({ params }: { params: { id: string } }) {
       }
     })
     return allItineraries
+  }
+
+  // 選択された日程のItineraryを取得する関数
+  const getFilteredItineraries = (): Itinerary[] => {
+    if (!trip?.days) return []
+    
+    if (selectedDayId) {
+      // 選択された日程のItineraryのみを返す
+      const selectedDay = trip.days.find(day => day.id === selectedDayId)
+      return selectedDay?.itineraries || []
+    }
+    
+    // フィルタが選択されていない場合は全てのItineraryを返す
+    return trip.days.flatMap(day => day.itineraries || [])
   }
 
   const handleScheduleAdded = async (newItinerary: any) => {
@@ -652,6 +679,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
           <NavigationMenu 
             trip={trip} 
             onNavigateToSection={navigateToSection}
+            onDayClick={handleDayClick}
             isCollapsed={!leftNavExpanded}
             onToggleCollapse={() => setLeftNavExpanded(!leftNavExpanded)}
           />
@@ -677,6 +705,10 @@ export default function TripPage({ params }: { params: { id: string } }) {
               trip={trip} 
               onNavigateToSection={(sectionId) => {
                 navigateToSection(sectionId)
+                setMobileMenuOpen(false) // メニューを閉じる
+              }}
+              onDayClick={(dayId) => {
+                handleDayClick(dayId)
                 setMobileMenuOpen(false) // メニューを閉じる
               }}
               isCollapsed={false} // モバイルでは常に展開
@@ -900,8 +932,11 @@ export default function TripPage({ params }: { params: { id: string } }) {
                 >
                   {/* ヘッダー部分 - 常に表示 */}
                   <div 
-                    className="flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => toggleDayCollapse(day.id)}
+                    className={`flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors ${selectedDayId === day.id ? 'bg-red-50 border-red-200' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDayClick(day.id)
+                    }}
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -1114,8 +1149,9 @@ export default function TripPage({ params }: { params: { id: string } }) {
       <div className="hidden md:block md:w-[335px] lg:w-[400px] xl:flex-1 flex-shrink-0">
         <div className="h-full bg-gray-100">
           <TripMap 
-            itineraries={getAllItineraries()} 
+            itineraries={getFilteredItineraries()} 
             selectedItineraryId={selectedItineraryId}
+            selectedDayId={selectedDayId}
             onItineraryClick={handleMapMarkerClick}
             className="h-full"
           />

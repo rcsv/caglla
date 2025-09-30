@@ -7,6 +7,7 @@ import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
 interface TripMapProps {
   itineraries: Itinerary[]
   selectedItineraryId?: string | null
+  selectedDayId?: string | null
   onItineraryClick?: (itineraryId: string) => void
   className?: string
 }
@@ -21,6 +22,7 @@ declare global {
 export default function TripMap({ 
   itineraries, 
   selectedItineraryId = null,
+  selectedDayId = null,
   onItineraryClick,
   className = '' 
 }: TripMapProps) {
@@ -187,7 +189,7 @@ export default function TripMap({
       })
       map.fitBounds(bounds)
     }
-  }, [map, directionsService, directionsRenderer, itineraries])
+  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId])
 
   // 選択されたItineraryにフォーカスする機能
   useEffect(() => {
@@ -237,11 +239,23 @@ export default function TripMap({
       <div ref={mapRef} className="w-full h-full" />
       
       {/* マップのオーバーレイ情報 */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs z-50">
+      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs z-[60]">
         <div className="text-sm text-gray-600">
-          <div className="font-medium text-gray-900 mb-1">旅程マップ</div>
+          <div className="font-medium text-gray-900 mb-1">
+            旅程マップ
+            {selectedDayId && (
+              <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                フィルタ中
+              </span>
+            )}
+          </div>
           <div>
             {itineraries.filter(i => i.place_data?.geometry?.location).length} 箇所の地点を表示
+            {selectedDayId && (
+              <div className="text-xs text-red-600 mt-1">
+                選択された日程のみ表示中
+              </div>
+            )}
           </div>
         </div>
       </div>

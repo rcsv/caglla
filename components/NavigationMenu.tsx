@@ -7,6 +7,7 @@ import { dateUtils } from '@/lib/date-utils'
 interface NavigationMenuProps {
   trip: Trip
   onNavigateToSection: (sectionId: string) => void
+  onDayClick?: (dayId: string) => void
   isCollapsed?: boolean
   onToggleCollapse?: () => void
 }
@@ -28,7 +29,7 @@ interface MenuItem {
   onClick: () => void
 }
 
-export default function NavigationMenu({ trip, onNavigateToSection, isCollapsed = false, onToggleCollapse }: NavigationMenuProps) {
+export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, isCollapsed = false, onToggleCollapse }: NavigationMenuProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['itinerary']))
 
   // メニューセクションの定義（メインエリア）
@@ -74,7 +75,10 @@ export default function NavigationMenu({ trip, onNavigateToSection, isCollapsed 
         title: getDayTitle(day),
         subtitle: getDaySubtitle(day),
         count: day.itineraries?.length || 0,
-        onClick: () => onNavigateToSection(`day-${day.id}`)
+        onClick: () => {
+          onNavigateToSection(`day-${day.id}`)
+          onDayClick?.(day.id)
+        }
       })) || []
     }
   ]
