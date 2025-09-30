@@ -20,6 +20,7 @@ import NavigationMenu from '@/components/NavigationMenu'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { Trip, Day, Itinerary, User } from '@/lib/firestore'
+import { getZIndexClass } from '@/lib/z-index-layers'
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
@@ -705,7 +706,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
       )}
 
       {/* Mobile Slide Menu - 188px固定幅 */}
-      <nav className={`fixed top-0 left-0 h-full w-[188px] bg-white border-r border-gray-200 transform transition-transform duration-300 z-50 md:hidden ${
+      <nav className={`fixed top-0 left-0 h-full w-[188px] bg-white border-r border-gray-200 transform transition-transform duration-300 ${getZIndexClass('LEFT_PANEL')} md:hidden ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         {/* NavigationMenuと同じ内容を表示 - 幅を制限 */}
@@ -753,7 +754,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
                 {/* ハンバーガーボタン（768px以下）- 左端フロート */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="md:hidden fixed top-4 left-4 z-30 inline-flex items-center px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30"
+                  className={`md:hidden fixed top-4 left-4 ${getZIndexClass('MAIN_CONTENT', 1)} inline-flex items-center px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

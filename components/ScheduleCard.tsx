@@ -5,6 +5,7 @@ import { placesApiHelpers } from '@/lib/places-api'
 import { PlaceData, Itinerary } from '@/lib/firestore'
 import { timezoneUtils } from '@/lib/timezone-utils'
 import { currencyUtils } from '@/lib/currency-utils'
+import { getZIndexClass } from '@/lib/z-index-layers'
 import VenueDistance from './VenueDistance'
 
 // ティアドロップ形状のマーカースタイル（左ペイン用）
@@ -942,7 +943,7 @@ export default function ScheduleCard({
 
               {/* ドロップダウンメニュー */}
               {showMenu && (
-                <div className="fixed bg-white rounded-md shadow-lg border border-gray-200 z-[9999]" 
+                <div className={`fixed bg-white rounded-md shadow-lg border border-gray-200 ${getZIndexClass('POPUP_MENU')}`} 
                      style={{
                        top: menuRef.current ? menuRef.current.getBoundingClientRect().bottom + 4 : 0,
                        left: menuRef.current ? menuRef.current.getBoundingClientRect().left : 0,

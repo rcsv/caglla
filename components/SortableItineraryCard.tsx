@@ -2,6 +2,7 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { getZIndexClass } from '@/lib/z-index-layers'
 import ScheduleCard from './ScheduleCard'
 import { Itinerary, PlaceData } from '@/lib/types'
 
@@ -44,7 +45,7 @@ export default function SortableItineraryCard(props: SortableItineraryCardProps)
     <div
       ref={setNodeRef}
       style={style}
-      className={`${isDragging ? 'z-50' : ''}`}
+      className={`${isDragging ? getZIndexClass('MAIN_CONTENT', 1) : ''}`}
     >
       <ScheduleCard 
         {...props} 

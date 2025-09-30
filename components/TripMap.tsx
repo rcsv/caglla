@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Itinerary } from '@/lib/firestore'
 import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
 import { routeOptimizer } from '@/lib/route-optimization'
+import { getZIndexClass } from '@/lib/z-index-layers'
 
 // ティアドロップ形状のマーカースタイル
 const teardropStyles = `
@@ -362,7 +363,7 @@ export default function TripMap({
   return (
     <div className={`relative ${className}`}>
       {loading && (
-        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
+        <div className={`absolute inset-0 bg-gray-100 flex items-center justify-center ${getZIndexClass('MAIN_CONTENT')}`}>
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
             <p className="text-sm text-gray-600">地図を読み込み中...</p>
@@ -371,7 +372,7 @@ export default function TripMap({
       )}
       
       {error && (
-        <div className="absolute inset-0 bg-red-50 flex items-center justify-center z-10">
+        <div className={`absolute inset-0 bg-red-50 flex items-center justify-center ${getZIndexClass('MAIN_CONTENT')}`}>
           <div className="text-center p-4">
             <div className="text-red-500 text-lg mb-2">⚠️ 地図の読み込みに失敗しました</div>
             <p className="text-sm text-red-600 mb-4">{error}</p>
@@ -388,7 +389,7 @@ export default function TripMap({
       <div ref={mapRef} className="w-full h-full" />
       
       {/* マップのオーバーレイ情報 */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs z-[60]">
+      <div className={`absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs ${getZIndexClass('MAIN_CONTENT', 1)}`}>
         <div className="text-sm text-gray-600">
           <div className="font-medium text-gray-900 mb-1">
             旅程マップ
