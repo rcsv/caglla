@@ -46,8 +46,8 @@ export default function POIDialog({ poiData, onClose, className = '' }: POIDialo
   if (!poiData) return null
 
   return (
-    <div className={`absolute bottom-0 left-0 right-0 z-[9999] ${className}`}>
-      <div className="mx-4 mb-4 bg-white border-t border-gray-200 shadow-lg rounded-t-lg">
+    <div className={`absolute bottom-4 left-4 right-4 ${getZIndexClass('FLOAT_MODAL')} ${className}`}>
+      <div className="bg-white border-t border-gray-200 shadow-lg rounded-t-lg w-full">
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-3">

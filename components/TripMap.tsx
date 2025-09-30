@@ -60,6 +60,11 @@ interface TripMapProps {
   selectedItineraryId?: string | null
   selectedDayId?: string | null
   onItineraryClick?: (itineraryId: string) => void
+  onPoiDataUpdate?: (poiData: {
+    placeId: string
+    name: string
+    location: { lat: number; lng: number }
+  } | null) => void
   className?: string
   focusMode?: 'all' | 'day' | 'single' // フォーカスモードを追加
 }
@@ -76,6 +81,7 @@ export default function TripMap({
   selectedItineraryId = null,
   selectedDayId = null,
   onItineraryClick,
+  onPoiDataUpdate,
   className = '',
   focusMode = 'all' // デフォルトは全体表示
 }: TripMapProps) {
@@ -276,6 +282,21 @@ export default function TripMap({
 
       marker.addListener('click', () => {
         infoWindow.open(map, marker)
+        
+        // POIダイアログを表示（place_idがある場合）
+        if (itinerary.place_data?.place_id) {
+          const newPoiData = {
+            placeId: itinerary.place_data.place_id,
+            name: itinerary.title,
+            location: {
+              lat: itinerary.place_data.geometry!.location.lat,
+              lng: itinerary.place_data.geometry!.location.lng
+            }
+          }
+          setPoiData(newPoiData)
+          onPoiDataUpdate?.(newPoiData)
+        }
+        
         // 左ペインのItineraryにスクロールするためのコールバック
         if (onItineraryClick) {
           onItineraryClick(itinerary.id)
@@ -472,7 +493,10 @@ export default function TripMap({
       {/* POIダイアログ */}
       <POIDialog 
         poiData={poiData}
-        onClose={() => setPoiData(null)}
+        onClose={() => {
+          setPoiData(null)
+          onPoiDataUpdate?.(null)
+        }}
       />
     </div>
   )

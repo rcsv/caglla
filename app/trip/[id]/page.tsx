@@ -40,6 +40,11 @@ export default function TripPage({ params }: { params: { id: string } }) {
   const [summaryCollapsed, setSummaryCollapsed] = useState(false)
   const [selectedItineraryId, setSelectedItineraryId] = useState<string | null>(null)
   const [mapFocusMode, setMapFocusMode] = useState<'all' | 'day' | 'single'>('all') // マップフォーカスモード
+  const [poiData, setPoiData] = useState<{
+    placeId: string
+    name: string
+    location: { lat: number; lng: number }
+  } | null>(null)
 
   // セクションへのナビゲーション機能
   const navigateToSection = (sectionId: string) => {
@@ -59,15 +64,29 @@ export default function TripPage({ params }: { params: { id: string } }) {
     // 個別フォーカスモードに切り替え
     setMapFocusMode('single')
     
-    // 該当するItineraryが含まれる日程を探して展開
+    // POIダイアログを更新（place_idがある場合）
     if (trip?.days) {
       for (const day of trip.days) {
-        if (day.itineraries?.some(itinerary => itinerary.id === itineraryId)) {
+        const itinerary = day.itineraries?.find(it => it.id === itineraryId)
+        if (itinerary) {
+          // 該当するItineraryが含まれる日程を展開
           setCollapsedDays(prev => {
             const newSet = new Set(prev)
             newSet.delete(day.id)
             return newSet
           })
+          
+          // POIダイアログを更新
+          if (itinerary.place_data?.place_id) {
+            setPoiData({
+              placeId: itinerary.place_data.place_id,
+              name: itinerary.title,
+              location: {
+                lat: itinerary.place_data.geometry!.location.lat,
+                lng: itinerary.place_data.geometry!.location.lng
+              }
+            })
+          }
           break
         }
       }
@@ -1175,6 +1194,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
             selectedItineraryId={selectedItineraryId}
             selectedDayId={selectedDayId}
             onItineraryClick={handleMapMarkerClick}
+            onPoiDataUpdate={setPoiData}
             className="h-full"
             focusMode={mapFocusMode}
           />
