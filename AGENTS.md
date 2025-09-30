@@ -70,6 +70,30 @@ _Note: `activities` are polymorphic and unified — one table holds different ac
 ### Reserved Words:
 - Avoid using MySQL reserved keywords (e.g., `order`, `group`, `index`) as column names.
 
+### Z-Index Layer Management System:
+- **ALWAYS** use the centralized z-index management system in `lib/z-index-layers.ts`
+- **NEVER** use hardcoded z-index values like `z-[9999]` or `z-50`
+- Use `getZIndexClass(layer, offset)` for Tailwind CSS classes
+- Use `getZIndex(layer, offset)` for direct values
+
+**Available Layers:**
+- `MAP` (0): 地図（最下層）
+- `MAIN_CONTENT` (10): 左ペイン・メインコンテンツ
+- `LEFT_PANEL` (20): 左ペイン・左メニュー
+- `SETTINGS_DIALOG` (30): セッティングダイアログ
+- `POPUP_MENU` (40): ポップアップメニュー
+- `FLOAT_MODAL` (50): フロートのモーダル
+
+**Usage Examples:**
+```typescript
+// ✅ Correct
+const menuClass = getZIndexClass('POPUP_MENU') // 'z-[40]'
+const subMenuClass = getZIndexClass('POPUP_MENU', 1) // 'z-[41]'
+
+// ❌ Wrong
+const menuClass = 'z-[9999]' // Don't use hardcoded values
+```
+
 ---
 
 ## 📦 Setup Notes
