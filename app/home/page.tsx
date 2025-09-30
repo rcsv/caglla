@@ -8,9 +8,19 @@ import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { dateUtils } from '@/lib/date-utils'
 import UserSettingsModal from '@/components/UserSettingsModal'
 import CountryStats from '@/components/CountryStats'
+import PlanInfoDisplay from '@/components/PlanInfoDisplay'
+import { SubscriptionProvider } from '@/lib/subscription-context'
 import type { Trip } from '@/lib/types'
 
 export default function HomePage() {
+  return (
+    <SubscriptionProvider>
+      <HomePageContent />
+    </SubscriptionProvider>
+  )
+}
+
+function HomePageContent() {
   const { user, loading, logout } = useAuth()
   const router = useRouter()
   const [trips, setTrips] = useState<Trip[]>([])
@@ -102,6 +112,9 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
+        {/* プラン情報表示 */}
+        <PlanInfoDisplay className="mb-6" />
+        
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900">あなたの旅行</h2>
           <Link
