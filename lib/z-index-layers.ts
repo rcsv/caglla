@@ -10,19 +10,19 @@ export const Z_INDEX_LAYERS = {
   MAP: 0,
   
   // メインコンテンツ層
-  MAIN_CONTENT: 10,
+  MAIN_CONTENT: 100,
   
   // 左ペイン・左メニュー
-  LEFT_PANEL: 20,
+  LEFT_PANEL: 200,
   
   // セッティングダイアログ
-  SETTINGS_DIALOG: 30,
+  SETTINGS_DIALOG: 400,
   
   // ポップアップメニュー
-  POPUP_MENU: 40,
+  POPUP_MENU: 800,
   
   // フロートのモーダル
-  FLOAT_MODAL: 50,
+  FLOAT_MODAL: 1600,
 } as const
 
 /**

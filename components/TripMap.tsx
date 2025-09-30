@@ -5,6 +5,7 @@ import { Itinerary } from '@/lib/firestore'
 import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
 import { routeOptimizer } from '@/lib/route-optimization'
 import { getZIndexClass } from '@/lib/z-index-layers'
+import POIDialog from './POIDialog'
 
 // ティアドロップ形状のマーカースタイル
 const teardropStyles = `
@@ -85,6 +86,11 @@ export default function TripMap({
   const [directionsRenderer, setDirectionsRenderer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [poiData, setPoiData] = useState<{
+    placeId: string
+    name: string
+    location: { lat: number; lng: number }
+  } | null>(null)
 
   // Google Maps API の読み込み
   useEffect(() => {
@@ -136,6 +142,59 @@ export default function TripMap({
         })
 
         newDirectionsRenderer.setMap(newMap)
+
+        // POIマーカーのクリックイベントを検出
+        newMap.addListener('click', (event: any) => {
+          // Google Maps標準のPOI情報ウィンドウをキャンセル
+          const infoWindows = newMap.get('infoWindows') || []
+          infoWindows.forEach((infoWindow: any) => {
+            infoWindow.close()
+          })
+          
+          // クリックされた位置のPOIマーカーを検出
+          const clickLatLng = event.latLng
+          
+          // Places APIを使用してPOI情報を取得
+          const service = new window.google.maps.places.PlacesService(newMap)
+          const request = {
+            location: clickLatLng,
+            radius: 50, // 50メートル以内のPOIを検索
+            type: 'point_of_interest'
+          }
+          
+          service.nearbySearch(request, (results: any[], status: any) => {
+            if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
+              // 最も近いPOIを選択
+              const nearestPOI = results[0]
+              setPoiData({
+                placeId: nearestPOI.place_id,
+                name: nearestPOI.name,
+                location: {
+                  lat: nearestPOI.geometry.location.lat(),
+                  lng: nearestPOI.geometry.location.lng()
+                }
+              })
+            }
+          })
+        })
+
+        // Google Maps標準のPOI情報ウィンドウを無効化
+        newMap.addListener('poi_click', (event: any) => {
+          // デフォルトのPOI情報ウィンドウをキャンセル
+          event.stop()
+          
+          // カスタムPOIダイアログを表示
+          if (event.placeId) {
+            setPoiData({
+              placeId: event.placeId,
+              name: event.displayName || 'POI',
+              location: {
+                lat: event.latLng.lat(),
+                lng: event.latLng.lng()
+              }
+            })
+          }
+        })
 
         setMap(newMap)
         setDirectionsService(newDirectionsService)
@@ -389,7 +448,7 @@ export default function TripMap({
       <div ref={mapRef} className="w-full h-full" />
       
       {/* マップのオーバーレイ情報 */}
-      <div className={`absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs ${getZIndexClass('MAIN_CONTENT', 1)}`}>
+      <div className={`absolute top-4 left-4 bg-white rounded-lg shadow-xl border border-gray-200 p-3 max-w-xs ${getZIndexClass('MAIN_CONTENT', 1)}`}>
         <div className="text-sm text-gray-600">
           <div className="font-medium text-gray-900 mb-1">
             旅程マップ
@@ -409,6 +468,12 @@ export default function TripMap({
           </div>
         </div>
       </div>
+      
+      {/* POIダイアログ */}
+      <POIDialog 
+        poiData={poiData}
+        onClose={() => setPoiData(null)}
+      />
     </div>
   )
 }
