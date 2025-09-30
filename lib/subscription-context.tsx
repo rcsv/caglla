@@ -1,18 +1,11 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { dummyPaymentService, SubscriptionPlan, Subscription, PaymentMethod } from './dummy-payment-service'
-import { PlanLimitChecker, UsageStats } from './plan-limits'
+import { dummyPaymentService, SubscriptionPlan as DummySubscriptionPlan, Subscription, PaymentMethod } from './dummy-payment-service'
+import { RestrictionProvider, RestrictionType, PlanId } from './restriction-system'
 
-export interface SubscriptionPlan {
-  id: string
-  name: string
-  price: number
-  currency: string
-  features: string[]
-  routeOptimizationLimit: number
-  isActive: boolean
-}
+// 統一されたSubscriptionPlan型
+export type SubscriptionPlan = DummySubscriptionPlan
 
 export interface SubscriptionStatus {
   isSubscribed: boolean
@@ -33,8 +26,12 @@ interface SubscriptionContextType {
   cancelSubscription: () => Promise<boolean>
   getPlans: () => Promise<SubscriptionPlan[]>
   getPaymentMethods: () => Promise<PaymentMethod[]>
-  // プラン制限チェック機能
-  checkPlanLimits: (usage: UsageStats) => ReturnType<typeof PlanLimitChecker.checkAllLimits>
+  // 新しい制限システム
+  can: (type: RestrictionType, currentValue?: number) => boolean
+  hasFeature: (type: RestrictionType) => boolean
+  getRemaining: (type: RestrictionType, currentValue?: number) => number
+  getLimitExceededMessage: (type: RestrictionType, currentValue?: number) => string
+  // 後方互換性のための関数
   canCreateTravel: (currentCount: number) => boolean
   canAddTravelDays: (totalDays: number) => boolean
   canUploadFiles: (storageUsedGB: number) => boolean
@@ -50,23 +47,33 @@ const DEMO_PLANS: SubscriptionPlan[] = [
     name: '無料プラン',
     price: 0,
     currency: 'JPY',
+    interval: 'month',
     features: ['基本的な旅行計画', '最大3地点まで'],
-    routeOptimizationLimit: 0,
-    isActive: true
+    limits: {
+      travelCount: 3,
+      travelDays: 5,
+      storageGB: 0.05,
+      photosPerTrip: 5
+    }
   },
   {
     id: 'plus',
     name: 'Plusプラン',
     price: 980,
     currency: 'JPY',
+    interval: 'month',
     features: [
       '無制限の旅行計画',
       'ルート最適化機能',
       'リアルタイム交通情報',
       '優先サポート'
     ],
-    routeOptimizationLimit: -1, // -1 = 無制限
-    isActive: true
+    limits: {
+      travelCount: -1,
+      travelDays: -1,
+      storageGB: 5,
+      photosPerTrip: -1
+    }
   }
 ]
 
@@ -100,7 +107,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
             isSubscribed: subscription.status === 'active',
             plan: plan || null,
             subscription,
-            remainingOptimizations: plan?.routeOptimizationLimit === -1 ? -1 : 0,
+            remainingOptimizations: plan?.limits.travelCount === -1 ? -1 : 0,
             expiresAt: subscription.currentPeriodEnd,
             paymentMethods
           })
@@ -209,43 +216,42 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     return await dummyPaymentService.getPaymentMethods('demo_user')
   }
 
-  // プラン制限チェック機能
-  const checkPlanLimits = (usage: UsageStats) => {
-    if (!subscriptionStatus.plan) {
-      // プランがない場合は制限なし
-      return {
-        travelCount: { isAllowed: true, currentUsage: 0, limit: -1, remaining: -1, message: 'プラン未設定' },
-        travelDays: { isAllowed: true, currentUsage: 0, limit: -1, remaining: -1, message: 'プラン未設定' },
-        storage: { isAllowed: true, currentUsage: 0, limit: -1, remaining: -1, message: 'プラン未設定' },
-        photos: { isAllowed: true, currentUsage: 0, limit: -1, remaining: -1, message: 'プラン未設定' },
-        hasAnyLimitExceeded: false
-      }
-    }
-    return PlanLimitChecker.checkAllLimits(subscriptionStatus.plan, usage)
+  // 新しい制限システムの実装
+  const can = (type: RestrictionType, currentValue: number = 1): boolean => {
+    const planId = subscriptionStatus.plan?.id || PlanId.SEASON_TRAVELER
+    return RestrictionProvider.can(planId, type, currentValue)
   }
 
+  const hasFeature = (type: RestrictionType): boolean => {
+    const planId = subscriptionStatus.plan?.id || PlanId.SEASON_TRAVELER
+    return RestrictionProvider.hasFeature(planId, type)
+  }
+
+  const getRemaining = (type: RestrictionType, currentValue: number = 0): number => {
+    const planId = subscriptionStatus.plan?.id || PlanId.SEASON_TRAVELER
+    return RestrictionProvider.getRemaining(planId, type, currentValue)
+  }
+
+  const getLimitExceededMessage = (type: RestrictionType, currentValue: number = 0): string => {
+    const planId = subscriptionStatus.plan?.id || PlanId.SEASON_TRAVELER
+    return RestrictionProvider.getLimitExceededMessage(planId, type, currentValue)
+  }
+
+  // 後方互換性のための関数
   const canCreateTravel = (currentCount: number): boolean => {
-    if (!subscriptionStatus.plan) return true
-    const check = PlanLimitChecker.checkTravelCountLimit(subscriptionStatus.plan, currentCount)
-    return check.isAllowed
+    return can(RestrictionType.MAX_TRIPS, currentCount + 1)
   }
 
   const canAddTravelDays = (totalDays: number): boolean => {
-    if (!subscriptionStatus.plan) return true
-    const check = PlanLimitChecker.checkTravelDaysLimit(subscriptionStatus.plan, totalDays)
-    return check.isAllowed
+    return can(RestrictionType.MAX_TRAVEL_DAYS, totalDays)
   }
 
   const canUploadFiles = (storageUsedGB: number): boolean => {
-    if (!subscriptionStatus.plan) return true
-    const check = PlanLimitChecker.checkStorageLimit(subscriptionStatus.plan, storageUsedGB)
-    return check.isAllowed
+    return can(RestrictionType.MAX_STORAGE_GB, storageUsedGB)
   }
 
   const canUploadPhotos = (photosPerTrip: number): boolean => {
-    if (!subscriptionStatus.plan) return true
-    const check = PlanLimitChecker.checkPhotosLimit(subscriptionStatus.plan, photosPerTrip)
-    return check.isAllowed
+    return can(RestrictionType.MAX_PHOTOS_PER_TRIP, photosPerTrip)
   }
 
   useEffect(() => {
@@ -262,7 +268,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     cancelSubscription,
     getPlans,
     getPaymentMethods,
-    checkPlanLimits,
+    // 新しい制限システム
+    can,
+    hasFeature,
+    getRemaining,
+    getLimitExceededMessage,
+    // 後方互換性
     canCreateTravel,
     canAddTravelDays,
     canUploadFiles,

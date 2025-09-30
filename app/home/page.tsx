@@ -9,18 +9,11 @@ import { dateUtils } from '@/lib/date-utils'
 import UserSettingsModal from '@/components/UserSettingsModal'
 import CountryStats from '@/components/CountryStats'
 import PlanInfoDisplay from '@/components/PlanInfoDisplay'
-import { SubscriptionProvider } from '@/lib/subscription-context'
+import { useSubscription } from '@/lib/subscription-context'
+import { RestrictionType } from '@/lib/restriction-system'
 import type { Trip } from '@/lib/types'
 
 export default function HomePage() {
-  return (
-    <SubscriptionProvider>
-      <HomePageContent />
-    </SubscriptionProvider>
-  )
-}
-
-function HomePageContent() {
   const { user, loading, logout } = useAuth()
   const router = useRouter()
   const [trips, setTrips] = useState<Trip[]>([])
