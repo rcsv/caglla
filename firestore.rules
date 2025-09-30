@@ -77,5 +77,11 @@ service cloud.firestore {
       allow read: if request.auth != null && 
         request.auth.uid == resource.data.user_id;
     }
+    
+    // Places cache collection rules (public read-only cache)
+    match /places_cache/{placeId} {
+      // Anyone can read and write cached place data (public cache)
+      allow read, write: if true;
+    }
   }
 }

@@ -8,7 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "ts-node src/migrate.ts"
+    "migrate": "ts-node src/migrate.ts",
+    "flush-itineraries": "ts-node scripts/flush-itineraries.ts",
+    "manage-itineraries": "ts-node scripts/manage-itineraries.ts",
+    "simple-flush": "ts-node scripts/simple-flush.ts",
+    "admin-flush": "ts-node scripts/admin-flush.ts",
+    "api-flush": "ts-node scripts/api-flush.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

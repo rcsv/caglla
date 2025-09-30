@@ -20,7 +20,8 @@ export const COLLECTIONS = {
   TRIPS: 'trips',
   DAYS: 'days',
   ITINERARIES: 'itineraries',
-  TRIP_USERS: 'trip_users'
+  TRIP_USERS: 'trip_users',
+  PLACES_CACHE: 'places_cache'
 } as const
 
 // Re-export types for backward compatibility

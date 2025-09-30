@@ -199,6 +199,7 @@ export default function TripMap({
                 lat: event.latLng.lat(),
                 lng: event.latLng.lng()
               }
+              // placeDataは渡さない（PlacesCacheから取得）
             })
           }
         })

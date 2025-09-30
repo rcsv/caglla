@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getZIndexClass } from '@/lib/z-index-layers'
 import { placesApiHelpers } from '@/lib/places-api'
+import { getCachedPlace, placesCacheManager } from '@/lib/places-cache'
 
 interface POIDialogProps {
   poiData: {
@@ -34,14 +35,35 @@ export default function POIDialog({ poiData, onClose, className = '' }: POIDialo
       return
     }
 
-    // place_dataがない場合のみAPIを呼び出し
+    // place_dataがない場合はPlacesCacheを確認してからAPIを呼び出し
     const fetchPlaceDetails = async () => {
       setLoading(true)
       setError(null)
       
       try {
+        console.log('🔍 Checking PlacesCache for place_id:', poiData.placeId)
+        
+        // まずPlacesCacheを確認
+        const cachedData = await getCachedPlace(poiData.placeId)
+        if (cachedData) {
+          console.log('✅ Found cached data:', cachedData.name)
+          setPlaceDetails(cachedData)
+          setLoading(false)
+          return
+        }
+        
+        console.log('❌ No cached data found, calling Google Places API...')
+        
+        // キャッシュにない場合はAPIを呼び出し
         const details = await placesApiHelpers.getPlaceDetails(poiData.placeId)
         setPlaceDetails(details)
+        
+        console.log('💾 Saving to PlacesCache...')
+        
+        // APIで取得したデータをキャッシュに保存
+        await placesCacheManager.fetchAndCachePlace(poiData.placeId)
+        
+        console.log('✅ Data saved to PlacesCache')
       } catch (err) {
         console.error('POI詳細情報の取得に失敗しました:', err)
         setError('POI情報の取得に失敗しました')

@@ -65,6 +65,49 @@ export interface PlaceData {
 }
 
 // ============================================================================
+// Google Places API Cache
+// ============================================================================
+
+export interface PlacesCache {
+  place_id: string
+  name: string
+  formatted_address: string
+  geometry: {
+    location: {
+      lat: number
+      lng: number
+    }
+  }
+  address_components?: Array<{
+    long_name: string
+    short_name: string
+    types: string[]
+  }>
+  photos?: Array<{
+    photo_reference: string
+    height: number
+    width: number
+  }>
+  rating?: number
+  user_ratings_total?: number
+  price_level?: number
+  types?: string[]
+  opening_hours?: {
+    open_now: boolean
+    weekday_text: string[]
+  }
+  international_phone_number?: string
+  website?: string
+  editorial_summary?: {
+    overview: string
+  }
+  // メタデータ
+  cached_at: Date | string
+  last_accessed: Date | string
+  access_count: number
+}
+
+// ============================================================================
 // 旅行・旅程関連
 // ============================================================================
 
