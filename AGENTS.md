@@ -127,6 +127,8 @@ const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY // Direct access
 
 **Optional Google APIs:**
 - **Google Maps Platform Map ID**: 高度なマーカー表示 (`NEXT_PUBLIC_GOOGLE_MAP_ID`)
+- **Google Directions API**: ルート計算・最適化 (Places APIキーと共用)
+- **Google Route Optimization API**: 高度なルート最適化 (Places APIキーと共用)
 
 **API Setup Requirements:**
 1. **Google Cloud Console**でプロジェクトを作成
@@ -135,6 +137,8 @@ const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY // Direct access
    - Maps JavaScript API
    - Geocoding API
    - Distance Matrix API
+   - Directions API (ルート最適化機能用)
+   - Route Optimization API (高度なルート最適化用)
 3. **認証情報**でAPIキーを作成
 4. **APIキーの制限**を設定（HTTPリファラー制限推奨）
 
@@ -144,6 +148,13 @@ const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY // Direct access
 import { placesApiHelpers } from '@/lib/places-api'
 const results = await placesApiHelpers.searchPlaces('Tokyo')
 
+// ✅ Correct - ルート最適化APIを使用
+import { optimizeWaypoints } from '@/lib/route-optimization'
+const optimized = await optimizeWaypoints(waypoints, origin, destination, {
+  travelMode: 'DRIVING',
+  avoidHighways: false
+})
+
 // ✅ Correct - 環境変数検証済み
 import { validateClientEnvironment } from '@/lib/env-validation'
 const env = validateClientEnvironment()
@@ -151,6 +162,42 @@ const apiKey = env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 
 // ❌ Wrong - 直接API呼び出し
 const response = await fetch('https://maps.googleapis.com/maps/api/place/...')
+```
+
+### Route Optimization System:
+- **ALWAYS** use the centralized route optimization system in `lib/route-optimization.ts`
+- **NEVER** implement custom route optimization logic
+- Use `RouteOptimizer` class for debounced route calculations
+- Use `optimizeWaypoints()` function for waypoint optimization
+
+**Available Route Optimization Features:**
+- **Waypoint Optimization**: 複数地点の最適な訪問順序を計算
+- **Travel Mode Support**: DRIVING, WALKING, BICYCLING, TRANSIT
+- **Avoid Options**: highways, tolls, ferries の回避設定
+- **Cost Estimation**: API呼び出しコストの見積もり
+- **Caching**: 同じルートの重複計算を防止
+
+**Route Optimization Components:**
+- `RouteOptimizationDisplay`: ルート最適化結果の表示
+- `DailyRouteOptimizer`: 日別旅程の最適化
+- `RouteCostEstimator`: ルートコストの見積もり
+
+**Usage Examples:**
+```typescript
+// ✅ Correct - RouteOptimizerクラスを使用
+import { RouteOptimizer } from '@/lib/route-optimization'
+const optimizer = new RouteOptimizer()
+await optimizer.calculateRouteOptimized(request, callback)
+
+// ✅ Correct - optimizeWaypoints関数を使用
+import { optimizeWaypoints } from '@/lib/route-optimization'
+const result = await optimizeWaypoints(waypoints, origin, destination, {
+  travelMode: 'DRIVING',
+  avoidHighways: true
+})
+
+// ❌ Wrong - 独自の最適化ロジック
+const customOptimization = (waypoints) => { /* custom logic */ }
 ```
 
 ### Type Definition Management System:
