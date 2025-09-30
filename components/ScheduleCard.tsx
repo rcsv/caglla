@@ -17,6 +17,7 @@ interface ScheduleCardProps {
   onMoveToDay?: (itineraryId: string, targetDayId: string) => void
   onDuplicateToDay?: (itineraryId: string, targetDayId: string) => void
   onDelete?: (itineraryId: string) => void
+  onItineraryClick?: (itineraryId: string) => void
   availableDays?: Array<{
     id: string
     day_number: number
@@ -27,6 +28,7 @@ interface ScheduleCardProps {
     listeners: any
   }
   isDragging?: boolean
+  isSelected?: boolean
 }
 
 export default function ScheduleCard({ 
@@ -39,9 +41,11 @@ export default function ScheduleCard({
   onMoveToDay, 
   onDuplicateToDay,
   onDelete,
+  onItineraryClick,
   availableDays = [],
   dragHandleProps,
-  isDragging = false
+  isDragging = false,
+  isSelected = false
 }: ScheduleCardProps) {
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [description, setDescription] = useState(itinerary.description || '')
@@ -510,8 +514,14 @@ export default function ScheduleCard({
   }
 
   return (
-    <div className="relative overflow-visible">
-      <div className="flex items-start space-x-3">
+    <div 
+      className="relative overflow-visible"
+      id={`itinerary-${itinerary.id}`}
+    >
+      <div 
+        className="flex items-start space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
+        onClick={() => onItineraryClick?.(itinerary.id)}
+      >
         {/* ドラッグハンドル（アイコンのみ） */}
         {dragHandleProps && (
           <div 
@@ -537,7 +547,7 @@ export default function ScheduleCard({
         </div>
 
         {/* カード本体 */}
-        <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className={`flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${isSelected ? 'ring-2 ring-red-500 ring-opacity-50' : ''}`}>
           <div className="flex">
             {/* 左側: 画像（16:9アスペクト比） */}
             <div className="flex-shrink-0 w-32 h-18">

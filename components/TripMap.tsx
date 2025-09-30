@@ -6,6 +6,8 @@ import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
 
 interface TripMapProps {
   itineraries: Itinerary[]
+  selectedItineraryId?: string | null
+  onItineraryClick?: (itineraryId: string) => void
   className?: string
 }
 
@@ -16,7 +18,12 @@ declare global {
   }
 }
 
-export default function TripMap({ itineraries, className = '' }: TripMapProps) {
+export default function TripMap({ 
+  itineraries, 
+  selectedItineraryId = null,
+  onItineraryClick,
+  className = '' 
+}: TripMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<any>(null)
   const [markers, setMarkers] = useState<any[]>([])
@@ -122,6 +129,10 @@ export default function TripMap({ itineraries, className = '' }: TripMapProps) {
 
       marker.addListener('click', () => {
         infoWindow.open(map, marker)
+        // 左ペインのItineraryにスクロールするためのコールバック
+        if (onItineraryClick) {
+          onItineraryClick(itinerary.id)
+        }
       })
 
       return marker
@@ -177,6 +188,49 @@ export default function TripMap({ itineraries, className = '' }: TripMapProps) {
       map.fitBounds(bounds)
     }
   }, [map, directionsService, directionsRenderer, itineraries])
+
+  // 選択されたItineraryにフォーカスする機能
+  useEffect(() => {
+    if (!map || !selectedItineraryId) return
+
+    const selectedItinerary = itineraries.find(itinerary => itinerary.id === selectedItineraryId)
+    if (!selectedItinerary?.place_data?.geometry?.location) return
+
+    const position = {
+      lat: selectedItinerary.place_data.geometry.location.lat,
+      lng: selectedItinerary.place_data.geometry.location.lng,
+    }
+
+    // 地図を選択されたVenueにズーム・フォーカス
+    map.setCenter(position)
+    map.setZoom(16)
+
+    // 該当するマーカーをハイライト
+    markers.forEach((marker, index) => {
+      const itinerary = itineraries.find(i => i.place_data?.geometry?.location)
+      if (itinerary?.id === selectedItineraryId) {
+        // 選択されたマーカーをハイライト
+        marker.setIcon({
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 25,
+          fillColor: '#EF4444', // 赤色でハイライト
+          fillOpacity: 1,
+          strokeColor: '#FFFFFF',
+          strokeWeight: 3,
+        })
+      } else {
+        // 他のマーカーは通常の色
+        marker.setIcon({
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 20,
+          fillColor: '#3B82F6',
+          fillOpacity: 1,
+          strokeColor: '#FFFFFF',
+          strokeWeight: 2,
+        })
+      }
+    })
+  }, [selectedItineraryId, map, markers, itineraries])
 
   return (
     <div className={`relative ${className}`}>

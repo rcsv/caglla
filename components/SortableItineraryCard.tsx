@@ -15,11 +15,13 @@ interface SortableItineraryCardProps {
   onMoveToDay?: (itineraryId: string, targetDayId: string) => void
   onDuplicateToDay?: (itineraryId: string, targetDayId: string) => void
   onDelete?: (itineraryId: string) => void
+  onItineraryClick?: (itineraryId: string) => void
   availableDays?: Array<{
     id: string
     day_number: number
     date: string
   }>
+  isSelected?: boolean
 }
 
 export default function SortableItineraryCard(props: SortableItineraryCardProps) {

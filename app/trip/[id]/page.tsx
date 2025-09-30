@@ -37,6 +37,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
   const [leftNavExpanded, setLeftNavExpanded] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [summaryCollapsed, setSummaryCollapsed] = useState(false)
+  const [selectedItineraryId, setSelectedItineraryId] = useState<string | null>(null)
 
   // セクションへのナビゲーション機能
   const navigateToSection = (sectionId: string) => {
@@ -46,6 +47,56 @@ export default function TripPage({ params }: { params: { id: string } }) {
         behavior: 'smooth',
         block: 'start'
       })
+    }
+  }
+
+  // Itineraryクリック時のハンドラー
+  const handleItineraryClick = (itineraryId: string) => {
+    setSelectedItineraryId(itineraryId)
+    
+    // 該当するItineraryが含まれる日程を探して展開
+    if (trip?.days) {
+      for (const day of trip.days) {
+        if (day.itineraries?.some(itinerary => itinerary.id === itineraryId)) {
+          setCollapsedDays(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(day.id)
+            return newSet
+          })
+          break
+        }
+      }
+    }
+  }
+
+  // 地図マーカークリック時のハンドラー
+  const handleMapMarkerClick = (itineraryId: string) => {
+    setSelectedItineraryId(itineraryId)
+    
+    // 該当するItineraryが含まれる日程を探して展開・スクロール
+    if (trip?.days) {
+      for (const day of trip.days) {
+        if (day.itineraries?.some(itinerary => itinerary.id === itineraryId)) {
+          // 日程を展開
+          setCollapsedDays(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(day.id)
+            return newSet
+          })
+          
+          // 該当するItineraryにスクロール
+          setTimeout(() => {
+            const element = document.getElementById(`itinerary-${itineraryId}`)
+            if (element) {
+              element.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'center'
+              })
+            }
+          }, 100)
+          break
+        }
+      }
     }
   }
 
@@ -140,6 +191,8 @@ export default function TripPage({ params }: { params: { id: string } }) {
       }
       return newSet
     })
+    // 日程をクリックした時に選択状態をリセット
+    setSelectedItineraryId(null)
   }
 
   const collapseAllDays = () => {
@@ -943,6 +996,8 @@ export default function TripPage({ params }: { params: { id: string } }) {
                                         onMoveToDay={handleMoveToDay}
                                         onDuplicateToDay={handleDuplicateToDay}
                                         onDelete={handleScheduleDelete}
+                                        onItineraryClick={handleItineraryClick}
+                                        isSelected={selectedItineraryId === itinerary.id}
                                         availableDays={trip.days?.map(d => ({
                                           id: d.id,
                                           day_number: d.day_number,
@@ -1060,6 +1115,8 @@ export default function TripPage({ params }: { params: { id: string } }) {
         <div className="h-full bg-gray-100">
           <TripMap 
             itineraries={getAllItineraries()} 
+            selectedItineraryId={selectedItineraryId}
+            onItineraryClick={handleMapMarkerClick}
             className="h-full"
           />
         </div>
