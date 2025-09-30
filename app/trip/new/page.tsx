@@ -8,10 +8,26 @@ import ImageUpload from '@/components/ImageUpload'
 import { imageUploadHelpers } from '@/lib/image-upload'
 import PlaceSearchInput from '@/components/PlaceSearchInput'
 import { PlaceData } from '@/lib/firestore'
+import { useSubscription } from '@/lib/subscription-context'
+import { RestrictionType } from '@/lib/restriction-system'
 
 export default function NewTripPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const { can, hasFeature, getRemaining, getLimitExceededMessage } = useSubscription()
+  
+  // 制限値を取得するヘルパー関数
+  const getLimitValue = (type: RestrictionType): number => {
+    // 無料プランの制限値を直接返す（現在は固定値）
+    switch (type) {
+      case RestrictionType.MAX_TRIPS:
+        return 3
+      case RestrictionType.MAX_TRAVEL_DAYS:
+        return 5
+      default:
+        return 0
+    }
+  }
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -23,6 +39,9 @@ export default function NewTripPage() {
     imageUrl: ''
   })
   const [submitting, setSubmitting] = useState(false)
+  const [currentTripCount, setCurrentTripCount] = useState(0)
+  const [isLoadingLimits, setIsLoadingLimits] = useState(true)
+  const [dateError, setDateError] = useState('')
 
   useEffect(() => {
     if (!loading && !user) {
@@ -30,9 +49,92 @@ export default function NewTripPage() {
     }
   }, [user, loading, router])
 
+  // プラン制限のチェック
+  useEffect(() => {
+    const checkLimits = async () => {
+      if (!user) return
+
+      setIsLoadingLimits(true)
+      try {
+        // 現在の旅行数を取得
+        const response = await makeAuthenticatedRequest('/api/trips', {
+          method: 'GET'
+        })
+        
+        if (response.ok) {
+          const trips = await response.json()
+          console.log('API Response:', trips) // デバッグ用
+          
+          // tripsが配列かどうかチェック
+          const tripsArray = Array.isArray(trips) ? trips : trips.trips || []
+          console.log('Trips array:', tripsArray) // デバッグ用
+          
+          setCurrentTripCount(tripsArray.length)
+        } else {
+          console.error('API request failed:', response.status, response.statusText)
+          setCurrentTripCount(0)
+        }
+      } catch (error) {
+        console.error('Error checking plan limits:', error)
+        setCurrentTripCount(0)
+      } finally {
+        setIsLoadingLimits(false)
+      }
+    }
+
+    checkLimits()
+  }, [user])
+
+  // 旅行日数の計算
+  const calculateTravelDays = (startDate: string, endDate: string): number => {
+    if (!startDate || !endDate) return 0
+    
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const diffTime = Math.abs(end.getTime() - start.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 // 開始日と終了日を含む
+    
+    return diffDays
+  }
+
+  // 日付のバリデーション
+  const validateDates = (startDate: string, endDate: string): string => {
+    if (!startDate || !endDate) return ''
+    
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    
+    if (start > end) {
+      return '出発日は帰宅日より前の日付を選択してください'
+    }
+    
+    return ''
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
+
+    // 日付のバリデーション
+    const dateValidationError = validateDates(formData.startDate, formData.endDate)
+    if (dateValidationError) {
+      setDateError(dateValidationError)
+      return
+    }
+    setDateError('')
+
+    // プラン制限のチェック
+    const totalDays = calculateTravelDays(formData.startDate, formData.endDate)
+    
+    if (!can(RestrictionType.MAX_TRIPS, currentTripCount + 1)) {
+      alert('旅行データ数の制限に達しています。プランをアップグレードしてください。')
+      return
+    }
+    
+    if (!can(RestrictionType.MAX_TRAVEL_DAYS, totalDays)) {
+      alert('旅行日数の制限を超過しています。プランをアップグレードしてください。')
+      return
+    }
 
     setSubmitting(true)
     try {
@@ -87,6 +189,13 @@ export default function NewTripPage() {
       ...prev,
       [name]: value
     }))
+    
+    // 日付が変更された場合は即座にバリデーションを実行
+    if (name === 'startDate' || name === 'endDate') {
+      const newFormData = { ...formData, [name]: value }
+      const dateValidationError = validateDates(newFormData.startDate, newFormData.endDate)
+      setDateError(dateValidationError)
+    }
   }
 
   const handleCancel = async () => {
@@ -99,7 +208,14 @@ export default function NewTripPage() {
         console.error('Failed to delete cancelled image:', error)
       }
     }
-    router.push('/home')
+    
+    // ルーティングエラーを防ぐため、window.locationを使用
+    try {
+      router.push('/home')
+    } catch (error) {
+      console.error('Router push failed, using window.location:', error)
+      window.location.href = '/home'
+    }
   }
 
   if (loading) {
@@ -139,6 +255,68 @@ export default function NewTripPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
+          {/* プラン制限の表示 */}
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-blue-800 mb-2">プラン制限</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-blue-700">旅行データ数:</span>
+                <span className={`font-medium ${isLoadingLimits ? 'text-gray-500' : can(RestrictionType.MAX_TRIPS, currentTripCount) ? 'text-green-600' : 'text-red-600'}`}>
+                  {isLoadingLimits 
+                    ? '読み込み中...'
+                    : `${currentTripCount}/${getLimitValue(RestrictionType.MAX_TRIPS)}件 (残り${getRemaining(RestrictionType.MAX_TRIPS, currentTripCount)}件)`
+                  }
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-blue-700">一回の旅行の最大日数:</span>
+                <span className={`font-medium ${isLoadingLimits ? 'text-gray-500' : can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate)) ? 'text-green-600' : 'text-red-600'}`}>
+                  {isLoadingLimits 
+                    ? '読み込み中...'
+                    : `${calculateTravelDays(formData.startDate, formData.endDate)}日 (最大${getLimitValue(RestrictionType.MAX_TRAVEL_DAYS)}日まで)`
+                  }
+                </span>
+              </div>
+              {(!can(RestrictionType.MAX_TRIPS, currentTripCount + 1) || !can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))) && (
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <h3 className="text-sm font-medium text-red-800">
+                        プラン制限を超過しています
+                      </h3>
+                      <div className="mt-2 text-sm text-red-700">
+                        <p>現在のプランでは制限を超えています。より多くの旅行や長期間の旅行を作成するには、プランのアップグレードをご検討ください。</p>
+                      </div>
+                      <div className="mt-3">
+                        <div className="-mx-2 -my-1.5 flex">
+                          <button
+                            type="button"
+                            onClick={() => router.push('/subscription')}
+                            className="bg-red-50 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                          >
+                            プランをアップグレード
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => router.push('/subscription')}
+                            className="ml-3 bg-red-100 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                          >
+                            プラン詳細を見る
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6">
             <div className="space-y-6">
               <div>
@@ -214,7 +392,9 @@ export default function NewTripPage() {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      dateError ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   />
                 </div>
 
@@ -228,10 +408,28 @@ export default function NewTripPage() {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      dateError ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   />
                 </div>
               </div>
+
+              {/* 日付エラーメッセージ */}
+              {dateError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-red-800">{dateError}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label htmlFor="accessLevel" className="block text-sm font-medium text-gray-700 mb-2">
@@ -266,7 +464,7 @@ export default function NewTripPage() {
               </button>
               <button
                 type="submit"
-                disabled={submitting || !formData.title}
+                disabled={submitting || !formData.title || dateError || (!can(RestrictionType.MAX_TRIPS, currentTripCount + 1) || !can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate)))}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
               >
                 {submitting ? '作成中...' : '旅行を作成'}
