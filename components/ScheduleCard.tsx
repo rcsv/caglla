@@ -136,7 +136,13 @@ export default function ScheduleCard({
     setEndTime(itinerary.end_time || '')
     setTempStartTime(itinerary.start_time || '')
     setTempEndTime(itinerary.end_time || '')
-    setDestinationTimezone('UTC')
+    
+    // タイムゾーンは既存の値を保持し、なければUTCをデフォルトに
+    if (itinerary.timezone) {
+      setDestinationTimezone(itinerary.timezone)
+    } else {
+      setDestinationTimezone('UTC')
+    }
     
     // 説明欄の初期値を設定（editorial_summaryがあれば使用、なければ既存のdescription）
     if (itinerary.place_data?.editorial_summary?.overview && !itinerary.description) {
@@ -144,7 +150,7 @@ export default function ScheduleCard({
     } else {
       setDescription(itinerary.description || '')
     }
-  }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.description, itinerary.place_data?.editorial_summary?.overview]) // itinerary.idを追加してオブジェクト参照の変更に対応
+  }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.description, itinerary.place_data?.editorial_summary?.overview, itinerary.timezone]) // itinerary.timezoneを追加
 
   // ブラウザのタイムゾーンを取得
   useEffect(() => {
@@ -157,8 +163,8 @@ export default function ScheduleCard({
       const detectedTimezone = timezoneUtils.getTimezoneFromPlace(itinerary.place_data)
       if (detectedTimezone !== 'UTC') {
         setDestinationTimezone(detectedTimezone)
-        // タイムゾーンの保存は手動で行う（自動保存を無効化）
-        // handleTimezoneUpdate(detectedTimezone)
+        // タイムゾーンを自動保存
+        handleTimezoneUpdate(detectedTimezone)
       }
     }
   }, [itinerary.place_data?.place_id]) // place_idを使用して無限ループを防ぐ
@@ -738,7 +744,10 @@ export default function ScheduleCard({
                       <label className="text-sm font-medium text-gray-700">タイムゾーン:</label>
                       <select
                         value={destinationTimezone}
-                        onChange={(e) => setDestinationTimezone(e.target.value)}
+                        onChange={(e) => {
+                          setDestinationTimezone(e.target.value)
+                          handleTimezoneUpdate(e.target.value)
+                        }}
                         className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="UTC">UTC</option>
