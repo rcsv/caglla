@@ -115,6 +115,44 @@ const apiKey = env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY // Direct access
 ```
 
+### Required Google APIs:
+- **ALWAYS** ensure all required Google APIs are enabled in Google Cloud Console
+- **NEVER** use Google APIs without proper API key configuration
+
+**Required Google APIs:**
+- **Google Places API**: 場所検索・詳細情報取得 (`NEXT_PUBLIC_GOOGLE_PLACES_API_KEY`)
+- **Google Maps JavaScript API**: 地図表示・マーカー・ルート表示 (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`)
+- **Google Geocoding API**: 住所↔座標変換 (Places APIキーと共用)
+- **Google Distance Matrix API**: 距離・時間計算 (Places APIキーと共用)
+
+**Optional Google APIs:**
+- **Google Maps Platform Map ID**: 高度なマーカー表示 (`NEXT_PUBLIC_GOOGLE_MAP_ID`)
+
+**API Setup Requirements:**
+1. **Google Cloud Console**でプロジェクトを作成
+2. **APIとサービス**で以下のAPIを有効化:
+   - Places API
+   - Maps JavaScript API
+   - Geocoding API
+   - Distance Matrix API
+3. **認証情報**でAPIキーを作成
+4. **APIキーの制限**を設定（HTTPリファラー制限推奨）
+
+**Usage Examples:**
+```typescript
+// ✅ Correct - APIヘルパーを使用
+import { placesApiHelpers } from '@/lib/places-api'
+const results = await placesApiHelpers.searchPlaces('Tokyo')
+
+// ✅ Correct - 環境変数検証済み
+import { validateClientEnvironment } from '@/lib/env-validation'
+const env = validateClientEnvironment()
+const apiKey = env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+
+// ❌ Wrong - 直接API呼び出し
+const response = await fetch('https://maps.googleapis.com/maps/api/place/...')
+```
+
 ### Type Definition Management System:
 - **ALWAYS** use centralized type definitions in `lib/types.ts`
 - **NEVER** define duplicate interfaces across files
