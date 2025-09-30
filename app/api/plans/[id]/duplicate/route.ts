@@ -1,0 +1,40 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { adminAuth } from '@/lib/firebase-admin'
+import { planSaveOperations } from '@/lib/plan-save-operations'
+
+/**
+ * プランを複製する
+ */
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // 認証チェック
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    }
+
+    const idToken = authHeader.split('Bearer ')[1]
+    const decodedToken = await adminAuth.verifyIdToken(idToken)
+    const userId = decodedToken.uid
+
+    const sourceTripId = params.id
+    const { newTitle }: { newTitle?: string } = await request.json()
+    
+    // プランを複製
+    const result = await planSaveOperations.duplicatePlan(sourceTripId, userId, newTitle)
+    
+    return NextResponse.json({
+      success: true,
+      data: result
+    })
+  } catch (error) {
+    console.error('Error duplicating plan:', error)
+    return NextResponse.json(
+      { error: 'プランの複製に失敗しました' },
+      { status: 500 }
+    )
+  }
+}
