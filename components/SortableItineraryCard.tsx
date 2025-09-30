@@ -23,6 +23,8 @@ interface SortableItineraryCardProps {
     date: string
   }>
   isSelected?: boolean
+  isFirst?: boolean
+  isLast?: boolean
 }
 
 export default function SortableItineraryCard(props: SortableItineraryCardProps) {

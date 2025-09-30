@@ -59,6 +59,8 @@ interface ScheduleCardProps {
   }
   isDragging?: boolean
   isSelected?: boolean
+  isFirst?: boolean
+  isLast?: boolean
 }
 
 export default function ScheduleCard({ 
@@ -75,7 +77,9 @@ export default function ScheduleCard({
   availableDays = [],
   dragHandleProps,
   isDragging = false,
-  isSelected = false
+  isSelected = false,
+  isFirst = false,
+  isLast = false
 }: ScheduleCardProps) {
   
   // CSSスタイルをDOMに追加
@@ -952,7 +956,12 @@ export default function ScheduleCard({
                   <div className="py-1">
                     <button
                       onClick={() => handleMenuAction('moveUp')}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      disabled={isFirst}
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
+                        isFirst 
+                          ? 'text-gray-400 cursor-not-allowed' 
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -961,7 +970,12 @@ export default function ScheduleCard({
                     </button>
                     <button
                       onClick={() => handleMenuAction('moveDown')}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                      disabled={isLast}
+                      className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
+                        isLast 
+                          ? 'text-gray-400 cursor-not-allowed' 
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />

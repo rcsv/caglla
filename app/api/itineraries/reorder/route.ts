@@ -26,13 +26,13 @@ export async function POST(request: NextRequest) {
 
     console.log('Using Firebase Admin SDK for reordering')
 
-    // 各itineraryのorderを更新
+    // 各itineraryのsort_numberを更新
     const batch = adminDb.batch()
     
     itineraryIds.forEach((itineraryId: string, index: number) => {
       const itineraryRef = adminDb.collection('itineraries').doc(itineraryId)
       batch.update(itineraryRef, { 
-        order: index,
+        sort_number: index + 1,
         updated_at: new Date()
       })
     })

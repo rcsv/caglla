@@ -511,11 +511,14 @@ export default function TripPage({ params }: { params: { id: string } }) {
     
     try {
       const response = await makeAuthenticatedRequest('/api/itineraries/reorder', {
-        method: 'PATCH',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ updates })
+        body: JSON.stringify({ 
+          dayId: dayId,
+          itineraryIds: updates.map(update => update.id)
+        })
       })
       
       if (response.ok) {
@@ -575,11 +578,14 @@ export default function TripPage({ params }: { params: { id: string } }) {
 
     try {
       const response = await makeAuthenticatedRequest('/api/itineraries/reorder', {
-        method: 'PATCH',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ updates })
+        body: JSON.stringify({ 
+          dayId: dayId,
+          itineraryIds: updates.map(update => update.id)
+        })
       })
 
       if (response.ok) {
@@ -634,11 +640,14 @@ export default function TripPage({ params }: { params: { id: string } }) {
 
     try {
       const response = await makeAuthenticatedRequest('/api/itineraries/reorder', {
-        method: 'PATCH',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ updates })
+        body: JSON.stringify({ 
+          dayId: dayId,
+          itineraryIds: updates.map(update => update.id)
+        })
       })
 
       if (response.ok) {
@@ -1044,6 +1053,8 @@ export default function TripPage({ params }: { params: { id: string } }) {
                                         onDelete={handleScheduleDelete}
                                         onItineraryClick={handleItineraryClick}
                                         isSelected={selectedItineraryId === itinerary.id}
+                                        isFirst={index === 0}
+                                        isLast={index === (day.itineraries?.length || 0) - 1}
                                         availableDays={trip.days?.map(d => ({
                                           id: d.id,
                                           day_number: d.day_number,
