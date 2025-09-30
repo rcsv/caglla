@@ -237,7 +237,7 @@ export default function TripMap({
       <div ref={mapRef} className="w-full h-full" />
       
       {/* マップのオーバーレイ情報 */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs">
+      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs z-50">
         <div className="text-sm text-gray-600">
           <div className="font-medium text-gray-900 mb-1">旅程マップ</div>
           <div>
