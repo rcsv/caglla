@@ -14,61 +14,60 @@ This project aims to support the creation, editing, and sharing of travel plans.
 
 | Path                  | Purpose                                                |
 |-----------------------|--------------------------------------------------------|
-| `src/routes/`         | Express route definitions (REST API endpoints)         |
-| `src/controllers/`    | Core business logic for each route                     |
-| `src/models/`         | MySQL table definitions using Sequelize or raw SQL     |
-| `scripts/`            | ビルドの際のユーティリティ                               |
-| `srcipts/migrations/` | SQL migration files to set up schema                   |
-| `public/`             | Static HTML/CSS/JS assets (if applicable)              |
-| `config/`             | DB, OAuth, and environment configuration               |
+| `app/`                | Next.js App Router (pages and API routes)             |
+| `app/api/`            | API route handlers (REST API endpoints)               |
+| `components/`         | React components                                       |
+| `lib/`                | Utilities, configurations, and shared logic          |
+| `docs/`               | Documentation and guides                               |
+| `public/`             | Static assets                                          |
+
+---
 
 ---
 
 ## 🔐 Authentication
 
-- Google OAuth 2.0 is used for login.
-- User profile information is stored in the `users` table.
-- No local password handling is implemented (OAuth only).
+- Firebase Authentication with Google OAuth is used for login.
+- User profile information is stored in Firestore `users` collection.
+- No local password handling is implemented (Firebase Auth only).
 
 ---
 
 ## 🗃️ Data Model (Simplified)
 
-Entities and their relationships mirror `tabi4.me`. Key tables include:
+Entities and their relationships are stored in Firebase Firestore collections:
 
-- `users` — user identity (OAuth-based)
-- `travels` — each travel plan (one-to-many with users)
-- `activities` — detailed scheduled events linked to a travel
-- `lodging`, `flight`, `car_rental`, etc. — activity subtypes (type-specific fields)
-- `persons` — companions or profile identities
-- `checklist_items`, `emergency_contacts`, `milestones` — optional trip data
+- `users` — user identity (Firebase Auth-based)
+- `trips` — each travel plan (one-to-many with users)
+- `days` — daily schedules within a trip
+- `itineraries` — detailed scheduled events linked to a day
+- `places` — location data with Google Places integration
 
-_Note: `activities` are polymorphic and unified — one table holds different activity types, distinguishable by `activity_type`._
+_Note: This is a Next.js + Firebase application, not a traditional MySQL-based system._
 
 ---
 
 ## 💡 Agent Instructions (Codex, Copilot, etc.)
 
 ### When adding a new REST endpoint:
-- Define the route in `src/routes/`.
-- Add handler logic in `src/controllers/`.
-- If DB access is needed, use existing DB abstraction in `models/` or use raw SQL via `mysql2`.
+- Define the route in `app/api/` using Next.js App Router.
+- Add handler logic directly in the route file.
+- If Firestore access is needed, use existing Firestore helpers in `lib/firestore.ts`.
 
-### When creating a new table:
-- Define SQL in `src/migrations/`.
-- If applicable, define TypeScript types in `models/`.
+### When creating new data structures:
+- Define TypeScript interfaces in `lib/types.ts`.
+- Use Firestore collections instead of SQL tables.
+- Follow Firestore best practices for data modeling.
 
-### For migrations:
-- Use `000_reset.sql` to drop all existing tables before rebuild.
-- Each migration file should be id-prefixed: `001_create_users.sql`, `002_create_travels.sql`, etc.
+### For data migrations:
+- Use Firestore Admin SDK for bulk operations.
+- Create migration scripts in `app/api/migrate/` if needed.
+- Test migrations in development environment first.
 
 ### Naming Conventions:
-- Table fields use `snake_case`.
-- Foreign keys follow the convention `*_id`.
-- All master data tables are prefixed with `mst_`, e.g., `mst_airport`, `mst_airline`.
-
-### Reserved Words:
-- Avoid using MySQL reserved keywords (e.g., `order`, `group`, `index`) as column names.
+- Firestore document fields use `camelCase`.
+- Document IDs should be descriptive and unique.
+- Collection names use plural forms (e.g., `users`, `trips`, `days`).
 
 ### Z-Index Layer Management System:
 - **ALWAYS** use the centralized z-index management system in `lib/z-index-layers.ts`
@@ -188,11 +187,11 @@ const timezone = 'Asia/Tokyo' // Hardcoded timezone
 
 - Install dependencies: `npm install`
 - Environment vars required:
-  - `GOOGLE_CLIENT_ID`
-  - `GOOGLE_CLIENT_SECRET`
-  - `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+  - Firebase: `NEXT_PUBLIC_FIREBASE_*` (API_KEY, AUTH_DOMAIN, PROJECT_ID, etc.)
+  - Google APIs: `NEXT_PUBLIC_GOOGLE_PLACES_API_KEY`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+  - Firebase Admin: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`
 - Start dev server: `npm run dev`
-- Run migrations manually or with custom script.
+- Firebase project setup required (Authentication, Firestore, Storage).
 
 ---
 
@@ -207,32 +206,36 @@ const timezone = 'Asia/Tokyo' // Hardcoded timezone
 ## 🙋 Questions for Human Developers?
 
 If you are unsure about:
-- Activity subtype structures
-- How travel statuses like `BOARDING`, `ITINERARY_INK`, `MEMORIES` are calculated
-- How checklist generation works
+- Firestore data modeling and collection structure
+- Firebase Authentication integration
+- Google Places API usage
+- Next.js App Router patterns
 → Please consult `README.md` or contact the repo owner.
 
 ---
 
-## 🧪 Local Test Environment (build_and_run)
+## 🧪 Development Environment
 
-This repository includes a simple test-runner script for initializing a local dev/testing environment.
+This is a Next.js application with Firebase backend. To set up the development environment:
 
-You can run the app in trial mode with:
-
-- **Windows**:
+1. **Install dependencies**:
 ```bash
-scripts\build_and_run.bat
+npm install
 ```
-- **Unix/macOS/Linux**:
+
+2. **Set up environment variables**:
+   - Copy `env.example` to `.env.local`
+   - Configure Firebase and Google API keys
+
+3. **Start development server**:
 ```bash
-./scripts/build_and_run.sh
+npm run dev
 ```
-These scripts will:
-1. Set up the database (drop & recreate if needed)
-2. Run all SQL migrations in `src/migrations/`
-3. Start the server with default or environment-based configs
 
-This allows agents or developers to quickly spin up the backend without manually configuring everything.
+4. **Firebase setup**:
+   - Create Firebase project
+   - Enable Authentication (Google provider)
+   - Create Firestore database
+   - Enable Storage
 
-> ❗ Make sure required env vars (OAuth + DB credentials) are set beforehand.
+> ❗ Make sure Firebase project is properly configured before running the application.
