@@ -64,6 +64,7 @@ interface TripMapProps {
     placeId: string
     name: string
     location: { lat: number; lng: number }
+    placeData?: any
   } | null) => void
   className?: string
   focusMode?: 'all' | 'day' | 'single' // フォーカスモードを追加
@@ -291,7 +292,8 @@ export default function TripMap({
             location: {
               lat: itinerary.place_data.geometry!.location.lat,
               lng: itinerary.place_data.geometry!.location.lng
-            }
+            },
+            placeData: itinerary.place_data // Itinerariesに保存されているplace_dataを渡す
           }
           setPoiData(newPoiData)
           onPoiDataUpdate?.(newPoiData)

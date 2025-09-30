@@ -12,6 +12,7 @@ interface POIDialogProps {
       lat: number
       lng: number
     }
+    placeData?: any // Itinerariesに保存されているplace_data
   } | null
   onClose: () => void
   className?: string
@@ -25,6 +26,15 @@ export default function POIDialog({ poiData, onClose, className = '' }: POIDialo
   useEffect(() => {
     if (!poiData) return
 
+    // Itinerariesに保存されているplace_dataがある場合はそれを使用
+    if (poiData.placeData) {
+      setPlaceDetails(poiData.placeData)
+      setLoading(false)
+      setError(null)
+      return
+    }
+
+    // place_dataがない場合のみAPIを呼び出し
     const fetchPlaceDetails = async () => {
       setLoading(true)
       setError(null)

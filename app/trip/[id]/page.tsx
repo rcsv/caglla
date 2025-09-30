@@ -44,6 +44,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
     placeId: string
     name: string
     location: { lat: number; lng: number }
+    placeData?: any
   } | null>(null)
 
   // セクションへのナビゲーション機能
@@ -84,7 +85,8 @@ export default function TripPage({ params }: { params: { id: string } }) {
               location: {
                 lat: itinerary.place_data.geometry!.location.lat,
                 lng: itinerary.place_data.geometry!.location.lng
-              }
+              },
+              placeData: itinerary.place_data // Itinerariesに保存されているplace_dataを渡す
             })
           }
           break
