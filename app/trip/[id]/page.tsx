@@ -20,7 +20,7 @@ import NavigationMenu from '@/components/NavigationMenu'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { Trip, Day, Itinerary, User } from '@/lib/firestore'
-import { getZIndexClass } from '@/lib/z-index-layers'
+import { getZIndexClass, getZIndex } from '@/lib/z-index-layers'
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
@@ -730,7 +730,8 @@ export default function TripPage({ params }: { params: { id: string } }) {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className={`fixed inset-0 bg-black bg-opacity-50 md:hidden ${getZIndexClass('MAIN_CONTENT')}`}
+          style={{ zIndex: getZIndex('MAIN_CONTENT') }}
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -738,7 +739,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
       {/* Mobile Slide Menu - 188px固定幅 */}
       <nav className={`fixed top-0 left-0 h-full w-[188px] bg-white border-r border-gray-200 transform transition-transform duration-300 ${getZIndexClass('LEFT_PANEL')} md:hidden ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      }`} style={{ zIndex: getZIndex('LEFT_PANEL') }}>
         {/* NavigationMenuと同じ内容を表示 - 幅を制限 */}
         {trip && (
           <div className="w-full h-full overflow-hidden">
