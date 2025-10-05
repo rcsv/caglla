@@ -18,7 +18,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
   if (variant === 'imageFull') {
     return (
       <Link href={`/trip/${trip.id}`} className="block group">
-        <div className="relative overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition bg-gray-900 h-96">
+        <div className="relative overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition bg-gray-900 h-[28rem]">
           {/* Image */}
           {trip.image_url && (
             <img
@@ -33,10 +33,10 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
             {trip.access_level === 'public' ? 'Public' : 'Private'}
           </div>
           {/* Bottom gradient overlay */}
-          <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
           {/* Text content */}
-          <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-            <h3 className="text-xl font-semibold drop-shadow-sm line-clamp-2">{trip.title}</h3>
+          <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+            <h3 className="text-2xl font-semibold drop-shadow-sm line-clamp-2">{trip.title}</h3>
             {trip.description && (
               <p className="mt-2 text-sm text-white/85 line-clamp-2">{trip.description}</p>
             )}
