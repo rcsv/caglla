@@ -7,13 +7,14 @@ import Link from 'next/link'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { dateUtils } from '@/lib/date-utils'
 import UserSettingsModal from '@/components/UserSettingsModal'
-import CountryStats from '@/components/stats/CountryStats'
 import TripCard from '@/components/common/TripCard'
 import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
 import UpcomingTripsSection from '@/components/common/UpcomingTripsSection'
 import MemoriesSection from '@/components/common/MemoriesSection'
 import PlanInfoDisplay from '@/components/PlanInfoDisplay'
+import CountryStatsSimple from '@/components/stats/CountryStatsSimple'
+import RecommendedTrips from '@/components/stats/RecommendedTrips'
 import { useSubscription } from '@/lib/subscription-context'
 import { RestrictionType } from '@/lib/restriction-system'
 import type { Trip } from '@/lib/types'
@@ -40,7 +41,7 @@ export default function HomePage() {
 
   const fetchTrips = async () => {
     try {
-      const response = await makeAuthenticatedRequest('/api/trips')
+      const response = await makeAuthenticatedRequest('/api/trips/accessible?includeShared=true')
       if (response.ok) {
         const data = await response.json()
         setTrips(data.trips || [])
@@ -70,6 +71,9 @@ export default function HomePage() {
     return null
   }
 
+  const { futureTrips, pastTrips } = dateUtils.sortTripsByDate(trips)
+  const nextTrip = futureTrips[0] // 次の旅行プラン（1件のみ）
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -83,59 +87,70 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* プラン情報表示 */}
-        <PlanInfoDisplay className="mb-6" />
-        
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">あなたの旅行</h2>
-          <Link
-            href="/trip/new"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-          >
-            新しい旅行を作成
-          </Link>
-        </div>
-
-        {tripsLoading ? (
-          <Loading message="旅行を読み込み中..." className="py-12" />
-        ) : trips.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">✈️</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">まだ旅行がありません</h3>
-            <p className="text-gray-600 mb-6">最初の旅行を作成して、素晴らしい冒険を始めましょう！</p>
-            <Link
-              href="/trip/new"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
-            >
-              旅行を作成
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-12">
-            {/* 国別統計とおすすめ旅行計画 */}
-            <CountryStats userId={user.uid} />
-            
-            {/* 旅行一覧 */}
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">旅行一覧</h3>
-              {(() => {
-                const { futureTrips, pastTrips } = dateUtils.sortTripsByDate(trips)
-                
-                // TripCardはcomponents/commonへ分離
-                const TripCardInline = ({ trip, isPastTrip = false }: { trip: Trip, isPastTrip?: boolean }) => (
-                  <TripCard key={trip.id} trip={trip} isPastTrip={isPastTrip} variant="imageFull" />
-                )
-
-                return (
-                  <div className="space-y-8">
-                    <UpcomingTripsSection trips={futureTrips} />
-                    <MemoriesSection trips={pastTrips} />
-                  </div>
-                )
-              })()}
+        <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
+          {/* 7側のコンテンツ */}
+          <div className="lg:col-span-7 space-y-8">
+            {/* 新しい旅行を作成 */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">新しい旅行を作成</h2>
+                  <p className="text-gray-600">素晴らしい冒険の計画を始めましょう</p>
+                </div>
+                <Link
+                  href="/trip/new"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+                >
+                  旅行を作成
+                </Link>
+              </div>
             </div>
+
+            {/* 旅行一覧（次の旅行プラン1件 + マップ） */}
+            {nextTrip && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6">次の旅行プラン</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <TripCard trip={nextTrip} variant="imageFull" />
+                  <div className="bg-gray-100 rounded-lg flex items-center justify-center">
+                    <p className="text-gray-500">旅行マップ（実装予定）</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 最近チェックした旅行 */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">最近チェックした旅行</h3>
+              <div className="text-center py-8 text-gray-500">
+                <p>最近チェックした旅行はありません</p>
+                <p className="text-sm mt-2">（実装予定）</p>
+              </div>
+            </div>
+
+            {/* 今後の旅行計画 */}
+            {futureTrips.length > 0 && (
+              <UpcomingTripsSection trips={futureTrips} />
+            )}
+
+            {/* 思い出 */}
+            {pastTrips.length > 0 && (
+              <MemoriesSection trips={pastTrips} />
+            )}
           </div>
-        )}
+
+          {/* 3側のコンテンツ */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* 国別統計（地図なし） */}
+            <CountryStatsSimple userId={user.uid} />
+
+            {/* プラン情報 */}
+            <PlanInfoDisplay />
+
+            {/* おすすめ旅行計画 */}
+            <RecommendedTrips limit={3} />
+          </div>
+        </div>
       </main>
 
       {/* User Settings Modal */}
