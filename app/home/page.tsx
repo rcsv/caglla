@@ -72,7 +72,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <HomeHeader
-        greeting={`こんにちは、${user.displayName || user.email}さん`}
+        userName={user.displayName || user.email || 'User'}
+        planName={useSubscription().subscriptionStatus.plan?.name || 'Season Traveler'}
+        avatarUrl={user.photoURL}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onLogout={handleLogout}
       />
