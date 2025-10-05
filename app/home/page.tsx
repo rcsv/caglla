@@ -15,6 +15,7 @@ import MemoriesSection from '@/components/common/MemoriesSection'
 import PlanInfoDisplay from '@/components/PlanInfoDisplay'
 import CountryStatsSimple from '@/components/stats/CountryStatsSimple'
 import RecommendedTrips from '@/components/stats/RecommendedTrips'
+import CreateTripDialog from '@/components/common/CreateTripDialog'
 import { useSubscription } from '@/lib/subscription-context'
 import { RestrictionType } from '@/lib/restriction-system'
 import type { Trip } from '@/lib/types'
@@ -26,6 +27,7 @@ export default function HomePage() {
   const [trips, setTrips] = useState<Trip[]>([])
   const [tripsLoading, setTripsLoading] = useState(true)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
+  const [isCreateTripDialogOpen, setIsCreateTripDialogOpen] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -63,6 +65,11 @@ export default function HomePage() {
     router.push('/')
   }
 
+  const handleTripCreated = () => {
+    // 旅行作成後に旅行一覧を再取得
+    fetchTrips()
+  }
+
   if (loading) {
     return <Loading fullScreen size="lg" />
   }
@@ -97,12 +104,12 @@ export default function HomePage() {
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">新しい旅行を作成</h2>
                   <p className="text-gray-600">素晴らしい冒険の計画を始めましょう</p>
                 </div>
-                <Link
-                  href="/trip/new"
+                <button
+                  onClick={() => setIsCreateTripDialogOpen(true)}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
                 >
                   旅行を作成
-                </Link>
+                </button>
               </div>
             </div>
 
@@ -158,6 +165,14 @@ export default function HomePage() {
         isOpen={isSettingsModalOpen} 
         onClose={() => setIsSettingsModalOpen(false)} 
       />
+
+      {/* Create Trip Dialog */}
+      <CreateTripDialog
+        isOpen={isCreateTripDialogOpen}
+        onClose={() => setIsCreateTripDialogOpen(false)}
+        onSuccess={handleTripCreated}
+      />
+
       <HomeFooter />
     </div>
   )
