@@ -132,25 +132,6 @@ export default function HomePage() {
                   <div className="space-y-8">
                     <UpcomingTripsSection trips={futureTrips} />
                     <MemoriesSection trips={pastTrips} />
-
-                    {/* 日付が設定されていない旅行 */}
-                    {trips.filter(trip => !trip.start_date).length > 0 && (
-                      <div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                          <span className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium mr-3">
-                            その他
-                          </span>
-                          <span className="text-gray-500 text-sm">
-                            {trips.filter(trip => !trip.start_date).length}件
-                          </span>
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {trips.filter(trip => !trip.start_date).map((trip) => (
-                            <TripCardInline key={trip.id} trip={trip} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )
               })()}
