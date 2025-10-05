@@ -15,7 +15,7 @@ import MemoriesSection from '@/components/common/MemoriesSection'
 import PlanInfoDisplay from '@/components/PlanInfoDisplay'
 import CountryStatsSimple from '@/components/stats/CountryStatsSimple'
 import RecommendedTrips from '@/components/stats/RecommendedTrips'
-import CreateTripDialog from '@/components/common/CreateTripDialog'
+import MainContent from '@/components/common/MainContent'
 import { useSubscription } from '@/lib/subscription-context'
 import { RestrictionType } from '@/lib/restriction-system'
 import type { Trip } from '@/lib/types'
@@ -27,7 +27,6 @@ export default function HomePage() {
   const [trips, setTrips] = useState<Trip[]>([])
   const [tripsLoading, setTripsLoading] = useState(true)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
-  const [isCreateTripDialogOpen, setIsCreateTripDialogOpen] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -97,34 +96,8 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-8">
           {/* 7側のコンテンツ */}
           <div className="lg:col-span-7 space-y-8">
-            {/* 新しい旅行を作成 */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">新しい旅行を作成</h2>
-                  <p className="text-gray-600">素晴らしい冒険の計画を始めましょう</p>
-                </div>
-                <button
-                  onClick={() => setIsCreateTripDialogOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
-                >
-                  旅行を作成
-                </button>
-              </div>
-            </div>
-
-            {/* 旅行一覧（次の旅行プラン1件 + マップ） */}
-            {nextTrip && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-6">次の旅行プラン</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <TripCard trip={nextTrip} variant="imageFull" />
-                  <div className="bg-gray-100 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-500">旅行マップ（実装予定）</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* メインコンテンツ（旅行作成 + 次の旅行プラン） */}
+            <MainContent nextTrip={nextTrip} onTripCreated={handleTripCreated} />
 
             {/* 最近チェックした旅行 */}
             <div className="bg-white rounded-lg shadow-md p-6">
@@ -164,13 +137,6 @@ export default function HomePage() {
       <UserSettingsModal 
         isOpen={isSettingsModalOpen} 
         onClose={() => setIsSettingsModalOpen(false)} 
-      />
-
-      {/* Create Trip Dialog */}
-      <CreateTripDialog
-        isOpen={isCreateTripDialogOpen}
-        onClose={() => setIsCreateTripDialogOpen(false)}
-        onSuccess={handleTripCreated}
       />
 
       <HomeFooter />
