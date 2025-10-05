@@ -121,7 +121,7 @@ export default function HomePage() {
                 
                 // TripCardはcomponents/commonへ分離
                 const TripCardInline = ({ trip, isPastTrip = false }: { trip: Trip, isPastTrip?: boolean }) => (
-                  <TripCard key={trip.id} trip={trip} isPastTrip={isPastTrip} />
+                  <TripCard key={trip.id} trip={trip} isPastTrip={isPastTrip} variant="imageFull" />
                 )
 
                 return (
