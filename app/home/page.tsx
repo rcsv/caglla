@@ -12,6 +12,8 @@ import TripCard from '@/components/common/TripCard'
 import RecommendedTrips from '@/components/common/RecommendedTrips'
 import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
+import UpcomingTripsSection from '@/components/common/UpcomingTripsSection'
+import MemoriesSection from '@/components/common/MemoriesSection'
 import PlanInfoDisplay from '@/components/PlanInfoDisplay'
 import { useSubscription } from '@/lib/subscription-context'
 import { RestrictionType } from '@/lib/restriction-system'
@@ -128,43 +130,8 @@ export default function HomePage() {
 
                 return (
                   <div className="space-y-8">
-                    {/* 次の旅行プラン */}
-                    {futureTrips.length > 0 && (
-                      <div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mr-3">
-                            次の旅行プラン
-                          </span>
-                          <span className="text-gray-500 text-sm">
-                            {futureTrips.length}件
-                          </span>
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {futureTrips.map((trip) => (
-                            <TripCardInline key={trip.id} trip={trip} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 思い出 */}
-                    {pastTrips.length > 0 && (
-                      <div>
-                        <h4 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                          <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium mr-3">
-                            思い出
-                          </span>
-                          <span className="text-gray-500 text-sm">
-                            {pastTrips.length}件
-                          </span>
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {pastTrips.map((trip) => (
-                            <TripCardInline key={trip.id} trip={trip} isPastTrip={true} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <UpcomingTripsSection trips={futureTrips} />
+                    <MemoriesSection trips={pastTrips} />
 
                     {/* 日付が設定されていない旅行 */}
                     {trips.filter(trip => !trip.start_date).length > 0 && (
