@@ -7,9 +7,8 @@ import Link from 'next/link'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { dateUtils } from '@/lib/date-utils'
 import UserSettingsModal from '@/components/UserSettingsModal'
-import CountryStats from '@/components/CountryStats'
+import CountryStats from '@/components/stats/CountryStats'
 import TripCard from '@/components/common/TripCard'
-import RecommendedTrips from '@/components/common/RecommendedTrips'
 import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
 import UpcomingTripsSection from '@/components/common/UpcomingTripsSection'
@@ -113,9 +112,8 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="space-y-12">
-            {/* 国別統計 */}
+            {/* 国別統計とおすすめ旅行計画 */}
             <CountryStats userId={user.uid} />
-            <RecommendedTrips className="" />
             
             {/* 旅行一覧 */}
             <div>
