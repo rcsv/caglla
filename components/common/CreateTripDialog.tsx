@@ -21,14 +21,13 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   const router = useRouter()
   const { can, getRemaining } = useSubscription()
   
-  // 制限値を取得するヘルパー関数
+  // 制限値を取得するヘルパー関数（開発用：制限を緩和）
   const getLimitValue = (type: RestrictionType): number => {
-    // 無料プランの制限値を直接返す（現在は固定値）
     switch (type) {
       case RestrictionType.MAX_TRIPS:
-        return 3
+        return 12 // 開発用：12回まで
       case RestrictionType.MAX_TRAVEL_DAYS:
-        return 5
+        return 365 // 開発用：1年まで
       default:
         return 0
     }
@@ -122,18 +121,19 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     }
     setDateError('')
 
-    // プラン制限のチェック
+    // プラン制限のチェック（開発用：制限を緩和）
     const totalDays = calculateTravelDays(formData.startDate, formData.endDate)
     
-    if (!can(RestrictionType.MAX_TRIPS, currentTripCount + 1)) {
-      alert('旅行データ数の制限に達しています。プランをアップグレードしてください。')
-      return
-    }
+    // 開発用：制限チェックを無効化
+    // if (!can(RestrictionType.MAX_TRIPS, currentTripCount + 1)) {
+    //   alert('旅行データ数の制限に達しています。プランをアップグレードしてください。')
+    //   return
+    // }
     
-    if (!can(RestrictionType.MAX_TRAVEL_DAYS, totalDays)) {
-      alert('旅行日数の制限を超過しています。プランをアップグレードしてください。')
-      return
-    }
+    // if (!can(RestrictionType.MAX_TRAVEL_DAYS, totalDays)) {
+    //   alert('旅行日数の制限を超過しています。プランをアップグレードしてください。')
+    //   return
+    // }
 
     setSubmitting(true)
     try {
@@ -252,23 +252,24 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-blue-700">旅行データ数:</span>
-                  <span className={`font-medium ${isLoadingLimits ? 'text-gray-500' : can(RestrictionType.MAX_TRIPS, currentTripCount) ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className="font-medium text-green-600">
                     {isLoadingLimits 
                       ? '読み込み中...'
-                      : `${currentTripCount}/${getLimitValue(RestrictionType.MAX_TRIPS)}件 (残り${getRemaining(RestrictionType.MAX_TRIPS, currentTripCount)}件)`
+                      : `${currentTripCount}/${getLimitValue(RestrictionType.MAX_TRIPS)}件 (開発用：制限緩和)`
                     }
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-blue-700">一回の旅行の最大日数:</span>
-                  <span className={`font-medium ${isLoadingLimits ? 'text-gray-500' : can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate)) ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className="font-medium text-green-600">
                     {isLoadingLimits 
                       ? '読み込み中...'
-                      : `${calculateTravelDays(formData.startDate, formData.endDate)}日 (最大${getLimitValue(RestrictionType.MAX_TRAVEL_DAYS)}日まで)`
+                      : `${calculateTravelDays(formData.startDate, formData.endDate)}日 (開発用：最大${getLimitValue(RestrictionType.MAX_TRAVEL_DAYS)}日まで)`
                     }
                   </span>
                 </div>
-                {(!can(RestrictionType.MAX_TRIPS, currentTripCount + 1) || !can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))) && (
+                {/* 開発用：制限警告を無効化 */}
+                {/* {(!can(RestrictionType.MAX_TRIPS, currentTripCount + 1) || !can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))) && (
                   <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                     <div className="flex items-start">
                       <div className="flex-shrink-0">
@@ -304,7 +305,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                       </div>
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
             
@@ -453,7 +454,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting || !formData.title || dateError || (!can(RestrictionType.MAX_TRIPS, currentTripCount + 1) || !can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate)))}
+                  disabled={submitting || !formData.title || dateError}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
                 >
                   {submitting ? '作成中...' : '旅行を作成'}
