@@ -2,7 +2,7 @@
 
 **ドキュメント種別:** UIコンポーネント設計指針
 **対象:** デザイナー / フロントエンド開発者 / 生成AI / QA
-**適用範囲:** `tabi4.me` および関連旅行サービスの全ボタンUI
+**適用範囲:** `tabi4.me` および関連旅行サービスの全UI（ボタン + フォーム要素）
 
 ---
 
@@ -20,8 +20,6 @@
 ## 2. ボタン構造ルール
 
 ### 2.1 ベース構造
-
-全バリアント共通のクラス構成：
 
 ```css
 .btn-base {
@@ -43,7 +41,7 @@
 
 ---
 
-## 3. カラーバリアント定義
+## 3. ボタンバリアント
 
 | Variant       | 用途             | Tailwindクラス例                                                                                                                       |
 | ------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -58,122 +56,146 @@
 
 ---
 
-## 4. 実装例
+## 4. フォーム要素デザイン（Input / Select / Textarea / Toggle）
+
+### 4.1 テキスト入力（Input）
 
 ```html
-<button class="btn-base btn-md btn-primary">旅を計画する</button>
-<button class="btn-base btn-md btn-secondary">詳細を見る</button>
-<button class="btn-base btn-md btn-accent">今すぐ予約</button>
-
-<button class="btn-base btn-sm btn-outline">下書きに保存</button>
-<button class="btn-base btn-sm btn-ghost">あとで</button>
-<button class="btn-base btn-sm btn-soft">家族旅行</button>
-
-<button class="btn-base btn-md btn-danger">削除する</button>
-<button class="btn-base btn-md btn-disabled" disabled>処理中...</button>
+<input type="text" class="tj-input" placeholder="例: 行き先を入力" />
 ```
 
-React用の共通コンポーネントも用意しています。
-
-```tsx
-// components/Button.tsx
-// 使い方例
-import { Button } from '@/components/Button'
-
-export default function Example() {
-  return (
-    <div className="space-x-2">
-      <Button variant="primary">旅を計画する</Button>
-      <Button variant="secondary">詳細を見る</Button>
-      <Button variant="accent">今すぐ予約</Button>
-      <Button variant="outline">下書きに保存</Button>
-      <Button variant="ghost">あとで</Button>
-      <Button variant="soft">家族旅行</Button>
-      <Button variant="danger">削除する</Button>
-      <Button variant="disabled" disabled>
-        処理中...
-      </Button>
-    </div>
-  )
+```css
+.tj-input {
+  @apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800
+    placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400
+    transition disabled:bg-gray-100 disabled:text-gray-500;
 }
 ```
 
----
+* **Hover:** `hover:border-emerald-400`
+* **Error:** `border-rose-400 focus:ring-rose-400`
+* **Success:** `border-lime-400 focus:ring-lime-400`
 
-## 5. 配色ガイドライン
+### 4.2 セレクトボックス（Select）
 
-| 要素       | 配色方針                                          |
-| -------- | --------------------------------------------- |
-| 背景       | `slate-50`〜`gray-100`（高コントラストを避ける）            |
-| 文字       | `gray-700`（可読性優先）                             |
-| CTA      | **Primaryは1ページに1種のみ**、Secondary・Accentは補助的に使用 |
-| Disabled | すべて統一トーン（グレー）で統一感を維持                          |
-
----
-
-## 6. ダークモード指針（任意）
-
-```css
-.dark .btn-outline { @apply border-emerald-400 text-emerald-200 hover:bg-emerald-900/30; }
-.dark .btn-ghost   { @apply text-emerald-200 hover:bg-emerald-900/30; }
-.dark .btn-soft    { @apply bg-emerald-900/40 text-emerald-200 hover:bg-emerald-900/60; }
+```html
+<select class="tj-select">
+  <option>国内旅行</option>
+  <option>海外旅行</option>
+</select>
 ```
 
-背景は `dark:bg-slate-900` を基本とする。
+```css
+.tj-select {
+  @apply w-full rounded-lg border border-sky-300 bg-white px-3 py-2 text-gray-800
+    appearance-none bg-[url('data:image/svg+xml;utf8,<svg fill=\\'none\\' stroke=\\'%2366c2ff\\' stroke-width=\\'2\\' viewBox=\\'0 0 24 24\\'><path d=\\'M6 9l6 6 6-6\\'/></svg>')] bg-no-repeat bg-right-3 bg-center-right
+    focus:ring-2 focus:ring-sky-400 focus:border-sky-400 hover:border-sky-400;
+}
+```
+
+### 4.3 テキストエリア（Textarea）
+
+```html
+<textarea class="tj-textarea" rows="4" placeholder="旅の目的を記入"></textarea>
+```
+
+```css
+.tj-textarea {
+  @apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 resize-y
+    focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
+}
+```
+
+### 4.4 トグルスイッチ（Toggle）
+
+```html
+<label class="tj-toggle">
+  <input type="checkbox" />
+  <span class="slider"></span>
+</label>
+```
+
+```css
+.tj-toggle {
+  @apply relative inline-block w-12 h-6;
+}
+.tj-toggle input {
+  @apply opacity-0 w-0 h-0;
+}
+.tj-toggle .slider {
+  @apply absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full transition;
+}
+.tj-toggle input:checked + .slider {
+  @apply bg-gradient-to-r from-emerald-500 to-lime-500;
+}
+.tj-toggle .slider::before {
+  content: "";
+  @apply absolute h-5 w-5 left-0.5 bottom-0.5 bg-white rounded-full transition;
+}
+.tj-toggle input:checked + .slider::before {
+  @apply translate-x-6;
+}
+```
+
+### 4.5 チェックボックス / ラジオボタン
+
+* 枠線：`border-emerald-400`
+* チェック色：`bg-emerald-500`
+* フォーカスリング：`ring-emerald-400`
+* 無効状態：`bg-gray-100 text-gray-400`
+
+---
+
+## 5. フォーム系のアクセントカラー運用
+
+| 用途  | カラー系統         | 備考        |
+| --- | ------------- | --------- |
+| 正常  | `emerald-400` | 入力完了・有効状態 |
+| 注意  | `orange-400`  | 軽微な警告や入力中 |
+| エラー | `rose-500`    | バリデーション失敗 |
+| 補助  | `sky-400`     | 補足情報・選択状態 |
+
+---
+
+## 6. ダークモード指針（フォーム）
+
+```css
+.dark .tj-input, .dark .tj-select, .dark .tj-textarea {
+  @apply bg-slate-800 text-gray-100 border-slate-600 placeholder-gray-500;
+}
+.dark .tj-input:focus, .dark .tj-select:focus, .dark .tj-textarea:focus {
+  @apply border-emerald-400 ring-emerald-400;
+}
+```
 
 ---
 
 ## 7. 運用ルール
 
-1. **Primaryは1画面に1個まで**。他のCTAより目立つ配色にする。
-2. 削除・キャンセル等の危険操作は必ず`btn-danger`。
-3. 二次的操作（キャンセル、戻る）は`btn-outline`または`btn-ghost`。
-4. 無効状態はすべて`disabled`属性で制御。個別カラー指定は禁止。
-5. `Soft`や`Ghost`ボタンはテキストリンク的UIで乱用しない。
-6. 新規バリアントを追加する場合は、**テーマ感（Tropical Joy）を維持する暖色または自然色グラデーションのみ許可**。
+1. **フォーム内での主張度はボタンより低く保つ。** 視覚ノイズを避けるため、色は1トーン明るめの同系色。
+2. **入力エラーと成功状態は明確に区別。** 色のみで判断できるように。
+3. **必須項目には `*` 表示ではなく、`(必須)` のラベルを推奨。**
+4. **フォームとボタンの隣接時は余白を 16px 以上確保。**
+5. **入力例・補足説明は `text-sm text-gray-500` で統一。**
 
 ---
 
-## 8. Tailwind設定拡張（任意）
+## 8. メンテナンス方針
 
-```js
-// tailwind.config.js
-export default {
-  theme: {
-    extend: {
-      colors: {
-        tj: {
-          primary: { from: '#10b981', to: '#84cc16' }, // emerald→lime
-          secondary: { from: '#38bdf8', to: '#3b82f6' }, // sky→blue
-          accent: { from: '#fb923c', to: '#f43f5e' }, // orange→rose
-        },
-      },
-    },
-  },
-}
-```
-
-→ `from-tj-primary-from to-tj-primary-to` のようなカスタムグラデーションも可能。
+| 項目        | 更新基準                             |
+| --------- | -------------------------------- |
+| コンポーネント追加 | UIレビュー後に `.tj-*` プレフィックスで統一命名    |
+| フォーカスリング  | Tailwindバージョン更新時に挙動を確認           |
+| 色味変更      | `Tropical Joy` のトーンに反しないことを条件に許可 |
 
 ---
 
-## 9. メンテナンス方針
-
-| 項目      | 更新基準                                  |
-| ------- | ------------------------------------- |
-| 配色      | 季節やキャンペーンテーマと競合しない限り固定                |
-| スタイル調整  | Tailwindバージョン変更時に検証                   |
-| バリアント追加 | UIレビュー承認後のみ（`btn-`接頭辞必須）              |
-| 自動生成    | 生成AIは本ガイドラインを参照し、既存クラスを流用。新色生成は要レビュー。 |
-
----
-
-## 10. ドキュメント管理情報
+## 9. ドキュメント管理情報
 
 | 項目      | 内容                                       |
 | ------- | ---------------------------------------- |
-| ドキュメント名 | Tropical Joy Button Design System        |
-| バージョン   | 1.0                                      |
+| ドキュメント名 | Tropical Joy Button & Form Design System |
+| バージョン   | 1.1                                      |
 | 最終更新    | 2025-10-05                               |
 | 作成者     | ともさん（設計） / ChatGPT (GPT-5)（整備）           |
 | 適用範囲    | Next.js / Bubble.io / Tailwind CSSベースのUI |

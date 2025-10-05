@@ -86,6 +86,7 @@ npm run dev
 │   ├── user/              # ユーザープロフィール
 │   └── user-settings/     # ユーザー設定
 ├── components/             # React コンポーネント
+│   └── common/             # 基本UI（Button/Input/Select/Textarea/Toggle）
 │   ├── AvatarUpload.tsx   # アバターアップロード
 │   ├── ImageUpload.tsx    # 画像アップロード
 │   ├── PlaceSearchInput.tsx # 場所検索
