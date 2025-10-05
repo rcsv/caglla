@@ -13,6 +13,7 @@ import PlanInfoDisplay from '@/components/PlanInfoDisplay'
 import { useSubscription } from '@/lib/subscription-context'
 import { RestrictionType } from '@/lib/restriction-system'
 import type { Trip } from '@/lib/types'
+import Loading from '@/components/common/Loading'
 
 export default function HomePage() {
   const { user, loading, logout } = useAuth()
@@ -58,14 +59,7 @@ export default function HomePage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">読み込み中...</p>
-        </div>
-      </div>
-    )
+    return <Loading fullScreen size="lg" />
   }
 
   if (!user) {
@@ -120,10 +114,7 @@ export default function HomePage() {
         </div>
 
         {tripsLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">旅行を読み込み中...</p>
-          </div>
+          <Loading message="旅行を読み込み中..." className="py-12" />
         ) : trips.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">✈️</div>
