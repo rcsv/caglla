@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import PlannerIcon from '@/components/common/icons/PlannerIcon'
 import { getZIndexClass } from '@/lib/z-index-layers'
 
 export interface HomeHeaderProps {
@@ -43,7 +44,9 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
           {/* Left: Logo and Nav */}
           <div className="flex items-center gap-6">
             <Link href="/home" className="flex items-center gap-2 text-gray-900">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-white font-bold">C</span>
+              <span className="inline-flex items-center justify-center rounded-lg bg-emerald-500 text-white font-bold h-8 w-8">
+                <PlannerIcon className="h-5 w-5" />
+              </span>
               <span className="text-xl font-bold">{appName}</span>
             </Link>
             <nav className="hidden md:flex items-center gap-4 text-sm">
