@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { dateUtils } from '@/lib/date-utils'
 import UserSettingsModal from '@/components/UserSettingsModal'
-import TripCard from '@/components/common/TripCard'
+import TripCard from '@/components/tripcard/TripCard'
 import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
 import UpcomingTripsSection from '@/components/common/UpcomingTripsSection'
@@ -15,17 +15,15 @@ import MemoriesSection from '@/components/common/MemoriesSection'
 import PlanInfoDisplay from '@/components/PlanInfoDisplay'
 import CountryStatsSimple from '@/components/stats/CountryStatsSimple'
 import RecommendedTrips from '@/components/stats/RecommendedTrips'
-import MainContent from '@/components/common/MainContent'
-import { useSubscription } from '@/lib/subscription-context'
-import { RestrictionType } from '@/lib/restriction-system'
+import NextTripCard from '@/components/tripcard/NextTripCard'
+import { useUserData } from '@/lib/user-data-context'
 import type { Trip } from '@/lib/types'
 import Loading from '@/components/common/Loading'
 
 export default function HomePage() {
   const { user, loading, logout } = useAuth()
+  const { trips, tripsLoading, addTrip, refreshTrips } = useUserData()
   const router = useRouter()
-  const [trips, setTrips] = useState<Trip[]>([])
-  const [tripsLoading, setTripsLoading] = useState(true)
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
 
   useEffect(() => {
@@ -34,42 +32,12 @@ export default function HomePage() {
     }
   }, [user, loading, router])
 
-  useEffect(() => {
-    if (user) {
-      fetchTrips()
-    }
-  }, [user])
-
-  const fetchTrips = async () => {
-    try {
-      const response = await makeAuthenticatedRequest('/api/trips/accessible?includeShared=true')
-      if (response.ok) {
-        const data = await response.json()
-        setTrips(data.trips || [])
-      } else if (response.status === 401) {
-        console.error('Authentication failed')
-        router.push('/')
-      } else {
-        console.error('Failed to fetch trips:', response.status)
-      }
-    } catch (error) {
-      console.error('Failed to fetch trips:', error)
-    } finally {
-      setTripsLoading(false)
-    }
-  }
-
-  const handleLogout = async () => {
-    await logout()
-    router.push('/')
-  }
-
   const handleTripCreated = () => {
     // 旅行作成後に旅行一覧を再取得
-    fetchTrips()
+    refreshTrips()
   }
 
-  if (loading) {
+  if (loading || tripsLoading) {
     return <Loading fullScreen size="lg" />
   }
 
@@ -80,12 +48,17 @@ export default function HomePage() {
   const { futureTrips, pastTrips } = dateUtils.sortTripsByDate(trips)
   const nextTrip = futureTrips[0] // 次の旅行プラン（1件のみ）
 
+  const handleLogout = async () => {
+    await logout()
+    router.push('/')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <HomeHeader
         userName={user.displayName || user.email || 'User'}
-        planName={useSubscription().subscriptionStatus.plan?.name || 'Season Traveler'}
+        planName="Season Traveler" // UserDataProviderから取得するように後で更新
         avatarUrl={user.photoURL}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onLogout={handleLogout}
@@ -97,7 +70,7 @@ export default function HomePage() {
           {/* 7側のコンテンツ */}
           <div className="lg:col-span-7 space-y-8">
             {/* メインコンテンツ（旅行作成 + 次の旅行プラン） */}
-            <MainContent nextTrip={nextTrip} onTripCreated={handleTripCreated} />
+            <NextTripCard nextTrip={nextTrip} onTripCreated={handleTripCreated} />
 
             {/* 最近チェックした旅行 */}
             <div className="bg-white rounded-lg shadow-md p-6">
