@@ -29,6 +29,20 @@
       ]
     },
     {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "access_level",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "user_id",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "days",
       "queryScope": "COLLECTION",
       "fields": [
@@ -81,16 +95,6 @@
         {
           "fieldPath": "created_at",
           "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "google_id",
-          "order": "ASCENDING"
         }
       ]
     }
