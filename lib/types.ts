@@ -24,6 +24,37 @@ export interface User {
   created_at: Date | string
   updated_at: Date | string
   planId: 'season_traveler' | 'backpacker' | 'globetrotter' | 'planner_pro' | 'enterprise'
+  storageUsage?: StorageUsage
+}
+
+// ============================================================================
+// ストレージ使用量管理
+// ============================================================================
+
+export interface StorageUsage {
+  totalBytes: number
+  fileCount: number
+  lastUpdated: Date | string
+  files: StorageFile[]
+}
+
+export interface StorageFile {
+  id: string
+  fileName: string
+  fileSize: number
+  fileType: string
+  storagePath: string
+  downloadUrl: string
+  uploadedAt: Date | string
+  tripId?: string
+  isAvatar?: boolean
+}
+
+export interface StorageQuota {
+  planId: 'season_traveler' | 'backpacker' | 'globetrotter' | 'planner_pro' | 'enterprise'
+  maxBytes: number
+  maxFiles: number
+  description: string
 }
 
 // ============================================================================
