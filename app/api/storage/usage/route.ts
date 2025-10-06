@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const decodedToken = await verifyIdToken(token)
     
     const body = await request.json()
-    const { action, fileId } = body
+    const { action, fileId, file } = body
     
     if (action === 'reset') {
       // 管理者のみストレージ使用量をリセット可能
@@ -84,6 +84,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'ストレージ使用量をリセットしました'
+      })
+    } else if (action === 'add' && file) {
+      // ファイルをストレージ使用量に追加
+      const result = await storageManagementHelpers.addFileToStorageUsage(decodedToken.uid, file)
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: 500 }
+        )
+      }
+      
+      return NextResponse.json({
+        success: true,
+        message: 'ファイルをストレージ使用量に追加しました'
+      })
+    } else if (action === 'remove' && fileId) {
+      // ファイルをストレージ使用量から削除
+      const result = await storageManagementHelpers.removeFileFromStorageUsage(decodedToken.uid, fileId)
+      if (!result.success) {
+        return NextResponse.json(
+          { success: false, error: result.error },
+          { status: 500 }
+        )
+      }
+      
+      return NextResponse.json({
+        success: true,
+        message: 'ファイルをストレージ使用量から削除しました'
       })
     }
     

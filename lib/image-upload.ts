@@ -1,7 +1,62 @@
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { storage } from './firebase'
-import { storageManagementHelpers } from './storage-management'
 import { StorageFile } from './types'
+
+// ストレージ制限チェック用のAPI呼び出し
+async function checkStorageQuota(userId: string, fileSize: number): Promise<{ canUpload: boolean; error?: string }> {
+  try {
+    const token = await getAuthToken()
+    const response = await fetch('/api/storage/quota', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fileSize })
+    })
+    
+    const result = await response.json()
+    return {
+      canUpload: result.success ? result.data.canUpload : false,
+      error: result.success ? result.data.error : result.error
+    }
+  } catch (error) {
+    console.error('Error checking storage quota:', error)
+    return { canUpload: false, error: 'ストレージ制限の確認に失敗しました' }
+  }
+}
+
+// ストレージ使用量更新用のAPI呼び出し
+async function updateStorageUsage(userId: string, file: StorageFile): Promise<{ success: boolean; error?: string }> {
+  try {
+    const token = await getAuthToken()
+    const response = await fetch('/api/storage/usage', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ action: 'add', file })
+    })
+    
+    const result = await response.json()
+    return {
+      success: result.success,
+      error: result.error
+    }
+  } catch (error) {
+    console.error('Error updating storage usage:', error)
+    return { success: false, error: 'ストレージ使用量の更新に失敗しました' }
+  }
+}
+
+// Firebase IDトークンを取得
+async function getAuthToken(): Promise<string> {
+  const { auth } = await import('./firebase')
+  const user = auth.currentUser
+  if (!user) throw new Error('User not authenticated')
+  return await user.getIdToken()
+}
 
 export const imageUploadHelpers = {
   // Upload image to Firebase Storage with storage tracking
@@ -13,7 +68,7 @@ export const imageUploadHelpers = {
       console.log('UserId:', userId)
       
       // ストレージ制限をチェック
-      const quotaCheck = await storageManagementHelpers.checkStorageQuota(userId, file.size)
+      const quotaCheck = await checkStorageQuota(userId, file.size)
       if (!quotaCheck.canUpload) {
         throw new Error(`ストレージ制限を超えています: ${quotaCheck.error}`)
       }
@@ -46,7 +101,7 @@ export const imageUploadHelpers = {
         isAvatar
       }
       
-      const addResult = await storageManagementHelpers.addFileToStorageUsage(userId, storageFile)
+      const addResult = await updateStorageUsage(userId, storageFile)
       if (!addResult.success) {
         console.warn('Failed to track storage usage:', addResult.error)
         // アップロードは成功したが、追跡に失敗した場合は警告のみ
@@ -110,9 +165,23 @@ export const imageUploadHelpers = {
       
       // ストレージ使用量からも削除
       if (userId && fileId) {
-        const removeResult = await storageManagementHelpers.removeFileFromStorageUsage(userId, fileId)
-        if (!removeResult.success) {
-          console.warn('Failed to update storage usage after deletion:', removeResult.error)
+        try {
+          const token = await getAuthToken()
+          const response = await fetch('/api/storage/usage', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action: 'remove', fileId })
+          })
+          
+          const result = await response.json()
+          if (!result.success) {
+            console.warn('Failed to update storage usage after deletion:', result.error)
+          }
+        } catch (error) {
+          console.warn('Failed to update storage usage after deletion:', error)
         }
       }
     } catch (error) {
