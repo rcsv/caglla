@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/lib/auth-context'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import TripEditor from '@/components/TripEditor'
@@ -26,9 +26,10 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-export default function TripPage({ params }: { params: { id: string } }) {
+export default function TripPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+  const { id } = useParams<{ id: string }>()
   const [trip, setTrip] = useState<Trip | null>(null)
   const [tripLoading, setTripLoading] = useState(true)
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
@@ -140,7 +141,7 @@ export default function TripPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const fetchTrip = async () => {
       try {
-        const response = await makeAuthenticatedRequest(`/api/trip/${params.id}`)
+        const response = await makeAuthenticatedRequest(`/api/trip/${id}`)
         if (response.ok) {
           const tripData = await response.json()
           setTrip(tripData)
@@ -154,10 +155,10 @@ export default function TripPage({ params }: { params: { id: string } }) {
       }
     }
 
-    if (user) {
+    if (user && id) {
       fetchTrip()
     }
-  }, [user, params.id])
+  }, [user, id])
 
   const handleAddSchedule = (dayId: string) => {
     setSelectedDayId(dayId)
