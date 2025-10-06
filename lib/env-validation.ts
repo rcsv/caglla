@@ -25,8 +25,8 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
     'FIREBASE_PROJECT_ID',
     'FIREBASE_CLIENT_EMAIL',
     'FIREBASE_PRIVATE_KEY',
-    'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY',
-    'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY' // Google Maps APIキーを必須に追加
+    'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY'
+    // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
   ]
 
   const missingVars: string[] = []
@@ -95,8 +95,8 @@ export function validateClientEnvironment(): Partial<RequiredEnvVars> {
     'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
     'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
     'NEXT_PUBLIC_FIREBASE_APP_ID',
-    'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY',
-    'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY' // Google Maps APIキーをクライアントサイドでも必須に追加
+    'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY'
+    // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
   ]
 
   const missingVars: string[] = []
@@ -122,8 +122,8 @@ export function validateClientEnvironment(): Partial<RequiredEnvVars> {
         NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'dev-project.appspot.com',
         NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
         NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789:web:dev',
-        NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || 'dev-places-key',
-        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'dev-maps-key'
+        NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || 'dev-places-key'
+        // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
       }
     } else {
       throw new EnvValidationError(message)
@@ -137,7 +137,7 @@ export function validateClientEnvironment(): Partial<RequiredEnvVars> {
     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
     NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-    NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY!,
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!
+    NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY!
+    // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
   }
 }
