@@ -198,7 +198,7 @@ export default function StorageTestPage() {
             <h2 className="text-lg font-semibold text-gray-800 mb-3">
               現在のストレージ使用量
             </h2>
-            <StorageUsageDisplay showDetails={true} />
+            <StorageUsageDisplay showDetails={true} showDeleteButtons={true} />
           </div>
 
           {/* エラー表示 */}

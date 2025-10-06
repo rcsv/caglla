@@ -7,6 +7,7 @@ import { StorageUsage, StorageQuota } from '@/lib/types'
 interface StorageUsageDisplayProps {
   className?: string
   showDetails?: boolean
+  showDeleteButtons?: boolean
 }
 
 interface StorageData {
@@ -23,11 +24,13 @@ interface StorageData {
 
 export default function StorageUsageDisplay({ 
   className = '', 
-  showDetails = false 
+  showDetails = false,
+  showDeleteButtons = false
 }: StorageUsageDisplayProps) {
   const [storageData, setStorageData] = useState<StorageData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const { user } = useAuth()
 
   useEffect(() => {
@@ -68,6 +71,44 @@ export default function StorageUsageDisplay({
     }
   }
 
+  const deleteFile = async (fileId: string) => {
+    if (!user) return
+
+    try {
+      setDeleting(fileId)
+      setError(null)
+
+      // Firebase IDトークンを取得
+      const token = await user.getIdToken()
+      
+      const response = await fetch('/api/storage/usage', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'remove', fileId }),
+      })
+
+      if (!response.ok) {
+        throw new Error('ファイルの削除に失敗しました')
+      }
+
+      const result = await response.json()
+      if (result.success) {
+        // 使用量を再取得
+        await fetchStorageUsage()
+      } else {
+        throw new Error(result.error || 'ファイルの削除に失敗しました')
+      }
+    } catch (error: any) {
+      console.error('Error deleting file:', error)
+      setError(error.message || 'ファイルの削除に失敗しました')
+    } finally {
+      setDeleting(null)
+    }
+  }
+
   if (!user) {
     return null
   }
@@ -85,6 +126,12 @@ export default function StorageUsageDisplay({
     return (
       <div className={`text-red-600 text-sm ${className}`}>
         {error}
+        <button
+          onClick={fetchStorageUsage}
+          className="ml-2 px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+        >
+          再試行
+        </button>
       </div>
     )
   }
@@ -94,6 +141,18 @@ export default function StorageUsageDisplay({
   }
 
   const { usage, quota, usagePercentage, formattedUsage } = storageData
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const formatDate = (date: string | Date) => {
+    return new Date(date).toLocaleString('ja-JP')
+  }
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -153,6 +212,71 @@ export default function StorageUsageDisplay({
               🚫 ストレージ制限に達しています。ファイルを削除するか、プランをアップグレードしてください。
             </div>
           )}
+
+          {/* アップロード履歴 */}
+          {usage.files && usage.files.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">アップロード履歴</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-1">ファイル名</th>
+                      <th className="text-left p-1">サイズ</th>
+                      <th className="text-left p-1">種類</th>
+                      <th className="text-left p-1">日時</th>
+                      {showDeleteButtons && <th className="text-left p-1">操作</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usage.files.map((file) => (
+                      <tr key={file.id} className="border-b">
+                        <td className="p-1 font-mono text-xs truncate max-w-20" title={file.fileName}>
+                          {file.fileName}
+                        </td>
+                        <td className="p-1">{formatBytes(file.fileSize)}</td>
+                        <td className="p-1">
+                          <span className={`px-1 py-0.5 rounded text-xs ${
+                            file.isAvatar 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {file.isAvatar ? 'アバター' : '旅行画像'}
+                          </span>
+                        </td>
+                        <td className="p-1 text-xs">{formatDate(file.uploadedAt)}</td>
+                        {showDeleteButtons && (
+                          <td className="p-1">
+                            <button
+                              onClick={() => deleteFile(file.id)}
+                              disabled={deleting === file.id}
+                              className={`px-2 py-1 rounded text-xs ${
+                                deleting === file.id
+                                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                  : 'bg-red-100 text-red-800 hover:bg-red-200'
+                              }`}
+                            >
+                              {deleting === file.id ? '削除中...' : '削除'}
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 更新ボタン */}
+          <div className="mt-3">
+            <button
+              onClick={fetchStorageUsage}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+            >
+              データを更新
+            </button>
+          </div>
         </div>
       )}
     </div>
