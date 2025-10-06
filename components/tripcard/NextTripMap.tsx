@@ -94,8 +94,16 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
     let center = { lat: 35.6762, lng: 139.6503 } // デフォルト: 東京
     let zoom = 10
 
-    if (trip.destination) {
-      // 目的地に応じて座標を設定
+    // destination_placeの座標を優先使用
+    if (trip.destination_place?.geometry?.location) {
+      center = {
+        lat: trip.destination_place.geometry.location.lat,
+        lng: trip.destination_place.geometry.location.lng
+      }
+      zoom = 11
+      console.log('NextTripMap: destination_placeの座標を使用', center)
+    } else if (trip.destination) {
+      // フォールバック: 目的地名による条件分岐
       const destination = trip.destination.toLowerCase()
       
       if (destination.includes('ホノルル') || destination.includes('honolulu') || destination.includes('hawaii')) {
