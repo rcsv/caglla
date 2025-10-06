@@ -1,8 +1,9 @@
 'use client'
 
 import React from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Card from '@/components/common/Card'
+import Button from '@/components/common/Button'
 import TripCard from '@/components/tripcard/TripCard'
 import type { Trip } from '@/lib/types'
 
@@ -13,16 +14,21 @@ export interface MemoriesSectionProps {
 export const MemoriesSection: React.FC<MemoriesSectionProps> = ({ trips }) => {
   if (!trips || trips.length === 0) return null
   const limited = trips.slice(0, 3)
+  const router = useRouter()
   return (
     <section id="memories">
       <Card
         title={
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium mr-3">思い出</span>
-              <span className="text-gray-500 text-sm">{trips.length}件</span>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">思い出</h2>
+              <span className="px-4 text-gray-500 text-sm">{trips.length}件</span>
             </div>
-            <Link href="/memories" className="text-sm text-blue-600 hover:underline">すべて見る</Link>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => router.push('/memories')}
+            >すべての思い出</Button>
           </div>
         }
         padding="lg"

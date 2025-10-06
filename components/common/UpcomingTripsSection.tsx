@@ -1,10 +1,12 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/common/Card'
 import TripCard from '@/components/tripcard/TripCard'
 import type { Trip } from '@/lib/types'
+import Button from './Button'
 
 export interface UpcomingTripsSectionProps {
   trips: Trip[]
@@ -13,16 +15,22 @@ export interface UpcomingTripsSectionProps {
 export const UpcomingTripsSection: React.FC<UpcomingTripsSectionProps> = ({ trips }) => {
   if (!trips || trips.length === 0) return null
   const limited = trips.slice(0, 3)
+  const router = useRouter()
   return (
     <section>
       <Card
         title={
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mr-3">次の旅行プラン</span>
-              <span className="text-gray-500 text-sm">{trips.length}件</span>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">計画中の旅行</h2>
+              <span className="px-4 text-gray-500 text-sm">{trips.length}件</span>
             </div>
-            <Link href="/plan" className="text-sm text-blue-600 hover:underline">すべて見る</Link>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => router.push('/plan')}>すべての旅行プラン</Button>
+
+            {/* <Link href="/plan" className="text-sm text-blue-600 hover:underline">すべて見る</Link> */}
           </div>
         }
         padding="lg"
