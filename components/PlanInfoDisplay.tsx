@@ -8,6 +8,7 @@ import {
   PLAN_CONFIGS
 } from '@/lib/restriction-system'
 import { Button } from '@/components/common/Button'
+import StorageUsageDisplay from '@/components/StorageUsageDisplay'
 import Link from 'next/link'
 
 interface PlanInfoDisplayProps {
@@ -55,10 +56,7 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
   const maxTrips = plan.limits[RestrictionType.MAX_TRIPS]
   const tripProgress = maxTrips === -1 ? 0 : (tripCount / maxTrips) * 100
 
-  // ストレージ制限（現在は仮の値、実際のファイルサイズ計算は後で実装）
-  const maxStorageGB = plan.limits[RestrictionType.MAX_STORAGE_GB]
-  const currentStorageGB = 0 // TODO: 実際のファイルサイズを計算
-  const storageProgress = maxStorageGB === -1 ? 0 : (currentStorageGB / maxStorageGB) * 100
+  // ストレージ制限（StorageUsageDisplayコンポーネントで動的に表示）
 
   return (
     <div className={`bg-white rounded-lg border p-4 ${className}`}>
@@ -104,26 +102,8 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
           </div>
         )}
 
-        {/* ストレージ制限 */}
-        {maxStorageGB !== -1 && (
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600">ファイルサイズ</span>
-              <span className="text-sm text-gray-900">
-                {currentStorageGB.toFixed(1)} / {maxStorageGB}GB
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  storageProgress >= 100 ? 'bg-red-500' : 
-                  storageProgress >= 80 ? 'bg-yellow-500' : 'bg-blue-500'
-                }`}
-                style={{ width: `${Math.min(storageProgress, 100)}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
+        {/* ストレージ使用量（動的表示） */}
+        <StorageUsageDisplay showDetails={false} />
       </div>
 
       {/* プラン変更ボタン */}
