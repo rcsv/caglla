@@ -107,7 +107,7 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
         {countryGroups.slice(0, 5).map((group, index) => (
           <div key={group.countryCode} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full text-sm font-semibold">
+              <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 text-white rounded-full text-sm font-semibold">
                 {index + 1}
               </div>
               <div>
@@ -116,7 +116,7 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-lg font-bold text-blue-600">{group.tripCount}</span>
+              <span className="text-lg font-bold text-emerald-600">{group.tripCount}</span>
               <span className="text-sm text-gray-500">回</span>
             </div>
           </div>
@@ -130,7 +130,7 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
               // 詳細表示のロジックをここに追加
               console.log('Show detailed country stats')
             }}
-            className="w-full text-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+            className="w-full text-center text-emerald-600 hover:text-emerald-700 text-sm font-medium"
           >
             詳細を見る →
           </button>
