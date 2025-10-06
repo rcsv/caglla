@@ -24,6 +24,8 @@ try {
   app = getApps().length === 0 ? initializeApp(firebaseAdminConfig) : getApps()[0]
   adminDb = getFirestore(app)
   adminAuth = getAuth(app)
+  
+  console.log('✅ Firebase Admin SDK initialized successfully')
 } catch (error) {
   console.warn('⚠️ Firebase Admin SDK environment validation failed, using fallback config:', error)
   
@@ -40,6 +42,7 @@ try {
     app = getApps().length === 0 ? initializeApp(firebaseAdminConfig) : getApps()[0]
     adminDb = getFirestore(app)
     adminAuth = getAuth(app)
+    console.log('✅ Firebase Admin SDK initialized with fallback config')
   } catch (initError) {
     console.error('❌ Firebase Admin SDK initialization failed:', initError)
     app = null

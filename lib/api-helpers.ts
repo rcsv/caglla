@@ -25,7 +25,10 @@ export async function makeAuthenticatedRequest(url: string, options: RequestInit
     ...options.headers,
   }
 
-  return fetch(url, {
+  // 相対URLの場合は現在のオリジンを使用
+  const fullUrl = url.startsWith('/') ? `${window.location.origin}${url}` : url
+
+  return fetch(fullUrl, {
     ...options,
     headers,
   })

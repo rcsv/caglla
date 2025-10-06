@@ -6,6 +6,12 @@ import type { Trip } from '@/lib/types'
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if Firebase Admin SDK is initialized
+    if (!adminAuth || !adminDb) {
+      console.warn('Firebase Admin SDK not initialized, returning empty trips')
+      return NextResponse.json({ trips: [] })
+    }
+
     // Get authorization header
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
