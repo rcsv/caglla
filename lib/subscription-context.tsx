@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { dummyPaymentService, SubscriptionPlan as DummySubscriptionPlan, Subscription, PaymentMethod } from './dummy-payment-service'
-import { RestrictionProvider, RestrictionType, PlanId } from './restriction-system'
+import { RestrictionProvider, RestrictionType, PlanId, PLAN_CONFIGS } from './restriction-system'
 
 // 統一されたSubscriptionPlan型
 export type SubscriptionPlan = DummySubscriptionPlan
@@ -40,38 +40,120 @@ interface SubscriptionContextType {
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
 
-// デモ用のサブスクリプションプラン（簡素化版）
+// デモ用のサブスクリプションプラン（新しいプランシステムに合わせて更新）
 const DEMO_PLANS: SubscriptionPlan[] = [
   {
-    id: 'free',
-    name: '無料プラン',
+    id: 'season_traveler',
+    name: 'Season Traveler',
     price: 0,
     currency: 'JPY',
     interval: 'month',
-    features: ['基本的な旅行計画', '最大3地点まで'],
+    features: [
+      '基本的な旅行計画',
+      '最大5件の旅行',
+      '最大3件のプライベート旅行',
+      '最大3日間の旅行',
+      '10MBのストレージ',
+      '100MBのアカウントストレージ'
+    ],
     limits: {
-      travelCount: 3,
-      travelDays: 5,
-      storageGB: 0.05,
-      photosPerTrip: 5
+      travelCount: 5,
+      travelDays: 3,
+      storageGB: 0.01,
+      photosPerTrip: 10
     }
   },
   {
-    id: 'plus',
-    name: 'Plusプラン',
+    id: 'backpacker',
+    name: 'Backpacker',
+    price: 480,
+    currency: 'JPY',
+    interval: 'month',
+    features: [
+      '最大12件の旅行',
+      '最大6件のプライベート旅行',
+      '最大7日間の旅行',
+      '50MBのストレージ',
+      '500MBのアカウントストレージ',
+      'AIサポート機能',
+      'ルート最適化機能'
+    ],
+    limits: {
+      travelCount: 12,
+      travelDays: 7,
+      storageGB: 0.05,
+      photosPerTrip: 50
+    }
+  },
+  {
+    id: 'globetrotter',
+    name: 'Globetrotter',
     price: 980,
     currency: 'JPY',
     interval: 'month',
     features: [
-      '無制限の旅行計画',
+      '無制限の旅行',
+      '無制限のプライベート旅行',
+      '無制限の旅行日数',
+      '100MBのストレージ',
+      '1GBのアカウントストレージ',
+      'AIサポート機能',
       'ルート最適化機能',
-      'リアルタイム交通情報',
+      'Outlook統合機能'
+    ],
+    limits: {
+      travelCount: -1,
+      travelDays: -1,
+      storageGB: 0.1,
+      photosPerTrip: -1
+    }
+  },
+  {
+    id: 'planner_pro',
+    name: 'Planner Pro',
+    price: 1980,
+    currency: 'JPY',
+    interval: 'month',
+    features: [
+      '無制限の旅行',
+      '無制限のプライベート旅行',
+      '無制限の旅行日数',
+      '1GBのストレージ',
+      '10GBのアカウントストレージ',
+      'AIサポート機能',
+      'ルート最適化機能',
+      'Outlook統合機能',
       '優先サポート'
     ],
     limits: {
       travelCount: -1,
       travelDays: -1,
-      storageGB: 5,
+      storageGB: 1,
+      photosPerTrip: -1
+    }
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: 0,
+    currency: 'JPY',
+    interval: 'month',
+    features: [
+      '無制限の旅行',
+      '無制限のプライベート旅行',
+      '無制限の旅行日数',
+      '無制限のストレージ',
+      '無制限のアカウントストレージ',
+      'AIサポート機能',
+      'ルート最適化機能',
+      'Outlook統合機能',
+      '専用サポート',
+      'カスタム機能'
+    ],
+    limits: {
+      travelCount: -1,
+      travelDays: -1,
+      storageGB: -1,
       photosPerTrip: -1
     }
   }
@@ -143,17 +225,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }
 
   const useRouteOptimization = (): boolean => {
-    if (!subscriptionStatus.isSubscribed) {
-      return false
-    }
-
-    // Backpackerプラン以上でルート最適化が利用可能
-    const planId = subscriptionStatus.plan?.id
-    if (planId === 'backpacker' || planId === 'globetrotter') {
-      return true
-    }
-
-    return false
+    return hasFeature(RestrictionType.ROUTE_OPTIMIZATION)
   }
 
   const refreshSubscription = async () => {
@@ -218,22 +290,22 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   // 新しい制限システムの実装
   const can = (type: RestrictionType, currentValue: number = 1): boolean => {
-    const planId = subscriptionStatus.plan?.id || PlanId.SEASON_TRAVELER
+    const planId = (subscriptionStatus.plan?.id as PlanId) || PlanId.SEASON_TRAVELER
     return RestrictionProvider.can(planId, type, currentValue)
   }
 
   const hasFeature = (type: RestrictionType): boolean => {
-    const planId = subscriptionStatus.plan?.id || PlanId.SEASON_TRAVELER
+    const planId = (subscriptionStatus.plan?.id as PlanId) || PlanId.SEASON_TRAVELER
     return RestrictionProvider.hasFeature(planId, type)
   }
 
   const getRemaining = (type: RestrictionType, currentValue: number = 0): number => {
-    const planId = subscriptionStatus.plan?.id || PlanId.SEASON_TRAVELER
+    const planId = (subscriptionStatus.plan?.id as PlanId) || PlanId.SEASON_TRAVELER
     return RestrictionProvider.getRemaining(planId, type, currentValue)
   }
 
   const getLimitExceededMessage = (type: RestrictionType, currentValue: number = 0): string => {
-    const planId = subscriptionStatus.plan?.id || PlanId.SEASON_TRAVELER
+    const planId = (subscriptionStatus.plan?.id as PlanId) || PlanId.SEASON_TRAVELER
     return RestrictionProvider.getLimitExceededMessage(planId, type, currentValue)
   }
 
@@ -251,7 +323,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }
 
   const canUploadPhotos = (photosPerTrip: number): boolean => {
-    return can(RestrictionType.MAX_PHOTOS_PER_TRIP, photosPerTrip)
+    return can(RestrictionType.MAX_STORAGE_GB, photosPerTrip) // ストレージ制限として扱う
   }
 
   useEffect(() => {

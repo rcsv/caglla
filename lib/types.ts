@@ -23,6 +23,7 @@ export interface User {
   preferences?: UserPreferences
   created_at: Date | string
   updated_at: Date | string
+  planId: 'season_traveler' | 'backpacker' | 'globetrotter' | 'planner_pro' | 'enterprise'
 }
 
 // ============================================================================
