@@ -7,8 +7,8 @@ import ImageUpload from '@/components/ImageUpload'
 import { imageUploadHelpers } from '@/lib/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import { PlaceData } from '@/lib/firestore'
-import { useSubscription } from '@/lib/subscription-context'
-import { RestrictionType } from '@/lib/restriction-system'
+import { useUserData } from '@/lib/user-data-context'
+import { RestrictionProvider, RestrictionType } from '@/lib/restriction-system'
 import { getZIndexClass } from '@/lib/z-index-layers'
 import { Input } from '@/components/common/Input'
 import { Textarea } from '@/components/common/Textarea'
@@ -25,7 +25,7 @@ interface CreateTripDialogProps {
 
 export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateTripDialogProps) {
   const router = useRouter()
-  const { can, getRemaining, getLimitExceededMessage } = useSubscription()
+  const { userPlanId, tripCount, privateTripCount } = useUserData()
   
   const [formData, setFormData] = useState({
     title: '',
@@ -38,54 +38,14 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     imageUrl: ''
   })
   const [submitting, setSubmitting] = useState(false)
-  const [currentTripCount, setCurrentTripCount] = useState(0)
-  const [currentPrivateTripCount, setCurrentPrivateTripCount] = useState(0)
-  const [isLoadingLimits, setIsLoadingLimits] = useState(true)
   const [dateError, setDateError] = useState('')
 
-  // プラン制限のチェック
-  useEffect(() => {
-    const checkLimits = async () => {
-      setIsLoadingLimits(true)
-      try {
-        // 現在の旅行数を取得
-        const response = await makeAuthenticatedRequest('/api/trips', {
-          method: 'GET'
-        })
-        
-        if (response.ok) {
-          const trips = await response.json()
-          const tripsArray = Array.isArray(trips) ? trips : trips.trips || []
-          setCurrentTripCount(tripsArray.length)
-          
-          // プライベート旅行数をカウント
-          const privateTrips = tripsArray.filter((trip: any) => trip.access_level === 'private')
-          setCurrentPrivateTripCount(privateTrips.length)
-        } else {
-          console.error('API request failed:', response.status, response.statusText)
-          setCurrentTripCount(0)
-          setCurrentPrivateTripCount(0)
-        }
-      } catch (error) {
-        console.error('Error checking plan limits:', error)
-        setCurrentTripCount(0)
-        setCurrentPrivateTripCount(0)
-      } finally {
-        setIsLoadingLimits(false)
-      }
-    }
-
-    if (isOpen) {
-      checkLimits()
-    }
-  }, [isOpen])
-
-  // 制限チェック
-  const canCreateTrip = can(RestrictionType.MAX_TRIPS, currentTripCount + 1)
-  const canCreatePrivateTrip = can(RestrictionType.MAX_PRIVATE_TRIPS, currentPrivateTripCount + 1)
+  // RestrictionProviderを使用してプラン制限をチェック
+  const canCreateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRIPS, tripCount + 1)
+  const canCreatePrivateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_PRIVATE_TRIPS, privateTripCount + 1)
   
-  const remainingTrips = getRemaining(RestrictionType.MAX_TRIPS, currentTripCount)
-  const remainingPrivateTrips = getRemaining(RestrictionType.MAX_PRIVATE_TRIPS, currentPrivateTripCount)
+  const remainingTrips = RestrictionProvider.getRemaining(userPlanId, RestrictionType.MAX_TRIPS, tripCount)
+  const remainingPrivateTrips = RestrictionProvider.getRemaining(userPlanId, RestrictionType.MAX_PRIVATE_TRIPS, privateTripCount)
 
   // 旅行日数の計算
   const calculateTravelDays = (startDate: string, endDate: string): number => {
@@ -100,7 +60,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   }
 
   // 旅行日数制限チェック
-  const canCreateTravelDays = can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))
+  const canCreateTravelDays = RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))
 
   // 日付のバリデーション
   const validateDates = (startDate: string, endDate: string): string => {
@@ -263,28 +223,19 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 <div className="flex justify-between">
                   <span className="text-blue-700">旅行データ数:</span>
                   <span className={`font-medium ${canCreateTrip ? 'text-green-600' : 'text-red-600'}`}>
-                    {isLoadingLimits 
-                      ? '読み込み中...'
-                      : `${currentTripCount}件 (残り${remainingTrips === -1 ? '無制限' : remainingTrips}件)`
-                    }
+                    {tripCount}件 (残り{remainingTrips === -1 ? '無制限' : remainingTrips}件)
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-blue-700">プライベート旅行数:</span>
                   <span className={`font-medium ${canCreatePrivateTrip ? 'text-green-600' : 'text-red-600'}`}>
-                    {isLoadingLimits 
-                      ? '読み込み中...'
-                      : `${currentPrivateTripCount}件 (残り${remainingPrivateTrips === -1 ? '無制限' : remainingPrivateTrips}件)`
-                    }
+                    {privateTripCount}件 (残り{remainingPrivateTrips === -1 ? '無制限' : remainingPrivateTrips}件)
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-blue-700">一回の旅行の最大日数:</span>
                   <span className={`font-medium ${canCreateTravelDays ? 'text-green-600' : 'text-red-600'}`}>
-                    {isLoadingLimits 
-                      ? '読み込み中...'
-                      : `${calculateTravelDays(formData.startDate, formData.endDate)}日`
-                    }
+                    {calculateTravelDays(formData.startDate, formData.endDate)}日
                   </span>
                 </div>
                 {/* 制限警告 */}

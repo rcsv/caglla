@@ -1,14 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import TripCard from '@/components/tripcard/TripCard'
 import CreateTripDialog from '@/components/common/CreateTripDialog'
 import { Button } from '@/components/common/Button'
 import NextTripMap from './NextTripMap'
-import { useSubscription } from '@/lib/subscription-context'
-import { RestrictionType } from '@/lib/restriction-system'
-import { makeAuthenticatedRequest } from '@/lib/api-helpers'
+import { useUserData } from '@/lib/user-data-context'
+import { RestrictionProvider, RestrictionType } from '@/lib/restriction-system'
 import type { Trip } from '@/lib/types'
 
 interface NextTripCardProps {
@@ -18,48 +17,17 @@ interface NextTripCardProps {
 
 export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardProps) {
   const router = useRouter()
-  const { can, getRemaining, getLimitExceededMessage } = useSubscription()
+  const { userPlanId, tripCount, planConfig } = useUserData()
   const [isCreateTripDialogOpen, setIsCreateTripDialogOpen] = useState(false)
-  const [currentTripCount, setCurrentTripCount] = useState(0)
-  const [isLoadingLimits, setIsLoadingLimits] = useState(true)
 
-  // 現在の旅行数を取得
-  useEffect(() => {
-    const fetchTripCount = async () => {
-      setIsLoadingLimits(true)
-      try {
-        const response = await makeAuthenticatedRequest('/api/trips', {
-          method: 'GET'
-        })
-        
-        if (response.ok) {
-          const trips = await response.json()
-          const tripsArray = Array.isArray(trips) ? trips : trips.trips || []
-          setCurrentTripCount(tripsArray.length)
-        } else {
-          setCurrentTripCount(0)
-        }
-      } catch (error) {
-        console.error('Error fetching trip count:', error)
-        setCurrentTripCount(0)
-      } finally {
-        setIsLoadingLimits(false)
-      }
-    }
-
-    fetchTripCount()
-  }, [])
-
-  // 旅行作成が可能かチェック
-  const canCreateTrip = can(RestrictionType.MAX_TRIPS, currentTripCount + 1)
-  const remainingTrips = getRemaining(RestrictionType.MAX_TRIPS, currentTripCount)
-  const limitExceededMessage = getLimitExceededMessage(RestrictionType.MAX_TRIPS, currentTripCount + 1)
+  // RestrictionProviderを使用してプラン制限をチェック
+  const canCreateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRIPS, tripCount + 1)
+  const remainingTrips = RestrictionProvider.getRemaining(userPlanId, RestrictionType.MAX_TRIPS, tripCount)
+  const limitExceededMessage = RestrictionProvider.getLimitExceededMessage(userPlanId, RestrictionType.MAX_TRIPS, tripCount + 1)
 
   const handleTripCreated = () => {
     onTripCreated()
     setIsCreateTripDialogOpen(false)
-    // 旅行作成後に旅行数を更新
-    setCurrentTripCount(prev => prev + 1)
   }
 
   const handleCreateTripClick = () => {
@@ -89,12 +57,9 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
           <Button
             variant="primary"
             onClick={handleCreateTripClick}
-            disabled={!canCreateTrip || isLoadingLimits}
+            disabled={!canCreateTrip}
           >
-            {isLoadingLimits 
-              ? '読み込み中...' 
-              : nextTrip ? '新しい旅行を作成' : '旅行を作成'
-            }
+            {nextTrip ? '新しい旅行を作成' : '旅行を作成'}
           </Button>
         </div>
 
@@ -115,9 +80,9 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
                 <Button
                   variant="primary"
                   onClick={handleCreateTripClick}
-                  disabled={!canCreateTrip || isLoadingLimits}
+                  disabled={!canCreateTrip}
                 >
-                  {isLoadingLimits ? '読み込み中...' : '旅行を作成'}
+                  旅行を作成
                 </Button>
               </div>
             )}
@@ -140,30 +105,28 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
         </div>
 
         {/* プラン制限情報 */}
-        {!isLoadingLimits && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-600">
-                旅行数: {currentTripCount}件
-                {remainingTrips !== -1 && (
-                  <span className="ml-2 text-gray-500">
-                    (残り{remainingTrips}件まで作成可能)
-                  </span>
-                )}
-                {remainingTrips === -1 && (
-                  <span className="ml-2 text-green-600 font-medium">
-                    (無制限)
-                  </span>
-                )}
-              </div>
-              {!canCreateTrip && (
-                <div className="text-sm text-red-600 font-medium">
-                  制限に達しています
-                </div>
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              旅行数: {tripCount}件
+              {remainingTrips !== -1 && (
+                <span className="ml-2 text-gray-500">
+                  (残り{remainingTrips}件まで作成可能)
+                </span>
+              )}
+              {remainingTrips === -1 && (
+                <span className="ml-2 text-green-600 font-medium">
+                  (無制限)
+                </span>
               )}
             </div>
+            {!canCreateTrip && (
+              <div className="text-sm text-red-600 font-medium">
+                制限に達しています
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* 追加アクション */}
         {nextTrip && (

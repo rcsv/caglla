@@ -5,9 +5,9 @@ import { useUserData } from '@/lib/user-data-context'
 import { 
   RestrictionProvider, 
   RestrictionType, 
-  PLAN_CONFIGS,
-  formatLimit
+  PLAN_CONFIGS
 } from '@/lib/restriction-system'
+import { Button } from '@/components/common/Button'
 import Link from 'next/link'
 
 interface PlanInfoDisplayProps {
@@ -15,7 +15,7 @@ interface PlanInfoDisplayProps {
 }
 
 export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps) {
-  const { userPlanId, planLoading, planError } = useUserData()
+  const { userPlanId, planConfig, planLoading, planError, tripCount } = useUserData()
 
   if (planLoading) {
     return (
@@ -38,7 +38,7 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
     )
   }
 
-  if (!userPlanId) {
+  if (!userPlanId || !planConfig) {
     return (
       <div className={`bg-white rounded-lg border p-4 ${className}`}>
         <div className="text-center text-gray-500 text-sm">
@@ -48,102 +48,91 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
     )
   }
 
-  const plan = PLAN_CONFIGS[userPlanId]
-  const isFreePlan = userPlanId === 'season_traveler'
+  const plan = planConfig
   const isPaidPlan = userPlanId !== 'season_traveler'
+
+  // 旅行数制限のプログレスバー
+  const maxTrips = plan.limits[RestrictionType.MAX_TRIPS]
+  const tripProgress = maxTrips === -1 ? 0 : (tripCount / maxTrips) * 100
+
+  // ストレージ制限（現在は仮の値、実際のファイルサイズ計算は後で実装）
+  const maxStorageGB = plan.limits[RestrictionType.MAX_STORAGE_GB]
+  const currentStorageGB = 0 // TODO: 実際のファイルサイズを計算
+  const storageProgress = maxStorageGB === -1 ? 0 : (currentStorageGB / maxStorageGB) * 100
 
   return (
     <div className={`bg-white rounded-lg border p-4 ${className}`}>
-      <div className="flex items-center justify-between">
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-            isFreePlan 
-              ? 'bg-gray-100 text-gray-800' 
-              : isPaidPlan
-                ? 'bg-green-100 text-green-800'
-                : 'bg-yellow-100 text-yellow-800'
-          }`}>
-            {isFreePlan ? '無料プラン' : isPaidPlan ? '有料プラン' : 'プラン未設定'}
-          </div>
-          
+          {isPaidPlan && (
+            <div className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+              有料プラン
+            </div>
+          )}
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              {plan.name}
+              利用プラン
             </h3>
             <p className="text-sm text-gray-600">
-              {plan.price === 0 ? '無料' : `¥${plan.price.toLocaleString()}/${plan.interval}`}
+              {plan.name}
             </p>
           </div>
         </div>
-
-        <div className="flex items-center space-x-2">
-          <Link
-            href="/subscription"
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1 rounded-md hover:bg-blue-50 transition-colors"
-          >
-            プラン変更
-          </Link>
-        </div>
       </div>
 
-      {/* プラン機能の詳細表示 */}
-      <div className="mt-3 pt-3 border-t border-gray-100">
-        <div className="space-y-2">
-          {/* 制限値の表示 */}
-          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-            <div className="flex items-center space-x-1">
-              <span className={`w-2 h-2 rounded-full ${
-                plan.limits[RestrictionType.MAX_TRIPS] === -1 ? 'bg-green-400' : 'bg-gray-300'
-              }`}></span>
-              <span>旅行: {formatLimit(plan.limits[RestrictionType.MAX_TRIPS], RestrictionType.MAX_TRIPS)}</span>
+      {/* 制限情報 */}
+      <div className="space-y-4">
+        {/* 旅行数制限 */}
+        {maxTrips !== -1 && (
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-gray-600">旅行設定数</span>
+              <span className="text-sm text-gray-900">
+                {tripCount} / {maxTrips}件
+              </span>
             </div>
-            
-            <div className="flex items-center space-x-1">
-              <span className={`w-2 h-2 rounded-full ${
-                plan.limits[RestrictionType.MAX_PRIVATE_TRIPS] === -1 ? 'bg-green-400' : 'bg-gray-300'
-              }`}></span>
-              <span>プライベート: {formatLimit(plan.limits[RestrictionType.MAX_PRIVATE_TRIPS], RestrictionType.MAX_PRIVATE_TRIPS)}</span>
-            </div>
-            
-            <div className="flex items-center space-x-1">
-              <span className={`w-2 h-2 rounded-full ${
-                plan.limits[RestrictionType.MAX_TRAVEL_DAYS] === -1 ? 'bg-green-400' : 'bg-gray-300'
-              }`}></span>
-              <span>日数: {formatLimit(plan.limits[RestrictionType.MAX_TRAVEL_DAYS], RestrictionType.MAX_TRAVEL_DAYS)}</span>
-            </div>
-            
-            <div className="flex items-center space-x-1">
-              <span className={`w-2 h-2 rounded-full ${
-                plan.limits[RestrictionType.MAX_STORAGE_GB] === -1 ? 'bg-green-400' : 'bg-gray-300'
-              }`}></span>
-              <span>ストレージ: {formatLimit(plan.limits[RestrictionType.MAX_STORAGE_GB], RestrictionType.MAX_STORAGE_GB)}</span>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  tripProgress >= 100 ? 'bg-red-500' : 
+                  tripProgress >= 80 ? 'bg-yellow-500' : 'bg-blue-500'
+                }`}
+                style={{ width: `${Math.min(tripProgress, 100)}%` }}
+              ></div>
             </div>
           </div>
+        )}
 
-          {/* 機能の表示 */}
-          <div className="flex items-center space-x-4 text-xs text-gray-600">
-            <div className="flex items-center space-x-1">
-              <span className={`w-2 h-2 rounded-full ${
-                RestrictionProvider.hasFeature(userPlanId, RestrictionType.AI_SUPPORT) ? 'bg-green-400' : 'bg-gray-300'
-              }`}></span>
-              <span>AIサポート: {RestrictionProvider.hasFeature(userPlanId, RestrictionType.AI_SUPPORT) ? '利用可能' : '制限'}</span>
+        {/* ストレージ制限 */}
+        {maxStorageGB !== -1 && (
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-gray-600">ファイルサイズ</span>
+              <span className="text-sm text-gray-900">
+                {currentStorageGB.toFixed(1)} / {maxStorageGB}GB
+              </span>
             </div>
-            
-            <div className="flex items-center space-x-1">
-              <span className={`w-2 h-2 rounded-full ${
-                RestrictionProvider.hasFeature(userPlanId, RestrictionType.ROUTE_OPTIMIZATION) ? 'bg-green-400' : 'bg-gray-300'
-              }`}></span>
-              <span>ルート最適化: {RestrictionProvider.hasFeature(userPlanId, RestrictionType.ROUTE_OPTIMIZATION) ? '利用可能' : '制限'}</span>
-            </div>
-            
-            <div className="flex items-center space-x-1">
-              <span className={`w-2 h-2 rounded-full ${
-                RestrictionProvider.hasFeature(userPlanId, RestrictionType.OUTLOOK_INTEGRATION) ? 'bg-green-400' : 'bg-gray-300'
-              }`}></span>
-              <span>Outlook統合: {RestrictionProvider.hasFeature(userPlanId, RestrictionType.OUTLOOK_INTEGRATION) ? '利用可能' : '制限'}</span>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  storageProgress >= 100 ? 'bg-red-500' : 
+                  storageProgress >= 80 ? 'bg-yellow-500' : 'bg-blue-500'
+                }`}
+                style={{ width: `${Math.min(storageProgress, 100)}%` }}
+              ></div>
             </div>
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* プラン変更ボタン */}
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <Link href="/subscription" className="block">
+          <Button variant="secondary" size="sm" fullWidth>
+            プラン変更
+          </Button>
+        </Link>
       </div>
     </div>
   )

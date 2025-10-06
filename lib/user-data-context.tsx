@@ -3,12 +3,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
-import { PlanId, RestrictionType } from '@/lib/restriction-system'
+import { PlanId, RestrictionType, PLAN_CONFIGS } from '@/lib/restriction-system'
 import type { Trip } from '@/lib/types'
 
 interface UserDataContextType {
   // プラン情報
-  userPlanId: PlanId | null
+  userPlanId: PlanId
+  planConfig: any
   planLoading: boolean
   planError: string | null
   
@@ -38,8 +39,8 @@ interface UserDataProviderProps {
 export function UserDataProvider({ children }: UserDataProviderProps) {
   const { user } = useAuth()
   
-  // プラン情報の状態
-  const [userPlanId, setUserPlanId] = useState<PlanId | null>(null)
+  // プラン情報の状態（デフォルト値を設定）
+  const [userPlanId, setUserPlanId] = useState<PlanId>(PlanId.SEASON_TRAVELER)
   const [planLoading, setPlanLoading] = useState(false)
   const [planError, setPlanError] = useState<string | null>(null)
   
@@ -139,6 +140,7 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
   const value: UserDataContextType = {
     // プラン情報
     userPlanId,
+    planConfig: PLAN_CONFIGS[userPlanId],
     planLoading,
     planError,
     
