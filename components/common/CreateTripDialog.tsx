@@ -5,11 +5,17 @@ import { useRouter } from 'next/navigation'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import ImageUpload from '@/components/ImageUpload'
 import { imageUploadHelpers } from '@/lib/image-upload'
-import PlaceSearchInput from '@/components/PlaceSearchInput'
+import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import { PlaceData } from '@/lib/firestore'
 import { useSubscription } from '@/lib/subscription-context'
 import { RestrictionType } from '@/lib/restriction-system'
 import { getZIndexClass } from '@/lib/z-index-layers'
+import { Input } from '@/components/common/Input'
+import { Textarea } from '@/components/common/Textarea'
+import { Select } from '@/components/common/Select'
+import { Toggle } from '@/components/common/Toggle'
+import { Button } from '@/components/common/Button'
+
 
 interface CreateTripDialogProps {
   isOpen: boolean
@@ -19,20 +25,8 @@ interface CreateTripDialogProps {
 
 export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateTripDialogProps) {
   const router = useRouter()
-  const { can, getRemaining } = useSubscription()
+  const { can, getRemaining, getLimitExceededMessage } = useSubscription()
   
-  // 制限値を取得するヘルパー関数（開発用：制限を緩和）
-  const getLimitValue = (type: RestrictionType): number => {
-    switch (type) {
-      case RestrictionType.MAX_TRIPS:
-        return 12 // 開発用：12回まで
-      case RestrictionType.MAX_TRAVEL_DAYS:
-        return 365 // 開発用：1年まで
-      default:
-        return 0
-    }
-  }
-
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -40,11 +34,12 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     destinationPlace: undefined as PlaceData | undefined,
     startDate: '',
     endDate: '',
-    accessLevel: 'private' as 'private' | 'public',
+    accessLevel: 'public' as 'private' | 'public',
     imageUrl: ''
   })
   const [submitting, setSubmitting] = useState(false)
   const [currentTripCount, setCurrentTripCount] = useState(0)
+  const [currentPrivateTripCount, setCurrentPrivateTripCount] = useState(0)
   const [isLoadingLimits, setIsLoadingLimits] = useState(true)
   const [dateError, setDateError] = useState('')
 
@@ -60,20 +55,21 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
         
         if (response.ok) {
           const trips = await response.json()
-          console.log('API Response:', trips) // デバッグ用
-          
-          // tripsが配列かどうかチェック
           const tripsArray = Array.isArray(trips) ? trips : trips.trips || []
-          console.log('Trips array:', tripsArray) // デバッグ用
-          
           setCurrentTripCount(tripsArray.length)
+          
+          // プライベート旅行数をカウント
+          const privateTrips = tripsArray.filter((trip: any) => trip.access_level === 'private')
+          setCurrentPrivateTripCount(privateTrips.length)
         } else {
           console.error('API request failed:', response.status, response.statusText)
           setCurrentTripCount(0)
+          setCurrentPrivateTripCount(0)
         }
       } catch (error) {
         console.error('Error checking plan limits:', error)
         setCurrentTripCount(0)
+        setCurrentPrivateTripCount(0)
       } finally {
         setIsLoadingLimits(false)
       }
@@ -83,6 +79,13 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       checkLimits()
     }
   }, [isOpen])
+
+  // 制限チェック
+  const canCreateTrip = can(RestrictionType.MAX_TRIPS, currentTripCount + 1)
+  const canCreatePrivateTrip = can(RestrictionType.MAX_PRIVATE_TRIPS, currentPrivateTripCount + 1)
+  
+  const remainingTrips = getRemaining(RestrictionType.MAX_TRIPS, currentTripCount)
+  const remainingPrivateTrips = getRemaining(RestrictionType.MAX_PRIVATE_TRIPS, currentPrivateTripCount)
 
   // 旅行日数の計算
   const calculateTravelDays = (startDate: string, endDate: string): number => {
@@ -95,6 +98,9 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     
     return diffDays
   }
+
+  // 旅行日数制限チェック
+  const canCreateTravelDays = can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))
 
   // 日付のバリデーション
   const validateDates = (startDate: string, endDate: string): string => {
@@ -121,19 +127,23 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     }
     setDateError('')
 
-    // プラン制限のチェック（開発用：制限を緩和）
+    // プラン制限のチェック
     const totalDays = calculateTravelDays(formData.startDate, formData.endDate)
     
-    // 開発用：制限チェックを無効化
-    // if (!can(RestrictionType.MAX_TRIPS, currentTripCount + 1)) {
-    //   alert('旅行データ数の制限に達しています。プランをアップグレードしてください。')
-    //   return
-    // }
+    if (!canCreateTrip) {
+      alert('旅行データ数の制限に達しています。プランをアップグレードしてください。')
+      return
+    }
     
-    // if (!can(RestrictionType.MAX_TRAVEL_DAYS, totalDays)) {
-    //   alert('旅行日数の制限を超過しています。プランをアップグレードしてください。')
-    //   return
-    // }
+    if (!canCreateTravelDays) {
+      alert('旅行日数の制限を超過しています。プランをアップグレードしてください。')
+      return
+    }
+
+    if (formData.accessLevel === 'private' && !canCreatePrivateTrip) {
+      alert('プライベート旅行数の制限に達しています。プランをアップグレードしてください。')
+      return
+    }
 
     setSubmitting(true)
     try {
@@ -218,7 +228,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       destinationPlace: undefined,
       startDate: '',
       endDate: '',
-      accessLevel: 'private',
+      accessLevel: 'public',
       imageUrl: ''
     })
     setDateError('')
@@ -228,7 +238,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   if (!isOpen) return null
 
   return (
-    <div className={`fixed inset-0 bg-black bg-opacity-50 ${getZIndexClass('FLOAT_MODAL')}`}>
+    <div className={`fixed inset-0 bg-black bg-opacity-50 ${getZIndexClass('FLOAT_MODAL')}`} style={{ margin: 0, top: 0 }}>
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <div className={`bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${getZIndexClass('FLOAT_MODAL', 1)}`}>
           {/* Header */}
@@ -252,24 +262,33 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-blue-700">旅行データ数:</span>
-                  <span className="font-medium text-green-600">
+                  <span className={`font-medium ${canCreateTrip ? 'text-green-600' : 'text-red-600'}`}>
                     {isLoadingLimits 
                       ? '読み込み中...'
-                      : `${currentTripCount}/${getLimitValue(RestrictionType.MAX_TRIPS)}件 (開発用：制限緩和)`
+                      : `${currentTripCount}件 (残り${remainingTrips === -1 ? '無制限' : remainingTrips}件)`
+                    }
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-blue-700">プライベート旅行数:</span>
+                  <span className={`font-medium ${canCreatePrivateTrip ? 'text-green-600' : 'text-red-600'}`}>
+                    {isLoadingLimits 
+                      ? '読み込み中...'
+                      : `${currentPrivateTripCount}件 (残り${remainingPrivateTrips === -1 ? '無制限' : remainingPrivateTrips}件)`
                     }
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-blue-700">一回の旅行の最大日数:</span>
-                  <span className="font-medium text-green-600">
+                  <span className={`font-medium ${canCreateTravelDays ? 'text-green-600' : 'text-red-600'}`}>
                     {isLoadingLimits 
                       ? '読み込み中...'
-                      : `${calculateTravelDays(formData.startDate, formData.endDate)}日 (開発用：最大${getLimitValue(RestrictionType.MAX_TRAVEL_DAYS)}日まで)`
+                      : `${calculateTravelDays(formData.startDate, formData.endDate)}日`
                     }
                   </span>
                 </div>
-                {/* 開発用：制限警告を無効化 */}
-                {/* {(!can(RestrictionType.MAX_TRIPS, currentTripCount + 1) || !can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))) && (
+                {/* 制限警告 */}
+                {(!canCreateTrip || !canCreatePrivateTrip || !canCreateTravelDays) && (
                   <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                     <div className="flex items-start">
                       <div className="flex-shrink-0">
@@ -305,41 +324,31 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                       </div>
                     </div>
                   </div>
-                )} */}
+                )}
               </div>
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                  旅行のタイトル *
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="例: 沖縄旅行"
-                />
-              </div>
+              <Input
+                label="旅行のタイトル *"
+                type="text"
+                id="title"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                required
+                placeholder="例: 沖縄旅行"
+              />
 
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                  説明
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="旅行の詳細や目的を記入してください"
-                />
-              </div>
+              <Textarea
+                label="説明"
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={3}
+                placeholder="旅行の詳細や目的を記入してください"
+              />
 
               <div>
                 <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
@@ -357,53 +366,39 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 />
                 {/* 従来のテキスト入力も残す（フォールバック用） */}
                 <div className="mt-2">
-                  <label htmlFor="destinationText" className="block text-xs text-gray-500 mb-1">
-                    または手動で入力
-                  </label>
-                  <input
+                  <Input
+                    label="または手動で入力"
                     type="text"
                     id="destinationText"
                     name="destination"
                     value={formData.destination}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     placeholder="例: 沖縄県那覇市"
+                    className="text-sm"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
-                    出発日
-                  </label>
-                  <input
-                    type="date"
-                    id="startDate"
-                    name="startDate"
-                    value={formData.startDate}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      dateError ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                </div>
+                <Input
+                  label="出発日"
+                  type="date"
+                  id="startDate"
+                  name="startDate"
+                  value={formData.startDate}
+                  onChange={handleInputChange}
+                  error={dateError ? '日付エラー' : undefined}
+                />
 
-                <div>
-                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
-                    帰宅日
-                  </label>
-                  <input
-                    type="date"
-                    id="endDate"
-                    name="endDate"
-                    value={formData.endDate}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      dateError ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                </div>
+                <Input
+                  label="帰宅日"
+                  type="date"
+                  id="endDate"
+                  name="endDate"
+                  value={formData.endDate}
+                  onChange={handleInputChange}
+                  error={dateError ? '日付エラー' : undefined}
+                />
               </div>
 
               {/* 日付エラーメッセージ */}
@@ -423,19 +418,31 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
               )}
 
               <div>
-                <label htmlFor="accessLevel" className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   公開設定
                 </label>
-                <select
-                  id="accessLevel"
-                  name="accessLevel"
-                  value={formData.accessLevel}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="private">非公開（自分と共有ユーザーのみ）</option>
-                  <option value="public">公開（誰でも閲覧可能）</option>
-                </select>
+                <Toggle
+                  label="非公開（自分と共有ユーザーのみ）"
+                  checked={formData.accessLevel === 'private'}
+                  onChange={(e) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      accessLevel: e.target.checked ? 'private' : 'public'
+                    }))
+                  }}
+                  disabled={!canCreatePrivateTrip}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  {formData.accessLevel === 'private' 
+                    ? 'この旅行は自分と共有ユーザーのみが閲覧できます' 
+                    : 'この旅行は誰でも閲覧できます'
+                  }
+                </p>
+                {!canCreatePrivateTrip && (
+                  <p className="mt-1 text-xs text-red-600">
+                    プライベート旅行数の制限に達しています
+                  </p>
+                )}
               </div>
 
               <ImageUpload
@@ -445,20 +452,20 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
               />
 
               <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleCancel}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
                 >
                   キャンセル
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={submitting || !formData.title || dateError}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+                  variant="primary"
+                  disabled={submitting || !formData.title || !!dateError || !canCreateTrip || !canCreateTravelDays || (formData.accessLevel === 'private' && !canCreatePrivateTrip)}
                 >
                   {submitting ? '作成中...' : '旅行を作成'}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
