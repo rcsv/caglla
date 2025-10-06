@@ -51,7 +51,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             </Link>
             <nav className="hidden md:flex items-center gap-4 text-sm">
               <Link href="/home" className="text-gray-600 hover:text-gray-900">Travel Guide</Link>
-              <Link href="/home#memories" className="text-gray-600 hover:text-gray-900">Memories</Link>
+              <Link href="/memories" className="text-gray-600 hover:text-gray-900">Memories</Link>
             </nav>
           </div>
 
