@@ -84,58 +84,9 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
     initializeMap()
   }, [])
 
-  // trip の情報に基づいて地図を更新
-  useEffect(() => {
+  // マーカーを作成・更新する関数
+  const updateMapAndMarker = (center: { lat: number; lng: number }, zoom: number) => {
     if (!map || !trip) return
-
-    console.log('NextTripMap: 旅行情報に基づいて地図を更新', trip.destination)
-
-    // 旅行の目的地に基づいて地図の中心を設定
-    let center = { lat: 35.6762, lng: 139.6503 } // デフォルト: 東京
-    let zoom = 10
-
-    // destination_placeの座標を優先使用
-    if (trip.destination_place?.geometry?.location) {
-      center = {
-        lat: trip.destination_place.geometry.location.lat,
-        lng: trip.destination_place.geometry.location.lng
-      }
-      zoom = 11
-      console.log('NextTripMap: destination_placeの座標を使用', center)
-    } else if (trip.destination) {
-      // フォールバック: 目的地名による条件分岐
-      const destination = trip.destination.toLowerCase()
-      
-      if (destination.includes('ホノルル') || destination.includes('honolulu') || destination.includes('hawaii')) {
-        center = { lat: 21.3099, lng: -157.8581 } // ホノルル
-        zoom = 11
-        console.log('NextTripMap: ホノルルに設定')
-      } else if (destination.includes('那覇') || destination.includes('沖縄') || destination.includes('okinawa')) {
-        center = { lat: 26.2124, lng: 127.6792 } // 那覇市
-        zoom = 12
-        console.log('NextTripMap: 那覇市に設定')
-      } else if (destination.includes('大阪') || destination.includes('osaka')) {
-        center = { lat: 34.6937, lng: 135.5023 } // 大阪市
-        zoom = 11
-      } else if (destination.includes('京都') || destination.includes('kyoto')) {
-        center = { lat: 35.0116, lng: 135.7681 } // 京都市
-        zoom = 11
-      } else if (destination.includes('札幌') || destination.includes('sapporo')) {
-        center = { lat: 43.0642, lng: 141.3469 } // 札幌市
-        zoom = 11
-      } else if (destination.includes('福岡') || destination.includes('fukuoka')) {
-        center = { lat: 33.5904, lng: 130.4017 } // 福岡市
-        zoom = 11
-      } else if (destination.includes('名古屋') || destination.includes('nagoya')) {
-        center = { lat: 35.1815, lng: 136.9066 } // 名古屋市
-        zoom = 11
-      } else if (destination.includes('横浜') || destination.includes('yokohama')) {
-        center = { lat: 35.4437, lng: 139.6380 } // 横浜市
-        zoom = 11
-      } else {
-        console.log('NextTripMap: 未対応の目的地、東京をデフォルトとして使用')
-      }
-    }
 
     // 地図の中心とズームを更新
     map.setCenter(center)
@@ -172,6 +123,51 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
     markerRef.current = newMarker
     
     console.log('NextTripMap: 地図の中心を更新', center, 'ズーム:', zoom)
+  }
+
+  // trip の情報に基づいて地図を更新
+  useEffect(() => {
+    if (!map || !trip) return
+
+    console.log('NextTripMap: 旅行情報に基づいて地図を更新', trip.destination)
+
+    // destination_placeの座標を優先使用
+    if (trip.destination_place?.geometry?.location) {
+      const center = {
+        lat: trip.destination_place.geometry.location.lat,
+        lng: trip.destination_place.geometry.location.lng
+      }
+      const zoom = 11
+      console.log('NextTripMap: destination_placeの座標を使用', center)
+      updateMapAndMarker(center, zoom)
+    } else {
+      // フォールバック: ブラウザの位置情報を取得
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const center = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            }
+            const zoom = 10
+            console.log('NextTripMap: ブラウザの位置情報を使用', center)
+            updateMapAndMarker(center, zoom)
+          },
+          (error) => {
+            console.log('NextTripMap: 位置情報取得エラー、東京をデフォルトとして使用', error)
+            // エラーの場合は東京をデフォルトとして使用
+            const center = { lat: 35.6762, lng: 139.6503 }
+            const zoom = 10
+            updateMapAndMarker(center, zoom)
+          }
+        )
+      } else {
+        console.log('NextTripMap: 位置情報API非対応、東京をデフォルトとして使用')
+        const center = { lat: 35.6762, lng: 139.6503 }
+        const zoom = 10
+        updateMapAndMarker(center, zoom)
+      }
+    }
 
   }, [map, trip])
 
