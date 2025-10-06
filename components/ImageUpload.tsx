@@ -2,25 +2,41 @@
 
 import { useState, useRef } from 'react'
 import { imageUploadHelpers } from '@/lib/image-upload'
+import { useAuth } from '@/lib/auth-context'
 
 interface ImageUploadProps {
   currentImageUrl?: string
   onImageChange: (imageUrl: string | null) => void
   tripId?: string
   disabled?: boolean
+  fileId?: string
+  onFileIdChange?: (fileId: string | null) => void
 }
 
-export default function ImageUpload({ currentImageUrl, onImageChange, tripId, disabled }: ImageUploadProps) {
+export default function ImageUpload({ 
+  currentImageUrl, 
+  onImageChange, 
+  tripId, 
+  disabled, 
+  fileId,
+  onFileIdChange 
+}: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { user } = useAuth()
 
   const processFile = async (file: File) => {
     // Validate file
     const validation = imageUploadHelpers.validateImageFile(file)
     if (!validation.valid) {
       setError(validation.error || '無効なファイルです')
+      return
+    }
+
+    if (!user) {
+      setError('ログインが必要です')
       return
     }
 
@@ -33,15 +49,25 @@ export default function ImageUpload({ currentImageUrl, onImageChange, tripId, di
       // Generate path for the image
       const path = tripId 
         ? imageUploadHelpers.generateTripImagePath(tripId, file.name)
-        : `temp/${Date.now()}_${file.name}`
+        : imageUploadHelpers.generateAvatarImagePath(user.id, file.name)
 
       console.log('Upload path:', path)
 
-      // Upload image
-      const imageUrl = await imageUploadHelpers.uploadImage(file, path)
-      console.log('Upload successful, URL:', imageUrl)
+      // Upload image with storage tracking
+      const result = await imageUploadHelpers.uploadImage(
+        file, 
+        path, 
+        user.id, 
+        tripId, 
+        !tripId // isAvatar if no tripId
+      )
       
-      onImageChange(imageUrl)
+      console.log('Upload successful, URL:', result.downloadURL, 'FileId:', result.fileId)
+      
+      onImageChange(result.downloadURL)
+      if (onFileIdChange) {
+        onFileIdChange(result.fileId)
+      }
     } catch (error) {
       console.error('Detailed upload error:', error)
       setError(`画像のアップロードに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`)
@@ -59,8 +85,15 @@ export default function ImageUpload({ currentImageUrl, onImageChange, tripId, di
   const handleRemoveImage = async () => {
     if (currentImageUrl) {
       try {
-        await imageUploadHelpers.deleteImage(currentImageUrl)
+        await imageUploadHelpers.deleteImage(
+          currentImageUrl, 
+          user?.id, 
+          fileId
+        )
         onImageChange(null)
+        if (onFileIdChange) {
+          onFileIdChange(null)
+        }
       } catch (error) {
         console.error('Error deleting image:', error)
         setError('画像の削除に失敗しました')
