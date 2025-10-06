@@ -40,6 +40,16 @@ export default function ImageUpload({
       return
     }
 
+    // デバッグ: ユーザー情報を確認
+    console.log('User object:', user)
+    console.log('User ID:', user.id)
+    console.log('User UID:', user.uid)
+    
+    if (!user.id && !user.uid) {
+      setError('ユーザーIDが取得できません。ログインし直してください。')
+      return
+    }
+
     setError(null)
     setUploading(true)
 
@@ -47,9 +57,10 @@ export default function ImageUpload({
       console.log('Starting image upload for file:', file.name, 'Size:', file.size)
       
       // Generate path for the image
+      const userId = user.id || user.uid
       const path = tripId 
         ? imageUploadHelpers.generateTripImagePath(tripId, file.name)
-        : imageUploadHelpers.generateAvatarImagePath(user.id, file.name)
+        : imageUploadHelpers.generateAvatarImagePath(userId, file.name)
 
       console.log('Upload path:', path)
 
@@ -57,7 +68,7 @@ export default function ImageUpload({
       const result = await imageUploadHelpers.uploadImage(
         file, 
         path, 
-        user.id, 
+        userId, 
         tripId, 
         !tripId // isAvatar if no tripId
       )
@@ -85,9 +96,10 @@ export default function ImageUpload({
   const handleRemoveImage = async () => {
     if (currentImageUrl) {
       try {
+        const userId = user?.id || user?.uid
         await imageUploadHelpers.deleteImage(
           currentImageUrl, 
-          user?.id, 
+          userId, 
           fileId
         )
         onImageChange(null)
