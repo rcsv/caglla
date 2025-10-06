@@ -65,8 +65,9 @@ export async function POST(request: NextRequest) {
     const { action, fileId, file } = body
     
     if (action === 'reset') {
-      // 管理者のみストレージ使用量をリセット可能
-      if (decodedToken.planId !== 'enterprise') {
+      // 開発環境では誰でもリセット可能、本番環境では管理者のみ
+      const isDevelopment = process.env.NODE_ENV === 'development'
+      if (!isDevelopment && decodedToken.planId !== 'enterprise') {
         return NextResponse.json(
           { success: false, error: '権限がありません' },
           { status: 403 }
