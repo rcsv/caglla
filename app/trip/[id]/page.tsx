@@ -18,6 +18,11 @@ import TripHotelDisplay from '@/components/TripHotelDisplay'
 import TripMap from '@/components/TripMap'
 import Checklist from '@/components/Checklist'
 import NavigationMenu from '@/components/planner/NavigationMenu'
+import Loading from '@/components/common/Loading'
+import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
+import FloatingTitleBar from '@/components/planner/FloatingTitleBar'
+import { PinIcon } from '@/components/common/icons/PinIcon'
+import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { Trip, Day, Itinerary, User } from '@/lib/firestore'
@@ -746,14 +751,7 @@ export default function TripPage() {
   }
 
   if (loading || tripLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">読み込み中...</p>
-        </div>
-      </div>
-    )
+    return <Loading fullScreen size="lg" message="読み込み中..." />
   }
 
   if (!user || !trip) {
@@ -810,8 +808,11 @@ export default function TripPage() {
 
       {/* Main Content Pane - Scrollable */}
       <div className="flex-1 overflow-y-auto scrollbar-hide main-content-scrollable main-content-shadow">
-        {/* Hero Header with Background Image */}
-        <header className="relative h-[200px] md:h-[240px] overflow-hidden">
+        {/* Floating Title Bar */}
+        <FloatingTitleBar title={trip.title} accessLevel={trip.access_level === 'private' ? 'private' : 'public'} className="zidx-left-panel" />
+        {/* Hero Header with Background Image - show only in summary view */}
+        {currentView === 'summary' && (
+        <header className="relative overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
           {/* Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -839,16 +840,7 @@ export default function TripPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
-                
-                <Link
-                  href="/"
-                  className="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  戻る
-                </Link>
+
               </div>
               <TripEditor 
                 trip={trip as any} 
@@ -865,12 +857,10 @@ export default function TripPage() {
                     {trip.title}
                   </h1>
                   
-                  {/* Date and Location */}
-                  <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+                  {/* Date and Location - 2 lines */}
+                  <div className="flex flex-col items-start gap-2 mb-6">
                     <div className="flex items-center text-white">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
+                      <CalendarIcon className="w-5 h-5 mr-2" color="white" />
                       <span className="text-lg font-medium">
                         {trip.start_date && trip.end_date 
                           ? dateUtils.formatTripDateRange(trip.start_date, trip.end_date)
@@ -881,10 +871,7 @@ export default function TripPage() {
                     
                     {trip.destination && (
                       <div className="flex items-center text-white">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
+                        <PinIcon className="w-5 h-5 mr-2" color="white" />
                         <span className="text-lg font-medium">{trip.destination}</span>
                       </div>
                     )}
@@ -897,26 +884,7 @@ export default function TripPage() {
                     </p>
                   )}
                   
-                  {/* Privacy Status */}
-                  <div className="flex items-center text-white text-sm opacity-80 drop-shadow-md mb-2">
-                    <svg 
-                      className="w-4 h-4 mr-2" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      {trip.access_level === 'private' ? (
-                        // Locked icon for private
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      ) : (
-                        // Unlocked icon for public
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                      )}
-                    </svg>
-                    <span>
-                      {trip.access_level === 'private' ? '非公開' : '公開'}
-                    </span>
-                  </div>
+
                   
                   {/* Creator Info */}
                   {trip.creator && (
@@ -929,6 +897,7 @@ export default function TripPage() {
             </div>
           </div>
         </header>
+        )}
 
         {/* Summary Section（view=summary のとき表示）*/}
         {currentView === 'summary' && (
@@ -1250,7 +1219,7 @@ export default function TripPage() {
 
       {/* Right Pane（md以上のみ表示）*/}
       <div className="hidden md:block md:w-[335px] lg:w-[400px] xl:flex-1 flex-shrink-0">
-        <div className="h-full bg-gray-100 p-2">
+        <div className="h-full bg-gray-100">
           {currentView === 'checklist' ? (
             <Checklist />
           ) : (
@@ -1262,6 +1231,7 @@ export default function TripPage() {
               onPoiDataUpdate={setPoiData}
               className="h-full"
               focusMode={mapFocusMode}
+              initialCenter={trip.destination_place?.geometry?.location || undefined as any}
             />
           )}
         </div>

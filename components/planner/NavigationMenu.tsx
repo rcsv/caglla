@@ -1,7 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import PlannerIcon from '@/components/common/icons/PlannerIcon'
+import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { Trip, Day, Itinerary } from '@/lib/types'
 import { dateUtils } from '@/lib/date-utils'
 
@@ -76,9 +79,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       id: 'itinerary',
       title: 'Itinerary',
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
+        <CalendarIcon className="w-5 h-5" />
       ),
       isExpandable: true,
       isExpanded: expandedSections.has('itinerary'),
@@ -191,32 +192,40 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     <div className={`bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-200 relative z-30 left-nav-shadow ${
       isCollapsed ? 'w-12' : 'w-[188px]'
     }`} style={{ maxWidth: isCollapsed ? '48px' : '188px' }}>
-      {/* メニューヘッダー（ハンバーガー + ロゴ） */}
+      {/* メニューヘッダー（ロゴ + Caglla → /home リンク） */}
       <div className={`border-b border-gray-200 ${isCollapsed ? 'p-2' : 'p-3'}`}>
-        <div className={`flex items-center gap-2 ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-          {onToggleCollapse && (
-            <button
-              onClick={onToggleCollapse}
-              className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
-              title={isCollapsed ? 'メニューを展開' : 'メニューを縮小'}
-              aria-label="Toggle menu"
-            >
-              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          )}
-          {!isCollapsed && (
-            <div className="select-none">
-              <span className="text-lg font-semibold tracking-tight text-gray-900">Caglla</span>
-            </div>
-          )}
+        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-start gap-2'}`}>
+          <Link href="/home" className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'} text-gray-900`} title="Home">
+            <span className="inline-flex items-center justify-center rounded-lg bg-emerald-500 text-white font-bold h-7 w-7">
+              <PlannerIcon className="h-4 w-4" />
+            </span>
+            {!isCollapsed && (
+              <span className="text-base font-semibold tracking-tight">Caglla</span>
+            )}
+          </Link>
         </div>
       </div>
 
       {/* メニューコンテンツ */}
       <div className="flex-1 flex flex-col min-h-0">
         <nav className="p-2 flex-1 flex flex-col min-h-0">
+          {/* ハンバーガー + Menu トグル */}
+          <button
+            onClick={() => onToggleCollapse && onToggleCollapse()}
+            className="w-full flex items-center justify-between p-2 text-left hover:bg-gray-50 rounded-lg transition-colors mb-2"
+            title="Toggle menu width"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </span>
+              {!isCollapsed && (
+                <span className="font-medium text-gray-900">Menu</span>
+              )}
+            </div>
+          </button>
           {menuSections.map((section) => (
             <div key={section.id} className={`${section.id === 'itinerary' ? 'flex-1 flex flex-col min-h-0' : 'mb-2'}`}>
               {/* セクションヘッダー */}

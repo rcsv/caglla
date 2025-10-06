@@ -6,7 +6,22 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+
+  --z-index-map:                0 ;
+  --z-index-main-content:     100 ;
+  --z-index-left-panel:       200 ;
+  --z-index-settings-dialog:  400 ;
+  --z-index-popup-menu:       800 ;
+  --z-index-float-modal:     1600 ;
 }
+
+.zidx-map {               z-index: var(--z-index-map); }
+.zidx-main-content {      z-index: var(--z-index-main-content); }
+.zidx-left-panel {        z-index: var(--z-index-left-panel); }
+.zidx-settings-dialog {   z-index: var(--z-index-settings-dialog); }
+.zidx-popup-menu {        z-index: var(--z-index-popup-menu); }
+.zidx-float-modal {       z-index: var(--z-index-float-modal); }
+
 
 @media (prefers-color-scheme: dark) {
   :root {

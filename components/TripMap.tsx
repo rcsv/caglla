@@ -68,6 +68,7 @@ interface TripMapProps {
   } | null) => void
   className?: string
   focusMode?: 'all' | 'day' | 'single' // フォーカスモードを追加
+  initialCenter?: { lat: number; lng: number } // 初期センター位置（未指定時は東京）
 }
 
 declare global {
@@ -84,7 +85,8 @@ export default function TripMap({
   onItineraryClick,
   onPoiDataUpdate,
   className = '',
-  focusMode = 'all' // デフォルトは全体表示
+  focusMode = 'all', // デフォルトは全体表示
+  initialCenter
 }: TripMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<any>(null)
@@ -125,7 +127,7 @@ export default function TripMap({
         document.head.appendChild(styleElement)
 
         // AdvancedMarkerElement用のmapIdを設定
-        const defaultCenter = { lat: 35.6762, lng: 139.6503 } // 東京
+        const defaultCenter = initialCenter || { lat: 35.6762, lng: 139.6503 } // 東京
         const newMap = new window.google.maps.Map(mapRef.current, {
           zoom: 10,
           center: defaultCenter,
@@ -232,7 +234,14 @@ export default function TripMap({
       itinerary => itinerary.place_data?.geometry?.location
     )
 
-    if (validItineraries.length === 0) return
+    if (validItineraries.length === 0) {
+      // 行先が無い場合は初期センターへ
+      if (initialCenter) {
+        map.setCenter(initialCenter)
+        map.setZoom(11)
+      }
+      return
+    }
 
     // 日程ごとの番号を計算するためのマップを作成
     const dayNumberMap = new Map<string, number>()
@@ -410,7 +419,7 @@ export default function TripMap({
       })
       map.fitBounds(bounds)
     }
-  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId])
+  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId, initialCenter])
 
   // 選択されたItineraryにフォーカスする機能
   useEffect(() => {
