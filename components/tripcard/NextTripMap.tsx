@@ -98,7 +98,11 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
       // 目的地に応じて座標を設定
       const destination = trip.destination.toLowerCase()
       
-      if (destination.includes('那覇') || destination.includes('沖縄') || destination.includes('okinawa')) {
+      if (destination.includes('ホノルル') || destination.includes('honolulu') || destination.includes('hawaii')) {
+        center = { lat: 21.3099, lng: -157.8581 } // ホノルル
+        zoom = 11
+        console.log('NextTripMap: ホノルルに設定')
+      } else if (destination.includes('那覇') || destination.includes('沖縄') || destination.includes('okinawa')) {
         center = { lat: 26.2124, lng: 127.6792 } // 那覇市
         zoom = 12
         console.log('NextTripMap: 那覇市に設定')
