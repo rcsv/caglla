@@ -35,13 +35,15 @@ export default function NewTripPage() {
     destinationPlace: undefined as PlaceData | undefined,
     startDate: '',
     endDate: '',
-    accessLevel: 'private' as 'private' | 'public',
+    accessLevel: 'public' as 'private' | 'public',
     imageUrl: ''
   })
   const [submitting, setSubmitting] = useState(false)
   const [currentTripCount, setCurrentTripCount] = useState(0)
   const [isLoadingLimits, setIsLoadingLimits] = useState(true)
   const [dateError, setDateError] = useState('')
+  const [isLoadingUnsplashImage, setIsLoadingUnsplashImage] = useState(false)
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -85,6 +87,38 @@ export default function NewTripPage() {
     checkLimits()
   }, [user])
 
+  // Unsplash画像の自動取得
+  const fetchUnsplashImage = async (destination: string) => {
+    if (!destination.trim()) return
+
+    setIsLoadingUnsplashImage(true)
+    try {
+      const response = await makeAuthenticatedRequest(`/api/unsplash?destination=${encodeURIComponent(destination)}&count=1`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.photo) {
+          setFormData(prev => ({ ...prev, imageUrl: data.photo.url }))
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch Unsplash image:', error)
+    } finally {
+      setIsLoadingUnsplashImage(false)
+    }
+  }
+
+  // 目的地が変更された時にUnsplash画像を自動取得
+  useEffect(() => {
+    if (formData.destination.trim() && !formData.imageUrl) {
+      const timeoutId = setTimeout(() => {
+        fetchUnsplashImage(formData.destination)
+      }, 1000) // 1秒後に実行（デバウンス）
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [formData.destination])
+
   // 旅行日数の計算
   const calculateTravelDays = (startDate: string, endDate: string): number => {
     if (!startDate || !endDate) return 0
@@ -115,6 +149,22 @@ export default function NewTripPage() {
     e.preventDefault()
     if (!user) return
 
+    // 必須項目のバリデーション
+    if (!formData.destination.trim()) {
+      alert('目的地を入力してください。')
+      return
+    }
+
+    if (!formData.startDate) {
+      alert('出発日を選択してください。')
+      return
+    }
+
+    if (!formData.endDate) {
+      alert('帰宅日を選択してください。')
+      return
+    }
+
     // 日付のバリデーション
     const dateValidationError = validateDates(formData.startDate, formData.endDate)
     if (dateValidationError) {
@@ -123,30 +173,18 @@ export default function NewTripPage() {
     }
     setDateError('')
 
-    // プラン制限のチェック
-    const totalDays = calculateTravelDays(formData.startDate, formData.endDate)
-    
-    if (!can(RestrictionType.MAX_TRIPS, currentTripCount + 1)) {
-      alert('旅行データ数の制限に達しています。プランをアップグレードしてください。')
-      return
-    }
-    
-    if (!can(RestrictionType.MAX_TRAVEL_DAYS, totalDays)) {
-      alert('旅行日数の制限を超過しています。プランをアップグレードしてください。')
-      return
-    }
 
     setSubmitting(true)
     try {
       const response = await makeAuthenticatedRequest('/api/trips', {
         method: 'POST',
         body: JSON.stringify({
-          title: formData.title,
+          title: formData.title || formData.destination, // タイトル未入力時は目的地を使用
           description: formData.description,
           destination: formData.destination,
           destinationPlace: formData.destinationPlace,
-          startDate: formData.startDate || null,
-          endDate: formData.endDate || null,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
           accessLevel: formData.accessLevel,
           imageUrl: formData.imageUrl || null,
         }),
@@ -255,104 +293,12 @@ export default function NewTripPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          {/* プラン制限の表示 */}
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-blue-800 mb-2">プラン制限</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-blue-700">旅行データ数:</span>
-                <span className={`font-medium ${isLoadingLimits ? 'text-gray-500' : can(RestrictionType.MAX_TRIPS, currentTripCount) ? 'text-green-600' : 'text-red-600'}`}>
-                  {isLoadingLimits 
-                    ? '読み込み中...'
-                    : `${currentTripCount}/${getLimitValue(RestrictionType.MAX_TRIPS)}件 (残り${getRemaining(RestrictionType.MAX_TRIPS, currentTripCount)}件)`
-                  }
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-blue-700">一回の旅行の最大日数:</span>
-                <span className={`font-medium ${isLoadingLimits ? 'text-gray-500' : can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate)) ? 'text-green-600' : 'text-red-600'}`}>
-                  {isLoadingLimits 
-                    ? '読み込み中...'
-                    : `${calculateTravelDays(formData.startDate, formData.endDate)}日 (最大${getLimitValue(RestrictionType.MAX_TRAVEL_DAYS)}日まで)`
-                  }
-                </span>
-              </div>
-              {(!can(RestrictionType.MAX_TRIPS, currentTripCount + 1) || !can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))) && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <h3 className="text-sm font-medium text-red-800">
-                        プラン制限を超過しています
-                      </h3>
-                      <div className="mt-2 text-sm text-red-700">
-                        <p>現在のプランでは制限を超えています。より多くの旅行や長期間の旅行を作成するには、プランのアップグレードをご検討ください。</p>
-                      </div>
-                      <div className="mt-3">
-                        <div className="-mx-2 -my-1.5 flex">
-                          <button
-                            type="button"
-                            onClick={() => router.push('/subscription')}
-                            className="bg-red-50 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
-                          >
-                            プランをアップグレード
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => router.push('/subscription')}
-                            className="ml-3 bg-red-100 px-2 py-1.5 rounded-md text-sm font-medium text-red-800 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
-                          >
-                            プラン詳細を見る
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6">
             <div className="space-y-6">
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                  旅行のタイトル *
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="例: 沖縄旅行"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                  説明
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="旅行の詳細や目的を記入してください"
-                />
-              </div>
-
+              {/* 必須項目 */}
               <div>
                 <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
-                  目的地
+                  目的地 *
                 </label>
                 <PlaceSearchInput
                   currentPlace={formData.destinationPlace}
@@ -375,6 +321,7 @@ export default function NewTripPage() {
                     name="destination"
                     value={formData.destination}
                     onChange={handleInputChange}
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     placeholder="例: 沖縄県那覇市"
                   />
@@ -384,7 +331,7 @@ export default function NewTripPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
-                    出発日
+                    出発日 *
                   </label>
                   <input
                     type="date"
@@ -392,6 +339,7 @@ export default function NewTripPage() {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
+                    required
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       dateError ? 'border-red-300' : 'border-gray-300'
                     }`}
@@ -400,7 +348,7 @@ export default function NewTripPage() {
 
                 <div>
                   <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
-                    帰宅日
+                    帰宅日 *
                   </label>
                   <input
                     type="date"
@@ -408,6 +356,7 @@ export default function NewTripPage() {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleInputChange}
+                    required
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       dateError ? 'border-red-300' : 'border-gray-300'
                     }`}
@@ -431,27 +380,117 @@ export default function NewTripPage() {
                 </div>
               )}
 
-              <div>
-                <label htmlFor="accessLevel" className="block text-sm font-medium text-gray-700 mb-2">
-                  公開設定
-                </label>
-                <select
-                  id="accessLevel"
-                  name="accessLevel"
-                  value={formData.accessLevel}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              {/* 詳細設定の折りたたみ */}
+              <div className="border-t border-gray-200 pt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                  className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md p-2 -m-2"
                 >
-                  <option value="private">非公開（自分と共有ユーザーのみ）</option>
-                  <option value="public">公開（誰でも閲覧可能）</option>
-                </select>
-              </div>
+                  <span>詳細設定</span>
+                  <svg
+                    className={`w-5 h-5 transform transition-transform ${showAdvancedSettings ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
 
-              <ImageUpload
-                currentImageUrl={formData.imageUrl}
-                onImageChange={(imageUrl) => setFormData(prev => ({ ...prev, imageUrl: imageUrl || '' }))}
-                disabled={submitting}
-              />
+                {showAdvancedSettings && (
+                  <div className="mt-4 space-y-6">
+                    <div>
+                      <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                        旅行のタイトル（未入力時は目的地が使用されます）
+                      </label>
+                      <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="例: 沖縄旅行（空欄の場合は目的地が使用されます）"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        説明
+                      </label>
+                      <textarea
+                        id="description"
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="旅行の詳細や目的を記入してください"
+                      />
+                    </div>
+
+                    <ImageUpload
+                      currentImageUrl={formData.imageUrl}
+                      onImageChange={(imageUrl) => setFormData(prev => ({ ...prev, imageUrl: imageUrl || '' }))}
+                      disabled={submitting}
+                    />
+
+                    {/* Unsplash画像自動取得の状態表示 */}
+                    {isLoadingUnsplashImage && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <svg className="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm text-blue-800">
+                              目的地に関連する画像を自動取得中...
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Unsplash画像が取得された場合の表示 */}
+                    {formData.imageUrl && !isLoadingUnsplashImage && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm text-green-800">
+                              目的地に関連する画像を自動取得しました
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label htmlFor="accessLevel" className="block text-sm font-medium text-gray-700 mb-2">
+                        公開設定
+                      </label>
+                      <select
+                        id="accessLevel"
+                        name="accessLevel"
+                        value={formData.accessLevel}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="private">非公開（自分と共有ユーザーのみ）</option>
+                        <option value="public">公開（誰でも閲覧可能）</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="mt-8 flex justify-end space-x-4">
@@ -464,7 +503,7 @@ export default function NewTripPage() {
               </button>
               <button
                 type="submit"
-                disabled={submitting || !formData.title || dateError || (!can(RestrictionType.MAX_TRIPS, currentTripCount + 1) || !can(RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate)))}
+                disabled={submitting || !formData.destination.trim() || !formData.startDate || !formData.endDate || !!dateError}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
               >
                 {submitting ? '作成中...' : '旅行を作成'}
