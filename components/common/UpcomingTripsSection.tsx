@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import TripCard from '@/components/common/TripCard'
+import TripCard from '@/components/tripcard/TripCard'
 import type { Trip } from '@/lib/types'
 
 export interface UpcomingTripsSectionProps {

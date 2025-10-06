@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { CountryGroup } from '@/lib/country-utils'
 import CountryMap from '@/components/CountryMap'
-import TripCard from '@/components/common/TripCard'
+import TripCard from '@/components/tripcard/TripCard'
 import Loading from '@/components/common/Loading'
 import type { Trip } from '@/lib/types'
 

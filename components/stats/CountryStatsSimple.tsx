@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { CountryGroup } from '@/lib/country-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
+import { PinIcon } from '@/components/common/icons/PinIcon'
 
 interface CountryStatsSimpleProps {
   userId: string
@@ -81,7 +82,10 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
   if (countryGroups.length === 0) {
     return (
       <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">国別統計</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <PinIcon className="w-5 h-5" color="#374151" />
+          国別統計
+        </h3>
         <p className="text-gray-500 text-center">まだ旅行がありません</p>
       </div>
     )
@@ -90,7 +94,10 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
   return (
     <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-800">国別統計</h3>
+        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <PinIcon className="w-5 h-5" color="#374151" />
+          国別統計
+        </h3>
         <div className="text-sm text-gray-500">
           {totalTrips}回の旅行 • {totalCountries}カ国
         </div>

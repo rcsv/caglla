@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
-import TripCard from '@/components/common/TripCard'
+import { useAuth } from '@/lib/auth-context'
+import TripCard from '@/components/tripcard/TripCard'
 import Loading from '@/components/common/Loading'
 import type { Trip } from '@/lib/types'
 
@@ -14,24 +15,47 @@ export interface RecommendedTripsProps {
 export const RecommendedTrips: React.FC<RecommendedTripsProps> = ({ limit = 6, className }) => {
   const [trips, setTrips] = useState<Trip[]>([])
   const [loading, setLoading] = useState(true)
+  const { user, loading: authLoading } = useAuth()
 
   useEffect(() => {
     const fetchRecommendations = async () => {
+      // 認証が完了していない場合は待機
+      if (authLoading) {
+        console.log('🔍 RecommendedTrips: Waiting for auth...')
+        return
+      }
+
+      // ユーザーがログインしていない場合は空の配列を返す
+      if (!user) {
+        console.log('🔍 RecommendedTrips: No user, returning empty trips')
+        setTrips([])
+        setLoading(false)
+        return
+      }
+
       try {
+        console.log('🔍 RecommendedTrips: Fetching recommendations for user:', user.uid)
         const resp = await makeAuthenticatedRequest(`/api/trips/recommended?limit=${limit}`)
+        
         if (resp.ok) {
           const data = await resp.json()
+          console.log('✅ RecommendedTrips: Got trips:', data.trips?.length || 0)
           setTrips(data.trips || [])
+        } else {
+          const errorData = await resp.json()
+          console.error('❌ RecommendedTrips: API error:', errorData)
         }
       } catch (e) {
-        console.error(e)
+        console.error('❌ RecommendedTrips: Fetch error:', e)
       } finally {
         setLoading(false)
       }
     }
+    
     fetchRecommendations()
-  }, [limit])
+  }, [limit, user, authLoading])
 
+  if (authLoading) return <Loading className="py-8" message="認証中..." />
   if (loading) return <Loading className="py-8" message="おすすめ旅行を読み込み中..." />
   if (trips.length === 0) return null
 

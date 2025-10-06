@@ -5,7 +5,7 @@ import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { dateUtils } from '@/lib/date-utils'
 import ImageUpload from './ImageUpload'
 import { imageUploadHelpers } from '@/lib/image-upload'
-import PlaceSearchInput from './PlaceSearchInput'
+import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import type { Trip, Day, Itinerary, TripEditorProps } from '@/lib/types'
 
 export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps) {
