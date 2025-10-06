@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
+import Loading from '@/components/common/Loading'
 import ImageUpload from '@/components/ImageUpload'
 import { imageUploadHelpers } from '@/lib/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
@@ -257,14 +258,7 @@ export default function NewTripPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">読み込み中...</p>
-        </div>
-      </div>
-    )
+    return <Loading fullScreen size="lg" />
   }
 
   if (!user) {
@@ -295,7 +289,7 @@ export default function NewTripPage() {
         <div className="max-w-2xl mx-auto">
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-6">
             <div className="space-y-6">
-              {/* 必須項目 */}
+              {/* 必須項目 */} 
               <div>
                 <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
                   目的地 *
