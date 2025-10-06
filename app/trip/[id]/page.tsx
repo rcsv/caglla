@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/lib/auth-context'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import TripEditor from '@/components/TripEditor'
@@ -16,7 +16,8 @@ import TripDistanceDisplay from '@/components/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/TripWeatherDisplay'
 import TripHotelDisplay from '@/components/TripHotelDisplay'
 import TripMap from '@/components/TripMap'
-import NavigationMenu from '@/components/NavigationMenu'
+import Checklist from '@/components/Checklist'
+import NavigationMenu from '@/components/planner/NavigationMenu'
 import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { Trip, Day, Itinerary, User } from '@/lib/firestore'
@@ -30,6 +31,7 @@ export default function TripPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const { id } = useParams<{ id: string }>()
+  const searchParams = useSearchParams()
   const [trip, setTrip] = useState<Trip | null>(null)
   const [tripLoading, setTripLoading] = useState(true)
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
@@ -48,8 +50,51 @@ export default function TripPage() {
     placeData?: any
   } | null>(null)
 
+  // クエリ: view / day を読み取り（デフォルトは summary）
+  const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
+  const queryDayId = searchParams.get('day')
+
+  // クエリ→状態の同期
+  useEffect(() => {
+    if (currentView === 'itinerary') {
+      if (queryDayId) {
+        setSelectedDayId(queryDayId)
+        setMapFocusMode('day')
+      } else {
+        setSelectedDayId(null)
+        setMapFocusMode('all')
+      }
+    }
+    if (currentView === 'summary') {
+      setSelectedDayId(null)
+      setMapFocusMode('all')
+    }
+    if (currentView === 'checklist') {
+      setSelectedItineraryId(null)
+      setMapFocusMode('all')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentView, queryDayId])
+
+  // クエリ更新ヘルパー
+  const updateQuery = (updates: Record<string, string | null>) => {
+    const params = new URLSearchParams(searchParams.toString())
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null) params.delete(key)
+      else params.set(key, value)
+    })
+    router.push(`?${params.toString()}`, { scroll: false })
+  }
+
   // セクションへのナビゲーション機能
   const navigateToSection = (sectionId: string) => {
+    // viewクエリを同期
+    if (sectionId === 'checklist') {
+      updateQuery({ view: 'checklist', day: null })
+      return
+    }
+    // Summary内のアンカー
+    updateQuery({ view: 'summary', day: null })
     const element = document.getElementById(sectionId)
     if (element) {
       element.scrollIntoView({ 
@@ -232,10 +277,12 @@ export default function TripPage() {
       // 同じ日程をクリックした場合はフィルタを解除
       setSelectedDayId(null)
       setMapFocusMode('all') // 全体表示に戻す
+      updateQuery({ view: 'itinerary', day: null })
     } else {
       // 新しい日程を選択
       setSelectedDayId(dayId)
       setMapFocusMode('day') // 日程表示モードに切り替え
+      updateQuery({ view: 'itinerary', day: dayId })
     }
     // Itinerary選択状態もリセット
     setSelectedItineraryId(null)
@@ -883,7 +930,8 @@ export default function TripPage() {
           </div>
         </header>
 
-        {/* Summary Section */}
+        {/* Summary Section（view=summary のとき表示）*/}
+        {currentView === 'summary' && (
         <div className="px-4 py-4 space-y-6">
           {/* Summary Header - 折りたたみ可能 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -940,8 +988,10 @@ export default function TripPage() {
             )}
           </div>
         </div>
+        )}
 
-        {/* Main Content */}
+        {/* Itinerary List（view=itinerary のとき表示）*/}
+        {currentView === 'itinerary' && (
         <main className="px-4 pb-4">
         {/* Days */}
         {trip.days && trip.days.length > 0 ? (
@@ -1188,20 +1238,32 @@ export default function TripPage() {
           </div>
         )}
         </main>
+        )}
+
+        {/* Checklist（モバイルではメインに表示）*/}
+        {currentView === 'checklist' && (
+          <div className="px-4 py-4 md:hidden">
+            <Checklist />
+          </div>
+        )}
       </div>
 
-      {/* Right Pane - Map Only (768px以上のみ表示) */}
+      {/* Right Pane（md以上のみ表示）*/}
       <div className="hidden md:block md:w-[335px] lg:w-[400px] xl:flex-1 flex-shrink-0">
-        <div className="h-full bg-gray-100">
-          <TripMap 
-            itineraries={getFilteredItineraries()} 
-            selectedItineraryId={selectedItineraryId}
-            selectedDayId={selectedDayId}
-            onItineraryClick={handleMapMarkerClick}
-            onPoiDataUpdate={setPoiData}
-            className="h-full"
-            focusMode={mapFocusMode}
-          />
+        <div className="h-full bg-gray-100 p-2">
+          {currentView === 'checklist' ? (
+            <Checklist />
+          ) : (
+            <TripMap 
+              itineraries={getFilteredItineraries()} 
+              selectedItineraryId={selectedItineraryId}
+              selectedDayId={selectedDayId}
+              onItineraryClick={handleMapMarkerClick}
+              onPoiDataUpdate={setPoiData}
+              className="h-full"
+              focusMode={mapFocusMode}
+            />
+          )}
         </div>
       </div>
 
