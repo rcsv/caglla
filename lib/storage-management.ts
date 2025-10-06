@@ -1,6 +1,22 @@
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, deleteDoc } from 'firebase/firestore'
-import { db } from './firebase'
+import { adminDb } from './firebase-admin'
 import { StorageUsage, StorageFile, StorageQuota } from './types'
+
+// Firebase Admin SDKを使用するためのヘルパー関数
+const getDoc = async (collection: string, docId: string) => {
+  const docRef = adminDb.collection(collection).doc(docId)
+  const docSnap = await docRef.get()
+  return docSnap.exists ? { data: () => docSnap.data(), exists: true } : { data: () => null, exists: false }
+}
+
+const setDoc = async (collection: string, docId: string, data: any) => {
+  const docRef = adminDb.collection(collection).doc(docId)
+  await docRef.set(data)
+}
+
+const updateDoc = async (collection: string, docId: string, data: any) => {
+  const docRef = adminDb.collection(collection).doc(docId)
+  await docRef.update(data)
+}
 
 // プラン別ストレージ制限
 export const STORAGE_QUOTAS: Record<string, StorageQuota> = {
@@ -40,9 +56,9 @@ export const storageManagementHelpers = {
   // ユーザーのストレージ使用量を取得
   async getUserStorageUsage(userId: string): Promise<StorageUsage> {
     try {
-      const storageDoc = await getDoc(doc(db, 'userStorage', userId))
+      const storageDoc = await getDoc('userStorage', userId)
       
-      if (storageDoc.exists()) {
+      if (storageDoc.exists) {
         const data = storageDoc.data()
         return {
           totalBytes: data.totalBytes || 0,
@@ -83,7 +99,7 @@ export const storageManagementHelpers = {
       }
 
       // Firestoreに保存
-      await setDoc(doc(db, 'userStorage', userId), {
+      await setDoc('userStorage', userId, {
         totalBytes: updatedUsage.totalBytes,
         fileCount: updatedUsage.fileCount,
         lastUpdated: updatedUsage.lastUpdated,
@@ -127,7 +143,7 @@ export const storageManagementHelpers = {
       }
 
       // Firestoreに保存
-      await setDoc(doc(db, 'userStorage', userId), {
+      await setDoc('userStorage', userId, {
         totalBytes: updatedUsage.totalBytes,
         fileCount: updatedUsage.fileCount,
         lastUpdated: updatedUsage.lastUpdated,
@@ -156,10 +172,10 @@ export const storageManagementHelpers = {
   }> {
     try {
       // ユーザー情報を取得してプランを確認
-      const userDoc = await getDoc(doc(db, 'users', userId))
+      const userDoc = await getDoc('users', userId)
       let planId = 'season_traveler' // デフォルトプラン
       
-      if (userDoc.exists()) {
+      if (userDoc.exists) {
         const userData = userDoc.data()
         planId = userData.planId || 'season_traveler'
       } else {
@@ -217,7 +233,7 @@ export const storageManagementHelpers = {
   // ユーザーのストレージ使用量をリセット（管理者用）
   async resetUserStorageUsage(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      await setDoc(doc(db, 'userStorage', userId), {
+      await setDoc('userStorage', userId, {
         totalBytes: 0,
         fileCount: 0,
         lastUpdated: new Date(),
