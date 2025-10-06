@@ -25,7 +25,8 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
     'FIREBASE_PROJECT_ID',
     'FIREBASE_CLIENT_EMAIL',
     'FIREBASE_PRIVATE_KEY',
-    'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY'
+    'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY',
+    'NEXT_PUBLIC_UNSPLASH_ACCESS_KEY'
     // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
   ]
 
@@ -57,6 +58,9 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
         FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY || '-----BEGIN PRIVATE KEY-----\ndev-key\n-----END PRIVATE KEY-----',
         NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || 'dev-places-key',
         NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'dev-maps-key',
+        NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 'dev-unsplash-key',
+        UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY || 'dev-unsplash-key',
+        UNSPLASH_SECRET_KEY: process.env.UNSPLASH_SECRET_KEY || 'dev-unsplash-secret',
         ...process.env as OptionalEnvVars
       }
     } else {
@@ -95,7 +99,8 @@ export function validateClientEnvironment(): Partial<RequiredEnvVars> {
     'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
     'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
     'NEXT_PUBLIC_FIREBASE_APP_ID',
-    'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY'
+    'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY',
+    'NEXT_PUBLIC_UNSPLASH_ACCESS_KEY'
     // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
   ]
 
@@ -128,7 +133,8 @@ export function validateClientEnvironment(): Partial<RequiredEnvVars> {
     NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
     NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-    NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY!
+    NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY!,
+    NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY!
     // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
   }
 }
