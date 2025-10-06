@@ -51,6 +51,14 @@ try {
   }
 }
 
+// IDトークンの検証関数
+export async function verifyIdToken(token: string) {
+  if (!adminAuth) {
+    throw new Error('Firebase Admin Auth not initialized')
+  }
+  return await adminAuth.verifyIdToken(token)
+}
+
 // Firestore Admin インスタンス
 export { adminDb, adminAuth }
 export default app
