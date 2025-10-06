@@ -114,17 +114,8 @@ export function validateClientEnvironment(): Partial<RequiredEnvVars> {
     
     if (isDevelopment()) {
       console.warn('⚠️ Client environment validation warning:', message)
-      // 開発環境ではデフォルト値を設定
-      return {
-        NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'dev-api-key',
-        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'dev-project.firebaseapp.com',
-        NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dev-project',
-        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'dev-project.appspot.com',
-        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-        NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789:web:dev',
-        NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || 'dev-places-key'
-        // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
-      }
+      // 開発環境でもエラーを投げる（デフォルト値ではFirebaseが動作しない）
+      throw new EnvValidationError(message)
     } else {
       throw new EnvValidationError(message)
     }
