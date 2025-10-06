@@ -17,12 +17,11 @@ interface NextTripCardProps {
 
 export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardProps) {
   const router = useRouter()
-  const { userPlanId, tripCount, planConfig } = useUserData()
+  const { userPlanId, tripCount } = useUserData()
   const [isCreateTripDialogOpen, setIsCreateTripDialogOpen] = useState(false)
 
   // RestrictionProviderを使用してプラン制限をチェック
   const canCreateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRIPS, tripCount + 1)
-  const remainingTrips = RestrictionProvider.getRemaining(userPlanId, RestrictionType.MAX_TRIPS, tripCount)
   const limitExceededMessage = RestrictionProvider.getLimitExceededMessage(userPlanId, RestrictionType.MAX_TRIPS, tripCount + 1)
 
   const handleTripCreated = () => {
@@ -104,46 +103,6 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
           </div>
         </div>
 
-        {/* プラン制限情報 */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600">
-              旅行数: {tripCount}件
-              {remainingTrips !== -1 && (
-                <span className="ml-2 text-gray-500">
-                  (残り{remainingTrips}件まで作成可能)
-                </span>
-              )}
-              {remainingTrips === -1 && (
-                <span className="ml-2 text-green-600 font-medium">
-                  (無制限)
-                </span>
-              )}
-            </div>
-            {!canCreateTrip && (
-              <div className="text-sm text-red-600 font-medium">
-                制限に達しています
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* 追加アクション */}
-        {nextTrip && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-600">
-                出発予定: {nextTrip.start_date ? new Date(nextTrip.start_date).toLocaleDateString('ja-JP') : '未設定'}
-              </div>
-              <Button
-                variant="secondary"
-                onClick={() => router.push(`/trip/${nextTrip.id}`)}
-              >
-                詳細を見る
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* 旅行作成ダイアログ */}
