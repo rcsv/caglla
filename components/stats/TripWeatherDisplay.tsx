@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { WeatherApiHelpers, WeatherSummary } from '@/lib/weather-api'
+import Card from '@/components/common/Card'
 
 interface TripWeatherDisplayProps {
   destination?: string
@@ -46,29 +47,20 @@ export default function TripWeatherDisplay({
 
   if (isLoading) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>天気予報</div>} className={className}>
         <div className="flex items-center justify-center py-4">
           <div className="flex items-center space-x-2 text-gray-500">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-500"></div>
             <span>天気情報を取得中...</span>
           </div>
         </div>
-      </div>
+      </Card>
     )
   }
 
   if (error) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 relative min-h-[200px] ${className}`}>
-        {/* 通常の天気予報レイアウトを維持 */}
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-            <svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-            </svg>
-            天気予報
-          </h3>
-        </div>
+      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>天気予報</div>} className={`${className} relative min-h-[200px]`}>
         
         {/* エラーオーバーレイ */}
         <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
@@ -84,22 +76,13 @@ export default function TripWeatherDisplay({
             </div>
           </div>
         </div>
-      </div>
+      </Card>
     )
   }
 
   if (!weatherData || weatherData.dominantWeather === 'データなし') {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 relative min-h-[200px] ${className}`}>
-        {/* 通常の天気予報レイアウトを維持 */}
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-            <svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-            </svg>
-            天気予報
-          </h3>
-        </div>
+      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>天気予報</div>} className={`${className} relative min-h-[200px]`}>
         
         {/* データなしオーバーレイ */}
         <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
@@ -120,7 +103,7 @@ export default function TripWeatherDisplay({
             </div>
           </div>
         </div>
-      </div>
+      </Card>
     )
   }
 
@@ -145,20 +128,12 @@ export default function TripWeatherDisplay({
   )
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 min-h-[200px] ${className}`}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-          <svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-          </svg>
-          天気予報
-        </h3>
-        {isPartialForecast && (
-          <div className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
-            部分的な予報
-          </div>
-        )}
-      </div>
+    <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>天気予報</div>} className={`min-h-[200px] ${className}`}>
+      {isPartialForecast && (
+        <div className="mb-2 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded inline-block">
+          部分的な予報
+        </div>
+      )}
       
       <div className="space-y-3">
         {/* メイン天気情報 */}
@@ -230,7 +205,7 @@ export default function TripWeatherDisplay({
           </p>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
 

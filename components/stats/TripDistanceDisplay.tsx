@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { distanceApiHelpers } from '@/lib/distance-api'
 import { dateUtils } from '@/lib/date-utils'
 import { Itinerary } from '@/lib/firestore'
+import Card from '@/components/common/Card'
 
 interface TripDistanceDisplayProps {
   itineraries: Itinerary[]
@@ -75,38 +76,26 @@ export default function TripDistanceDisplay({
 
   if (isLoading) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            総移動距離
-          </h3>
-        </div>
+      <Card title={<div className="flex items-center">
+        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        総移動距離
+      </div>} className={className}>
         <div className="flex items-center justify-center py-4">
           <div className="flex items-center space-x-2 text-gray-500">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
             <span>総移動距離を計算中...</span>
           </div>
         </div>
-      </div>
+      </Card>
     )
   }
 
   if (error) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            総移動距離
-          </h3>
-        </div>
+      <Card title={<div className="flex items-center">
+        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        総移動距離
+      </div>} className={className}>
         <div className="text-center py-4">
           <div className="text-red-500 text-sm mb-2">
             {error}
@@ -115,7 +104,7 @@ export default function TripDistanceDisplay({
             距離計算に失敗しました
           </p>
         </div>
-      </div>
+      </Card>
     )
   }
 
@@ -125,17 +114,10 @@ export default function TripDistanceDisplay({
     
     if (placesWithLocation.length < 2) {
       return (
-        <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              総移動距離
-            </h3>
-          </div>
-          
+        <Card title={<div className="flex items-center">
+          <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          総移動距離
+        </div>} className={className}>
           <div className="text-center py-8">
             <div className="text-gray-500 mb-2">
               <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +134,7 @@ export default function TripDistanceDisplay({
               各スケジュールに場所を設定すると、総移動距離が表示されます
             </p>
           </div>
-        </div>
+        </Card>
       )
     }
     
@@ -160,16 +142,10 @@ export default function TripDistanceDisplay({
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-          <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          移動情報
-        </h3>
-      </div>
+    <Card title={<div className="flex items-center">
+      <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+      総移動距離
+    </div>} className={className}>
       
       <div className="space-y-3">
         {/* メイン情報 - 1行レイアウト */}
@@ -230,7 +206,7 @@ export default function TripDistanceDisplay({
           </p>
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
 
