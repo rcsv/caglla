@@ -242,7 +242,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
         {/* 編集モーダル（Portal） */}
         {createPortal(
         <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass('FLOAT_MODAL')}`} style={{ zIndex: getZIndex('FLOAT_MODAL') }}>
-          <div className="bg-white rounded-lg shadow-sm p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">旅行情報を編集</h2>
               <button
@@ -421,7 +421,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
         {/* 削除確認ダイアログ（Portal） */}
         {showDeleteConfirm && createPortal(
           <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass('FLOAT_MODAL', 2)}`} style={{ zIndex: getZIndex('FLOAT_MODAL', 2) }}>
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 旅行を削除しますか？
               </h3>
