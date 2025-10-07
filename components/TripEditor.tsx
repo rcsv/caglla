@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { dateUtils } from '@/lib/date-utils'
 import ImageUpload from './ImageUpload'
 import { imageUploadHelpers } from '@/lib/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import type { Trip, Day, Itinerary, TripEditorProps } from '@/lib/types'
+import { getZIndexClass, getZIndex } from '@/lib/z-index-layers'
 
 export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps) {
   const [isEditing, setIsEditing] = useState(false)
@@ -219,9 +221,9 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
   if (isEditing) {
     return (
       <>
-        {/* 画面全体のローディングオーバーレイ */}
-        {showLoadingOverlay && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        {/* 画面全体のローディングオーバーレイ（Portal） */}
+        {showLoadingOverlay && createPortal(
+          <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass('FLOAT_MODAL', 1)}`} style={{ zIndex: getZIndex('FLOAT_MODAL', 1) }}>
             <div className="bg-white rounded-lg p-8 flex flex-col items-center space-y-4 shadow-xl">
               {/* 回転プログレスバー */}
               <div className="relative">
@@ -233,11 +235,13 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
                 <p className="text-gray-600 text-sm">日程を更新しています</p>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
         
-        {/* 編集モーダルを固定位置で表示 */}
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        {/* 編集モーダル（Portal） */}
+        {createPortal(
+        <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass('FLOAT_MODAL')}`} style={{ zIndex: getZIndex('FLOAT_MODAL') }}>
           <div className="bg-white rounded-lg shadow-sm p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">旅行情報を編集</h2>
@@ -412,11 +416,11 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
           </button>
         </div>
           </div>
-        </div>
+        </div>, document.body)}
 
-        {/* 削除確認ダイアログ */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        {/* 削除確認ダイアログ（Portal） */}
+        {showDeleteConfirm && createPortal(
+          <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass('FLOAT_MODAL', 2)}`} style={{ zIndex: getZIndex('FLOAT_MODAL', 2) }}>
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 旅行を削除しますか？
@@ -441,7 +445,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
                 </button>
               </div>
             </div>
-          </div>
+          </div>, document.body
         )}
       </>
     )
