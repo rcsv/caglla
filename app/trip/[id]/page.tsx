@@ -877,12 +877,7 @@ export default function TripPage() {
                     )}
                   </div>
                   
-                  {/* Description */}
-                  {trip.description && (
-                    <p className="text-white text-lg md:text-xl leading-relaxed drop-shadow-md max-w-2xl mb-2">
-                      {trip.description}
-                    </p>
-                  )}
+                  {/* Description was moved to Summary area */}
                   
 
                   
@@ -902,6 +897,13 @@ export default function TripPage() {
         {/* Summary Section（view=summary のとき表示）*/}
         {currentView === 'summary' && (
         <div className="px-4 py-4 space-y-6">
+          {/* Trip Description - move from hero to top of Summary */}
+          {trip.description && (
+            <section id="trip-description" className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <h3 className="text-lg font-medium text-gray-700 mb-3">Description</h3>
+              <p className="text-gray-700 whitespace-pre-line">{trip.description}</p>
+            </section>
+          )}
           {/* Summary Header - 折りたたみ可能 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div 
