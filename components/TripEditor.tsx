@@ -249,8 +249,6 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
               <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
                 <CloseIcon className="w-6 h-6" />
               </button>
-                <CloseIcon className="w-6 h-6" />
-              </button>
             </div>
         
         <div className="space-y-4">
