@@ -896,13 +896,6 @@ export default function TripPage() {
         {/* Summary Section（view=summary のとき表示）*/}
         {currentView === 'summary' && (
         <div className="px-4 py-4 space-y-6">
-          {/* Trip Description - move from hero to top of Summary */}
-          {trip.description && (
-            <section id="trip-description" className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <h3 className="text-lg font-medium text-gray-700 mb-3">Description</h3>
-              <p className="text-gray-700 whitespace-pre-line">{trip.description}</p>
-            </section>
-          )}
           {/* Summary Header - 折りたたみ可能 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div 
@@ -923,16 +916,23 @@ export default function TripPage() {
             {/* Summary Content - 折りたたまれていない時のみ表示 */}
             {!summaryCollapsed && (
               <div className="px-4 pb-4 space-y-6">
+                {/* Note (Description) */}
+                {trip.description && (
+                  <section id="summary-note" className="bg-white rounded-lg border border-gray-200 p-4">
+                    <h3 className="text-lg font-medium text-gray-700 mb-3">Note</h3>
+                    <p className="text-gray-700 whitespace-pre-line">{trip.description}</p>
+                  </section>
+                )}
                 {/* At a glance - 総移動距離と天気予報 */}
                 <div id="at-a-glance">
                   <h3 className="text-lg font-medium text-gray-700 mb-4">At a glance</h3>
                   <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
-                    {/* Distance Summary - 6/10 (60%) */}
+                    {/* Whole Distance - 6/10 (60%) */}
                     <div className="lg:col-span-6">
                       <TripDistanceDisplay itineraries={getAllItineraries()} />
                     </div>
                     
-                    {/* Weather Summary - 4/10 (40%) */}
+                    {/* Weather forecasting - 4/10 (40%) */}
                     <div className="lg:col-span-4">
                       <TripWeatherDisplay 
                         destination={trip.destination}
@@ -943,17 +943,32 @@ export default function TripPage() {
                   </div>
                 </div>
 
-                {/* Budget / Reservation - 旅行費用とホテル情報 */}
-                <div id="budget-reservation">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4">Budget / Reservation</h3>
+                {/* Budgeting */}
+                <section id="budgeting" className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-700">Budgeting</h3>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Cost Summary */}
-                    <TripCostDisplay itineraries={getAllItineraries()} />
-                    
-                    {/* Hotel Summary */}
-                    <TripHotelDisplay />
+                    {/* Expenses (Dutching plan) */}
+                    <div>
+                      <TripCostDisplay itineraries={getAllItineraries()} />
+                      <div className="mt-3 text-xs text-gray-500 px-1">Dutching plan: 割り勘計画（スタブ）</div>
+                    </div>
+                    {/* Reservation (Flight / Accommodation / Activity) */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                      <h4 className="text-base font-medium text-gray-800 mb-3">Reservation (Flight / Accommodation / Activity)</h4>
+                      <TripHotelDisplay />
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
+                        <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                          <div className="font-medium mb-1">Flight</div>
+                          <div className="text-xs text-gray-500">フライト予約の要約（スタブ）</div>
+                        </div>
+                        <div className="p-3 bg-gray-50 rounded-md border border-gray-200">
+                          <div className="font-medium mb-1">Activity</div>
+                          <div className="text-xs text-gray-500">アクティビティ予約の要約（スタブ）</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </section>
               </div>
             )}
           </div>
