@@ -2,6 +2,7 @@
 
 import { CostSummary, aggregateCostsByCurrency, formatMultipleCostSummaries } from '@/lib/cost-aggregation'
 import { currencyUtils } from '@/lib/currency-utils'
+import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
 
 interface TripCostDisplayProps {
   itineraries: any[]
@@ -16,9 +17,7 @@ export default function TripCostDisplay({ itineraries, className = '' }: TripCos
       <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-            <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-            </svg>
+            <MoneyIcon className="w-5 h-5 mr-2" color="#16a34a" />
             旅行費用
           </h3>
         </div>
@@ -43,9 +42,7 @@ export default function TripCostDisplay({ itineraries, className = '' }: TripCos
     <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-          <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1" />
-          </svg>
+          <MoneyIcon className="w-5 h-5 mr-2" color="#16a34a" />
           旅行費用
         </h3>
       </div>
