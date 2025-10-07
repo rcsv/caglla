@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { CloseIcon } from '@/components/common/icons/CloseIcon'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { dateUtils } from '@/lib/date-utils'
 import ImageUpload from './ImageUpload'
@@ -245,13 +246,10 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
           <div className="bg-white rounded-lg shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">旅行情報を編集</h2>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <CloseIcon className="w-6 h-6" />
+              </button>
+                <CloseIcon className="w-6 h-6" />
               </button>
             </div>
         

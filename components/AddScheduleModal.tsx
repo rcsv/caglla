@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { placesApiHelpers, PlaceSearchResult } from '@/lib/places-api'
+import { CloseIcon } from '@/components/common/icons/CloseIcon'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 
 interface AddScheduleModalProps {
@@ -111,13 +112,8 @@ export default function AddScheduleModal({
           <h2 className="text-lg font-semibold text-gray-900">
             Venue / Point of Interest を追加
           </h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
+            <CloseIcon className="w-6 h-6" />
           </button>
         </div>
 

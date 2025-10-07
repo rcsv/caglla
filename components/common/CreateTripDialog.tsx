@@ -15,6 +15,7 @@ import { Textarea } from '@/components/common/Textarea'
 import { Select } from '@/components/common/Select'
 import { Toggle } from '@/components/common/Toggle'
 import { Button } from '@/components/common/Button'
+import { CloseIcon } from '@/components/common/icons/CloseIcon'
 
 
 interface CreateTripDialogProps {
@@ -237,13 +238,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900">新しい旅行を作成</h2>
-            <button
-              onClick={handleCancel}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600">
+              <CloseIcon className="w-6 h-6" />
             </button>
           </div>
 

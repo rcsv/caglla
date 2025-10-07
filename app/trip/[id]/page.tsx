@@ -21,6 +21,7 @@ import NavigationMenu from '@/components/planner/NavigationMenu'
 import Loading from '@/components/common/Loading'
 import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
 import FloatingTitleBar from '@/components/planner/FloatingTitleBar'
+import { MenuIcon } from '@/components/common/icons/MenuIcon'
 import { PinIcon } from '@/components/common/icons/PinIcon'
 import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { dateUtils } from '@/lib/date-utils'
@@ -836,9 +837,7 @@ export default function TripPage() {
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className={`md:hidden fixed top-4 left-4 ${getZIndexClass('MAIN_CONTENT', 1)} inline-flex items-center px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30`}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
+                  <MenuIcon className="w-4 h-4" color="currentColor" />
                 </button>
 
               </div>
