@@ -5,6 +5,7 @@ import { distanceApiHelpers } from '@/lib/distance-api'
 import { dateUtils } from '@/lib/date-utils'
 import { Itinerary } from '@/lib/firestore'
 import Card from '@/components/common/Card'
+import { LocationIcon } from '@/components/common/icons/LocationIcon'
 
 interface TripDistanceDisplayProps {
   itineraries: Itinerary[]
@@ -76,10 +77,7 @@ export default function TripDistanceDisplay({
 
   if (isLoading) {
     return (
-      <Card title={<div className="flex items-center">
-        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-        総移動距離
-      </div>} className={className}>
+      <Card title={<div className="flex items-center"><LocationIcon className="w-5 h-5 mr-2" color="#2563eb" />総移動距離</div>} className={className}>
         <div className="flex items-center justify-center py-4">
           <div className="flex items-center space-x-2 text-gray-500">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
@@ -92,10 +90,7 @@ export default function TripDistanceDisplay({
 
   if (error) {
     return (
-      <Card title={<div className="flex items-center">
-        <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-        総移動距離
-      </div>} className={className}>
+      <Card title={<div className="flex items-center"><LocationIcon className="w-5 h-5 mr-2" color="#2563eb" />総移動距離</div>} className={className}>
         <div className="text-center py-4">
           <div className="text-red-500 text-sm mb-2">
             {error}
@@ -114,10 +109,7 @@ export default function TripDistanceDisplay({
     
     if (placesWithLocation.length < 2) {
       return (
-        <Card title={<div className="flex items-center">
-          <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-          総移動距離
-        </div>} className={className}>
+        <Card title={<div className="flex items-center"><LocationIcon className="w-5 h-5 mr-2" color="#2563eb" />総移動距離</div>} className={className}>
           <div className="text-center py-8">
             <div className="text-gray-500 mb-2">
               <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,10 +134,7 @@ export default function TripDistanceDisplay({
   }
 
   return (
-    <Card title={<div className="flex items-center">
-      <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-      総移動距離
-    </div>} className={className}>
+    <Card title={<div className="flex items-center"><LocationIcon className="w-5 h-5 mr-2" color="#2563eb" />総移動距離</div>} className={className}>
       
       <div className="space-y-3">
         {/* メイン情報 - 1行レイアウト */}

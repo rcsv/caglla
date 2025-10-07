@@ -33,7 +33,7 @@ export const Card: React.FC<CardProps> = ({
   footer,
   padding = 'md',
   interactive = false,
-  divider = true,
+  divider = false,
   className,
   children,
   ...rest

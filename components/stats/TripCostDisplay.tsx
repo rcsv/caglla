@@ -2,6 +2,7 @@
 
 import { CostSummary, aggregateCostsByCurrency, formatMultipleCostSummaries } from '@/lib/cost-aggregation'
 import { currencyUtils } from '@/lib/currency-utils'
+import Card from '@/components/common/Card'
 import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
 
 interface TripCostDisplayProps {
@@ -14,13 +15,7 @@ export default function TripCostDisplay({ itineraries, className = '' }: TripCos
   
   if (!costSummary.hasCosts) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-            <MoneyIcon className="w-5 h-5 mr-2" color="#16a34a" />
-            旅行費用
-          </h3>
-        </div>
+      <Card title={<div className="flex items-center"><MoneyIcon className="w-5 h-5 mr-2" color="#16a34a" />旅行費用</div>} className={className}>
         <div className="text-center py-4">
           <div className="text-gray-500 mb-2">
             <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,18 +29,12 @@ export default function TripCostDisplay({ itineraries, className = '' }: TripCos
             各スケジュールに費用を設定すると、総費用が表示されます
           </p>
         </div>
-      </div>
+      </Card>
     )
   }
   
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-          <MoneyIcon className="w-5 h-5 mr-2" color="#16a34a" />
-          旅行費用
-        </h3>
-      </div>
+    <Card title={<div className="flex items-center"><MoneyIcon className="w-5 h-5 mr-2" color="#16a34a" />旅行費用</div>} className={className}>
       
       <div className="space-y-2">
         {costSummary.totalCosts.map((cost) => (
@@ -83,7 +72,7 @@ export default function TripCostDisplay({ itineraries, className = '' }: TripCos
           💡 各スケジュールの費用をクリックして編集できます
         </p>
       </div>
-    </div>
+    </Card>
   )
 }
 

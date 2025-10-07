@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { WeatherApiHelpers, WeatherSummary } from '@/lib/weather-api'
 import Card from '@/components/common/Card'
+import { CloudIcon } from '@/components/common/icons/CloudIcon'
 
 interface TripWeatherDisplayProps {
   destination?: string
@@ -47,7 +48,7 @@ export default function TripWeatherDisplay({
 
   if (isLoading) {
     return (
-      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>天気予報</div>} className={className}>
+      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><CloudIcon className="w-5 h-5 mr-2" color="#ca8a04" />天気予報</div>} className={className}>
         <div className="flex items-center justify-center py-4">
           <div className="flex items-center space-x-2 text-gray-500">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-500"></div>
@@ -60,7 +61,7 @@ export default function TripWeatherDisplay({
 
   if (error) {
     return (
-      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>天気予報</div>} className={`${className} relative min-h-[200px]`}>
+      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><CloudIcon className="w-5 h-5 mr-2" color="#ca8a04" />天気予報</div>} className={`${className} relative min-h-[200px]`}>
         
         {/* エラーオーバーレイ */}
         <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
@@ -82,7 +83,7 @@ export default function TripWeatherDisplay({
 
   if (!weatherData || weatherData.dominantWeather === 'データなし') {
     return (
-      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>天気予報</div>} className={`${className} relative min-h-[200px]`}>
+      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><CloudIcon className="w-5 h-5 mr-2" color="#ca8a04" />天気予報</div>} className={`${className} relative min-h-[200px]`}>
         
         {/* データなしオーバーレイ */}
         <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
@@ -128,7 +129,7 @@ export default function TripWeatherDisplay({
   )
 
   return (
-    <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>天気予報</div>} className={`min-h-[200px] ${className}`}>
+    <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><CloudIcon className="w-5 h-5 mr-2" color="#ca8a04" />天気予報</div>} className={`min-h-[200px] ${className}`}>
       {isPartialForecast && (
         <div className="mb-2 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded inline-block">
           部分的な予報
