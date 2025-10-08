@@ -36,8 +36,6 @@ export async function getUserBySlug(userSlug: string): Promise<User | null> {
  * @returns 旅行データまたはnull
  */
 export async function getTripBySlug(tripSlug: string, userId: string): Promise<Trip | null> {
-  console.log('🔍 getTripBySlug: Starting query', { tripSlug, userId })
-  
   const db = getFirestore()
   const tripsRef = collection(db, 'trips')
   const q = query(
@@ -48,28 +46,16 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
   
   try {
     const querySnapshot = await getDocs(q)
-    console.log('📊 getTripBySlug: Query result', { 
-      empty: querySnapshot.empty, 
-      size: querySnapshot.size 
-    })
     
     if (querySnapshot.empty) {
-      console.log('❌ getTripBySlug: No trips found')
       return null
     }
     
     const tripDoc = querySnapshot.docs[0]
-    const tripData = {
+    return {
       id: tripDoc.id,
       ...tripDoc.data()
     } as Trip
-    
-    console.log('✅ getTripBySlug: Trip found', { 
-      tripId: tripData.id, 
-      accessLevel: tripData.access_level 
-    })
-    
-    return tripData
   } catch (error) {
     console.error('❌ getTripBySlug: Query failed', error)
     throw error
@@ -83,23 +69,17 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
  * @returns 旅行データ（creator情報付き）またはnull
  */
 export async function getTripBySlugs(userSlug: string, tripSlug: string): Promise<Trip | null> {
-  console.log('🔍 getTripBySlugs: Starting lookup', { userSlug, tripSlug })
-  
   // 1. userSlug から user を取得
   const user = await getUserBySlug(userSlug)
   if (!user) {
-    console.log('❌ getTripBySlugs: User not found', { userSlug })
     return null
   }
-  console.log('✅ getTripBySlugs: User found', { userId: user.id, googleId: user.google_id })
   
   // 2. tripSlug と user.google_id から trip を取得
   const trip = await getTripBySlug(tripSlug, user.google_id)
   if (!trip) {
-    console.log('❌ getTripBySlugs: Trip not found', { tripSlug, userId: user.google_id })
     return null
   }
-  console.log('✅ getTripBySlugs: Trip found', { tripId: trip.id, accessLevel: trip.access_level })
   
   // 3. creator情報を追加
   return {
