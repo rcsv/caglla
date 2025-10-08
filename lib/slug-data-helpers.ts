@@ -3,7 +3,7 @@
  * userSlug/tripSlug から trip データを取得する機能
  */
 
-import { getFirestore, collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore'
+import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore'
 import type { Trip, User } from './types'
 
 /**
@@ -69,7 +69,8 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
     const daysRef = collection(db, 'days')
     const daysQuery = query(
       daysRef,
-      where('trip_id', '==', tripDoc.id)
+      where('trip_id', '==', tripDoc.id),
+      orderBy('day_number', 'asc')
     )
     
     const daysSnapshot = await getDocs(daysQuery)
@@ -83,7 +84,7 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
         created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
         updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
       }
-    })
+    }).sort((a, b) => (a.day_number || 0) - (b.day_number || 0)) // day_number順でソート
 
     // 各DayのItinerariesを取得
     const daysWithItineraries = await Promise.all(

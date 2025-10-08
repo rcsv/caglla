@@ -83,7 +83,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       ),
       isExpandable: true,
       isExpanded: expandedSections.has('itinerary'),
-      children: trip.days?.map((day: Day) => ({
+      children: trip.days?.sort((a, b) => (a.day_number || 0) - (b.day_number || 0)).map((day: Day) => ({
         id: `day-${day.id}`,
         title: getDayTitle(day),
         subtitle: getDaySubtitle(day),

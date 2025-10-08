@@ -89,6 +89,9 @@ export async function GET(
         itineraries
       })
     }
+    
+    // day_number順でソート
+    days.sort((a, b) => (a.day_number || 0) - (b.day_number || 0))
 
     // 作成者情報を取得（google_idで検索）
     let creator = null
