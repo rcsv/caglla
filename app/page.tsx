@@ -16,6 +16,7 @@ export default function HomePage() {
     }
   }, [user, loading, router])
 
+  // 一時的にローディング状態を無効化してデバッグすることもある。
   if (loading) {
     return <Loading fullScreen size="lg" />
   }

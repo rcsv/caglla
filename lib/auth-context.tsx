@@ -52,24 +52,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // ブラウザ情報を取得
       const browserInfo = await getBrowserInfo()
       
-      // ユーザーの基本情報（name/email/icon）はサーバ側で保持するため、
-      // ここでは preferences のみ同期して上書きを避ける
-      const userData = {
-        preferences: {
-          currency: browserInfo.currency,
-          timezone: browserInfo.timezone,
-          language: browserInfo.language,
-          home_address: browserInfo.homeAddress,
-          theme: 'light' as const,
-          notifications: true
-        }
-      }
-      
-      // APIを呼び出してユーザーを作成/更新
-      await makeAuthenticatedRequest('/api/users', {
-        method: 'POST',
-        body: JSON.stringify(userData)
+      // 既存ユーザーかどうかをチェック
+      const existingUserResponse = await makeAuthenticatedRequest('/api/users', {
+        method: 'GET'
       })
+      
+      if (existingUserResponse.ok) {
+        // 既存ユーザーの場合：preferencesのみ更新（Google情報は送信しない）
+        const userData = {
+          preferences: {
+            currency: browserInfo.currency,
+            timezone: browserInfo.timezone,
+            language: browserInfo.language,
+            home_address: browserInfo.homeAddress,
+            theme: 'light' as const,
+            notifications: true
+          }
+        }
+        
+        console.log('🔄 Auth Context: Updating existing user preferences only')
+        await makeAuthenticatedRequest('/api/users', {
+          method: 'POST',
+          body: JSON.stringify(userData)
+        })
+      } else {
+        // 新規ユーザーの場合のみ：Google情報を含めてユーザーを作成
+        const userData = {
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'ユーザー',
+          email: firebaseUser.email || '',
+          profile_image_url: firebaseUser.photoURL || '',
+          preferences: {
+            currency: browserInfo.currency,
+            timezone: browserInfo.timezone,
+            language: browserInfo.language,
+            home_address: browserInfo.homeAddress,
+            theme: 'light' as const,
+            notifications: true
+          }
+        }
+        
+        console.log('🆕 Auth Context: Creating new user with Google info')
+        await makeAuthenticatedRequest('/api/users', {
+          method: 'POST',
+          body: JSON.stringify(userData)
+        })
+      }
     } catch (error) {
       console.error('Error creating/updating user:', error)
     }

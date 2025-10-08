@@ -4,9 +4,14 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useAuth } from '@/lib/auth-context'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { PlanId, RestrictionType, PLAN_CONFIGS } from '@/lib/restriction-system'
-import type { Trip } from '@/lib/types'
+import type { Trip, User } from '@/lib/types'
 
 interface UserDataContextType {
+  // ユーザー情報
+  userData: User | null
+  userDataLoading: boolean
+  userDataError: string | null
+  
   // プラン情報
   userPlanId: PlanId
   planConfig: any
@@ -23,6 +28,7 @@ interface UserDataContextType {
   privateTripCount: number
   
   // 更新関数
+  refreshUserData: () => Promise<void>
   refreshUserPlan: () => Promise<void>
   refreshTrips: () => Promise<void>
   addTrip: (trip: Trip) => void
@@ -39,6 +45,11 @@ interface UserDataProviderProps {
 export function UserDataProvider({ children }: UserDataProviderProps) {
   const { user } = useAuth()
   
+  // ユーザー情報の状態
+  const [userData, setUserData] = useState<User | null>(null)
+  const [userDataLoading, setUserDataLoading] = useState(false)
+  const [userDataError, setUserDataError] = useState<string | null>(null)
+  
   // プラン情報の状態（デフォルト値を設定）
   const [userPlanId, setUserPlanId] = useState<PlanId>(PlanId.SEASON_TRAVELER)
   const [planLoading, setPlanLoading] = useState(false)
@@ -48,6 +59,33 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
   const [trips, setTrips] = useState<Trip[]>([])
   const [tripsLoading, setTripsLoading] = useState(false)
   const [tripsError, setTripsError] = useState<string | null>(null)
+
+  // ユーザー情報を取得
+  const refreshUserData = async () => {
+    if (!user) return
+    
+    try {
+      setUserDataLoading(true)
+      setUserDataError(null)
+      
+      const response = await makeAuthenticatedRequest('/api/users', {
+        method: 'GET'
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setUserData(data.user)
+      } else {
+        console.error('Failed to fetch user data:', response.status)
+        setUserDataError('ユーザー情報の取得に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      setUserDataError('ユーザー情報の取得に失敗しました')
+    } finally {
+      setUserDataLoading(false)
+    }
+  }
 
   // ユーザープラン情報を取得
   const refreshUserPlan = async () => {
@@ -132,12 +170,18 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
   // 初期データ読み込み
   useEffect(() => {
     if (user) {
+      refreshUserData()
       refreshUserPlan()
       refreshTrips()
     }
   }, [user])
 
   const value: UserDataContextType = {
+    // ユーザー情報
+    userData,
+    userDataLoading,
+    userDataError,
+    
     // プラン情報
     userPlanId,
     planConfig: PLAN_CONFIGS[userPlanId],
@@ -154,6 +198,7 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
     privateTripCount,
     
     // 更新関数
+    refreshUserData,
     refreshUserPlan,
     refreshTrips,
     addTrip,

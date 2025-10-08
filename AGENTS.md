@@ -70,27 +70,40 @@ _Note: This is a Next.js + Firebase application, not a traditional MySQL-based s
 - Collection names use plural forms (e.g., `users`, `trips`, `days`).
 
 ### Z-Index Layer Management System:
-- **ALWAYS** use the centralized z-index management system in `lib/z-index-layers.ts`
+- **ALWAYS** use the centralized z-index management system defined in `app/globals.css`
 - **NEVER** use hardcoded z-index values like `z-[9999]` or `z-50`
-- Use `getZIndexClass(layer, offset)` for Tailwind CSS classes
-- Use `getZIndex(layer, offset)` for direct values
+- **NEVER** use Tailwind CSS's `getZIndexClass()` function as it has compatibility issues
+- Use predefined CSS classes from `globals.css` for consistent z-index management
 
-**Available Layers:**
-- `MAP` (0): 地図（最下層）
-- `MAIN_CONTENT` (10): 左ペイン・メインコンテンツ
-- `LEFT_PANEL` (20): 左ペイン・左メニュー
-- `SETTINGS_DIALOG` (30): セッティングダイアログ
-- `POPUP_MENU` (40): ポップアップメニュー
-- `FLOAT_MODAL` (50): フロートのモーダル
+**Available Z-Index Classes:**
+- `.zidx-map` (0): 地図（最下層）
+- `.zidx-main` (100): メインコンテンツ
+- `.zidx-main-content` (150): メインコンテンツ詳細
+- `.zidx-left-panel` (200): 左メニュー
+- `.zidx-left-panel-content` (250): 左メニュー詳細
+- `.zidx-map-button` (300): マップボタン
+- `.zidx-map-overlay` (350): マップオーバーレイ
+- `.zidx-top-menu` (400): トップメニュー
+- `.zidx-top-menu-content` (450): トップメニュー詳細
+- `.zidx-popup-menu` (500): ポップアップメニュー
+- `.zidx-popup-menu-content` (550): ポップアップメニュー詳細
+- `.zidx-float-modal` (600): モーダルダイアログ
+- `.zidx-float-modal-content` (650): モーダルダイアログ詳細
+- `.zidx-dialog-popup` (700): ダイアログ内ポップアップ
+- `.zidx-dialog-overlay` (750): ダイアログ内オーバーレイ
+- `.zidx-user-settings` (800): ユーザー設定ダイアログ
+- `.zidx-user-settings-content` (850): ユーザー設定ダイアログ詳細
 
 **Usage Examples:**
 ```typescript
-// ✅ Correct
-const menuClass = getZIndexClass('POPUP_MENU') // 'z-[40]'
-const subMenuClass = getZIndexClass('POPUP_MENU', 1) // 'z-[41]'
+// ✅ Correct - globals.cssのz-indexクラスを使用
+<div className="zidx-popup-menu">ポップアップメニュー</div>
+<div className="zidx-float-modal">モーダルダイアログ</div>
+<div className="zidx-top-menu-content">トップメニューコンテンツ</div>
 
-// ❌ Wrong
-const menuClass = 'z-[9999]' // Don't use hardcoded values
+// ❌ Wrong - Tailwind CSSのz-index戦略
+const menuClass = getZIndexClass('POPUP_MENU') // 廃止された関数
+const menuClass = 'z-[9999]' // ハードコードされた値
 ```
 
 ### Environment Variable Management System:

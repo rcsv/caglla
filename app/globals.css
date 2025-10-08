@@ -129,41 +129,40 @@ body {
 /* 右ペイン（マップ側）のレスポンシブ制御 */
 .right-pane-responsive {
   /* デフォルト（md以上）: 335px */
-  width: 335px;
+  width: 300px;
 }
 
 /* lg以上（1024px以上）: 400px */
 @media (min-width: 1024px) {
   .right-pane-responsive {
-    width: 400px;
-  }
-}
-
-/* xl以上（1280px以上）: 420px */
-@media (min-width: 1280px) {
-  .right-pane-responsive {
-    width: 420px;
+    width: auto;
+    min-width: 300px;
+    flex: 1;
   }
 }
 
 /* 1200px-1520pxの範囲で地図側を優先的に縮小 */
-@media (min-width: 1200px) and (max-width: 1520px) {
+@media (min-width: 1024px) and (max-width: 1520px) {
   .right-pane-responsive {
-    width: 380px;
+    width: auto;
+    min-width: 300px;
+    flex: 1;
   }
 }
 
 /* 2xl以上（1536px以上）: 450px */
 @media (min-width: 1536px) {
   .right-pane-responsive {
-    width: 450px;
+    width: auto;
+    flex: 1;
   }
 }
 
 /* 3xl以上（1920px以上）: 500px */
 @media (min-width: 1920px) {
   .right-pane-responsive {
-    width: 500px;
+    width: auto;
+    flex: 1;
   }
 }
 

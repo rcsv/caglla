@@ -56,24 +56,40 @@ export const adminUserOperations = {
     const existingUser = await this.getUserByGoogleId(userData.google_id)
     
     if (existingUser) {
-      // 既存ユーザーの場合、preferencesのみ更新
-      const updatedPreferences = {
-        ...existingUser.preferences,
-        ...userData.preferences
+      // 既存ユーザーの場合、明示的に変更されたフィールドのみ更新
+      const updateData: any = {}
+      
+      // preferencesは常に更新
+      if (userData.preferences) {
+        updateData.preferences = {
+          ...existingUser.preferences,
+          ...userData.preferences
+        }
       }
       
-      await this.updateUser(existingUser.id, {
-        preferences: updatedPreferences,
-        name: userData.name,
-        slug: userData.slug,
-        email: userData.email,
-        profile_image_url: userData.profile_image_url
-      })
+      // 名前が明示的に変更された場合のみ更新
+      if (userData.name && userData.name !== existingUser.name) {
+        updateData.name = userData.name
+        updateData.slug = userData.slug
+      }
+      
+      // メールが明示的に変更された場合のみ更新
+      if (userData.email && userData.email !== existingUser.email) {
+        updateData.email = userData.email
+      }
+      
+      // プロフィール画像が明示的に変更された場合のみ更新
+      if (userData.profile_image_url && userData.profile_image_url !== existingUser.profile_image_url) {
+        updateData.profile_image_url = userData.profile_image_url
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        await this.updateUser(existingUser.id, updateData)
+      }
       
       return {
         ...existingUser,
-        ...userData,
-        preferences: updatedPreferences,
+        ...updateData,
         updated_at: new Date()
       }
     } else {

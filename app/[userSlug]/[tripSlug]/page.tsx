@@ -792,13 +792,13 @@ export default function SlugBasedTripPage() {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div 
-          className={`fixed inset-0 bg-black bg-opacity-50 md:hidden zidx-main-content`}
+          className={`fixed inset-0 bg-black bg-opacity-50 md:hidden zidx-left-panel`}
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* Mobile Slide Menu - 188px固定幅 */}
-      <nav className={`fixed top-0 left-0 h-full w-[188px] bg-white border-r border-gray-200 transform transition-transform duration-300 zidx-left-panel md:hidden ${
+      <nav className={`fixed top-0 left-0 h-full w-[188px] bg-white border-r border-gray-200 transform transition-transform duration-300 zidx-left-panel-content md:hidden ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         {/* NavigationMenuと同じ内容を表示 - 幅を制限 */}
@@ -824,7 +824,7 @@ export default function SlugBasedTripPage() {
       {/* Main Content Pane - Scrollable */}
       <div className="flex-1 overflow-y-auto scrollbar-hide main-content-scrollable main-content-shadow">
         {/* Floating Title Bar */}
-        <FloatingTitleBar title={trip.title} accessLevel={trip.access_level === 'private' ? 'private' : 'public'} className="zidx-left-panel" />
+        <FloatingTitleBar title={trip.title} accessLevel={trip.access_level === 'private' ? 'private' : 'public'} className="zidx-top-menu" />
         {/* Hero Header with Background Image - show only in summary view */}
         {currentView === 'summary' && (
         <header className="relative overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
@@ -849,7 +849,7 @@ export default function SlugBasedTripPage() {
                 {/* ハンバーガーボタン（768px以下）- 左端フロート */}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className={`md:hidden fixed top-4 left-4 zidx-main-content inline-flex items-center px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30`}
+                  className={`md:hidden fixed top-4 left-4 zidx-top-menu-content inline-flex items-center px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

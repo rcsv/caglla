@@ -22,7 +22,7 @@ import Loading from '@/components/common/Loading'
 
 export default function HomePage() {
   const { user, loading, logout } = useAuth()
-  const { trips, tripsLoading, addTrip, refreshTrips, planConfig, planLoading } = useUserData()
+  const { trips, tripsLoading, addTrip, refreshTrips, planConfig, planLoading, userData, userDataLoading } = useUserData()
   const router = useRouter()
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
 
@@ -37,7 +37,7 @@ export default function HomePage() {
     refreshTrips()
   }
 
-  if (loading || tripsLoading || planLoading) {
+  if (loading || tripsLoading || planLoading || userDataLoading) {
     return <Loading fullScreen size="lg" />
   }
 
@@ -61,9 +61,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <HomeHeader
-        userName={user.displayName || user.email || 'User'}
+        userName={userData?.name || user?.email || 'User'}
         planName={planConfig?.name || 'Season Traveler'}
-        avatarUrl={user.photoURL}
+        avatarUrl={userData?.profile_image_url || user?.photoURL}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onLogout={handleLogout}
         onChangePlan={handleChangePlan}

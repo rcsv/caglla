@@ -27,25 +27,20 @@ export async function POST(request: NextRequest) {
       preferences 
     } = body
 
-    const userName = name || decodedToken.name || 'ユーザー'
-    
-    console.log('🔍 User API: Processing user update', {
-      userId,
-      userName,
-      existingName: name,
-      tokenName: decodedToken.name
-    })
-    
     // 既存ユーザーをチェック
     const existingUser = await adminUserOperations.getUserByGoogleId(userId)
     
-    let userSlug: string
+    let userData: Omit<User, 'id' | 'created_at' | 'updated_at'>
     
     if (existingUser) {
-      // 既存ユーザーの場合、名前が変更されたらスラッグも再生成
+      // 既存ユーザーの場合：Google情報は参照せず、既存データを保持
+      // 名前が明示的に変更された場合のみ更新
+      let userName = existingUser.name
+      let userSlug = existingUser.slug
+      
       if (name && name !== existingUser.name) {
-        // 名前が変更された場合は新しいスラッグを生成
-        userSlug = generateUniqueSlug(userName, [])
+        userName = name
+        userSlug = generateUniqueSlug(name, [])
         console.log('🔄 User API: Name changed, generating new slug', {
           oldName: existingUser.name,
           newName: userName,
@@ -53,30 +48,39 @@ export async function POST(request: NextRequest) {
           newSlug: userSlug
         })
       } else {
-        // 名前が変更されていない場合は既存のスラッグを保持
-        userSlug = existingUser.slug || generateUniqueSlug(userName, [])
-        console.log('✅ User API: Name unchanged, keeping existing slug', {
+        console.log('✅ User API: Existing user, keeping current data', {
           name: userName,
           slug: userSlug
         })
       }
-    } else {
-      // 新規ユーザーの場合のみスラッグを生成
-      userSlug = generateUniqueSlug(userName, [])
-      console.log('🆕 User API: New user, generating slug', {
+      
+      userData = {
+        google_id: userId,
         name: userName,
+        slug: userSlug,
+        email: existingUser.email, // 既存のemailを保持
+        profile_image_url: existingUser.profile_image_url, // 既存の画像を保持
+        preferences: preferences || existingUser.preferences || {}
+      }
+    } else {
+      // 新規ユーザーの場合のみ：Google情報を使用
+      const userName = name || decodedToken.name || 'ユーザー'
+      const userSlug = generateUniqueSlug(userName, [])
+      
+      console.log('🆕 User API: New user, using Google info', {
+        name: userName,
+        email: decodedToken.email,
         slug: userSlug
       })
-    }
-
-    // Create or update user
-    const userData: Omit<User, 'id' | 'created_at' | 'updated_at'> = {
-      google_id: userId,
-      name: userName,
-      slug: userSlug,
-      email: email || decodedToken.email || '',
-      profile_image_url: profile_image_url || decodedToken.picture,
-      preferences: preferences || {}
+      
+      userData = {
+        google_id: userId,
+        name: userName,
+        slug: userSlug,
+        email: email || decodedToken.email || '',
+        profile_image_url: profile_image_url || decodedToken.picture,
+        preferences: preferences || {}
+      }
     }
 
     const user = await adminUserOperations.createOrUpdateUser(userData)
