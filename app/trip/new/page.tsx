@@ -193,7 +193,12 @@ export default function NewTripPage() {
 
       if (response.ok) {
         const trip = await response.json()
-        router.push(`/trip/${trip.id}`)
+        // スラッグベースのURLにリダイレクト（フォールバック: IDベース）
+        if (trip.creator?.slug && trip.slug) {
+          router.push(`/${trip.creator.slug}/${trip.slug}`)
+        } else {
+          router.push(`/trip/${trip.id}`)
+        }
       } else {
         // 作成に失敗した場合、アップロードした画像を削除
         if (formData.imageUrl) {

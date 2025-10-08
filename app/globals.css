@@ -7,20 +7,45 @@
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
 
-  --z-index-map:                0 ;
-  --z-index-main-content:     100 ;
-  --z-index-left-panel:       200 ;
-  --z-index-settings-dialog:  400 ;
-  --z-index-popup-menu:       800 ;
-  --z-index-float-modal:     1600 ;
+  /* Z-Index レイヤー定義（階層順） */
+  --z-index-map:                       0 ;   /* 地図（最下層） */
+  --z-index-main:                    100 ;   /* メインコンテンツ */
+  --z-index-main-content:            150 ;   /* メインコンテンツ詳細 */
+  --z-index-left-panel:              200 ;   /* 左メニュー */
+  --z-index-left-panel-content:      250 ;   /* 左メニュー詳細 */
+  --z-index-map-button:              300 ;   /* マップボタン */
+  --z-index-map-overlay:             350 ;   /* マップオーバーレイ */
+  --z-index-top-menu:                400 ;   /* トップメニュー */
+  --z-index-top-menu-content:        450 ;   /* トップメニュー詳細 */
+  --z-index-popup-menu:              500 ;   /* ポップアップメニュー */
+  --z-index-popup-menu-content:      550 ;   /* ポップアップメニュー詳細 */
+  --z-index-float-modal:             600 ;   /* モーダルダイアログ */
+  --z-index-float-modal-content:     650 ;   /* モーダルダイアログ詳細 */
+  --z-index-dialog-popup:            700 ;   /* ダイアログ内ポップアップ */
+  --z-index-dialog-overlay:          750 ;   /* ダイアログ内オーバーレイ */
+  --z-index-user-settings:           800 ;   /* ユーザー設定ダイアログ */
+  --z-index-user-settings-content:   850 ;   /* ユーザー設定ダイアログ詳細 */
+  
 }
 
+/* Z-Index CSS クラス定義 */
 .zidx-map {               z-index: var(--z-index-map); }
+.zidx-main {              z-index: var(--z-index-main); }
 .zidx-main-content {      z-index: var(--z-index-main-content); }
 .zidx-left-panel {        z-index: var(--z-index-left-panel); }
-.zidx-settings-dialog {   z-index: var(--z-index-settings-dialog); }
+.zidx-left-panel-content { z-index: var(--z-index-left-panel-content); }
+.zidx-map-button {        z-index: var(--z-index-map-button); }
+.zidx-map-overlay {       z-index: var(--z-index-map-overlay); }
+.zidx-top-menu {          z-index: var(--z-index-top-menu); }
+.zidx-top-menu-content {  z-index: var(--z-index-top-menu-content); }
 .zidx-popup-menu {        z-index: var(--z-index-popup-menu); }
+.zidx-popup-menu-content { z-index: var(--z-index-popup-menu-content); }
 .zidx-float-modal {       z-index: var(--z-index-float-modal); }
+.zidx-float-modal-content { z-index: var(--z-index-float-modal-content); }
+.zidx-dialog-popup {      z-index: var(--z-index-dialog-popup); }
+.zidx-dialog-overlay {    z-index: var(--z-index-dialog-overlay); }
+.zidx-user-settings {     z-index: var(--z-index-user-settings); }
+.zidx-user-settings-content { z-index: var(--z-index-user-settings-content); }
 
 
 @media (prefers-color-scheme: dark) {

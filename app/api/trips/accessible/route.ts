@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminTripOperations, adminTripUserOperations } from '@/lib/firestore-admin-operations'
+import { adminTripOperations, adminTripUserOperations, adminUserOperations } from '@/lib/firestore-admin-operations'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
-import type { Trip } from '@/lib/types'
+import type { Trip, User } from '@/lib/types'
 
 export async function GET(request: NextRequest) {
   try {
@@ -70,7 +70,23 @@ export async function GET(request: NextRequest) {
       trips = trips.slice(0, limit)
     }
 
-    return NextResponse.json({ trips })
+    // Add creator information to trips
+    const tripsWithCreator = await Promise.all(
+      trips.map(async (trip) => {
+        try {
+          const creator = await adminUserOperations.getUserByGoogleId(trip.user_id)
+          return {
+            ...trip,
+            creator
+          }
+        } catch (error) {
+          console.error(`Error fetching creator for trip ${trip.id}:`, error)
+          return trip
+        }
+      })
+    )
+
+    return NextResponse.json({ trips: tripsWithCreator })
   } catch (error) {
     console.error('Error fetching trips:', error)
     return NextResponse.json(

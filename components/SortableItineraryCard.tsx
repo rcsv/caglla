@@ -47,7 +47,7 @@ export default function SortableItineraryCard(props: SortableItineraryCardProps)
     <div
       ref={setNodeRef}
       style={style}
-      className={`${isDragging ? getZIndexClass('MAIN_CONTENT', 1) : ''}`}
+      className={`${isDragging ? getZIndexClass('MAIN_CONTENT') : ''}`}
     >
       <ScheduleCard 
         {...props} 

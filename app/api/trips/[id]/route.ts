@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { Trip, Day, Itinerary, User } from '@/lib/firestore'
+import { generateUniqueSlug } from '@/lib/slug-utils'
 
 import { COLLECTIONS } from '@/lib/firestore'
 
@@ -241,8 +242,28 @@ export async function PUT(
       console.log('日程に変更はありません。daysドキュメントは更新しません。')
     }
 
+    // タイトルが変更された場合はスラッグを更新
+    let slugUpdate = {}
+    if (body.title && body.title !== tripData.title) {
+      // ユーザーの既存旅行スラッグを取得（現在の旅行を除く）
+      const userTripsSnapshot = await adminDb
+        .collection(COLLECTIONS.TRIPS)
+        .where('user_id', '==', tripData.user_id)
+        .get()
+      
+      const existingSlugs = userTripsSnapshot.docs
+        .filter(doc => doc.id !== tripId) // 現在の旅行を除外
+        .map(doc => doc.data().slug)
+        .filter(Boolean)
+      
+      // 新しいスラッグを生成
+      const newSlug = generateUniqueSlug(body.title, existingSlugs)
+      slugUpdate = { slug: newSlug }
+    }
+
     const updateData = {
       ...body,
+      ...slugUpdate,
       updated_at: new Date()
     }
 

@@ -65,6 +65,7 @@ export const adminUserOperations = {
       await this.updateUser(existingUser.id, {
         preferences: updatedPreferences,
         name: userData.name,
+        slug: userData.slug,
         email: userData.email,
         profile_image_url: userData.profile_image_url
       })

@@ -126,12 +126,22 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {publicTrips.map((trip) => (
-                <Link
-                  key={trip.id}
-                  href={`/trip/${trip.id}`}
-                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition duration-200 p-6"
-                >
+              {publicTrips.map((trip) => {
+        // スラッグベースのURLを生成
+        const getTripUrl = () => {
+          if (trip.creator?.slug && trip.slug) {
+            return `/${trip.creator.slug}/${trip.slug}`
+          }
+          // フォールバック: スラッグが存在しない場合はIDベースのURL
+          return `/trip/${trip.id}`
+        }
+
+                return (
+                  <Link
+                    key={trip.id}
+                    href={getTripUrl()}
+                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition duration-200 p-6"
+                  >
                   <h4 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                     {trip.title}
                   </h4>
@@ -153,8 +163,9 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
                       📅 {new Date(trip.start_date).toLocaleDateString('ja-JP')} - {new Date(trip.end_date).toLocaleDateString('ja-JP')}
                     </p>
                   )}
-                </Link>
-              ))}
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>

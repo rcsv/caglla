@@ -19,6 +19,7 @@ export interface User {
   google_id: string
   name: string
   email: string
+  slug?: string // URL-safe スラッグ
   profile_image_url?: string
   preferences?: UserPreferences
   created_at: Date | string
@@ -177,6 +178,7 @@ export interface Trip {
   id: string
   user_id: string
   title: string
+  slug?: string // URL-safe スラッグ
   description?: string
   destination?: string // 後方互換性のため残す
   destination_place?: PlaceData // 新しいGoogle Places API連携フィールド

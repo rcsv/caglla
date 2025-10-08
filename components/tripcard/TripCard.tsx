@@ -17,9 +17,18 @@ export interface TripCardProps {
 }
 
 export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, variant = 'standard' }) => {
+        // スラッグベースのURLを生成
+        const getTripUrl = () => {
+          if (trip.creator?.slug && trip.slug) {
+            return `/${trip.creator.slug}/${trip.slug}`
+          }
+          // フォールバック: スラッグが存在しない場合はIDベースのURL
+          return `/trip/${trip.id}`
+        }
+
   if (variant === 'imageFull') {
     return (
-      <Link href={`/trip/${trip.id}`} className="block group">
+      <Link href={getTripUrl()} className="block group">
         <div className="relative overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition bg-gray-900 h-[28rem]">
           {/* Image */}
           {trip.image_url && (
@@ -72,7 +81,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
 
   // standard
   return (
-    <Link href={`/trip/${trip.id}`} className="block group">
+    <Link href={getTripUrl()} className="block group">
       <Card interactive padding="md" className="h-full">
         {trip.image_url && (
           <div className="mb-4">

@@ -153,6 +153,12 @@ export const imageUploadHelpers = {
   // Delete image from Firebase Storage with storage tracking
   async deleteImage(imageUrl: string, userId?: string, fileId?: string): Promise<void> {
     try {
+      // Check if imageUrl is valid
+      if (!imageUrl || typeof imageUrl !== 'string') {
+        console.warn('Invalid imageUrl provided to deleteImage:', imageUrl)
+        return
+      }
+
       // Extract the path from the URL
       const url = new URL(imageUrl)
       const path = decodeURIComponent(url.pathname.split('/o/')[1].split('?')[0])

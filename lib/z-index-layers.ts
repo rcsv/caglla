@@ -2,48 +2,53 @@
  * Z-Index レイヤー管理システム
  * 
  * レイヤーの階層構造を定義し、一貫したz-index管理を提供します。
- * 各レイヤーは10の倍数で定義され、必要に応じて中間値を追加できます。
+ * CSS変数と独自クラスを使用して、Tailwind CSSの制限を回避します。
  */
 
 export const Z_INDEX_LAYERS = {
   // 最下層：地図
-  MAP: 0,
+  MAP: 'map',
   
   // メインコンテンツ層
-  MAIN_CONTENT: 100,
+  MAIN: 'main',
+  MAIN_CONTENT: 'main-content',
   
   // 左ペイン・左メニュー
-  LEFT_PANEL: 200,
+  LEFT_PANEL: 'left-panel',
+  LEFT_PANEL_CONTENT: 'left-panel-content',
   
-  // セッティングダイアログ
-  SETTINGS_DIALOG: 400,
+  // マップ関連
+  MAP_BUTTON: 'map-button',
+  MAP_OVERLAY: 'map-overlay',
+  
+  // トップメニュー
+  TOP_MENU: 'top-menu',
+  TOP_MENU_CONTENT: 'top-menu-content',
   
   // ポップアップメニュー
-  POPUP_MENU: 800,
+  POPUP_MENU: 'popup-menu',
+  POPUP_MENU_CONTENT: 'popup-menu-content',
   
   // フロートのモーダル
-  FLOAT_MODAL: 1600,
+  FLOAT_MODAL: 'float-modal',
+  FLOAT_MODAL_CONTENT: 'float-modal-content',
+  
+  // ダイアログ内要素
+  DIALOG_POPUP: 'dialog-popup',
+  DIALOG_OVERLAY: 'dialog-overlay',
+  
+  // ユーザー設定ダイアログ（最上位）
+  USER_SETTINGS: 'user-settings',
+  USER_SETTINGS_CONTENT: 'user-settings-content',
 } as const
 
 /**
- * Z-Index値を取得するヘルパー関数
+ * Z-Index CSSクラス名を取得するヘルパー関数
  * @param layer レイヤー名
- * @param offset オフセット値（デフォルト: 0）
- * @returns z-index値
+ * @returns CSSクラス名
  */
-export function getZIndex(layer: keyof typeof Z_INDEX_LAYERS, offset: number = 0): number {
-  return Z_INDEX_LAYERS[layer] + offset
-}
-
-/**
- * Tailwind CSS用のz-indexクラス名を生成
- * @param layer レイヤー名
- * @param offset オフセット値（デフォルト: 0）
- * @returns Tailwind CSSクラス名
- */
-export function getZIndexClass(layer: keyof typeof Z_INDEX_LAYERS, offset: number = 0): string {
-  const value = getZIndex(layer, offset)
-  return `z-[${value}]`
+export function getZIndexClass(layer: keyof typeof Z_INDEX_LAYERS): string {
+  return `zidx-${Z_INDEX_LAYERS[layer]}`
 }
 
 /**
@@ -51,25 +56,35 @@ export function getZIndexClass(layer: keyof typeof Z_INDEX_LAYERS, offset: numbe
  */
 export const LAYER_DESCRIPTIONS = {
   MAP: '地図（最下層）',
-  MAIN_CONTENT: '左ペイン・メインコンテンツ',
-  LEFT_PANEL: '左ペイン・左メニュー',
-  SETTINGS_DIALOG: 'セッティングダイアログ',
+  MAIN: 'メインコンテンツ',
+  MAIN_CONTENT: 'メインコンテンツ詳細',
+  LEFT_PANEL: '左メニュー',
+  LEFT_PANEL_CONTENT: '左メニュー詳細',
+  MAP_BUTTON: 'マップボタン',
+  MAP_OVERLAY: 'マップオーバーレイ',
+  TOP_MENU: 'トップメニュー',
+  TOP_MENU_CONTENT: 'トップメニュー詳細',
   POPUP_MENU: 'ポップアップメニュー',
-  FLOAT_MODAL: 'フロートのモーダル',
+  POPUP_MENU_CONTENT: 'ポップアップメニュー詳細',
+  FLOAT_MODAL: 'モーダルダイアログ',
+  FLOAT_MODAL_CONTENT: 'モーダルダイアログ詳細',
+  DIALOG_POPUP: 'ダイアログ内ポップアップ',
+  DIALOG_OVERLAY: 'ダイアログ内オーバーレイ',
+  USER_SETTINGS: 'ユーザー設定ダイアログ',
+  USER_SETTINGS_CONTENT: 'ユーザー設定ダイアログ詳細',
 } as const
 
 /**
  * 使用例:
  * 
- * // 直接値を使用
- * const mapZIndex = getZIndex('MAP') // 0
- * const menuZIndex = getZIndex('POPUP_MENU') // 40
+ * // CSSクラスを使用
+ * const mapClass = getZIndexClass('MAP') // 'zidx-map'
+ * const menuClass = getZIndexClass('POPUP_MENU') // 'zidx-popup-menu'
  * 
- * // Tailwind CSSクラスを使用
- * const mapClass = getZIndexClass('MAP') // 'z-[0]'
- * const menuClass = getZIndexClass('POPUP_MENU') // 'z-[40]'
- * 
- * // オフセット付き
- * const subMenuZIndex = getZIndex('POPUP_MENU', 1) // 41
- * const subMenuClass = getZIndexClass('POPUP_MENU', 1) // 'z-[41]'
+ * // JSXでの使用
+ * <div className={getZIndexClass('FLOAT_MODAL')}>
+ *   <div className={getZIndexClass('FLOAT_MODAL_CONTENT')}>
+ *     モーダルコンテンツ
+ *   </div>
+ * </div>
  */
