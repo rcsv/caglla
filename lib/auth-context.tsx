@@ -52,11 +52,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // ブラウザ情報を取得
       const browserInfo = await getBrowserInfo()
       
-      // ユーザー情報を作成
+      // ユーザーの基本情報（name/email/icon）はサーバ側で保持するため、
+      // ここでは preferences のみ同期して上書きを避ける
       const userData = {
-        name: firebaseUser.displayName || 'ユーザー',
-        email: firebaseUser.email || '',
-        profile_image_url: firebaseUser.photoURL,
         preferences: {
           currency: browserInfo.currency,
           timezone: browserInfo.timezone,
