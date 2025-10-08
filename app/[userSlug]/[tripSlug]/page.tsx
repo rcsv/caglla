@@ -979,10 +979,10 @@ export default function SlugBasedTripPage() {
         {currentView === 'itinerary' && (
         <main className="px-4 pb-4">
         {/* Days */}
-        {trip.days && trip.days.length > 0 ? (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">日程</h2>
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-900">日程</h2>
+            {trip.days && trip.days.length > 0 && (
               <div className="flex gap-2">
                 <button
                   onClick={expandAllDays}
@@ -996,13 +996,17 @@ export default function SlugBasedTripPage() {
                 >
                   全て折りたたみ
                 </button>
-        </div>
-      </div>
-            {trip.days.map((day) => {
+              </div>
+            )}
+          </div>
+          
+          {/* Day Cards - 常に表示 */}
+          {trip.days && trip.days.length > 0 ? (
+            trip.days.map((day) => {
               const isCollapsed = collapsedDays.has(day.id)
               const itinerarySummary = generateItinerarySummary(day)
 
-  return (
+              return (
                 <div
                   key={day.id}
                   id={`day-${day.id}`}
@@ -1189,28 +1193,19 @@ export default function SlugBasedTripPage() {
                       )}
                     </div>
                   )}
-              </div>
+                </div>
               )
-            })}
-            
-            {/* 日程追加ボタン */}
-            <div className="mt-6 text-center">
-              <button
-                onClick={handleAddDay}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 mx-auto"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                日程を追加
-              </button>
+            })
+          ) : (
+            // 日程が0件の場合でも空のDayカードを表示
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-4">📅</div>
+              <p className="text-gray-600 mb-4">日程を追加して旅行を計画しましょう</p>
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📅</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">まだ日程がありません</h3>
-            <p className="text-gray-600 mb-6">旅行の日程を追加して、詳細な計画を立てましょう！</p>
+          )}
+          
+          {/* 日程追加ボタン - 常に表示 */}
+          <div className="mt-6 text-center">
             <button
               onClick={handleAddDay}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 mx-auto"
@@ -1221,7 +1216,7 @@ export default function SlugBasedTripPage() {
               日程を追加
             </button>
           </div>
-        )}
+        </div>
         </main>
         )}
 

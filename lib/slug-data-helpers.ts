@@ -52,9 +52,49 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
     }
     
     const tripDoc = querySnapshot.docs[0]
-    return {
+    const tripData = {
       id: tripDoc.id,
       ...tripDoc.data()
+    } as Trip
+
+    // Daysを取得
+    const daysRef = collection(db, 'days')
+    const daysQuery = query(
+      daysRef,
+      where('trip_id', '==', tripDoc.id)
+    )
+    
+    const daysSnapshot = await getDocs(daysQuery)
+    const days = daysSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+
+    // 各DayのItinerariesを取得
+    const daysWithItineraries = await Promise.all(
+      days.map(async (day) => {
+        const itinerariesRef = collection(db, 'itineraries')
+        const itinerariesQuery = query(
+          itinerariesRef,
+          where('day_id', '==', day.id)
+        )
+        
+        const itinerariesSnapshot = await getDocs(itinerariesQuery)
+        const itineraries = itinerariesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+
+        return {
+          ...day,
+          itineraries
+        }
+      })
+    )
+
+    return {
+      ...tripData,
+      days: daysWithItineraries
     } as Trip
   } catch (error) {
     console.error('❌ getTripBySlug: Query failed', error)
