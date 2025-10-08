@@ -23,6 +23,10 @@ const config: Config = {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
       },
+      screens: {
+        '3xl': '1536px', // 1520px前後での調整用
+        '4xl': '1920px', // より大きな画面用
+      },
     },
   },
   plugins: [],

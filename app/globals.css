@@ -122,7 +122,57 @@ body {
 
 /* メインコンテンツエリアの最大幅制限 */
 .main-content-scrollable {
-  max-width: 877px;
+  max-width: 740px;
+  min-width: 400px;
+}
+
+/* 右ペイン（マップ側）のレスポンシブ制御 */
+.right-pane-responsive {
+  /* デフォルト（md以上）: 335px */
+  width: 335px;
+}
+
+/* lg以上（1024px以上）: 400px */
+@media (min-width: 1024px) {
+  .right-pane-responsive {
+    width: 400px;
+  }
+}
+
+/* xl以上（1280px以上）: 420px */
+@media (min-width: 1280px) {
+  .right-pane-responsive {
+    width: 420px;
+  }
+}
+
+/* 1200px-1520pxの範囲で地図側を優先的に縮小 */
+@media (min-width: 1200px) and (max-width: 1520px) {
+  .right-pane-responsive {
+    width: 380px;
+  }
+}
+
+/* 2xl以上（1536px以上）: 450px */
+@media (min-width: 1536px) {
+  .right-pane-responsive {
+    width: 450px;
+  }
+}
+
+/* 3xl以上（1920px以上）: 500px */
+@media (min-width: 1920px) {
+  .right-pane-responsive {
+    width: 500px;
+  }
+}
+
+/* 4xl以上（2560px以上）: flex-1で可変幅 */
+@media (min-width: 2560px) {
+  .right-pane-responsive {
+    width: auto;
+    flex: 1;
+  }
 }
 
 /* ===== Tropical Joy Buttons ===== */
