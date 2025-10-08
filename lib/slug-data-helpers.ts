@@ -32,7 +32,7 @@ export async function getUserBySlug(userSlug: string): Promise<User | null> {
 /**
  * tripSlug と user_id から trip データを取得
  * @param tripSlug 旅行のスラッグ
- * @param userId ユーザーID
+ * @param userId ユーザーID（google_id）
  * @returns 旅行データまたはnull
  */
 export async function getTripBySlug(tripSlug: string, userId: string): Promise<Trip | null> {
@@ -70,8 +70,8 @@ export async function getTripBySlugs(userSlug: string, tripSlug: string): Promis
     return null
   }
   
-  // 2. tripSlug と user_id から trip を取得
-  const trip = await getTripBySlug(tripSlug, user.id)
+  // 2. tripSlug と user.google_id から trip を取得
+  const trip = await getTripBySlug(tripSlug, user.google_id)
   if (!trip) {
     return null
   }
@@ -101,14 +101,16 @@ export async function getSlugsFromTripId(tripId: string): Promise<{ userSlug: st
   
   const trip = tripDoc.data() as Trip
   
-  // 2. user を取得
-  const userRef = doc(db, 'users', trip.user_id)
-  const userDoc = await getDoc(userRef)
+  // 2. user を取得（user_idはgoogle_idなので、whereクエリを使用）
+  const usersRef = collection(db, 'users')
+  const userQuery = query(usersRef, where('google_id', '==', trip.user_id))
+  const userQuerySnapshot = await getDocs(userQuery)
   
-  if (!userDoc.exists()) {
+  if (userQuerySnapshot.empty) {
     return null
   }
   
+  const userDoc = userQuerySnapshot.docs[0]
   const user = userDoc.data() as User
   
   // 3. スラッグが存在するかチェック
