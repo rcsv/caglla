@@ -3,12 +3,16 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Users collection rules
     match /users/{userId} {
-      // Users can read and write their own data
-      allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.google_id || 
+      // Public read: allow reading user profiles (e.g., slug, name) for routing and cards
+      allow read: if true;
+
+      // Write restricted to the owner
+      allow write: if request.auth != null &&
+        (request.auth.uid == resource.data.google_id ||
          request.auth.uid == userId);
+
       // Allow creation for new users
-      allow create: if request.auth != null && 
+      allow create: if request.auth != null &&
         (request.auth.uid == request.resource.data.google_id ||
          request.auth.uid == userId);
     }
