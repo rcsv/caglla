@@ -2,6 +2,23 @@
 // このファイルに全ての型定義を集約し、重複を排除する
 
 // ============================================================================
+// Firestore型定義
+// ============================================================================
+
+// Firestore Timestamp型の型定義
+export interface FirestoreTimestamp {
+  seconds: number
+  nanoseconds: number
+  toDate(): Date
+  toMillis(): number
+  isEqual(other: FirestoreTimestamp): boolean
+  valueOf(): string
+}
+
+// Firestoreから取得される日付型（Timestamp、Date、stringのいずれか）
+export type FirestoreDate = FirestoreTimestamp | Date | string
+
+// ============================================================================
 // 基本型定義
 // ============================================================================
 
@@ -22,8 +39,8 @@ export interface User {
   slug?: string // URL-safe スラッグ
   profile_image_url?: string
   preferences?: UserPreferences
-  created_at: Date | string
-  updated_at: Date | string
+  created_at: FirestoreDate
+  updated_at: FirestoreDate
   planId: 'season_traveler' | 'backpacker' | 'globetrotter' | 'planner_pro' | 'enterprise'
   storageUsage?: StorageUsage
 }
@@ -35,7 +52,7 @@ export interface User {
 export interface StorageUsage {
   totalBytes: number
   fileCount: number
-  lastUpdated: Date | string
+  lastUpdated: FirestoreDate
   files: StorageFile[]
 }
 
@@ -46,7 +63,7 @@ export interface StorageFile {
   fileType: string
   storagePath: string
   downloadUrl: string
-  uploadedAt: Date | string
+  uploadedAt: FirestoreDate
   tripId?: string
   isAvatar?: boolean
 }
@@ -137,8 +154,8 @@ export interface PlacesCache {
     overview: string
   }
   // メタデータ
-  cached_at: Date | string
-  last_accessed: Date | string
+  cached_at: FirestoreDate
+  last_accessed: FirestoreDate
   access_count: number
 }
 
@@ -159,18 +176,18 @@ export interface Itinerary {
   timezone?: string
   cost_amount?: number | null
   cost_currency?: string
-  created_at: Date | string
-  updated_at: Date | string
+  created_at: FirestoreDate
+  updated_at: FirestoreDate
 }
 
 export interface Day {
   id: string
   trip_id: string
   day_number: number
-  date: Date | string
+  date: FirestoreDate
   description?: string
-  created_at: Date | string
-  updated_at: Date | string
+  created_at: FirestoreDate
+  updated_at: FirestoreDate
   itineraries?: Itinerary[]
 }
 
@@ -182,13 +199,13 @@ export interface Trip {
   description?: string
   destination?: string // 後方互換性のため残す
   destination_place?: PlaceData // 新しいGoogle Places API連携フィールド
-  start_date?: Date | string
-  end_date?: Date | string
+  start_date?: FirestoreDate
+  end_date?: FirestoreDate
   status: string
   access_level: 'private' | 'public'
   image_url?: string
-  created_at: Date | string
-  updated_at: Date | string
+  created_at: FirestoreDate
+  updated_at: FirestoreDate
   days?: Day[]
   creator?: User
 }
@@ -197,7 +214,7 @@ export interface TripUser {
   id: string
   trip_id: string
   user_id: string
-  created_at: Date | string
+  created_at: FirestoreDate
 }
 
 // ============================================================================
@@ -414,7 +431,7 @@ export interface TimezoneFailureLog {
   detected_city?: string
   detected_country?: string
   formatted_address: string
-  created_at: Date | string
+  created_at: FirestoreDate
   user_id?: string
   status: 'pending' | 'processed' | 'ignored'
 }
@@ -425,7 +442,7 @@ export interface TimezoneMappingUpdate {
   timezone: string
   confidence: 'high' | 'medium' | 'low'
   source: 'user_feedback' | 'batch_analysis' | 'manual'
-  created_at: Date | string
+  created_at: FirestoreDate
 }
 
 // 通貨推定失敗ログ
@@ -436,7 +453,7 @@ export interface CurrencyFailureLog {
   detected_city?: string
   detected_country?: string
   formatted_address: string
-  created_at: Date | string
+  created_at: FirestoreDate
   user_id?: string
   status: 'pending' | 'processed' | 'ignored'
 }
@@ -447,7 +464,7 @@ export interface CurrencyMappingUpdate {
   currency: string
   confidence: 'high' | 'medium' | 'low'
   source: 'user_feedback' | 'batch_analysis' | 'manual'
-  created_at: Date | string
+  created_at: FirestoreDate
 }
 
 export interface CountryCoordinate {
@@ -467,8 +484,8 @@ export interface CountryGroup {
     id: string
     title: string
     destination?: string
-    startDate?: Date
-    endDate?: Date
+    startDate?: FirestoreDate
+    endDate?: FirestoreDate
     imageUrl?: string
   }>
 }

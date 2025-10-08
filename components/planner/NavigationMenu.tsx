@@ -127,7 +127,19 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
 
   // 日付のタイトルを生成（簡潔版）
   function getDayTitle(day: Day): string {
-    const date = new Date(day.date)
+    // Firestore Timestamp型またはDate型を処理
+    let date: Date
+    if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
+      // Firestore Timestamp型の場合
+      date = (day.date as any).toDate()
+    } else {
+      // Date型または文字列の場合
+      date = new Date(day.date as any)
+    }
+    
+    if (isNaN(date.getTime())) {
+      return `Day ${day.day_number}`
+    }
     const month = date.getMonth() + 1
     const dayNum = date.getDate()
     const dayNames = ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.']
@@ -150,7 +162,19 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
   }
 
   function getDayColor(day: Day): string {
-    const date = new Date(day.date)
+    // Firestore Timestamp型またはDate型を処理
+    let date: Date
+    if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
+      // Firestore Timestamp型の場合
+      date = (day.date as any).toDate()
+    } else {
+      // Date型または文字列の場合
+      date = new Date(day.date as any)
+    }
+    
+    if (isNaN(date.getTime())) {
+      return 'text-gray-900'
+    }
     const dayOfWeek = date.getDay()
     if (dayOfWeek === 6) return 'text-blue-600'
     if (dayOfWeek === 0) return 'text-red-600'

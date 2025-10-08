@@ -25,7 +25,10 @@ export async function getUserBySlug(userSlug: string): Promise<User | null> {
   const userDoc = querySnapshot.docs[0]
   return {
     id: userDoc.id,
-    ...userDoc.data()
+    ...userDoc.data(),
+    // Firestore Timestamp型をDate型に変換
+    created_at: userDoc.data().created_at?.toDate ? userDoc.data().created_at.toDate() : userDoc.data().created_at,
+    updated_at: userDoc.data().updated_at?.toDate ? userDoc.data().updated_at.toDate() : userDoc.data().updated_at,
   } as User
 }
 
@@ -54,7 +57,12 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
     const tripDoc = querySnapshot.docs[0]
     const tripData = {
       id: tripDoc.id,
-      ...tripDoc.data()
+      ...tripDoc.data(),
+      // Firestore Timestamp型をDate型に変換
+      start_date: tripDoc.data().start_date?.toDate ? tripDoc.data().start_date.toDate() : tripDoc.data().start_date,
+      end_date: tripDoc.data().end_date?.toDate ? tripDoc.data().end_date.toDate() : tripDoc.data().end_date,
+      created_at: tripDoc.data().created_at?.toDate ? tripDoc.data().created_at.toDate() : tripDoc.data().created_at,
+      updated_at: tripDoc.data().updated_at?.toDate ? tripDoc.data().updated_at.toDate() : tripDoc.data().updated_at,
     } as Trip
 
     // Daysを取得
@@ -65,10 +73,17 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
     )
     
     const daysSnapshot = await getDocs(daysQuery)
-    const days = daysSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }))
+    const days = daysSnapshot.docs.map(doc => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        ...data,
+        // Firestore Timestamp型をDate型に変換
+        date: data.date?.toDate ? data.date.toDate() : data.date,
+        created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
+        updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
+      }
+    })
 
     // 各DayのItinerariesを取得
     const daysWithItineraries = await Promise.all(
@@ -80,10 +95,16 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
         )
         
         const itinerariesSnapshot = await getDocs(itinerariesQuery)
-        const itineraries = itinerariesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+        const itineraries = itinerariesSnapshot.docs.map(doc => {
+          const data = doc.data()
+          return {
+            id: doc.id,
+            ...data,
+            // Firestore Timestamp型をDate型に変換
+            created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
+            updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
+          }
+        })
 
         return {
           ...day,

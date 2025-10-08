@@ -110,10 +110,21 @@ export default function TripItineraryView({
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        #{day.day_number} | {trip.start_date 
+                        #{day.day_number} | {day.date 
                           ? (() => {
-                              const dayDate = new Date(trip.start_date)
-                              dayDate.setDate(dayDate.getDate() + (day.day_number - 1))
+                              // Firestore Timestamp型またはDate型を処理
+                              let dayDate: Date
+                              if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
+                                // Firestore Timestamp型の場合
+                                dayDate = (day.date as any).toDate()
+                              } else {
+                                // Date型または文字列の場合
+                                dayDate = new Date(day.date as any)
+                              }
+                              
+                              if (isNaN(dayDate.getTime())) {
+                                return '日付が無効です'
+                              }
                               const month = dayDate.getMonth() + 1
                               const dayNum = dayDate.getDate()
                               const dayNames = ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.']
