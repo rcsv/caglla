@@ -4,6 +4,25 @@
  */
 
 /**
+ * ハッシュ文字列を生成（フォールバック用）
+ * @param text 元の文字列
+ * @returns 8文字のハッシュ文字列
+ */
+function generateHashSlug(text: string): string {
+  // シンプルなハッシュ関数（文字列の文字コードの合計を使用）
+  let hash = 0
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // 32bit整数に変換
+  }
+  
+  // 絶対値にして8文字の16進数文字列に変換
+  const hashStr = Math.abs(hash).toString(16).padStart(8, '0')
+  return hashStr.substring(0, 8)
+}
+
+/**
  * 文字列をURL-safeなスラッグに変換
  * @param text 変換対象の文字列
  * @returns URL-safeなスラッグ
@@ -11,7 +30,7 @@
 export function generateSlug(text: string): string {
   if (!text) return ''
   
-  return text
+  const slug = text
     // 日本語のひらがな・カタカナをローマ字に変換（簡易版）
     .replace(/[\u3041-\u3096]/g, (char) => hiraganaToRomaji(char))
     .replace(/[\u30A1-\u30F6]/g, (char) => katakanaToRomaji(char))
@@ -27,6 +46,13 @@ export function generateSlug(text: string): string {
     .toLowerCase()
     // 最大長制限（50文字）
     .substring(0, 50)
+  
+  // スラッグが空になった場合はハッシュ文字列を生成
+  if (!slug || slug.length === 0) {
+    return generateHashSlug(text)
+  }
+  
+  return slug
 }
 
 /**
@@ -87,6 +113,25 @@ function katakanaToRomaji(char: string): string {
  */
 export function generateUniqueSlug(baseText: string, existingSlugs: string[]): string {
   const baseSlug = generateSlug(baseText)
+  
+  // ベーススラッグが空の場合はハッシュ文字列を使用
+  if (!baseSlug || baseSlug.length === 0) {
+    const hashSlug = generateHashSlug(baseText)
+    if (!existingSlugs.includes(hashSlug)) {
+      return hashSlug
+    }
+    
+    // ハッシュスラッグも重複している場合は連番を付与
+    let counter = 1
+    let uniqueSlug = `${hashSlug}-${counter}`
+    
+    while (existingSlugs.includes(uniqueSlug)) {
+      counter++
+      uniqueSlug = `${hashSlug}-${counter}`
+    }
+    
+    return uniqueSlug
+  }
   
   if (!existingSlugs.includes(baseSlug)) {
     return baseSlug

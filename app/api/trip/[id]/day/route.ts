@@ -4,7 +4,7 @@ import { adminDayOperations, adminTripOperations } from '@/lib/firestore-admin-o
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -19,7 +19,7 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const tripId = params.id
+    const { id: tripId } = await params
     const body = await request.json()
     
     // 既存の日程を取得して次のday_numberを決定

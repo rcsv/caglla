@@ -27,7 +27,7 @@ export default function TripRedirectPage() {
         }
         
         // 新しいスラッグベースのURLにリダイレクト
-        const newUrl = `/trip/${slugs.userSlug}/${slugs.tripSlug}`
+        const newUrl = `/${slugs.userSlug}/${slugs.tripSlug}`
         router.replace(newUrl)
     } catch (error) {
         console.error('Redirect error:', error)

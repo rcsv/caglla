@@ -3,9 +3,10 @@ import { adminDb } from '@/lib/firebase-admin'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     
     // reorderリクエストかどうかを判定
@@ -13,7 +14,7 @@ export async function PUT(
       // reorderリクエスト
       const { day_id, sort_number } = body
       
-      const itineraryRef = adminDb.collection('itineraries').doc(params.id)
+      const itineraryRef = adminDb.collection('itineraries').doc(id)
       
       const updateData = {
         day_id,
@@ -41,7 +42,7 @@ export async function PUT(
       // 通常の更新リクエスト
       const { title, description, start_time, end_time, timezone, cost_amount, cost_currency } = body
       
-      const itineraryRef = adminDb.collection('itineraries').doc(params.id)
+      const itineraryRef = adminDb.collection('itineraries').doc(id)
       
       const updateData: any = {
         updated_at: new Date()
@@ -83,10 +84,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const itineraryRef = adminDb.collection('itineraries').doc(params.id)
+    const { id } = await params
+    const itineraryRef = adminDb.collection('itineraries').doc(id)
     
     // ドキュメントを削除
     await itineraryRef.update({

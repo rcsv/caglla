@@ -7,7 +7,7 @@ import { planSaveOperations } from '@/lib/plan-save-operations'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // 認証チェック
@@ -20,7 +20,7 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const tripId = params.id
+    const { id: tripId } = await params
     const { templateName }: { templateName: string } = await request.json()
     
     if (!templateName) {

@@ -21,6 +21,10 @@ This project aims to support the creation, editing, and sharing of travel plans.
 | `docs/`               | Documentation and guides                               |
 | `public/`             | Static assets                                          |
 
+### 📚 Important Documentation
+
+- **スラッグ生成仕様**: `docs/slug-generation-specification.md` - URL生成のためのスラッグシステムの詳細仕様
+
 ---
 
 ---
@@ -68,6 +72,28 @@ _Note: This is a Next.js + Firebase application, not a traditional MySQL-based s
 - Firestore document fields use `camelCase`.
 - Document IDs should be descriptive and unique.
 - Collection names use plural forms (e.g., `users`, `trips`, `days`).
+
+### Slug Generation System:
+- **ALWAYS** use the centralized slug generation system in `lib/slug-utils.ts`
+- **NEVER** implement custom slug generation logic
+- Use `generateSlug()` for basic slug generation
+- Use `generateUniqueSlug()` for unique slug generation with duplicate handling
+- **ALWAYS** handle Japanese characters (kanji-only strings generate hash-based slugs)
+- **ALWAYS** use slug-based URLs for new features: `/[userSlug]/[tripSlug]`
+- **NEVER** use ID-based URLs for new features: `/trip/[id]` (legacy only)
+
+**Slug Generation Examples:**
+```typescript
+// ✅ Correct
+import { generateSlug, generateUniqueSlug } from '@/lib/slug-utils'
+const slug = generateSlug('Tokyo') // 'tokyo'
+const slug = generateSlug('長野市') // '024319ab' (hash fallback)
+const uniqueSlug = generateUniqueSlug('Tokyo', existingSlugs)
+
+// ❌ Wrong
+const customSlug = text.toLowerCase().replace(/\s+/g, '-') // Custom logic
+const idBasedUrl = `/trip/${tripId}` // ID-based URL
+```
 
 ### Z-Index Layer Management System:
 - **ALWAYS** use the centralized z-index management system defined in `app/globals.css`

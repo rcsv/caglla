@@ -84,10 +84,12 @@ export async function POST(request: NextRequest) {
       imageUrl
     } = body
 
-    if (!title) {
-      console.log('❌ Trip API: Title is required')
+    // タイトルが空の場合は目的地を使用
+    const finalTitle = title || destination
+    if (!finalTitle) {
+      console.log('❌ Trip API: Title or destination is required')
       return NextResponse.json(
-        { error: 'Title is required' },
+        { error: 'Title or destination is required' },
         { status: 400 }
       )
     }
@@ -101,13 +103,13 @@ export async function POST(request: NextRequest) {
     console.log('📊 Trip API: Found existing trips:', existingTrips.length, 'slugs:', existingSlugs.length)
     
     // 旅行タイトルからユニークなスラッグを生成
-    const tripSlug = generateUniqueSlug(title, existingSlugs)
+    const tripSlug = generateUniqueSlug(finalTitle, existingSlugs)
     
     console.log('🏷️ Trip API: Generated trip slug:', tripSlug)
 
     console.log('🏗️ Trip API: Creating trip with data:', {
       userId,
-      title,
+      title: finalTitle,
       slug: tripSlug,
       destination,
       hasDestinationPlace: !!destinationPlace,
@@ -117,7 +119,7 @@ export async function POST(request: NextRequest) {
     // Create trip
     const tripData: any = {
       user_id: userId,
-      title,
+      title: finalTitle,
       slug: tripSlug,
       destination,
       access_level: accessLevel,

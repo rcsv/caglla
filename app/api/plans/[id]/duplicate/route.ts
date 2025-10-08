@@ -7,7 +7,7 @@ import { planSaveOperations } from '@/lib/plan-save-operations'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // 認証チェック
@@ -20,7 +20,7 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const sourceTripId = params.id
+    const { id: sourceTripId } = await params
     const { newTitle }: { newTitle?: string } = await request.json()
     
     // プランを複製
