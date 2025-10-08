@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
-import ImageUpload from '@/components/ImageUpload'
+import ImageUpload from '@/components/ui/ImageUpload'
 import { imageUploadHelpers } from '@/lib/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import { PlaceData } from '@/lib/firestore'

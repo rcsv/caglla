@@ -4,34 +4,18 @@ import { useAuth } from '@/lib/auth-context'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { notFound } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import TripEditor from '@/components/TripEditor'
-import DayEditor from '@/components/DayEditor'
-import AddScheduleModal from '@/components/AddScheduleModal'
-import ScheduleCard from '@/components/ScheduleCard'
-import SortableItineraryCard from '@/components/SortableItineraryCard'
-import VenueInsertButton from '@/components/VenueInsertButton'
-import VenueDistance from '@/components/VenueDistance'
-import TripCostDisplay from '@/components/stats/TripCostDisplay'
-import TripDistanceDisplay from '@/components/stats/TripDistanceDisplay'
-import TripWeatherDisplay from '@/components/stats/TripWeatherDisplay'
-import TripHotelDisplay from '@/components/stats/TripHotelDisplay'
-import TripMap from '@/components/TripMap'
-import Checklist from '@/components/Checklist'
-import NavigationMenu from '@/components/planner/NavigationMenu'
+import AddScheduleModal from '@/components/modals/AddScheduleModal'
 import Loading from '@/components/common/Loading'
-import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
-import FloatingTitleBar from '@/components/planner/FloatingTitleBar'
-import { PinIcon } from '@/components/common/icons/PinIcon'
-import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
-import { dateUtils } from '@/lib/date-utils'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
-import { Trip, Day, Itinerary, User } from '@/lib/firestore'
+import { Trip, Day, Itinerary } from '@/lib/firestore'
 import { getTripBySlugs } from '@/lib/slug-data-helpers'
-import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { DragEndEvent } from '@dnd-kit/core'
+import TripPageLayout from '@/components/trip/TripPageLayout'
+import TripHeroSection from '@/components/trip/TripHeroSection'
+import TripSummaryView from '@/components/trip/TripSummaryView'
+import TripItineraryView from '@/components/trip/TripItineraryView'
+import TripChecklistView from '@/components/trip/TripChecklistView'
+import TripRightPane from '@/components/trip/TripRightPane'
 
 export default function SlugBasedTripPage() {
   const { user, loading } = useAuth()
@@ -319,15 +303,6 @@ export default function SlugBasedTripPage() {
     setCollapsedDays(new Set())
   }
 
-  // itinerariesのタイトルを生成する関数
-  const generateItinerarySummary = (day: Day): string => {
-    if (!day.itineraries || day.itineraries.length === 0) {
-      return ''
-    }
-    
-    const sortedItineraries = [...day.itineraries].sort((a, b) => a.sort_number - b.sort_number)
-    return sortedItineraries.map(itinerary => itinerary.title).join(' → ')
-  }
 
   // すべてのItinerariesを収集する関数
   const getAllItineraries = (): Itinerary[] => {
@@ -774,480 +749,79 @@ export default function SlugBasedTripPage() {
     return null
   }
 
-    return (
-    <div className="h-screen bg-gray-50 flex overflow-hidden">
-      {/* Left Navigation Menu - 768px以上のみ表示 */}
-      {trip && (
-        <div className="hidden md:block flex-shrink-0">
-          <NavigationMenu 
-            trip={trip} 
-            onNavigateToSection={navigateToSection}
-            onDayClick={handleDayClick}
-            isCollapsed={!leftNavExpanded}
-            onToggleCollapse={() => setLeftNavExpanded(!leftNavExpanded)}
-          />
-        </div>
-      )}
-
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div 
-          className={`fixed inset-0 bg-black bg-opacity-50 md:hidden zidx-left-panel`}
-          onClick={() => setMobileMenuOpen(false)}
+  return (
+    <TripPageLayout
+      trip={trip}
+      leftNavExpanded={leftNavExpanded}
+      onToggleLeftNav={() => setLeftNavExpanded(!leftNavExpanded)}
+      mobileMenuOpen={mobileMenuOpen}
+      onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
+      onNavigateToSection={navigateToSection}
+      onDayClick={handleDayClick}
+      rightPane={
+        <TripRightPane
+          trip={trip}
+          currentView={currentView}
+          selectedItineraryId={selectedItineraryId}
+          selectedDayId={selectedDayId}
+          mapFocusMode={mapFocusMode}
+          poiData={poiData}
+          onItineraryClick={handleMapMarkerClick}
+          onPoiDataUpdate={setPoiData}
+          getFilteredItineraries={getFilteredItineraries}
+        />
+      }
+    >
+      {/* Hero Header with Background Image - show only in summary view */}
+      {currentView === 'summary' && (
+        <TripHeroSection
+          trip={trip}
+          onUpdateTrip={setTrip}
+          onDeleteTrip={() => router.push('/')}
+          onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
       )}
 
-      {/* Mobile Slide Menu - 188px固定幅 */}
-      <nav className={`fixed top-0 left-0 h-full w-[188px] bg-white border-r border-gray-200 transform transition-transform duration-300 zidx-left-panel-content md:hidden ${
-        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        {/* NavigationMenuと同じ内容を表示 - 幅を制限 */}
-        {trip && (
-          <div className="w-full h-full overflow-hidden">
-            <NavigationMenu 
-              trip={trip} 
-              onNavigateToSection={(sectionId) => {
-                navigateToSection(sectionId)
-                setMobileMenuOpen(false) // メニューを閉じる
-              }}
-              onDayClick={(dayId) => {
-                handleDayClick(dayId)
-                setMobileMenuOpen(false) // メニューを閉じる
-              }}
-              isCollapsed={false} // モバイルでは常に展開
-              onToggleCollapse={() => setMobileMenuOpen(false)} // 折りたたみボタンでメニューを閉じる
-            />
-          </div>
-        )}
-      </nav>
+      {/* Summary Section（view=summary のとき表示）*/}
+      {currentView === 'summary' && (
+        <TripSummaryView
+          trip={trip}
+          summaryCollapsed={summaryCollapsed}
+          onToggleSummary={() => setSummaryCollapsed(!summaryCollapsed)}
+          getAllItineraries={getAllItineraries}
+        />
+      )}
 
-      {/* Main Content Pane - Scrollable */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide main-content-scrollable main-content-shadow">
-        {/* Floating Title Bar */}
-        <FloatingTitleBar title={trip.title} accessLevel={trip.access_level === 'private' ? 'private' : 'public'} className="zidx-top-menu" />
-        {/* Hero Header with Background Image - show only in summary view */}
-        {currentView === 'summary' && (
-        <header className="relative overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
-          {/* Background Image */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{
-              backgroundImage: trip.image_url 
-                ? `url(${trip.image_url})` 
-                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-            }}
-          >
-            {/* Dark Overlay for better text readability */}
-            <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-          </div>
-          
-          {/* Content Overlay */}
-          <div className="relative h-full flex flex-col">
-            {/* Top Navigation */}
-            <div className="flex justify-between items-start p-6">
-              <div className="flex items-center gap-4">
-                {/* ハンバーガーボタン（768px以下）- 左端フロート */}
-                <button
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className={`md:hidden fixed top-6 left-6 zidx-top-menu-content inline-flex items-center px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
+      {/* Itinerary List（view=itinerary のとき表示）*/}
+      {currentView === 'itinerary' && (
+        <TripItineraryView
+          trip={trip}
+          collapsedDays={collapsedDays}
+          selectedDayId={selectedDayId}
+          selectedItineraryId={selectedItineraryId}
+          onToggleDayCollapse={toggleDayCollapse}
+          onDayClick={handleDayClick}
+          onAddSchedule={handleAddSchedule}
+          onInsertSchedule={handleInsertSchedule}
+          onAddDay={handleAddDay}
+          onScheduleUpdated={handleScheduleUpdated}
+          onMoveUp={handleMoveUp}
+          onMoveDown={handleMoveDown}
+          onMoveToDay={handleMoveToDay}
+          onDuplicateToDay={handleDuplicateToDay}
+          onScheduleDelete={handleScheduleDelete}
+          onItineraryClick={handleItineraryClick}
+          onDragEnd={handleDragEnd}
+          onUpdateTrip={setTrip}
+          expandAllDays={expandAllDays}
+          collapseAllDays={collapseAllDays}
+        />
+      )}
 
-        </div>
-              <TripEditor 
-                trip={trip as any} 
-                onUpdate={(updatedTrip: any) => setTrip(updatedTrip)} 
-                onDelete={() => router.push('/')}
-              />
-      </div>
-            
-            {/* Main Content - Positioned higher */}
-            <div className="flex-1 flex items-start pt-8">
-              <div className="w-full px-6">
-                <div className="max-w-4xl">
-                  {/* モバイル用のハンバーガーボタン用スペース */}
-                  <div className="md:hidden h-16 mb-2"></div>
-                  
-                  <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
-                    {trip.title}
-                  </h1>
-                  
-                  {/* Date and Location - 2 lines */}
-                  <div className="flex flex-col items-start gap-2 mb-6">
-                    <div className="flex items-center text-white">
-                      <CalendarIcon className="w-5 h-5 mr-2" color="white" />
-                      <span className="text-lg font-medium">
-                        {trip.start_date && trip.end_date 
-                          ? dateUtils.formatTripDateRange(trip.start_date, trip.end_date)
-                          : '日付が設定されていません'
-                        }
-                      </span>
-                    </div>
-                    
-                    {trip.destination && (
-                      <div className="flex items-center text-white">
-                        <PinIcon className="w-5 h-5 mr-2" color="white" />
-                        <span className="text-lg font-medium">{trip.destination}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Creator Info */}
-                  {trip.creator && (
-                    <p className="text-white text-sm opacity-80 drop-shadow-md">
-                      by {trip.creator.name}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-        )}
-
-        {/* Summary Section（view=summary のとき表示）*/}
-        {currentView === 'summary' && (
-        <div className="px-4 py-4 space-y-6">
-          {/* Trip Description - move from hero to top of Summary */}
-          {trip.description && (
-            <section id="trip-description" className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <h3 className="text-lg font-medium text-gray-700 mb-3">Description</h3>
-              <p className="text-gray-700 whitespace-pre-line">{trip.description}</p>
-            </section>
-          )}
-          {/* Summary Header - 折りたたみ可能 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div 
-              className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => setSummaryCollapsed(!summaryCollapsed)}
-            >
-              <h2 className="text-xl font-semibold text-gray-800">Summary</h2>
-              <svg 
-                className={`w-5 h-5 text-gray-400 transition-transform ${summaryCollapsed ? 'rotate-180' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-
-            {/* Summary Content - 折りたたまれていない時のみ表示 */}
-            {!summaryCollapsed && (
-              <div className="px-4 pb-4 space-y-6">
-                {/* At a glance - 総移動距離と天気予報 */}
-                <div id="at-a-glance">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4">At a glance</h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
-                    {/* Distance Summary - 6/10 (60%) */}
-                    <div className="lg:col-span-6">
-                      <TripDistanceDisplay itineraries={getAllItineraries()} />
-                    </div>
-                    
-                    {/* Weather Summary - 4/10 (40%) */}
-                    <div className="lg:col-span-4">
-                      <TripWeatherDisplay 
-                        destination={trip.destination}
-                        startDate={trip.start_date ? (trip.start_date instanceof Date ? trip.start_date.toISOString().split('T')[0] : trip.start_date) : undefined}
-                        endDate={trip.end_date ? (trip.end_date instanceof Date ? trip.end_date.toISOString().split('T')[0] : trip.end_date) : undefined}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Budget / Reservation - 旅行費用とホテル情報 */}
-                <div id="budget-reservation">
-                  <h3 className="text-lg font-medium text-gray-700 mb-4">Budget / Reservation</h3>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Cost Summary */}
-                    <TripCostDisplay itineraries={getAllItineraries()} />
-                    
-                    {/* Hotel Summary */}
-                    <TripHotelDisplay />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        )}
-
-        {/* Itinerary List（view=itinerary のとき表示）*/}
-        {currentView === 'itinerary' && (
-        <main className="px-4 pb-4">
-        {/* Days */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-900">日程</h2>
-            {trip.days && trip.days.length > 0 && (
-              <div className="flex gap-2">
-                <button
-                  onClick={expandAllDays}
-                  className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                >
-                  全て展開
-                </button>
-                <button
-                  onClick={collapseAllDays}
-                  className="px-3 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-                >
-                  全て折りたたみ
-                </button>
-              </div>
-            )}
-          </div>
-          
-          {/* Day Cards - 常に表示 */}
-          {trip.days && trip.days.length > 0 ? (
-            trip.days.map((day) => {
-              const isCollapsed = collapsedDays.has(day.id)
-              const itinerarySummary = generateItinerarySummary(day)
-
-              return (
-                <div
-                  key={day.id}
-                  id={`day-${day.id}`}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200"
-                >
-                  {/* ヘッダー部分 - 常に表示 */}
-                  <div 
-                    className={`flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors ${selectedDayId === day.id ? 'bg-red-50 border-red-200' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDayClick(day.id)
-                    }}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          #{day.day_number} | {trip.start_date 
-                            ? (() => {
-                                const dayDate = new Date(trip.start_date)
-                                dayDate.setDate(dayDate.getDate() + (day.day_number - 1))
-                                const month = dayDate.getMonth() + 1
-                                const dayNum = dayDate.getDate()
-                                const dayNames = ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.']
-                                const dayName = dayNames[dayDate.getDay()]
-                                return `${month}/${dayNum} ${dayName}`
-                              })()
-                            : '日付が設定されていません'
-                          }
-                        </h3>
-                        {/* 折りたたみアイコン */}
-                        <svg 
-                          className={`w-5 h-5 text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                      
-                      {/* 縮小表示時の情報 */}
-                      {isCollapsed && (
-                        <div className="text-sm text-gray-600">
-                          {day.description && (
-                            <p className="mb-1">{day.description}</p>
-                          )}
-                          {itinerarySummary && (
-                            <p className="text-gray-500">{itinerarySummary}</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 詳細部分 - 折りたたまれていない時のみ表示 */}
-                  {!isCollapsed && (
-                    <div className="px-6 pb-6">
-                      <DayEditor 
-                        day={day as any} 
-                        itinerarySummary={itinerarySummary}
-                        onUpdate={(updatedDay: any) => {
-                          setTrip(prevTrip => {
-                            if (!prevTrip) return prevTrip
-                            return {
-                              ...prevTrip,
-                              days: prevTrip.days?.map(d => 
-                                d.id === updatedDay.id ? updatedDay as any : d
-                              ) || []
-                            }
-                          })
-                        }} 
-                      />
-
-                      {day.itineraries && day.itineraries.length > 0 ? (
-                        <div className="mt-6">
-                          <div className="flex justify-between items-center mb-4">
-                            <h4 className="font-medium text-gray-900">スケジュール</h4>
-                            <button
-                              onClick={() => handleAddSchedule(day.id)}
-                              className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                            >
-                              Venue / Point of Interest を追加
-                            </button>
-                          </div>
-                          <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                            <SortableContext 
-                              items={day.itineraries.map(i => i.id)} 
-                              strategy={verticalListSortingStrategy}
-                            >
-                              <div className="space-y-0">
-                                {day.itineraries.map((itinerary, index) => {
-                                  const previousItinerary = index > 0 ? day.itineraries?.[index - 1] : null
-                                  const nextItinerary = index < (day.itineraries?.length || 0) - 1 ? day.itineraries?.[index + 1] : null
-                                  
-                                  return (
-                                    <div key={itinerary.id} className="relative">
-                                      <SortableItineraryCard
-                                        itinerary={itinerary}
-                                        previousPlace={previousItinerary?.place_data}
-                                        nextPlace={nextItinerary?.place_data}
-                                        onUpdate={handleScheduleUpdated}
-                                        onMoveUp={() => handleMoveUp(itinerary.id, day.id)}
-                                        onMoveDown={() => handleMoveDown(itinerary.id, day.id)}
-                                        onMoveToDay={handleMoveToDay}
-                                        onDuplicateToDay={handleDuplicateToDay}
-                                        onDelete={handleScheduleDelete}
-                                        onItineraryClick={handleItineraryClick}
-                                        isSelected={selectedItineraryId === itinerary.id}
-                                        isFirst={index === 0}
-                                        isLast={index === (day.itineraries?.length || 0) - 1}
-                                        availableDays={trip.days?.map(d => ({
-                                          id: d.id,
-                                          day_number: d.day_number,
-                                          date: '' // Day型にdateプロパティがないため空文字列を設定
-                                        })) || []}
-                                      />
-                                      
-                                      {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}
-                                      {itinerary.place_data && 
-                                       nextItinerary?.place_data && 
-                                       itinerary.place_data.place_id !== nextItinerary.place_data.place_id && (
-                                        <VenueDistance 
-                                          fromPlace={itinerary.place_data}
-                                          toPlace={nextItinerary.place_data}
-                                          mode="driving"
-                                          showInsertButton={true}
-                                          onInsertVenue={() => handleInsertSchedule(day.id, index)}
-                                        />
-                                      )}
-                                      
-                                      {/* Venue間の挿入ボタン（距離表示がない場合のみ） */}
-                                      {index < (day.itineraries?.length || 0) - 1 && 
-                                       (!itinerary.place_data || !nextItinerary?.place_data || 
-                                        itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
-                                        <VenueInsertButton
-                                          onInsert={() => handleInsertSchedule(day.id, index)}
-                                          dayId={day.id}
-                                        />
-                                      )}
-                                    </div>
-                                  )
-                                })}
-                                
-                                {/* 最後のVenueの後に挿入ボタンを表示 */}
-                                {day.itineraries.length > 0 && (
-                                  <div className="flex justify-center py-4">
-                                    <div className="relative flex items-center justify-center">
-                                      {/* Gitタイムライン風の縦線（上側のみ） */}
-                                      <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300 top-0"></div>
-                                      
-                                      {/* 挿入ボタン */}
-                                      <button
-                                        onClick={() => handleInsertSchedule(day.id, (day.itineraries?.length || 0) - 1)}
-                                        className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
-                                        title="最後にVenueを追加"
-                                      >
-                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                          <path d="M12 2C13.1 2 14 2.9 14 4V10H20C21.1 10 22 10.9 22 12S21.1 14 20 14H14V20C14 21.1 13.1 22 12 22S10 21.1 10 20V14H4C2.9 14 2 13.1 2 12S2.9 10 4 10H10V4C10 2.9 10.9 2 12 2Z" />
-                                          <path 
-                                            d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z" 
-                                            fill="white"
-                                            opacity="0.8"
-                                            transform="scale(0.3) translate(20, 20)"
-                                          />
-                                        </svg>
-                                      </button>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </SortableContext>
-                          </DndContext>
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 text-gray-500">
-                          <p>まだスケジュールがありません</p>
-                          <button
-                            onClick={() => handleAddSchedule(day.id)}
-                            className="text-blue-600 hover:text-blue-800 font-medium"
-                          >
-                            Venue / Point of Interest を追加
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })
-          ) : (
-            // 日程が0件の場合でも空のDayカードを表示
-            <div className="text-center py-8 text-gray-500">
-              <div className="text-4xl mb-4">📅</div>
-              <p className="text-gray-600 mb-4">日程を追加して旅行を計画しましょう</p>
-            </div>
-          )}
-          
-          {/* 日程追加ボタン - 常に表示 */}
-          <div className="mt-6 text-center">
-            <button
-              onClick={handleAddDay}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 mx-auto"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              日程を追加
-            </button>
-          </div>
-        </div>
-        </main>
-        )}
-
-        {/* Checklist（モバイルではメインに表示）*/}
-        {currentView === 'checklist' && (
-          <div className="px-4 py-4 md:hidden">
-                  <Checklist />
-                </div>
-        )}
-      </div>
-
-      {/* Right Pane（md以上のみ表示）*/}
-      <div className="hidden md:block right-pane-responsive flex-shrink-0">
-        <div className="h-full bg-gray-100">
-          {currentView === 'checklist' ? (
-            <Checklist />
-              ) : (
-                <TripMap
-              itineraries={getFilteredItineraries()} 
-                  selectedItineraryId={selectedItineraryId}
-                  selectedDayId={selectedDayId}
-              onItineraryClick={handleMapMarkerClick}
-                  onPoiDataUpdate={setPoiData}
-                  className="h-full"
-                  focusMode={mapFocusMode}
-              initialCenter={trip.destination_place?.geometry?.location || undefined as any}
-                />
-              )}
-        </div>
-      </div>
-
+      {/* Checklist（モバイルではメインに表示）*/}
+      {currentView === 'checklist' && (
+        <TripChecklistView />
+      )}
 
       {/* Add Schedule Modal */}
       {showAddScheduleModal && selectedDayId && (
@@ -1263,6 +837,6 @@ export default function SlugBasedTripPage() {
           insertAfterIndex={insertAfterIndex}
         />
       )}
-    </div>
+    </TripPageLayout>
   )
 }

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import ImageUpload from '@/components/ImageUpload'
-import StorageUsageDisplay from '@/components/StorageUsageDisplay'
+import ImageUpload from '@/components/ui/ImageUpload'
+import StorageUsageDisplay from '@/components/ui/StorageUsageDisplay'
 import { StorageUsage, StorageQuota, StorageFile } from '@/lib/types'
 
 interface StorageTestData {

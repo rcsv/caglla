@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription-context'
 import { UsageStats } from '@/lib/plan-limits'
-import PlanLimitsDisplay from '@/components/PlanLimitsDisplay'
+import PlanLimitsDisplay from '@/components/ui/PlanLimitsDisplay'
 
 function PlanLimitsTestContent() {
   const { subscriptionStatus, checkPlanLimits } = useSubscription()

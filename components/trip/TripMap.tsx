@@ -5,7 +5,7 @@ import { Itinerary } from '@/lib/firestore'
 import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
 import { routeOptimizer } from '@/lib/route-optimization'
 import { getZIndexClass } from '@/lib/z-index-layers'
-import POIDialog from './POIDialog'
+import POIDialog from '@/components/modals/POIDialog'
 
 // ティアドロップ形状のマーカースタイル
 const teardropStyles = `

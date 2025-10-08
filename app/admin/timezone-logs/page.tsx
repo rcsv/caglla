@@ -1,4 +1,4 @@
-import TimezoneLogManager from '@/components/TimezoneLogManager'
+import TimezoneLogManager from '@/components/ui/TimezoneLogManager'
 
 export default function TimezoneLogsPage() {
   return (

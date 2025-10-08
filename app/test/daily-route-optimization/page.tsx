@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import DayEditor from '@/components/DayEditor'
+import DayEditor from '@/components/trip/DayEditor'
 import { Day, Itinerary } from '@/lib/firestore'
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription-context'
 

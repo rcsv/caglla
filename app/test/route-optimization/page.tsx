@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import RouteCostEstimator from '@/components/RouteCostEstimator'
-import RouteOptimizationDisplay from '@/components/RouteOptimizationDisplay'
+import RouteCostEstimator from '@/components/trip/RouteCostEstimator'
+import RouteOptimizationDisplay from '@/components/trip/RouteOptimizationDisplay'
 
 export default function RouteOptimizationDemo() {
   const [waypointCount, setWaypointCount] = useState(5)

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import AvatarUpload from './AvatarUpload'
+import AvatarUpload from '@/components/ui/AvatarUpload'
 import { getZIndexClass } from '@/lib/z-index-layers'
 import type { User, UserPreferences, UserSettingsModalProps } from '@/lib/types'
 import { CloseIcon } from '@/components/common/icons/CloseIcon'

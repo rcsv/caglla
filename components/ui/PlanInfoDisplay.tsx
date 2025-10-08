@@ -8,7 +8,7 @@ import {
   PLAN_CONFIGS
 } from '@/lib/restriction-system'
 import { Button } from '@/components/common/Button'
-import StorageUsageDisplay from '@/components/StorageUsageDisplay'
+import StorageUsageDisplay from '@/components/ui/StorageUsageDisplay'
 import Link from 'next/link'
 
 interface PlanInfoDisplayProps {

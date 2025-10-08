@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import AvatarUpload from '@/components/AvatarUpload'
+import AvatarUpload from '@/components/ui/AvatarUpload'
 import type { User, UserPreferences } from '@/lib/types'
 
 export default function UserSettingsPage() {

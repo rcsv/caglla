@@ -5,7 +5,7 @@ import { Itinerary } from '@/lib/firestore'
 import { optimizeWaypoints, estimateRouteCost } from '@/lib/route-optimization'
 import { applyOptimizedOrder } from '@/lib/itinerary-reorder'
 import RouteOptimizationDisplay from './RouteOptimizationDisplay'
-import PremiumButton from './PremiumButton'
+import PremiumButton from '@/components/ui/PremiumButton'
 
 interface DailyRouteOptimizerProps {
   dayId: string
@@ -56,8 +56,7 @@ export default function DailyRouteOptimizer({
         origin,
         destination,
         {
-          travelMode: 'DRIVING',
-          optimizeWaypoints: true
+          travelMode: 'DRIVING'
         }
       )
 
@@ -90,13 +89,13 @@ export default function DailyRouteOptimizer({
       
       // ローカルの状態も更新
       const reorderedItineraries = [...itineraries]
-      const validIndices = validItineraries.map((_, index) => 
+      const validIndices = validItineraries.map((_: Itinerary, index: number) => 
         itineraries.findIndex(it => it.id === validItineraries[index].id)
       )
 
-      const newValidOrder = optimizationResult.optimizedOrder.map(index => validItineraries[index])
+      const newValidOrder = optimizationResult.optimizedOrder.map((index: number) => validItineraries[index])
       
-      newValidOrder.forEach((itinerary, newIndex) => {
+      newValidOrder.forEach((itinerary: Itinerary, newIndex: number) => {
         const originalIndex = validIndices[optimizationResult.optimizedOrder[newIndex]]
         if (originalIndex !== -1) {
           reorderedItineraries[originalIndex] = itinerary
@@ -113,13 +112,13 @@ export default function DailyRouteOptimizer({
         console.log('Server update skipped, applying client-side changes')
         // ローカルの状態を更新
         const reorderedItineraries = [...itineraries]
-        const validIndices = validItineraries.map((_, index) => 
+        const validIndices = validItineraries.map((_: Itinerary, index: number) => 
           itineraries.findIndex(it => it.id === validItineraries[index].id)
         )
 
-        const newValidOrder = optimizationResult.optimizedOrder.map(index => validItineraries[index])
+        const newValidOrder = optimizationResult.optimizedOrder.map((index: number) => validItineraries[index])
         
-        newValidOrder.forEach((itinerary, newIndex) => {
+        newValidOrder.forEach((itinerary: Itinerary, newIndex: number) => {
           const originalIndex = validIndices[optimizationResult.optimizedOrder[newIndex]]
           if (originalIndex !== -1) {
             reorderedItineraries[originalIndex] = itinerary
