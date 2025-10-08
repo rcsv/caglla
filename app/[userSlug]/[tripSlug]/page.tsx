@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/lib/auth-context'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import TripEditor from '@/components/TripEditor'
@@ -84,8 +85,8 @@ export default function SlugBasedTripPage() {
         const tripData = await getTripBySlugs(userSlug, tripSlug)
         
         if (!tripData) {
-          // 旅行が見つからない場合は404ページにリダイレクト
-          router.push('/404')
+          // 旅行が見つからない場合はnotFound()を呼び出し
+          notFound()
           return
         }
         
@@ -101,7 +102,7 @@ export default function SlugBasedTripPage() {
         }
       } catch (error) {
         console.error('旅行データの取得に失敗しました:', error)
-        router.push('/404')
+        notFound()
       } finally {
         setTripLoading(false)
       }
