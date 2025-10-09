@@ -13,6 +13,20 @@ interface AddScheduleModalProps {
   insertAfterIndex?: number // 挿入位置を指定（undefinedの場合は最後に追加）
 }
 
+/**
+ * Modal UI for searching places and adding a schedule entry to a specific day.
+ *
+ * Provides a search field, displays place results, and saves a selected place as a schedule
+ * entry. When `insertAfterIndex` is provided the component uses the insert endpoint to place
+ * the new schedule at the specified position; otherwise it appends via the regular API.
+ *
+ * @param isOpen - Whether the modal is visible
+ * @param onClose - Callback invoked when the modal is closed
+ * @param dayId - Identifier of the day to which the schedule will be added
+ * @param onScheduleAdded - Callback invoked with the newly created schedule object after a successful save
+ * @param insertAfterIndex - Optional zero-based index after which the new schedule should be inserted; undefined means append to the end
+ * @returns The modal element when `isOpen` is true, otherwise `null`
+ */
 export default function AddScheduleModal({ 
   isOpen, 
   onClose, 

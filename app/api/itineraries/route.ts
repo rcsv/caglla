@@ -3,6 +3,13 @@ import { adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 import type { PlaceData } from '@/lib/types'
 
+/**
+ * Create a new itinerary for a given day and return the saved itinerary with resolved place data.
+ *
+ * Validates required input (day_id, title, and either place_id or place_data.place_id), assigns the next sort_number for the day, persists an itinerary record containing only the place_id, and attempts to resolve or populate a cached PlaceData entry for the place. The response includes the persisted itinerary fields plus a place_data property containing the resolved PlaceData (or `null` when unavailable). Validation failures produce a 400 error object; unexpected server errors produce a 500 error object.
+ *
+ * @returns The saved itinerary object with properties: `id`, `day_id`, `sort_number`, `title`, `description`, `location`, `place_id`, `created_at`, `updated_at`, and `place_data` (resolved PlaceData or `null`). On validation failure returns an error object with status 400; on server error returns an error object with status 500.
+ */
 export async function POST(request: NextRequest) {
   try {
     const { day_id, place_id, place_data, title, description, location } = await request.json()

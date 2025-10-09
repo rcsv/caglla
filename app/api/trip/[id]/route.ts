@@ -3,6 +3,16 @@ import { adminTripOperations, adminDayOperations, adminItineraryOperations } fro
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 
+/**
+ * Retrieve a trip by ID including its destination (resolved from place cache when missing), days with their itineraries (with place data resolved from place cache when missing), and the creator's public info when available.
+ *
+ * @param request - The incoming Next.js request (unused for retrieval logic).
+ * @param params - An object containing route parameters; `params.id` is the trip ID to fetch.
+ * @returns A JSON response containing the trip fields plus:
+ * - `days`: array of days each including an `itineraries` array (each itinerary may include `place_data` populated from the places cache),
+ * - `creator`: public creator info `{ id, name, email, avatar_url, slug }` or `null` if not found.
+ * Returns a 404 response with `{ error: 'Trip not found' }` when the trip does not exist, or a 500 response with `{ error: 'Failed to fetch trip' }` on unexpected failures.
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -96,6 +106,15 @@ export async function GET(
   }
 }
 
+/**
+ * Update a trip by ID, enforce ownership, and adjust associated day documents when the trip date range changes.
+ *
+ * Updates the trip's metadata (title, description, destination, destination_place_id, start/end dates, access level, image URL).
+ * If the start or end date changes, creates, updates, or deletes day documents so they match the new inclusive date range and renumbers day_number accordingly.
+ *
+ * @param request - The incoming NextRequest containing authorization header and JSON body with update fields.
+ * @param params - An object whose `id` property (resolved from the route) is the target trip ID.
+ * @returns A NextResponse with `{ success: true }` on successful update. On error returns JSON with an `error` message and an appropriate HTTP status (401, 403, 400, or 500).
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

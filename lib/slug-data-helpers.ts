@@ -34,10 +34,14 @@ export async function getUserBySlug(userSlug: string): Promise<User | null> {
 }
 
 /**
- * tripSlug と user_id から trip データを取得
- * @param tripSlug 旅行のスラッグ
- * @param userId ユーザーID（google_id）
- * @returns 旅行データまたはnull
+ * Retrieve a trip by its slug for a specific user, including resolved destination and per-day itineraries.
+ *
+ * Queries the trips collection for a document matching `tripSlug` and `userId`, converts Firestore timestamps to `Date`, resolves `destination_place` from the places cache when `destination_place_id` is present, loads all days for the trip ordered by `day_number`, and loads each day's itineraries ordered by `sort_number` (resolving each itinerary's `place_data` from the places cache when needed).
+ *
+ * @param tripSlug - The trip's slug
+ * @param userId - The user's ID (google_id)
+ * @returns The assembled `Trip` object including `days` and their `itineraries`, or `null` if no matching trip is found
+ * @throws Propagates any error thrown while querying or reading from Firestore
  */
 export async function getTripBySlug(tripSlug: string, userId: string): Promise<Trip | null> {
   const db = getFirestore()

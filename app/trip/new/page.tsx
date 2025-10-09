@@ -12,6 +12,11 @@ import { PlaceData } from '@/lib/firestore'
 import { useSubscription } from '@/lib/subscription-context'
 import { RestrictionType } from '@/lib/restriction-system'
 
+/**
+ * Renders the "New Trip" page and manages creation flow, including form state, date validation, authenticated plan-limit checks, automatic destination image fetching, image upload cleanup, and navigation after creation.
+ *
+ * @returns The New Trip page React element.
+ */
 export default function NewTripPage() {
   const { user, loading } = useAuth()
   const router = useRouter()

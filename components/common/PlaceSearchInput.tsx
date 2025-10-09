@@ -11,6 +11,16 @@ interface PlaceSearchInputProps {
   disabled?: boolean
 }
 
+/**
+ * A controlled place search input that performs debounced queries and shows selectable search results.
+ *
+ * Renders a text input that queries places as the user types (debounced), displays a dropdown of matches, allows selecting a place, and surfaces errors and loading state.
+ *
+ * @param currentPlace - The currently selected place or `null`; its `name` initializes the input value.
+ * @param onPlaceSelect - Callback invoked with the selected `PlaceData` or `null` when the selection is cleared.
+ * @param placeholder - Input placeholder text (defaults to "場所を検索...").
+ * @param disabled - If `true`, disables the input and interaction.
+ * @returns The input and dropdown UI for searching and selecting places. */
 export default function PlaceSearchInput({ 
   currentPlace, 
   onPlaceSelect, 

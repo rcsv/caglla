@@ -4,7 +4,19 @@ import { COLLECTIONS } from '@/lib/firestore'
 import type { PlaceData } from '@/lib/types'
 
 /**
- * 指定位置にスケジュールを挿入し、後続のスケジュールを再番号付けする
+ * Insert a new itinerary into a specified day at a given position and renumber subsequent itineraries as needed.
+ *
+ * @param request - The incoming NextRequest whose JSON body must include:
+ *   - `day_id` (string): target day identifier (required)
+ *   - `title` (string): itinerary title (required)
+ *   - `place_id` (string) or `place_data.place_id` (string): identifier of the place to attach (one required)
+ *   - `place_data` (optional): partial place payload used to populate cache when the place is not found in PLACES_CACHE
+ *   - `description` (optional): itinerary description
+ *   - `location` (optional): itinerary location string
+ *   - `insert_after_index` (optional): 1-based display index after which to insert; if omitted or out of range, the itinerary is appended
+ * @returns The saved itinerary object containing `id`, the persisted itinerary fields (including `sort_number`), and `place_data` set to the resolved PlaceData or `null`.
+ *
+ * On validation failure returns a 400 response with an error message. On unexpected errors returns a 500 response.
  */
 export async function POST(request: NextRequest) {
   try {
