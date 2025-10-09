@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
       } else {
         // サーバー側で一度だけ詳細を取得してキャッシュ
         try {
-          const baseUrl = new URL(request.url).origin
-          const resp = await fetch(`${baseUrl}/api/places/details`, {
+          // Use a fixed base URL to prevent SSRF
+          const resp = await fetch(`http://127.0.0.1:3000/api/places/details`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ placeId: resolvedPlaceId })
