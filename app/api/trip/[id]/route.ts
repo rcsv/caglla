@@ -115,6 +115,7 @@ export async function GET(
  * @param request - The incoming NextRequest containing authorization header and JSON body with update fields.
  * @param params - An object whose `id` property (resolved from the route) is the target trip ID.
  * @returns A NextResponse with `{ success: true }` on successful update. On error returns JSON with an `error` message and an appropriate HTTP status (401, 403, 400, or 500).
+ */
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
