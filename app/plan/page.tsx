@@ -3,27 +3,53 @@
 import { useAuth } from '@/lib/auth-context'
 import { useUserData } from '@/lib/user-data-context'
 import { dateUtils } from '@/lib/date-utils'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import Loading from '@/components/common/Loading'
 import TripCard from '@/components/tripcard/TripCard'
 import Card from '@/components/common/Card'
-import Link from 'next/link'
+import HomeHeader from '@/components/common/HomeHeader'
+import HomeFooter from '@/components/common/HomeFooter'
+import UserSettingsModal from '@/components/modals/UserSettingsModal'
 
 export default function PlanListPage() {
-  const { user, loading } = useAuth()
-  const { trips, tripsLoading } = useUserData()
+  const { user, loading, logout } = useAuth()
+  const { trips, tripsLoading, planConfig, planLoading, userData, userDataLoading } = useUserData()
+  const router = useRouter()
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
 
-  if (loading || tripsLoading) {
+  if (loading || tripsLoading || planLoading || userDataLoading) {
     return <Loading fullScreen size="lg" />
   }
   if (!user) return null
 
   const { futureTrips } = dateUtils.sortTripsByDate(trips)
 
+  const handleLogout = async () => {
+    await logout()
+    router.push('/')
+  }
+
+  const handleChangePlan = () => {
+    router.push('/subscription')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <HomeHeader
+        userName={userData?.name || user?.email || 'User'}
+        planName={planConfig?.name || 'Season Traveler'}
+        avatarUrl={userData?.profile_image_url || user?.photoURL}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onLogout={handleLogout}
+        onChangePlan={handleChangePlan}
+      />
+
+      {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Card
-          title={<div className="flex items-center justify-between"><span className="text-lg font-medium text-gray-900">すべての旅行プラン</span><Link href="/home" className="text-sm text-blue-600 hover:underline">ホームへ戻る</Link></div>}
+          title={<div className="flex items-center justify-between"><span className="text-lg font-medium text-gray-900">今後の旅行プラン</span></div>}
           padding="lg"
         >
           {futureTrips.length === 0 ? (
@@ -37,6 +63,14 @@ export default function PlanListPage() {
           )}
         </Card>
       </main>
+
+      {/* User Settings Modal */}
+      <UserSettingsModal 
+        isOpen={isSettingsModalOpen} 
+        onClose={() => setIsSettingsModalOpen(false)} 
+      />
+
+      <HomeFooter />
     </div>
   )
 }
