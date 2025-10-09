@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 
+/**
+ * Duplicates an existing itinerary into a specified day and returns the newly created record.
+ *
+ * @param request - NextRequest whose JSON body must include `itinerary_id` (the source itinerary document ID) and `target_day_id` (the destination day ID)
+ * @returns The saved itinerary object containing the new document `id` and all stored fields: `day_id`, `sort_number`, `title`, `description`, `location`, `place_id`, `start_time`, `end_time`, `timezone`, `cost_amount`, `cost_currency`, `created_at`, and `updated_at`.
+ */
 export async function POST(request: NextRequest) {
   try {
     const { itinerary_id, target_day_id } = await request.json()

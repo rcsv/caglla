@@ -7,6 +7,15 @@ import { adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 import type { PlaceData } from '@/lib/types'
 
+/**
+ * Retrieve trips for the authenticated user, optionally grouped by country.
+ *
+ * Expects an Authorization header with a Bearer ID token and an optional
+ * query parameter `groupByCountry=true` to enable grouping.
+ *
+ * @param request - The incoming HTTP request containing authorization and query parameters
+ * @returns When `groupByCountry` is `true`, an object with `trips` as an array of country groups, `grouped: true`, `totalTrips`, and `totalCountries`; otherwise an object with `trips` as an array of trip records
+ */
 export async function GET(request: NextRequest) {
   try {
     // Get authorization header
@@ -48,6 +57,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * Create a new trip for the authenticated user, optionally create per-day records, and return the created trip enriched with creator and cached destination_place data when available.
+ *
+ * Requires a Bearer ID token in the Authorization header. The request body may include title, destination, destinationPlace or destinationPlaceId, startDate/endDate (to create days), description, accessLevel, and imageUrl.
+ *
+ * @param request - The incoming NextRequest containing the Authorization header and JSON body for the new trip.
+ * @returns A NextResponse containing the created trip object on success. Returns a JSON error with status 401 for missing/invalid authorization, 400 if both title and destination are missing, and 500 for other server errors.
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 Trip API: Starting trip creation')

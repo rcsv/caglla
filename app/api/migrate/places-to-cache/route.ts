@@ -3,7 +3,18 @@ import { adminDb, adminAuth } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 
 // 管理者専用: 既存の trips.destination_place と itineraries.place_data を
-// places_cache と place_id フィールドへ移行する
+/**
+ * Performs an admin-only migration that copies existing place objects into the centralized `places_cache`
+ * and populates `destination_place_id` on Trip documents and `place_id` on Itinerary documents when missing.
+ *
+ * The request must include an Authorization header with a Bearer Firebase ID token for an admin user.
+ *
+ * @param request - Next.js POST request whose Authorization header must contain a Bearer ID token for an admin
+ * @returns On success, a JSON object `{ success: true, stats }` where `stats` contains counts:
+ *          `tripsProcessed`, `tripsUpdated`, `itinerariesProcessed`, `itinerariesUpdated`, and `cacheWritten`.
+ *          Returns a 401 JSON error if authorization is missing/invalid, 403 if the caller is not an admin,
+ *          or 500 with `{ error: 'Migration failed' }` on unexpected failures.
+ */
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization')
