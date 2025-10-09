@@ -92,6 +92,8 @@ export default function TripItineraryView({
           trip.days.map((day) => {
             const isCollapsed = collapsedDays.has(day.id)
             const itinerarySummary = generateItinerarySummary(day)
+            // 表示は常に sort_number 昇順で固定
+            const sortedItineraries = [...(day.itineraries || [])].sort((a, b) => a.sort_number - b.sort_number)
 
             return (
               <div
@@ -175,7 +177,7 @@ export default function TripItineraryView({
                       }} 
                     />
 
-                    {day.itineraries && day.itineraries.length > 0 ? (
+                    {sortedItineraries && sortedItineraries.length > 0 ? (
                       <div className="mt-6">
                         <div className="flex justify-between items-center mb-4">
                           <h4 className="font-medium text-gray-900">スケジュール</h4>
@@ -188,13 +190,13 @@ export default function TripItineraryView({
                         </div>
                         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                           <SortableContext 
-                            items={day.itineraries.map(i => i.id)} 
+                            items={sortedItineraries.map(i => i.id)} 
                             strategy={verticalListSortingStrategy}
                           >
                             <div className="space-y-0">
-                              {day.itineraries.map((itinerary, index) => {
-                                const previousItinerary = index > 0 ? day.itineraries?.[index - 1] : null
-                                const nextItinerary = index < (day.itineraries?.length || 0) - 1 ? day.itineraries?.[index + 1] : null
+                              {sortedItineraries.map((itinerary, index) => {
+                                const previousItinerary = index > 0 ? sortedItineraries[index - 1] : null
+                                const nextItinerary = index < (sortedItineraries.length || 0) - 1 ? sortedItineraries[index + 1] : null
                                 
                                 return (
                                   <div key={itinerary.id} className="relative">
@@ -211,7 +213,7 @@ export default function TripItineraryView({
                                       onItineraryClick={onItineraryClick}
                                       isSelected={selectedItineraryId === itinerary.id}
                                       isFirst={index === 0}
-                                      isLast={index === (day.itineraries?.length || 0) - 1}
+                                      isLast={index === (sortedItineraries.length || 0) - 1}
                                       availableDays={trip.days?.map(d => ({
                                         id: d.id,
                                         day_number: d.day_number,
@@ -233,7 +235,7 @@ export default function TripItineraryView({
                                     )}
                                     
                                     {/* Venue間の挿入ボタン（距離表示がない場合のみ） */}
-                                    {index < (day.itineraries?.length || 0) - 1 && 
+                                    {index < (sortedItineraries.length || 0) - 1 && 
                                      (!itinerary.place_data || !nextItinerary?.place_data || 
                                       itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
                                       <VenueInsertButton
@@ -246,7 +248,7 @@ export default function TripItineraryView({
                               })}
                               
                               {/* 最後のVenueの後に挿入ボタンを表示 */}
-                              {day.itineraries.length > 0 && (
+                              {sortedItineraries.length > 0 && (
                                 <div className="flex justify-center py-4">
                                   <div className="relative flex items-center justify-center">
                                     {/* Gitタイムライン風の縦線（上側のみ） */}
@@ -254,7 +256,7 @@ export default function TripItineraryView({
                                     
                                     {/* 挿入ボタン */}
                                     <button
-                                      onClick={() => onInsertSchedule(day.id, (day.itineraries?.length || 0) - 1)}
+                                      onClick={() => onInsertSchedule(day.id, sortedItineraries.length)}
                                       className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
                                       title="最後にVenueを追加"
                                     >
