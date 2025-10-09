@@ -24,6 +24,16 @@ interface CreateTripDialogProps {
   onSuccess: () => void
 }
 
+/**
+ * Dialog modal for creating a new trip, collecting destination, travel dates, optional title/description/image, and access level.
+ *
+ * The component validates required fields and dates, can auto-fetch an Unsplash image for the destination, enforces plan limits, uploads/removes images as needed, posts trip data to the API, and redirects to the created trip on success.
+ *
+ * @param isOpen - Whether the dialog is visible
+ * @param onClose - Called when the dialog is closed or cancelled
+ * @param onSuccess - Called after a trip is successfully created
+ * @returns The dialog's rendered React element when open, or `null` when closed
+ */
 export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateTripDialogProps) {
   const router = useRouter()
   const { userPlanId, tripCount, privateTripCount } = useUserData()
@@ -147,7 +157,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
           title: formData.title || formData.destination, // タイトル未入力時は目的地を使用
           description: formData.description,
           destination: formData.destination,
-          destinationPlace: formData.destinationPlace,
+          destinationPlaceId: formData.destinationPlace?.place_id,
           startDate: formData.startDate,
           endDate: formData.endDate,
           accessLevel: formData.accessLevel,

@@ -1,21 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
-import { PlaceData } from '@/lib/firestore'
 import { COLLECTIONS } from '@/lib/firestore'
+import type { PlaceData } from '@/lib/types'
 
 /**
- * 指定位置にスケジュールを挿入し、後続のスケジュールを再番号付けする
+ * Insert a new itinerary into a specified day at a given position and renumber subsequent itineraries as needed.
+ *
+ * @param request - The incoming NextRequest whose JSON body must include:
+ *   - `day_id` (string): target day identifier (required)
+ *   - `title` (string): itinerary title (required)
+ *   - `place_id` (string) or `place_data.place_id` (string): identifier of the place to attach (one required)
+ *   - `place_data` (optional): partial place payload used to populate cache when the place is not found in PLACES_CACHE
+ *   - `description` (optional): itinerary description
+ *   - `location` (optional): itinerary location string
+ *   - `insert_after_index` (optional): 1-based display index after which to insert; if omitted or out of range, the itinerary is appended
+ * @returns The saved itinerary object containing `id`, the persisted itinerary fields (including `sort_number`), and `place_data` set to the resolved PlaceData or `null`.
+ *
+ * On validation failure returns a 400 response with an error message. On unexpected errors returns a 500 response.
  */
 export async function POST(request: NextRequest) {
   try {
-    const { day_id, place_data, title, description, location, insert_after_index } = await request.json()
+    const { day_id, place_id, place_data, title, description, location, insert_after_index } = await request.json()
     
-    if (!day_id || !place_data || !title) {
+    if (!day_id || !title || (!place_id && !place_data?.place_id)) {
       return NextResponse.json(
-        { error: 'Missing required fields: day_id, place_data, title' },
+        { error: 'Missing required fields: day_id, title, and place_id or place_data.place_id' },
         { status: 400 }
       )
     }
+
+    const resolvedPlaceId: string = place_id || place_data.place_id
 
     const insertAfterIndex = insert_after_index !== undefined ? parseInt(insert_after_index) : -1
 
@@ -90,7 +104,7 @@ export async function POST(request: NextRequest) {
       title,
       description: description || '',
       location: location || '',
-      place_data: place_data as PlaceData,
+      place_id: resolvedPlaceId as string,
       created_at: new Date(),
       updated_at: new Date()
     }
@@ -99,9 +113,45 @@ export async function POST(request: NextRequest) {
     const docRef = await itinerariesRef.add(itineraryData)
     
     // 保存されたデータを返す
+    // place_cache から実体を解決（存在しなければ、リクエストのplace_dataをキャッシュ保存）
+    let resolvedPlaceData: PlaceData | null = null
+    try {
+      const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).get()
+      if (cacheDoc.exists) {
+        resolvedPlaceData = cacheDoc.data() as PlaceData
+        await cacheDoc.ref.update({ last_accessed: new Date(), access_count: (cacheDoc.data().access_count || 0) + 1 }).catch(() => {})
+      } else if (place_data?.place_id) {
+        const cachePayload: any = {
+          format_version: '1.0.0',
+          place_id: place_data.place_id,
+          name: place_data.name,
+          formatted_address: place_data.formatted_address,
+          geometry: place_data.geometry,
+          cached_at: new Date(),
+          last_accessed: new Date(),
+          access_count: 1
+        }
+        if (place_data.address_components) cachePayload.address_components = place_data.address_components
+        if (place_data.photos) cachePayload.photos = place_data.photos
+        if (place_data.rating !== undefined) cachePayload.rating = place_data.rating
+        if (place_data.user_ratings_total !== undefined) cachePayload.user_ratings_total = place_data.user_ratings_total
+        if (place_data.price_level !== undefined) cachePayload.price_level = place_data.price_level
+        if (place_data.types) cachePayload.types = place_data.types
+        if (place_data.opening_hours?.weekday_text) cachePayload.opening_hours = { weekday_text: place_data.opening_hours.weekday_text }
+        if (place_data.international_phone_number) cachePayload.international_phone_number = place_data.international_phone_number
+        if (place_data.website) cachePayload.website = place_data.website
+        if (place_data.editorial_summary) cachePayload.editorial_summary = place_data.editorial_summary
+        await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).set(cachePayload)
+        resolvedPlaceData = cachePayload as PlaceData
+      }
+    } catch (e) {
+      resolvedPlaceData = (place_data as PlaceData) || null
+    }
+
     const savedItinerary = {
       id: docRef.id,
-      ...itineraryData
+      ...itineraryData,
+      place_data: resolvedPlaceData
     }
 
     console.log(`Inserted itinerary at position ${newSortNumber} in day ${day_id}`)

@@ -11,6 +11,19 @@ import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import type { Trip, Day, Itinerary, TripEditorProps } from '@/lib/types'
 import { getZIndexClass } from '@/lib/z-index-layers'
 
+/**
+ * Renders an editor UI for a Trip and manages editing, saving, cancelling, and deletion.
+ *
+ * The component provides a modal form to edit trip fields (title, description, destination, dates, access level, image),
+ * validates that the start date is not after the end date, shows fullscreen loading while saving, and confirms deletion.
+ * On save it sends an update to the server, removes replaced images when applicable, and calls `onUpdate` with the latest trip data
+ * (or a locally-updated fallback). On delete it calls `onDelete` after a successful server deletion.
+ *
+ * @param trip - The trip object to be displayed and edited.
+ * @param onUpdate - Callback invoked with the updated trip data after a successful save.
+ * @param onDelete - Optional callback invoked after a successful deletion of the trip.
+ * @returns The JSX element for the trip editor or an edit button when not editing.
+ */
 export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -99,7 +112,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
           title: formData.title,
           description: formData.description,
           destination: formData.destination,
-          destinationPlace: formData.destinationPlace,
+          destinationPlaceId: formData.destinationPlace?.place_id,
           startDate: formData.startDate || null,
           endDate: formData.endDate || null,
           accessLevel: formData.accessLevel,
