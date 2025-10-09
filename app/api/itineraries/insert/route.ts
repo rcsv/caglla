@@ -34,6 +34,9 @@ export async function POST(request: NextRequest) {
     // 挿入位置に基づいて新しいsort_numberを計算
     let newSortNumber: number
     
+    console.log(`Insert API: insertAfterIndex=${insertAfterIndex}, existingItineraries.length=${existingItineraries.length}`)
+    console.log(`Existing itineraries sort_numbers:`, existingItineraries.map(i => ({ id: i.id, title: i.title, sort_number: i.sort_number })))
+    
     if (insertAfterIndex < 0 || insertAfterIndex >= existingItineraries.length) {
       // 最後に追加する場合
       newSortNumber = existingItineraries.length > 0 
