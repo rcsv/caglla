@@ -35,14 +35,28 @@ export default function VenueDistance({
 
   useEffect(() => {
     const calculateDistance = async () => {
+      console.log('📏 VenueDistance: Starting calculation')
+      console.log('  fromPlace:', fromPlace)
+      console.log('  toPlace:', toPlace)
+      console.log('  fromPlace.geometry:', fromPlace?.geometry)
+      console.log('  toPlace.geometry:', toPlace?.geometry)
+      
       if (!fromPlace?.geometry?.location || !toPlace?.geometry?.location) {
-        console.log('Missing place data:', { fromPlace, toPlace })
+        console.log('❌ Missing place data or geometry:', { 
+          fromPlace: !!fromPlace, 
+          toPlace: !!toPlace,
+          fromGeometry: !!fromPlace?.geometry,
+          toGeometry: !!toPlace?.geometry,
+          fromLocation: !!fromPlace?.geometry?.location,
+          toLocation: !!toPlace?.geometry?.location
+        })
         setDistanceInfo(null)
         return
       }
 
       // 同じ場所の場合は距離を表示しない
       if (fromPlace.place_id === toPlace.place_id) {
+        console.log('⚠️ Same place, skipping distance calculation')
         setDistanceInfo(null)
         return
       }
@@ -51,17 +65,20 @@ export default function VenueDistance({
       setError(null)
 
       try {
-        console.log('Calculating distance between:', fromPlace.name, 'and', toPlace.name)
+        console.log('🔄 Calculating distance between:', fromPlace.name, 'and', toPlace.name)
+        console.log('  From coords:', fromPlace.geometry.location)
+        console.log('  To coords:', toPlace.geometry.location)
+        
         const result = await distanceApiHelpers.calculateDistance(
           fromPlace.geometry.location,
           toPlace.geometry.location,
           mode
         )
         
-        console.log('Distance result:', result)
+        console.log('✅ Distance result:', result)
         setDistanceInfo(result)
       } catch (err) {
-        console.error('Error calculating distance:', err)
+        console.error('❌ Error calculating distance:', err)
         setError('距離の計算に失敗しました')
       } finally {
         setIsLoading(false)

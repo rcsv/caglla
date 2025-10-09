@@ -209,9 +209,16 @@ export default function ScheduleCard({
 
   // 写真のURLを取得
   const getPhotoUrl = () => {
+    console.log('🖼️ Getting photo URL for:', itinerary.title)
+    console.log('  place_data:', itinerary.place_data)
+    console.log('  photos:', itinerary.place_data?.photos)
+    
     if (itinerary.place_data?.photos && itinerary.place_data.photos.length > 0) {
-      return placesApiHelpers.getPhotoUrl(itinerary.place_data.photos[0].photo_reference, 300)
+      const photoUrl = placesApiHelpers.getPhotoUrl(itinerary.place_data.photos[0].photo_reference, 300)
+      console.log('  Generated photo URL:', photoUrl)
+      return photoUrl
     }
+    console.log('  No photos available')
     return null
   }
 
@@ -631,7 +638,11 @@ export default function ScheduleCard({
                   alt={itinerary.title}
                   className="w-full h-full object-cover"
                   onError={(e) => {
+                    console.error('❌ Image load error for:', itinerary.title, photoUrl)
                     e.currentTarget.style.display = 'none'
+                  }}
+                  onLoad={() => {
+                    console.log('✅ Image loaded successfully for:', itinerary.title)
                   }}
                 />
               ) : (
