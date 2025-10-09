@@ -90,10 +90,47 @@ export async function DELETE(
     const { id } = await params
     const itineraryRef = adminDb.collection('itineraries').doc(id)
     
+    // 削除前にitineraryの情報を取得（day_idとsort_numberを取得するため）
+    const itineraryDoc = await itineraryRef.get()
+    if (!itineraryDoc.exists) {
+      return NextResponse.json(
+        { error: 'Itinerary not found' },
+        { status: 404 }
+      )
+    }
+    
+    const itineraryData = itineraryDoc.data()
+    const dayId = itineraryData?.day_id
+    const deletedSortNumber = itineraryData?.sort_number || 0
+    
     // ハードデリート（実際にドキュメントを削除）
     await itineraryRef.delete()
 
     console.log(`Deleted itinerary: ${id}`)
+
+    // 同じ日程の後続のitinerariesのsort_numberを1つずつ減らす
+    if (dayId && deletedSortNumber > 0) {
+      const itinerariesRef = adminDb.collection('itineraries')
+      const subsequentItineraries = await itinerariesRef
+        .where('day_id', '==', dayId)
+        .where('sort_number', '>', deletedSortNumber)
+        .get()
+      
+      if (!subsequentItineraries.empty) {
+        const batch = adminDb.batch()
+        
+        subsequentItineraries.docs.forEach(doc => {
+          const currentSortNumber = doc.data().sort_number || 0
+          batch.update(doc.ref, { 
+            sort_number: currentSortNumber - 1,
+            updated_at: new Date()
+          })
+        })
+        
+        await batch.commit()
+        console.log(`Renumbered ${subsequentItineraries.docs.length} subsequent itineraries`)
+      }
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

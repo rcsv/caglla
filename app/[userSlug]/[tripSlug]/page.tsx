@@ -441,15 +441,27 @@ export default function SlugBasedTripPage() {
       })
 
       if (response.ok) {
-        // UIから削除
+        // UIから削除し、sort_numberを再番号付け
         setTrip(prevTrip => {
           if (!prevTrip) return prevTrip
           return {
             ...prevTrip,
-            days: prevTrip.days?.map(day => ({
-              ...day,
-              itineraries: day.itineraries?.filter(itinerary => itinerary.id !== itineraryId) || []
-            })) || []
+            days: prevTrip.days?.map(day => {
+              const filteredItineraries = day.itineraries?.filter(itinerary => itinerary.id !== itineraryId) || []
+              
+              // sort_numberを再番号付け（1から連番）
+              const renumberedItineraries = filteredItineraries
+                .sort((a, b) => a.sort_number - b.sort_number)
+                .map((itinerary, index) => ({
+                  ...itinerary,
+                  sort_number: index + 1
+                }))
+              
+              return {
+                ...day,
+                itineraries: renumberedItineraries
+              }
+            }) || []
           }
         })
       } else {
