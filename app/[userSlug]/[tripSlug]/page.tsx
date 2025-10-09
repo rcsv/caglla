@@ -17,6 +17,7 @@ import TripSummaryView from '@/components/trip/TripSummaryView'
 import TripItineraryView from '@/components/trip/TripItineraryView'
 import TripChecklistView from '@/components/trip/TripChecklistView'
 import TripRightPane from '@/components/trip/TripRightPane'
+import { getCachedPlaces } from '@/lib/places-cache'
 
 export default function SlugBasedTripPage() {
   const { user, loading } = useAuth()
@@ -33,7 +34,7 @@ export default function SlugBasedTripPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [summaryCollapsed, setSummaryCollapsed] = useState(false)
   const [selectedItineraryId, setSelectedItineraryId] = useState<string | null>(null)
-  const [mapFocusMode, setMapFocusMode] = useState<'all' | 'day' | 'single'>('all') // マップフォーカスモード
+  const [mapFocusMode, setMapFocusMode] = useState<'all' | 'day' | 'single'>('all')
   const [poiData, setPoiData] = useState<{
     placeId: string
     name: string
@@ -102,12 +103,10 @@ export default function SlugBasedTripPage() {
 
   // セクションへのナビゲーション機能
   const navigateToSection = (sectionId: string) => {
-    // viewクエリを同期
     if (sectionId === 'checklist') {
       updateQuery({ view: 'checklist', day: null })
       return
     }
-    // Summary内のアンカー
     updateQuery({ view: 'summary', day: null })
     const element = document.getElementById(sectionId)
     if (element) {
@@ -121,16 +120,11 @@ export default function SlugBasedTripPage() {
   // Itineraryクリック時のハンドラー
   const handleItineraryClick = (itineraryId: string) => {
     setSelectedItineraryId(itineraryId)
-    
-    // 個別フォーカスモードに切り替え
     setMapFocusMode('single')
-    
-    // POIダイアログを更新（place_idがある場合）
     if (trip?.days) {
       for (const day of trip.days) {
         const itinerary = day.itineraries?.find(it => it.id === itineraryId)
         if (itinerary) {
-          // 該当するItineraryが含まれる日程を展開
           setCollapsedDays(prev => {
             const newSet = new Set(prev)
             newSet.delete(day.id)
