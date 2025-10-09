@@ -507,9 +507,18 @@ export default function SlugBasedTripPage() {
           if (day.id === updatedItinerary.day_id) {
             return {
               ...day,
-              itineraries: day.itineraries?.map(itinerary => 
-                itinerary.id === updatedItinerary.id ? updatedItinerary : itinerary
-              ) || []
+              itineraries: day.itineraries?.map(itinerary => {
+                if (itinerary.id === updatedItinerary.id) {
+                  // 既存のplace_dataを保持しつつ、更新されたフィールドをマージ
+                  return {
+                    ...itinerary,
+                    ...updatedItinerary,
+                    // place_dataは既存のものを保持（APIレスポンスに含まれていない場合）
+                    place_data: updatedItinerary.place_data || itinerary.place_data
+                  }
+                }
+                return itinerary
+              }) || []
             }
           }
           return day
