@@ -9,6 +9,7 @@ import Loading from '@/components/common/Loading'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { Trip, Day, Itinerary } from '@/lib/firestore'
 import { getTripBySlugs } from '@/lib/slug-data-helpers'
+import { dateUtils } from '@/lib/date-utils'
 import { DragEndEvent } from '@dnd-kit/core'
 import TripPageLayout from '@/components/trip/TripPageLayout'
 import TripHeroSection from '@/components/trip/TripHeroSection'
@@ -42,14 +43,36 @@ export default function SlugBasedTripPage() {
 
   // クエリ: view / day を読み取り（デフォルトは summary）
   const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
-  const queryDayId = searchParams.get('day')
+  const queryDayParam = searchParams.get('day')
 
   // クエリ→状態の同期
   useEffect(() => {
     if (currentView === 'itinerary') {
-      if (queryDayId) {
-        setSelectedDayId(queryDayId)
-        setMapFocusMode('day')
+      if (queryDayParam && trip?.days) {
+        // まず日付形式（yyyy-mm-dd）として試行
+        try {
+          const queryDate = dateUtils.fromUrlDateString(queryDayParam)
+          const matchingDay = trip.days.find(day => 
+            dateUtils.isSameDay(day.date, queryDate)
+          )
+          if (matchingDay) {
+            setSelectedDayId(matchingDay.id)
+            setMapFocusMode('day')
+            return
+          }
+        } catch (error) {
+          // 日付形式でない場合は、IDベースの検索を試行（後方互換性）
+          const matchingDay = trip.days.find(day => day.id === queryDayParam)
+          if (matchingDay) {
+            setSelectedDayId(matchingDay.id)
+            setMapFocusMode('day')
+            return
+          }
+        }
+        
+        // どちらでも見つからない場合
+        setSelectedDayId(null)
+        setMapFocusMode('all')
       } else {
         setSelectedDayId(null)
         setMapFocusMode('all')
@@ -64,7 +87,7 @@ export default function SlugBasedTripPage() {
       setMapFocusMode('all')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentView, queryDayId])
+  }, [currentView, queryDayParam, trip])
 
   // クエリ更新ヘルパー
   const updateQuery = (updates: Record<string, string | null>) => {
@@ -197,15 +220,27 @@ export default function SlugBasedTripPage() {
 
   // 旅行データ読み込み後の初期クエリパラメータ同期
   useEffect(() => {
-    if (!trip || !queryDayId) return
+    if (!trip || !queryDayParam) return
     
     // 日付パラメータが指定されている場合は該当する日を選択
-    const day = trip.days?.find(d => d.id === queryDayId)
-    if (day) {
-      setSelectedDayId(day.id)
-      setMapFocusMode('day')
+    // まず日付形式（yyyy-mm-dd）として試行
+    try {
+      const queryDate = dateUtils.fromUrlDateString(queryDayParam)
+      const day = trip.days?.find(d => dateUtils.isSameDay(d.date, queryDate))
+      if (day) {
+        setSelectedDayId(day.id)
+        setMapFocusMode('day')
+        return
+      }
+    } catch (error) {
+      // 日付形式でない場合は、IDベースの検索を試行（後方互換性）
+      const day = trip.days?.find(d => d.id === queryDayParam)
+      if (day) {
+        setSelectedDayId(day.id)
+        setMapFocusMode('day')
+      }
     }
-  }, [trip, queryDayId])
+  }, [trip, queryDayParam])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -290,7 +325,15 @@ export default function SlugBasedTripPage() {
       // 新しい日程を選択
       setSelectedDayId(dayId)
       setMapFocusMode('day') // 日程表示モードに切り替え
-      updateQuery({ view: 'itinerary', day: dayId })
+      
+      // 日付ベースのURLパラメータを生成
+      if (trip?.days) {
+        const day = trip.days.find(d => d.id === dayId)
+        if (day) {
+          const dateString = dateUtils.toUrlDateString(day.date)
+          updateQuery({ view: 'itinerary', day: dateString })
+        }
+      }
     }
     // Itinerary選択状態もリセット
     setSelectedItineraryId(null)

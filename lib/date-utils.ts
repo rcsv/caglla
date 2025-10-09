@@ -298,5 +298,72 @@ export const dateUtils = {
     } else {
       return `${decimalHours}h`
     }
+  },
+
+  // Convert date to yyyy-mm-dd format for URL parameters
+  toUrlDateString: (date: any): string => {
+    if (!dateUtils.isValidDate(date)) {
+      throw new Error('Invalid date provided')
+    }
+    
+    // Handle Firestore Timestamp objects
+    let d: Date
+    if (date && typeof date === 'object' && date.toDate && typeof date.toDate === 'function') {
+      d = date.toDate()
+    } else {
+      d = new Date(date)
+    }
+    
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    
+    return `${year}-${month}-${day}`
+  },
+
+  // Parse yyyy-mm-dd format from URL parameters
+  fromUrlDateString: (dateString: string): Date => {
+    if (!dateString || typeof dateString !== 'string') {
+      throw new Error('Invalid date string provided')
+    }
+    
+    // Validate format (yyyy-mm-dd)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+    if (!dateRegex.test(dateString)) {
+      throw new Error('Date string must be in yyyy-mm-dd format')
+    }
+    
+    const date = new Date(dateString + 'T00:00:00.000Z')
+    
+    if (isNaN(date.getTime())) {
+      throw new Error('Invalid date string provided')
+    }
+    
+    return date
+  },
+
+  // Check if two dates are the same day (ignoring time)
+  isSameDay: (date1: any, date2: any): boolean => {
+    if (!dateUtils.isValidDate(date1) || !dateUtils.isValidDate(date2)) {
+      return false
+    }
+    
+    // Handle Firestore Timestamp objects
+    let d1: Date, d2: Date
+    if (date1 && typeof date1 === 'object' && date1.toDate && typeof date1.toDate === 'function') {
+      d1 = date1.toDate()
+    } else {
+      d1 = new Date(date1)
+    }
+    
+    if (date2 && typeof date2 === 'object' && date2.toDate && typeof date2.toDate === 'function') {
+      d2 = date2.toDate()
+    } else {
+      d2 = new Date(date2)
+    }
+    
+    return d1.getFullYear() === d2.getFullYear() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getDate() === d2.getDate()
   }
 }
