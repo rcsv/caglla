@@ -497,25 +497,15 @@ export default function SlugBasedTripPage() {
       })
 
       if (response.ok) {
-        // UIから削除し、sort_numberを再番号付け
+        // UIから削除（APIで既にsort_numberは再番号付け済み）
         setTrip(prevTrip => {
           if (!prevTrip) return prevTrip
           return {
             ...prevTrip,
             days: prevTrip.days?.map(day => {
-              const filteredItineraries = day.itineraries?.filter(itinerary => itinerary.id !== itineraryId) || []
-              
-              // sort_numberを再番号付け（1から連番）
-              const renumberedItineraries = filteredItineraries
-                .sort((a, b) => a.sort_number - b.sort_number)
-                .map((itinerary, index) => ({
-                  ...itinerary,
-                  sort_number: index + 1
-                }))
-              
               return {
                 ...day,
-                itineraries: renumberedItineraries
+                itineraries: day.itineraries?.filter(itinerary => itinerary.id !== itineraryId) || []
               }
             }) || []
           }
