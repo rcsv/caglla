@@ -184,15 +184,6 @@ export default function SlugBasedTripPage() {
         }
         
         setTrip(tripData)
-        
-        // 日付パラメータが指定されている場合は該当する日を選択
-        if (queryDayId) {
-          const day = tripData.days?.find(d => d.id === queryDayId)
-          if (day) {
-            setSelectedDayId(day.id)
-            setMapFocusMode('day')
-          }
-        }
       } catch (error) {
         console.error('旅行データの取得に失敗しました:', error)
         notFound()
@@ -202,7 +193,19 @@ export default function SlugBasedTripPage() {
     }
 
     fetchTrip()
-  }, [userSlug, tripSlug, queryDayId, router])
+  }, [userSlug, tripSlug, router])
+
+  // 旅行データ読み込み後の初期クエリパラメータ同期
+  useEffect(() => {
+    if (!trip || !queryDayId) return
+    
+    // 日付パラメータが指定されている場合は該当する日を選択
+    const day = trip.days?.find(d => d.id === queryDayId)
+    if (day) {
+      setSelectedDayId(day.id)
+      setMapFocusMode('day')
+    }
+  }, [trip, queryDayId])
 
   useEffect(() => {
     if (!loading && !user) {
