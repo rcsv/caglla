@@ -1,321 +1,153 @@
-'use client'
+import { NextRequest, NextResponse } from 'next/server'
+import { adminDb } from '@/lib/firebase-admin'
+import { COLLECTIONS } from '@/lib/firestore'
+import type { PlaceData } from '@/lib/types'
 
-import { Trip, Day, Itinerary } from '@/lib/firestore'
-import DayEditor from '@/components/trip/DayEditor'
-import SortableItineraryCard from '@/components/trip/SortableItineraryCard'
-import VenueDistance from '@/components/trip/VenueDistance'
-import VenueInsertButton from '@/components/trip/VenueInsertButton'
-import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+/**
+ * Insert a new itinerary into a specified day at a given position and renumber subsequent itineraries as needed.
+ *
+ * Body:
+ *   - day_id (string)                               (required)
+ *   - title (string)                                (required)
+ *   - place_id (string) | place_data.place_id       (いずれか必須)
+ *   - place_data (optional)                         (PLACES_CACHE を埋める用)
+ *   - description, location (optional)
+ *   - insert_after_index (optional, 1-based)        ← この番号の“後ろ”に挿入。未指定 or 範囲外 → 末尾に追加
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { day_id, place_id, place_data, title, description, location, insert_after_index } = body ?? {}
 
-interface TripItineraryViewProps {
-  trip: Trip
-  collapsedDays: Set<string>
-  selectedDayId: string | null
-  selectedItineraryId: string | null
-  onToggleDayCollapse: (dayId: string) => void
-  onDayClick: (dayId: string) => void
-  onAddSchedule: (dayId: string) => void
-  onInsertSchedule: (dayId: string, afterIndex: number) => void
-  onAddDay: () => void
-  onScheduleUpdated: (updatedItinerary: any) => void
-  onMoveUp: (itineraryId: string, dayId: string) => void
-  onMoveDown: (itineraryId: string, dayId: string) => void
-  onMoveToDay: (itineraryId: string, targetDayId: string) => void
-  onDuplicateToDay: (itineraryId: string, targetDayId: string) => void
-  onScheduleDelete: (itineraryId: string) => void
-  onItineraryClick: (itineraryId: string) => void
-  onDragEnd: (event: DragEndEvent) => void
-  onUpdateTrip: (updatedTrip: Trip) => void
-  expandAllDays: () => void
-  collapseAllDays: () => void
-}
-
-export default function TripItineraryView({
-  trip,
-  collapsedDays,
-  selectedDayId,
-  selectedItineraryId,
-  onToggleDayCollapse,
-  onDayClick,
-  onAddSchedule,
-  onInsertSchedule,
-  onAddDay,
-  onScheduleUpdated,
-  onMoveUp,
-  onMoveDown,
-  onMoveToDay,
-  onDuplicateToDay,
-  onScheduleDelete,
-  onItineraryClick,
-  onDragEnd,
-  onUpdateTrip,
-  expandAllDays,
-  collapseAllDays,
-}: TripItineraryViewProps) {
-  // itinerariesのタイトルを生成する関数
-  const generateItinerarySummary = (day: Day): string => {
-    if (!day.itineraries || day.itineraries.length === 0) {
-      return ''
+    if (!day_id || !title || (!place_id && !place_data?.place_id)) {
+      return NextResponse.json(
+        { error: 'Missing required fields: day_id, title, and place_id or place_data.place_id' },
+        { status: 400 }
+      )
     }
-    
-    const sortedItineraries = [...day.itineraries].sort((a, b) => a.sort_number - b.sort_number)
-    return sortedItineraries.map(itinerary => itinerary.title).join(' → ')
-  }
 
-  return (
-    <main className="px-4 pb-4">
-      {/* Days */}
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">日程</h2>
-          {trip.days && trip.days.length > 0 && (
-            <div className="flex gap-2">
-              <button
-                onClick={expandAllDays}
-                className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                全て展開
-              </button>
-              <button
-                onClick={collapseAllDays}
-                className="px-3 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                全て折りたたみ
-              </button>
-            </div>
-          )}
-        </div>
-        
-        {/* Day Cards - 常に表示 */}
-        {trip.days && trip.days.length > 0 ? (
-          trip.days.map((day) => {
-            const isCollapsed = collapsedDays.has(day.id)
-            const itinerarySummary = generateItinerarySummary(day)
+    const resolvedPlaceId: string = place_id || place_data.place_id
 
-            return (
-              <div
-                key={day.id}
-                id={`day-${day.id}`}
-                className="bg-white rounded-lg shadow-sm border border-gray-200"
-              >
-                {/* ヘッダー部分 - 常に表示 */}
-                <div 
-                  className={`flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors ${selectedDayId === day.id ? 'bg-red-50 border-red-200' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDayClick(day.id)
-                  }}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        #{day.day_number} | {day.date 
-                          ? (() => {
-                              // Firestore Timestamp型またはDate型を処理
-                              let dayDate: Date
-                              if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
-                                // Firestore Timestamp型の場合
-                                dayDate = (day.date as any).toDate()
-                              } else {
-                                // Date型または文字列の場合
-                                dayDate = new Date(day.date as any)
-                              }
-                              
-                              if (isNaN(dayDate.getTime())) {
-                                return '日付が無効です'
-                              }
-                              const month = dayDate.getMonth() + 1
-                              const dayNum = dayDate.getDate()
-                              const dayNames = ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.']
-                              const dayName = dayNames[dayDate.getDay()]
-                              return `${month}/${dayNum} ${dayName}`
-                            })()
-                          : '日付が設定されていません'
-                        }
-                      </h3>
-                      {/* 折りたたみアイコン */}
-                      <svg 
-                        className={`w-5 h-5 text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                    
-                    {/* 縮小表示時の情報 */}
-                    {isCollapsed && (
-                      <div className="text-sm text-gray-600">
-                        {day.description && (
-                          <p className="mb-1">{day.description}</p>
-                        )}
-                        {itinerarySummary && (
-                          <p className="text-gray-500">{itinerarySummary}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
+    // 1-based index after which to insert; invalid → append
+    const parsedIndex =
+      insert_after_index === undefined || insert_after_index === null
+        ? NaN
+        : parseInt(String(insert_after_index), 10)
 
-                {/* 詳細部分 - 折りたたまれていない時のみ表示 */}
-                {!isCollapsed && (
-                  <div className="px-6 pb-6">
-                    <DayEditor 
-                      day={day as any} 
-                      itinerarySummary={itinerarySummary}
-                      onUpdate={(updatedDay: any) => {
-                        onUpdateTrip({
-                          ...trip,
-                          days: trip.days?.map(d => 
-                            d.id === updatedDay.id ? updatedDay as any : d
-                          ) || []
-                        })
-                      }} 
-                    />
+    const itinerariesRef = adminDb.collection(COLLECTIONS.ITINERARIES)
+    const snap = await itinerariesRef.where('day_id', '==', day_id).orderBy('sort_number', 'asc').get()
 
-                    {day.itineraries && day.itineraries.length > 0 ? (
-                      <div className="mt-6">
-                        <div className="flex justify-between items-center mb-4">
-                          <h4 className="font-medium text-gray-900">スケジュール</h4>
-                          <button
-                            onClick={() => onAddSchedule(day.id)}
-                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                          >
-                            Venue / Point of Interest を追加
-                          </button>
-                        </div>
-                        <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-                          <SortableContext 
-                            items={[...day.itineraries].sort((a, b) => a.sort_number - b.sort_number).map(i => i.id)} 
-                            strategy={verticalListSortingStrategy}
-                          >
-                            <div className="space-y-0">
-                              {[...day.itineraries].sort((a, b) => a.sort_number - b.sort_number).map((itinerary, index, sortedArray) => {
-                                const previousItinerary = index > 0 ? sortedArray[index - 1] : null
-                                const nextItinerary = index < sortedArray.length - 1 ? sortedArray[index + 1] : null
-                                
-                                return (
-                                  <div key={itinerary.id} className="relative">
-                                    <SortableItineraryCard
-                                      itinerary={itinerary}
-                                      previousPlace={previousItinerary?.place_data}
-                                      nextPlace={nextItinerary?.place_data}
-                                      onUpdate={onScheduleUpdated}
-                                      onMoveUp={() => onMoveUp(itinerary.id, day.id)}
-                                      onMoveDown={() => onMoveDown(itinerary.id, day.id)}
-                                      onMoveToDay={onMoveToDay}
-                                      onDuplicateToDay={onDuplicateToDay}
-                                      onDelete={onScheduleDelete}
-                                      onItineraryClick={onItineraryClick}
-                                      isSelected={selectedItineraryId === itinerary.id}
-                                      isFirst={index === 0}
-                                      isLast={index === sortedArray.length - 1}
-                                      availableDays={trip.days?.map(d => ({
-                                        id: d.id,
-                                        day_number: d.day_number,
-                                        date: '' // Day型にdateプロパティがないため空文字列を設定
-                                      })) || []}
-                                    />
-                                    
-                                    {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}
-                                    {itinerary.place_data && 
-                                     nextItinerary?.place_data && 
-                                     itinerary.place_data.place_id !== nextItinerary.place_data.place_id && (
-                                      <VenueDistance 
-                                        fromPlace={itinerary.place_data}
-                                        toPlace={nextItinerary.place_data}
-                                        mode="driving"
-                                        showInsertButton={true}
-                                        onInsertVenue={() => onInsertSchedule(day.id, itinerary.sort_number)}
-                                      />
-                                    )}
-                                    
-                                    {/* Venue間の挿入ボタン（距離表示がない場合のみ） */}
-                                    {index < sortedArray.length - 1 && 
-                                     (!itinerary.place_data || !nextItinerary?.place_data || 
-                                      itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
-                                      <VenueInsertButton
-                                        onInsert={() => onInsertSchedule(day.id, itinerary.sort_number)}
-                                        dayId={day.id}
-                                      />
-                                    )}
-                                  </div>
-                                )
-                              })}
-                              
-                              {/* 最後のVenueの後に挿入ボタンを表示 */}
-                              {[...day.itineraries].sort((a, b) => a.sort_number - b.sort_number).length > 0 && (() => {
-                                const sortedItineraries = [...day.itineraries].sort((a, b) => a.sort_number - b.sort_number)
-                                const lastItinerary = sortedItineraries[sortedItineraries.length - 1]
-                                return (
-                                  <div className="flex justify-center py-4">
-                                    <div className="relative flex items-center justify-center">
-                                      {/* Gitタイムライン風の縦線（上側のみ） */}
-                                      <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300 top-0"></div>
-                                      
-                                      {/* 挿入ボタン */}
-                                      <button
-                                        onClick={() => onInsertSchedule(day.id, lastItinerary.sort_number)}
-                                        className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
-                                        title="最後にVenueを追加"
-                                      >
-                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                          <path d="M12 2C13.1 2 14 2.9 14 4V10H20C21.1 10 22 10.9 22 12S21.1 14 20 14H14V20C14 21.1 13.1 22 12 22S10 21.1 10 20V14H4C2.9 14 2 13.1 2 12S2.9 10 4 10H10V4C10 2.9 10.9 2 12 2Z" />
-                                          <path 
-                                            d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z" 
-                                            fill="white"
-                                            opacity="0.8"
-                                            transform="scale(0.3) translate(20, 20)"
-                                          />
-                                        </svg>
-                                      </button>
-                                    </div>
-                                  </div>
-                                )
-                              })()}
-                            </div>
-                          </SortableContext>
-                        </DndContext>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        <p>まだスケジュールがありません</p>
-                        <button
-                          onClick={() => onAddSchedule(day.id)}
-                          className="text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          Venue / Point of Interest を追加
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
+    const existing = snap.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }))
+    const count = existing.length
+    const maxSort = count > 0 ? Math.max(...existing.map((i: any) => i.sort_number || 0)) : 0
+
+    console.log(
+      `Insert API: insert_after_index=${insert_after_index} (parsed=${parsedIndex}), existing=${count}, maxSort=${maxSort}`
+    )
+    console.log(
+      `Existing sort_numbers:`,
+      existing.map((i) => ({ id: i.id, title: i.title, sort_number: i.sort_number }))
+    )
+
+    let newSortNumber: number
+
+    const isValidIndex = Number.isInteger(parsedIndex) && parsedIndex >= 1 && parsedIndex <= count
+    if (isValidIndex) {
+      // 指定番号の“後ろ”に挿入（1-based）
+      newSortNumber = parsedIndex + 1
+      console.log(`Insert after display index ${parsedIndex} → newSortNumber=${newSortNumber}`)
+
+      // newSortNumber 以上を +1（衝突回避のため昇順で問題なし）
+      const toShift = existing.filter((i: any) => (i.sort_number || 0) >= newSortNumber)
+
+      if (toShift.length > 0) {
+        const batch = adminDb.batch()
+        for (const it of toShift) {
+          batch.update(itinerariesRef.doc(it.id), {
+            sort_number: (it as any).sort_number + 1,
+            updated_at: new Date(),
           })
-        ) : (
-          // 日程が0件の場合でも空のDayカードを表示
-          <div className="text-center py-8 text-gray-500">
-            <div className="text-4xl mb-4">📅</div>
-            <p className="text-gray-600 mb-4">日程を追加して旅行を計画しましょう</p>
-          </div>
-        )}
-        
-        {/* 日程追加ボタン - 常に表示 */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={onAddDay}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 mx-auto"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            日程を追加
-          </button>
-        </div>
-      </div>
-    </main>
-  )
+        }
+        await batch.commit()
+        console.log(`Shifted ${toShift.length} itineraries starting at sort_number >= ${newSortNumber}`)
+      }
+    } else {
+      // 未指定 or 範囲外 → 末尾に追加
+      newSortNumber = maxSort + 1
+      console.log(`Index invalid/out of range → append at newSortNumber=${newSortNumber}`)
+    }
+
+    // 新規作成
+    const now = new Date()
+    const itineraryData = {
+      day_id,
+      sort_number: newSortNumber,
+      title,
+      description: description || '',
+      location: location || '',
+      place_id: resolvedPlaceId as string,
+      created_at: now,
+      updated_at: now,
+    }
+
+    const docRef = await itinerariesRef.add(itineraryData)
+
+    // place_cache 解決（なければ受信データで埋める）
+    let resolvedPlaceData: PlaceData | null = null
+    try {
+      const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).get()
+      if (cacheDoc.exists) {
+        const data = cacheDoc.data() as any
+        resolvedPlaceData = data as PlaceData
+        await cacheDoc.ref
+          .update({ last_accessed: now, access_count: (data.access_count || 0) + 1 })
+          .catch(() => {})
+      } else if (place_data?.place_id) {
+        const cachePayload: any = {
+          format_version: '1.0.0',
+          place_id: place_data.place_id,
+          name: place_data.name,
+          formatted_address: place_data.formatted_address,
+          geometry: place_data.geometry,
+          cached_at: now,
+          last_accessed: now,
+          access_count: 1,
+        }
+        if (place_data.address_components) cachePayload.address_components = place_data.address_components
+        if (place_data.photos) cachePayload.photos = place_data.photos
+        if (place_data.rating !== undefined) cachePayload.rating = place_data.rating
+        if (place_data.user_ratings_total !== undefined) cachePayload.user_ratings_total = place_data.user_ratings_total
+        if (place_data.price_level !== undefined) cachePayload.price_level = place_data.price_level
+        if (place_data.types) cachePayload.types = place_data.types
+        if (place_data.opening_hours?.weekday_text)
+          cachePayload.opening_hours = { weekday_text: place_data.opening_hours.weekday_text }
+        if (place_data.international_phone_number)
+          cachePayload.international_phone_number = place_data.international_phone_number
+        if (place_data.website) cachePayload.website = place_data.website
+        if (place_data.editorial_summary) cachePayload.editorial_summary = place_data.editorial_summary
+
+        await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).set(cachePayload)
+        resolvedPlaceData = cachePayload as PlaceData
+      }
+    } catch {
+      resolvedPlaceData = (place_data as PlaceData) || null
+    }
+
+    const savedItinerary = {
+      id: docRef.id,
+      ...itineraryData,
+      place_data: resolvedPlaceData,
+    }
+
+    console.log(`Inserted itinerary at position ${newSortNumber} in day ${day_id}`, {
+      id: savedItinerary.id,
+      title: savedItinerary.title,
+      sort_number: savedItinerary.sort_number,
+    })
+
+    return NextResponse.json(savedItinerary)
+  } catch (error) {
+    console.error('Error inserting itinerary:', error)
+    return NextResponse.json({ error: 'Failed to insert itinerary' }, { status: 500 })
+  }
 }

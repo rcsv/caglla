@@ -17,6 +17,7 @@ import TripSummaryView from '@/components/trip/TripSummaryView'
 import TripItineraryView from '@/components/trip/TripItineraryView'
 import TripChecklistView from '@/components/trip/TripChecklistView'
 import TripRightPane from '@/components/trip/TripRightPane'
+import { getCachedPlaces } from '@/lib/places-cache'
 
 export default function SlugBasedTripPage() {
   const { user, loading } = useAuth()
@@ -218,6 +219,53 @@ export default function SlugBasedTripPage() {
     fetchTrip()
   }, [userSlug, tripSlug, router])
 
+  // Itinerariesのplace_data欠落分をplaces_cacheから解決し、tripに付与
+  useEffect(() => {
+    const resolvePlacesFromCache = async () => {
+      if (!trip?.days || trip.days.length === 0) return
+
+      // place_idはあるがplace_dataが無いものを抽出
+      const missingPlaceIds = new Set<string>()
+      trip.days.forEach(day => {
+        day.itineraries?.forEach(it => {
+          if (!it.place_data && it.place_id) {
+            missingPlaceIds.add(it.place_id)
+          }
+        })
+      })
+
+      if (missingPlaceIds.size === 0) return
+
+      try {
+        const placeMap = await getCachedPlaces(Array.from(missingPlaceIds))
+
+        // 取得できたキャッシュを反映
+        setTrip(prev => {
+          if (!prev) return prev
+          const updatedDays = prev.days?.map(day => ({
+            ...day,
+            itineraries: (day.itineraries || []).map(it => {
+              if (!it.place_data && it.place_id) {
+                const cached = placeMap.get(it.place_id)
+                if (cached) {
+                  return { ...it, place_data: cached as any }
+                }
+              }
+              return it
+            })
+          })) || []
+
+          return { ...prev, days: updatedDays as any }
+        })
+      } catch (e) {
+        // 失敗時は何もしない（ベストエフォート）
+        console.warn('places_cache 解決に失敗しました', e)
+      }
+    }
+
+    resolvePlacesFromCache()
+  }, [trip])
+
   // 旅行データ読み込み後の初期クエリパラメータ同期
   useEffect(() => {
     if (!trip || !queryDayParam) return
@@ -257,6 +305,7 @@ export default function SlugBasedTripPage() {
   const handleInsertSchedule = (dayId: string, afterIndex: number) => {
     console.log(`handleInsertSchedule called: dayId=${dayId}, afterIndex=${afterIndex}`)
     setSelectedDayId(dayId)
+    // afterIndexは挿入位置を表す表示番号（1ベース）
     setInsertAfterIndex(afterIndex) // 指定位置に挿入
     setShowAddScheduleModal(true)
   }
@@ -381,8 +430,8 @@ export default function SlugBasedTripPage() {
   const handleScheduleAdded = async (newItinerary: any) => {
     if (!trip) return
 
-    // 新しいAPIが正しいsort_numberで挿入し、後続のスケジュールを再番号付けするので、
-    // フロントエンド側では単純に新しいスケジュールを配列に追加するだけで十分
+    // サーバー側では挿入位置に応じて後続の sort_number を +1 済みだが、
+    // ローカル状態は古いままなので、同様の再番号付けを適用してから追加する
     setTrip(prevTrip => {
       if (!prevTrip) return prevTrip
       
@@ -391,12 +440,20 @@ export default function SlugBasedTripPage() {
         days: prevTrip.days?.map(day => {
           if (day.id === newItinerary.day_id) {
             const currentItineraries = day.itineraries || []
-            
-            // 新しいスケジュールを正しい位置に挿入
-            // 新しいAPIがsort_numberを正しく設定するので、sort_number順に挿入
-            const sortedItineraries = [...currentItineraries, newItinerary]
+
+            // 後続（newItinerary.sort_number 以上）の既存要素を +1 して重複を解消
+            const updatedExisting = currentItineraries.map(item => {
+              if (item.id === newItinerary.id) return item
+              if ((item.sort_number || 0) >= (newItinerary.sort_number || 0)) {
+                return { ...item, sort_number: (item.sort_number || 0) + 1 }
+              }
+              return item
+            })
+
+            // 新規を統合して sort_number 順に整列
+            const sortedItineraries = [...updatedExisting, newItinerary]
               .sort((a, b) => a.sort_number - b.sort_number)
-            
+
             return {
               ...day,
               itineraries: sortedItineraries
@@ -441,25 +498,15 @@ export default function SlugBasedTripPage() {
       })
 
       if (response.ok) {
-        // UIから削除し、sort_numberを再番号付け
+        // UIから削除（APIで既にsort_numberは再番号付け済み）
         setTrip(prevTrip => {
           if (!prevTrip) return prevTrip
           return {
             ...prevTrip,
             days: prevTrip.days?.map(day => {
-              const filteredItineraries = day.itineraries?.filter(itinerary => itinerary.id !== itineraryId) || []
-              
-              // sort_numberを再番号付け（1から連番）
-              const renumberedItineraries = filteredItineraries
-                .sort((a, b) => a.sort_number - b.sort_number)
-                .map((itinerary, index) => ({
-                  ...itinerary,
-                  sort_number: index + 1
-                }))
-              
               return {
                 ...day,
-                itineraries: renumberedItineraries
+                itineraries: day.itineraries?.filter(itinerary => itinerary.id !== itineraryId) || []
               }
             }) || []
           }

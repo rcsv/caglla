@@ -98,8 +98,8 @@ export default function AddScheduleModal({
       
       // 挿入位置が指定されている場合は追加
       if (insertAfterIndex !== undefined) {
-        requestBody.insert_after_index = insertAfterIndex
-        console.log(`Using insert API with insert_after_index=${insertAfterIndex}`)
+        requestBody.insert_after_index = insertAfterIndex + 1 // 1ベースのインデックスに変換
+        console.log(`Using insert API with insert_after_index=${insertAfterIndex + 1} (converted from 0-based ${insertAfterIndex})`)
       } else {
         console.log(`Using regular API (no insert position specified)`)
       }
