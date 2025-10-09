@@ -230,11 +230,26 @@ export default function TripMap({
     setMarkers([])
 
     // 位置情報がある itineraries をフィルタリング
+    console.log('🗺️ TripMap: Filtering itineraries')
+    console.log('  Total itineraries:', itineraries.length)
+    
     const validItineraries = itineraries.filter(
-      itinerary => itinerary.place_data?.geometry?.location
+      itinerary => {
+        const isValid = !!itinerary.place_data?.geometry?.location
+        console.log(`  Itinerary "${itinerary.title}":`, {
+          hasPlaceData: !!itinerary.place_data,
+          hasGeometry: !!itinerary.place_data?.geometry,
+          hasLocation: !!itinerary.place_data?.geometry?.location,
+          isValid
+        })
+        return isValid
+      }
     )
 
+    console.log('  Valid itineraries count:', validItineraries.length)
+
     if (validItineraries.length === 0) {
+      console.log('⚠️ No valid itineraries, resetting map')
       // 行先が無い場合は初期センターへ
       if (initialCenter) {
         map.setCenter(initialCenter)
@@ -266,11 +281,14 @@ export default function TripMap({
       const teardropElement = document.createElement('div')
       teardropElement.className = 'teardrop-marker'
       
-      // ラベル（番号）を追加 - 日程ごとの番号を使用
+      // ラベル（番号）を追加 - sort_numberを使用（日程ごとの番号ではなく、全体の番号）
       const labelElement = document.createElement('div')
       labelElement.className = 'teardrop-label'
-      labelElement.textContent = dayNumber.toString()
+      const markerNumber = itinerary.sort_number
+      labelElement.textContent = markerNumber.toString()
       teardropElement.appendChild(labelElement)
+      
+      console.log(`  Creating marker for "${itinerary.title}" with number: ${markerNumber}`)
 
       // AdvancedMarkerElementを作成
       const marker = new window.google.maps.marker.AdvancedMarkerElement({
