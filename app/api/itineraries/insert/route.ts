@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     if (insertAfterIndex < 0 || insertAfterIndex >= existingItineraries.length) {
       // 最後に追加する場合
       newSortNumber = existingItineraries.length > 0 
-        ? Math.max(...existingItineraries.map((i: any) => i.sort_number)) + 1 
+        ? Math.max(...existingItineraries.map((i: any) => i.sort_number || 0)) + 1 
         : 1
     } else {
       // 指定位置に挿入する場合

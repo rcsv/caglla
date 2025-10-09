@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .get()
     
-    const nextSortNumber = existingItineraries.empty ? 1 : existingItineraries.docs[0].data().sort_number + 1
+    const nextSortNumber = existingItineraries.empty ? 1 : (existingItineraries.docs[0].data().sort_number || 0) + 1
 
     // PlaceDataを保存用の形式に変換
     const itineraryData = {

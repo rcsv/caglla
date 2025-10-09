@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .get()
     
-    const nextSortNumber = existingItineraries.empty ? 1 : existingItineraries.docs[0].data().sort_number + 1
+    const nextSortNumber = existingItineraries.empty ? 1 : (existingItineraries.docs[0].data().sort_number || 0) + 1
 
     // 複製データを作成（タイトルに「(複製)」を追加）
     const duplicateData = {

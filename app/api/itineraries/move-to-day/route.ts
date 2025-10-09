@@ -20,7 +20,7 @@ export async function PUT(request: NextRequest) {
       .limit(1)
       .get()
     
-    const nextSortNumber = existingItineraries.empty ? 1 : existingItineraries.docs[0].data().sort_number + 1
+    const nextSortNumber = existingItineraries.empty ? 1 : (existingItineraries.docs[0].data().sort_number || 0) + 1
 
     // itineraryを新しい日程に移動
     const itineraryRef = adminDb.collection('itineraries').doc(itinerary_id)
