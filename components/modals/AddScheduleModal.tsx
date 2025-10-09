@@ -10,7 +10,7 @@ interface AddScheduleModalProps {
   onClose: () => void
   dayId: string
   onScheduleAdded: (schedule: any) => void
-  insertAfterIndex?: number // 挿入位置を指定（undefinedの場合は最後に追加）
+  insertAfterIndex?: number // 挿入位置を指定（sort_numberの値、undefinedの場合は最後に追加）
 }
 
 /**
@@ -24,7 +24,7 @@ interface AddScheduleModalProps {
  * @param onClose - Callback invoked when the modal is closed
  * @param dayId - Identifier of the day to which the schedule will be added
  * @param onScheduleAdded - Callback invoked with the newly created schedule object after a successful save
- * @param insertAfterIndex - Optional zero-based index after which the new schedule should be inserted; undefined means append to the end
+ * @param insertAfterIndex - Optional sort_number (1-based) of the itinerary after which the new schedule should be inserted; undefined means append to the end
  * @returns The modal element when `isOpen` is true, otherwise `null`
  */
 export default function AddScheduleModal({ 

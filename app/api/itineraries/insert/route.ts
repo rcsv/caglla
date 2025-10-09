@@ -13,7 +13,7 @@ import type { PlaceData } from '@/lib/types'
  *   - `place_data` (optional): partial place payload used to populate cache when the place is not found in PLACES_CACHE
  *   - `description` (optional): itinerary description
  *   - `location` (optional): itinerary location string
- *   - `insert_after_index` (optional): 1-based display index after which to insert; if omitted or out of range, the itinerary is appended
+ *   - `insert_after_index` (optional): sort_number of the itinerary after which to insert (1-based); if omitted or out of range, the itinerary is appended
  * @returns The saved itinerary object containing `id`, the persisted itinerary fields (including `sort_number`), and `place_data` set to the resolved PlaceData or `null`.
  *
  * On validation failure returns a 400 response with an error message. On unexpected errors returns a 500 response.
@@ -46,40 +46,17 @@ export async function POST(request: NextRequest) {
     }))
 
     // 挿入位置に基づいて新しいsort_numberを計算
+    // insertAfterIndexはsort_numberの値（1ベース）として扱う
     let newSortNumber: number
     
     console.log(`Insert API: insertAfterIndex=${insertAfterIndex}, existingItineraries.length=${existingItineraries.length}`)
     console.log(`Existing itineraries sort_numbers:`, existingItineraries.map(i => ({ id: i.id, title: i.title, sort_number: i.sort_number })))
     
-    if (insertAfterIndex < 0 || insertAfterIndex >= existingItineraries.length) {
-      // 最後に追加する場合
-      newSortNumber = existingItineraries.length > 0 
-        ? Math.max(...existingItineraries.map((i: any) => i.sort_number || 0)) + 1 
-        : 1
-    } else {
-      // 指定位置に挿入する場合
-      // insertAfterIndexは表示番号（1ベース）なので、配列インデックス（0ベース）に変換
-      const targetIndex = insertAfterIndex - 1
-      let itinerariesToUpdate: any[] = []
-      
-      if (targetIndex >= 0 && targetIndex < existingItineraries.length) {
-        // 手前のItineraryのsort_number + 1を使用
-        const previousItinerary = existingItineraries[targetIndex]
-        newSortNumber = (previousItinerary.sort_number || 0) + 1
-        
-        console.log(`Insert after index ${insertAfterIndex}: previousItinerary sort_number=${previousItinerary.sort_number}, newSortNumber=${newSortNumber}`)
-        
-        // 後続のitinerariesのsort_numberを1つずつ増やす
-        itinerariesToUpdate = existingItineraries.filter((i: any) => (i.sort_number || 0) >= newSortNumber)
-      } else {
-        // 範囲外の場合は最後に追加
-        newSortNumber = existingItineraries.length > 0 
-          ? Math.max(...existingItineraries.map((i: any) => i.sort_number || 0)) + 1 
-          : 1
-        itinerariesToUpdate = []
-      }
-      
-      // バッチ処理で後続のitinerariesを更新
+    if (insertAfterIndex <= 0) {
+      // 先頭に追加する場合（insertAfterIndex=0または負の値）
+      newSortNumber = 1
+      // 既存の全itinerariesのsort_numberを1つずつ増やす
+      const itinerariesToUpdate = existingItineraries
       const batch = adminDb.batch()
       
       for (const itinerary of itinerariesToUpdate) {
@@ -90,10 +67,46 @@ export async function POST(request: NextRequest) {
         })
       }
       
-      // バッチ更新を実行
       if (itinerariesToUpdate.length > 0) {
         await batch.commit()
-        console.log(`Updated ${itinerariesToUpdate.length} itineraries after insertion`)
+        console.log(`Updated ${itinerariesToUpdate.length} itineraries after insertion at beginning`)
+      }
+    } else {
+      // insertAfterIndexで指定されたsort_numberの後に挿入する
+      // 例: insertAfterIndex=2の場合、sort_number=2の後（つまりsort_number=3の位置）に挿入
+      const targetItinerary = existingItineraries.find((i: any) => i.sort_number === insertAfterIndex)
+      
+      if (!targetItinerary) {
+        // 指定されたsort_numberのitineraryが見つからない場合は最後に追加
+        console.log(`Itinerary with sort_number=${insertAfterIndex} not found, appending to end`)
+        newSortNumber = existingItineraries.length > 0 
+          ? Math.max(...existingItineraries.map((i: any) => i.sort_number || 0)) + 1 
+          : 1
+      } else {
+        // 指定されたsort_numberの次の位置に挿入
+        newSortNumber = insertAfterIndex + 1
+        
+        console.log(`Insert after sort_number ${insertAfterIndex}: newSortNumber=${newSortNumber}`)
+        
+        // 後続のitinerariesのsort_numberを1つずつ増やす
+        const itinerariesToUpdate = existingItineraries.filter((i: any) => (i.sort_number || 0) >= newSortNumber)
+        
+        // バッチ処理で後続のitinerariesを更新
+        const batch = adminDb.batch()
+        
+        for (const itinerary of itinerariesToUpdate) {
+          const docRef = itinerariesRef.doc(itinerary.id)
+          batch.update(docRef, { 
+            sort_number: (itinerary as any).sort_number + 1,
+            updated_at: new Date()
+          })
+        }
+        
+        // バッチ更新を実行
+        if (itinerariesToUpdate.length > 0) {
+          await batch.commit()
+          console.log(`Updated ${itinerariesToUpdate.length} itineraries after insertion`)
+        }
       }
     }
 

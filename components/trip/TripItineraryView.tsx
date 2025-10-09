@@ -188,13 +188,13 @@ export default function TripItineraryView({
                         </div>
                         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
                           <SortableContext 
-                            items={day.itineraries.map(i => i.id)} 
+                            items={[...day.itineraries].sort((a, b) => a.sort_number - b.sort_number).map(i => i.id)} 
                             strategy={verticalListSortingStrategy}
                           >
                             <div className="space-y-0">
-                              {day.itineraries.map((itinerary, index) => {
-                                const previousItinerary = index > 0 ? day.itineraries?.[index - 1] : null
-                                const nextItinerary = index < (day.itineraries?.length || 0) - 1 ? day.itineraries?.[index + 1] : null
+                              {[...day.itineraries].sort((a, b) => a.sort_number - b.sort_number).map((itinerary, index, sortedArray) => {
+                                const previousItinerary = index > 0 ? sortedArray[index - 1] : null
+                                const nextItinerary = index < sortedArray.length - 1 ? sortedArray[index + 1] : null
                                 
                                 return (
                                   <div key={itinerary.id} className="relative">
@@ -211,7 +211,7 @@ export default function TripItineraryView({
                                       onItineraryClick={onItineraryClick}
                                       isSelected={selectedItineraryId === itinerary.id}
                                       isFirst={index === 0}
-                                      isLast={index === (day.itineraries?.length || 0) - 1}
+                                      isLast={index === sortedArray.length - 1}
                                       availableDays={trip.days?.map(d => ({
                                         id: d.id,
                                         day_number: d.day_number,
@@ -228,16 +228,16 @@ export default function TripItineraryView({
                                         toPlace={nextItinerary.place_data}
                                         mode="driving"
                                         showInsertButton={true}
-                                        onInsertVenue={() => onInsertSchedule(day.id, index + 1)}
+                                        onInsertVenue={() => onInsertSchedule(day.id, itinerary.sort_number)}
                                       />
                                     )}
                                     
                                     {/* Venue間の挿入ボタン（距離表示がない場合のみ） */}
-                                    {index < (day.itineraries?.length || 0) - 1 && 
+                                    {index < sortedArray.length - 1 && 
                                      (!itinerary.place_data || !nextItinerary?.place_data || 
                                       itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
                                       <VenueInsertButton
-                                        onInsert={() => onInsertSchedule(day.id, index + 1)}
+                                        onInsert={() => onInsertSchedule(day.id, itinerary.sort_number)}
                                         dayId={day.id}
                                       />
                                     )}
@@ -246,31 +246,35 @@ export default function TripItineraryView({
                               })}
                               
                               {/* 最後のVenueの後に挿入ボタンを表示 */}
-                              {day.itineraries.length > 0 && (
-                                <div className="flex justify-center py-4">
-                                  <div className="relative flex items-center justify-center">
-                                    {/* Gitタイムライン風の縦線（上側のみ） */}
-                                    <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300 top-0"></div>
-                                    
-                                    {/* 挿入ボタン */}
-                                    <button
-                                      onClick={() => onInsertSchedule(day.id, (day.itineraries?.length || 0) - 1)}
-                                      className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
-                                      title="最後にVenueを追加"
-                                    >
-                                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 2C13.1 2 14 2.9 14 4V10H20C21.1 10 22 10.9 22 12S21.1 14 20 14H14V20C14 21.1 13.1 22 12 22S10 21.1 10 20V14H4C2.9 14 2 13.1 2 12S2.9 10 4 10H10V4C10 2.9 10.9 2 12 2Z" />
-                                        <path 
-                                          d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z" 
-                                          fill="white"
-                                          opacity="0.8"
-                                          transform="scale(0.3) translate(20, 20)"
-                                        />
-                                      </svg>
-                                    </button>
+                              {[...day.itineraries].sort((a, b) => a.sort_number - b.sort_number).length > 0 && (() => {
+                                const sortedItineraries = [...day.itineraries].sort((a, b) => a.sort_number - b.sort_number)
+                                const lastItinerary = sortedItineraries[sortedItineraries.length - 1]
+                                return (
+                                  <div className="flex justify-center py-4">
+                                    <div className="relative flex items-center justify-center">
+                                      {/* Gitタイムライン風の縦線（上側のみ） */}
+                                      <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300 top-0"></div>
+                                      
+                                      {/* 挿入ボタン */}
+                                      <button
+                                        onClick={() => onInsertSchedule(day.id, lastItinerary.sort_number)}
+                                        className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
+                                        title="最後にVenueを追加"
+                                      >
+                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                          <path d="M12 2C13.1 2 14 2.9 14 4V10H20C21.1 10 22 10.9 22 12S21.1 14 20 14H14V20C14 21.1 13.1 22 12 22S10 21.1 10 20V14H4C2.9 14 2 13.1 2 12S2.9 10 4 10H10V4C10 2.9 10.9 2 12 2Z" />
+                                          <path 
+                                            d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z" 
+                                            fill="white"
+                                            opacity="0.8"
+                                            transform="scale(0.3) translate(20, 20)"
+                                          />
+                                        </svg>
+                                      </button>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )
+                              })()}
                             </div>
                           </SortableContext>
                         </DndContext>
