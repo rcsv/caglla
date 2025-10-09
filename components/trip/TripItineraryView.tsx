@@ -89,6 +89,8 @@ export default function TripItineraryView({
           trip.days.map((day) => {
             const isCollapsed = collapsedDays.has(day.id)
             const itinerarySummary = generateItinerarySummary(day)
+            // 表示は常に sort_number 昇順で固定
+            const sortedItineraries = [...(day.itineraries || [])].sort((a, b) => a.sort_number - b.sort_number)
 
             return (
               <div
@@ -167,7 +169,7 @@ export default function TripItineraryView({
                       }}
                     />
 
-                    {day.itineraries && day.itineraries.length > 0 ? (
+                    {sortedItineraries && sortedItineraries.length > 0 ? (
                       <div className="mt-6">
                         <div className="flex justify-between items-center mb-4">
                           <h4 className="font-medium text-gray-900">スケジュール</h4>
