@@ -92,10 +92,19 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
         const itinerariesRef = collection(db, 'itineraries')
         const itinerariesQuery = query(
           itinerariesRef,
-          where('day_id', '==', day.id)
+          where('day_id', '==', day.id),
+          orderBy('sort_number', 'asc')
         )
         
         const itinerariesSnapshot = await getDocs(itinerariesQuery)
+        
+        // デバッグ用ログ
+        console.log(`Day ${day.id} itineraries sort_numbers:`, itinerariesSnapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          title: doc.data().title, 
+          sort_number: doc.data().sort_number 
+        })))
+        
         const itineraries = itinerariesSnapshot.docs.map(doc => {
           const data = doc.data()
           return {
@@ -105,7 +114,7 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
             created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
             updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
           }
-        })
+        }).sort((a, b) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
 
         return {
           ...day,

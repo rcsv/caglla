@@ -66,28 +66,15 @@ export async function GET(
       }
       
       // 各DayのItinerariesを取得（sort_number順でソート）
-      console.log(`Fetching itineraries for day: ${dayDoc.id}`)
       const itinerariesSnapshot = await adminDb
         .collection(COLLECTIONS.ITINERARIES)
         .where('day_id', '==', dayDoc.id)
         .orderBy('sort_number', 'asc')
         .get()
       
-      console.log(`Firestore query completed. Found ${itinerariesSnapshot.docs.length} itineraries`)
-      
 
       // デバッグ用に、browser consoleに、
       console.log('Day itineraries:', itinerariesSnapshot.docs.map(doc => doc.data()))
-      
-      // より詳細なデバッグログ
-      console.log(`=== Day ${dayDoc.id} Debug Info ===`)
-      console.log(`Total itineraries found: ${itinerariesSnapshot.docs.length}`)
-      console.log('Raw itineraries data:')
-      itinerariesSnapshot.docs.forEach((doc, index) => {
-        const data = doc.data()
-        console.log(`  [${index}] ID: ${doc.id}, sort_number: ${data.sort_number}, title: ${data.title}`)
-      })
-      console.log('=== End Debug Info ===')
 
       const itineraries = itinerariesSnapshot.docs
         .map((itineraryDoc: any) => {
