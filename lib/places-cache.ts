@@ -197,9 +197,19 @@ export class PlacesCacheManager {
       return true // cached_atがない場合は期限切れとする
     }
     
-    const cachedAt = typeof cacheData.cached_at === 'string' 
-      ? new Date(cacheData.cached_at) 
-      : cacheData.cached_at
+    // FirestoreDate型を適切に処理
+    let cachedAt: Date
+    if (typeof cacheData.cached_at === 'string') {
+      cachedAt = new Date(cacheData.cached_at)
+    } else if (cacheData.cached_at instanceof Date) {
+      cachedAt = cacheData.cached_at
+    } else if ('toDate' in cacheData.cached_at && typeof cacheData.cached_at.toDate === 'function') {
+      // Firestore Timestamp型
+      cachedAt = cacheData.cached_at.toDate()
+    } else {
+      console.error('Invalid cached_at type:', typeof cacheData.cached_at, cacheData.cached_at)
+      return true // 不明な型の場合は期限切れとする
+    }
     
     const now = new Date()
     const daysSinceCached = Math.floor((now.getTime() - cachedAt.getTime()) / (1000 * 60 * 60 * 24))
@@ -411,3 +421,33 @@ export const isVersionSupported = (version: string) => SUPPORTED_VERSIONS.includ
 export const getPopularPlaces = (limit?: number) => placesCacheManager.getPopularPlaces(limit)
 export const getRecentlyAccessedPlaces = (limit?: number) => placesCacheManager.getRecentlyAccessedPlaces(limit)
 export const getCacheStats = () => placesCacheManager.getCacheStats()
+
+/**
+ * PlacesCacheをPlaceDataに変換する
+ * @param placesCache PlacesCacheオブジェクト
+ * @returns PlaceDataオブジェクト（メタデータを除外）
+ */
+export const convertPlacesCacheToPlaceData = (placesCache: PlacesCache | null): PlaceData | null => {
+  if (!placesCache) return null
+  
+  const placeData: PlaceData = {
+    place_id: placesCache.place_id,
+    name: placesCache.name,
+    formatted_address: placesCache.formatted_address,
+    geometry: placesCache.geometry,
+  }
+  
+  // オプショナルフィールドのコピー
+  if (placesCache.address_components) placeData.address_components = placesCache.address_components
+  if (placesCache.photos) placeData.photos = placesCache.photos
+  if (placesCache.rating !== undefined) placeData.rating = placesCache.rating
+  if (placesCache.user_ratings_total !== undefined) placeData.user_ratings_total = placesCache.user_ratings_total
+  if (placesCache.price_level !== undefined) placeData.price_level = placesCache.price_level
+  if (placesCache.types) placeData.types = placesCache.types
+  if (placesCache.opening_hours) placeData.opening_hours = placesCache.opening_hours
+  if (placesCache.international_phone_number) placeData.international_phone_number = placesCache.international_phone_number
+  if (placesCache.website) placeData.website = placesCache.website
+  if (placesCache.editorial_summary) placeData.editorial_summary = placesCache.editorial_summary
+  
+  return placeData
+}
