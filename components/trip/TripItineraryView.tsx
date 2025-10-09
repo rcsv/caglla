@@ -192,14 +192,20 @@ export default function TripItineraryView({
                             strategy={verticalListSortingStrategy}
                           >
                             <div className="space-y-0">
-                              {day.itineraries.map((itinerary, index) => {
-                                const previousItinerary = index > 0 ? day.itineraries?.[index - 1] : null
-                                const nextItinerary = index < (day.itineraries?.length || 0) - 1 ? day.itineraries?.[index + 1] : null
+                              {day.itineraries
+                                .sort((a, b) => a.sort_number - b.sort_number)
+                                .map((itinerary, index) => {
+                                  const sortedItineraries = day.itineraries?.sort((a, b) => a.sort_number - b.sort_number) || []
+                                  const previousItinerary = index > 0 ? sortedItineraries[index - 1] : null
+                                  const nextItinerary = index < sortedItineraries.length - 1 ? sortedItineraries[index + 1] : null
                                 
                                 return (
                                   <div key={itinerary.id} className="relative">
                                     <SortableItineraryCard
-                                      itinerary={itinerary}
+                                      itinerary={{
+                                        ...itinerary,
+                                        sort_number: index + 1 // 表示用の連続した番号を設定
+                                      }}
                                       previousPlace={previousItinerary?.place_data}
                                       nextPlace={nextItinerary?.place_data}
                                       onUpdate={onScheduleUpdated}
@@ -211,7 +217,7 @@ export default function TripItineraryView({
                                       onItineraryClick={onItineraryClick}
                                       isSelected={selectedItineraryId === itinerary.id}
                                       isFirst={index === 0}
-                                      isLast={index === (day.itineraries?.length || 0) - 1}
+                                      isLast={index === sortedItineraries.length - 1}
                                       availableDays={trip.days?.map(d => ({
                                         id: d.id,
                                         day_number: d.day_number,
@@ -228,7 +234,7 @@ export default function TripItineraryView({
                                         toPlace={nextItinerary.place_data}
                                         mode="driving"
                                         showInsertButton={true}
-                                        onInsertVenue={() => onInsertSchedule(day.id, index + 1)}
+                                        onInsertVenue={() => onInsertSchedule(day.id, index)}
                                       />
                                     )}
                                     
@@ -237,7 +243,7 @@ export default function TripItineraryView({
                                      (!itinerary.place_data || !nextItinerary?.place_data || 
                                       itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
                                       <VenueInsertButton
-                                        onInsert={() => onInsertSchedule(day.id, index + 1)}
+                                        onInsert={() => onInsertSchedule(day.id, index)}
                                         dayId={day.id}
                                       />
                                     )}
@@ -254,7 +260,7 @@ export default function TripItineraryView({
                                     
                                     {/* 挿入ボタン */}
                                     <button
-                                      onClick={() => onInsertSchedule(day.id, (day.itineraries?.length || 0) - 1)}
+                                      onClick={() => onInsertSchedule(day.id, (sortedItineraries.length || 0) - 1)}
                                       className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
                                       title="最後にVenueを追加"
                                     >

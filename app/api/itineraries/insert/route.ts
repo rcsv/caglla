@@ -58,18 +58,16 @@ export async function POST(request: NextRequest) {
         : 1
     } else {
       // 指定位置に挿入する場合
-      // insertAfterIndexは表示番号（1ベース）なので、配列インデックス（0ベース）に変換
-      const targetIndex = insertAfterIndex - 1
+      // insertAfterIndexは表示番号（1ベース）
       let itinerariesToUpdate: any[] = []
       
-      if (targetIndex >= 0 && targetIndex < existingItineraries.length) {
-        // 手前のItineraryのsort_number + 1を使用
-        const previousItinerary = existingItineraries[targetIndex]
-        newSortNumber = (previousItinerary.sort_number || 0) + 1
+      if (insertAfterIndex > 0 && insertAfterIndex <= existingItineraries.length) {
+        // insertAfterIndex番目の後に挿入するので、sort_numberはinsertAfterIndex + 1
+        newSortNumber = insertAfterIndex + 1
         
-        console.log(`Insert after index ${insertAfterIndex}: previousItinerary sort_number=${previousItinerary.sort_number}, newSortNumber=${newSortNumber}`)
+        console.log(`Insert after display index ${insertAfterIndex}: newSortNumber=${newSortNumber}`)
         
-        // 後続のitinerariesのsort_numberを1つずつ増やす
+        // 新しいsort_number以降のitinerariesのsort_numberを1つずつ増やす
         itinerariesToUpdate = existingItineraries.filter((i: any) => (i.sort_number || 0) >= newSortNumber)
       } else {
         // 範囲外の場合は最後に追加
