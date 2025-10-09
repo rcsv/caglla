@@ -26,8 +26,8 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
     'FIREBASE_CLIENT_EMAIL',
     'FIREBASE_PRIVATE_KEY',
     'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY',
+    'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY',
     'NEXT_PUBLIC_UNSPLASH_ACCESS_KEY'
-    // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
   ]
 
   const missingVars: string[] = []
@@ -100,8 +100,8 @@ export function validateClientEnvironment(): Partial<RequiredEnvVars> {
     'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
     'NEXT_PUBLIC_FIREBASE_APP_ID',
     'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY',
+    'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY',
     'NEXT_PUBLIC_UNSPLASH_ACCESS_KEY'
-    // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
   ]
 
   const missingVars: string[] = []
@@ -134,7 +134,7 @@ export function validateClientEnvironment(): Partial<RequiredEnvVars> {
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
     NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
     NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY!,
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
     NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY!
-    // NEXT_PUBLIC_GOOGLE_MAPS_API_KEYはオプションなので削除
   }
 }
