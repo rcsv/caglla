@@ -99,7 +99,7 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
         date: data.date?.toDate ? data.date.toDate() : data.date,
         created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
         updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
-      }
+      } as any
     }).sort((a, b) => (a.day_number || 0) - (b.day_number || 0)) // day_number順でソート
 
     // 各DayのItinerariesを取得
@@ -121,7 +121,7 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
           sort_number: doc.data().sort_number 
         })))
         
-        const itineraries = (await Promise.all(itinerariesSnapshot.docs.map(async (docSnap => {
+        const itineraries = (await Promise.all(itinerariesSnapshot.docs.map(async (docSnap) => {
           const data = docSnap.data() as Itinerary & { place_id?: string }
           const itineraryBase: any = {
             id: docSnap.id,
@@ -142,7 +142,7 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
           }
 
           return itineraryBase
-        })))).sort((a: any, b: any) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
+        }))).sort((a: any, b: any) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
 
         return {
           ...day,
