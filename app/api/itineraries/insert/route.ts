@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
-import type { PlaceData } from '@/lib/types'
+import type { PlaceData, PlacesCache } from '@/lib/types'
 
 /**
  * Insert a new itinerary into a specified day at a given position and renumber subsequent itineraries as needed.
@@ -116,9 +116,31 @@ export async function POST(request: NextRequest) {
     try {
       const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).get()
       if (cacheDoc.exists) {
-        resolvedPlaceData = cacheDoc.data() as PlaceData
-        await cacheDoc.ref.update({ last_accessed: new Date(), access_count: (cacheDoc.data().access_count || 0) + 1 }).catch(() => {})
+        const placesCache = cacheDoc.data() as PlacesCache
+        // PlacesCacheからPlaceDataに変換（メタデータを除外）
+        resolvedPlaceData = {
+          place_id: placesCache.place_id,
+          name: placesCache.name,
+          formatted_address: placesCache.formatted_address,
+          geometry: placesCache.geometry,
+          address_components: placesCache.address_components,
+          photos: placesCache.photos,
+          rating: placesCache.rating,
+          user_ratings_total: placesCache.user_ratings_total,
+          price_level: placesCache.price_level,
+          types: placesCache.types,
+          opening_hours: placesCache.opening_hours,
+          international_phone_number: placesCache.international_phone_number,
+          website: placesCache.website,
+          editorial_summary: placesCache.editorial_summary,
+        }
+        // アクセス統計を更新
+        await cacheDoc.ref.update({ 
+          last_accessed: new Date(), 
+          access_count: (placesCache.access_count || 0) + 1 
+        }).catch(() => {})
       } else if (place_data?.place_id) {
+        console.log('💾 Saving place_data to PlacesCache:', place_data.place_id)
         const cachePayload: any = {
           format_version: '1.0.0',
           place_id: place_data.place_id,
@@ -139,10 +161,30 @@ export async function POST(request: NextRequest) {
         if (place_data.international_phone_number) cachePayload.international_phone_number = place_data.international_phone_number
         if (place_data.website) cachePayload.website = place_data.website
         if (place_data.editorial_summary) cachePayload.editorial_summary = place_data.editorial_summary
+        
         await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).set(cachePayload)
-        resolvedPlaceData = cachePayload as PlaceData
+        console.log('✅ Successfully saved to PlacesCache')
+        
+        // PlaceDataとして返す（メタデータを除外）
+        resolvedPlaceData = {
+          place_id: place_data.place_id,
+          name: place_data.name,
+          formatted_address: place_data.formatted_address,
+          geometry: place_data.geometry,
+          address_components: place_data.address_components,
+          photos: place_data.photos,
+          rating: place_data.rating,
+          user_ratings_total: place_data.user_ratings_total,
+          price_level: place_data.price_level,
+          types: place_data.types,
+          opening_hours: place_data.opening_hours,
+          international_phone_number: place_data.international_phone_number,
+          website: place_data.website,
+          editorial_summary: place_data.editorial_summary,
+        }
       }
     } catch (e) {
+      console.error('Error resolving place_data:', e)
       resolvedPlaceData = (place_data as PlaceData) || null
     }
 

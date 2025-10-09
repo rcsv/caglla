@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminTripOperations, adminDayOperations, adminItineraryOperations } from '@/lib/firestore-admin-operations'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
+import type { PlacesCache, FirestoreDate } from '@/lib/types'
+
+/**
+ * FirestoreDateをDateオブジェクトに変換
+ */
+function toDate(firestoreDate: FirestoreDate | undefined): Date | undefined {
+  if (!firestoreDate) return undefined
+  if (firestoreDate instanceof Date) return firestoreDate
+  if (typeof firestoreDate === 'string') return new Date(firestoreDate)
+  if ('toDate' in firestoreDate && typeof firestoreDate.toDate === 'function') {
+    return firestoreDate.toDate()
+  }
+  return undefined
+}
 
 /**
  * Retrieve a trip by ID including its destination (resolved from place cache when missing), days with their itineraries (with place data resolved from place cache when missing), and the creator's public info when available.
@@ -32,10 +46,29 @@ export async function GET(
       if (anyTrip.destination_place_id && !anyTrip.destination_place) {
         const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(anyTrip.destination_place_id).get()
         if (cacheDoc.exists) {
-          anyTrip.destination_place = cacheDoc.data()
+          const placesCache = cacheDoc.data() as PlacesCache
+          // PlacesCacheからPlaceDataに変換（メタデータを除外）
+          anyTrip.destination_place = {
+            place_id: placesCache.place_id,
+            name: placesCache.name,
+            formatted_address: placesCache.formatted_address,
+            geometry: placesCache.geometry,
+            address_components: placesCache.address_components,
+            photos: placesCache.photos,
+            rating: placesCache.rating,
+            user_ratings_total: placesCache.user_ratings_total,
+            price_level: placesCache.price_level,
+            types: placesCache.types,
+            opening_hours: placesCache.opening_hours,
+            international_phone_number: placesCache.international_phone_number,
+            website: placesCache.website,
+            editorial_summary: placesCache.editorial_summary,
+          }
         }
       }
-    } catch {}
+    } catch (error) {
+      console.error('Failed to resolve destination_place:', error)
+    }
 
     // Get days for this trip
     const days = await adminDayOperations.getDaysByTripId(tripId)
@@ -47,13 +80,55 @@ export async function GET(
         // 各 itinerary の place_data を places_cache から解決
         const itineraries = await Promise.all(
           rawItineraries.map(async (it: any) => {
-            if (it.place_id && !it.place_data) {
+            // place_idがある場合、place_cacheから最新データを取得
+            if (it.place_id) {
               try {
                 const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(it.place_id).get()
                 if (cacheDoc.exists) {
-                  it.place_data = cacheDoc.data()
+                  const placesCache = cacheDoc.data() as PlacesCache
+                  // PlacesCacheからPlaceDataに変換（メタデータを除外）
+                  it.place_data = {
+                    place_id: placesCache.place_id,
+                    name: placesCache.name,
+                    formatted_address: placesCache.formatted_address,
+                    geometry: placesCache.geometry,
+                    address_components: placesCache.address_components,
+                    photos: placesCache.photos,
+                    rating: placesCache.rating,
+                    user_ratings_total: placesCache.user_ratings_total,
+                    price_level: placesCache.price_level,
+                    types: placesCache.types,
+                    opening_hours: placesCache.opening_hours,
+                    international_phone_number: placesCache.international_phone_number,
+                    website: placesCache.website,
+                    editorial_summary: placesCache.editorial_summary,
+                  }
+                } else if (!it.place_data) {
+                  // キャッシュにない場合のみ、フォールバックとして既存のplace_dataを使用
+                  console.warn(`PlacesCache not found for itinerary ${it.id} (place_id: ${it.place_id})`)
                 }
-              } catch {}
+              } catch (error) {
+                console.error(`Failed to resolve place_data for itinerary ${it.id}:`, error)
+              }
+            } else if (it.place_data && it.place_data.format_version) {
+              // place_idがないが、place_dataがPlacesCache形式の場合は変換
+              const placesCache = it.place_data
+              it.place_data = {
+                place_id: placesCache.place_id,
+                name: placesCache.name,
+                formatted_address: placesCache.formatted_address,
+                geometry: placesCache.geometry,
+                address_components: placesCache.address_components,
+                photos: placesCache.photos,
+                rating: placesCache.rating,
+                user_ratings_total: placesCache.user_ratings_total,
+                price_level: placesCache.price_level,
+                types: placesCache.types,
+                opening_hours: placesCache.opening_hours,
+                international_phone_number: placesCache.international_phone_number,
+                website: placesCache.website,
+                editorial_summary: placesCache.editorial_summary,
+              }
             }
             return it
           })
@@ -178,20 +253,29 @@ export async function PUT(
     }
     
     // 日付を正規化するヘルパー関数
-    const normalizeDate = (date: Date | string): Date => {
-      const d = typeof date === 'string' ? new Date(date) : date
-      return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    const normalizeDate = (date: Date | string | FirestoreDate): Date => {
+      if (date instanceof Date) return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+      if (typeof date === 'string') {
+        const d = new Date(date)
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      }
+      // FirestoreTimestamp の場合
+      if ('toDate' in date && typeof date.toDate === 'function') {
+        const d = date.toDate()
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      }
+      throw new Error('Invalid date type')
     }
     
     // 日付のキーを生成するヘルパー関数
-    const getDateKey = (date: Date | string): string => {
+    const getDateKey = (date: Date | string | FirestoreDate): string => {
       const normalized = normalizeDate(date)
       return normalized.toISOString().split('T')[0] // YYYY-MM-DD形式
     }
     
     // 日程が変更された場合の処理
-    const startDateChanged = !compareDates(originalStartDate, newStartDate)
-    const endDateChanged = !compareDates(originalEndDate, newEndDate)
+    const startDateChanged = !compareDates(toDate(originalStartDate), newStartDate)
+    const endDateChanged = !compareDates(toDate(originalEndDate), newEndDate)
     
     if ((startDateChanged || endDateChanged) && newStartDate && newEndDate) {
       console.log('日程が変更されました。daysドキュメントを更新します。')
