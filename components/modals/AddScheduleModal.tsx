@@ -72,19 +72,29 @@ export default function AddScheduleModal({
       // 詳細情報を取得
       const placeDetails = await placesApiHelpers.getPlaceDetails(place.place_id)
       
+      // 挿入位置が指定されている場合は新しい挿入APIを使用、そうでなければ従来のAPIを使用
+      const apiEndpoint = insertAfterIndex !== undefined ? '/api/itineraries/insert' : '/api/itineraries'
+      
+      const requestBody: any = {
+        day_id: dayId,
+        place_data: placeDetails,
+        title: place.name,
+        description: place.formatted_address,
+        location: place.formatted_address
+      }
+      
+      // 挿入位置が指定されている場合は追加
+      if (insertAfterIndex !== undefined) {
+        requestBody.insert_after_index = insertAfterIndex
+      }
+      
       // APIでスケジュールを保存
-      const response = await makeAuthenticatedRequest('/api/itineraries', {
+      const response = await makeAuthenticatedRequest(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          day_id: dayId,
-          place_data: placeDetails,
-          title: place.name,
-          description: place.formatted_address,
-          location: place.formatted_address
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (response.ok) {
