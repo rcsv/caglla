@@ -381,8 +381,8 @@ export default function SlugBasedTripPage() {
   const handleScheduleAdded = async (newItinerary: any) => {
     if (!trip) return
 
-    // 新しいAPIが正しいsort_numberで挿入し、後続のスケジュールを再番号付けするので、
-    // フロントエンド側では単純に新しいスケジュールを配列に追加するだけで十分
+    // サーバー側では挿入位置に応じて後続の sort_number を +1 済みだが、
+    // ローカル状態は古いままなので、同様の再番号付けを適用してから追加する
     setTrip(prevTrip => {
       if (!prevTrip) return prevTrip
       
@@ -391,12 +391,20 @@ export default function SlugBasedTripPage() {
         days: prevTrip.days?.map(day => {
           if (day.id === newItinerary.day_id) {
             const currentItineraries = day.itineraries || []
-            
-            // 新しいスケジュールを正しい位置に挿入
-            // 新しいAPIがsort_numberを正しく設定するので、sort_number順に挿入
-            const sortedItineraries = [...currentItineraries, newItinerary]
+
+            // 後続（newItinerary.sort_number 以上）の既存要素を +1 して重複を解消
+            const updatedExisting = currentItineraries.map(item => {
+              if (item.id === newItinerary.id) return item
+              if ((item.sort_number || 0) >= (newItinerary.sort_number || 0)) {
+                return { ...item, sort_number: (item.sort_number || 0) + 1 }
+              }
+              return item
+            })
+
+            // 新規を統合して sort_number 順に整列
+            const sortedItineraries = [...updatedExisting, newItinerary]
               .sort((a, b) => a.sort_number - b.sort_number)
-            
+
             return {
               ...day,
               itineraries: sortedItineraries
