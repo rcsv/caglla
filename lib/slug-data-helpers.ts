@@ -6,6 +6,7 @@
 import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore'
 import type { Trip, User, PlacesCache, Itinerary } from './types'
 import { COLLECTIONS } from './firestore'
+import { placesCacheManager } from './places-cache'
 
 /**
  * userSlug から user データを取得
@@ -131,26 +132,92 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
             updated_at: (data as any).updated_at?.toDate ? (data as any).updated_at.toDate() : (data as any).updated_at,
           }
 
+          console.log(`📊 Checking itinerary "${data.title}":`, {
+            has_place_id: !!(data as any).place_id,
+            has_place_data: !!(data as any).place_data,
+            place_id: (data as any).place_id || 'none'
+          })
+
           // place_id がある場合は常に places_cache を優先的に解決し、
           // 見つからない場合のみ既存の place_data をフォールバックとして利用する
           if ((data as any).place_id) {
             try {
               const cacheDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, (data as any).place_id))
               if (cacheDoc.exists()) {
-                itineraryBase.place_data = cacheDoc.data() as PlacesCache
-              } else if ((data as any).place_data) {
-                // キャッシュに無い場合は既存の place_data を使用（後方互換）
-                itineraryBase.place_data = (data as any).place_data
+                const placesCache = cacheDoc.data() as any
+                // PlacesCacheからPlaceDataに変換（メタデータを除外）
+                itineraryBase.place_data = {
+                  place_id: placesCache.place_id,
+                  name: placesCache.name,
+                  formatted_address: placesCache.formatted_address,
+                  geometry: placesCache.geometry,
+                  address_components: placesCache.address_components,
+                  photos: placesCache.photos,
+                  rating: placesCache.rating,
+                  user_ratings_total: placesCache.user_ratings_total,
+                  price_level: placesCache.price_level,
+                  types: placesCache.types,
+                  opening_hours: placesCache.opening_hours,
+                  international_phone_number: placesCache.international_phone_number,
+                  website: placesCache.website,
+                  editorial_summary: placesCache.editorial_summary,
+                }
+                console.log(`✅ Resolved place_data for "${data.title}" from cache:`, itineraryBase.place_data)
+              } else {
+                console.log(`⚠️ PlacesCache not found for "${data.title}" (place_id: ${(data as any).place_id})`)
+                if ((data as any).place_data) {
+                  // キャッシュに無い場合は既存の place_data を使用（後方互換）
+                  itineraryBase.place_data = (data as any).place_data
+                  console.log(`✅ Using fallback place_data for "${data.title}" (not in cache)`)
+                } else {
+                  // フォールバックもない場合、APIから取得してキャッシュ
+                  console.log(`🔄 Fetching place_data from API for "${data.title}"`)
+                  try {
+                    const fetchedPlaceData = await placesCacheManager.fetchAndCachePlace((data as any).place_id)
+                    if (fetchedPlaceData) {
+                      // PlacesCacheからPlaceDataに変換
+                      itineraryBase.place_data = {
+                        place_id: fetchedPlaceData.place_id,
+                        name: fetchedPlaceData.name,
+                        formatted_address: fetchedPlaceData.formatted_address,
+                        geometry: fetchedPlaceData.geometry,
+                        address_components: fetchedPlaceData.address_components,
+                        photos: fetchedPlaceData.photos,
+                        rating: fetchedPlaceData.rating,
+                        user_ratings_total: fetchedPlaceData.user_ratings_total,
+                        price_level: fetchedPlaceData.price_level,
+                        types: fetchedPlaceData.types,
+                        opening_hours: fetchedPlaceData.opening_hours,
+                        international_phone_number: fetchedPlaceData.international_phone_number,
+                        website: fetchedPlaceData.website,
+                        editorial_summary: fetchedPlaceData.editorial_summary,
+                      }
+                      console.log(`✅ Fetched and cached place_data for "${data.title}"`)
+                    } else {
+                      console.log(`❌ Failed to fetch place_data for "${data.title}"`)
+                    }
+                  } catch (error) {
+                    console.error(`❌ Error fetching place_data for "${data.title}":`, error)
+                  }
+                }
               }
-            } catch {
+            } catch (error) {
+              console.error(`❌ Failed to resolve place_data for "${data.title}":`, error)
               // 取得失敗時も既存の place_data をフォールバック
               if ((data as any).place_data) {
                 itineraryBase.place_data = (data as any).place_data
+                console.log(`✅ Using fallback place_data for "${data.title}" (after error)`)
               }
             }
-          } else if ((data as any).place_data) {
-            // place_id が無い古いデータ向け
-            itineraryBase.place_data = (data as any).place_data
+          } else {
+            console.log(`⚠️ No place_id for "${data.title}"`)
+            if ((data as any).place_data) {
+              // place_id が無い古いデータ向け
+              itineraryBase.place_data = (data as any).place_data
+              console.log(`✅ Using legacy place_data for "${data.title}" (no place_id)`)
+            } else {
+              console.log(`❌ No place_data available for "${data.title}" (no place_id, no place_data)`)
+            }
           }
 
           return itineraryBase
