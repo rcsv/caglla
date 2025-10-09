@@ -147,7 +147,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
           title: formData.title || formData.destination, // タイトル未入力時は目的地を使用
           description: formData.description,
           destination: formData.destination,
-          destinationPlace: formData.destinationPlace,
+          destinationPlaceId: formData.destinationPlace?.place_id,
           startDate: formData.startDate,
           endDate: formData.endDate,
           accessLevel: formData.accessLevel,

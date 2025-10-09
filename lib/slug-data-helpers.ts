@@ -4,7 +4,8 @@
  */
 
 import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore'
-import type { Trip, User } from './types'
+import type { Trip, User, PlacesCache, Itinerary } from './types'
+import { COLLECTIONS } from './firestore'
 
 /**
  * userSlug から user データを取得
@@ -65,6 +66,17 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
       updated_at: tripDoc.data().updated_at?.toDate ? tripDoc.data().updated_at.toDate() : tripDoc.data().updated_at,
     } as Trip
 
+    // destination_place_id がある場合は places_cache から解決
+    const destinationPlaceId: string | undefined = (tripDoc.data() as any).destination_place_id
+    if (destinationPlaceId) {
+      try {
+        const destDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, destinationPlaceId))
+        if (destDoc.exists()) {
+          ;(tripData as any).destination_place = destDoc.data() as PlacesCache
+        }
+      } catch {}
+    }
+
     // Daysを取得
     const daysRef = collection(db, 'days')
     const daysQuery = query(
@@ -105,16 +117,28 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
           sort_number: doc.data().sort_number 
         })))
         
-        const itineraries = itinerariesSnapshot.docs.map(doc => {
-          const data = doc.data()
-          return {
-            id: doc.id,
+        const itineraries = (await Promise.all(itinerariesSnapshot.docs.map(async (docSnap => {
+          const data = docSnap.data() as Itinerary & { place_id?: string }
+          const itineraryBase: any = {
+            id: docSnap.id,
             ...data,
             // Firestore Timestamp型をDate型に変換
-            created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
-            updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
+            created_at: (data as any).created_at?.toDate ? (data as any).created_at.toDate() : (data as any).created_at,
+            updated_at: (data as any).updated_at?.toDate ? (data as any).updated_at.toDate() : (data as any).updated_at,
           }
-        }).sort((a, b) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
+
+          // place_id が存在する場合はキャッシュから place_data を解決
+          if ((data as any).place_id && !data.place_data) {
+            try {
+              const cacheDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, (data as any).place_id))
+              if (cacheDoc.exists()) {
+                itineraryBase.place_data = cacheDoc.data() as PlacesCache
+              }
+            } catch {}
+          }
+
+          return itineraryBase
+        })))).sort((a: any, b: any) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
 
         return {
           ...day,

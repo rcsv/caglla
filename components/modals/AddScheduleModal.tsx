@@ -71,15 +71,12 @@ export default function AddScheduleModal({
     try {
       console.log(`AddScheduleModal: insertAfterIndex=${insertAfterIndex}, dayId=${dayId}`)
       
-      // 詳細情報を取得
-      const placeDetails = await placesApiHelpers.getPlaceDetails(place.place_id)
-      
       // 挿入位置が指定されている場合は新しい挿入APIを使用、そうでなければ従来のAPIを使用
       const apiEndpoint = insertAfterIndex !== undefined ? '/api/itineraries/insert' : '/api/itineraries'
       
       const requestBody: any = {
         day_id: dayId,
-        place_data: placeDetails,
+        place_id: place.place_id,
         title: place.name,
         description: place.formatted_address,
         location: place.formatted_address
@@ -93,7 +90,7 @@ export default function AddScheduleModal({
         console.log(`Using regular API (no insert position specified)`)
       }
       
-      // APIでスケジュールを保存
+      // APIでスケジュールを保存（place_idのみ送信）
       const response = await makeAuthenticatedRequest(apiEndpoint, {
         method: 'POST',
         headers: {

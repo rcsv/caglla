@@ -48,7 +48,8 @@ export async function POST(request: NextRequest) {
       title: `${originalData.title} (複製)`,
       description: originalData.description || '',
       location: originalData.location || '',
-      place_data: originalData.place_data || null,
+      // place_idを優先的にコピー（後方互換でplace_dataからplace_id抽出）
+      place_id: originalData.place_id || originalData.place_data?.place_id || null,
       start_time: originalData.start_time || '',
       end_time: originalData.end_time || '',
       timezone: originalData.timezone || 'UTC',

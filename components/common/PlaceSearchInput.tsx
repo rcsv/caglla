@@ -5,8 +5,8 @@ import { placesApiHelpers, PlaceSearchResult } from '@/lib/places-api'
 import { PlaceData } from '@/lib/firestore'
 
 interface PlaceSearchInputProps {
-  currentPlace?: PlaceData
-  onPlaceSelect: (place: PlaceData) => void
+  currentPlace?: PlaceData | null
+  onPlaceSelect: (place: PlaceData | null) => void
   placeholder?: string
   disabled?: boolean
 }
@@ -94,9 +94,14 @@ export default function PlaceSearchInput({
 
   const handlePlaceSelect = async (place: PlaceSearchResult) => {
     try {
-      // 詳細情報を取得
-      const placeDetails = await placesApiHelpers.getPlaceDetails(place.place_id)
-      onPlaceSelect(placeDetails)
+      // ここでは詳細取得せず、place_idのみで親に通知
+      onPlaceSelect({
+        place_id: place.place_id,
+        name: place.name,
+        formatted_address: place.formatted_address,
+        geometry: place.geometry,
+        types: place.types,
+      } as any)
       
       setQuery(place.name)
       setShowResults(false)
@@ -112,7 +117,7 @@ export default function PlaceSearchInput({
     setQuery(e.target.value)
     if (currentPlace && e.target.value !== currentPlace.name) {
       // 現在の選択をクリア
-      onPlaceSelect({} as PlaceData)
+      onPlaceSelect(null)
     }
     // エラーをクリア
     setError(null)

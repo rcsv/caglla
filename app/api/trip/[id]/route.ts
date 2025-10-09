@@ -16,13 +16,38 @@ export async function GET(
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
     }
 
+    // destination_place を places_cache から解決
+    try {
+      const anyTrip: any = trip as any
+      if (anyTrip.destination_place_id && !anyTrip.destination_place) {
+        const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(anyTrip.destination_place_id).get()
+        if (cacheDoc.exists) {
+          anyTrip.destination_place = cacheDoc.data()
+        }
+      }
+    } catch {}
+
     // Get days for this trip
     const days = await adminDayOperations.getDaysByTripId(tripId)
 
     // Get itineraries for each day
     const daysWithItineraries = await Promise.all(
       days.map(async (day) => {
-        const itineraries = await adminItineraryOperations.getItinerariesByDayId(day.id)
+        const rawItineraries = await adminItineraryOperations.getItinerariesByDayId(day.id)
+        // 各 itinerary の place_data を places_cache から解決
+        const itineraries = await Promise.all(
+          rawItineraries.map(async (it: any) => {
+            if (it.place_id && !it.place_data) {
+              try {
+                const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(it.place_id).get()
+                if (cacheDoc.exists) {
+                  it.place_data = cacheDoc.data()
+                }
+              } catch {}
+            }
+            return it
+          })
+        )
         return {
           ...day,
           itineraries
@@ -96,6 +121,7 @@ export async function PUT(
       description,
       destination,
       destinationPlace,
+      destinationPlaceId,
       startDate,
       endDate,
       accessLevel,
@@ -286,7 +312,7 @@ export async function PUT(
       title,
       description,
       destination,
-      destination_place: destinationPlace,
+      destination_place_id: destinationPlaceId || destinationPlace?.place_id,
       start_date: newStartDate,
       end_date: newEndDate,
       access_level: accessLevel,

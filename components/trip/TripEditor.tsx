@@ -99,7 +99,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
           title: formData.title,
           description: formData.description,
           destination: formData.destination,
-          destinationPlace: formData.destinationPlace,
+          destinationPlaceId: formData.destinationPlace?.place_id,
           startDate: formData.startDate || null,
           endDate: formData.endDate || null,
           accessLevel: formData.accessLevel,

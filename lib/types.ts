@@ -170,6 +170,8 @@ export interface Itinerary {
   title: string
   description?: string
   location?: string
+  // Firestoreには place_id を保存し、実体は places_cache から解決する
+  place_id?: string | null
   place_data?: PlaceData | null
   start_time?: string
   end_time?: string
@@ -198,7 +200,9 @@ export interface Trip {
   slug?: string // URL-safe スラッグ
   description?: string
   destination?: string // 後方互換性のため残す
-  destination_place?: PlaceData // 新しいGoogle Places API連携フィールド
+  // Firestoreには destination_place_id を保存し、実体は places_cache から解決する
+  destination_place_id?: string
+  destination_place?: PlaceData // UI向けに解決済みのデータ（読み取り時に付与）
   start_date?: FirestoreDate
   end_date?: FirestoreDate
   status: string
@@ -251,6 +255,8 @@ export interface ItineraryFormData {
   title: string
   description?: string
   location?: string
+  // 新設: 保存は place_id を推奨（place_data は後方互換）
+  place_id?: string | null
   place_data?: PlaceData | null
   start_time?: string
   end_time?: string
