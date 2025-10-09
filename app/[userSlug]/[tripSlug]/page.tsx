@@ -17,6 +17,7 @@ import TripSummaryView from '@/components/trip/TripSummaryView'
 import TripItineraryView from '@/components/trip/TripItineraryView'
 import TripChecklistView from '@/components/trip/TripChecklistView'
 import TripRightPane from '@/components/trip/TripRightPane'
+import { getCachedPlaces } from '@/lib/places-cache'
 
 export default function SlugBasedTripPage() {
   const { user, loading } = useAuth()
@@ -217,6 +218,53 @@ export default function SlugBasedTripPage() {
 
     fetchTrip()
   }, [userSlug, tripSlug, router])
+
+  // Itinerariesのplace_data欠落分をplaces_cacheから解決し、tripに付与
+  useEffect(() => {
+    const resolvePlacesFromCache = async () => {
+      if (!trip?.days || trip.days.length === 0) return
+
+      // place_idはあるがplace_dataが無いものを抽出
+      const missingPlaceIds = new Set<string>()
+      trip.days.forEach(day => {
+        day.itineraries?.forEach(it => {
+          if (!it.place_data && it.place_id) {
+            missingPlaceIds.add(it.place_id)
+          }
+        })
+      })
+
+      if (missingPlaceIds.size === 0) return
+
+      try {
+        const placeMap = await getCachedPlaces(Array.from(missingPlaceIds))
+
+        // 取得できたキャッシュを反映
+        setTrip(prev => {
+          if (!prev) return prev
+          const updatedDays = prev.days?.map(day => ({
+            ...day,
+            itineraries: (day.itineraries || []).map(it => {
+              if (!it.place_data && it.place_id) {
+                const cached = placeMap.get(it.place_id)
+                if (cached) {
+                  return { ...it, place_data: cached as any }
+                }
+              }
+              return it
+            })
+          })) || []
+
+          return { ...prev, days: updatedDays as any }
+        })
+      } catch (e) {
+        // 失敗時は何もしない（ベストエフォート）
+        console.warn('places_cache 解決に失敗しました', e)
+      }
+    }
+
+    resolvePlacesFromCache()
+  }, [trip])
 
   // 旅行データ読み込み後の初期クエリパラメータ同期
   useEffect(() => {
