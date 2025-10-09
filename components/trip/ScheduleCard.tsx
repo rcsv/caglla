@@ -39,6 +39,7 @@ const teardropStyles = `
 
 interface ScheduleCardProps {
   itinerary: Itinerary
+  displayNumber?: number
   previousPlace?: PlaceData | null
   nextPlace?: PlaceData | null
   onUpdate?: (updatedItinerary: any) => void
@@ -65,6 +66,7 @@ interface ScheduleCardProps {
 
 export default function ScheduleCard({ 
   itinerary, 
+  displayNumber,
   previousPlace,
   nextPlace,
   onUpdate, 
@@ -613,7 +615,7 @@ export default function ScheduleCard({
         <div className="relative mt-3">
           <div className={`teardrop-marker-left ${isSelected ? 'selected' : ''}`}>
             <div className="teardrop-label-left">
-              {itinerary.sort_number}
+              {displayNumber || itinerary.sort_number}
             </div>
           </div>
         </div>

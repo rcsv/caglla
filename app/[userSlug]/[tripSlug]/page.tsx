@@ -17,6 +17,7 @@ import TripSummaryView from '@/components/trip/TripSummaryView'
 import TripItineraryView from '@/components/trip/TripItineraryView'
 import TripChecklistView from '@/components/trip/TripChecklistView'
 import TripRightPane from '@/components/trip/TripRightPane'
+import { getCachedPlaces } from '@/lib/places-cache'
 
 export default function SlugBasedTripPage() {
   const { user, loading } = useAuth()
@@ -33,13 +34,14 @@ export default function SlugBasedTripPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [summaryCollapsed, setSummaryCollapsed] = useState(false)
   const [selectedItineraryId, setSelectedItineraryId] = useState<string | null>(null)
-  const [mapFocusMode, setMapFocusMode] = useState<'all' | 'day' | 'single'>('all') // マップフォーカスモード
+  const [mapFocusMode, setMapFocusMode] = useState<'all' | 'day' | 'single'>('all')
   const [poiData, setPoiData] = useState<{
     placeId: string
     name: string
     location: { lat: number; lng: number }
     placeData?: any
   } | null>(null)
+  const [missingPlaceDataCache, setMissingPlaceDataCache] = useState<Map<string, any>>(new Map())
 
   // クエリ: view / day を読み取り（デフォルトは summary）
   const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
@@ -101,12 +103,10 @@ export default function SlugBasedTripPage() {
 
   // セクションへのナビゲーション機能
   const navigateToSection = (sectionId: string) => {
-    // viewクエリを同期
     if (sectionId === 'checklist') {
       updateQuery({ view: 'checklist', day: null })
       return
     }
-    // Summary内のアンカー
     updateQuery({ view: 'summary', day: null })
     const element = document.getElementById(sectionId)
     if (element) {
@@ -120,16 +120,11 @@ export default function SlugBasedTripPage() {
   // Itineraryクリック時のハンドラー
   const handleItineraryClick = (itineraryId: string) => {
     setSelectedItineraryId(itineraryId)
-    
-    // 個別フォーカスモードに切り替え
     setMapFocusMode('single')
-    
-    // POIダイアログを更新（place_idがある場合）
     if (trip?.days) {
       for (const day of trip.days) {
         const itinerary = day.itineraries?.find(it => it.id === itineraryId)
         if (itinerary) {
-          // 該当するItineraryが含まれる日程を展開
           setCollapsedDays(prev => {
             const newSet = new Set(prev)
             newSet.delete(day.id)
@@ -137,15 +132,30 @@ export default function SlugBasedTripPage() {
           })
           
           // POIダイアログを更新
-          if (itinerary.place_data?.place_id) {
+          let placeData = itinerary.place_data
+          
+          // missingPlaceDataCacheから補完
+          if (!placeData && itinerary.place_id && missingPlaceDataCache.has(itinerary.place_id)) {
+            placeData = missingPlaceDataCache.get(itinerary.place_id)
+          }
+          
+          if (placeData?.place_id) {
             setPoiData({
-              placeId: itinerary.place_data.place_id,
+              placeId: placeData.place_id,
               name: itinerary.title,
               location: {
-                lat: itinerary.place_data.geometry!.location.lat,
-                lng: itinerary.place_data.geometry!.location.lng
+                lat: placeData.geometry!.location.lat,
+                lng: placeData.geometry!.location.lng
               },
-              placeData: itinerary.place_data // Itinerariesに保存されているplace_dataを渡す
+              placeData: placeData
+            })
+          } else if (itinerary.place_id) {
+            // place_idのみがある場合（place_dataがまだキャッシュされていない）
+            setPoiData({
+              placeId: itinerary.place_id,
+              name: itinerary.title,
+              location: null as any, // 位置情報は後でAPIから取得
+              placeData: null // place_dataは後でAPIから取得
             })
           }
           break
@@ -207,6 +217,50 @@ export default function SlugBasedTripPage() {
         }
         
         setTrip(tripData)
+        
+        // place_idがあるがplace_dataがないItineraryを検出し、必要に応じてデータを取得
+        if (tripData.days) {
+          const missingPlaceIds: string[] = []
+          tripData.days.forEach(day => {
+            day.itineraries?.forEach(itinerary => {
+              if (itinerary.place_id && !itinerary.place_data) {
+                missingPlaceIds.push(itinerary.place_id)
+              }
+            })
+          })
+          
+          // 不足しているplace_dataを並列で取得
+          if (missingPlaceIds.length > 0) {
+            const placeDataPromises = missingPlaceIds.map(async (placeId) => {
+              try {
+                const response = await makeAuthenticatedRequest('/api/places/details', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ placeId })
+                })
+                
+                if (response.ok) {
+                  const data = await response.json()
+                  return { placeId, placeData: data.result }
+                }
+              } catch (error) {
+                console.error(`Failed to fetch place data for ${placeId}:`, error)
+              }
+              return null
+            })
+            
+            const results = await Promise.all(placeDataPromises)
+            const newCache = new Map<string, any>()
+            
+            results.forEach(result => {
+              if (result) {
+                newCache.set(result.placeId, result.placeData)
+              }
+            })
+            
+            setMissingPlaceDataCache(newCache)
+          }
+        }
       } catch (error) {
         console.error('旅行データの取得に失敗しました:', error)
         notFound()
@@ -351,31 +405,53 @@ export default function SlugBasedTripPage() {
   }
 
 
-  // すべてのItinerariesを収集する関数
+  // すべてのItinerariesを収集する関数（missingPlaceDataCacheから補完）
   const getAllItineraries = (): Itinerary[] => {
     if (!trip || !trip.days) return []
     
     const allItineraries: Itinerary[] = []
     trip.days.forEach(day => {
       if (day.itineraries) {
-        allItineraries.push(...day.itineraries)
+        const supplementedItineraries = day.itineraries.map(itinerary => {
+          if (itinerary.place_id && !itinerary.place_data && missingPlaceDataCache.has(itinerary.place_id)) {
+            return {
+              ...itinerary,
+              place_data: missingPlaceDataCache.get(itinerary.place_id)
+            }
+          }
+          return itinerary
+        })
+        allItineraries.push(...supplementedItineraries)
       }
     })
     return allItineraries
   }
 
-  // 選択された日程のItineraryを取得する関数
+  // 選択された日程のItineraryを取得する関数（missingPlaceDataCacheから補完）
   const getFilteredItineraries = (): Itinerary[] => {
     if (!trip?.days) return []
+    
+    let itineraries: Itinerary[]
     
     if (selectedDayId) {
       // 選択された日程のItineraryのみを返す
       const selectedDay = trip.days.find(day => day.id === selectedDayId)
-      return selectedDay?.itineraries || []
+      itineraries = selectedDay?.itineraries || []
+    } else {
+      // フィルタが選択されていない場合は全てのItineraryを返す
+      itineraries = trip.days.flatMap(day => day.itineraries || [])
     }
     
-    // フィルタが選択されていない場合は全てのItineraryを返す
-    return trip.days.flatMap(day => day.itineraries || [])
+    // missingPlaceDataCacheからplace_dataを補完
+    return itineraries.map(itinerary => {
+      if (itinerary.place_id && !itinerary.place_data && missingPlaceDataCache.has(itinerary.place_id)) {
+        return {
+          ...itinerary,
+          place_data: missingPlaceDataCache.get(itinerary.place_id)
+        }
+      }
+      return itinerary
+    })
   }
 
   const handleScheduleAdded = async (newItinerary: any) => {

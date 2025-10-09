@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
  *
  * @param request - The incoming NextRequest containing the Authorization header and JSON body for the new trip.
  * @returns A NextResponse containing the created trip object on success. Returns a JSON error with status 401 for missing/invalid authorization, 400 if both title and destination are missing, and 500 for other server errors.
+ */
 export async function POST(request: NextRequest) {
   try {
     console.log('🚀 Trip API: Starting trip creation')

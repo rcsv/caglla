@@ -109,7 +109,7 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
         date: data.date?.toDate ? data.date.toDate() : data.date,
         created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
         updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
-      }
+      } as any
     }).sort((a, b) => (a.day_number || 0) - (b.day_number || 0)) // day_number順でソート
 
     // 各DayのItinerariesを取得
@@ -124,8 +124,15 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
         
         const itinerariesSnapshot = await getDocs(itinerariesQuery)
         
+        // デバッグ用ログ
+        console.log(`Day ${day.id} itineraries sort_numbers:`, itinerariesSnapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          title: doc.data().title, 
+          sort_number: doc.data().sort_number 
+        })))
+        
         const itineraries = (await Promise.all(itinerariesSnapshot.docs.map(async (docSnap) => {
-          const data = docSnap.data()
+          const data = docSnap.data() as Itinerary & { place_id?: string }
           const itineraryBase: any = {
             id: docSnap.id,
             ...data,
@@ -134,9 +141,9 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
             updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
           }
 
-          // place_id が存在する場合はキャッシュから place_data を解決
-          const placeId = data.place_id
-          if (placeId && !data.place_data) {
+          // place_id がある場合は常に places_cache を優先的に解決し、
+          // 見つからない場合のみ既存の place_data をフォールバックとして利用する
+          if ((data as any).place_id) {
             try {
               // まずキャッシュを確認
               const cacheDocRef = doc(db, COLLECTIONS.PLACES_CACHE, placeId)
@@ -144,17 +151,19 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
               if (cacheDoc.exists()) {
                 // PlacesCacheデータをPlaceDataとして使用（メタデータは無視される）
                 itineraryBase.place_data = cacheDoc.data() as PlacesCache
-              } else {
-                // キャッシュにない場合は、Google Places APIから取得してキャッシュに保存
-                console.log(`places_cache not found for place_id: ${placeId}, fetching from API...`)
-                const fetchedData = await placesCacheManager.fetchAndCachePlace(placeId)
-                if (fetchedData) {
-                  itineraryBase.place_data = fetchedData
-                }
+              } else if ((data as any).place_data) {
+                // キャッシュに無い場合は既存の place_data を使用（後方互換）
+                itineraryBase.place_data = (data as any).place_data
               }
-            } catch (error) {
-              console.error(`Failed to resolve place_data for place_id: ${placeId}`, error)
+            } catch {
+              // 取得失敗時も既存の place_data をフォールバック
+              if ((data as any).place_data) {
+                itineraryBase.place_data = (data as any).place_data
+              }
             }
+          } else if ((data as any).place_data) {
+            // place_id が無い古いデータ向け
+            itineraryBase.place_data = (data as any).place_data
           }
 
           return itineraryBase
