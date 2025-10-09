@@ -131,14 +131,26 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
             updated_at: (data as any).updated_at?.toDate ? (data as any).updated_at.toDate() : (data as any).updated_at,
           }
 
-          // place_id が存在する場合はキャッシュから place_data を解決
-          if ((data as any).place_id && !data.place_data) {
+          // place_id がある場合は常に places_cache を優先的に解決し、
+          // 見つからない場合のみ既存の place_data をフォールバックとして利用する
+          if ((data as any).place_id) {
             try {
               const cacheDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, (data as any).place_id))
               if (cacheDoc.exists()) {
                 itineraryBase.place_data = cacheDoc.data() as PlacesCache
+              } else if ((data as any).place_data) {
+                // キャッシュに無い場合は既存の place_data を使用（後方互換）
+                itineraryBase.place_data = (data as any).place_data
               }
-            } catch {}
+            } catch {
+              // 取得失敗時も既存の place_data をフォールバック
+              if ((data as any).place_data) {
+                itineraryBase.place_data = (data as any).place_data
+              }
+            }
+          } else if ((data as any).place_data) {
+            // place_id が無い古いデータ向け
+            itineraryBase.place_data = (data as any).place_data
           }
 
           return itineraryBase
