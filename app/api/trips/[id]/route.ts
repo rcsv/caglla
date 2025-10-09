@@ -1,3 +1,9 @@
+/**
+ * Trip ID ベースのAPIエンドポイント
+ * 現在は未使用（スラッグベースのURLを使用）
+ * 将来のAPI統合用に保持
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { Trip, Day, Itinerary, User } from '@/lib/firestore'
