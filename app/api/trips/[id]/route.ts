@@ -82,6 +82,9 @@ export async function GET(
           } as Itinerary
         })
         .sort((a: Itinerary, b: Itinerary) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
+      
+      // デバッグ用ログ
+      console.log(`Day ${dayDoc.id} itineraries sort_numbers:`, itineraries.map(i => ({ id: i.id, title: i.title, sort_number: i.sort_number })))
 
       days.push({
         id: dayDoc.id,

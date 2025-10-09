@@ -46,6 +46,8 @@ export async function POST(request: NextRequest) {
       ...itineraryData
     }
 
+    console.log(`Created itinerary:`, { id: savedItinerary.id, title: savedItinerary.title, sort_number: savedItinerary.sort_number })
+
     return NextResponse.json(savedItinerary)
   } catch (error) {
     console.error('Error creating itinerary:', error)

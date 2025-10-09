@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`Inserted itinerary at position ${newSortNumber} in day ${day_id}`)
+    console.log(`Inserted itinerary details:`, { id: savedItinerary.id, title: savedItinerary.title, sort_number: savedItinerary.sort_number })
 
     return NextResponse.json(savedItinerary)
   } catch (error) {
