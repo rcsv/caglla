@@ -257,6 +257,7 @@ export default function SlugBasedTripPage() {
   const handleInsertSchedule = (dayId: string, afterIndex: number) => {
     console.log(`handleInsertSchedule called: dayId=${dayId}, afterIndex=${afterIndex}`)
     setSelectedDayId(dayId)
+    // afterIndexは挿入位置を表す表示番号（1ベース）
     setInsertAfterIndex(afterIndex) // 指定位置に挿入
     setShowAddScheduleModal(true)
   }

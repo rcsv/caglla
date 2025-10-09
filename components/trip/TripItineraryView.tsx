@@ -192,7 +192,7 @@ export default function TripItineraryView({
                             strategy={verticalListSortingStrategy}
                           >
                             <div className="space-y-0">
-                              {day.itineraries.map((itinerary, index) => {
+                              {[...day.itineraries].sort((a, b) => a.sort_number - b.sort_number).map((itinerary, index) => {
                                 const previousItinerary = index > 0 ? day.itineraries?.[index - 1] : null
                                 const nextItinerary = index < (day.itineraries?.length || 0) - 1 ? day.itineraries?.[index + 1] : null
                                 
@@ -200,6 +200,7 @@ export default function TripItineraryView({
                                   <div key={itinerary.id} className="relative">
                                     <SortableItineraryCard
                                       itinerary={itinerary}
+                                      displayNumber={index + 1}
                                       previousPlace={previousItinerary?.place_data}
                                       nextPlace={nextItinerary?.place_data}
                                       onUpdate={onScheduleUpdated}
@@ -254,7 +255,7 @@ export default function TripItineraryView({
                                     
                                     {/* 挿入ボタン */}
                                     <button
-                                      onClick={() => onInsertSchedule(day.id, (day.itineraries?.length || 0) - 1)}
+                                      onClick={() => onInsertSchedule(day.id, (day.itineraries?.length || 0))}
                                       className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
                                       title="最後にVenueを追加"
                                     >
