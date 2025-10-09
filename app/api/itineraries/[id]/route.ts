@@ -90,10 +90,10 @@ export async function DELETE(
     const { id } = await params
     const itineraryRef = adminDb.collection('itineraries').doc(id)
     
-    // ドキュメントを削除
-    await itineraryRef.update({
-      deleted_at: new Date()
-    })
+    // ハードデリート（実際にドキュメントを削除）
+    await itineraryRef.delete()
+
+    console.log(`Deleted itinerary: ${id}`)
 
     return NextResponse.json({ success: true })
   } catch (error) {
