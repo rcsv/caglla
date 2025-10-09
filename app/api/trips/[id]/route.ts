@@ -65,10 +65,11 @@ export async function GET(
         date: dayData.date?.toDate ? dayData.date.toDate() : dayData.date,
       }
       
-      // 各DayのItinerariesを取得
+      // 各DayのItinerariesを取得（sort_number順でソート）
       const itinerariesSnapshot = await adminDb
         .collection(COLLECTIONS.ITINERARIES)
         .where('day_id', '==', dayDoc.id)
+        .orderBy('sort_number', 'asc')
         .get()
 
       const itineraries = itinerariesSnapshot.docs
@@ -81,7 +82,7 @@ export async function GET(
             updated_at: itineraryData.updated_at?.toDate ? itineraryData.updated_at.toDate() : itineraryData.updated_at,
           } as Itinerary
         })
-        .sort((a: Itinerary, b: Itinerary) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
+        .sort((a: Itinerary, b: Itinerary) => (a.sort_number || 0) - (b.sort_number || 0)) // 念のためJavaScript側でもソート（FirestoreでorderBy済み）
       
       // デバッグ用ログ
       console.log(`Day ${dayDoc.id} itineraries sort_numbers:`, itineraries.map(i => ({ id: i.id, title: i.title, sort_number: i.sort_number })))
