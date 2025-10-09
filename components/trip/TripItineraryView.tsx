@@ -1,6 +1,6 @@
 'use client'
 
-import { Trip, Day, Itinerary } from '@/lib/firestore'
+import { Trip, Day } from '@/lib/firestore'
 import DayEditor from '@/components/trip/DayEditor'
 import SortableItineraryCard from '@/components/trip/SortableItineraryCard'
 import VenueDistance from '@/components/trip/VenueDistance'
@@ -118,10 +118,8 @@ export default function TripItineraryView({
                                 'toDate' in day.date &&
                                 typeof (day.date as any).toDate === 'function'
                               ) {
-                                // Firestore Timestamp型の場合
                                 dayDate = (day.date as any).toDate()
                               } else {
-                                // Date型または文字列の場合
                                 dayDate = new Date(day.date as any)
                               }
 
@@ -136,7 +134,6 @@ export default function TripItineraryView({
                             })()
                           : '日付が設定されていません'}
                       </h3>
-                      {/* 折りたたみアイコン */}
                       <svg
                         className={`w-5 h-5 text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
                         fill="none"
@@ -147,7 +144,6 @@ export default function TripItineraryView({
                       </svg>
                     </div>
 
-                    {/* 縮小表示時の情報 */}
                     {isCollapsed && (
                       <div className="text-sm text-gray-600">
                         {day.description && <p className="mb-1">{day.description}</p>}
@@ -182,8 +178,9 @@ export default function TripItineraryView({
                             Venue / Point of Interest を追加
                           </button>
                         </div>
+
                         {(() => {
-                          // 表示・DnDの一貫性担保のため常に sort_number 順で並べ替え
+                          // 表示・DnDの一貫性担保のため常に sort_number 順で固定
                           const sortedItineraries = [...(day.itineraries || [])].sort(
                             (a, b) => a.sort_number - b.sort_number
                           )
@@ -205,7 +202,8 @@ export default function TripItineraryView({
                                         <SortableItineraryCard
                                           itinerary={{
                                             ...itinerary,
-                                            sort_number: index + 1, // 表示用の連続した番号を設定
+                                            // 表示用の連番（内部 sort_number は触らない）
+                                            sort_number: index + 1,
                                           }}
                                           previousPlace={previousItinerary?.place_data}
                                           nextPlace={nextItinerary?.place_data}
@@ -223,12 +221,12 @@ export default function TripItineraryView({
                                             trip.days?.map((d) => ({
                                               id: d.id,
                                               day_number: d.day_number,
-                                              date: '', // Day型にdateプロパティがないため空文字列を設定
+                                              date: '',
                                             })) || []
                                           }
                                         />
 
-                                        {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}
+                                        {/* 次のVenueへの距離表示（最後以外＆両方 place_data があり、同一 place でない） */}
                                         {itinerary.place_data &&
                                           nextItinerary?.place_data &&
                                           itinerary.place_data.place_id !== nextItinerary.place_data.place_id && (
@@ -237,6 +235,7 @@ export default function TripItineraryView({
                                               toPlace={nextItinerary.place_data}
                                               mode="driving"
                                               showInsertButton={true}
+                                              // “現在 index の後ろ”に新規挿入
                                               onInsertVenue={() => onInsertSchedule(day.id, index)}
                                             />
                                           )}
@@ -246,7 +245,10 @@ export default function TripItineraryView({
                                           (!itinerary.place_data ||
                                             !nextItinerary?.place_data ||
                                             itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
-                                            <VenueInsertButton onInsert={() => onInsertSchedule(day.id, index)} dayId={day.id} />
+                                            <VenueInsertButton
+                                              onInsert={() => onInsertSchedule(day.id, index)}
+                                              dayId={day.id}
+                                            />
                                           )}
                                       </div>
                                     )
@@ -256,11 +258,9 @@ export default function TripItineraryView({
                                   {sortedItineraries.length > 0 && (
                                     <div className="flex justify-center py-4">
                                       <div className="relative flex items-center justify-center">
-                                        {/* Gitタイムライン風の縦線（上側のみ） */}
                                         <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300 top-0" />
-
-                                        {/* 挿入ボタン */}
                                         <button
+                                          // “最後の要素の後ろ”に挿入
                                           onClick={() =>
                                             onInsertSchedule(day.id, Math.max(0, sortedItineraries.length - 1))
                                           }
@@ -314,15 +314,4 @@ export default function TripItineraryView({
         <div className="mt-6 text-center">
           <button
             onClick={onAddDay}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 mx-auto"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            日程を追加
-          </button>
-        </div>
-      </div>
-    </main>
-  )
-}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transiti
