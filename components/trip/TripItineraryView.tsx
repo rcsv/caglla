@@ -228,7 +228,7 @@ export default function TripItineraryView({
                                         toPlace={nextItinerary.place_data}
                                         mode="driving"
                                         showInsertButton={true}
-                                        onInsertVenue={() => onInsertSchedule(day.id, index)}
+                                        onInsertVenue={() => onInsertSchedule(day.id, index + 1)}
                                       />
                                     )}
                                     
@@ -237,7 +237,7 @@ export default function TripItineraryView({
                                      (!itinerary.place_data || !nextItinerary?.place_data || 
                                       itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
                                       <VenueInsertButton
-                                        onInsert={() => onInsertSchedule(day.id, index)}
+                                        onInsert={() => onInsertSchedule(day.id, index + 1)}
                                         dayId={day.id}
                                       />
                                     )}

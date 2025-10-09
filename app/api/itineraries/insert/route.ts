@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         : 1
     } else {
       // 指定位置に挿入する場合
-      const insertPosition = insertAfterIndex + 1
+      const insertPosition = insertAfterIndex
       newSortNumber = insertPosition
       
       // 後続のitinerariesのsort_numberを1つずつ増やす
