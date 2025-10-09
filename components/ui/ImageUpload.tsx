@@ -94,22 +94,39 @@ export default function ImageUpload({
   }
 
   const handleRemoveImage = async () => {
-    if (currentImageUrl) {
-      try {
-        const userId = user?.id || user?.uid
-        await imageUploadHelpers.deleteImage(
-          currentImageUrl, 
-          userId, 
-          fileId
-        )
-        onImageChange(null)
-        if (onFileIdChange) {
-          onFileIdChange(null)
-        }
-      } catch (error) {
-        console.error('Error deleting image:', error)
-        setError('画像の削除に失敗しました')
+    if (!currentImageUrl) {
+      console.warn('No image URL to remove')
+      return
+    }
+
+    try {
+      console.log('Starting image removal process...')
+      console.log('Current image URL:', currentImageUrl)
+      console.log('User ID:', user?.id || user?.uid)
+      console.log('File ID:', fileId)
+
+      const userId = user?.id || user?.uid
+      if (!userId) {
+        setError('ユーザー情報が取得できません。ログインし直してください。')
+        return
       }
+
+      await imageUploadHelpers.deleteImage(
+        currentImageUrl, 
+        userId, 
+        fileId
+      )
+      
+      console.log('Image deletion successful, updating UI...')
+      onImageChange(null)
+      if (onFileIdChange) {
+        onFileIdChange(null)
+      }
+      setError(null) // Clear any previous errors
+    } catch (error) {
+      console.error('Error deleting image:', error)
+      const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました'
+      setError(`画像の削除に失敗しました: ${errorMessage}`)
     }
   }
 

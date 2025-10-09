@@ -8,6 +8,7 @@ import { Itinerary, PlaceData } from '@/lib/types'
 
 interface SortableItineraryCardProps {
   itinerary: Itinerary
+  displayNumber?: number
   previousPlace?: PlaceData | null
   nextPlace?: PlaceData | null
   onUpdate?: (updatedItinerary: any) => void
