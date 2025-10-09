@@ -13,6 +13,20 @@ interface AddScheduleModalProps {
   insertAfterIndex?: number // 挿入位置を指定（undefinedの場合は最後に追加）
 }
 
+/**
+ * Modal UI for searching places and adding a schedule entry to a specific day.
+ *
+ * Provides a search field, displays place results, and saves a selected place as a schedule
+ * entry. When `insertAfterIndex` is provided the component uses the insert endpoint to place
+ * the new schedule at the specified position; otherwise it appends via the regular API.
+ *
+ * @param isOpen - Whether the modal is visible
+ * @param onClose - Callback invoked when the modal is closed
+ * @param dayId - Identifier of the day to which the schedule will be added
+ * @param onScheduleAdded - Callback invoked with the newly created schedule object after a successful save
+ * @param insertAfterIndex - Optional zero-based index after which the new schedule should be inserted; undefined means append to the end
+ * @returns The modal element when `isOpen` is true, otherwise `null`
+ */
 export default function AddScheduleModal({ 
   isOpen, 
   onClose, 
@@ -71,15 +85,12 @@ export default function AddScheduleModal({
     try {
       console.log(`AddScheduleModal: insertAfterIndex=${insertAfterIndex}, dayId=${dayId}`)
       
-      // 詳細情報を取得
-      const placeDetails = await placesApiHelpers.getPlaceDetails(place.place_id)
-      
       // 挿入位置が指定されている場合は新しい挿入APIを使用、そうでなければ従来のAPIを使用
       const apiEndpoint = insertAfterIndex !== undefined ? '/api/itineraries/insert' : '/api/itineraries'
       
       const requestBody: any = {
         day_id: dayId,
-        place_data: placeDetails,
+        place_id: place.place_id,
         title: place.name,
         description: place.formatted_address,
         location: place.formatted_address
@@ -93,7 +104,7 @@ export default function AddScheduleModal({
         console.log(`Using regular API (no insert position specified)`)
       }
       
-      // APIでスケジュールを保存
+      // APIでスケジュールを保存（place_idのみ送信）
       const response = await makeAuthenticatedRequest(apiEndpoint, {
         method: 'POST',
         headers: {

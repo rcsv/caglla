@@ -53,13 +53,13 @@ class ItinerariesManager {
       snapshot.docs.forEach((doc, index) => {
         const data = doc.data()
         
-        if (data.place_data) {
+        if (data.place_id || data.place_data) {
           stats.withPlaceData++
         } else {
           stats.withoutPlaceData++
         }
         
-        if (data.place_data?.place_id) {
+        if (data.place_id || data.place_data?.place_id) {
           stats.withPlaceId++
         } else {
           stats.withoutPlaceId++

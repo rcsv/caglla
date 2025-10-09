@@ -5,12 +5,22 @@ import { placesApiHelpers, PlaceSearchResult } from '@/lib/places-api'
 import { PlaceData } from '@/lib/firestore'
 
 interface PlaceSearchInputProps {
-  currentPlace?: PlaceData
-  onPlaceSelect: (place: PlaceData) => void
+  currentPlace?: PlaceData | null
+  onPlaceSelect: (place: PlaceData | null) => void
   placeholder?: string
   disabled?: boolean
 }
 
+/**
+ * A controlled place search input that performs debounced queries and shows selectable search results.
+ *
+ * Renders a text input that queries places as the user types (debounced), displays a dropdown of matches, allows selecting a place, and surfaces errors and loading state.
+ *
+ * @param currentPlace - The currently selected place or `null`; its `name` initializes the input value.
+ * @param onPlaceSelect - Callback invoked with the selected `PlaceData` or `null` when the selection is cleared.
+ * @param placeholder - Input placeholder text (defaults to "場所を検索...").
+ * @param disabled - If `true`, disables the input and interaction.
+ * @returns The input and dropdown UI for searching and selecting places. */
 export default function PlaceSearchInput({ 
   currentPlace, 
   onPlaceSelect, 
@@ -94,9 +104,14 @@ export default function PlaceSearchInput({
 
   const handlePlaceSelect = async (place: PlaceSearchResult) => {
     try {
-      // 詳細情報を取得
-      const placeDetails = await placesApiHelpers.getPlaceDetails(place.place_id)
-      onPlaceSelect(placeDetails)
+      // ここでは詳細取得せず、place_idのみで親に通知
+      onPlaceSelect({
+        place_id: place.place_id,
+        name: place.name,
+        formatted_address: place.formatted_address,
+        geometry: place.geometry,
+        types: place.types,
+      } as any)
       
       setQuery(place.name)
       setShowResults(false)
@@ -112,7 +127,7 @@ export default function PlaceSearchInput({
     setQuery(e.target.value)
     if (currentPlace && e.target.value !== currentPlace.name) {
       // 現在の選択をクリア
-      onPlaceSelect({} as PlaceData)
+      onPlaceSelect(null)
     }
     // エラーをクリア
     setError(null)

@@ -3,6 +3,16 @@ import { adminTripOperations, adminDayOperations, adminItineraryOperations } fro
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 
+/**
+ * Retrieve a trip by ID including its destination (resolved from place cache when missing), days with their itineraries (with place data resolved from place cache when missing), and the creator's public info when available.
+ *
+ * @param request - The incoming Next.js request (unused for retrieval logic).
+ * @param params - An object containing route parameters; `params.id` is the trip ID to fetch.
+ * @returns A JSON response containing the trip fields plus:
+ * - `days`: array of days each including an `itineraries` array (each itinerary may include `place_data` populated from the places cache),
+ * - `creator`: public creator info `{ id, name, email, avatar_url, slug }` or `null` if not found.
+ * Returns a 404 response with `{ error: 'Trip not found' }` when the trip does not exist, or a 500 response with `{ error: 'Failed to fetch trip' }` on unexpected failures.
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -16,13 +26,38 @@ export async function GET(
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
     }
 
+    // destination_place を places_cache から解決
+    try {
+      const anyTrip: any = trip as any
+      if (anyTrip.destination_place_id && !anyTrip.destination_place) {
+        const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(anyTrip.destination_place_id).get()
+        if (cacheDoc.exists) {
+          anyTrip.destination_place = cacheDoc.data()
+        }
+      }
+    } catch {}
+
     // Get days for this trip
     const days = await adminDayOperations.getDaysByTripId(tripId)
 
     // Get itineraries for each day
     const daysWithItineraries = await Promise.all(
       days.map(async (day) => {
-        const itineraries = await adminItineraryOperations.getItinerariesByDayId(day.id)
+        const rawItineraries = await adminItineraryOperations.getItinerariesByDayId(day.id)
+        // 各 itinerary の place_data を places_cache から解決
+        const itineraries = await Promise.all(
+          rawItineraries.map(async (it: any) => {
+            if (it.place_id && !it.place_data) {
+              try {
+                const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(it.place_id).get()
+                if (cacheDoc.exists) {
+                  it.place_data = cacheDoc.data()
+                }
+              } catch {}
+            }
+            return it
+          })
+        )
         return {
           ...day,
           itineraries
@@ -71,6 +106,15 @@ export async function GET(
   }
 }
 
+/**
+ * Update a trip by ID, enforce ownership, and adjust associated day documents when the trip date range changes.
+ *
+ * Updates the trip's metadata (title, description, destination, destination_place_id, start/end dates, access level, image URL).
+ * If the start or end date changes, creates, updates, or deletes day documents so they match the new inclusive date range and renumbers day_number accordingly.
+ *
+ * @param request - The incoming NextRequest containing authorization header and JSON body with update fields.
+ * @param params - An object whose `id` property (resolved from the route) is the target trip ID.
+ * @returns A NextResponse with `{ success: true }` on successful update. On error returns JSON with an `error` message and an appropriate HTTP status (401, 403, 400, or 500).
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -96,6 +140,7 @@ export async function PUT(
       description,
       destination,
       destinationPlace,
+      destinationPlaceId,
       startDate,
       endDate,
       accessLevel,
@@ -286,7 +331,7 @@ export async function PUT(
       title,
       description,
       destination,
-      destination_place: destinationPlace,
+      destination_place_id: destinationPlaceId || destinationPlace?.place_id,
       start_date: newStartDate,
       end_date: newEndDate,
       access_level: accessLevel,
