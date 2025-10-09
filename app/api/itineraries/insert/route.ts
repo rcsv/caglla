@@ -44,11 +44,26 @@ export async function POST(request: NextRequest) {
         : 1
     } else {
       // 指定位置に挿入する場合
-      const insertPosition = insertAfterIndex
-      newSortNumber = insertPosition
+      // insertAfterIndexは表示番号（1ベース）なので、配列インデックス（0ベース）に変換
+      const targetIndex = insertAfterIndex - 1
+      let itinerariesToUpdate: any[] = []
       
-      // 後続のitinerariesのsort_numberを1つずつ増やす
-      const itinerariesToUpdate = existingItineraries.filter((i: any) => i.sort_number >= insertPosition)
+      if (targetIndex >= 0 && targetIndex < existingItineraries.length) {
+        // 手前のItineraryのsort_number + 1を使用
+        const previousItinerary = existingItineraries[targetIndex]
+        newSortNumber = (previousItinerary.sort_number || 0) + 1
+        
+        console.log(`Insert after index ${insertAfterIndex}: previousItinerary sort_number=${previousItinerary.sort_number}, newSortNumber=${newSortNumber}`)
+        
+        // 後続のitinerariesのsort_numberを1つずつ増やす
+        itinerariesToUpdate = existingItineraries.filter((i: any) => (i.sort_number || 0) >= newSortNumber)
+      } else {
+        // 範囲外の場合は最後に追加
+        newSortNumber = existingItineraries.length > 0 
+          ? Math.max(...existingItineraries.map((i: any) => i.sort_number || 0)) + 1 
+          : 1
+        itinerariesToUpdate = []
+      }
       
       // バッチ処理で後続のitinerariesを更新
       const batch = adminDb.batch()
