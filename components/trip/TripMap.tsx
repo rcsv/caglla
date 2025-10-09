@@ -233,6 +233,18 @@ export default function TripMap({
     const validItineraries = itineraries.filter(
       itinerary => itinerary.place_data?.geometry?.location
     )
+    
+    // デバッグ用ログ（本番環境では削除可能）
+    if (itineraries.length > 0 && validItineraries.length === 0) {
+      console.warn(`⚠️ TripMap: ${itineraries.length} itineraries found, but none have valid location data`)
+      itineraries.forEach((itinerary, index) => {
+        if (!(itinerary as any).place_id && !itinerary.place_data) {
+          console.warn(`  [${index}] "${itinerary.title}": Missing place_id and place_data`)
+        } else if ((itinerary as any).place_id && !itinerary.place_data) {
+          console.warn(`  [${index}] "${itinerary.title}": Has place_id but place_data not resolved`)
+        }
+      })
+    }
 
     if (validItineraries.length === 0) {
       // 行先が無い場合は初期センターへ

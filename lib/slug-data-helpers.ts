@@ -6,6 +6,7 @@
 import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore'
 import type { Trip, User, PlacesCache, Itinerary } from './types'
 import { COLLECTIONS } from './firestore'
+import { placesCacheManager } from './places-cache'
 
 /**
  * userSlug から user データを取得
@@ -77,8 +78,17 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
         const destDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, destinationPlaceId))
         if (destDoc.exists()) {
           ;(tripData as any).destination_place = destDoc.data() as PlacesCache
+        } else {
+          // キャッシュにない場合は、Google Places APIから取得してキャッシュに保存
+          console.log(`places_cache not found for destination_place_id: ${destinationPlaceId}, fetching from API...`)
+          const fetchedData = await placesCacheManager.fetchAndCachePlace(destinationPlaceId)
+          if (fetchedData) {
+            ;(tripData as any).destination_place = fetchedData
+          }
         }
-      } catch {}
+      } catch (error) {
+        console.error(`Failed to resolve destination_place for place_id: ${destinationPlaceId}`, error)
+      }
     }
 
     // Daysを取得
@@ -114,35 +124,41 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
         
         const itinerariesSnapshot = await getDocs(itinerariesQuery)
         
-        // デバッグ用ログ
-        console.log(`Day ${day.id} itineraries sort_numbers:`, itinerariesSnapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          title: doc.data().title, 
-          sort_number: doc.data().sort_number 
-        })))
-        
-        const itineraries = (await Promise.all(itinerariesSnapshot.docs.map(async (docSnap => {
-          const data = docSnap.data() as Itinerary & { place_id?: string }
+        const itineraries = (await Promise.all(itinerariesSnapshot.docs.map(async (docSnap) => {
+          const data = docSnap.data()
           const itineraryBase: any = {
             id: docSnap.id,
             ...data,
             // Firestore Timestamp型をDate型に変換
-            created_at: (data as any).created_at?.toDate ? (data as any).created_at.toDate() : (data as any).created_at,
-            updated_at: (data as any).updated_at?.toDate ? (data as any).updated_at.toDate() : (data as any).updated_at,
+            created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
+            updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
           }
 
           // place_id が存在する場合はキャッシュから place_data を解決
-          if ((data as any).place_id && !data.place_data) {
+          const placeId = data.place_id
+          if (placeId && !data.place_data) {
             try {
-              const cacheDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, (data as any).place_id))
+              // まずキャッシュを確認
+              const cacheDocRef = doc(db, COLLECTIONS.PLACES_CACHE, placeId)
+              const cacheDoc = await getDoc(cacheDocRef)
               if (cacheDoc.exists()) {
+                // PlacesCacheデータをPlaceDataとして使用（メタデータは無視される）
                 itineraryBase.place_data = cacheDoc.data() as PlacesCache
+              } else {
+                // キャッシュにない場合は、Google Places APIから取得してキャッシュに保存
+                console.log(`places_cache not found for place_id: ${placeId}, fetching from API...`)
+                const fetchedData = await placesCacheManager.fetchAndCachePlace(placeId)
+                if (fetchedData) {
+                  itineraryBase.place_data = fetchedData
+                }
               }
-            } catch {}
+            } catch (error) {
+              console.error(`Failed to resolve place_data for place_id: ${placeId}`, error)
+            }
           }
 
           return itineraryBase
-        })))).sort((a: any, b: any) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
+        }))).sort((a: any, b: any) => (a.sort_number || 0) - (b.sort_number || 0)) // sort_number順でソート
 
         return {
           ...day,
