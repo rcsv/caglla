@@ -159,15 +159,53 @@ export const imageUploadHelpers = {
         return
       }
 
-      // Extract the path from the URL
-      const url = new URL(imageUrl)
-      const path = decodeURIComponent(url.pathname.split('/o/')[1].split('?')[0])
+      console.log('Attempting to delete image with URL:', imageUrl)
+
+      // Extract the path from the URL with better error handling
+      let path: string
+      try {
+        const url = new URL(imageUrl)
+        console.log('Parsed URL pathname:', url.pathname)
+        
+        // Check if this is a Firebase Storage URL
+        if (!url.pathname.includes('/o/')) {
+          console.warn('URL does not appear to be a Firebase Storage URL:', imageUrl)
+          return
+        }
+        
+        const pathParts = url.pathname.split('/o/')
+        if (pathParts.length < 2) {
+          console.warn('Invalid Firebase Storage URL format:', imageUrl)
+          return
+        }
+        
+        const pathWithParams = pathParts[1]
+        if (!pathWithParams) {
+          console.warn('No path found in Firebase Storage URL:', imageUrl)
+          return
+        }
+        
+        // Remove query parameters
+        path = decodeURIComponent(pathWithParams.split('?')[0])
+        console.log('Extracted path:', path)
+        
+        if (!path) {
+          console.warn('Empty path extracted from URL:', imageUrl)
+          return
+        }
+      } catch (urlError) {
+        console.error('Error parsing image URL:', urlError)
+        console.error('Problematic URL:', imageUrl)
+        return
+      }
       
       // Create a reference to the file
       const imageRef = ref(storage, path)
+      console.log('Created storage reference:', imageRef.fullPath)
       
       // Delete the file
       await deleteObject(imageRef)
+      console.log('Successfully deleted image from storage')
       
       // ストレージ使用量からも削除
       if (userId && fileId) {
@@ -185,6 +223,8 @@ export const imageUploadHelpers = {
           const result = await response.json()
           if (!result.success) {
             console.warn('Failed to update storage usage after deletion:', result.error)
+          } else {
+            console.log('Successfully updated storage usage after deletion')
           }
         } catch (error) {
           console.warn('Failed to update storage usage after deletion:', error)
