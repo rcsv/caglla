@@ -84,6 +84,7 @@ export default function AddScheduleModal({
     setIsSaving(true)
     try {
       console.log(`AddScheduleModal: insertAfterIndex=${insertAfterIndex}, dayId=${dayId}`)
+      console.log(`Selected place:`, place)
       
       // 挿入位置が指定されている場合は新しい挿入APIを使用、そうでなければ従来のAPIを使用
       const apiEndpoint = insertAfterIndex !== undefined ? '/api/itineraries/insert' : '/api/itineraries'
@@ -91,6 +92,17 @@ export default function AddScheduleModal({
       const requestBody: any = {
         day_id: dayId,
         place_id: place.place_id,
+        // place_dataを含めることで、API側でplaces_cacheに保存される
+        place_data: {
+          place_id: place.place_id,
+          name: place.name,
+          formatted_address: place.formatted_address,
+          geometry: place.geometry,
+          photos: place.photos,
+          rating: place.rating,
+          price_level: place.price_level,
+          types: place.types
+        },
         title: place.name,
         description: place.formatted_address,
         location: place.formatted_address
@@ -104,7 +116,9 @@ export default function AddScheduleModal({
         console.log(`Using regular API (no insert position specified)`)
       }
       
-      // APIでスケジュールを保存（place_idのみ送信）
+      console.log(`Sending request to ${apiEndpoint} with place_data`)
+      
+      // APIでスケジュールを保存（place_idとplace_dataを送信）
       const response = await makeAuthenticatedRequest(apiEndpoint, {
         method: 'POST',
         headers: {
