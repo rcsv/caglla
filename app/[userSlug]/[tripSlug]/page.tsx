@@ -493,6 +493,10 @@ export default function SlugBasedTripPage() {
     
     // 挿入位置をリセット
     setInsertAfterIndex(undefined)
+    
+    // 新規作成されたItineraryを選択し、地図にフォーカス
+    setSelectedItineraryId(newItinerary.id)
+    setMapFocusMode('single')
   }
 
   const handleScheduleUpdated = async (updatedItinerary: any) => {
