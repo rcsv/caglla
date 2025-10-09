@@ -69,6 +69,8 @@ export default function AddScheduleModal({
   const handleSelectPlace = async (place: PlaceSearchResult) => {
     setIsSaving(true)
     try {
+      console.log(`AddScheduleModal: insertAfterIndex=${insertAfterIndex}, dayId=${dayId}`)
+      
       // 詳細情報を取得
       const placeDetails = await placesApiHelpers.getPlaceDetails(place.place_id)
       
@@ -86,6 +88,9 @@ export default function AddScheduleModal({
       // 挿入位置が指定されている場合は追加
       if (insertAfterIndex !== undefined) {
         requestBody.insert_after_index = insertAfterIndex
+        console.log(`Using insert API with insert_after_index=${insertAfterIndex}`)
+      } else {
+        console.log(`Using regular API (no insert position specified)`)
       }
       
       // APIでスケジュールを保存
