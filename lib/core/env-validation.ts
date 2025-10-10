@@ -1,7 +1,7 @@
 // 環境変数の検証とバリデーション
 
-import type { RequiredEnvVars, OptionalEnvVars } from './types'
-import logger from './logger'
+import type { RequiredEnvVars, OptionalEnvVars } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
 
 export class EnvValidationError extends Error {
   constructor(message: string) {
