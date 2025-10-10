@@ -6,9 +6,9 @@ import TripCard from '@/components/tripcard/TripCard'
 import CreateTripDialog from '@/components/common/CreateTripDialog'
 import { Button } from '@/components/common/Button'
 import NextTripMap from './NextTripMap'
-import { useUserData } from '@/lib/user-data-context'
-import { RestrictionProvider, RestrictionType } from '@/lib/restriction-system'
-import type { Trip } from '@/lib/types'
+import { useUserData } from '@/lib/contexts/user-data'
+import { RestrictionProvider, RestrictionType } from '@/lib/subscription/restriction'
+import type { Trip } from '@/lib/core/types'
 
 interface NextTripCardProps {
   nextTrip?: Trip

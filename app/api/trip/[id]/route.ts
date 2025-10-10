@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminTripOperations, adminDayOperations, adminItineraryOperations } from '@/lib/firestore-admin-operations'
-import { adminAuth, adminDb } from '@/lib/firebase-admin'
-import { COLLECTIONS } from '@/lib/firestore'
-import type { PlacesCache, FirestoreDate } from '@/lib/types'
-import logger from '@/lib/logger'
+import { adminTripOperations, adminDayOperations, adminItineraryOperations } from '@/lib/firebase/admin-operation'
+import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
+import type { PlacesCache, FirestoreDate } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
 
 /**
  * FirestoreDateをDateオブジェクトに変換

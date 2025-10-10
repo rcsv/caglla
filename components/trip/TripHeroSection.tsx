@@ -1,10 +1,10 @@
 'use client'
 
-import { Trip } from '@/lib/firestore'
+import { Trip } from '@/lib/core/types'
 import TripEditor from '@/components/trip/TripEditor'
 import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { PinIcon } from '@/components/common/icons/PinIcon'
-import { dateUtils } from '@/lib/date-utils'
+import { dateUtils } from '@/lib/utils/date'
 
 interface TripHeroSectionProps {
   trip: Trip

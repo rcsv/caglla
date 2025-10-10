@@ -1,8 +1,8 @@
 'use client'
 
-import { useAuth } from '@/lib/auth-context'
-import { useUserData } from '@/lib/user-data-context'
-import { dateUtils } from '@/lib/date-utils'
+import { useAuth } from '@/lib/contexts/auth'
+import { useUserData } from '@/lib/contexts/user-data'
+import { dateUtils } from '@/lib/utils/date'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Loading from '@/components/common/Loading'

@@ -1,12 +1,12 @@
 'use client'
 
 import React from 'react'
-import { useUserData } from '@/lib/user-data-context'
+import { useUserData } from '@/lib/contexts/user-data'
 import { 
   RestrictionProvider, 
   RestrictionType, 
   PLAN_CONFIGS
-} from '@/lib/restriction-system'
+} from '@/lib/subscription/restriction'
 import { Button } from '@/components/common/Button'
 import StorageUsageDisplay from '@/components/ui/StorageUsageDisplay'
 import Link from 'next/link'

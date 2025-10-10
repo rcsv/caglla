@@ -1,11 +1,11 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useEffect, useRef, useState } from 'react'
-import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
-import { getZIndexClass } from '@/lib/z-index-layers'
+import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
+import { getZIndexClass } from '@/lib/core/z-index'
 import { PinIcon } from '@/components/common/icons/PinIcon'
-import type { Trip } from '@/lib/types'
+import type { Trip } from '@/lib/core/types'
 
 // SVGアイコンコンポーネント
 const CalendarIcon = ({ className = "w-4 h-4" }: { className?: string }) => (

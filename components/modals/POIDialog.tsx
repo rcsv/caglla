@@ -1,10 +1,10 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
-import { getZIndexClass } from '@/lib/z-index-layers'
-import { placesApiHelpers } from '@/lib/places-api'
-import { getCachedPlace, placesCacheManager } from '@/lib/places-cache'
+import { getZIndexClass } from '@/lib/core/z-index'
+import { placesApiHelpers } from '@/lib/api/google/places'
+import { getCachedPlace, placesCacheManager } from '@/lib/travel/places-cache'
 
 interface POIDialogProps {
   poiData: {

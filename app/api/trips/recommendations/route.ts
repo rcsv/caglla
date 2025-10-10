@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import logger from '@/lib/logger'
-import { adminTripOperations } from '@/lib/firestore-admin-operations'
+import logger from '@/lib/core/logger'
+import { adminTripOperations } from '@/lib/firebase/admin-operation'
 
 // ランダムな公開旅行を返すAPI（認証不要）
 export async function GET(request: NextRequest) {

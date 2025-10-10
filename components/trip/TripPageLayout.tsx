@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { Trip } from '@/lib/firestore'
+import { Trip } from '@/lib/core/types'
 import NavigationMenu from '@/components/planner/NavigationMenu'
 import FloatingTitleBar from '@/components/planner/FloatingTitleBar'
 

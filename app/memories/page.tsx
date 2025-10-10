@@ -1,8 +1,8 @@
 'use client'
 
-import { useAuth } from '@/lib/auth-context'
-import { useUserData } from '@/lib/user-data-context'
-import { dateUtils } from '@/lib/date-utils'
+import { useAuth } from '@/lib/contexts/auth'
+import { useUserData } from '@/lib/contexts/user-data'
+import { dateUtils } from '@/lib/utils/date'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import Loading from '@/components/common/Loading'
@@ -11,7 +11,7 @@ import Card from '@/components/common/Card'
 import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
 import UserSettingsModal from '@/components/modals/UserSettingsModal'
-import type { Trip } from '@/lib/types'
+import type { Trip } from '@/lib/core/types'
 
 export default function MemoriesListPage() {
   const { user, loading, logout } = useAuth()

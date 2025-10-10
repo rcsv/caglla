@@ -1,9 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useRef } from 'react'
 import { imageUploadHelpers } from '@/lib/image-upload'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/lib/contexts/auth'
 
 interface ImageUploadProps {
   currentImageUrl?: string

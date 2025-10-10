@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import logger from '@/lib/logger'
-import { adminAuth } from '@/lib/firebase-admin'
-import { planSaveOperations } from '@/lib/plan-save-operations'
+import logger from '@/lib/core/logger'
+import { adminAuth } from '@/lib/firebase/admin'
+import { planSaveOperations } from '@/lib/travel/plan-save'
 
 /**
  * プランを複製する

@@ -1,9 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
-import { CountryGroup } from '@/lib/country-utils'
-import { makeAuthenticatedRequest } from '@/lib/api-helpers'
+import { CountryGroup } from '@/lib/travel/country/utils'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { PinIcon } from '@/components/common/icons/PinIcon'
 
 interface CountryStatsSimpleProps {

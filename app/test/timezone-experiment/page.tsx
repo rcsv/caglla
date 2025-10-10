@@ -1,9 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
-import { timezoneUtils } from '@/lib/timezone-utils'
-import type { PlaceData } from '@/lib/types'
+import { timezoneUtils } from '@/lib/utils/timezone'
+import type { PlaceData } from '@/lib/core/types'
 
 export default function TimezoneExperimentPage() {
   const [testPlaces, setTestPlaces] = useState<PlaceData[]>([

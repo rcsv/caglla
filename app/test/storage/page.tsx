@@ -1,11 +1,11 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/lib/contexts/auth'
 import ImageUpload from '@/components/ui/ImageUpload'
 import StorageUsageDisplay from '@/components/ui/StorageUsageDisplay'
-import { StorageUsage, StorageQuota, StorageFile } from '@/lib/types'
+import { StorageUsage, StorageQuota, StorageFile } from '@/lib/core/types'
 
 interface StorageTestData {
   usage: StorageUsage

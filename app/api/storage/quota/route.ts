@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import logger from '@/lib/logger'
-import { storageManagementHelpers } from '@/lib/storage-management'
-import { verifyIdToken } from '@/lib/firebase-admin'
+import logger from '@/lib/core/logger'
+import { storageManagementHelpers } from '@/lib/firebase/storage'
+import { verifyIdToken } from '@/lib/firebase/admin'
 
 // GET /api/storage/quota - ユーザーのストレージ制限情報を取得
 export async function GET(request: NextRequest) {

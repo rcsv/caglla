@@ -1,9 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth-context'
-import { StorageUsage, StorageQuota } from '@/lib/types'
+import { useAuth } from '@/lib/contexts/auth'
+import { StorageUsage, StorageQuota } from '@/lib/core/types'
 
 interface StorageUsageDisplayProps {
   className?: string

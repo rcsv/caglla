@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import logger from '@/lib/logger'
-import { adminDb } from '@/lib/firebase-admin'
+import logger from '@/lib/core/logger'
+import { adminDb } from '@/lib/firebase/admin'
 
 /**
  * Duplicates an existing itinerary into a specified day and returns the newly created record.

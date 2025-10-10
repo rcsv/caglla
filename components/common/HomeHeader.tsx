@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import PlannerIcon from '@/components/common/icons/PlannerIcon'
-import { getZIndexClass } from '@/lib/z-index-layers'
+import { getZIndexClass } from '@/lib/core/z-index'
 
 export interface HomeHeaderProps {
   appName?: string

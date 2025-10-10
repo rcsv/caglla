@@ -1,8 +1,8 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import React, { useState } from 'react'
-import { SubscriptionProvider, useSubscription } from '@/lib/subscription-context'
+import { SubscriptionProvider, useSubscription } from '@/lib/contexts/subscription'
 import { UsageStats } from '@/lib/plan-limits'
 import PlanLimitsDisplay from '@/components/ui/PlanLimitsDisplay'
 

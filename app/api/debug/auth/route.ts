@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase-admin'
-import logger from '@/lib/logger'
+import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import logger from '@/lib/core/logger'
 
 export async function GET(request: NextRequest) {
   try {

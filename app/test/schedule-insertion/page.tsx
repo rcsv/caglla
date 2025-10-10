@@ -1,9 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState } from 'react'
-import { makeAuthenticatedRequest } from '@/lib/api-helpers'
-import { useAuth } from '@/lib/auth-context'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { useAuth } from '@/lib/contexts/auth'
 
 export default function ScheduleInsertionTest() {
   const { user, loading } = useAuth()

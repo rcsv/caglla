@@ -1,11 +1,11 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/lib/contexts/auth'
 import { useRouter } from 'next/navigation'
 import AvatarUpload from '@/components/ui/AvatarUpload'
-import type { User, UserPreferences } from '@/lib/types'
+import type { User, UserPreferences } from '@/lib/core/types'
 
 export default function UserSettingsPage() {
   const { user, loading } = useAuth()

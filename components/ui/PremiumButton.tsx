@@ -1,8 +1,8 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import React, { useState } from 'react'
-import { useSubscription } from '@/lib/subscription-context'
+import { useSubscription } from '@/lib/contexts/subscription'
 import { useRouter } from 'next/navigation'
 
 interface PremiumButtonProps {

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import logger from '@/lib/logger'
-import { adminUserOperations } from '@/lib/firestore-admin-operations'
-import { adminAuth, adminDb } from '@/lib/firebase-admin'
-import { generateSlug } from '@/lib/slug-utils'
+import logger from '@/lib/core/logger'
+import { adminUserOperations } from '@/lib/firebase/admin-operation'
+import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { generateSlug } from '@/lib/utils/slug'
 
 export async function POST(request: NextRequest) {
   try {

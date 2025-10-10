@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Card from '@/components/common/Card'
 import TripCard from '@/components/tripcard/TripCard'
-import type { Trip } from '@/lib/types'
+import type { Trip } from '@/lib/core/types'
 import Button from './Button'
 
 export interface UpcomingTripsSectionProps {

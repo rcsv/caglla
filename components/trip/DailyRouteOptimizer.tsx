@@ -1,10 +1,10 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import React, { useState } from 'react'
-import { Itinerary } from '@/lib/firestore'
-import { optimizeWaypoints, estimateRouteCost } from '@/lib/route-optimization'
-import { applyOptimizedOrder } from '@/lib/itinerary-reorder'
+import { Itinerary } from '@/lib/core/types'
+import { optimizeWaypoints, estimateRouteCost } from '@/lib/travel/route-optimization'
+import { applyOptimizedOrder } from '@/lib/travel/itinerary-reorder'
 import RouteOptimizationDisplay from './RouteOptimizationDisplay'
 import PremiumButton from '@/components/ui/PremiumButton'
 

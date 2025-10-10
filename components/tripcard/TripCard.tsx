@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { Card } from '@/components/common/Card'
 import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
 import { PinIcon } from '@/components/common/icons/PinIcon'
-import { dateUtils } from '@/lib/date-utils'
-import type { Trip } from '@/lib/types'
+import { dateUtils } from '@/lib/utils/date'
+import type { Trip } from '@/lib/core/types'
 
 type TripCardVariant = 'standard' | 'imageFull'
 

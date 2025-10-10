@@ -1,9 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useRef } from 'react'
-import { placesApiHelpers, PlaceSearchResult } from '@/lib/places-api'
-import { PlaceData } from '@/lib/firestore'
+import { placesApiHelpers, PlaceSearchResult } from '@/lib/api/google/places'
+import { PlaceData } from '@/lib/core/types'
 
 interface PlaceSearchInputProps {
   currentPlace?: PlaceData | null

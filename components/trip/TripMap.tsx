@@ -1,11 +1,11 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useEffect, useRef, useState } from 'react'
-import { Itinerary } from '@/lib/firestore'
-import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
-import { routeOptimizer } from '@/lib/route-optimization'
-import { getZIndexClass } from '@/lib/z-index-layers'
+import { Itinerary } from '@/lib/core/types'
+import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
+import { routeOptimizer } from '@/lib/travel/route-optimization'
+import { getZIndexClass } from '@/lib/core/z-index'
 import POIDialog from '@/components/modals/POIDialog'
 
 // ティアドロップ形状のマーカースタイル

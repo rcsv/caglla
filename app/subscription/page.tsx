@@ -1,10 +1,10 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import React, { useState } from 'react'
-import { SubscriptionProvider, useSubscription } from '@/lib/subscription-context'
+import { SubscriptionProvider, useSubscription } from '@/lib/contexts/subscription'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { paymentHelpers } from '@/lib/dummy-payment-service'
+import { paymentHelpers } from '@/lib/subscription/payment-service'
 
 function SubscriptionContent() {
   const { subscriptionStatus, subscribeToPlan } = useSubscription()

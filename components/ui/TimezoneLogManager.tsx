@@ -1,9 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
-import { timezoneUtils } from '@/lib/timezone-utils'
-import type { TimezoneFailureLog, TimezoneMappingUpdate } from '@/lib/types'
+import { timezoneUtils } from '@/lib/utils/timezone'
+import type { TimezoneFailureLog, TimezoneMappingUpdate } from '@/lib/core/types'
 
 export default function TimezoneLogManager() {
   const [logs, setLogs] = useState<TimezoneFailureLog[]>([])

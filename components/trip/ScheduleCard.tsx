@@ -1,12 +1,12 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useRef } from 'react'
-import { placesApiHelpers } from '@/lib/places-api'
-import { PlaceData, Itinerary } from '@/lib/firestore'
+import { placesApiHelpers } from '@/lib/api/google/places'
+import { PlaceData, Itinerary } from '@/lib/core/types'
 import { timezoneUtils } from '@/lib/timezone-utils'
 import { currencyUtils } from '@/lib/currency-utils'
-import { getZIndexClass } from '@/lib/z-index-layers'
+import { getZIndexClass } from '@/lib/core/z-index'
 import VenueDistance from './VenueDistance'
 
 // ティアドロップ形状のマーカースタイル（左ペイン用）

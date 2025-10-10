@@ -1,10 +1,10 @@
 // Unsplash画像取得APIエンドポイント
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 // 旅行の目的地に関連する画像を取得する
 
 import { NextRequest, NextResponse } from 'next/server'
-import { unsplashApiHelpers } from '@/lib/unsplash-api'
-import { validateServerEnvironment } from '@/lib/env-validation'
+import { unsplashApiHelpers } from '@/lib/api/unsplash'
+import { validateServerEnvironment } from '@/lib/core/env-validation'
 
 export async function GET(request: NextRequest) {
   try {

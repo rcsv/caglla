@@ -1,6 +1,6 @@
 'use client'
 
-import { Trip, Itinerary } from '@/lib/firestore'
+import { Trip, Itinerary } from '@/lib/core/types'
 import TripDistanceDisplay from '@/components/stats/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/stats/TripWeatherDisplay'
 import TripCostDisplay from '@/components/stats/TripCostDisplay'

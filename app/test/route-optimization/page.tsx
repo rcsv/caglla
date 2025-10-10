@@ -1,5 +1,5 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import React, { useState } from 'react'
 import RouteCostEstimator from '@/components/trip/RouteCostEstimator'

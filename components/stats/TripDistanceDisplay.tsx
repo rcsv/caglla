@@ -1,10 +1,10 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useMemo } from 'react'
-import { distanceApiHelpers } from '@/lib/distance-api'
-import { dateUtils } from '@/lib/date-utils'
-import { Itinerary } from '@/lib/firestore'
+import { distanceApiHelpers } from '@/lib/api/google/distance'
+import { dateUtils } from '@/lib/utils/date'
+import { Itinerary } from '@/lib/core/types'
 import Card from '@/components/common/Card'
 import { LocationIcon } from '@/components/common/icons/LocationIcon'
 

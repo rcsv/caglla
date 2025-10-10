@@ -1,12 +1,12 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import React, { useEffect, useState } from 'react'
-import { makeAuthenticatedRequest } from '@/lib/api-helpers'
-import { useAuth } from '@/lib/auth-context'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { useAuth } from '@/lib/contexts/auth'
 import TripCard from '@/components/tripcard/TripCard'
 import Loading from '@/components/common/Loading'
-import type { Trip } from '@/lib/types'
+import type { Trip } from '@/lib/core/types'
 
 export interface RecommendedTripsProps {
   limit?: number

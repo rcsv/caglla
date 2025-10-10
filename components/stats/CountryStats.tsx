@@ -1,12 +1,12 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
-import { CountryGroup } from '@/lib/country-utils'
+import { CountryGroup } from '@/lib/travel/country/utils'
 import CountryMap from '@/components/CountryMap'
 import TripCard from '@/components/tripcard/TripCard'
 import Loading from '@/components/common/Loading'
-import type { Trip } from '@/lib/types'
+import type { Trip } from '@/lib/core/types'
 
 interface CountryStatsProps {
   userId: string
@@ -31,7 +31,7 @@ export default function CountryStats({ userId, className = '' }: CountryStatsPro
       setError(null)
 
       // Get Firebase ID token
-      const { auth } = await import('@/lib/firebase')
+      const { auth } = await import('@/lib/firebase/client')
       const user = auth.currentUser
       if (!user) {
         throw new Error('User not authenticated')

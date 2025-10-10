@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/lib/contexts/auth'
 
 export default function DevToolsIndex() {
   const { user, loading } = useAuth()

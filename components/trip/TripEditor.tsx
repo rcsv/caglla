@@ -1,16 +1,16 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { CloseIcon } from '@/components/common/icons/CloseIcon'
-import { makeAuthenticatedRequest } from '@/lib/api-helpers'
-import { dateUtils } from '@/lib/date-utils'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { dateUtils } from '@/lib/utils/date'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { imageUploadHelpers } from '@/lib/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
-import type { Trip, Day, Itinerary, TripEditorProps } from '@/lib/types'
-import { getZIndexClass } from '@/lib/z-index-layers'
+import type { Trip, Day, Itinerary, TripEditorProps } from '@/lib/core/types'
+import { getZIndexClass } from '@/lib/core/z-index'
 
 /**
  * Renders an editor UI for a Trip and manages editing, saving, cancelling, and deletion.

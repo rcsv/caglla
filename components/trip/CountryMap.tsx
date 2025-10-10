@@ -1,9 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useEffect, useRef, useState } from 'react'
-import { CountryGroup } from '@/lib/country-utils'
-import { loadGoogleMapsAPI } from '@/lib/google-maps-loader'
+import { CountryGroup } from '@/lib/travel/country/utils'
+import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
 
 // Google Maps APIの型定義
 declare global {

@@ -1,5 +1,5 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import React, { useState, useEffect } from 'react'
 import { 
@@ -10,9 +10,9 @@ import {
   formatLimit,
   calculateUsagePercentage,
   getUsageColor
-} from '@/lib/restriction-system'
-import { useAuth } from '@/lib/auth-context'
-import { makeAuthenticatedRequest } from '@/lib/api-helpers'
+} from '@/lib/subscription/restriction'
+import { useAuth } from '@/lib/contexts/auth'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 
 export default function PlaygroundPage() {
   const { user } = useAuth()

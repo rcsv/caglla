@@ -1,9 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { getSlugsFromTripId } from '@/lib/slug-data-helpers'
+import { getSlugsFromTripId } from '@/lib/travel/slug-helpers'
 import Loading from '@/components/common/Loading'
 
 export default function TripRedirectPage() {

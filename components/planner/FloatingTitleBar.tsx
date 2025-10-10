@@ -2,7 +2,7 @@
 
 import React from 'react'
 import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
-import { getZIndexClass } from '@/lib/z-index-layers'
+import { getZIndexClass } from '@/lib/core/z-index'
 
 export interface FloatingTitleBarProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string

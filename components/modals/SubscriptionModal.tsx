@@ -1,8 +1,8 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import React, { useState } from 'react'
-import { SubscriptionPlan, updateSubscriptionStatus } from '@/lib/subscription-context'
+import { SubscriptionPlan, updateSubscriptionStatus } from '@/lib/contexts/subscription'
 
 interface SubscriptionModalProps {
   isOpen: boolean

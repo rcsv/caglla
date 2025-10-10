@@ -1,6 +1,6 @@
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 import React, { useState, useEffect } from 'react'
-import { optimizeWaypoints, compareRouteOptions, RouteOptimizationRequest } from '@/lib/route-optimization'
+import { optimizeWaypoints, compareRouteOptions, RouteOptimizationRequest } from '@/lib/travel/route-optimization'
 
 interface RouteOptimizationResult {
   optimizedWaypoints: Array<string | { lat: number; lng: number }>

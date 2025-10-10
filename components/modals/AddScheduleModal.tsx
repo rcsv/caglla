@@ -1,10 +1,10 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
-import { placesApiHelpers, PlaceSearchResult } from '@/lib/places-api'
+import { placesApiHelpers, PlaceSearchResult } from '@/lib/api/google/places'
 import { CloseIcon } from '@/components/common/icons/CloseIcon'
-import { makeAuthenticatedRequest } from '@/lib/api-helpers'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 
 interface AddScheduleModalProps {
   isOpen: boolean

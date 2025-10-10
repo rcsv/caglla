@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminTripOperations, adminDayOperations, adminUserOperations } from '@/lib/firestore-admin-operations'
-import { adminAuth } from '@/lib/firebase-admin'
-import { groupTripsByCountry } from '@/lib/country-utils'
-import { generateUniqueSlug } from '@/lib/slug-utils'
-import { adminDb } from '@/lib/firebase-admin'
-import { COLLECTIONS } from '@/lib/firestore'
-import type { PlaceData } from '@/lib/types'
-import logger from '@/lib/logger'
+import { adminTripOperations, adminDayOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
+import { adminAuth } from '@/lib/firebase/admin'
+import { groupTripsByCountry } from '@/lib/travel/country/utils'
+import { generateUniqueSlug } from '@/lib/utils/slug'
+import { adminDb } from '@/lib/firebase/admin'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
+import type { PlaceData } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
 
 /**
  * Retrieve trips for the authenticated user, optionally grouped by country.

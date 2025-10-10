@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase-admin'
-import logger from '@/lib/logger'
-import { PlanId } from '@/lib/restriction-system'
+import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import logger from '@/lib/core/logger'
+import { PlanId } from '@/lib/subscription/restriction'
 
 // 開発環境用のフォールバック（Firebase Admin SDKが利用できない場合）
 const DEV_USER_PLANS: Record<string, PlanId> = {}

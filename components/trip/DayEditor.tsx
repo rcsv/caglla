@@ -1,8 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState } from 'react'
-import { updateDay, Day, Itinerary } from '@/lib/firestore'
+import { Day, Itinerary } from '@/lib/core/types'
+import { updateDay } from '@/lib/firebase/firestore'
 import DailyRouteOptimizer from './DailyRouteOptimizer'
 
 interface DayEditorProps {

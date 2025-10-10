@@ -1,11 +1,11 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useRef } from 'react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/lib/contexts/auth'
 import AvatarUpload from '@/components/ui/AvatarUpload'
-import { getZIndexClass } from '@/lib/z-index-layers'
-import type { User, UserPreferences, UserSettingsModalProps } from '@/lib/types'
+import { getZIndexClass } from '@/lib/core/z-index'
+import type { User, UserPreferences, UserSettingsModalProps } from '@/lib/core/types'
 import { CloseIcon } from '@/components/common/icons/CloseIcon'
 
 export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {

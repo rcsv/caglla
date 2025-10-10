@@ -1,9 +1,9 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useMemo } from 'react'
-import { distanceApiHelpers, DistanceMatrixResult } from '@/lib/distance-api'
-import { PlaceData } from '@/lib/firestore'
+import { distanceApiHelpers, DistanceMatrixResult } from '@/lib/api/google/distance'
+import { PlaceData } from '@/lib/core/types'
 
 interface VenueDistanceProps {
   fromPlace?: PlaceData | null

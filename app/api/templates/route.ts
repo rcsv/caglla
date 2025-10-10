@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import logger from '@/lib/logger'
-import { adminAuth } from '@/lib/firebase-admin'
-import { planSaveOperations } from '@/lib/plan-save-operations'
+import logger from '@/lib/core/logger'
+import { adminAuth } from '@/lib/firebase/admin'
+import { planSaveOperations } from '@/lib/travel/plan-save'
 
 /**
  * テンプレートからプランを作成する
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     const userId = decodedToken.uid
 
     // テンプレート一覧を取得
-    const { adminDb } = await import('@/lib/firebase-admin')
+    const { adminDb } = await import('@/lib/firebase/admin')
     const templatesSnapshot = await adminDb.collection('templates')
       .orderBy('created_at', 'desc')
       .get()

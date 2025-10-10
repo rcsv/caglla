@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import logger from '@/lib/logger'
-import { adminDb, adminAuth } from '@/lib/firebase-admin'
-import { COLLECTIONS } from '@/lib/firestore'
+import logger from '@/lib/core/logger'
+import { adminDb, adminAuth } from '@/lib/firebase/admin'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
 
 // 管理者専用: 既存の trips.destination_place と itineraries.place_data を
 /**

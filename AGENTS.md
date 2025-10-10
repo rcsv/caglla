@@ -184,7 +184,7 @@ const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY // Direct access
 **Usage Examples:**
 ```typescript
 // ✅ Correct - APIヘルパーを使用
-import { placesApiHelpers } from '@/lib/places-api'
+import { placesApiHelpers } from '@/lib/api/google/places'
 const results = await placesApiHelpers.searchPlaces('Tokyo')
 
 // ✅ Correct - ルート最適化APIを使用
@@ -263,7 +263,7 @@ const customOptimization = (waypoints) => { /* custom logic */ }
 **Usage Examples:**
 ```typescript
 // ✅ Correct
-import { placesApiHelpers } from '@/lib/places-api'
+import { placesApiHelpers } from '@/lib/api/google/places'
 const results = await placesApiHelpers.searchPlaces('Tokyo')
 
 // ❌ Wrong
@@ -298,7 +298,7 @@ const canOptimize = user.plan === 'premium' // Hardcoded check
 **Usage Examples:**
 ```typescript
 // ✅ Correct
-import { timezoneUtils } from '@/lib/timezone-utils'
+import { timezoneUtils } from '@/lib/utils/timezone'
 const timezone = timezoneUtils.getTimezoneFromCity('Tokyo')
 
 // ❌ Wrong

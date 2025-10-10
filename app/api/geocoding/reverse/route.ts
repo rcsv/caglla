@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 const GOOGLE_GEOCODING_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode'

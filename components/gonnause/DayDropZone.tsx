@@ -1,5 +1,5 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useDroppable } from '@dnd-kit/core'
 import { useEffect } from 'react'

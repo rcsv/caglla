@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminTripOperations } from '@/lib/firestore-admin-operations'
-import { adminAuth, adminDb } from '@/lib/firebase-admin'
-import type { Trip } from '@/lib/types'
-import logger from '@/lib/logger'
+import { adminTripOperations } from '@/lib/firebase/admin-operation'
+import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import type { Trip } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,8 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useSubscription } from '@/lib/subscription-context'
-import SubscriptionModal from './SubscriptionModal'
+import { useSubscription } from '@/lib/contexts/subscription'
+import SubscriptionModal from '@/components/modals/SubscriptionModal'
 
 interface PremiumFeatureProps {
   featureName: string

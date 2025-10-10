@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { SubscriptionPlan, UsageStats } from '@/lib/dummy-payment-service'
+import { SubscriptionPlan, UsageStats } from '@/lib/subscription/payment-service'
 import { PlanLimitChecker, LimitCheckResult, planLimitHelpers } from '@/lib/plan-limits'
 
 interface PlanLimitsDisplayProps {

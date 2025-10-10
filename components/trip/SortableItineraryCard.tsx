@@ -2,9 +2,9 @@
 
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { getZIndexClass } from '@/lib/z-index-layers'
+import { getZIndexClass } from '@/lib/core/z-index'
 import ScheduleCard from './ScheduleCard'
-import { Itinerary, PlaceData } from '@/lib/types'
+import { Itinerary, PlaceData } from '@/lib/core/types'
 
 interface SortableItineraryCardProps {
   itinerary: Itinerary

@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import PlannerIcon from '@/components/common/icons/PlannerIcon'
 import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
-import { Trip, Day, Itinerary } from '@/lib/types'
-import { dateUtils } from '@/lib/date-utils'
+import { Trip, Day, Itinerary } from '@/lib/core/types'
+import { dateUtils } from '@/lib/utils/date'
 
 interface NavigationMenuProps {
   trip: Trip

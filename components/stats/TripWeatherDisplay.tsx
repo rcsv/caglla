@@ -1,8 +1,8 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
-import { WeatherApiHelpers, WeatherSummary } from '@/lib/weather-api'
+import { WeatherApiHelpers, WeatherSummary } from '@/lib/api/weather'
 import Card from '@/components/common/Card'
 import { CloudIcon } from '@/components/common/icons/CloudIcon'
 

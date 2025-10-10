@@ -1,11 +1,11 @@
 'use client'
 
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/lib/contexts/auth'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import type { Trip } from '@/lib/types'
-import logger from '@/lib/logger'
+import type { Trip } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
 
 export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { user, loading } = useAuth()

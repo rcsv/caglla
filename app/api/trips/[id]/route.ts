@@ -5,11 +5,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase-admin'
-import { Trip, Day, Itinerary, User } from '@/lib/firestore'
-import { generateUniqueSlug } from '@/lib/slug-utils'
+import { adminDb } from '@/lib/firebase/admin'
+import { Trip, Day, Itinerary, User } from '@/lib/core/types'
+import { generateUniqueSlug } from '@/lib/utils/slug'
 
-import { COLLECTIONS } from '@/lib/firestore'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
 
 export async function GET(
   request: NextRequest,

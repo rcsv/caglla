@@ -1,17 +1,17 @@
 'use client'
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/lib/contexts/auth'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { makeAuthenticatedRequest } from '@/lib/api-helpers'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import Loading from '@/components/common/Loading'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { imageUploadHelpers } from '@/lib/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
-import { PlaceData } from '@/lib/firestore'
-import { useSubscription } from '@/lib/subscription-context'
-import { RestrictionType } from '@/lib/restriction-system'
+import { PlaceData } from '@/lib/core/types'
+import { useSubscription } from '@/lib/contexts/subscription'
+import { RestrictionType } from '@/lib/subscription/restriction'
 
 /**
  * Renders the "New Trip" page and manages creation flow, including form state, date validation, authenticated plan-limit checks, automatic destination image fetching, image upload cleanup, and navigation after creation.

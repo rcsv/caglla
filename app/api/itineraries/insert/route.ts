@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase-admin'
-import { COLLECTIONS } from '@/lib/firestore'
-import type { PlaceData, PlacesCache } from '@/lib/types'
-import logger from '@/lib/logger'
+import { adminDb } from '@/lib/firebase/admin'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
+import type { PlaceData, PlacesCache } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
 
 /**
  * Insert a new itinerary into a specified day at a given position and renumber subsequent itineraries as needed.

@@ -1,6 +1,6 @@
 'use client'
 
-import { Trip, Day, Itinerary } from '@/lib/firestore'
+import { Trip, Day, Itinerary } from '@/lib/core/types'
 import DayEditor from '@/components/trip/DayEditor'
 import SortableItineraryCard from '@/components/trip/SortableItineraryCard'
 import VenueDistance from '@/components/trip/VenueDistance'

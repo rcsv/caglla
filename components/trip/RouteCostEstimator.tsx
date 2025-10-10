@@ -1,6 +1,6 @@
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 import React, { useState, useEffect } from 'react'
-import { estimateRouteCost, getCostOptimizationSuggestions } from '@/lib/route-optimization'
+import { estimateRouteCost, getCostOptimizationSuggestions } from '@/lib/travel/route-optimization'
 
 interface RouteCostEstimatorProps {
   waypointCount: number
