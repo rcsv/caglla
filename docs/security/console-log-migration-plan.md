@@ -212,7 +212,7 @@ console.log(`Processing trip: ${tripId}`)
 
 **変更後**:
 ```typescript
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 logger.debug('User data:', userData)
 logger.debug(`Processing trip: ${tripId}`)
@@ -234,7 +234,7 @@ logger.debug(`Processing trip: ${tripId}`)
 
 **変更後**:
 ```typescript
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 } catch (error) {
   logger.error('Failed to fetch trip', error)
@@ -257,7 +257,7 @@ if (!placeData) {
 
 **変更後**:
 ```typescript
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 if (!placeData) {
   logger.warn('Place data not found:', placeId)
@@ -277,7 +277,7 @@ console.log('✅ Trip created successfully:', tripId)
 
 **変更後**:
 ```typescript
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 logger.info('Trip created successfully', { tripId })
 ```
@@ -297,7 +297,7 @@ console.log('Places API response:', response.status)
 
 **変更後**:
 ```typescript
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 logger.apiCall('GET', url, { placeId })
 const response = await fetch(url)
@@ -317,7 +317,7 @@ console.log('User credentials:', credentials)
 
 **変更後**:
 ```typescript
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 // logger は自動的にサニタイズするが、可能な限り機密情報はログに出力しない
 logger.debug('Auth token received') // 値は出力しない
@@ -335,7 +335,7 @@ logger.debug('User credentials:', credentials) // 自動サニタイズ
 
 ### 1. import文の追加
 ```typescript
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 ```
 
 ### 2. console 呼び出しの置き換え

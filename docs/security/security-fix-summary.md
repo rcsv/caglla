@@ -110,7 +110,7 @@ if (missingVars.length > 0) {
 // テスト環境: WARNレベル（警告以上のみ）
 // 本番環境: ERRORレベル（エラーのみ）
 
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 
 // 使用例
 logger.debug('デバッグ情報', { userId: '123' })
@@ -263,7 +263,7 @@ npm run dev
 console.log('Debug info:', data)
 
 // 新しいロガーを使用（推奨）
-import logger from '@/lib/logger'
+import logger from '@/lib/core/logger'
 logger.debug('Debug info', data)
 ```
 
