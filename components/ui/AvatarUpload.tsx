@@ -2,7 +2,7 @@
 import logger from '@/lib/core/logger'
 
 import { useState, useRef } from 'react'
-import { imageUploadHelpers } from '@/lib/image-upload'
+import { imageUploadHelpers } from '@/lib/storage/image-upload'
 
 interface AvatarUploadProps {
   currentImageUrl?: string
@@ -38,10 +38,10 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
       logger.debug('Upload path:', path)
 
       // Upload image
-      const imageUrl = await imageUploadHelpers.uploadImage(file, path)
+      const imageUrl = await imageUploadHelpers.uploadImage(file, path, userId, undefined, true)
       logger.debug('Upload successful, URL:', imageUrl)
       
-      onImageChange(imageUrl)
+      onImageChange(imageUrl.downloadURL)
     } catch (error) {
       logger.error('Detailed upload error:', error)
       setError(`画像のアップロードに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`)
