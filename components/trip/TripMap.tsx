@@ -67,6 +67,12 @@ interface TripMapProps {
     location: { lat: number; lng: number }
     placeData?: any
   } | null) => void
+  poiData?: {
+    placeId: string
+    name: string
+    location: { lat: number; lng: number }
+    placeData?: any
+  } | null
   className?: string
   focusMode?: 'all' | 'day' | 'single' // フォーカスモードを追加
   initialCenter?: { lat: number; lng: number } // 初期センター位置（未指定時は東京）
@@ -79,12 +85,13 @@ declare global {
   }
 }
 
-export default function TripMap({ 
-  itineraries, 
+export default function TripMap({
+  itineraries,
   selectedItineraryId = null,
   selectedDayId = null,
   onItineraryClick,
   onPoiDataUpdate,
+  poiData,
   className = '',
   focusMode = 'all', // デフォルトは全体表示
   initialCenter
@@ -96,7 +103,7 @@ export default function TripMap({
   const [directionsRenderer, setDirectionsRenderer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [poiData, setPoiData] = useState<{
+  const [internalPoiData, setInternalPoiData] = useState<{
     placeId: string
     name: string
     location: { lat: number; lng: number }
@@ -177,14 +184,16 @@ export default function TripMap({
             if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
               // 最も近いPOIを選択
               const nearestPOI = results[0]
-              setPoiData({
+              const newPoiData = {
                 placeId: nearestPOI.place_id,
                 name: nearestPOI.name,
                 location: {
                   lat: nearestPOI.geometry.location.lat(),
                   lng: nearestPOI.geometry.location.lng()
                 }
-              })
+              }
+              setInternalPoiData(newPoiData)
+              onPoiDataUpdate?.(newPoiData)
             }
           })
         })
@@ -196,7 +205,7 @@ export default function TripMap({
           
           // カスタムPOIダイアログを表示
           if (event.placeId) {
-            setPoiData({
+            const newPoiData = {
               placeId: event.placeId,
               name: event.displayName || 'POI',
               location: {
@@ -204,7 +213,9 @@ export default function TripMap({
                 lng: event.latLng.lng()
               }
               // placeDataは渡さない（PlacesCacheから取得）
-            })
+            }
+            setInternalPoiData(newPoiData)
+            onPoiDataUpdate?.(newPoiData)
           }
         })
 
@@ -326,7 +337,7 @@ export default function TripMap({
             },
             placeData: itinerary.place_data // Itinerariesに保存されているplace_dataを渡す
           }
-          setPoiData(newPoiData)
+          setInternalPoiData(newPoiData)
           onPoiDataUpdate?.(newPoiData)
         }
         
@@ -524,10 +535,10 @@ export default function TripMap({
       </div>
       
       {/* POIダイアログ */}
-      <POIDialog 
-        poiData={poiData}
+      <POIDialog
+        poiData={poiData || internalPoiData}
         onClose={() => {
-          setPoiData(null)
+          setInternalPoiData(null)
           onPoiDataUpdate?.(null)
         }}
       />

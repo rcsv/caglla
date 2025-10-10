@@ -3,7 +3,7 @@ import logger from '@/lib/core/logger'
 
 import React, { useState } from 'react'
 import { SubscriptionProvider, useSubscription } from '@/lib/contexts/subscription'
-import { UsageStats } from '@/lib/plan-limits'
+import { UsageStats } from '@/lib/subscription/plan-limits'
 import PlanLimitsDisplay from '@/components/ui/PlanLimitsDisplay'
 
 function PlanLimitsTestContent() {

@@ -21,6 +21,13 @@ interface TripRightPaneProps {
   getFilteredItineraries: () => Itinerary[]
 }
 
+declare global {
+  interface Window {
+    google: any
+    initMap: () => void
+  }
+}
+
 export default function TripRightPane({
   trip,
   currentView,
@@ -39,11 +46,12 @@ export default function TripRightPane({
           <Checklist />
         ) : (
           <TripMap
-            itineraries={getFilteredItineraries()} 
+            itineraries={getFilteredItineraries()}
             selectedItineraryId={selectedItineraryId}
             selectedDayId={selectedDayId}
             onItineraryClick={onItineraryClick}
             onPoiDataUpdate={onPoiDataUpdate}
+            poiData={poiData}
             className="h-full"
             focusMode={mapFocusMode}
             initialCenter={trip.destination_place?.geometry?.location || undefined as any}
