@@ -4,10 +4,11 @@
  */
 
 import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore'
-import type { Trip, User, PlacesCache, Itinerary } from './types'
-import { COLLECTIONS } from './firestore'
-import { placesCacheManager } from './places-cache'
-import logger from './logger'
+import type { Trip, User, PlacesCache, Itinerary } from '../core/types'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
+import { placesCacheManager } from '@/lib/travel/places-cache'
+import logger from '@/lib/core/logger'
+import { convertStandardDates, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 
 /**
  * userSlug から user データを取得
@@ -26,13 +27,10 @@ export async function getUserBySlug(userSlug: string): Promise<User | null> {
   }
   
   const userDoc = querySnapshot.docs[0]
-  return {
+  return convertStandardDates({
     id: userDoc.id,
     ...userDoc.data(),
-    // Firestore Timestamp型をDate型に変換
-    created_at: userDoc.data().created_at?.toDate ? userDoc.data().created_at.toDate() : userDoc.data().created_at,
-    updated_at: userDoc.data().updated_at?.toDate ? userDoc.data().updated_at.toDate() : userDoc.data().updated_at,
-  } as User
+  }) as User
 }
 
 /**
@@ -62,15 +60,10 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
     }
     
     const tripDoc = querySnapshot.docs[0]
-    const tripData = {
+    const tripData = convertStandardDates({
       id: tripDoc.id,
       ...tripDoc.data(),
-      // Firestore Timestamp型をDate型に変換
-      start_date: tripDoc.data().start_date?.toDate ? tripDoc.data().start_date.toDate() : tripDoc.data().start_date,
-      end_date: tripDoc.data().end_date?.toDate ? tripDoc.data().end_date.toDate() : tripDoc.data().end_date,
-      created_at: tripDoc.data().created_at?.toDate ? tripDoc.data().created_at.toDate() : tripDoc.data().created_at,
-      updated_at: tripDoc.data().updated_at?.toDate ? tripDoc.data().updated_at.toDate() : tripDoc.data().updated_at,
-    } as Trip
+    }) as Trip
 
     // destination_place_id がある場合は places_cache から解決
     const destinationPlaceId: string | undefined = (tripDoc.data() as any).destination_place_id
@@ -94,15 +87,11 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
     const daysSnapshot = await getDocs(daysQuery)
     const days = daysSnapshot.docs.map(doc => {
       const data = doc.data()
-      return {
+      return convertStandardDates({
         id: doc.id,
         ...data,
-        // Firestore Timestamp型をDate型に変換
-        date: data.date?.toDate ? data.date.toDate() : data.date,
-        created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
-        updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
-      } as any
-    }).sort((a, b) => (a.day_number || 0) - (b.day_number || 0)) // day_number順でソート
+      })
+    }).sort((a: any, b: any) => (a.day_number || 0) - (b.day_number || 0)) // day_number順でソート
 
     // 各DayのItinerariesを取得
     const daysWithItineraries = await Promise.all(
@@ -125,18 +114,9 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
         
         const itineraries = (await Promise.all(itinerariesSnapshot.docs.map(async (docSnap) => {
           const data = docSnap.data() as Itinerary & { place_id?: string }
-          const itineraryBase: any = {
-            id: docSnap.id,
+          const itineraryBase: any = convertStandardDates({
             ...data,
-            // Firestore Timestamp型をDate型に変換
-            created_at: (data as any).created_at?.toDate ? (data as any).created_at.toDate() : (data as any).created_at,
-            updated_at: (data as any).updated_at?.toDate ? (data as any).updated_at.toDate() : (data as any).updated_at,
-          }
-
-          logger.debug(`📊 Checking itinerary "${data.title}":`, {
-            has_place_id: !!(data as any).place_id,
-            has_place_data: !!(data as any).place_data,
-            place_id: (data as any).place_id || 'none'
+            id: docSnap.id, // 確実にdocSnap.idを使用するため最後に定義
           })
 
           // place_id がある場合は常に places_cache を優先的に解決し、
@@ -163,16 +143,16 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
                   website: placesCache.website,
                   editorial_summary: placesCache.editorial_summary,
                 }
-                logger.debug(`✅ Resolved place_data for "${data.title}" from cache:`, itineraryBase.place_data)
+                logger.debug(`Resolved place_data for "${data.title}" from cache`)
               } else {
-                logger.debug(`⚠️ PlacesCache not found for "${data.title}" (place_id: ${(data as any).place_id})`)
+                logger.debug(`PlacesCache not found for place_id: ${(data as any).place_id}`)
                 if ((data as any).place_data) {
                   // キャッシュに無い場合は既存の place_data を使用（後方互換）
                   itineraryBase.place_data = (data as any).place_data
-                  logger.debug(`✅ Using fallback place_data for "${data.title}" (not in cache)`)
+                  logger.debug(`Using fallback place_data for "${data.title}"`)
                 } else {
                   // フォールバックもない場合、APIから取得してキャッシュ
-                  logger.debug(`🔄 Fetching place_data from API for "${data.title}"`)
+                  logger.info(`Fetching place_data from API for "${data.title}"`)
                   try {
                     const fetchedPlaceData = await placesCacheManager.fetchAndCachePlace((data as any).place_id)
                     if (fetchedPlaceData) {
@@ -193,32 +173,27 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
                         website: fetchedPlaceData.website,
                         editorial_summary: fetchedPlaceData.editorial_summary,
                       }
-                      logger.debug(`✅ Fetched and cached place_data for "${data.title}"`)
+                      logger.info(`Fetched and cached place_data for "${data.title}"`)
                     } else {
-                      logger.debug(`❌ Failed to fetch place_data for "${data.title}"`)
+                      logger.warn(`Failed to fetch place_data for "${data.title}"`)
                     }
                   } catch (error) {
-                    logger.error(`❌ Error fetching place_data for "${data.title}":`, error)
+                    logger.error(`Error fetching place_data for "${data.title}":`, error)
                   }
                 }
               }
             } catch (error) {
-              logger.error(`❌ Failed to resolve place_data for "${data.title}":`, error)
+              logger.error(`Failed to resolve place_data for "${data.title}":`, error)
               // 取得失敗時も既存の place_data をフォールバック
               if ((data as any).place_data) {
                 itineraryBase.place_data = (data as any).place_data
-                logger.debug(`✅ Using fallback place_data for "${data.title}" (after error)`)
+                logger.debug(`Using fallback place_data after error`)
               }
             }
-          } else {
-            logger.debug(`⚠️ No place_id for "${data.title}"`)
-            if ((data as any).place_data) {
-              // place_id が無い古いデータ向け
-              itineraryBase.place_data = (data as any).place_data
-              logger.debug(`✅ Using legacy place_data for "${data.title}" (no place_id)`)
-            } else {
-              logger.debug(`❌ No place_data available for "${data.title}" (no place_id, no place_data)`)
-            }
+          } else if ((data as any).place_data) {
+            // place_id が無い古いデータ向け
+            itineraryBase.place_data = (data as any).place_data
+            logger.debug(`Using legacy place_data (no place_id)`)
           }
 
           return itineraryBase

@@ -7,10 +7,10 @@
 
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, orderBy, limit, writeBatch } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
-import { PlacesCache, PlaceData } from './types'
-import { COLLECTIONS } from './firestore'
-import logger from './logger'
-import { placesApiHelpers } from './places-api'
+import { PlacesCache, PlaceData } from '../core/types'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
+import logger from '@/lib/core/logger'
+import { placesApiHelpers } from '@/lib/api/google/places'
 
 // キャッシュの有効期限設定
 const CACHE_EXPIRY = {

@@ -1,7 +1,6 @@
 // 国名抽出とグループ化のユーティリティ関数
-import { PlaceData } from './firestore'
-import logger from './logger'
-import { geocodingApiHelpers } from './geocoding-api'
+import { PlaceData } from '@/lib/core/types'
+import { geocodingApiHelpers } from '@/lib/api/google/geocoding'
 
 // 国名のマッピング（英語→日本語）
 const COUNTRY_NAMES: { [key: string]: string } = {
@@ -159,7 +158,7 @@ const COUNTRY_NAMES: { [key: string]: string } = {
   'Mozambique': 'モザンビーク'
 }
 
-import type { CountryGroup } from './types'
+import type { CountryGroup } from '../../core/types'
 
 // Re-export types for backward compatibility
 export type { CountryGroup }

@@ -1,7 +1,7 @@
-import { adminDb } from './firebase-admin'
-import logger from './logger'
-import { COLLECTIONS } from './firestore'
-import type { User, Trip, Day, Itinerary, TripFormData, ItineraryFormData, DayFormData, PlaceData } from './types'
+import { adminDb } from '../firebase/admin'
+import logger from '@/lib/core/logger'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
+import type { User, Trip, Day, Itinerary, TripFormData, ItineraryFormData, DayFormData, PlaceData } from '@/lib/core/types'
 
 // プラン保存用の型定義
 export interface PlanSaveData {
