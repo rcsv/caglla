@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
@@ -71,19 +72,19 @@ export default function NewTripPage() {
         
         if (response.ok) {
           const trips = await response.json()
-          console.log('API Response:', trips) // デバッグ用
+          logger.debug('API Response:', trips) // デバッグ用
           
           // tripsが配列かどうかチェック
           const tripsArray = Array.isArray(trips) ? trips : trips.trips || []
-          console.log('Trips array:', tripsArray) // デバッグ用
+          logger.debug('Trips array:', tripsArray) // デバッグ用
           
           setCurrentTripCount(tripsArray.length)
         } else {
-          console.error('API request failed:', response.status, response.statusText)
+          logger.error('API request failed:', response.status, response.statusText)
           setCurrentTripCount(0)
         }
       } catch (error) {
-        console.error('Error checking plan limits:', error)
+        logger.error('Error checking plan limits:', error)
         setCurrentTripCount(0)
       } finally {
         setIsLoadingLimits(false)
@@ -108,7 +109,7 @@ export default function NewTripPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch Unsplash image:', error)
+      logger.error('Failed to fetch Unsplash image:', error)
     } finally {
       setIsLoadingUnsplashImage(false)
     }
@@ -209,24 +210,24 @@ export default function NewTripPage() {
         if (formData.imageUrl) {
           try {
             await imageUploadHelpers.deleteImage(formData.imageUrl)
-            console.log('Failed creation image deleted:', formData.imageUrl)
+            logger.debug('Failed creation image deleted:', formData.imageUrl)
           } catch (error) {
-            console.error('Failed to delete image after creation failure:', error)
+            logger.error('Failed to delete image after creation failure:', error)
           }
         }
-        console.error('Failed to create trip')
+        logger.error('Failed to create trip')
       }
     } catch (error) {
       // エラーが発生した場合、アップロードした画像を削除
       if (formData.imageUrl) {
         try {
           await imageUploadHelpers.deleteImage(formData.imageUrl)
-          console.log('Error image deleted:', formData.imageUrl)
+          logger.debug('Error image deleted:', formData.imageUrl)
         } catch (deleteError) {
-          console.error('Failed to delete image after error:', deleteError)
+          logger.error('Failed to delete image after error:', deleteError)
         }
       }
-      console.error('Error creating trip:', error)
+      logger.error('Error creating trip:', error)
     } finally {
       setSubmitting(false)
     }
@@ -252,9 +253,9 @@ export default function NewTripPage() {
     if (formData.imageUrl) {
       try {
         await imageUploadHelpers.deleteImage(formData.imageUrl)
-        console.log('Cancelled image deleted:', formData.imageUrl)
+        logger.debug('Cancelled image deleted:', formData.imageUrl)
       } catch (error) {
-        console.error('Failed to delete cancelled image:', error)
+        logger.error('Failed to delete cancelled image:', error)
       }
     }
     
@@ -262,7 +263,7 @@ export default function NewTripPage() {
     try {
       router.push('/home')
     } catch (error) {
-      console.error('Router push failed, using window.location:', error)
+      logger.error('Router push failed, using window.location:', error)
       window.location.href = '/home'
     }
   }

@@ -6,8 +6,11 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app'
+import logger from '../lib/logger'
 import { getFirestore, collection, getDocs, doc, deleteDoc, writeBatch } from 'firebase/firestore'
+import logger from '../lib/logger'
 import { validateServerEnvironment } from './lib/env-validation'
+import logger from '../lib/logger'
 
 // Firebase設定
 const firebaseConfig = {
@@ -21,26 +24,26 @@ const firebaseConfig = {
 
 async function flushItinerariesData() {
   try {
-    console.log('🚀 Starting Itineraries data flush...')
+    logger.debug('🚀 Starting Itineraries data flush...')
     
     // 環境変数の検証
     const env = validateServerEnvironment()
-    console.log('✅ Environment variables validated')
+    logger.debug('✅ Environment variables validated')
     
     // Firebase初期化
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
     const db = getFirestore(app)
-    console.log('✅ Firebase initialized')
+    logger.debug('✅ Firebase initialized')
     
     // Itinerariesコレクションの全ドキュメントを取得
-    console.log('📋 Fetching all itineraries...')
+    logger.debug('📋 Fetching all itineraries...')
     const itinerariesRef = collection(db, 'itineraries')
     const itinerariesSnapshot = await getDocs(itinerariesRef)
     
-    console.log(`📊 Found ${itinerariesSnapshot.docs.length} itineraries to delete`)
+    logger.debug(`📊 Found ${itinerariesSnapshot.docs.length} itineraries to delete`)
     
     if (itinerariesSnapshot.docs.length === 0) {
-      console.log('✅ No itineraries found. Nothing to delete.')
+      logger.debug('✅ No itineraries found. Nothing to delete.')
       return
     }
     
@@ -59,7 +62,7 @@ async function flushItinerariesData() {
         batches.push(currentBatch)
         currentBatch = writeBatch(db)
         batchCount++
-        console.log(`📦 Prepared batch ${batchCount} (${batchSize} documents)`)
+        logger.debug(`📦 Prepared batch ${batchCount} (${batchSize} documents)`)
       }
     }
     
@@ -67,27 +70,27 @@ async function flushItinerariesData() {
     if (currentBatch._mutations.length > 0) {
       batches.push(currentBatch)
       batchCount++
-      console.log(`📦 Prepared final batch ${batchCount} (${currentBatch._mutations.length} documents)`)
+      logger.debug(`📦 Prepared final batch ${batchCount} (${currentBatch._mutations.length} documents)`)
     }
     
-    console.log(`🔄 Executing ${batches.length} batches...`)
+    logger.debug(`🔄 Executing ${batches.length} batches...`)
     
     // バッチを順次実行
     for (let i = 0; i < batches.length; i++) {
       try {
         await batches[i].commit()
-        console.log(`✅ Batch ${i + 1}/${batches.length} completed`)
+        logger.debug(`✅ Batch ${i + 1}/${batches.length} completed`)
       } catch (error) {
-        console.error(`❌ Error in batch ${i + 1}:`, error)
+        logger.error(`❌ Error in batch ${i + 1}:`, error)
         throw error
       }
     }
     
-    console.log('🎉 All itineraries data flushed successfully!')
-    console.log(`📊 Total deleted: ${itinerariesSnapshot.docs.length} documents`)
+    logger.debug('🎉 All itineraries data flushed successfully!')
+    logger.debug(`📊 Total deleted: ${itinerariesSnapshot.docs.length} documents`)
     
   } catch (error) {
-    console.error('❌ Error flushing itineraries data:', error)
+    logger.error('❌ Error flushing itineraries data:', error)
     throw error
   }
 }
@@ -96,11 +99,11 @@ async function flushItinerariesData() {
 if (require.main === module) {
   flushItinerariesData()
     .then(() => {
-      console.log('✅ Script completed successfully')
+      logger.debug('✅ Script completed successfully')
       process.exit(0)
     })
     .catch((error) => {
-      console.error('❌ Script failed:', error)
+      logger.error('❌ Script failed:', error)
       process.exit(1)
     })
 }

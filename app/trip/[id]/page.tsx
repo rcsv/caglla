@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -30,7 +31,7 @@ export default function TripRedirectPage() {
         const newUrl = `/${slugs.userSlug}/${slugs.tripSlug}`
         router.replace(newUrl)
     } catch (error) {
-        console.error('Redirect error:', error)
+        logger.error('Redirect error:', error)
         router.push('/404')
       }
     }

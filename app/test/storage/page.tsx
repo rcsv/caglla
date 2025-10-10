@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
@@ -59,7 +60,7 @@ export default function StorageTestPage() {
         setError(result.error || 'ストレージ使用量の取得に失敗しました')
       }
     } catch (error) {
-      console.error('Error fetching storage data:', error)
+      logger.error('Error fetching storage data:', error)
       setError('ストレージ使用量の取得に失敗しました')
     } finally {
       setLoading(false)
@@ -102,7 +103,7 @@ export default function StorageTestPage() {
           setError(result.error || 'ファイルの削除に失敗しました')
         }
       } catch (error) {
-        console.error('Error removing file:', error)
+        logger.error('Error removing file:', error)
         setError('ファイルの削除に失敗しました')
       }
     }
@@ -128,7 +129,7 @@ export default function StorageTestPage() {
         alert(`エラー: ${result.error}`)
       }
     } catch (error) {
-      console.error('Error testing quota:', error)
+      logger.error('Error testing quota:', error)
       alert('制限チェックのテストに失敗しました')
     }
   }
@@ -160,7 +161,7 @@ export default function StorageTestPage() {
         alert(`エラー: ${result.error}`)
       }
     } catch (error) {
-      console.error('Error resetting storage:', error)
+      logger.error('Error resetting storage:', error)
       alert('ストレージのリセットに失敗しました')
     }
   }

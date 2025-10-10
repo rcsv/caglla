@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState } from 'react'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'

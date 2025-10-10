@@ -10,7 +10,9 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app'
+import logger from '../lib/logger'
 import { getFirestore, collection, getDocs, doc, updateDoc, deleteField } from 'firebase/firestore'
+import logger from '../lib/logger'
 
 // 環境変数を直接読み込み
 const firebaseConfig = {
@@ -37,7 +39,7 @@ interface UserDocument {
 }
 
 async function migrateUserData() {
-  console.log('🚀 ユーザーデータ移行を開始します...')
+  logger.debug('🚀 ユーザーデータ移行を開始します...')
   
   try {
     // 全ユーザーを取得
@@ -51,33 +53,33 @@ async function migrateUserData() {
       } as UserDocument)
     })
     
-    console.log(`📊 ${users.length}件のユーザーが見つかりました`)
+    logger.debug(`📊 ${users.length}件のユーザーが見つかりました`)
     
     let processedCount = 0
     let errorCount = 0
     
     for (const user of users) {
       try {
-        console.log(`\n👤 ユーザー処理中: ${user.id}`)
-        console.log(`   現在のname: ${user.name}`)
+        logger.debug(`\n👤 ユーザー処理中: ${user.id}`)
+        logger.debug(`   現在のname: ${user.name}`)
         
         const updateData: any = {}
         let needsUpdate = false
         
         // preferences内のnameフィールドをチェック
         if (user.preferences?.name) {
-          console.log(`   preferences.name: ${user.preferences.name}`)
+          logger.debug(`   preferences.name: ${user.preferences.name}`)
           
           // preferences内のnameがドキュメント直下のnameと異なる場合
           if (user.preferences.name !== user.name) {
-            console.log(`   ⚠️  nameの不整合を検出`)
+            logger.debug(`   ⚠️  nameの不整合を検出`)
             
             // preferences内のnameを優先（より詳細な情報の可能性）
             if (user.preferences.name.length > user.name.length) {
               updateData.name = user.preferences.name
-              console.log(`   ✅ preferences.nameを採用: ${user.preferences.name}`)
+              logger.debug(`   ✅ preferences.nameを採用: ${user.preferences.name}`)
             } else {
-              console.log(`   ✅ 既存のnameを維持: ${user.name}`)
+              logger.debug(`   ✅ 既存のnameを維持: ${user.name}`)
             }
             needsUpdate = true
           }
@@ -89,25 +91,25 @@ async function migrateUserData() {
         
         if (needsUpdate) {
           await updateDoc(doc(db, 'users', user.id), updateData)
-          console.log(`   ✅ 更新完了`)
+          logger.debug(`   ✅ 更新完了`)
           processedCount++
         } else {
-          console.log(`   ℹ️  更新不要`)
+          logger.debug(`   ℹ️  更新不要`)
         }
         
       } catch (error) {
-        console.error(`   ❌ エラー: ${error}`)
+        logger.error(`   ❌ エラー: ${error}`)
         errorCount++
       }
     }
     
-    console.log(`\n📈 移行完了:`)
-    console.log(`   - 処理済み: ${processedCount}件`)
-    console.log(`   - エラー: ${errorCount}件`)
-    console.log(`   - 総数: ${users.length}件`)
+    logger.debug(`\n📈 移行完了:`)
+    logger.debug(`   - 処理済み: ${processedCount}件`)
+    logger.debug(`   - エラー: ${errorCount}件`)
+    logger.debug(`   - 総数: ${users.length}件`)
     
   } catch (error) {
-    console.error('❌ 移行中にエラーが発生しました:', error)
+    logger.error('❌ 移行中にエラーが発生しました:', error)
     process.exit(1)
   }
 }
@@ -116,11 +118,11 @@ async function migrateUserData() {
 if (require.main === module) {
   migrateUserData()
     .then(() => {
-      console.log('🎉 移行が正常に完了しました')
+      logger.debug('🎉 移行が正常に完了しました')
       process.exit(0)
     })
     .catch((error) => {
-      console.error('💥 移行に失敗しました:', error)
+      logger.error('💥 移行に失敗しました:', error)
       process.exit(1)
     })
 }

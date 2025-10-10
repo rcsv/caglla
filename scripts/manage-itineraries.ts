@@ -8,10 +8,15 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app'
+import logger from '../lib/logger'
 import { getFirestore, collection, getDocs, doc, deleteDoc, writeBatch, query, orderBy, limit } from 'firebase/firestore'
+import logger from '../lib/logger'
 import { validateServerEnvironment } from '../lib/env-validation'
+import logger from '../lib/logger'
 import fs from 'fs'
+import logger from '../lib/logger'
 import path from 'path'
+import logger from '../lib/logger'
 
 // Firebase設定
 const firebaseConfig = {
@@ -36,7 +41,7 @@ class ItinerariesManager {
    */
   async getStatistics() {
     try {
-      console.log('📊 Getting itineraries statistics...')
+      logger.debug('📊 Getting itineraries statistics...')
       
       const itinerariesRef = collection(this.db, 'itineraries')
       const snapshot = await getDocs(itinerariesRef)
@@ -79,7 +84,7 @@ class ItinerariesManager {
       
       return stats
     } catch (error) {
-      console.error('❌ Error getting statistics:', error)
+      logger.error('❌ Error getting statistics:', error)
       throw error
     }
   }
@@ -89,7 +94,7 @@ class ItinerariesManager {
    */
   async backupData(outputPath: string = './backup') {
     try {
-      console.log('💾 Creating backup...')
+      logger.debug('💾 Creating backup...')
       
       const itinerariesRef = collection(this.db, 'itineraries')
       const snapshot = await getDocs(itinerariesRef)
@@ -113,12 +118,12 @@ class ItinerariesManager {
       
       fs.writeFileSync(filepath, JSON.stringify(backupData, null, 2))
       
-      console.log(`✅ Backup created: ${filepath}`)
-      console.log(`📊 Backed up ${backupData.totalCount} documents`)
+      logger.debug(`✅ Backup created: ${filepath}`)
+      logger.debug(`📊 Backed up ${backupData.totalCount} documents`)
       
       return filepath
     } catch (error) {
-      console.error('❌ Error creating backup:', error)
+      logger.error('❌ Error creating backup:', error)
       throw error
     }
   }
@@ -128,22 +133,22 @@ class ItinerariesManager {
    */
   async deleteAllData(confirm: boolean = false) {
     if (!confirm) {
-      console.log('⚠️  This will delete ALL itineraries data!')
-      console.log('⚠️  Make sure you have a backup before proceeding.')
-      console.log('⚠️  To confirm, call deleteAllData(true)')
+      logger.debug('⚠️  This will delete ALL itineraries data!')
+      logger.debug('⚠️  Make sure you have a backup before proceeding.')
+      logger.debug('⚠️  To confirm, call deleteAllData(true)')
       return
     }
 
     try {
-      console.log('🗑️  Deleting all itineraries data...')
+      logger.debug('🗑️  Deleting all itineraries data...')
       
       const itinerariesRef = collection(this.db, 'itineraries')
       const snapshot = await getDocs(itinerariesRef)
       
-      console.log(`📊 Found ${snapshot.docs.length} documents to delete`)
+      logger.debug(`📊 Found ${snapshot.docs.length} documents to delete`)
       
       if (snapshot.docs.length === 0) {
-        console.log('✅ No documents found. Nothing to delete.')
+        logger.debug('✅ No documents found. Nothing to delete.')
         return
       }
       
@@ -166,17 +171,17 @@ class ItinerariesManager {
         batches.push(currentBatch)
       }
       
-      console.log(`🔄 Executing ${batches.length} batches...`)
+      logger.debug(`🔄 Executing ${batches.length} batches...`)
       
       for (let i = 0; i < batches.length; i++) {
         await batches[i].commit()
-        console.log(`✅ Batch ${i + 1}/${batches.length} completed`)
+        logger.debug(`✅ Batch ${i + 1}/${batches.length} completed`)
       }
       
-      console.log('🎉 All itineraries data deleted successfully!')
+      logger.debug('🎉 All itineraries data deleted successfully!')
       
     } catch (error) {
-      console.error('❌ Error deleting data:', error)
+      logger.error('❌ Error deleting data:', error)
       throw error
     }
   }
@@ -186,23 +191,23 @@ class ItinerariesManager {
    */
   async deleteByCondition(condition: (data: any) => boolean, confirm: boolean = false) {
     if (!confirm) {
-      console.log('⚠️  This will delete itineraries matching the condition!')
-      console.log('⚠️  To confirm, call deleteByCondition(condition, true)')
+      logger.debug('⚠️  This will delete itineraries matching the condition!')
+      logger.debug('⚠️  To confirm, call deleteByCondition(condition, true)')
       return
     }
 
     try {
-      console.log('🗑️  Deleting itineraries by condition...')
+      logger.debug('🗑️  Deleting itineraries by condition...')
       
       const itinerariesRef = collection(this.db, 'itineraries')
       const snapshot = await getDocs(itinerariesRef)
       
       const docsToDelete = snapshot.docs.filter(doc => condition(doc.data()))
       
-      console.log(`📊 Found ${docsToDelete.length} documents matching condition`)
+      logger.debug(`📊 Found ${docsToDelete.length} documents matching condition`)
       
       if (docsToDelete.length === 0) {
-        console.log('✅ No documents match the condition.')
+        logger.debug('✅ No documents match the condition.')
         return
       }
       
@@ -225,17 +230,17 @@ class ItinerariesManager {
         batches.push(currentBatch)
       }
       
-      console.log(`🔄 Executing ${batches.length} batches...`)
+      logger.debug(`🔄 Executing ${batches.length} batches...`)
       
       for (let i = 0; i < batches.length; i++) {
         await batches[i].commit()
-        console.log(`✅ Batch ${i + 1}/${batches.length} completed`)
+        logger.debug(`✅ Batch ${i + 1}/${batches.length} completed`)
       }
       
-      console.log('🎉 Conditional deletion completed successfully!')
+      logger.debug('🎉 Conditional deletion completed successfully!')
       
     } catch (error) {
-      console.error('❌ Error deleting data by condition:', error)
+      logger.error('❌ Error deleting data by condition:', error)
       throw error
     }
   }
@@ -248,11 +253,11 @@ async function main() {
     
     // 統計を取得
     const stats = await manager.getStatistics()
-    console.log('📊 Statistics:', stats)
+    logger.debug('📊 Statistics:', stats)
     
     // バックアップを作成
     const backupPath = await manager.backupData()
-    console.log(`💾 Backup created at: ${backupPath}`)
+    logger.debug(`💾 Backup created at: ${backupPath}`)
     
     // 確認後、全データを削除
     // await manager.deleteAllData(true)
@@ -261,7 +266,7 @@ async function main() {
     // await manager.deleteByCondition(data => !data.place_data?.place_id, true)
     
   } catch (error) {
-    console.error('❌ Main execution failed:', error)
+    logger.error('❌ Main execution failed:', error)
   }
 }
 

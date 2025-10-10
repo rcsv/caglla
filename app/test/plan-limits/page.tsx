@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import React, { useState } from 'react'
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription-context'

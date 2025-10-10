@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useAuth } from '@/lib/auth-context'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
@@ -244,7 +245,7 @@ export default function SlugBasedTripPage() {
                   return { placeId, placeData: data.result }
                 }
               } catch (error) {
-                console.error(`Failed to fetch place data for ${placeId}:`, error)
+                logger.error(`Failed to fetch place data for ${placeId}:`, error)
               }
               return null
             })
@@ -262,7 +263,7 @@ export default function SlugBasedTripPage() {
           }
         }
       } catch (error) {
-        console.error('旅行データの取得に失敗しました:', error)
+        logger.error('旅行データの取得に失敗しました:', error)
         notFound()
       } finally {
         setTripLoading(false)
@@ -309,7 +310,7 @@ export default function SlugBasedTripPage() {
   }
 
   const handleInsertSchedule = (dayId: string, afterIndex: number) => {
-    console.log(`handleInsertSchedule called: dayId=${dayId}, afterIndex=${afterIndex}`)
+    logger.debug(`handleInsertSchedule called: dayId=${dayId}, afterIndex=${afterIndex}`)
     setSelectedDayId(dayId)
     setInsertAfterIndex(afterIndex) // 指定位置に挿入
     setShowAddScheduleModal(true)
@@ -346,11 +347,11 @@ export default function SlugBasedTripPage() {
           })
         }
       } else {
-        console.error('Failed to add day')
+        logger.error('Failed to add day')
         alert('日程の追加に失敗しました')
       }
     } catch (error) {
-      console.error('Error adding day:', error)
+      logger.error('Error adding day:', error)
       alert('日程の追加に失敗しました')
     }
   }
@@ -562,11 +563,11 @@ export default function SlugBasedTripPage() {
           }
         })
       } else {
-        console.error('Failed to delete itinerary')
+        logger.error('Failed to delete itinerary')
         alert('削除に失敗しました')
       }
     } catch (error) {
-      console.error('Error deleting itinerary:', error)
+      logger.error('Error deleting itinerary:', error)
       alert('削除に失敗しました')
     }
   }
@@ -759,11 +760,11 @@ export default function SlugBasedTripPage() {
           }
         })
       } else {
-        console.error('Failed to reorder itineraries')
+        logger.error('Failed to reorder itineraries')
         alert('順序の更新に失敗しました')
       }
     } catch (error) {
-      console.error('Error reordering itineraries:', error)
+      logger.error('Error reordering itineraries:', error)
       alert('順序の更新に失敗しました')
     }
   }
@@ -827,7 +828,7 @@ export default function SlugBasedTripPage() {
         })
       }
     } catch (error) {
-      console.error('Error moving up:', error)
+      logger.error('Error moving up:', error)
     }
   }
 
@@ -889,7 +890,7 @@ export default function SlugBasedTripPage() {
         })
       }
     } catch (error) {
-      console.error('Error moving down:', error)
+      logger.error('Error moving down:', error)
     }
   }
 

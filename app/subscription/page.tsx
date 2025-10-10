@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import React, { useState } from 'react'
 import { SubscriptionProvider, useSubscription } from '@/lib/subscription-context'
@@ -37,7 +38,7 @@ function SubscriptionContent() {
         alert('サブスクリプションの処理中にエラーが発生しました')
       }
     } catch (error) {
-      console.error('Subscription error:', error)
+      logger.error('Subscription error:', error)
       alert('サブスクリプションの処理中にエラーが発生しました')
     } finally {
       setIsSubscribing(false)

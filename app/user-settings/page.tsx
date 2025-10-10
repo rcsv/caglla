@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
@@ -39,7 +40,7 @@ export default function UserSettingsPage() {
         setPreferences(data.user.preferences || {})
       }
     } catch (error) {
-      console.error('Failed to fetch user data:', error)
+      logger.error('Failed to fetch user data:', error)
     }
   }
 
@@ -66,7 +67,7 @@ export default function UserSettingsPage() {
         alert('設定を保存しました')
       }
     } catch (error) {
-      console.error('Failed to save preferences:', error)
+      logger.error('Failed to save preferences:', error)
       alert('設定の保存に失敗しました')
     } finally {
       setSaving(false)

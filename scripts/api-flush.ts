@@ -4,10 +4,10 @@
 
 async function flushItinerariesViaAPI() {
   try {
-    console.log('🚀 Starting Itineraries data flush via API...')
+    logger.debug('🚀 Starting Itineraries data flush via API...')
     
     // まず、すべてのItinerariesを取得
-    console.log('📋 Fetching all itineraries...')
+    logger.debug('📋 Fetching all itineraries...')
     const response = await fetch('http://localhost:3000/api/itineraries', {
       method: 'GET',
       headers: {
@@ -20,10 +20,10 @@ async function flushItinerariesViaAPI() {
     }
     
     const itineraries = await response.json()
-    console.log(`📊 Found ${itineraries.length} itineraries to delete`)
+    logger.debug(`📊 Found ${itineraries.length} itineraries to delete`)
     
     if (itineraries.length === 0) {
-      console.log('✅ No itineraries found. Nothing to delete.')
+      logger.debug('✅ No itineraries found. Nothing to delete.')
       return
     }
     
@@ -40,20 +40,20 @@ async function flushItinerariesViaAPI() {
         
         if (deleteResponse.ok) {
           deletedCount++
-          console.log(`✅ Deleted itinerary ${deletedCount}/${itineraries.length}: ${itinerary.title}`)
+          logger.debug(`✅ Deleted itinerary ${deletedCount}/${itineraries.length}: ${itinerary.title}`)
         } else {
-          console.error(`❌ Failed to delete itinerary ${itinerary.id}: ${deleteResponse.status}`)
+          logger.error(`❌ Failed to delete itinerary ${itinerary.id}: ${deleteResponse.status}`)
         }
       } catch (error) {
-        console.error(`❌ Error deleting itinerary ${itinerary.id}:`, error)
+        logger.error(`❌ Error deleting itinerary ${itinerary.id}:`, error)
       }
     }
     
-    console.log('🎉 Itineraries data flush completed!')
-    console.log(`📊 Total deleted: ${deletedCount}/${itineraries.length} documents`)
+    logger.debug('🎉 Itineraries data flush completed!')
+    logger.debug(`📊 Total deleted: ${deletedCount}/${itineraries.length} documents`)
     
   } catch (error) {
-    console.error('❌ Error flushing itineraries data:', error)
+    logger.error('❌ Error flushing itineraries data:', error)
     throw error
   }
 }
@@ -61,10 +61,10 @@ async function flushItinerariesViaAPI() {
 // スクリプト実行
 flushItinerariesViaAPI()
   .then(() => {
-    console.log('✅ Script completed successfully')
+    logger.debug('✅ Script completed successfully')
     process.exit(0)
   })
   .catch((error) => {
-    console.error('❌ Script failed:', error)
+    logger.error('❌ Script failed:', error)
     process.exit(1)
   })

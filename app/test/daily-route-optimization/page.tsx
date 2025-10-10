@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import React, { useState } from 'react'
 import DayEditor from '@/components/trip/DayEditor'
@@ -140,7 +141,7 @@ function DailyRouteOptimizationContent() {
   }
 
   const handleReorderItineraries = (dayId: string, reorderedItineraries: Itinerary[]) => {
-    console.log('Reordering itineraries for day:', dayId, reorderedItineraries.map(it => ({ id: it.id, name: it.place_data?.name, order: it.order })))
+    logger.debug('Reordering itineraries for day:', dayId, reorderedItineraries.map(it => ({ id: it.id, name: it.place_data?.name, order: it.order })))
     
     setItineraries(prev => {
       const otherItineraries = prev.filter(it => it.day_id !== dayId)

@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import React, { useState, useEffect } from 'react'
 import { 
@@ -41,7 +42,7 @@ export default function PlaygroundPage() {
           setUserPlanId(data.planId)
           setSelectedPlanId(data.planId)
         } else {
-          console.error('Failed to fetch user plan:', response.status)
+          logger.error('Failed to fetch user plan:', response.status)
           // フォールバック: ユーザーオブジェクトからplanIdを取得
           if (user.planId) {
             setUserPlanId(user.planId as PlanId)
@@ -49,7 +50,7 @@ export default function PlaygroundPage() {
           }
         }
       } catch (error) {
-        console.error('Error fetching user plan:', error)
+        logger.error('Error fetching user plan:', error)
         // フォールバック: ユーザーオブジェクトからplanIdを取得
         if (user.planId) {
           setUserPlanId(user.planId as PlanId)
@@ -107,11 +108,11 @@ export default function PlaygroundPage() {
         setSelectedPlanId(planId)
         alert(`プランが「${PLAN_CONFIGS[planId].name}」に更新されました`)
       } else {
-        console.error('Failed to update user plan:', response.status)
+        logger.error('Failed to update user plan:', response.status)
         alert('プランの更新に失敗しました')
       }
     } catch (error) {
-      console.error('Error updating user plan:', error)
+      logger.error('Error updating user plan:', error)
       alert('プランの更新中にエラーが発生しました')
     } finally {
       setIsUpdatingPlan(false)
