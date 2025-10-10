@@ -1,8 +1,8 @@
 // Unsplash API統合ヘルパー関数
 // 旅行の目的地に関連する画像を自動取得する機能を提供
 
-import { UnsplashPhoto, UnsplashSearchResponse, UnsplashRandomResponse } from './types'
-import logger from './logger'
+import { UnsplashPhoto, UnsplashSearchResponse, UnsplashRandomResponse } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
 
 export interface UnsplashApiConfig {
   accessKey: string

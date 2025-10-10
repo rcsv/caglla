@@ -1,5 +1,5 @@
-import { auth } from './firebase'
-import logger from './logger'
+import { auth } from '@/lib/firebase/client'
+import logger from '@/lib/core/logger'
 
 export async function getIdToken(): Promise<string | null> {
   const user = auth.currentUser
