@@ -2,8 +2,8 @@
  * Firebase Admin SDK を使用したItinerariesデータ削除スクリプト
  */
 
-import { adminDb } from '../lib/firebase-admin'
-import logger from '../lib/logger'
+import { adminDb } from '@/lib/firebase/admin'
+import logger from '@/lib/core/logger'
 
 async function flushItinerariesWithAdmin() {
   try {

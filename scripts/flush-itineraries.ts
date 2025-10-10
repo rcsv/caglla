@@ -6,11 +6,10 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app'
-import logger from '../lib/logger'
+import logger from '@/lib/core/logger'
 import { getFirestore, collection, getDocs, doc, deleteDoc, writeBatch } from 'firebase/firestore'
-import logger from '../lib/logger'
-import { validateServerEnvironment } from './lib/env-validation'
-import logger from '../lib/logger'
+import { validateServerEnvironment } from '@/lib/core/env-validation'
+
 
 // Firebase設定
 const firebaseConfig = {

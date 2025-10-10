@@ -3,9 +3,8 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app'
-import logger from '../lib/logger'
+import logger from '@/lib/core/logger'
 import { getFirestore, collection, getDocs, writeBatch } from 'firebase/firestore'
-import logger from '../lib/logger'
 
 // Firebase設定
 const firebaseConfig = {

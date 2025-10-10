@@ -10,9 +10,8 @@
  */
 
 import { initializeApp, getApps } from 'firebase/app'
-import logger from '../lib/logger'
+import logger from '@/lib/core/logger'
 import { getFirestore, collection, getDocs, doc, updateDoc, deleteField } from 'firebase/firestore'
-import logger from '../lib/logger'
 
 // 環境変数を直接読み込み
 const firebaseConfig = {
