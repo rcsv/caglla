@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { CountryGroup } from '@/lib/country-utils'
@@ -64,7 +65,7 @@ export default function CountryStats({ userId, className = '' }: CountryStatsPro
         setRecommendedTrips(recommendedData.trips || [])
       }
     } catch (err) {
-      console.error('Error fetching data:', err)
+      logger.error('Error fetching data:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch data')
     } finally {
       setLoading(false)
@@ -161,7 +162,7 @@ export default function CountryStats({ userId, className = '' }: CountryStatsPro
                 <button
                   onClick={() => {
                     // 詳細表示のロジックをここに追加
-                    console.log('Show detailed country stats')
+                    logger.debug('Show detailed country stats')
                   }}
                   className="w-full text-center text-emerald-600 hover:text-emerald-700 text-sm font-medium"
                 >

@@ -1,3 +1,4 @@
+import logger from '@/lib/logger'
 import React, { useState, useEffect } from 'react'
 import { optimizeWaypoints, compareRouteOptions, RouteOptimizationRequest } from '@/lib/route-optimization'
 
@@ -71,7 +72,7 @@ export default function RouteOptimizationDisplay({
           }
         }
       } catch (err) {
-        console.error('Route optimization error:', err)
+        logger.error('Route optimization error:', err)
         setError('ルート最適化に失敗しました')
       } finally {
         setIsLoading(false)

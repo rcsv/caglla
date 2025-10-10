@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useEffect, useRef, useState } from 'react'
 import { CountryGroup } from '@/lib/country-utils'
@@ -64,14 +65,14 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         countryGroups.forEach((group, index) => {
           const coordinate = getCountryCoordinate(group.countryCode)
           
-          console.log(`Processing country: ${group.countryCode} (${group.countryNameJa})`, coordinate)
+          logger.debug(`Processing country: ${group.countryCode} (${group.countryNameJa})`, coordinate)
           
           if (coordinate) {
             // マーカーの色を旅行回数に応じて変更
             const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
             const colorIndex = Math.min(index, colors.length - 1)
             
-            console.log(`Creating marker for ${group.countryNameJa} at ${coordinate.lat}, ${coordinate.lng}`)
+            logger.debug(`Creating marker for ${group.countryNameJa} at ${coordinate.lat}, ${coordinate.lng}`)
             
             // カスタムマーカー要素を作成
             const markerElement = document.createElement('div')
@@ -108,7 +109,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
 
             newMarkers.push(marker)
           } else {
-            console.warn(`No coordinate found for country: ${group.countryCode}`)
+            logger.warn(`No coordinate found for country: ${group.countryCode}`)
           }
         })
 
@@ -134,7 +135,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         }
 
       } catch (err) {
-        console.error('Error initializing map:', err)
+        logger.error('Error initializing map:', err)
         setError('地図の読み込みに失敗しました')
       } finally {
         setLoading(false)

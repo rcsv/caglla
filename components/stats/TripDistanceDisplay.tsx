@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect, useMemo } from 'react'
 import { distanceApiHelpers } from '@/lib/distance-api'
@@ -65,7 +66,7 @@ export default function TripDistanceDisplay({
           setError('距離計算に失敗しました')
         }
       } catch (err) {
-        console.error('Error calculating total distance:', err)
+        logger.error('Error calculating total distance:', err)
         setError('総移動距離の計算に失敗しました')
       } finally {
         setIsLoading(false)

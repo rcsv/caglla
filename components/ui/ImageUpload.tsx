@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useRef } from 'react'
 import { imageUploadHelpers } from '@/lib/image-upload'
@@ -41,9 +42,9 @@ export default function ImageUpload({
     }
 
     // デバッグ: ユーザー情報を確認
-    console.log('User object:', user)
-    console.log('User ID:', user.id)
-    console.log('User UID:', user.uid)
+    logger.debug('User object:', user)
+    logger.debug('User ID:', user.id)
+    logger.debug('User UID:', user.uid)
     
     if (!user.id && !user.uid) {
       setError('ユーザーIDが取得できません。ログインし直してください。')
@@ -54,7 +55,7 @@ export default function ImageUpload({
     setUploading(true)
 
     try {
-      console.log('Starting image upload for file:', file.name, 'Size:', file.size)
+      logger.debug('Starting image upload for file:', file.name, 'Size:', file.size)
       
       // Generate path for the image
       const userId = user.id || user.uid
@@ -62,7 +63,7 @@ export default function ImageUpload({
         ? imageUploadHelpers.generateTripImagePath(tripId, file.name)
         : imageUploadHelpers.generateAvatarImagePath(userId, file.name)
 
-      console.log('Upload path:', path)
+      logger.debug('Upload path:', path)
 
       // Upload image with storage tracking
       const result = await imageUploadHelpers.uploadImage(
@@ -73,14 +74,14 @@ export default function ImageUpload({
         !tripId // isAvatar if no tripId
       )
       
-      console.log('Upload successful, URL:', result.downloadURL, 'FileId:', result.fileId)
+      logger.debug('Upload successful, URL:', result.downloadURL, 'FileId:', result.fileId)
       
       onImageChange(result.downloadURL)
       if (onFileIdChange) {
         onFileIdChange(result.fileId)
       }
     } catch (error) {
-      console.error('Detailed upload error:', error)
+      logger.error('Detailed upload error:', error)
       setError(`画像のアップロードに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`)
     } finally {
       setUploading(false)
@@ -95,15 +96,15 @@ export default function ImageUpload({
 
   const handleRemoveImage = async () => {
     if (!currentImageUrl) {
-      console.warn('No image URL to remove')
+      logger.warn('No image URL to remove')
       return
     }
 
     try {
-      console.log('Starting image removal process...')
-      console.log('Current image URL:', currentImageUrl)
-      console.log('User ID:', user?.id || user?.uid)
-      console.log('File ID:', fileId)
+      logger.debug('Starting image removal process...')
+      logger.debug('Current image URL:', currentImageUrl)
+      logger.debug('User ID:', user?.id || user?.uid)
+      logger.debug('File ID:', fileId)
 
       const userId = user?.id || user?.uid
       if (!userId) {
@@ -117,14 +118,14 @@ export default function ImageUpload({
         fileId
       )
       
-      console.log('Image deletion successful, updating UI...')
+      logger.debug('Image deletion successful, updating UI...')
       onImageChange(null)
       if (onFileIdChange) {
         onFileIdChange(null)
       }
       setError(null) // Clear any previous errors
     } catch (error) {
-      console.error('Error deleting image:', error)
+      logger.error('Error deleting image:', error)
       const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました'
       setError(`画像の削除に失敗しました: ${errorMessage}`)
     }

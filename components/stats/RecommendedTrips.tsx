@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import React, { useEffect, useState } from 'react'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
@@ -21,32 +22,32 @@ export const RecommendedTrips: React.FC<RecommendedTripsProps> = ({ limit = 6, c
     const fetchRecommendations = async () => {
       // 認証が完了していない場合は待機
       if (authLoading) {
-        console.log('🔍 RecommendedTrips: Waiting for auth...')
+        logger.debug('🔍 RecommendedTrips: Waiting for auth...')
         return
       }
 
       // ユーザーがログインしていない場合は空の配列を返す
       if (!user) {
-        console.log('🔍 RecommendedTrips: No user, returning empty trips')
+        logger.debug('🔍 RecommendedTrips: No user, returning empty trips')
         setTrips([])
         setLoading(false)
         return
       }
 
       try {
-        console.log('🔍 RecommendedTrips: Fetching recommendations for user:', user.uid)
+        logger.debug('🔍 RecommendedTrips: Fetching recommendations for user:', user.uid)
         const resp = await makeAuthenticatedRequest(`/api/trips/recommended?limit=${limit}`)
         
         if (resp.ok) {
           const data = await resp.json()
-          console.log('✅ RecommendedTrips: Got trips:', data.trips?.length || 0)
+          logger.debug('✅ RecommendedTrips: Got trips:', data.trips?.length || 0)
           setTrips(data.trips || [])
         } else {
           const errorData = await resp.json()
-          console.error('❌ RecommendedTrips: API error:', errorData)
+          logger.error('❌ RecommendedTrips: API error:', errorData)
         }
       } catch (e) {
-        console.error('❌ RecommendedTrips: Fetch error:', e)
+        logger.error('❌ RecommendedTrips: Fetch error:', e)
       } finally {
         setLoading(false)
       }

@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers, PlaceSearchResult } from '@/lib/places-api'
@@ -85,7 +86,7 @@ export default function PlaceSearchInput({
       setShowResults(true)
       setError(null) // 成功時はエラーをクリア
     } catch (error) {
-      console.error('Search error:', error)
+      logger.error('Search error:', error)
       const errorMessage = error instanceof Error ? error.message : '場所の検索に失敗しました'
       
       // ZERO_RESULTSの場合はエラーではなく、結果なしとして扱う
@@ -117,7 +118,7 @@ export default function PlaceSearchInput({
       setShowResults(false)
       setError(null)
     } catch (error) {
-      console.error('Error getting place details:', error)
+      logger.error('Error getting place details:', error)
       const errorMessage = error instanceof Error ? error.message : '場所の詳細情報の取得に失敗しました'
       setError(`詳細取得エラー: ${errorMessage}`)
     }

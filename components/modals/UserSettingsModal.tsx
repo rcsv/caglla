@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/auth-context'
@@ -42,7 +43,7 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
         setPreferences(data.user.preferences || {})
       }
     } catch (error) {
-      console.error('Failed to fetch user data:', error)
+      logger.error('Failed to fetch user data:', error)
     }
   }
 
@@ -85,7 +86,7 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
         setNameError('スラッグの確認に失敗しました')
       }
     } catch (error) {
-      console.error('Failed to check slug availability:', error)
+      logger.error('Failed to check slug availability:', error)
       setNameError('スラッグの確認に失敗しました')
     } finally {
       setIsCheckingSlug(false)
@@ -123,7 +124,7 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
 
     setSaving(true)
     try {
-      console.log('Saving user data:', {
+      logger.debug('Saving user data:', {
         name: userData?.name,
         email: userData?.email,
         profile_image_url: userData?.profile_image_url,
@@ -144,21 +145,21 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
         })
       })
       
-      console.log('Save response status:', response.status)
+      logger.debug('Save response status:', response.status)
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Save successful:', data)
+        logger.debug('Save successful:', data)
         setUserData(data.user)
         alert('設定を保存しました')
         onClose() // ダイアログを閉じる
       } else {
         const errorData = await response.json().catch(() => ({}))
-        console.error('Save failed:', response.status, errorData)
+        logger.error('Save failed:', response.status, errorData)
         alert(`設定の保存に失敗しました: ${errorData.error || '不明なエラー'}`)
       }
     } catch (error) {
-      console.error('Failed to save preferences:', error)
+      logger.error('Failed to save preferences:', error)
       alert('設定の保存に失敗しました: ネットワークエラー')
     } finally {
       setSaving(false)

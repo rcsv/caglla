@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
@@ -64,7 +65,7 @@ export default function StorageUsageDisplay({
         setError(result.error || 'ストレージ使用量の取得に失敗しました')
       }
     } catch (error) {
-      console.error('Error fetching storage usage:', error)
+      logger.error('Error fetching storage usage:', error)
       setError('ストレージ使用量の取得に失敗しました')
     } finally {
       setLoading(false)
@@ -102,7 +103,7 @@ export default function StorageUsageDisplay({
         throw new Error(result.error || 'ファイルの削除に失敗しました')
       }
     } catch (error: any) {
-      console.error('Error deleting file:', error)
+      logger.error('Error deleting file:', error)
       setError(error.message || 'ファイルの削除に失敗しました')
     } finally {
       setDeleting(null)

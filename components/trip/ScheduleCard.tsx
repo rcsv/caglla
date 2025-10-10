@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers } from '@/lib/places-api'
@@ -209,16 +210,16 @@ export default function ScheduleCard({
 
   // 写真のURLを取得
   const getPhotoUrl = () => {
-    console.log('🖼️ Getting photo URL for:', itinerary.title)
-    console.log('  place_data:', itinerary.place_data)
-    console.log('  photos:', itinerary.place_data?.photos)
+    logger.debug('🖼️ Getting photo URL for:', itinerary.title)
+    logger.debug('  place_data:', itinerary.place_data)
+    logger.debug('  photos:', itinerary.place_data?.photos)
     
     if (itinerary.place_data?.photos && itinerary.place_data.photos.length > 0) {
       const photoUrl = placesApiHelpers.getPhotoUrl(itinerary.place_data.photos[0].photo_reference, 300)
-      console.log('  Generated photo URL:', photoUrl)
+      logger.debug('  Generated photo URL:', photoUrl)
       return photoUrl
     }
-    console.log('  No photos available')
+    logger.debug('  No photos available')
     return null
   }
 
@@ -246,10 +247,10 @@ export default function ScheduleCard({
           const updatedItinerary = await response.json()
           onUpdate?.(updatedItinerary)
         } else {
-          console.error('Failed to update title')
+          logger.error('Failed to update title')
         }
       } catch (error) {
-        console.error('Error updating title:', error)
+        logger.error('Error updating title:', error)
       } finally {
         setIsSaving(false)
       }
@@ -287,10 +288,10 @@ export default function ScheduleCard({
           const updatedItinerary = await response.json()
           onUpdate?.(updatedItinerary)
         } else {
-          console.error('Failed to update description')
+          logger.error('Failed to update description')
         }
       } catch (error) {
-        console.error('Error updating description:', error)
+        logger.error('Error updating description:', error)
       } finally {
         setIsSaving(false)
       }
@@ -322,7 +323,7 @@ export default function ScheduleCard({
         onUpdate?.(updatedItinerary)
       }
     } catch (error) {
-      console.error('Error updating time:', error)
+      logger.error('Error updating time:', error)
     }
   }
 
@@ -344,7 +345,7 @@ export default function ScheduleCard({
         onUpdate?.(updatedItinerary)
       }
     } catch (error) {
-      console.error('Error updating timezone:', error)
+      logger.error('Error updating timezone:', error)
     }
   }
 
@@ -366,7 +367,7 @@ export default function ScheduleCard({
         onUpdate?.(updatedItinerary)
       }
     } catch (error) {
-      console.error('Error updating currency:', error)
+      logger.error('Error updating currency:', error)
     }
   }
 
@@ -401,11 +402,11 @@ export default function ScheduleCard({
         onUpdate?.(updatedItinerary)
         setIsEditingTime(false)
       } else {
-        console.error('Failed to update time')
+        logger.error('Failed to update time')
         alert('時間の更新に失敗しました')
       }
     } catch (error) {
-      console.error('Error updating time:', error)
+      logger.error('Error updating time:', error)
       alert('時間の更新に失敗しました')
     } finally {
       setIsSaving(false)
@@ -455,11 +456,11 @@ export default function ScheduleCard({
         onUpdate?.(updatedItinerary)
         setIsEditingCost(false)
       } else {
-        console.error('Failed to update cost')
+        logger.error('Failed to update cost')
         alert('費用の更新に失敗しました')
       }
     } catch (error) {
-      console.error('Error updating cost:', error)
+      logger.error('Error updating cost:', error)
       alert('費用の更新に失敗しました')
     } finally {
       setIsSaving(false)
@@ -531,11 +532,11 @@ export default function ScheduleCard({
         const updatedItinerary = await response.json()
         onMoveToDay?.(itinerary.id, targetDayId)
       } else {
-        console.error('Failed to move itinerary')
+        logger.error('Failed to move itinerary')
         alert('日程の移動に失敗しました')
       }
     } catch (error) {
-      console.error('Error moving itinerary:', error)
+      logger.error('Error moving itinerary:', error)
       alert('日程の移動に失敗しました')
     }
   }
@@ -561,11 +562,11 @@ export default function ScheduleCard({
         const duplicatedItinerary = await response.json()
         onDuplicateToDay?.(itinerary.id, targetDayId)
       } else {
-        console.error('Failed to duplicate itinerary')
+        logger.error('Failed to duplicate itinerary')
         alert('日程の複製に失敗しました')
       }
     } catch (error) {
-      console.error('Error duplicating itinerary:', error)
+      logger.error('Error duplicating itinerary:', error)
       alert('日程の複製に失敗しました')
     }
   }
@@ -638,11 +639,11 @@ export default function ScheduleCard({
                   alt={itinerary.title}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    console.error('❌ Image load error for:', itinerary.title, photoUrl)
+                    logger.error('❌ Image load error for:', itinerary.title, photoUrl)
                     e.currentTarget.style.display = 'none'
                   }}
                   onLoad={() => {
-                    console.log('✅ Image loaded successfully for:', itinerary.title)
+                    logger.debug('✅ Image loaded successfully for:', itinerary.title)
                   }}
                 />
               ) : (

@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { placesApiHelpers, PlaceSearchResult } from '@/lib/places-api'
@@ -65,7 +66,7 @@ export default function AddScheduleModal({
       const results = await placesApiHelpers.searchPlaces(query)
       setSearchResults(results)
     } catch (error) {
-      console.error('Error searching places:', error)
+      logger.error('Error searching places:', error)
       setSearchResults([])
     } finally {
       setIsSearching(false)
@@ -83,8 +84,8 @@ export default function AddScheduleModal({
   const handleSelectPlace = async (place: PlaceSearchResult) => {
     setIsSaving(true)
     try {
-      console.log(`AddScheduleModal: insertAfterIndex=${insertAfterIndex}, dayId=${dayId}`)
-      console.log(`Selected place:`, place)
+      logger.debug(`AddScheduleModal: insertAfterIndex=${insertAfterIndex}, dayId=${dayId}`)
+      logger.debug(`Selected place:`, place)
       
       // 挿入位置が指定されている場合は新しい挿入APIを使用、そうでなければ従来のAPIを使用
       const apiEndpoint = insertAfterIndex !== undefined ? '/api/itineraries/insert' : '/api/itineraries'
@@ -111,12 +112,12 @@ export default function AddScheduleModal({
       // 挿入位置が指定されている場合は追加
       if (insertAfterIndex !== undefined) {
         requestBody.insert_after_index = insertAfterIndex + 1 // 1ベースのインデックスに変換
-        console.log(`Using insert API with insert_after_index=${insertAfterIndex + 1} (converted from 0-based ${insertAfterIndex})`)
+        logger.debug(`Using insert API with insert_after_index=${insertAfterIndex + 1} (converted from 0-based ${insertAfterIndex})`)
       } else {
-        console.log(`Using regular API (no insert position specified)`)
+        logger.debug(`Using regular API (no insert position specified)`)
       }
       
-      console.log(`Sending request to ${apiEndpoint} with place_data`)
+      logger.debug(`Sending request to ${apiEndpoint} with place_data`)
       
       // APIでスケジュールを保存（place_idとplace_dataを送信）
       const response = await makeAuthenticatedRequest(apiEndpoint, {
@@ -132,11 +133,11 @@ export default function AddScheduleModal({
         onScheduleAdded(newSchedule)
         handleClose()
       } else {
-        console.error('Failed to save schedule')
+        logger.error('Failed to save schedule')
         alert('スケジュールの保存に失敗しました')
       }
     } catch (error) {
-      console.error('Error saving schedule:', error)
+      logger.error('Error saving schedule:', error)
       alert('スケジュールの保存に失敗しました')
     } finally {
       setIsSaving(false)

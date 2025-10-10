@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -75,7 +76,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
         }
       }
     } catch (error) {
-      console.error('Failed to fetch Unsplash image:', error)
+      logger.error('Failed to fetch Unsplash image:', error)
     } finally {
       setIsLoadingUnsplashImage(false)
     }
@@ -180,24 +181,24 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
         if (formData.imageUrl) {
           try {
             await imageUploadHelpers.deleteImage(formData.imageUrl)
-            console.log('Failed creation image deleted:', formData.imageUrl)
+            logger.debug('Failed creation image deleted:', formData.imageUrl)
           } catch (error) {
-            console.error('Failed to delete image after creation failure:', error)
+            logger.error('Failed to delete image after creation failure:', error)
           }
         }
-        console.error('Failed to create trip')
+        logger.error('Failed to create trip')
       }
     } catch (error) {
       // エラーが発生した場合、アップロードした画像を削除
       if (formData.imageUrl) {
         try {
           await imageUploadHelpers.deleteImage(formData.imageUrl)
-          console.log('Error image deleted:', formData.imageUrl)
+          logger.debug('Error image deleted:', formData.imageUrl)
         } catch (deleteError) {
-          console.error('Failed to delete image after error:', deleteError)
+          logger.error('Failed to delete image after error:', deleteError)
         }
       }
-      console.error('Error creating trip:', error)
+      logger.error('Error creating trip:', error)
     } finally {
       setSubmitting(false)
     }
@@ -223,9 +224,9 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     if (formData.imageUrl) {
       try {
         await imageUploadHelpers.deleteImage(formData.imageUrl)
-        console.log('Cancelled image deleted:', formData.imageUrl)
+        logger.debug('Cancelled image deleted:', formData.imageUrl)
       } catch (error) {
-        console.error('Failed to delete cancelled image:', error)
+        logger.error('Failed to delete cancelled image:', error)
       }
     }
     

@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { getZIndexClass } from '@/lib/z-index-layers'
@@ -41,25 +42,25 @@ export default function POIDialog({ poiData, onClose, className = '' }: POIDialo
       setError(null)
       
       try {
-        console.log('🔍 Checking PlacesCache for place_id:', poiData.placeId)
+        logger.debug('🔍 Checking PlacesCache for place_id:', poiData.placeId)
         
         // まずPlacesCacheを確認
         const cachedData = await getCachedPlace(poiData.placeId)
         if (cachedData) {
-          console.log('✅ Found cached data:', cachedData.name)
+          logger.debug('✅ Found cached data:', cachedData.name)
           
           // キャッシュデータにopen_nowがない場合、最新の営業状態を取得
           if (cachedData.opening_hours && cachedData.opening_hours.open_now === undefined) {
-            console.log('🔄 Fetching current open_now status...')
+            logger.debug('🔄 Fetching current open_now status...')
             try {
               const currentDetails = await placesApiHelpers.getPlaceDetails(poiData.placeId)
               if (currentDetails.opening_hours?.open_now !== undefined) {
                 // キャッシュデータに最新のopen_nowを追加
                 cachedData.opening_hours.open_now = currentDetails.opening_hours.open_now
-                console.log('✅ Updated open_now status:', currentDetails.opening_hours.open_now)
+                logger.debug('✅ Updated open_now status:', currentDetails.opening_hours.open_now)
               }
             } catch (err) {
-              console.warn('⚠️ Failed to fetch current open_now status:', err)
+              logger.warn('⚠️ Failed to fetch current open_now status:', err)
             }
           }
           
@@ -68,20 +69,20 @@ export default function POIDialog({ poiData, onClose, className = '' }: POIDialo
           return
         }
         
-        console.log('❌ No cached data found, calling Google Places API...')
+        logger.debug('❌ No cached data found, calling Google Places API...')
         
         // キャッシュにない場合はAPIを呼び出し
         const details = await placesApiHelpers.getPlaceDetails(poiData.placeId)
         setPlaceDetails(details)
         
-        console.log('💾 Saving to PlacesCache...')
+        logger.debug('💾 Saving to PlacesCache...')
         
         // APIで取得したデータをキャッシュに保存
         await placesCacheManager.fetchAndCachePlace(poiData.placeId)
         
-        console.log('✅ Data saved to PlacesCache')
+        logger.debug('✅ Data saved to PlacesCache')
       } catch (err) {
-        console.error('POI詳細情報の取得に失敗しました:', err)
+        logger.error('POI詳細情報の取得に失敗しました:', err)
         setError('POI情報の取得に失敗しました')
       } finally {
         setLoading(false)

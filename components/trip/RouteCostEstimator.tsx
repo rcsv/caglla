@@ -1,3 +1,4 @@
+import logger from '@/lib/logger'
 import React, { useState, useEffect } from 'react'
 import { estimateRouteCost, getCostOptimizationSuggestions } from '@/lib/route-optimization'
 
@@ -36,7 +37,7 @@ export default function RouteCostEstimator({
         const estimate = await estimateRouteCost(waypointCount)
         setCostEstimate(estimate)
       } catch (err) {
-        console.error('Error fetching cost estimate:', err)
+        logger.error('Error fetching cost estimate:', err)
         setError('コスト見積もりの取得に失敗しました')
       } finally {
         setIsLoading(false)

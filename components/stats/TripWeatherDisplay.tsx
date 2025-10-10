@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { WeatherApiHelpers, WeatherSummary } from '@/lib/weather-api'
@@ -36,7 +37,7 @@ export default function TripWeatherDisplay({
         const weather = await WeatherApiHelpers.getTripWeather(destination, startDate, endDate)
         setWeatherData(weather)
       } catch (err) {
-        console.error('Error fetching weather:', err)
+        logger.error('Error fetching weather:', err)
         setError('天気情報の取得に失敗しました')
       } finally {
         setIsLoading(false)

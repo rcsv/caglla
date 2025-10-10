@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useRef } from 'react'
 import { imageUploadHelpers } from '@/lib/image-upload'
@@ -30,19 +31,19 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
     setUploading(true)
 
     try {
-      console.log('Starting avatar upload for file:', file.name, 'Size:', file.size)
+      logger.debug('Starting avatar upload for file:', file.name, 'Size:', file.size)
       
       // Generate path for the avatar image
       const path = imageUploadHelpers.generateAvatarImagePath(userId, file.name)
-      console.log('Upload path:', path)
+      logger.debug('Upload path:', path)
 
       // Upload image
       const imageUrl = await imageUploadHelpers.uploadImage(file, path)
-      console.log('Upload successful, URL:', imageUrl)
+      logger.debug('Upload successful, URL:', imageUrl)
       
       onImageChange(imageUrl)
     } catch (error) {
-      console.error('Detailed upload error:', error)
+      logger.error('Detailed upload error:', error)
       setError(`画像のアップロードに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`)
     } finally {
       setUploading(false)
@@ -55,7 +56,7 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
         await imageUploadHelpers.deleteImage(currentImageUrl)
         onImageChange(null)
       } catch (error) {
-        console.error('Error deleting image:', error)
+        logger.error('Error deleting image:', error)
         setError('画像の削除に失敗しました')
       }
     }

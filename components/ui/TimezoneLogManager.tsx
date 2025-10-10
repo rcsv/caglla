@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { timezoneUtils } from '@/lib/timezone-utils'
@@ -32,7 +33,7 @@ export default function TimezoneLogManager() {
         alert('処理対象のログが不足しています（50件未満）。')
       }
     } catch (error) {
-      console.error('Batch processing failed:', error)
+      logger.error('Batch processing failed:', error)
       alert('バッチ処理に失敗しました。')
     } finally {
       setIsProcessing(false)

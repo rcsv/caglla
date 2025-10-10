@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import React, { useState } from 'react'
 import { Itinerary } from '@/lib/firestore'
@@ -67,7 +68,7 @@ export default function DailyRouteOptimizer({
         setError('ルート最適化に失敗しました')
       }
     } catch (err) {
-      console.error('Route optimization error:', err)
+      logger.error('Route optimization error:', err)
       setError('ルート最適化中にエラーが発生しました')
     } finally {
       setIsOptimizing(false)
@@ -78,7 +79,7 @@ export default function DailyRouteOptimizer({
     if (!optimizationResult) return
 
     try {
-      console.log('Applying optimization:', {
+      logger.debug('Applying optimization:', {
         dayId,
         itineraries: itineraries.map(it => ({ id: it.id, name: it.place_data?.name })),
         optimizedOrder: optimizationResult.optimizedOrder
@@ -106,10 +107,10 @@ export default function DailyRouteOptimizer({
       setShowOptimization(false)
       setOptimizationResult(null)
     } catch (error) {
-      console.error('Error applying optimization:', error)
+      logger.error('Error applying optimization:', error)
       // デモ環境では、サーバーエラーでもクライアントサイドの更新は実行
       if (error instanceof Error && (error.message.includes('server update skipped') || error.message.includes('Client-side reordering completed'))) {
-        console.log('Server update skipped, applying client-side changes')
+        logger.debug('Server update skipped, applying client-side changes')
         // ローカルの状態を更新
         const reorderedItineraries = [...itineraries]
         const validIndices = validItineraries.map((_: Itinerary, index: number) => 

@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { CountryGroup } from '@/lib/country-utils'
@@ -36,7 +37,7 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
         throw new Error('Failed to fetch country stats')
       }
     } catch (err) {
-      console.error('Error fetching country stats:', err)
+      logger.error('Error fetching country stats:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch country stats')
     } finally {
       setLoading(false)
@@ -128,7 +129,7 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
           <button
             onClick={() => {
               // 詳細表示のロジックをここに追加
-              console.log('Show detailed country stats')
+              logger.debug('Show detailed country stats')
             }}
             className="w-full text-center text-emerald-600 hover:text-emerald-700 text-sm font-medium"
           >

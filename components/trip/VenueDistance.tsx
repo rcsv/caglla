@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect, useMemo } from 'react'
 import { distanceApiHelpers, DistanceMatrixResult } from '@/lib/distance-api'
@@ -35,14 +36,14 @@ export default function VenueDistance({
 
   useEffect(() => {
     const calculateDistance = async () => {
-      console.log('📏 VenueDistance: Starting calculation')
-      console.log('  fromPlace:', fromPlace)
-      console.log('  toPlace:', toPlace)
-      console.log('  fromPlace.geometry:', fromPlace?.geometry)
-      console.log('  toPlace.geometry:', toPlace?.geometry)
+      logger.debug('📏 VenueDistance: Starting calculation')
+      logger.debug('  fromPlace:', fromPlace)
+      logger.debug('  toPlace:', toPlace)
+      logger.debug('  fromPlace.geometry:', fromPlace?.geometry)
+      logger.debug('  toPlace.geometry:', toPlace?.geometry)
       
       if (!fromPlace?.geometry?.location || !toPlace?.geometry?.location) {
-        console.log('❌ Missing place data or geometry:', { 
+        logger.debug('❌ Missing place data or geometry:', { 
           fromPlace: !!fromPlace, 
           toPlace: !!toPlace,
           fromGeometry: !!fromPlace?.geometry,
@@ -56,7 +57,7 @@ export default function VenueDistance({
 
       // 同じ場所の場合は距離を表示しない
       if (fromPlace.place_id === toPlace.place_id) {
-        console.log('⚠️ Same place, skipping distance calculation')
+        logger.debug('⚠️ Same place, skipping distance calculation')
         setDistanceInfo(null)
         return
       }
@@ -65,9 +66,9 @@ export default function VenueDistance({
       setError(null)
 
       try {
-        console.log('🔄 Calculating distance between:', fromPlace.name, 'and', toPlace.name)
-        console.log('  From coords:', fromPlace.geometry.location)
-        console.log('  To coords:', toPlace.geometry.location)
+        logger.debug('🔄 Calculating distance between:', fromPlace.name, 'and', toPlace.name)
+        logger.debug('  From coords:', fromPlace.geometry.location)
+        logger.debug('  To coords:', toPlace.geometry.location)
         
         const result = await distanceApiHelpers.calculateDistance(
           fromPlace.geometry.location,
@@ -75,10 +76,10 @@ export default function VenueDistance({
           mode
         )
         
-        console.log('✅ Distance result:', result)
+        logger.debug('✅ Distance result:', result)
         setDistanceInfo(result)
       } catch (err) {
-        console.error('❌ Error calculating distance:', err)
+        logger.error('❌ Error calculating distance:', err)
         setError('距離の計算に失敗しました')
       } finally {
         setIsLoading(false)

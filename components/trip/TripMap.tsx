@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useEffect, useRef, useState } from 'react'
 import { Itinerary } from '@/lib/firestore'
@@ -212,7 +213,7 @@ export default function TripMap({
         setDirectionsRenderer(newDirectionsRenderer)
         setLoading(false)
       } catch (error) {
-        console.error('Google Maps APIの読み込みに失敗しました:', error)
+        logger.error('Google Maps APIの読み込みに失敗しました:', error)
         setError(error instanceof Error ? error.message : '地図の読み込みに失敗しました')
         setLoading(false)
       }
@@ -230,13 +231,13 @@ export default function TripMap({
     setMarkers([])
 
     // 位置情報がある itineraries をフィルタリング
-    console.log('🗺️ TripMap: Filtering itineraries')
-    console.log('  Total itineraries:', itineraries.length)
+    logger.debug('🗺️ TripMap: Filtering itineraries')
+    logger.debug('  Total itineraries:', itineraries.length)
     
     const validItineraries = itineraries.filter(
       itinerary => {
         const isValid = !!itinerary.place_data?.geometry?.location
-        console.log(`  Itinerary "${itinerary.title}":`, {
+        logger.debug(`  Itinerary "${itinerary.title}":`, {
           hasPlaceData: !!itinerary.place_data,
           hasGeometry: !!itinerary.place_data?.geometry,
           hasLocation: !!itinerary.place_data?.geometry?.location,
@@ -246,10 +247,10 @@ export default function TripMap({
       }
     )
 
-    console.log('  Valid itineraries count:', validItineraries.length)
+    logger.debug('  Valid itineraries count:', validItineraries.length)
 
     if (validItineraries.length === 0) {
-      console.log('⚠️ No valid itineraries, resetting map')
+      logger.debug('⚠️ No valid itineraries, resetting map')
       // 行先が無い場合は初期センターへ
       if (initialCenter) {
         map.setCenter(initialCenter)
@@ -288,7 +289,7 @@ export default function TripMap({
       labelElement.textContent = markerNumber.toString()
       teardropElement.appendChild(labelElement)
       
-      console.log(`  Creating marker for "${itinerary.title}" with number: ${markerNumber}`)
+      logger.debug(`  Creating marker for "${itinerary.title}" with number: ${markerNumber}`)
 
       // AdvancedMarkerElementを作成
       const marker = new window.google.maps.marker.AdvancedMarkerElement({

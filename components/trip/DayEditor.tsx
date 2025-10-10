@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState } from 'react'
 import { updateDay, Day, Itinerary } from '@/lib/firestore'
@@ -32,7 +33,7 @@ export default function DayEditor({
       onUpdate(updatedDay)
       setIsEditing(false)
     } catch (error) {
-      console.error('日程の更新に失敗しました:', error)
+      logger.error('日程の更新に失敗しました:', error)
       alert('日程の更新に失敗しました')
     } finally {
       setIsLoading(false)

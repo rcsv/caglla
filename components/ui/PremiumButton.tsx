@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import React, { useState } from 'react'
 import { useSubscription } from '@/lib/subscription-context'
@@ -24,7 +25,7 @@ export default function PremiumButton({
   const canUseFeature = useRouteOptimization()
 
   // デバッグ用ログ
-  console.log('PremiumButton Debug:', {
+  logger.debug('PremiumButton Debug:', {
     featureName,
     canUseFeature,
     isSubscribed: subscriptionStatus.isSubscribed,

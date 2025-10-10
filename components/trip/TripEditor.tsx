@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
@@ -42,7 +43,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
       
       return `${year}-${month}-${day}`
     } catch (error) {
-      console.error('Error formatting date:', error)
+      logger.error('Error formatting date:', error)
       return ''
     }
   }
@@ -125,9 +126,9 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
         if (originalImageUrl && originalImageUrl !== formData.imageUrl) {
           try {
             await imageUploadHelpers.deleteImage(originalImageUrl)
-            console.log('Old image deleted:', originalImageUrl)
+            logger.debug('Old image deleted:', originalImageUrl)
           } catch (error) {
-            console.error('Failed to delete old image:', error)
+            logger.error('Failed to delete old image:', error)
             // エラーが発生しても処理は続行
           }
         }
@@ -159,10 +160,10 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
         // 編集モードを終了
         setIsEditing(false)
       } else {
-        console.error('Failed to update trip')
+        logger.error('Failed to update trip')
       }
     } catch (error) {
-      console.error('Error updating trip:', error)
+      logger.error('Error updating trip:', error)
     } finally {
       setSaving(false)
       setShowLoadingOverlay(false)
@@ -174,9 +175,9 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
     if (formData.imageUrl && formData.imageUrl !== originalImageUrl) {
       try {
         await imageUploadHelpers.deleteImage(formData.imageUrl)
-        console.log('Cancelled image deleted:', formData.imageUrl)
+        logger.debug('Cancelled image deleted:', formData.imageUrl)
       } catch (error) {
-        console.error('Failed to delete cancelled image:', error)
+        logger.error('Failed to delete cancelled image:', error)
       }
     }
 
@@ -205,11 +206,11 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
       if (response.ok) {
         onDelete()
       } else {
-        console.error('Failed to delete trip')
+        logger.error('Failed to delete trip')
         alert('旅行の削除に失敗しました')
       }
     } catch (error) {
-      console.error('Error deleting trip:', error)
+      logger.error('Error deleting trip:', error)
       alert('旅行の削除中にエラーが発生しました')
     } finally {
       setDeleting(false)

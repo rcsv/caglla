@@ -1,4 +1,5 @@
 'use client'
+import logger from '@/lib/logger'
 
 import { useDroppable } from '@dnd-kit/core'
 import { useEffect } from 'react'
@@ -25,7 +26,7 @@ export default function DayDropZone({ dayId, dayNumber, isOver, children }: DayD
   // ドロップゾーンの状態をログ
   useEffect(() => {
     if (isDroppableOver) {
-      console.log('DayDropZone is over:', dayId)
+      logger.debug('DayDropZone is over:', dayId)
     }
   }, [isDroppableOver, dayId])
 
