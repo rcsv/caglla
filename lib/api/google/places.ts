@@ -1,7 +1,7 @@
 // Google Places API integration utilities
-import { PlaceData } from './firestore'
-import logger from './logger'
-import type { PlaceSearchResult, PlaceDetailsResult } from './types'
+import { PlaceData } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
+import type { PlaceSearchResult, PlaceDetailsResult } from '@/lib/core/types'
 
 // Re-export types for backward compatibility
 export type { PlaceSearchResult, PlaceDetailsResult }

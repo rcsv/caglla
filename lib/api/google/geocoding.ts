@@ -1,7 +1,7 @@
 // Google Geocoding API integration utilities
-import { PlaceData } from './firestore'
-import logger from './logger'
-import type { GeocodingResult, GeocodingResponse } from './types'
+import { PlaceData } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
+import type { GeocodingResult, GeocodingResponse } from '@/lib/core/types'
 
 // Google Geocoding API configuration
 const GOOGLE_GEOCODING_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY // 同じAPIキーを使用

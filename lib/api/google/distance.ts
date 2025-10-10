@@ -1,6 +1,6 @@
 // Distance Matrix API integration utilities
-import type { DistanceMatrixResult, DistanceMatrixResponse } from './types'
-import logger from './logger'
+import type { DistanceMatrixResult, DistanceMatrixResponse } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
 
 // Re-export types for backward compatibility
 export type { DistanceMatrixResult, DistanceMatrixResponse }
