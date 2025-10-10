@@ -11,7 +11,7 @@ declare global {
     google: any
   }
 }
-import { getCountryCoordinate } from '@/lib/country-coordinates'
+import { getCountryCoordinate } from '@/lib/travel/country/coordinates'
 
 interface CountryMapProps {
   countryGroups: CountryGroup[]
