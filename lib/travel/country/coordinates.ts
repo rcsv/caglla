@@ -1,6 +1,6 @@
 // 各国の座標データとマッピング機能
 
-import type { CountryCoordinate } from './core/types'
+import type { CountryCoordinate } from '@/lib/core/types'
 
 // 主要国の座標データ
 export const COUNTRY_COORDINATES: CountryCoordinate[] = [

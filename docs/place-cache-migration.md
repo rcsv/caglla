@@ -9,7 +9,7 @@
 - キャッシュミス時: 一度だけ `places/details` プロキシを呼び、結果を `places_cache` に保存。
 
 ## 型の変更
-- `lib/types.ts`
+- `lib/core/types.ts`
   - `Trip`: `destination_place_id?: string`, `destination_place?: PlaceData`
   - `Itinerary`: `place_id?: string | null`, `place_data?: PlaceData | null`
   - `ItineraryFormData`: `place_id?: string | null` を追加（後方互換で `place_data` も許容）

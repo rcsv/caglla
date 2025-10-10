@@ -159,7 +159,7 @@ const COUNTRY_NAMES: { [key: string]: string } = {
   'Mozambique': 'モザンビーク'
 }
 
-import type { CountryGroup } from '../../core/types'
+import type { CountryGroup } from '@/lib/core/types'
 
 // Re-export types for backward compatibility
 export type { CountryGroup }
