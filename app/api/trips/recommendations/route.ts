@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { adminTripOperations } from '@/lib/firestore-admin-operations'
 
 // ランダムな公開旅行を返すAPI（認証不要）
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ trips: publicTrips.slice(0, limit) })
   } catch (error) {
-    console.error('Error fetching recommendations:', error)
+    logger.error('Error fetching recommendations:', error)
     return NextResponse.json({ error: 'Failed to fetch recommendations' }, { status: 500 })
   }
 }

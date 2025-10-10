@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 import type { PlaceData, PlacesCache } from '@/lib/types'
+import logger from '@/lib/logger'
 
 /**
  * Create a new itinerary for a given day and return the saved itinerary with resolved place data.
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
           user_ratings_total: placesCache.user_ratings_total,
           price_level: placesCache.price_level,
           types: placesCache.types,
-          opening_hours: placesCache.opening_hours,
+          opening_hours: placesCache.opening_hours as any,
           international_phone_number: placesCache.international_phone_number,
           website: placesCache.website,
           editorial_summary: placesCache.editorial_summary,
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
           access_count: (placesCache.access_count || 0) + 1 
         }).catch(() => {})
       } else if (place_data?.place_id) {
-        console.log('💾 Saving place_data to PlacesCache:', place_data.place_id)
+        logger.debug('Saving place_data to PlacesCache', { placeId: place_data.place_id })
         // 受け取った place_data をキャッシュへ保存（API追加コールを避ける）
         const cachePayload: any = {
           format_version: '1.0.0',
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
         if (place_data.editorial_summary) cachePayload.editorial_summary = place_data.editorial_summary
         
         await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).set(cachePayload)
-        console.log('✅ Successfully saved to PlacesCache')
+        logger.debug('Successfully saved to PlacesCache')
         
         // PlaceDataとして返す（メタデータを除外）
         resolvedPlaceData = {
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
           editorial_summary: place_data.editorial_summary,
         }
       } else {
-        console.log('⚠️ No place_data provided, attempting to fetch from API')
+        logger.debug('No place_data provided, attempting to fetch from API')
         // サーバー側で一度だけ詳細を取得してキャッシュ
         try {
           // Use a fixed base URL to prevent SSRF
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
             if (result.editorial_summary) cachePayload.editorial_summary = result.editorial_summary
             
             await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).set(cachePayload)
-            console.log('✅ Successfully saved to PlacesCache from API')
+            logger.debug('Successfully saved to PlacesCache from API')
             
             // PlaceDataとして返す（メタデータを除外）
             resolvedPlaceData = {
@@ -175,11 +176,11 @@ export async function POST(request: NextRequest) {
             }
           }
         } catch (err) {
-          console.error('Error fetching from Places API:', err)
+          logger.error('Error fetching from Places API', err)
         }
       }
     } catch (e) {
-      console.error('Error resolving place_data:', e)
+      logger.error('Error resolving place_data', e)
       // 失敗時はplace_dataがあればそれを返す（ベストエフォート）
       resolvedPlaceData = (place_data as PlaceData) || null
     }
@@ -191,11 +192,15 @@ export async function POST(request: NextRequest) {
       place_data: resolvedPlaceData
     }
 
-    console.log(`Created itinerary:`, { id: savedItinerary.id, title: savedItinerary.title, sort_number: savedItinerary.sort_number })
+    logger.info('Itinerary created', { 
+      id: savedItinerary.id, 
+      title: savedItinerary.title, 
+      sort_number: savedItinerary.sort_number 
+    })
 
     return NextResponse.json(savedItinerary)
   } catch (error) {
-    console.error('Error creating itinerary:', error)
+    logger.error('Error creating itinerary', error)
     return NextResponse.json(
       { error: 'Failed to create itinerary' },
       { status: 500 }
@@ -229,7 +234,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(itineraries)
   } catch (error) {
-    console.error('Error fetching itineraries:', error)
+    logger.error('Error fetching itineraries', error)
     return NextResponse.json(
       { error: 'Failed to fetch itineraries' },
       { status: 500 }

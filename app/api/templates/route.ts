@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { adminAuth } from '@/lib/firebase-admin'
 import { planSaveOperations } from '@/lib/plan-save-operations'
 
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
       data: result
     })
   } catch (error) {
-    console.error('Error creating from template:', error)
+    logger.error('Error creating from template:', error)
     return NextResponse.json(
       { error: 'テンプレートからのプラン作成に失敗しました' },
       { status: 500 }
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
       .orderBy('created_at', 'desc')
       .get()
     
-    const templates = templatesSnapshot.docs.map(doc => ({
+    const templates = templatesSnapshot.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data()
     }))
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
       data: templates
     })
   } catch (error) {
-    console.error('Error getting templates:', error)
+    logger.error('Error getting templates:', error)
     return NextResponse.json(
       { error: 'テンプレート一覧の取得に失敗しました' },
       { status: 500 }

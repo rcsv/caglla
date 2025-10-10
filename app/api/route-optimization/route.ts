@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_DIRECTIONS_API_URL = 'https://maps.googleapis.com/maps/api/directions/json'
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       params.append('avoid', avoidOptions.join('|'))
     }
 
-    console.log('Route optimization request:', {
+    logger.debug('Route optimization request', {
       origin: formatLocation(body.origin),
       destination: formatLocation(body.destination),
       waypointCount,
@@ -126,7 +127,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(optimizedResponse)
   } catch (error) {
-    console.error('Error in route optimization API:', error)
+    logger.error('Error in route optimization API', error)
     return NextResponse.json(
       { error: 'Failed to optimize route' },
       { status: 500 }
@@ -149,12 +150,18 @@ export async function GET(request: NextRequest) {
 
     // Google Directions API料金計算
     const requestsNeeded = Math.ceil(waypointCount / 23) // 1リクエストあたり最大23のwaypoint
-    const estimatedCost = requestsNeeded * 0.005 // $0.005 per request
+    const estimatedCostValue = requestsNeeded * 0.005 // $0.005 per request
 
-    const costEstimate = {
+    const costEstimate: {
+      waypointCount: number
+      requestsNeeded: number
+      estimatedCost: string
+      currency: string
+      suggestions: string[]
+    } = {
       waypointCount,
       requestsNeeded,
-      estimatedCost,
+      estimatedCost: `$${estimatedCostValue.toFixed(3)}`,
       currency: 'USD',
       suggestions: []
     }
@@ -170,7 +177,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(costEstimate)
   } catch (error) {
-    console.error('Error in cost estimation API:', error)
+    logger.error('Error in cost estimation API', error)
     return NextResponse.json(
       { error: 'Failed to estimate cost' },
       { status: 500 }

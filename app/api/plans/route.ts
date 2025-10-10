@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { adminAuth } from '@/lib/firebase-admin'
 import { planSaveOperations, PlanSaveData } from '@/lib/plan-save-operations'
 
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       data: result
     })
   } catch (error) {
-    console.error('Error saving plan:', error)
+    logger.error('Error saving plan:', error)
     return NextResponse.json(
       { error: 'プランの保存に失敗しました' },
       { status: 500 }
@@ -75,7 +76,7 @@ export async function PUT(request: NextRequest) {
       data: result
     })
   } catch (error) {
-    console.error('Error updating plan:', error)
+    logger.error('Error updating plan:', error)
     return NextResponse.json(
       { error: 'プランの更新に失敗しました' },
       { status: 500 }

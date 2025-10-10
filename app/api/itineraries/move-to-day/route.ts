@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { adminDb } from '@/lib/firebase-admin'
 
 export async function PUT(request: NextRequest) {
@@ -49,7 +50,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedItinerary)
   } catch (error) {
-    console.error('Error moving itinerary to different day:', error)
+    logger.error('Error moving itinerary to different day:', error)
     return NextResponse.json(
       { error: 'Failed to move itinerary' },
       { status: 500 }

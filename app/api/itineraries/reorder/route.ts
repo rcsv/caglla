@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
+import logger from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
     const { dayId, itineraryIds } = await request.json()
     
-    console.log('Reorder API called with:', { dayId, itineraryIds })
+    logger.debug('Reorder API called', { dayId, itineraryCount: itineraryIds?.length })
     
     if (!dayId || !itineraryIds || !Array.isArray(itineraryIds)) {
       return NextResponse.json(
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     // Firebase Admin SDKが利用できない場合は、クライアントサイドの更新のみ実行
     if (!adminDb) {
-      console.warn('Firebase Admin SDK not available, skipping server-side update')
+      logger.warn('Firebase Admin SDK not available, skipping server-side update')
       return NextResponse.json({ 
         success: true, 
         message: 'Client-side reordering completed (server update skipped)',
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    console.log('Using Firebase Admin SDK for reordering')
+    logger.debug('Using Firebase Admin SDK for reordering')
 
     // 各itineraryのsort_numberを更新
     const batch = adminDb.batch()
@@ -39,7 +40,9 @@ export async function POST(request: NextRequest) {
 
     await batch.commit()
 
-    console.log('Batch commit successful')
+    logger.info('Itineraries reordered successfully', { 
+      reorderedCount: itineraryIds.length 
+    })
 
     return NextResponse.json({ 
       success: true, 
@@ -47,7 +50,7 @@ export async function POST(request: NextRequest) {
       reorderedCount: itineraryIds.length
     })
   } catch (error) {
-    console.error('Error reordering itineraries:', error)
+    logger.error('Error reordering itineraries', error)
     return NextResponse.json(
       { error: `Failed to reorder itineraries: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }

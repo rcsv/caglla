@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 
 const GOOGLE_GEOCODING_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode'
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error('Error in reverse geocoding proxy:', error)
+    logger.error('Error in reverse geocoding proxy:', error)
     return NextResponse.json(
       { error: 'Failed to reverse geocode coordinates' },
       { status: 500 }

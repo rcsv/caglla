@@ -1,4 +1,5 @@
 // Unsplash画像取得APIエンドポイント
+import logger from '@/lib/logger'
 // 旅行の目的地に関連する画像を取得する
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Unsplash API error:', error)
+    logger.error('Unsplash API error:', error)
     
     if (error instanceof Error) {
       return NextResponse.json(
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Unsplash API error:', error)
+    logger.error('Unsplash API error:', error)
     
     if (error instanceof Error) {
       return NextResponse.json(

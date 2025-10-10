@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place'
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error('Error in places details proxy:', error)
+    logger.error('Error in places details proxy:', error)
     return NextResponse.json(
       { error: 'Failed to get place details' },
       { status: 500 }

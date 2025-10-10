@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { adminUserOperations } from '@/lib/firestore-admin-operations'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import { generateSlug } from '@/lib/slug-utils'
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
         : 'この名前は既に使用されています。別の名前を試してください。'
     })
   } catch (error) {
-    console.error('Error checking slug availability:', error)
+    logger.error('Error checking slug availability:', error)
     return NextResponse.json(
       { error: 'Failed to check slug availability' },
       { status: 500 }

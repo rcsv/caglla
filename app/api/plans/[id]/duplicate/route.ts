@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { adminAuth } from '@/lib/firebase-admin'
 import { planSaveOperations } from '@/lib/plan-save-operations'
 
@@ -31,7 +32,7 @@ export async function POST(
       data: result
     })
   } catch (error) {
-    console.error('Error duplicating plan:', error)
+    logger.error('Error duplicating plan:', error)
     return NextResponse.json(
       { error: 'プランの複製に失敗しました' },
       { status: 500 }

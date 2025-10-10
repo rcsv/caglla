@@ -3,6 +3,7 @@ import { adminUserOperations } from '@/lib/firestore-admin-operations'
 import { adminAuth } from '@/lib/firebase-admin'
 import { generateUniqueSlug } from '@/lib/slug-utils'
 import type { User } from '@/lib/firestore'
+import logger from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,14 +42,14 @@ export async function POST(request: NextRequest) {
       if (name && name !== existingUser.name) {
         userName = name
         userSlug = generateUniqueSlug(name, [])
-        console.log('🔄 User API: Name changed, generating new slug', {
+        logger.debug('User name changed, generating new slug', {
           oldName: existingUser.name,
           newName: userName,
           oldSlug: existingUser.slug,
           newSlug: userSlug
         })
       } else {
-        console.log('✅ User API: Existing user, keeping current data', {
+        logger.debug('Existing user, keeping current data', {
           name: userName,
           slug: userSlug
         })
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       const userName = name || decodedToken.name || 'ユーザー'
       const userSlug = generateUniqueSlug(userName, [])
       
-      console.log('🆕 User API: New user, using Google info', {
+      logger.debug('New user, using Google info', {
         name: userName,
         email: decodedToken.email,
         slug: userSlug
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     const user = await adminUserOperations.createOrUpdateUser(userData)
     
-    console.log('💾 User API: User saved successfully', {
+    logger.info('User saved successfully', {
       userId: user.id,
       name: user.name,
       slug: user.slug
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ user })
   } catch (error) {
-    console.error('Error creating/updating user:', error)
+    logger.error('Error creating/updating user', error)
     return NextResponse.json(
       { error: 'Failed to create/update user' },
       { status: 500 }
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ user })
   } catch (error) {
-    console.error('Error fetching user:', error)
+    logger.error('Error fetching user', error)
     return NextResponse.json(
       { error: 'Failed to fetch user' },
       { status: 500 }

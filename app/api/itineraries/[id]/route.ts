@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
+import logger from '@/lib/logger'
 
 export async function PUT(
   request: NextRequest,
@@ -74,7 +75,7 @@ export async function PUT(
       return NextResponse.json(updatedItinerary)
     }
   } catch (error) {
-    console.error('Error updating itinerary:', error)
+    logger.error('Error updating itinerary', error)
     return NextResponse.json(
       { error: 'Failed to update itinerary' },
       { status: 500 }
@@ -106,7 +107,7 @@ export async function DELETE(
     // ハードデリート（実際にドキュメントを削除）
     await itineraryRef.delete()
 
-    console.log(`Deleted itinerary: ${id}`)
+    logger.info('Itinerary deleted', { itineraryId: id })
 
     // 同じ日程の後続のitinerariesのsort_numberを1つずつ減らす
     if (dayId && deletedSortNumber > 0) {
@@ -119,7 +120,7 @@ export async function DELETE(
       if (!subsequentItineraries.empty) {
         const batch = adminDb.batch()
         
-        subsequentItineraries.docs.forEach(doc => {
+        subsequentItineraries.docs.forEach((doc: any) => {
           const currentSortNumber = doc.data().sort_number || 0
           batch.update(doc.ref, { 
             sort_number: currentSortNumber - 1,
@@ -128,13 +129,13 @@ export async function DELETE(
         })
         
         await batch.commit()
-        console.log(`Renumbered ${subsequentItineraries.docs.length} subsequent itineraries`)
+        logger.debug('Renumbered subsequent itineraries', { count: subsequentItineraries.docs.length })
       }
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting itinerary:', error)
+    logger.error('Error deleting itinerary', error)
     return NextResponse.json(
       { error: 'Failed to delete itinerary' },
       { status: 500 }

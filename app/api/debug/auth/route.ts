@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
+import logger from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Auth debug API called')
+    logger.debug('Auth debug API called')
     
     // Check if Firebase Admin SDK is initialized
     if (!adminAuth || !adminDb) {
-      console.warn('⚠️ Firebase Admin SDK not initialized')
+      logger.warn('Firebase Admin SDK not initialized')
       return NextResponse.json({ 
         error: 'Firebase Admin SDK not initialized',
         isInitialized: false 
       })
     }
 
-    console.log('✅ Firebase Admin SDK is initialized')
+    logger.debug('Firebase Admin SDK is initialized')
 
     // Get authorization header
     const authHeader = request.headers.get('authorization')
-    console.log('🔑 Auth header:', authHeader ? 'Present' : 'Missing')
+    logger.debug('Auth header status', { present: !!authHeader })
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('❌ No valid authorization header')
+      logger.debug('No valid authorization header')
       return NextResponse.json({ 
         error: 'No authorization header',
         hasAuthHeader: false 
@@ -29,15 +30,15 @@ export async function GET(request: NextRequest) {
     }
 
     const idToken = authHeader.split('Bearer ')[1]
-    console.log('🔑 ID token length:', idToken.length)
-    console.log('🔑 ID token preview:', idToken.substring(0, 50) + '...')
+    logger.debug('ID token received', { length: idToken.length })
+    // トークンプレビューは機密情報のため、本番環境では出力しない（logger.debugのみ）
     
     // Try to verify the ID token
     try {
-      console.log('🔍 Attempting to verify ID token...')
+      logger.debug('Attempting to verify ID token')
       const decodedToken = await adminAuth.verifyIdToken(idToken)
       const userId = decodedToken.uid
-      console.log('✅ ID token verified successfully, userId:', userId)
+      logger.info('ID token verified successfully', { userId })
       
       return NextResponse.json({ 
         success: true,
@@ -51,16 +52,16 @@ export async function GET(request: NextRequest) {
         }
       })
     } catch (verifyError) {
-      console.error('❌ ID token verification failed:', verifyError)
+      logger.error('ID token verification failed', verifyError)
       return NextResponse.json({ 
         error: 'ID token verification failed',
         details: verifyError instanceof Error ? verifyError.message : 'Unknown error',
-        tokenLength: idToken.length,
-        tokenPreview: idToken.substring(0, 50) + '...'
+        tokenLength: idToken.length
+        // tokenPreviewは機密情報のため削除
       }, { status: 401 })
     }
   } catch (error) {
-    console.error('❌ Auth debug error:', error)
+    logger.error('Auth debug error', error)
     return NextResponse.json(
       { error: 'Auth debug failed', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

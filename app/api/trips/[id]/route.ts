@@ -80,7 +80,7 @@ export async function GET(
       
 
       // デバッグ用に、browser consoleに、
-      console.log('Day itineraries:', itinerariesSnapshot.docs.map(doc => doc.data()))
+      logger.debug('Day itineraries', { itineraries: itinerariesSnapshot.docs.map(doc => doc.data()) })
 
       const itineraries = itinerariesSnapshot.docs
         .map((itineraryDoc: any) => {
@@ -95,7 +95,10 @@ export async function GET(
         .sort((a: Itinerary, b: Itinerary) => (a.sort_number || 0) - (b.sort_number || 0)) // 念のためJavaScript側でもソート（FirestoreでorderBy済み）
       
       // デバッグ用ログ
-      console.log(`Day ${dayDoc.id} itineraries sort_numbers:`, itineraries.map(i => ({ id: i.id, title: i.title, sort_number: i.sort_number })))
+      logger.debug('Day itineraries sort_numbers', { 
+        dayId: dayDoc.id, 
+        itineraries: itineraries.map(i => ({ id: i.id, title: i.title, sort_number: i.sort_number })) 
+      })
 
       days.push({
         id: dayDoc.id,
@@ -130,7 +133,7 @@ export async function GET(
           }
         }
       } catch (error) {
-        console.error('Error fetching creator:', error)
+        logger.error('Error fetching creator', error)
       }
     }
 
@@ -143,7 +146,7 @@ export async function GET(
 
     return NextResponse.json(trip)
   } catch (error) {
-    console.error('Error fetching trip:', error)
+    logger.error('Error fetching trip', error)
     return NextResponse.json(
       { error: 'Failed to fetch trip' },
       { status: 500 }
@@ -210,7 +213,7 @@ export async function PUT(
     )
     
     if (datesChanged && newStartDate && newEndDate) {
-      console.log('日程が変更されました。daysドキュメントを更新します。')
+      logger.debug('Trip dates changed, updating days documents')
       
       // 既存のdayドキュメントを削除
       const daysSnapshot = await adminDb
@@ -257,7 +260,7 @@ export async function PUT(
         dayNumber++
       }
     } else {
-      console.log('日程に変更はありません。daysドキュメントは更新しません。')
+      logger.debug('No changes to trip dates, skipping days update')
     }
 
     // タイトルが変更された場合はスラッグを更新
@@ -310,7 +313,7 @@ export async function PUT(
 
     return NextResponse.json(updatedTrip)
   } catch (error) {
-    console.error('Error updating trip:', error)
+    logger.error('Error updating trip', error)
     return NextResponse.json(
       { error: 'Failed to update trip' },
       { status: 500 }
@@ -351,7 +354,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Trip deleted successfully' })
   } catch (error) {
-    console.error('Error deleting trip:', error)
+    logger.error('Error deleting trip', error)
     return NextResponse.json(
       { error: 'Failed to delete trip' },
       { status: 500 }

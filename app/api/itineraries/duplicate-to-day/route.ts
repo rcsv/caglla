@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { adminDb } from '@/lib/firebase-admin'
 
 /**
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(savedItinerary)
   } catch (error) {
-    console.error('Error duplicating itinerary:', error)
+    logger.error('Error duplicating itinerary:', error)
     return NextResponse.json(
       { error: 'Failed to duplicate itinerary' },
       { status: 500 }

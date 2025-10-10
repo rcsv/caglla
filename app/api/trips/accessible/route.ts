@@ -3,12 +3,13 @@ import { adminTripOperations, adminTripUserOperations, adminUserOperations } fro
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 import type { Trip, User } from '@/lib/types'
+import logger from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
     // Check if Firebase Admin SDK is initialized
     if (!adminAuth || !adminDb) {
-      console.warn('Firebase Admin SDK not initialized, returning empty trips')
+      logger.warn('Firebase Admin SDK not initialized, returning empty trips')
       return NextResponse.json({ trips: [] })
     }
 
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
           try {
             return await adminTripOperations.getTripById(tripId)
           } catch (error) {
-            console.error(`Error fetching shared trip ${tripId}:`, error)
+            logger.error('Error fetching shared trip', error, { tripId })
             return null
           }
         })
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest) {
             creator
           }
         } catch (error) {
-          console.error(`Error fetching creator for trip ${trip.id}:`, error)
+          logger.error('Error fetching creator for trip', error, { tripId: trip.id })
           return trip
         }
       })
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ trips: tripsWithCreator })
   } catch (error) {
-    console.error('Error fetching trips:', error)
+    logger.error('Error fetching trips', error)
     return NextResponse.json(
       { error: 'Failed to fetch trips' },
       { status: 500 }

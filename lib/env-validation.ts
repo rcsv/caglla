@@ -38,34 +38,21 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
     }
   }
 
-  // 開発環境では警告のみ、本番環境ではエラー
+  // すべての環境でエラーを投げる（開発環境でも厳格に検証）
   if (missingVars.length > 0) {
-    const message = `Missing required environment variables: ${missingVars.join(', ')}\n` +
-      'Please check your .env.local file and ensure all required variables are set.'
+    const message = `Missing required environment variables: ${missingVars.join(', ')}\n\n` +
+      'Please follow these steps:\n' +
+      '1. Copy env.example to .env.local\n' +
+      '2. Fill in all required environment variables\n' +
+      '3. Restart the development server\n\n' +
+      'Refer to the README.md for detailed setup instructions.'
     
     if (isDevelopment()) {
-      console.warn('⚠️ Environment validation warning:', message)
-      // 開発環境ではデフォルト値を設定
-      return {
-        NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'dev-api-key',
-        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'dev-project.firebaseapp.com',
-        NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dev-project',
-        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'dev-project.appspot.com',
-        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-        NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789:web:dev',
-        FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || 'dev-project',
-        FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL || 'dev@dev-project.iam.gserviceaccount.com',
-        FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY || '-----BEGIN PRIVATE KEY-----\ndev-key\n-----END PRIVATE KEY-----',
-        NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || 'dev-places-key',
-        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'dev-maps-key',
-        NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 'dev-unsplash-key',
-        UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY || 'dev-unsplash-key',
-        UNSPLASH_SECRET_KEY: process.env.UNSPLASH_SECRET_KEY || 'dev-unsplash-secret',
-        ...process.env as OptionalEnvVars
-      }
-    } else {
-      throw new EnvValidationError(message)
+      console.error('❌ Environment validation failed:', message)
+      console.error('\n📝 Missing variables:', missingVars)
     }
+    
+    throw new EnvValidationError(message)
   }
 
   // Firebase Project IDの一貫性チェック（本番環境のみ）

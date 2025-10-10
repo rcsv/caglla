@@ -3,6 +3,7 @@ import { adminTripOperations, adminDayOperations, adminItineraryOperations } fro
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 import type { PlacesCache, FirestoreDate } from '@/lib/types'
+import logger from '@/lib/logger'
 
 /**
  * FirestoreDateをDateオブジェクトに変換
@@ -59,7 +60,7 @@ export async function GET(
             user_ratings_total: placesCache.user_ratings_total,
             price_level: placesCache.price_level,
             types: placesCache.types,
-            opening_hours: placesCache.opening_hours,
+            opening_hours: placesCache.opening_hours as any,
             international_phone_number: placesCache.international_phone_number,
             website: placesCache.website,
             editorial_summary: placesCache.editorial_summary,
@@ -67,7 +68,7 @@ export async function GET(
         }
       }
     } catch (error) {
-      console.error('Failed to resolve destination_place:', error)
+      logger.error('Failed to resolve destination_place', error)
     }
 
     // Get days for this trip
@@ -98,17 +99,17 @@ export async function GET(
                     user_ratings_total: placesCache.user_ratings_total,
                     price_level: placesCache.price_level,
                     types: placesCache.types,
-                    opening_hours: placesCache.opening_hours,
+                    opening_hours: placesCache.opening_hours as any,
                     international_phone_number: placesCache.international_phone_number,
                     website: placesCache.website,
                     editorial_summary: placesCache.editorial_summary,
                   }
                 } else if (!it.place_data) {
                   // キャッシュにない場合のみ、フォールバックとして既存のplace_dataを使用
-                  console.warn(`PlacesCache not found for itinerary ${it.id} (place_id: ${it.place_id})`)
+                  logger.warn('PlacesCache not found for itinerary', { itineraryId: it.id, placeId: it.place_id })
                 }
               } catch (error) {
-                console.error(`Failed to resolve place_data for itinerary ${it.id}:`, error)
+                logger.error('Failed to resolve place_data for itinerary', error, { itineraryId: it.id })
               }
             } else if (it.place_data && it.place_data.format_version) {
               // place_idがないが、place_dataがPlacesCache形式の場合は変換
@@ -124,7 +125,7 @@ export async function GET(
                 user_ratings_total: placesCache.user_ratings_total,
                 price_level: placesCache.price_level,
                 types: placesCache.types,
-                opening_hours: placesCache.opening_hours,
+                opening_hours: placesCache.opening_hours as any,
                 international_phone_number: placesCache.international_phone_number,
                 website: placesCache.website,
                 editorial_summary: placesCache.editorial_summary,
@@ -163,7 +164,7 @@ export async function GET(
           }
         }
       } catch (error) {
-        console.error('Error fetching creator:', error)
+        logger.error('Error fetching creator', error)
       }
     }
 
@@ -173,7 +174,7 @@ export async function GET(
       creator
     })
   } catch (error) {
-    console.error('Error fetching trip:', error)
+    logger.error('Error fetching trip', error)
     return NextResponse.json(
       { error: 'Failed to fetch trip' },
       { status: 500 }
@@ -278,26 +279,27 @@ export async function PUT(
     const endDateChanged = !compareDates(toDate(originalEndDate), newEndDate)
     
     if ((startDateChanged || endDateChanged) && newStartDate && newEndDate) {
-      console.log('日程が変更されました。daysドキュメントを更新します。')
-      console.log('元の日程:', originalStartDate, '→', originalEndDate)
-      console.log('新しい日程:', newStartDate, '→', newEndDate)
+      logger.debug('Trip dates changed, updating days documents', {
+        original: { start: originalStartDate, end: originalEndDate },
+        new: { start: newStartDate, end: newEndDate }
+      })
       
       // 新しい日程範囲を計算
       const start = new Date(newStartDate)
       const end = new Date(newEndDate)
       
-      // 開始日が終了日より後の場合はエラー
+      // 開始日が終了日より後の場合はエラー      
       if (start > end) {
-        console.error('開始日が終了日より後です:', start, '>', end)
+        logger.error('Start date is after end date', { start, end })
         return NextResponse.json({ error: '開始日は終了日より前である必要があります' }, { status: 400 })
       }
       
       try {
-        console.log('日程更新処理を開始します...')
+        logger.debug('Starting trip dates update process')
         
         // 既存のdaysを取得
         const existingDays = await adminDayOperations.getDaysByTripId(tripId)
-        console.log('既存のdays:', existingDays.map(d => ({ id: d.id, date: d.date, day_number: d.day_number })))
+        logger.debug('Existing days', { days: existingDays.map(d => ({ id: d.id, date: d.date, day_number: d.day_number })) })
         
         // 新しい日程範囲を計算
         const start = new Date(newStartDate)
@@ -309,7 +311,7 @@ export async function PUT(
           if (day.date) {
             const dateKey = getDateKey(day.date)
             existingDaysByDate.set(dateKey, day)
-            console.log(`既存dayマップ: ${dateKey} -> ${day.id}`)
+            logger.debug('Existing day mapped', { dateKey, dayId: day.id })
           }
         })
         
@@ -322,7 +324,10 @@ export async function PUT(
         const startNormalized = normalizeDate(start)
         const endNormalized = normalizeDate(end)
         
-        console.log(`新しい日程範囲: ${getDateKey(startNormalized)} から ${getDateKey(endNormalized)}`)
+        logger.debug('New date range', { 
+          start: getDateKey(startNormalized), 
+          end: getDateKey(endNormalized) 
+        })
         
         let currentDate = new Date(startNormalized)
         let dayNumber = 1
@@ -330,26 +335,35 @@ export async function PUT(
         // 同じ日付の場合の特別処理
         const isSameDay = startNormalized.getTime() === endNormalized.getTime()
         if (isSameDay) {
-          console.log('同じ日付のtripです')
+          logger.debug('Trip is for a single day')
         }
         
         while (currentDate <= endNormalized) {
           const dateKey = getDateKey(currentDate)
           const existingDay = existingDaysByDate.get(dateKey)
           
-          console.log(`処理中の日付: ${dateKey}, dayNumber: ${dayNumber}, 既存day: ${existingDay ? existingDay.id : 'なし'}`)
+          logger.debug('Processing date', { 
+            dateKey, 
+            dayNumber, 
+            hasExistingDay: !!existingDay,
+            existingDayId: existingDay?.id 
+          })
           
           if (existingDay) {
             // 既存のdayが新しい日程範囲内にある場合、day_numberを更新
             if (existingDay.day_number !== dayNumber) {
-              console.log(`day_numberを更新: ${existingDay.day_number} -> ${dayNumber}`)
+              logger.debug('Updating day_number', { 
+                dayId: existingDay.id,
+                old: existingDay.day_number, 
+                new: dayNumber 
+              })
               daysToUpdate.push({ id: existingDay.id, day_number: dayNumber })
             } else {
-              console.log(`day_numberは変更なし: ${dayNumber}`)
+              logger.debug('Day_number unchanged', { dayNumber })
             }
           } else {
             // 新しいdayを作成
-            console.log(`新しいdayを作成: ${dateKey}`)
+            logger.debug('Creating new day', { dateKey })
             daysToCreate.push({
               trip_id: tripId,
               day_number: dayNumber,
@@ -371,7 +385,10 @@ export async function PUT(
         
         // day_numberの更新を実行
         for (const update of daysToUpdate) {
-          console.log(`day_numberを更新: ${update.id} -> ${update.day_number}`)
+          logger.debug('Updating day_number in database', { 
+            dayId: update.id, 
+            newDayNumber: update.day_number 
+          })
           await adminDayOperations.updateDay(update.id, { 
             day_number: update.day_number,
             updated_at: new Date()
@@ -383,7 +400,10 @@ export async function PUT(
           if (day.date) {
             const dayDateNormalized = normalizeDate(day.date)
             if (dayDateNormalized < startNormalized || dayDateNormalized > endNormalized) {
-              console.log(`削除対象のday: ${getDateKey(day.date)} (${day.id})`)
+              logger.debug('Day marked for deletion', { 
+                dateKey: getDateKey(day.date), 
+                dayId: day.id 
+              })
               daysToDelete.push(day.id)
             }
           }
@@ -391,25 +411,28 @@ export async function PUT(
         
         // 不要なdaysとそのitinerariesを削除
         for (const dayId of daysToDelete) {
-          console.log(`dayを削除: ${dayId}`)
+          logger.debug('Deleting day', { dayId })
           await adminDayOperations.deleteDay(dayId)
         }
         
         // 新しいdaysを作成
         for (const dayData of daysToCreate) {
-          console.log(`新しいdayを作成: ${dayData.date.toDateString()}`)
+          logger.debug('Creating new day', { date: dayData.date.toDateString() })
           await adminDayOperations.createDay(dayData)
         }
         
-        console.log(`更新されたdays: ${daysToUpdate.length}, 削除されたdays: ${daysToDelete.length}, 作成されたdays: ${daysToCreate.length}`)
-        console.log('日程更新処理が完了しました')
+        logger.info('Trip dates update completed', { 
+          updated: daysToUpdate.length, 
+          deleted: daysToDelete.length, 
+          created: daysToCreate.length 
+        })
         
       } catch (error) {
-        console.error('日程更新中にエラーが発生しました:', error)
+        logger.error('Error during trip dates update', error)
         return NextResponse.json({ error: '日程の更新に失敗しました' }, { status: 500 })
       }
     } else {
-      console.log('日程に変更はありません。daysドキュメントは更新しません。')
+      logger.debug('No changes to trip dates, skipping days update')
     }
 
     await adminTripOperations.updateTrip(tripId, {
@@ -425,7 +448,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error updating trip:', error)
+    logger.error('Error updating trip', error)
     return NextResponse.json(
       { error: 'Failed to update trip' },
       { status: 500 }
@@ -463,7 +486,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting trip:', error)
+    logger.error('Error deleting trip', error)
     return NextResponse.json(
       { error: 'Failed to delete trip' },
       { status: 500 }

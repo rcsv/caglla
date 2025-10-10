@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminUserOperations } from '@/lib/firestore-admin-operations'
 import { adminAuth } from '@/lib/firebase-admin'
+import logger from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,37 +17,42 @@ export async function POST(request: NextRequest) {
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    console.log('🚀 ユーザーデータ移行を開始します...')
+    logger.info('Starting user data migration')
     
     // 全ユーザーを取得
     const users = await adminUserOperations.getAllUsers()
-    console.log(`📊 ${users.length}件のユーザーが見つかりました`)
+    logger.info('Users found for migration', { userCount: users.length })
     
     let processedCount = 0
     let errorCount = 0
     
     for (const user of users) {
       try {
-        console.log(`\n👤 ユーザー処理中: ${user.id}`)
-        console.log(`   現在のname: ${user.name}`)
+        logger.debug('Processing user', { userId: user.id, name: user.name })
         
         const updateData: any = {}
         let needsUpdate = false
         
         // preferences内のnameフィールドをチェック
         if (user.preferences?.name) {
-          console.log(`   preferences.name: ${user.preferences.name}`)
+          logger.debug('Found name in preferences', { 
+            userId: user.id,
+            preferencesName: user.preferences.name 
+          })
           
           // preferences内のnameがドキュメント直下のnameと異なる場合
           if (user.preferences.name !== user.name) {
-            console.log(`   ⚠️  nameの不整合を検出`)
+            logger.debug('Name inconsistency detected', { userId: user.id })
             
             // preferences内のnameを優先（より詳細な情報の可能性）
             if (user.preferences.name.length > user.name.length) {
               updateData.name = user.preferences.name
-              console.log(`   ✅ preferences.nameを採用: ${user.preferences.name}`)
+              logger.debug('Adopting preferences.name', { 
+                userId: user.id,
+                newName: user.preferences.name 
+              })
             } else {
-              console.log(`   ✅ 既存のnameを維持: ${user.name}`)
+              logger.debug('Keeping existing name', { userId: user.id })
             }
             needsUpdate = true
           }
@@ -59,22 +65,23 @@ export async function POST(request: NextRequest) {
         
         if (needsUpdate) {
           await adminUserOperations.updateUser(user.id, updateData)
-          console.log(`   ✅ 更新完了`)
+          logger.debug('User updated', { userId: user.id })
           processedCount++
         } else {
-          console.log(`   ℹ️  更新不要`)
+          logger.debug('No update needed', { userId: user.id })
         }
         
       } catch (error) {
-        console.error(`   ❌ エラー: ${error}`)
+        logger.error('Error processing user', error, { userId: user.id })
         errorCount++
       }
     }
     
-    console.log(`\n📈 移行完了:`)
-    console.log(`   - 処理済み: ${processedCount}件`)
-    console.log(`   - エラー: ${errorCount}件`)
-    console.log(`   - 総数: ${users.length}件`)
+    logger.info('Migration completed', {
+      processed: processedCount,
+      errors: errorCount,
+      total: users.length
+    })
     
     return NextResponse.json({ 
       success: true,
@@ -84,7 +91,7 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('❌ 移行中にエラーが発生しました:', error)
+    logger.error('Error during user data migration', error)
     return NextResponse.json(
       { error: 'Failed to migrate user data' },
       { status: 500 }

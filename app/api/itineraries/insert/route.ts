@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 import type { PlaceData, PlacesCache } from '@/lib/types'
+import logger from '@/lib/logger'
 
 /**
  * Insert a new itinerary into a specified day at a given position and renumber subsequent itineraries as needed.
@@ -48,8 +49,17 @@ export async function POST(request: NextRequest) {
     // 挿入位置に基づいて新しいsort_numberを計算
     let newSortNumber: number
     
-    console.log(`Insert API: insertAfterIndex=${insertAfterIndex}, existingItineraries.length=${existingItineraries.length}`)
-    console.log(`Existing itineraries sort_numbers:`, existingItineraries.map(i => ({ id: i.id, title: i.title, sort_number: i.sort_number })))
+    logger.debug('Insert API called', { 
+      insertAfterIndex, 
+      existingCount: existingItineraries.length 
+    })
+    logger.debug('Existing itineraries', { 
+      itineraries: existingItineraries.map((i: any) => ({ 
+        id: i.id, 
+        title: i.title, 
+        sort_number: i.sort_number 
+      }))
+    })
     
     if (insertAfterIndex < 0 || insertAfterIndex >= existingItineraries.length) {
       // 最後に追加する場合
@@ -65,7 +75,7 @@ export async function POST(request: NextRequest) {
         // insertAfterIndex番目の後に挿入するので、sort_numberはinsertAfterIndex + 1
         newSortNumber = insertAfterIndex + 1
         
-        console.log(`Insert after display index ${insertAfterIndex}: newSortNumber=${newSortNumber}`)
+        logger.debug('Insert after display index', { insertAfterIndex, newSortNumber })
         
         // 新しいsort_number以降のitinerariesのsort_numberを1つずつ増やす
         itinerariesToUpdate = existingItineraries.filter((i: any) => (i.sort_number || 0) >= newSortNumber)
@@ -91,7 +101,9 @@ export async function POST(request: NextRequest) {
       // バッチ更新を実行
       if (itinerariesToUpdate.length > 0) {
         await batch.commit()
-        console.log(`Updated ${itinerariesToUpdate.length} itineraries after insertion`)
+        logger.debug('Updated itineraries after insertion', { 
+          count: itinerariesToUpdate.length 
+        })
       }
     }
 
@@ -129,7 +141,7 @@ export async function POST(request: NextRequest) {
           user_ratings_total: placesCache.user_ratings_total,
           price_level: placesCache.price_level,
           types: placesCache.types,
-          opening_hours: placesCache.opening_hours,
+          opening_hours: placesCache.opening_hours as any,
           international_phone_number: placesCache.international_phone_number,
           website: placesCache.website,
           editorial_summary: placesCache.editorial_summary,
@@ -140,7 +152,7 @@ export async function POST(request: NextRequest) {
           access_count: (placesCache.access_count || 0) + 1 
         }).catch(() => {})
       } else if (place_data?.place_id) {
-        console.log('💾 Saving place_data to PlacesCache:', place_data.place_id)
+        logger.debug('Saving place_data to PlacesCache', { placeId: place_data.place_id })
         const cachePayload: any = {
           format_version: '1.0.0',
           place_id: place_data.place_id,
@@ -163,7 +175,7 @@ export async function POST(request: NextRequest) {
         if (place_data.editorial_summary) cachePayload.editorial_summary = place_data.editorial_summary
         
         await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).set(cachePayload)
-        console.log('✅ Successfully saved to PlacesCache')
+        logger.debug('Successfully saved to PlacesCache')
         
         // PlaceDataとして返す（メタデータを除外）
         resolvedPlaceData = {
@@ -184,7 +196,7 @@ export async function POST(request: NextRequest) {
         }
       }
     } catch (e) {
-      console.error('Error resolving place_data:', e)
+      logger.error('Error resolving place_data', e)
       resolvedPlaceData = (place_data as PlaceData) || null
     }
 
@@ -194,12 +206,16 @@ export async function POST(request: NextRequest) {
       place_data: resolvedPlaceData
     }
 
-    console.log(`Inserted itinerary at position ${newSortNumber} in day ${day_id}`)
-    console.log(`Inserted itinerary details:`, { id: savedItinerary.id, title: savedItinerary.title, sort_number: savedItinerary.sort_number })
+    logger.info('Itinerary inserted', { 
+      position: newSortNumber, 
+      dayId: day_id,
+      itineraryId: savedItinerary.id,
+      title: savedItinerary.title
+    })
 
     return NextResponse.json(savedItinerary)
   } catch (error) {
-    console.error('Error inserting itinerary:', error)
+    logger.error('Error inserting itinerary', error)
     return NextResponse.json(
       { error: 'Failed to insert itinerary' },
       { status: 500 }

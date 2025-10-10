@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { adminAuth } from '@/lib/firebase-admin'
 import { planSaveOperations } from '@/lib/plan-save-operations'
 
@@ -38,7 +39,7 @@ export async function POST(
       message: 'テンプレートとして保存しました'
     })
   } catch (error) {
-    console.error('Error saving as template:', error)
+    logger.error('Error saving as template:', error)
     return NextResponse.json(
       { error: 'テンプレートの保存に失敗しました' },
       { status: 500 }

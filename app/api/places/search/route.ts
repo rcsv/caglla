@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place'
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('Searching for:', query)
+    logger.debug('Searching for place', { query })
 
     // 複数の検索戦略を試行
     const searchStrategies = [
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     
     for (let i = 0; i < searchStrategies.length; i++) {
       const apiUrl = searchStrategies[i]
-      console.log(`Trying search strategy ${i + 1}`)
+      logger.debug('Trying search strategy', { strategyNumber: i + 1 })
       
       try {
         const response = await fetch(apiUrl)
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
         lastError = new Error(`No results found with strategy ${i + 1}`)
         
       } catch (error) {
-        console.log(`Search strategy ${i + 1} failed:`, error)
+        logger.debug('Search strategy failed', { strategyNumber: i + 1, error })
         lastError = error instanceof Error ? error : new Error('Unknown error')
         
         // 最後の戦略でない場合は次の戦略を試す
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
     // すべての戦略が失敗した場合
     throw lastError || new Error('All search strategies failed')
   } catch (error) {
-    console.error('Error in places search proxy:', error)
+    logger.error('Error in places search proxy', error)
     return NextResponse.json(
       { error: 'Failed to search places' },
       { status: 500 }

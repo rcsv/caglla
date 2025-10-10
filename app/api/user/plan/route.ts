@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase-admin'
+import logger from '@/lib/logger'
 import { PlanId } from '@/lib/restriction-system'
 
 // 開発環境用のフォールバック（Firebase Admin SDKが利用できない場合）
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     // Firebase Admin SDKの初期化チェック
     if (!adminDb || !adminAuth) {
-      console.warn('Firebase Admin SDK not available, using development fallback')
+      logger.warn('Firebase Admin SDK not available, using development fallback')
       
       // 開発環境用のフォールバック
       const mockUserId = 'dev-user-123'
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
       userId: uid
     })
   } catch (error) {
-    console.error('Error fetching user plan:', error)
+    logger.error('Error fetching user plan', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -57,7 +58,7 @@ export async function PUT(request: NextRequest) {
   try {
     // Firebase Admin SDKの初期化チェック
     if (!adminDb || !adminAuth) {
-      console.warn('Firebase Admin SDK not available, using development fallback')
+      logger.warn('Firebase Admin SDK not available, using development fallback')
       
       // 開発環境用のフォールバック
       const { planId } = await request.json()
@@ -110,7 +111,7 @@ export async function PUT(request: NextRequest) {
       message: 'Plan updated successfully'
     })
   } catch (error) {
-    console.error('Error updating user plan:', error)
+    logger.error('Error updating user plan', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -12,9 +12,10 @@ export interface MemoriesSectionProps {
 }
 
 export const MemoriesSection: React.FC<MemoriesSectionProps> = ({ trips }) => {
+  const router = useRouter()
+  
   if (!trips || trips.length === 0) return null
   const limited = trips.slice(0, 3)
-  const router = useRouter()
   return (
     <section id="memories">
       <Card

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { adminDb, adminAuth } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, stats })
   } catch (error) {
-    console.error('Migration failed:', error)
+    logger.error('Migration failed:', error)
     return NextResponse.json({ error: 'Migration failed' }, { status: 500 })
   }
 }

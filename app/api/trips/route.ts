@@ -6,6 +6,7 @@ import { generateUniqueSlug } from '@/lib/slug-utils'
 import { adminDb } from '@/lib/firebase-admin'
 import { COLLECTIONS } from '@/lib/firestore'
 import type { PlaceData } from '@/lib/types'
+import logger from '@/lib/logger'
 
 /**
  * Retrieve trips for the authenticated user, optionally grouped by country.
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ trips })
   } catch (error) {
-    console.error('Error fetching trips:', error)
+    logger.error('Error fetching trips', error)
     return NextResponse.json(
       { error: 'Failed to fetch trips' },
       { status: 500 }
@@ -67,12 +68,12 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚀 Trip API: Starting trip creation')
+    logger.debug('Starting trip creation')
     
     // Get authorization header
     const authHeader = request.headers.get('authorization')
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('❌ Trip API: Missing authorization header')
+      logger.debug('Missing authorization header')
       return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
     }
 
@@ -82,11 +83,11 @@ export async function POST(request: NextRequest) {
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
     
-    console.log('✅ Trip API: User authenticated:', userId)
+    logger.debug('User authenticated', { userId })
 
     const body = await request.json()
     
-    console.log('📝 Trip API: Request body:', {
+    logger.debug('Trip creation request', {
       title: body.title,
       destination: body.destination,
       hasImageUrl: !!body.imageUrl,
@@ -108,27 +109,30 @@ export async function POST(request: NextRequest) {
     // タイトルが空の場合は目的地を使用
     const finalTitle = title || destination
     if (!finalTitle) {
-      console.log('❌ Trip API: Title or destination is required')
+      logger.debug('Title or destination is required but not provided')
       return NextResponse.json(
         { error: 'Title or destination is required' },
         { status: 400 }
       )
     }
 
-    console.log('🔄 Trip API: Getting existing trips for user:', userId)
+    logger.debug('Getting existing trips for user', { userId })
     
     // ユーザーの既存旅行スラッグを取得
     const existingTrips = await adminTripOperations.getTripsByUserId(userId)
     const existingSlugs = existingTrips.map(t => t.slug).filter((slug): slug is string => Boolean(slug))
     
-    console.log('📊 Trip API: Found existing trips:', existingTrips.length, 'slugs:', existingSlugs.length)
+    logger.debug('Found existing trips', { 
+      tripCount: existingTrips.length, 
+      slugCount: existingSlugs.length 
+    })
     
     // 旅行タイトルからユニークなスラッグを生成
     const tripSlug = generateUniqueSlug(finalTitle, existingSlugs)
     
-    console.log('🏷️ Trip API: Generated trip slug:', tripSlug)
+    logger.debug('Generated trip slug', { tripSlug })
 
-    console.log('🏗️ Trip API: Creating trip with data:', {
+    logger.debug('Creating trip', {
       userId,
       title: finalTitle,
       slug: tripSlug,
@@ -158,24 +162,24 @@ export async function POST(request: NextRequest) {
 
     const trip = await adminTripOperations.createTrip(tripData)
 
-    console.log('✅ Trip API: Trip created successfully:', trip.id)
+    logger.info('Trip created successfully', { tripId: trip.id })
 
     // Create days if start and end dates are provided
     if (startDate && endDate) {
-      console.log('📅 Trip API: Creating days for trip:', trip.id)
+      logger.debug('Creating days for trip', { tripId: trip.id })
       await createDaysForTrip(trip.id, startDate, endDate)
-      console.log('✅ Trip API: Days created successfully')
+      logger.debug('Days created successfully')
     }
 
-    console.log('👤 Trip API: Fetching user data for creator info')
+    logger.debug('Fetching user data for creator info')
     
     // 最新のユーザー情報を取得してcreator情報を追加
     const user = await adminUserOperations.getUserByGoogleId(userId)
     if (user) {
       trip.creator = user
-      console.log('✅ Trip API: Creator info added:', user.slug)
+      logger.debug('Creator info added', { userSlug: user.slug })
     } else {
-      console.log('⚠️ Trip API: User not found for creator info')
+      logger.warn('User not found for creator info', { userId })
     }
 
     // UI利便性のため、destination_place を解決して返す
@@ -216,11 +220,10 @@ export async function POST(request: NextRequest) {
       // best-effort
     }
 
-    console.log('🎉 Trip API: Trip creation completed successfully')
+    logger.info('Trip creation completed successfully')
     return NextResponse.json(trip)
   } catch (error) {
-    console.error('❌ Trip API: Error creating trip:', error)
-    console.error('❌ Trip API: Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    logger.error('Error creating trip', error)
     return NextResponse.json(
       { error: 'Failed to create trip' },
       { status: 500 }

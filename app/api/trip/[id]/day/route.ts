@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { adminAuth } from '@/lib/firebase-admin'
 import { adminDayOperations, adminTripOperations } from '@/lib/firestore-admin-operations'
 
@@ -32,8 +33,11 @@ export async function POST(
     let newDate: Date
     if (existingDays.length > 0) {
       const lastDay = existingDays.find(d => d.day_number === Math.max(...existingDays.map(d => d.day_number)))
-      if (lastDay) {
-        newDate = new Date(lastDay.date)
+      if (lastDay && lastDay.date) {
+        const lastDate = lastDay.date instanceof Date ? lastDay.date : 
+                        typeof lastDay.date === 'string' ? new Date(lastDay.date) :
+                        'toDate' in lastDay.date ? lastDay.date.toDate() : new Date()
+        newDate = new Date(lastDate)
         newDate.setDate(newDate.getDate() + 1)
       } else {
         newDate = new Date()
@@ -56,7 +60,7 @@ export async function POST(
 
     return NextResponse.json(newDay)
   } catch (error) {
-    console.error('Error creating day:', error)
+    logger.error('Error creating day:', error)
     return NextResponse.json(
       { error: 'Failed to create day' },
       { status: 500 }

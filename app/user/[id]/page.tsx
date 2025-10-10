@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { Trip } from '@/lib/types'
+import logger from '@/lib/logger'
 
-export default function UserProfilePage({ params }: { params: { id: string } }) {
+export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [profileUser, setProfileUser] = useState<any>(null)
@@ -20,10 +21,10 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
   }, [user, loading, router])
 
   useEffect(() => {
-    if (user) {
+    if (user && userId) {
       fetchUserProfile()
     }
-  }, [user, params.id])
+  }, [user, userId])
 
   const fetchUserProfile = async () => {
     try {
@@ -38,7 +39,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
         })
         
         // Fetch user's public trips
-        const response = await fetch(`/api/trips?userId=${params.id}`)
+        const response = await fetch(`/api/trips?userId=${userId}`)
         if (response.ok) {
           const data = await response.json()
           setPublicTrips(data.trips.filter((trip: Trip) => trip.access_level === 'public'))
@@ -49,7 +50,7 @@ export default function UserProfilePage({ params }: { params: { id: string } }) 
         router.push('/home')
       }
     } catch (error) {
-      console.error('Failed to fetch user profile:', error)
+      logger.error('Failed to fetch user profile', error)
     } finally {
       setProfileLoading(false)
     }

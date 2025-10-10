@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { storageManagementHelpers } from '@/lib/storage-management'
 import { verifyIdToken } from '@/lib/firebase-admin'
 
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error getting storage quota:', error)
+    logger.error('Error getting storage quota:', error)
     return NextResponse.json(
       { success: false, error: 'ストレージ制限情報の取得に失敗しました' },
       { status: 500 }
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error checking storage quota:', error)
+    logger.error('Error checking storage quota:', error)
     return NextResponse.json(
       { success: false, error: 'ストレージ制限の確認に失敗しました' },
       { status: 500 }

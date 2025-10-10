@@ -13,9 +13,10 @@ export interface UpcomingTripsSectionProps {
 }
 
 export const UpcomingTripsSection: React.FC<UpcomingTripsSectionProps> = ({ trips }) => {
+  const router = useRouter()
+  
   if (!trips || trips.length === 0) return null
   const limited = trips.slice(0, 3)
-  const router = useRouter()
   return (
     <section>
       <Card

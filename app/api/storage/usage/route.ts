@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 import { storageManagementHelpers } from '@/lib/storage-management'
 import { verifyIdToken } from '@/lib/firebase-admin'
 
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error getting storage usage:', error)
+    logger.error('Error getting storage usage:', error)
     return NextResponse.json(
       { success: false, error: 'ストレージ使用量の取得に失敗しました' },
       { status: 500 }
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     )
   } catch (error) {
-    console.error('Error updating storage usage:', error)
+    logger.error('Error updating storage usage:', error)
     return NextResponse.json(
       { success: false, error: 'ストレージ使用量の更新に失敗しました' },
       { status: 500 }

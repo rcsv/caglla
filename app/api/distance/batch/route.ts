@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_DISTANCE_MATRIX_API_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json'
@@ -93,7 +94,9 @@ export async function POST(request: NextRequest) {
           const fromPlace = places[rowIndex]
           const toPlace = places[rowIndex + 1]
           
-          console.warn(`Distance calculation failed for segment ${rowIndex}-${elementIndex}:`, {
+          logger.warn('Distance calculation failed for segment', {
+            rowIndex,
+            elementIndex,
             from: fromPlace?.name || 'Unknown',
             to: toPlace?.name || 'Unknown',
             from_coords: fromPlace?.geometry?.location ? 
@@ -114,7 +117,7 @@ export async function POST(request: NextRequest) {
               toPlace.geometry.location
             )
             
-            console.log(`Using fallback straight-line distance: ${fallbackDistance.toFixed(2)}km`)
+            logger.debug('Using fallback straight-line distance', { distanceKm: fallbackDistance.toFixed(2) })
             
             // フォールバック距離を追加（徒歩時間を推定）
             const estimatedWalkingTime = Math.round(fallbackDistance * 12) // 時速5kmで計算
@@ -162,7 +165,7 @@ export async function POST(request: NextRequest) {
       segmentCount: segments.length
     })
   } catch (error) {
-    console.error('Error in batch distance calculation:', error)
+    logger.error('Error in batch distance calculation', error)
     return NextResponse.json(
       { error: 'Failed to calculate total distance' },
       { status: 500 }
