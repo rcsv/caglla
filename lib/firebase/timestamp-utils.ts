@@ -3,7 +3,7 @@
  * FirestoreDate型（Timestamp | Date | string）をDate型に統一的に変換
  */
 
-import type { FirestoreDate } from '../core/types'
+import type { FirestoreDate } from '@/lib/core/types'
 
 /**
  * FirestoreDateをDate型に変換

@@ -1,7 +1,7 @@
 import { adminDb } from './admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { User, Trip, Day, Itinerary, TripUser } from '@/lib/core/types'
-import { convertStandardDates } from './timestamp-utils'
+import { convertStandardDates, toDateOrNull } from './timestamp-utils'
 
 // Helper functions for Firestore Admin operations
 const adminFirestoreHelpers = {
@@ -115,9 +115,10 @@ export const adminTripOperations = {
     
     // Sort by created_at on the client side (descending)
     return trips.sort((a: Trip, b: Trip) => {
-      const aTime = typeof a.created_at === 'string' ? new Date(a.created_at).getTime() : a.created_at.getTime()
-      const bTime = typeof b.created_at === 'string' ? new Date(b.created_at).getTime() : b.created_at.getTime()
-      return bTime - aTime
+      const aDate = toDateOrNull(a.created_at) ;
+      const bDate = toDateOrNull(b.created_at) ;
+      if (!aDate || !bDate) return 0 
+      return bDate.getTime() - aDate.getTime();
     })
   },
 
@@ -156,9 +157,10 @@ export const adminTripOperations = {
     
     // Sort by created_at on the client side (descending)
     return trips.sort((a: Trip, b: Trip) => {
-      const aTime = typeof a.created_at === 'string' ? new Date(a.created_at).getTime() : a.created_at.getTime()
-      const bTime = typeof b.created_at === 'string' ? new Date(b.created_at).getTime() : b.created_at.getTime()
-      return bTime - aTime
+      const aDate = toDateOrNull(a.created_at) ;
+      const bDate = toDateOrNull(b.created_at) ;
+      if (!aDate || !bDate) return 0 
+      return bDate.getTime() - aDate.getTime();
     })
   }
 }
@@ -372,9 +374,11 @@ export const adminTripUserOperations = {
     
     // Sort by created_at on the client side (descending)
     return tripUsers.sort((a: TripUser, b: TripUser) => {
-      const aTime = typeof a.created_at === 'string' ? new Date(a.created_at).getTime() : a.created_at.getTime()
-      const bTime = typeof b.created_at === 'string' ? new Date(b.created_at).getTime() : b.created_at.getTime()
-      return bTime - aTime
+      const aDate = toDateOrNull(a.created_at) ;
+      const bDate = toDateOrNull(b.created_at) ;
+
+      if (!aDate || !bDate) return 0 
+      return bDate.getTime() - aDate.getTime();
     })
   },
 
