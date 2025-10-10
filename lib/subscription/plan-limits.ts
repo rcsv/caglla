@@ -3,7 +3,7 @@
  * subscription-idea.mdの制限事項に基づく実装
  */
 
-import { SubscriptionPlan } from './dummy-payment-service'
+import { SubscriptionPlan } from './payment-service'
 
 export interface PlanLimits {
   travelCount: number
