@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import logger from './logger'
+import logger from '@/lib/core/logger'
 import { 
   User, 
   onAuthStateChanged, 
@@ -9,11 +9,11 @@ import {
   GoogleAuthProvider, 
   signOut 
 } from 'firebase/auth'
-import { auth } from './firebase'
-import { getBrowserInfo } from './browser-info'
-import { makeAuthenticatedRequest } from './api-helpers'
+import { auth } from '@/lib/firebase/client'
+import { getBrowserInfo } from '@/lib/utils/browser'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 
-import type { AuthContextType } from './types'
+import type { AuthContextType } from '@/lib/core/types'
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -71,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
-        logger.debug('🔄 Auth Context: Updating existing user preferences only')
+        logger.info('Updating existing user preferences')
         await makeAuthenticatedRequest('/api/users', {
           method: 'POST',
           body: JSON.stringify(userData)
@@ -92,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
-        logger.debug('🆕 Auth Context: Creating new user with Google info')
+        logger.info('Creating new user with Google authentication')
         await makeAuthenticatedRequest('/api/users', {
           method: 'POST',
           body: JSON.stringify(userData)

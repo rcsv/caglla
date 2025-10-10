@@ -1,11 +1,11 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import logger from './logger'
-import { useAuth } from '@/lib/auth-context'
-import { makeAuthenticatedRequest } from '@/lib/api-helpers'
-import { PlanId, RestrictionType, PLAN_CONFIGS } from '@/lib/restriction-system'
-import type { Trip, User } from '@/lib/types'
+import logger from '@/lib/core/logger'
+import { useAuth } from '@/lib/contexts/auth'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { PlanId, RestrictionType, PLAN_CONFIGS } from '@/lib/subscription/restriction'
+import type { Trip, User } from '@/lib/core/types'
 
 interface UserDataContextType {
   // ユーザー情報

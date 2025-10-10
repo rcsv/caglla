@@ -1,9 +1,9 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import logger from './logger'
-import { dummyPaymentService, SubscriptionPlan as DummySubscriptionPlan, Subscription, PaymentMethod } from './dummy-payment-service'
-import { RestrictionProvider, RestrictionType, PlanId, PLAN_CONFIGS } from './restriction-system'
+import logger from '@/lib/core/logger'
+import { dummyPaymentService, SubscriptionPlan as DummySubscriptionPlan, Subscription, PaymentMethod } from '@/lib/subscription/payment-service'
+import { RestrictionProvider, RestrictionType, PlanId, PLAN_CONFIGS } from '@/lib/subscription/restriction'
 
 // 統一されたSubscriptionPlan型
 export type SubscriptionPlan = DummySubscriptionPlan
@@ -374,3 +374,5 @@ export const resetDemoData = () => {
   localStorage.removeItem('subscription_id')
   window.location.reload()
 }
+
+// 
