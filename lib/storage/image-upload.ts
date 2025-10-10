@@ -1,7 +1,7 @@
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
-import { storage } from './firebase'
-import { StorageFile } from './types'
-import logger from './logger'
+import { storage } from '@/lib/firebase/client'
+import { StorageFile } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
 
 // ストレージ制限チェック用のAPI呼び出し
 async function checkStorageQuota(userId: string, fileSize: number): Promise<{ canUpload: boolean; error?: string }> {
@@ -53,7 +53,7 @@ async function updateStorageUsage(userId: string, file: StorageFile): Promise<{ 
 
 // Firebase IDトークンを取得
 async function getAuthToken(): Promise<string> {
-  const { auth } = await import('./firebase')
+  const { auth } = await import('./firebase/client')
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated')
   return await user.getIdToken()
