@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import logger from './logger'
 import { 
   User, 
   onAuthStateChanged, 
@@ -70,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
-        console.log('🔄 Auth Context: Updating existing user preferences only')
+        logger.debug('🔄 Auth Context: Updating existing user preferences only')
         await makeAuthenticatedRequest('/api/users', {
           method: 'POST',
           body: JSON.stringify(userData)
@@ -91,14 +92,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
-        console.log('🆕 Auth Context: Creating new user with Google info')
+        logger.debug('🆕 Auth Context: Creating new user with Google info')
         await makeAuthenticatedRequest('/api/users', {
           method: 'POST',
           body: JSON.stringify(userData)
         })
       }
     } catch (error) {
-      console.error('Error creating/updating user:', error)
+      logger.error('Error creating/updating user:', error)
     }
   }
 
@@ -107,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signInWithPopup(auth, provider)
     } catch (error) {
-      console.error('Error signing in with Google:', error)
+      logger.error('Error signing in with Google:', error)
     }
   }
 
@@ -115,7 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signOut(auth)
     } catch (error) {
-      console.error('Error signing out:', error)
+      logger.error('Error signing out:', error)
     }
   }
 

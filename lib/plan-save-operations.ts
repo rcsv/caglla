@@ -1,4 +1,5 @@
 import { adminDb } from './firebase-admin'
+import logger from './logger'
 import { COLLECTIONS } from './firestore'
 import type { User, Trip, Day, Itinerary, TripFormData, ItineraryFormData, DayFormData, PlaceData } from './types'
 
@@ -49,7 +50,7 @@ export class PlanSaveOperations {
         itineraries
       }
     } catch (error) {
-      console.error('Error saving complete plan:', error)
+      logger.error('Error saving complete plan:', error)
       throw new Error('プランの保存に失敗しました')
     }
   }
@@ -85,7 +86,7 @@ export class PlanSaveOperations {
         itineraries
       }
     } catch (error) {
-      console.error('Error updating complete plan:', error)
+      logger.error('Error updating complete plan:', error)
       throw new Error('プランの更新に失敗しました')
     }
   }
@@ -146,7 +147,7 @@ export class PlanSaveOperations {
         itineraries
       }
     } catch (error) {
-      console.error('Error duplicating plan:', error)
+      logger.error('Error duplicating plan:', error)
       throw new Error('プランの複製に失敗しました')
     }
   }
@@ -173,7 +174,7 @@ export class PlanSaveOperations {
       
       await adminDb.collection('templates').add(templateData)
     } catch (error) {
-      console.error('Error saving as template:', error)
+      logger.error('Error saving as template:', error)
       throw new Error('テンプレートの保存に失敗しました')
     }
   }
@@ -224,7 +225,7 @@ export class PlanSaveOperations {
       
       return await this.saveCompletePlan(userId, planData)
     } catch (error) {
-      console.error('Error creating from template:', error)
+      logger.error('Error creating from template:', error)
       throw new Error('テンプレートからのプラン作成に失敗しました')
     }
   }
@@ -394,7 +395,7 @@ export class PlanSaveOperations {
         itineraries
       }
     } catch (error) {
-      console.error('Error getting trip with details:', error)
+      logger.error('Error getting trip with details:', error)
       return null
     }
   }

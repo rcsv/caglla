@@ -7,6 +7,7 @@ import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy }
 import type { Trip, User, PlacesCache, Itinerary } from './types'
 import { COLLECTIONS } from './firestore'
 import { placesCacheManager } from './places-cache'
+import logger from './logger'
 
 /**
  * userSlug から user データを取得
@@ -116,7 +117,7 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
         const itinerariesSnapshot = await getDocs(itinerariesQuery)
         
         // デバッグ用ログ
-        console.log(`Day ${day.id} itineraries sort_numbers:`, itinerariesSnapshot.docs.map(doc => ({ 
+        logger.debug(`Day ${day.id} itineraries sort_numbers:`, itinerariesSnapshot.docs.map(doc => ({ 
           id: doc.id, 
           title: doc.data().title, 
           sort_number: doc.data().sort_number 
@@ -132,7 +133,7 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
             updated_at: (data as any).updated_at?.toDate ? (data as any).updated_at.toDate() : (data as any).updated_at,
           }
 
-          console.log(`📊 Checking itinerary "${data.title}":`, {
+          logger.debug(`📊 Checking itinerary "${data.title}":`, {
             has_place_id: !!(data as any).place_id,
             has_place_data: !!(data as any).place_data,
             place_id: (data as any).place_id || 'none'
@@ -162,16 +163,16 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
                   website: placesCache.website,
                   editorial_summary: placesCache.editorial_summary,
                 }
-                console.log(`✅ Resolved place_data for "${data.title}" from cache:`, itineraryBase.place_data)
+                logger.debug(`✅ Resolved place_data for "${data.title}" from cache:`, itineraryBase.place_data)
               } else {
-                console.log(`⚠️ PlacesCache not found for "${data.title}" (place_id: ${(data as any).place_id})`)
+                logger.debug(`⚠️ PlacesCache not found for "${data.title}" (place_id: ${(data as any).place_id})`)
                 if ((data as any).place_data) {
                   // キャッシュに無い場合は既存の place_data を使用（後方互換）
                   itineraryBase.place_data = (data as any).place_data
-                  console.log(`✅ Using fallback place_data for "${data.title}" (not in cache)`)
+                  logger.debug(`✅ Using fallback place_data for "${data.title}" (not in cache)`)
                 } else {
                   // フォールバックもない場合、APIから取得してキャッシュ
-                  console.log(`🔄 Fetching place_data from API for "${data.title}"`)
+                  logger.debug(`🔄 Fetching place_data from API for "${data.title}"`)
                   try {
                     const fetchedPlaceData = await placesCacheManager.fetchAndCachePlace((data as any).place_id)
                     if (fetchedPlaceData) {
@@ -192,31 +193,31 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
                         website: fetchedPlaceData.website,
                         editorial_summary: fetchedPlaceData.editorial_summary,
                       }
-                      console.log(`✅ Fetched and cached place_data for "${data.title}"`)
+                      logger.debug(`✅ Fetched and cached place_data for "${data.title}"`)
                     } else {
-                      console.log(`❌ Failed to fetch place_data for "${data.title}"`)
+                      logger.debug(`❌ Failed to fetch place_data for "${data.title}"`)
                     }
                   } catch (error) {
-                    console.error(`❌ Error fetching place_data for "${data.title}":`, error)
+                    logger.error(`❌ Error fetching place_data for "${data.title}":`, error)
                   }
                 }
               }
             } catch (error) {
-              console.error(`❌ Failed to resolve place_data for "${data.title}":`, error)
+              logger.error(`❌ Failed to resolve place_data for "${data.title}":`, error)
               // 取得失敗時も既存の place_data をフォールバック
               if ((data as any).place_data) {
                 itineraryBase.place_data = (data as any).place_data
-                console.log(`✅ Using fallback place_data for "${data.title}" (after error)`)
+                logger.debug(`✅ Using fallback place_data for "${data.title}" (after error)`)
               }
             }
           } else {
-            console.log(`⚠️ No place_id for "${data.title}"`)
+            logger.debug(`⚠️ No place_id for "${data.title}"`)
             if ((data as any).place_data) {
               // place_id が無い古いデータ向け
               itineraryBase.place_data = (data as any).place_data
-              console.log(`✅ Using legacy place_data for "${data.title}" (no place_id)`)
+              logger.debug(`✅ Using legacy place_data for "${data.title}" (no place_id)`)
             } else {
-              console.log(`❌ No place_data available for "${data.title}" (no place_id, no place_data)`)
+              logger.debug(`❌ No place_data available for "${data.title}" (no place_id, no place_data)`)
             }
           }
 
@@ -235,7 +236,7 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
       days: daysWithItineraries
     } as Trip
   } catch (error) {
-    console.error('❌ getTripBySlug: Query failed', error)
+    logger.error('❌ getTripBySlug: Query failed', error)
     throw error
   }
 }

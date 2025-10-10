@@ -1,5 +1,6 @@
 // 国名抽出とグループ化のユーティリティ関数
 import { PlaceData } from './firestore'
+import logger from './logger'
 import { geocodingApiHelpers } from './geocoding-api'
 
 // 国名のマッピング（英語→日本語）
@@ -202,7 +203,7 @@ export async function extractCountryFromAddress(formattedAddress: string): Promi
     return { countryCode: 'unknown', countryName: '不明' }
   }
 
-  console.log('extractCountryFromAddress input:', formattedAddress)
+  logger.debug('extractCountryFromAddress input:', formattedAddress)
 
   try {
     // Geocoding APIを使用してaddress_componentsを取得
@@ -210,21 +211,21 @@ export async function extractCountryFromAddress(formattedAddress: string): Promi
     
     if (geocodingResults.length > 0) {
       const result = geocodingResults[0]
-      console.log('Geocoding result:', result)
+      logger.debug('Geocoding result:', result)
       
       // address_componentsから国を抽出
       const countryInfo = extractCountryFromAddressComponents(result.address_components)
       if (countryInfo.countryCode !== 'unknown') {
-        console.log('Found country via Geocoding API:', countryInfo)
+        logger.debug('Found country via Geocoding API:', countryInfo)
         return countryInfo
       }
     }
   } catch (error) {
-    console.warn('Geocoding API failed:', error)
+    logger.warn('Geocoding API failed:', error)
   }
 
   // Geocoding APIが失敗した場合は「不明」として扱う
-  console.log('No country found for:', formattedAddress, 'using unknown')
+  logger.debug('No country found for:', formattedAddress, 'using unknown')
   return { countryCode: 'unknown', countryName: '不明' }
 }
 
@@ -242,10 +243,10 @@ export async function groupTripsByCountry(trips: Array<{
 }>): Promise<CountryGroup[]> {
   const countryMap = new Map<string, CountryGroup>()
 
-  console.log('=== groupTripsByCountry Debug ===')
-  console.log('Total trips:', trips.length)
+  logger.debug('=== groupTripsByCountry Debug ===')
+  logger.debug('Total trips:', trips.length)
   trips.forEach((trip, index) => {
-    console.log(`Trip ${index + 1}:`, {
+    logger.debug(`Trip ${index + 1}:`, {
       title: trip.title,
       destination: trip.destination,
       destinationPlace: trip.destinationPlace ? {
@@ -262,39 +263,39 @@ export async function groupTripsByCountry(trips: Array<{
     let countryName = '不明'
     let countryNameJa = '不明'
 
-    console.log(`Processing trip: ${trip.title}`)
-    console.log('destinationPlace:', trip.destinationPlace)
-    console.log('destination:', trip.destination)
+    logger.debug(`Processing trip: ${trip.title}`)
+    logger.debug('destinationPlace:', trip.destinationPlace)
+    logger.debug('destination:', trip.destination)
 
     if (trip.destinationPlace) {
       // address_componentsがある場合はそれを使用（より正確）
       if (trip.destinationPlace.address_components) {
-        console.log('Using address_components')
+        logger.debug('Using address_components')
         const countryInfo = extractCountryFromAddressComponents(trip.destinationPlace.address_components)
         countryCode = countryInfo.countryCode
         countryName = countryInfo.countryName
         countryNameJa = COUNTRY_NAMES[countryName] || countryName
-        console.log('Country from address_components:', countryInfo)
+        logger.debug('Country from address_components:', countryInfo)
       } else if (trip.destinationPlace.formatted_address) {
-        console.log('Using formatted_address with Geocoding API')
+        logger.debug('Using formatted_address with Geocoding API')
         // address_componentsがない場合はformatted_addressから推測（Geocoding API使用）
         const countryInfo = await extractCountryFromAddress(trip.destinationPlace.formatted_address)
         countryCode = countryInfo.countryCode
         countryName = countryInfo.countryName
         countryNameJa = COUNTRY_NAMES[countryName] || countryName
-        console.log('Country from formatted_address:', countryInfo)
+        logger.debug('Country from formatted_address:', countryInfo)
       }
     } else if (trip.destination) {
-      console.log('Using destination string with Geocoding API')
+      logger.debug('Using destination string with Geocoding API')
       // destinationPlaceがない場合は、destinationから推測（Geocoding API使用）
       const countryInfo = await extractCountryFromAddress(trip.destination)
       countryCode = countryInfo.countryCode
       countryName = countryInfo.countryName
       countryNameJa = COUNTRY_NAMES[countryName] || countryName
-      console.log('Country from destination:', countryInfo)
+      logger.debug('Country from destination:', countryInfo)
     }
 
-    console.log(`Final country info: ${countryCode} - ${countryName} (${countryNameJa})`)
+    logger.debug(`Final country info: ${countryCode} - ${countryName} (${countryNameJa})`)
 
     if (!countryMap.has(countryCode)) {
       countryMap.set(countryCode, {
@@ -318,11 +319,11 @@ export async function groupTripsByCountry(trips: Array<{
     })
   }
 
-  console.log('Final country groups:', Array.from(countryMap.values()))
+  logger.debug('Final country groups:', Array.from(countryMap.values()))
 
   // 旅行数でソート（多い順）
   const result = Array.from(countryMap.values()).sort((a, b) => b.tripCount - a.tripCount)
-  console.log('Sorted result:', result)
+  logger.debug('Sorted result:', result)
   return result
 }
 

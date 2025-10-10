@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
+import logger from './logger'
 import { dummyPaymentService, SubscriptionPlan as DummySubscriptionPlan, Subscription, PaymentMethod } from './dummy-payment-service'
 import { RestrictionProvider, RestrictionType, PlanId, PLAN_CONFIGS } from './restriction-system'
 
@@ -218,7 +219,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         })
       }
     } catch (error) {
-      console.error('Error checking subscription:', error)
+      logger.error('Error checking subscription:', error)
     } finally {
       setIsLoading(false)
     }
@@ -251,7 +252,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       
       return true
     } catch (error) {
-      console.error('Error subscribing to plan:', error)
+      logger.error('Error subscribing to plan:', error)
       return false
     } finally {
       setIsLoading(false)
@@ -273,7 +274,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       
       return true
     } catch (error) {
-      console.error('Error cancelling subscription:', error)
+      logger.error('Error cancelling subscription:', error)
       return false
     } finally {
       setIsLoading(false)

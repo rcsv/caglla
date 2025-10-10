@@ -1,4 +1,5 @@
 import { auth } from './firebase'
+import logger from './logger'
 
 export async function getIdToken(): Promise<string | null> {
   const user = auth.currentUser
@@ -7,7 +8,7 @@ export async function getIdToken(): Promise<string | null> {
   try {
     return await user.getIdToken()
   } catch (error) {
-    console.error('Error getting ID token:', error)
+    logger.error('Error getting ID token:', error)
     return null
   }
 }

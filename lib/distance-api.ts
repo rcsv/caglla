@@ -1,5 +1,6 @@
 // Distance Matrix API integration utilities
 import type { DistanceMatrixResult, DistanceMatrixResponse } from './types'
+import logger from './logger'
 
 // Re-export types for backward compatibility
 export type { DistanceMatrixResult, DistanceMatrixResponse }
@@ -52,7 +53,7 @@ export const distanceApiHelpers = {
 
       return element
     } catch (error) {
-      console.error('Error calculating distance:', error)
+      logger.error('Error calculating distance:', error)
       return null
     }
   },
@@ -117,7 +118,7 @@ export const distanceApiHelpers = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        console.error('Batch distance API error:', {
+        logger.error('Batch distance API error:', {
           status: response.status,
           error: errorData.error || 'Unknown error'
         })
@@ -128,13 +129,13 @@ export const distanceApiHelpers = {
       
       // エラーレスポンスの場合はnullを返す
       if (data.error) {
-        console.error('Batch distance calculation error:', data.error)
+        logger.error('Batch distance calculation error:', data.error)
         return null
       }
       
       return data
     } catch (error) {
-      console.error('Error calculating total distance:', error)
+      logger.error('Error calculating total distance:', error)
       return null
     }
   }

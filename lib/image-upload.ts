@@ -1,6 +1,7 @@
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { storage } from './firebase'
 import { StorageFile } from './types'
+import logger from './logger'
 
 // ストレージ制限チェック用のAPI呼び出し
 async function checkStorageQuota(userId: string, fileSize: number): Promise<{ canUpload: boolean; error?: string }> {
@@ -21,7 +22,7 @@ async function checkStorageQuota(userId: string, fileSize: number): Promise<{ ca
       error: result.success ? result.data.error : result.error
     }
   } catch (error) {
-    console.error('Error checking storage quota:', error)
+    logger.error('Error checking storage quota:', error)
     return { canUpload: false, error: 'ストレージ制限の確認に失敗しました' }
   }
 }
@@ -45,7 +46,7 @@ async function updateStorageUsage(userId: string, file: StorageFile): Promise<{ 
       error: result.error
     }
   } catch (error) {
-    console.error('Error updating storage usage:', error)
+    logger.error('Error updating storage usage:', error)
     return { success: false, error: 'ストレージ使用量の更新に失敗しました' }
   }
 }
@@ -62,10 +63,10 @@ export const imageUploadHelpers = {
   // Upload image to Firebase Storage with storage tracking
   async uploadImage(file: File, path: string, userId: string, tripId?: string, isAvatar?: boolean): Promise<{ downloadURL: string; fileId: string }> {
     try {
-      console.log('Firebase Storage upload starting...')
-      console.log('File:', file.name, 'Size:', file.size, 'Type:', file.type)
-      console.log('Path:', path)
-      console.log('UserId:', userId)
+      logger.debug('Firebase Storage upload starting...')
+      logger.debug('File:', file.name, 'Size:', file.size, 'Type:', file.type)
+      logger.debug('Path:', path)
+      logger.debug('UserId:', userId)
       
       // ストレージ制限をチェック
       const quotaCheck = await checkStorageQuota(userId, file.size)
@@ -75,17 +76,17 @@ export const imageUploadHelpers = {
       
       // Create a reference to the file
       const imageRef = ref(storage, path)
-      console.log('Storage reference created:', imageRef.fullPath)
+      logger.debug('Storage reference created:', imageRef.fullPath)
       
       // Upload the file
-      console.log('Starting upload...')
+      logger.debug('Starting upload...')
       const snapshot = await uploadBytes(imageRef, file)
-      console.log('Upload completed, snapshot:', snapshot)
+      logger.debug('Upload completed, snapshot:', snapshot)
       
       // Get the download URL
-      console.log('Getting download URL...')
+      logger.debug('Getting download URL...')
       const downloadURL = await getDownloadURL(snapshot.ref)
-      console.log('Download URL obtained:', downloadURL)
+      logger.debug('Download URL obtained:', downloadURL)
       
       // ストレージ使用量を追跡
       const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -103,13 +104,13 @@ export const imageUploadHelpers = {
       
       const addResult = await updateStorageUsage(userId, storageFile)
       if (!addResult.success) {
-        console.warn('Failed to track storage usage:', addResult.error)
+        logger.warn('Failed to track storage usage:', addResult.error)
         // アップロードは成功したが、追跡に失敗した場合は警告のみ
       }
       
       return { downloadURL, fileId }
     } catch (error) {
-      console.error('Detailed Firebase Storage error:', error)
+      logger.error('Detailed Firebase Storage error:', error)
       
       // Provide more specific error messages
       if (error instanceof Error) {
@@ -155,57 +156,57 @@ export const imageUploadHelpers = {
     try {
       // Check if imageUrl is valid
       if (!imageUrl || typeof imageUrl !== 'string') {
-        console.warn('Invalid imageUrl provided to deleteImage:', imageUrl)
+        logger.warn('Invalid imageUrl provided to deleteImage:', imageUrl)
         return
       }
 
-      console.log('Attempting to delete image with URL:', imageUrl)
+      logger.debug('Attempting to delete image with URL:', imageUrl)
 
       // Extract the path from the URL with better error handling
       let path: string
       try {
         const url = new URL(imageUrl)
-        console.log('Parsed URL pathname:', url.pathname)
+        logger.debug('Parsed URL pathname:', url.pathname)
         
         // Check if this is a Firebase Storage URL
         if (!url.pathname.includes('/o/')) {
-          console.warn('URL does not appear to be a Firebase Storage URL:', imageUrl)
+          logger.warn('URL does not appear to be a Firebase Storage URL:', imageUrl)
           return
         }
         
         const pathParts = url.pathname.split('/o/')
         if (pathParts.length < 2) {
-          console.warn('Invalid Firebase Storage URL format:', imageUrl)
+          logger.warn('Invalid Firebase Storage URL format:', imageUrl)
           return
         }
         
         const pathWithParams = pathParts[1]
         if (!pathWithParams) {
-          console.warn('No path found in Firebase Storage URL:', imageUrl)
+          logger.warn('No path found in Firebase Storage URL:', imageUrl)
           return
         }
         
         // Remove query parameters
         path = decodeURIComponent(pathWithParams.split('?')[0])
-        console.log('Extracted path:', path)
+        logger.debug('Extracted path:', path)
         
         if (!path) {
-          console.warn('Empty path extracted from URL:', imageUrl)
+          logger.warn('Empty path extracted from URL:', imageUrl)
           return
         }
       } catch (urlError) {
-        console.error('Error parsing image URL:', urlError)
-        console.error('Problematic URL:', imageUrl)
+        logger.error('Error parsing image URL:', urlError)
+        logger.error('Problematic URL:', imageUrl)
         return
       }
       
       // Create a reference to the file
       const imageRef = ref(storage, path)
-      console.log('Created storage reference:', imageRef.fullPath)
+      logger.debug('Created storage reference:', imageRef.fullPath)
       
       // Delete the file
       await deleteObject(imageRef)
-      console.log('Successfully deleted image from storage')
+      logger.debug('Successfully deleted image from storage')
       
       // ストレージ使用量からも削除
       if (userId && fileId) {
@@ -222,16 +223,16 @@ export const imageUploadHelpers = {
           
           const result = await response.json()
           if (!result.success) {
-            console.warn('Failed to update storage usage after deletion:', result.error)
+            logger.warn('Failed to update storage usage after deletion:', result.error)
           } else {
-            console.log('Successfully updated storage usage after deletion')
+            logger.debug('Successfully updated storage usage after deletion')
           }
         } catch (error) {
-          console.warn('Failed to update storage usage after deletion:', error)
+          logger.warn('Failed to update storage usage after deletion:', error)
         }
       }
     } catch (error) {
-      console.error('Error deleting image:', error)
+      logger.error('Error deleting image:', error)
       throw error
     }
   },

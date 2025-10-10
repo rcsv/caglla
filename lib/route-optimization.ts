@@ -155,7 +155,7 @@ export class RouteOptimizer {
           callback(result, status)
         })
       } catch (error) {
-        console.error('Route calculation error:', error)
+        logger.error('Route calculation error:', error)
         callback(null, 'ERROR')
       }
     }, this.config.debounceMs)
@@ -209,7 +209,7 @@ export class RouteOptimizer {
       
       callback(result, result.status)
     } catch (error) {
-      console.error('Route optimization error:', error)
+      logger.error('Route optimization error:', error)
       callback(null, 'ERROR')
     }
   }
@@ -293,7 +293,7 @@ export const estimateRouteCost = async (waypointCount: number): Promise<{
       return await response.json()
     }
   } catch (error) {
-    console.error('Error fetching cost estimate:', error)
+    logger.error('Error fetching cost estimate:', error)
   }
 
   // フォールバック: ローカル計算
@@ -371,11 +371,11 @@ export const optimizeWaypoints = async (
     // 最適化されたwaypointの順序を取得
     const optimizedOrder = result.optimizedOrder || []
     
-    console.log('Google API optimizedOrder:', optimizedOrder)
-    console.log('Waypoints length:', waypoints.length)
-    console.log('Original waypoints:', waypoints.map((wp, i) => ({ index: i, location: wp })))
-    console.log('Origin:', origin)
-    console.log('Destination:', destination)
+    logger.debug('Google API optimizedOrder:', optimizedOrder)
+    logger.debug('Waypoints length:', waypoints.length)
+    logger.debug('Original waypoints:', waypoints.map((wp, i) => ({ index: i, location: wp })))
+    logger.debug('Origin:', origin)
+    logger.debug('Destination:', destination)
     
     // Google APIのoptimizedOrderは、waypointのみの最適化順序
     // 例: waypoints = [A, B, C, D] で optimizedOrder = [2, 0, 3, 1] の場合
@@ -391,7 +391,7 @@ export const optimizeWaypoints = async (
     // destinationは常に最後
     fullOptimizedOrder.push(waypoints.length + 1)
     
-    console.log('Full optimized order:', fullOptimizedOrder)
+    logger.debug('Full optimized order:', fullOptimizedOrder)
 
     return {
       optimizedWaypoints: fullOptimizedOrder.map(index => {
@@ -405,7 +405,7 @@ export const optimizeWaypoints = async (
       costEstimate: result.costEstimate || { apiCalls: 1, estimatedCost: 0.005, currency: 'USD' }
     }
   } catch (error) {
-    console.error('Waypoint optimization error:', error)
+    logger.error('Waypoint optimization error:', error)
     return null
   }
 }
@@ -478,7 +478,7 @@ export const compareRouteOptions = async (
       recommendations
     }
   } catch (error) {
-    console.error('Route comparison error:', error)
+    logger.error('Route comparison error:', error)
     return null
   }
 }
@@ -491,7 +491,7 @@ export const getCostOptimizationSuggestions = async (waypointCount: number): Pro
     const costEstimate = await estimateRouteCost(waypointCount)
     return costEstimate.suggestions
   } catch (error) {
-    console.error('Error getting cost optimization suggestions:', error)
+    logger.error('Error getting cost optimization suggestions:', error)
     return []
   }
 }

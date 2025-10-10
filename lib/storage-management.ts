@@ -1,4 +1,5 @@
 import { adminDb } from './firebase-admin'
+import logger from './logger'
 import { StorageUsage, StorageFile, StorageQuota } from './types'
 
 // Firebase Admin SDKを使用するためのヘルパー関数
@@ -76,7 +77,7 @@ export const storageManagementHelpers = {
         }
       }
     } catch (error) {
-      console.error('Error getting user storage usage:', error)
+      logger.error('Error getting user storage usage:', error)
       throw new Error('ストレージ使用量の取得に失敗しました')
     }
   },
@@ -108,7 +109,7 @@ export const storageManagementHelpers = {
 
       return { success: true }
     } catch (error) {
-      console.error('Error adding file to storage usage:', error)
+      logger.error('Error adding file to storage usage:', error)
       return { 
         success: false, 
         error: 'ストレージ使用量の更新に失敗しました' 
@@ -152,7 +153,7 @@ export const storageManagementHelpers = {
 
       return { success: true }
     } catch (error) {
-      console.error('Error removing file from storage usage:', error)
+      logger.error('Error removing file from storage usage:', error)
       return { 
         success: false, 
         error: 'ストレージ使用量の更新に失敗しました' 
@@ -180,13 +181,13 @@ export const storageManagementHelpers = {
         planId = userData.planId || 'season_traveler'
       } else {
         // ユーザー情報が存在しない場合はデフォルトプランで新規作成
-        console.log('User document not found, using default plan:', userId)
+        logger.debug('User document not found, using default plan:', userId)
       }
 
       const quota = STORAGE_QUOTAS[planId]
       
       if (!quota) {
-        console.warn('Invalid plan ID, using default:', planId)
+        logger.warn('Invalid plan ID, using default:', planId)
         planId = 'season_traveler'
       }
 
@@ -203,7 +204,7 @@ export const storageManagementHelpers = {
         error: canUpload ? undefined : 'ストレージ制限を超えています'
       }
     } catch (error) {
-      console.error('Error checking storage quota:', error)
+      logger.error('Error checking storage quota:', error)
       return {
         canUpload: false,
         quota: STORAGE_QUOTAS.season_traveler,
@@ -242,7 +243,7 @@ export const storageManagementHelpers = {
 
       return { success: true }
     } catch (error) {
-      console.error('Error resetting user storage usage:', error)
+      logger.error('Error resetting user storage usage:', error)
       return { 
         success: false, 
         error: 'ストレージ使用量のリセットに失敗しました' 

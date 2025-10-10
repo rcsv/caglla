@@ -2,6 +2,7 @@
 // 旅行の目的地に関連する画像を自動取得する機能を提供
 
 import { UnsplashPhoto, UnsplashSearchResponse, UnsplashRandomResponse } from './types'
+import logger from './logger'
 
 export interface UnsplashApiConfig {
   accessKey: string
@@ -116,7 +117,7 @@ export class UnsplashApiClient {
 
       return randomPhoto as UnsplashPhoto
     } catch (error) {
-      console.error('Failed to fetch travel photo:', error)
+      logger.error('Failed to fetch travel photo:', error)
       return null
     }
   }
@@ -135,7 +136,7 @@ export class UnsplashApiClient {
 
       return searchResults.results.slice(0, count)
     } catch (error) {
-      console.error('Failed to fetch travel photo options:', error)
+      logger.error('Failed to fetch travel photo options:', error)
       return []
     }
   }
@@ -174,7 +175,7 @@ export const unsplashApiHelpers = {
       
       return null
     } catch (error) {
-      console.error('Failed to get travel photo:', error)
+      logger.error('Failed to get travel photo:', error)
       return null
     }
   },
@@ -193,7 +194,7 @@ export const unsplashApiHelpers = {
         photographer: photo.user.name
       }))
     } catch (error) {
-      console.error('Failed to get travel photo options:', error)
+      logger.error('Failed to get travel photo options:', error)
       return []
     }
   },
@@ -210,7 +211,7 @@ export const unsplashApiHelpers = {
         unsplashUrl: 'https://unsplash.com'
       }
     } catch (error) {
-      console.error('Failed to get photo credit:', error)
+      logger.error('Failed to get photo credit:', error)
       return null
     }
   }

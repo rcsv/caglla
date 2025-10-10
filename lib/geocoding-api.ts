@@ -1,5 +1,6 @@
 // Google Geocoding API integration utilities
 import { PlaceData } from './firestore'
+import logger from './logger'
 import type { GeocodingResult, GeocodingResponse } from './types'
 
 // Google Geocoding API configuration
@@ -13,7 +14,7 @@ export const geocodingApiHelpers = {
       throw new Error('Google Geocoding API key is not configured')
     }
 
-    console.log('Geocoding address:', address)
+    logger.debug('Geocoding address:', address)
 
     try {
       // サーバーサイドでは直接Google Geocoding APIを呼び出し
@@ -33,7 +34,7 @@ export const geocodingApiHelpers = {
 
       return data.results || []
     } catch (error) {
-      console.error('Error geocoding address:', error)
+      logger.error('Error geocoding address:', error)
       throw error
     }
   },
@@ -44,7 +45,7 @@ export const geocodingApiHelpers = {
       throw new Error('Google Geocoding API key is not configured')
     }
 
-    console.log('Reverse geocoding coordinates:', lat, lng)
+    logger.debug('Reverse geocoding coordinates:', lat, lng)
 
     try {
       // サーバーサイドでは直接Google Geocoding APIを呼び出し
@@ -64,7 +65,7 @@ export const geocodingApiHelpers = {
 
       return data.results || []
     } catch (error) {
-      console.error('Error reverse geocoding:', error)
+      logger.error('Error reverse geocoding:', error)
       throw error
     }
   },

@@ -9,6 +9,7 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where,
 import { getAuth } from 'firebase/auth'
 import { PlacesCache, PlaceData } from './types'
 import { COLLECTIONS } from './firestore'
+import logger from './logger'
 import { placesApiHelpers } from './places-api'
 
 // キャッシュの有効期限設定
@@ -36,32 +37,32 @@ export class PlacesCacheManager {
    */
   async getCachedPlace(placeId: string): Promise<PlacesCache | null> {
     try {
-      console.log('🔍 Attempting to get cached place:', placeId)
-      console.log('🔐 Auth state:', this.auth.currentUser ? 'authenticated' : 'not authenticated')
+      logger.debug('🔍 Attempting to get cached place:', placeId)
+      logger.debug('🔐 Auth state:', this.auth.currentUser ? 'authenticated' : 'not authenticated')
       const docRef = doc(this.db, COLLECTIONS.PLACES_CACHE, placeId)
       const docSnap = await getDoc(docRef)
       
       if (!docSnap.exists()) {
-        console.log('❌ No cached document found for:', placeId)
+        logger.debug('❌ No cached document found for:', placeId)
         return null
       }
 
       const data = docSnap.data() as PlacesCache
-      console.log('✅ Found cached data:', data.name)
+      logger.debug('✅ Found cached data:', data.name)
       
       // バージョン互換性をチェック
       if (!this.isCacheVersionCompatible(data)) {
-        console.log('⚠️ Incompatible cache version for:', placeId)
+        logger.debug('⚠️ Incompatible cache version for:', placeId)
         // 互換性のないキャッシュは削除（非同期）
-        this.deleteIncompatibleCache(placeId).catch(console.error)
+        this.deleteIncompatibleCache(placeId).catch(err => logger.error('Failed to delete incompatible cache', err))
         return null
       }
       
       // キャッシュの有効期限をチェック
       if (this.isCacheExpired(data)) {
-        console.log('⚠️ Cached data expired for:', placeId)
+        logger.debug('⚠️ Cached data expired for:', placeId)
         // 期限切れのキャッシュは削除（非同期）
-        this.deleteExpiredCache(1).catch(console.error)
+        this.deleteExpiredCache(1).catch(err => logger.error('Failed to delete expired cache', err))
         return null
       }
       
@@ -70,8 +71,8 @@ export class PlacesCacheManager {
       
       return data
     } catch (error) {
-      console.error('❌ Error getting cached place:', error)
-      console.error('Error details:', error)
+      logger.error('❌ Error getting cached place:', error)
+      logger.error('Error details:', error)
       return null
     }
   }
@@ -118,14 +119,14 @@ export class PlacesCacheManager {
       if (placeData.editorial_summary) cacheData.editorial_summary = placeData.editorial_summary
       
       // Firestoreに保存
-      console.log('💾 Saving cache data:', cacheData)
+      logger.debug('💾 Saving cache data:', cacheData)
       const docRef = doc(this.db, COLLECTIONS.PLACES_CACHE, placeId)
       await setDoc(docRef, cacheData)
-      console.log('✅ Successfully saved to PlacesCache')
+      logger.debug('✅ Successfully saved to PlacesCache')
       
       return cacheData
     } catch (error) {
-      console.error('Error fetching and caching place:', error)
+      logger.error('Error fetching and caching place:', error)
       return null
     }
   }
@@ -173,15 +174,15 @@ export class PlacesCacheManager {
    */
   private isCacheVersionCompatible(cacheData: PlacesCache): boolean {
     if (!cacheData.format_version) {
-      console.log('⚠️ No format_version found, treating as incompatible')
+      logger.debug('⚠️ No format_version found, treating as incompatible')
       return false
     }
     
     const isCompatible = SUPPORTED_VERSIONS.includes(cacheData.format_version)
     if (!isCompatible) {
-      console.log(`⚠️ Incompatible format_version: ${cacheData.format_version}`)
+      logger.debug(`⚠️ Incompatible format_version: ${cacheData.format_version}`)
     } else {
-      console.log(`✅ Compatible format_version: ${cacheData.format_version}`)
+      logger.debug(`✅ Compatible format_version: ${cacheData.format_version}`)
     }
     
     return isCompatible
@@ -207,7 +208,7 @@ export class PlacesCacheManager {
       // Firestore Timestamp型
       cachedAt = cacheData.cached_at.toDate()
     } else {
-      console.error('Invalid cached_at type:', typeof cacheData.cached_at, cacheData.cached_at)
+      logger.error('Invalid cached_at type:', typeof cacheData.cached_at, cacheData.cached_at)
       return true // 不明な型の場合は期限切れとする
     }
     
@@ -217,7 +218,7 @@ export class PlacesCacheManager {
     // 動的情報（営業時間、評価）がある場合は7日間で期限切れ
     if (cacheData.opening_hours || cacheData.rating !== undefined) {
       if (daysSinceCached > CACHE_EXPIRY.DYNAMIC_INFO_DAYS) {
-        console.log(`⚠️ Dynamic info expired (${daysSinceCached} days old)`)
+        logger.debug(`⚠️ Dynamic info expired (${daysSinceCached} days old)`)
         return true
       }
     }
@@ -225,18 +226,18 @@ export class PlacesCacheManager {
     // 写真がある場合は30日間で期限切れ
     if (cacheData.photos && cacheData.photos.length > 0) {
       if (daysSinceCached > CACHE_EXPIRY.PHOTOS_DAYS) {
-        console.log(`⚠️ Photos expired (${daysSinceCached} days old)`)
+        logger.debug(`⚠️ Photos expired (${daysSinceCached} days old)`)
         return true
       }
     }
     
     // 基本情報は1年間有効
     if (daysSinceCached > CACHE_EXPIRY.BASIC_INFO_DAYS) {
-      console.log(`⚠️ Basic info expired (${daysSinceCached} days old)`)
+      logger.debug(`⚠️ Basic info expired (${daysSinceCached} days old)`)
       return true
     }
     
-    console.log(`✅ Cache is still valid (${daysSinceCached} days old)`)
+    logger.debug(`✅ Cache is still valid (${daysSinceCached} days old)`)
     return false
   }
 
@@ -252,7 +253,7 @@ export class PlacesCacheManager {
         access_count: await this.incrementAccessCount(placeId)
       })
     } catch (error) {
-      console.error('Error updating access stats:', error)
+      logger.error('Error updating access stats:', error)
     }
   }
 
@@ -264,9 +265,9 @@ export class PlacesCacheManager {
     try {
       const docRef = doc(this.db, COLLECTIONS.PLACES_CACHE, placeId)
       await setDoc(docRef, {}, { merge: false }) // 完全削除
-      console.log(`🗑️ Deleted incompatible cache for: ${placeId}`)
+      logger.debug(`🗑️ Deleted incompatible cache for: ${placeId}`)
     } catch (error) {
-      console.error('Error deleting incompatible cache:', error)
+      logger.error('Error deleting incompatible cache:', error)
     }
   }
 
@@ -287,7 +288,7 @@ export class PlacesCacheManager {
       
       return 1
     } catch (error) {
-      console.error('Error incrementing access count:', error)
+      logger.error('Error incrementing access count:', error)
       return 1
     }
   }
@@ -318,12 +319,12 @@ export class PlacesCacheManager {
       
       if (deletedCount > 0) {
         await batch.commit()
-        console.log(`🗑️ Deleted ${deletedCount} expired cache entries`)
+        logger.debug(`🗑️ Deleted ${deletedCount} expired cache entries`)
       }
       
       return deletedCount
     } catch (error) {
-      console.error('Error deleting expired cache:', error)
+      logger.error('Error deleting expired cache:', error)
       return 0
     }
   }
@@ -344,7 +345,7 @@ export class PlacesCacheManager {
       const querySnapshot = await getDocs(q)
       return querySnapshot.docs.map(doc => doc.data() as PlacesCache)
     } catch (error) {
-      console.error('Error getting popular places:', error)
+      logger.error('Error getting popular places:', error)
       return []
     }
   }
@@ -365,7 +366,7 @@ export class PlacesCacheManager {
       const querySnapshot = await getDocs(q)
       return querySnapshot.docs.map(doc => doc.data() as PlacesCache)
     } catch (error) {
-      console.error('Error getting recently accessed places:', error)
+      logger.error('Error getting recently accessed places:', error)
       return []
     }
   }
@@ -397,7 +398,7 @@ export class PlacesCacheManager {
         averageAccessCount: totalPlaces > 0 ? totalAccesses / totalPlaces : 0
       }
     } catch (error) {
-      console.error('Error getting cache stats:', error)
+      logger.error('Error getting cache stats:', error)
       return {
         totalPlaces: 0,
         totalAccesses: 0,

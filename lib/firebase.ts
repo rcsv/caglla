@@ -1,4 +1,5 @@
 import { initializeApp } from 'firebase/app'
+import logger from './logger'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
@@ -15,8 +16,8 @@ const firebaseConfig = {
 
 // 環境変数の検証
 if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) {
-  console.error('❌ Firebase configuration is missing required environment variables')
-  console.error('Required variables:', {
+  logger.error('❌ Firebase configuration is missing required environment variables')
+  logger.error('Required variables:', {
     NEXT_PUBLIC_FIREBASE_API_KEY: !!firebaseConfig.apiKey,
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: !!firebaseConfig.authDomain,
     NEXT_PUBLIC_FIREBASE_PROJECT_ID: !!firebaseConfig.projectId,
@@ -38,7 +39,7 @@ try {
   db = getFirestore(app)
   storage = getStorage(app)
 } catch (error) {
-  console.error('❌ Firebase initialization failed:', error)
+  logger.error('❌ Firebase initialization failed:', error)
   // フォールバック用のダミーオブジェクト
   app = null
   auth = null

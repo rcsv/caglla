@@ -1,4 +1,5 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import logger from './logger'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 
@@ -25,14 +26,14 @@ try {
   adminDb = getFirestore(app)
   adminAuth = getAuth(app)
   
-  console.log('✅ Firebase Admin SDK initialized successfully')
+  logger.debug('✅ Firebase Admin SDK initialized successfully')
 } catch (error) {
-  console.error('❌ Firebase Admin SDK initialization failed:', error)
-  console.error('Please ensure all required environment variables are set:')
-  console.error('  - FIREBASE_PROJECT_ID')
-  console.error('  - FIREBASE_CLIENT_EMAIL')
-  console.error('  - FIREBASE_PRIVATE_KEY')
-  console.error('\nRefer to env.example for required configuration.')
+  logger.error('❌ Firebase Admin SDK initialization failed:', error)
+  logger.error('Please ensure all required environment variables are set:')
+  logger.error('  - FIREBASE_PROJECT_ID')
+  logger.error('  - FIREBASE_CLIENT_EMAIL')
+  logger.error('  - FIREBASE_PRIVATE_KEY')
+  logger.error('\nRefer to env.example for required configuration.')
   
   // フォールバック設定を削除：環境変数が不足している場合は起動を停止
   throw new Error('Firebase Admin SDK initialization failed due to missing or invalid environment variables')

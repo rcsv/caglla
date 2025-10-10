@@ -41,7 +41,7 @@ export const reorderItineraries = async (
     const result: ReorderItinerariesResponse = await response.json()
     return result
   } catch (error) {
-    console.error('Error reordering itineraries:', error)
+    logger.error('Error reordering itineraries:', error)
     // デモ環境では、サーバーエラーでもクライアントサイドの更新は成功として扱う
     if (error instanceof Error && error.message.includes('server update skipped')) {
       return {
@@ -63,7 +63,7 @@ export const applyOptimizedOrder = async (
   optimizedOrder: number[]
 ): Promise<void> => {
   try {
-    console.log('applyOptimizedOrder called with:', {
+    logger.debug('applyOptimizedOrder called with:', {
       dayId,
       itinerariesCount: itineraries.length,
       optimizedOrder
@@ -74,7 +74,7 @@ export const applyOptimizedOrder = async (
       itinerary => itinerary.place_data?.geometry?.location
     )
 
-    console.log('Valid itineraries:', validItineraries.map(it => ({ id: it.id, name: it.place_data?.name })))
+    logger.debug('Valid itineraries:', validItineraries.map(it => ({ id: it.id, name: it.place_data?.name })))
 
     if (validItineraries.length !== optimizedOrder.length) {
       throw new Error(`Optimized order length (${optimizedOrder.length}) does not match valid itineraries count (${validItineraries.length})`)
@@ -83,18 +83,18 @@ export const applyOptimizedOrder = async (
     // 最適化された順序でitineraryを並び替え
     const reorderedItineraries = optimizedOrder.map(index => validItineraries[index])
     
-    console.log('Reordered itineraries:', reorderedItineraries.map(it => ({ id: it.id, name: it.place_data?.name })))
+    logger.debug('Reordered itineraries:', reorderedItineraries.map(it => ({ id: it.id, name: it.place_data?.name })))
     
     // itineraryのIDを取得
     const itineraryIds = reorderedItineraries.map(itinerary => itinerary.id)
 
-    console.log('Itinerary IDs to reorder:', itineraryIds)
+    logger.debug('Itinerary IDs to reorder:', itineraryIds)
 
     // サーバーに並び替えを送信
     const result = await reorderItineraries(dayId, itineraryIds)
-    console.log('Reorder result:', result)
+    logger.debug('Reorder result:', result)
   } catch (error) {
-    console.error('Error applying optimized order:', error)
+    logger.error('Error applying optimized order:', error)
     throw error
   }
 }
@@ -122,7 +122,7 @@ export const manualReorderItineraries = async (
     // サーバーに並び替えを送信
     await reorderItineraries(dayId, itineraryIds)
   } catch (error) {
-    console.error('Error manually reordering itineraries:', error)
+    logger.error('Error manually reordering itineraries:', error)
     throw error
   }
 }

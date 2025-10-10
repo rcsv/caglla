@@ -1,6 +1,7 @@
 // 通貨自動検出ユーティリティ
 
 import type { CurrencyFailureLog, CurrencyMappingUpdate, PlaceData } from './types'
+import logger from './logger'
 
 // 国コードから通貨を推定するマッピング
 const COUNTRY_CURRENCY_MAP: Record<string, string> = {
@@ -123,10 +124,10 @@ const saveCurrencyFailureLog = (log: Omit<CurrencyFailureLog, 'id'>): void => {
     
     // バッチサイズに達したら通知
     if (existingLogs.length >= BATCH_SIZE) {
-      console.warn(`Currency failure logs reached batch size (${BATCH_SIZE}). Consider processing.`)
+      logger.warn(`Currency failure logs reached batch size (${BATCH_SIZE}). Consider processing.`)
     }
   } catch (error) {
-    console.error('Failed to save currency failure log:', error)
+    logger.error('Failed to save currency failure log:', error)
   }
 }
 
@@ -139,7 +140,7 @@ const getCurrencyFailureLogs = (): CurrencyFailureLog[] => {
     const logs = localStorage.getItem(CURRENCY_FAILURE_LOGS_KEY)
     return logs ? JSON.parse(logs) : []
   } catch (error) {
-    console.error('Failed to get currency failure logs:', error)
+    logger.error('Failed to get currency failure logs:', error)
     return []
   }
 }
@@ -152,7 +153,7 @@ const clearCurrencyFailureLogs = (): void => {
   try {
     localStorage.removeItem(CURRENCY_FAILURE_LOGS_KEY)
   } catch (error) {
-    console.error('Failed to clear currency failure logs:', error)
+    logger.error('Failed to clear currency failure logs:', error)
   }
 }
 
@@ -327,7 +328,7 @@ export const currencyUtils = {
     // 都市マッピングは実行時にのみ適用（既存の cityCountryMap を拡張）
     updates.forEach(update => {
       if (update.confidence === 'high' || update.confidence === 'medium') {
-        console.log(`Updated currency mapping: ${update.city_name} -> ${update.currency}`)
+        logger.debug(`Updated currency mapping: ${update.city_name} -> ${update.currency}`)
       }
     })
   },
@@ -347,7 +348,7 @@ export const currencyUtils = {
     try {
       localStorage.setItem(CURRENCY_FAILURE_LOGS_KEY, JSON.stringify(updatedLogs))
     } catch (error) {
-      console.error('Failed to update currency log status:', error)
+      logger.error('Failed to update currency log status:', error)
     }
   },
   

@@ -1,6 +1,7 @@
 // 環境変数の検証とバリデーション
 
 import type { RequiredEnvVars, OptionalEnvVars } from './types'
+import logger from './logger'
 
 export class EnvValidationError extends Error {
   constructor(message: string) {
@@ -48,8 +49,8 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
       'Refer to the README.md for detailed setup instructions.'
     
     if (isDevelopment()) {
-      console.error('❌ Environment validation failed:', message)
-      console.error('\n📝 Missing variables:', missingVars)
+      logger.error('❌ Environment validation failed:', message)
+      logger.error('\n📝 Missing variables:', missingVars)
     }
     
     throw new EnvValidationError(message)
@@ -72,7 +73,7 @@ export function validateServerEnvironment(): RequiredEnvVars & OptionalEnvVars {
   try {
     return validateEnvironment()
   } catch (error) {
-    console.error('Environment validation failed:', error)
+    logger.error('Environment validation failed:', error)
     throw error
   }
 }
@@ -105,7 +106,7 @@ export function validateClientEnvironment(): Partial<RequiredEnvVars> {
       'Please check your .env.local file and ensure all NEXT_PUBLIC_ variables are set.'
     
     if (isDevelopment()) {
-      console.warn('⚠️ Client environment validation warning:', message)
+      logger.warn('⚠️ Client environment validation warning:', message)
       // 開発環境でもエラーを投げる（デフォルト値ではFirebaseが動作しない）
       throw new EnvValidationError(message)
     } else {

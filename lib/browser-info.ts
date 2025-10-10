@@ -1,6 +1,7 @@
 // ブラウザ情報を取得するユーティリティ関数
 
 import type { BrowserInfo } from './types'
+import logger from './logger'
 
 // 通貨コードを取得（Intl.NumberFormatを使用）
 export function getCurrencyFromLocale(): string {
@@ -105,7 +106,7 @@ export function getCurrencyFromLocale(): string {
     
     return currency || 'USD'
   } catch (error) {
-    console.warn('Failed to get currency from locale:', error)
+    logger.warn('Failed to get currency from locale:', error)
     return 'USD'
   }
 }
@@ -115,7 +116,7 @@ export function getTimezone(): string {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone
   } catch (error) {
-    console.warn('Failed to get timezone:', error)
+    logger.warn('Failed to get timezone:', error)
     return 'UTC'
   }
 }
@@ -125,7 +126,7 @@ export function getLanguage(): string {
   try {
     return navigator.language || 'en'
   } catch (error) {
-    console.warn('Failed to get language:', error)
+    logger.warn('Failed to get language:', error)
     return 'en'
   }
 }
@@ -133,7 +134,7 @@ export function getLanguage(): string {
 // 位置情報から住所を取得（ユーザーの許可が必要）
 export async function getHomeAddress(): Promise<string | undefined> {
   if (!navigator.geolocation) {
-    console.warn('Geolocation is not supported by this browser')
+    logger.warn('Geolocation is not supported by this browser')
     return undefined
   }
 
@@ -152,7 +153,7 @@ export async function getHomeAddress(): Promise<string | undefined> {
     const address = await reverseGeocode(latitude, longitude)
     return address
   } catch (error) {
-    console.warn('Failed to get location:', error)
+    logger.warn('Failed to get location:', error)
     return undefined
   }
 }
@@ -198,7 +199,7 @@ async function reverseGeocode(lat: number, lng: number): Promise<string | undefi
     
     return undefined
   } catch (error) {
-    console.warn('Reverse geocoding failed:', error)
+    logger.warn('Reverse geocoding failed:', error)
     return undefined
   }
 }

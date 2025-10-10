@@ -1,6 +1,7 @@
 // タイムゾーン関連のユーティリティ関数
 
 import type { TimezoneInfo, TimezoneFailureLog, TimezoneMappingUpdate, PlaceData } from './types'
+import logger from './logger'
 
 // 主要都市のタイムゾーンマッピング
 const CITY_TIMEZONE_MAP: Record<string, string> = {
@@ -104,10 +105,10 @@ const saveFailureLog = (log: Omit<TimezoneFailureLog, 'id'>): void => {
     
     // バッチサイズに達したら通知
     if (existingLogs.length >= BATCH_SIZE) {
-      console.warn(`Timezone failure logs reached batch size (${BATCH_SIZE}). Consider processing.`)
+      logger.warn(`Timezone failure logs reached batch size (${BATCH_SIZE}). Consider processing.`)
     }
   } catch (error) {
-    console.error('Failed to save timezone failure log:', error)
+    logger.error('Failed to save timezone failure log:', error)
   }
 }
 
@@ -120,7 +121,7 @@ const getFailureLogs = (): TimezoneFailureLog[] => {
     const logs = localStorage.getItem(TIMEZONE_FAILURE_LOGS_KEY)
     return logs ? JSON.parse(logs) : []
   } catch (error) {
-    console.error('Failed to get timezone failure logs:', error)
+    logger.error('Failed to get timezone failure logs:', error)
     return []
   }
 }
@@ -133,7 +134,7 @@ const clearFailureLogs = (): void => {
   try {
     localStorage.removeItem(TIMEZONE_FAILURE_LOGS_KEY)
   } catch (error) {
-    console.error('Failed to clear timezone failure logs:', error)
+    logger.error('Failed to clear timezone failure logs:', error)
   }
 }
 
@@ -216,7 +217,7 @@ export const timezoneUtils = {
       
       return new Date(localDateTime.getTime() + utcOffset).toISOString()
     } catch (error) {
-      console.error('Error converting time to UTC:', error)
+      logger.error('Error converting time to UTC:', error)
       return ''
     }
   },
@@ -236,7 +237,7 @@ export const timezoneUtils = {
       
       return localTime
     } catch (error) {
-      console.error('Error converting UTC to local time:', error)
+      logger.error('Error converting UTC to local time:', error)
       return ''
     }
   },
@@ -250,7 +251,7 @@ export const timezoneUtils = {
       
       return (local.getTime() - utc.getTime()) / 60000
     } catch (error) {
-      console.error('Error getting timezone offset:', error)
+      logger.error('Error getting timezone offset:', error)
       return 0
     }
   },
@@ -272,7 +273,7 @@ export const timezoneUtils = {
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone
     } catch (error) {
-      console.warn('Failed to get browser timezone:', error)
+      logger.warn('Failed to get browser timezone:', error)
       return 'UTC'
     }
   },
@@ -337,7 +338,7 @@ export const timezoneUtils = {
       if (update.confidence === 'high' || update.confidence === 'medium') {
         // 高信頼度または中信頼度の場合のみ更新
         CITY_TIMEZONE_MAP[update.city_name.toLowerCase()] = update.timezone
-        console.log(`Updated timezone mapping: ${update.city_name} -> ${update.timezone}`)
+        logger.debug(`Updated timezone mapping: ${update.city_name} -> ${update.timezone}`)
       }
     })
   },
@@ -357,7 +358,7 @@ export const timezoneUtils = {
     try {
       localStorage.setItem(TIMEZONE_FAILURE_LOGS_KEY, JSON.stringify(updatedLogs))
     } catch (error) {
-      console.error('Failed to update log status:', error)
+      logger.error('Failed to update log status:', error)
     }
   },
   

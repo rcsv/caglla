@@ -10,6 +10,7 @@
  */
 
 import type { WeatherData, WeatherForecast, WeatherSummary } from './types'
+import logger from './logger'
 
 // Re-export types for backward compatibility
 export type { WeatherData, WeatherForecast, WeatherSummary }
@@ -94,13 +95,13 @@ export class WeatherApiHelpers {
     })
 
     const url = `${this.BASE_URL}?${params}`
-    console.log('Weather API request URL:', url)
+    logger.debug('Weather API request URL:', url)
 
     const response = await fetch(url)
     
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Weather API error response:', errorText)
+      logger.error('Weather API error response:', errorText)
       
       // Parse error response for better error messages
       try {
@@ -124,7 +125,7 @@ export class WeatherApiHelpers {
     }
 
     const data = await response.json()
-    console.log('Weather API response:', data)
+    logger.debug('Weather API response:', data)
     return data
   }
 
@@ -137,18 +138,18 @@ export class WeatherApiHelpers {
     endDate: string
   ): Promise<WeatherSummary | null> {
     try {
-      console.log('Getting weather for:', { destination, startDate, endDate })
+      logger.debug('Getting weather for:', { destination, startDate, endDate })
       
       // First, get coordinates for the destination using a geocoding service
       const coordinates = await this.getCoordinatesForDestination(destination)
       
       if (!coordinates) {
-        console.warn(`Could not find coordinates for destination: ${destination}`)
+        logger.warn(`Could not find coordinates for destination: ${destination}`)
         // Return a fallback summary indicating no weather data available
         return this.createFallbackWeatherSummary(destination, startDate, endDate)
       }
 
-      console.log('Using coordinates:', coordinates)
+      logger.debug('Using coordinates:', coordinates)
 
       const forecast = await this.getWeatherForecast(
         coordinates.latitude,
@@ -158,10 +159,10 @@ export class WeatherApiHelpers {
       )
 
       const summary = this.calculateWeatherSummary(forecast, startDate, endDate)
-      console.log('Weather summary calculated:', summary)
+      logger.debug('Weather summary calculated:', summary)
       return summary
     } catch (error) {
-      console.error('Error fetching weather data:', error)
+      logger.error('Error fetching weather data:', error)
       
       // Return a fallback summary with error information
       return this.createFallbackWeatherSummary(destination, startDate, endDate, error as Error)
@@ -204,45 +205,45 @@ export class WeatherApiHelpers {
     if (googleApiKey) {
       try {
         const googleGeocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(destination)}&key=${googleApiKey}&language=ja`
-        console.log('Google Geocoding API request URL:', googleGeocodingUrl.replace(googleApiKey, '***'))
+        logger.debug('Google Geocoding API request URL:', googleGeocodingUrl.replace(googleApiKey, '***'))
         
         const response = await fetch(googleGeocodingUrl)
         
         if (response.ok) {
           const data = await response.json()
-          console.log('Google Geocoding API response status:', data.status)
+          logger.debug('Google Geocoding API response status:', data.status)
           
           if (data.status === 'OK' && data.results && data.results.length > 0) {
             const result = data.results[0]
             const location = result.geometry.location
-            console.log('Found coordinates via Google:', location.lat, location.lng, 'for:', result.formatted_address)
+            logger.debug('Found coordinates via Google:', location.lat, location.lng, 'for:', result.formatted_address)
             return {
               latitude: location.lat,
               longitude: location.lng
             }
           } else {
-            console.warn('Google Geocoding API returned no results:', data.status)
+            logger.warn('Google Geocoding API returned no results:', data.status)
           }
         } else {
-          console.warn('Google Geocoding API request failed:', response.status)
+          logger.warn('Google Geocoding API request failed:', response.status)
         }
       } catch (error) {
-        console.error('Error with Google Geocoding API:', error)
+        logger.error('Error with Google Geocoding API:', error)
       }
     } else {
-      console.warn('Google Places API key not found, falling back to Open-Meteo')
+      logger.warn('Google Places API key not found, falling back to Open-Meteo')
     }
 
     // Fallback to Open-Meteo Geocoding API
     try {
       const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination)}&count=1&language=ja&format=json`
-      console.log('Open-Meteo Geocoding API request URL:', geocodingUrl)
+      logger.debug('Open-Meteo Geocoding API request URL:', geocodingUrl)
       
       const response = await fetch(geocodingUrl)
       
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Open-Meteo Geocoding API error response:', errorText)
+        logger.error('Open-Meteo Geocoding API error response:', errorText)
         if (response.status === 403) {
           throw new Error('Open-Meteo Geocoding API access denied. Please check rate limits or try again later.')
         }
@@ -250,21 +251,21 @@ export class WeatherApiHelpers {
       }
 
       const data = await response.json()
-      console.log('Open-Meteo Geocoding API response:', data)
+      logger.debug('Open-Meteo Geocoding API response:', data)
       
       if (data.results && data.results.length > 0) {
         const result = data.results[0]
-        console.log('Found coordinates via Open-Meteo:', result.latitude, result.longitude, 'for:', result.name)
+        logger.debug('Found coordinates via Open-Meteo:', result.latitude, result.longitude, 'for:', result.name)
         return {
           latitude: result.latitude,
           longitude: result.longitude
         }
       }
 
-      console.warn('No coordinates found for destination:', destination)
+      logger.warn('No coordinates found for destination:', destination)
       return null
     } catch (error) {
-      console.error('Error geocoding destination with Open-Meteo:', error)
+      logger.error('Error geocoding destination with Open-Meteo:', error)
       return null
     }
   }

@@ -1,5 +1,6 @@
 // Google Places API integration utilities
 import { PlaceData } from './firestore'
+import logger from './logger'
 import type { PlaceSearchResult, PlaceDetailsResult } from './types'
 
 // Re-export types for backward compatibility
@@ -16,8 +17,8 @@ export const placesApiHelpers = {
       throw new Error('Google Places API key is not configured')
     }
 
-    console.log('Searching places with query:', query)
-    console.log('API Key configured:', !!GOOGLE_PLACES_API_KEY)
+    logger.debug('Searching places with query:', query)
+    logger.debug('API Key configured:', !!GOOGLE_PLACES_API_KEY)
 
     try {
       // プロキシサーバー経由でAPIを呼び出し（CORS問題を回避）
@@ -29,7 +30,7 @@ export const placesApiHelpers = {
         body: JSON.stringify({ query })
       })
 
-      console.log('Search response status:', response.status)
+      logger.debug('Search response status:', response.status)
 
       if (!response.ok) {
         throw new Error(`Places API error: ${response.status}`)
@@ -62,7 +63,7 @@ export const placesApiHelpers = {
         }))
       }))
     } catch (error) {
-      console.error('Error searching places:', error)
+      logger.error('Error searching places:', error)
       throw error
     }
   },
@@ -129,7 +130,7 @@ export const placesApiHelpers = {
         } : undefined
       }
     } catch (error) {
-      console.error('Error getting place details:', error)
+      logger.error('Error getting place details:', error)
       throw error
     }
   },

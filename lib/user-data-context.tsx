@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import logger from './logger'
 import { useAuth } from '@/lib/auth-context'
 import { makeAuthenticatedRequest } from '@/lib/api-helpers'
 import { PlanId, RestrictionType, PLAN_CONFIGS } from '@/lib/restriction-system'
@@ -76,11 +77,11 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
         const data = await response.json()
         setUserData(data.user)
       } else {
-        console.error('Failed to fetch user data:', response.status)
+        logger.error('Failed to fetch user data:', response.status)
         setUserDataError('ユーザー情報の取得に失敗しました')
       }
     } catch (error) {
-      console.error('Error fetching user data:', error)
+      logger.error('Error fetching user data:', error)
       setUserDataError('ユーザー情報の取得に失敗しました')
     } finally {
       setUserDataLoading(false)
@@ -103,14 +104,14 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
         const data = await response.json()
         setUserPlanId(data.planId)
       } else {
-        console.error('Failed to fetch user plan:', response.status)
+        logger.error('Failed to fetch user plan:', response.status)
         // フォールバック: ユーザーオブジェクトからplanIdを取得
         if (user.planId) {
           setUserPlanId(user.planId as PlanId)
         }
       }
     } catch (error) {
-      console.error('Error fetching user plan:', error)
+      logger.error('Error fetching user plan:', error)
       setPlanError('プラン情報の取得に失敗しました')
       // フォールバック: ユーザーオブジェクトからplanIdを取得
       if (user.planId) {
@@ -135,11 +136,11 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
         const data = await response.json()
         setTrips(data.trips || [])
       } else {
-        console.error('Failed to fetch trips:', response.status)
+        logger.error('Failed to fetch trips:', response.status)
         setTripsError('旅行データの取得に失敗しました')
       }
     } catch (error) {
-      console.error('Error fetching trips:', error)
+      logger.error('Error fetching trips:', error)
       setTripsError('旅行データの取得に失敗しました')
     } finally {
       setTripsLoading(false)
