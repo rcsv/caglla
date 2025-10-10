@@ -1,142 +1,12 @@
 // タイムゾーン関連のユーティリティ関数
 
-import type { TimezoneInfo, TimezoneFailureLog, TimezoneMappingUpdate, PlaceData } from './types'
-import logger from './logger'
+import type { TimezoneInfo, TimezoneFailureLog, TimezoneMappingUpdate, PlaceData } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
+import { getTimezoneByCountryCode, getTimezoneByCityName } from '@/lib/core/locations'
+import { FailureLogger } from '@/lib/core/failure-logger'
 
-// 主要都市のタイムゾーンマッピング
-const CITY_TIMEZONE_MAP: Record<string, string> = {
-  // 日本
-  'tokyo': 'Asia/Tokyo',
-  'osaka': 'Asia/Tokyo',
-  'kyoto': 'Asia/Tokyo',
-  'sapporo': 'Asia/Tokyo',
-  
-  // アメリカ
-  'new york': 'America/New_York',
-  'los angeles': 'America/Los_Angeles',
-  'chicago': 'America/Chicago',
-  'san francisco': 'America/Los_Angeles',
-  'las vegas': 'America/Los_Angeles',
-  'miami': 'America/New_York',
-  
-  // ヨーロッパ
-  'london': 'Europe/London',
-  'paris': 'Europe/Paris',
-  'rome': 'Europe/Rome',
-  'berlin': 'Europe/Berlin',
-  'madrid': 'Europe/Madrid',
-  'amsterdam': 'Europe/Amsterdam',
-  
-  // アジア
-  'seoul': 'Asia/Seoul',
-  'beijing': 'Asia/Shanghai',
-  'shanghai': 'Asia/Shanghai',
-  'hong kong': 'Asia/Hong_Kong',
-  'singapore': 'Asia/Singapore',
-  'bangkok': 'Asia/Bangkok',
-  'taipei': 'Asia/Taipei',
-  
-  // オセアニア
-  'sydney': 'Australia/Sydney',
-  'melbourne': 'Australia/Melbourne',
-  'auckland': 'Pacific/Auckland',
-  
-  // 太平洋諸島
-  'honolulu': 'Pacific/Honolulu',
-  'guam': 'Pacific/Guam',
-  'saipan': 'Pacific/Saipan',
-  
-  // インド・南アジア
-  'mumbai': 'Asia/Kolkata',
-  'delhi': 'Asia/Kolkata',
-  'bangalore': 'Asia/Kolkata',
-  'chennai': 'Asia/Kolkata',
-  'kolkata': 'Asia/Kolkata',
-  
-  // その他
-  'dubai': 'Asia/Dubai',
-  'moscow': 'Europe/Moscow',
-  'istanbul': 'Europe/Istanbul',
-}
-
-// 国コードからタイムゾーンを推定
-const COUNTRY_TIMEZONE_MAP: Record<string, string[]> = {
-  'JP': ['Asia/Tokyo'],
-  'US': ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles'],
-  'GB': ['Europe/London'],
-  'FR': ['Europe/Paris'],
-  'DE': ['Europe/Berlin'],
-  'IT': ['Europe/Rome'],
-  'ES': ['Europe/Madrid'],
-  'KR': ['Asia/Seoul'],
-  'CN': ['Asia/Shanghai'],
-  'HK': ['Asia/Hong_Kong'],
-  'SG': ['Asia/Singapore'],
-  'TH': ['Asia/Bangkok'],
-  'TW': ['Asia/Taipei'],
-  'AU': ['Australia/Sydney', 'Australia/Melbourne'],
-  'NZ': ['Pacific/Auckland'],
-  'GU': ['Pacific/Guam'],
-  'MP': ['Pacific/Saipan'],
-  'IN': ['Asia/Kolkata'],
-  'AE': ['Asia/Dubai'],
-  'RU': ['Europe/Moscow'],
-  'TR': ['Europe/Istanbul'],
-}
-
-// ローカルストレージキー
-const TIMEZONE_FAILURE_LOGS_KEY = 'timezone_failure_logs'
-const BATCH_SIZE = 50 // バッチ処理の閾値
-
-// 失敗ログをローカルストレージに保存
-const saveFailureLog = (log: Omit<TimezoneFailureLog, 'id'>): void => {
-  // ブラウザ環境でのみ実行
-  if (typeof window === 'undefined') return
-  
-  try {
-    const existingLogs = getFailureLogs()
-    const newLog: TimezoneFailureLog = {
-      ...log,
-      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    }
-    
-    existingLogs.push(newLog)
-    localStorage.setItem(TIMEZONE_FAILURE_LOGS_KEY, JSON.stringify(existingLogs))
-    
-    // バッチサイズに達したら通知
-    if (existingLogs.length >= BATCH_SIZE) {
-      logger.warn(`Timezone failure logs reached batch size (${BATCH_SIZE}). Consider processing.`)
-    }
-  } catch (error) {
-    logger.error('Failed to save timezone failure log:', error)
-  }
-}
-
-// 失敗ログを取得
-const getFailureLogs = (): TimezoneFailureLog[] => {
-  // ブラウザ環境でのみ実行
-  if (typeof window === 'undefined') return []
-  
-  try {
-    const logs = localStorage.getItem(TIMEZONE_FAILURE_LOGS_KEY)
-    return logs ? JSON.parse(logs) : []
-  } catch (error) {
-    logger.error('Failed to get timezone failure logs:', error)
-    return []
-  }
-}
-
-// 失敗ログをクリア
-const clearFailureLogs = (): void => {
-  // ブラウザ環境でのみ実行
-  if (typeof window === 'undefined') return
-  
-  try {
-    localStorage.removeItem(TIMEZONE_FAILURE_LOGS_KEY)
-  } catch (error) {
-    logger.error('Failed to clear timezone failure logs:', error)
-  }
-}
+// タイムゾーン失敗ログ管理
+const timezoneFailureLogger = new FailureLogger<TimezoneFailureLog>('timezone_failure_logs', 50)
 
 export const timezoneUtils = {
   // 場所情報からタイムゾーンを推定（ログ機能付き）
@@ -149,8 +19,11 @@ export const timezoneUtils = {
     
     // 1. 都市名から推定
     const cityName = placeData.name?.toLowerCase()
-    if (cityName && CITY_TIMEZONE_MAP[cityName]) {
-      return CITY_TIMEZONE_MAP[cityName]
+    if (cityName) {
+      const timezone = getTimezoneByCityName(cityName)
+      if (timezone) {
+        return timezone
+      }
     }
     detectedCity = cityName
     
@@ -158,19 +31,21 @@ export const timezoneUtils = {
     const address = placeData.formatted_address || ''
     const addressLower = address.toLowerCase()
     
-    for (const [city, timezone] of Object.entries(CITY_TIMEZONE_MAP)) {
-      if (addressLower.includes(city)) {
-        return timezone
-      }
+    const timezoneFromAddress = getTimezoneByCityName(addressLower)
+    if (timezoneFromAddress) {
+      return timezoneFromAddress
     }
     
-    // 3. 国コードから推定（最初のタイムゾーンを使用）
+    // 3. 国コードから推定
     const countryCode = placeData.address_components?.find(
       (component: any) => component.types.includes('country')
     )?.short_name
     
-    if (countryCode && COUNTRY_TIMEZONE_MAP[countryCode]) {
-      return COUNTRY_TIMEZONE_MAP[countryCode][0]
+    if (countryCode) {
+      const timezone = getTimezoneByCountryCode(countryCode)
+      if (timezone) {
+        return timezone
+      }
     }
     detectedCountry = countryCode
     
@@ -184,7 +59,7 @@ export const timezoneUtils = {
     }
     
     // 失敗ログを保存
-    saveFailureLog({
+    timezoneFailureLogger.save({
       place_data: placeData,
       failure_reason: failureReason,
       detected_city: detectedCity,
@@ -289,12 +164,12 @@ export const timezoneUtils = {
   },
 
   // 失敗ログ管理
-  getFailureLogs,
-  clearFailureLogs,
+  getFailureLogs: (): TimezoneFailureLog[] => timezoneFailureLogger.getLogs(),
+  clearFailureLogs: (): void => timezoneFailureLogger.clear(),
   
   // バッチ分析とマッピング更新
   analyzeFailureLogs: (): TimezoneMappingUpdate[] => {
-    const logs = getFailureLogs()
+    const logs = timezoneFailureLogger.getLogs()
     const cityCounts: Record<string, number> = {}
     const countryCounts: Record<string, number> = {}
     
@@ -318,14 +193,17 @@ export const timezoneUtils = {
         const countryLogs = logs.filter(log => log.detected_city === city)
         const countryCode = countryLogs[0]?.detected_country
         
-        if (countryCode && COUNTRY_TIMEZONE_MAP[countryCode]) {
-          updates.push({
-            city_name: city,
-            timezone: COUNTRY_TIMEZONE_MAP[countryCode][0],
-            confidence: count >= 10 ? 'high' : count >= 5 ? 'medium' : 'low',
-            source: 'batch_analysis',
-            created_at: new Date()
-          })
+        if (countryCode) {
+          const timezone = getTimezoneByCountryCode(countryCode)
+          if (timezone) {
+            updates.push({
+              city_name: city,
+              timezone,
+              confidence: count >= 10 ? 'high' : count >= 5 ? 'medium' : 'low',
+              source: 'batch_analysis',
+              created_at: new Date()
+            })
+          }
         }
       })
     
@@ -333,41 +211,27 @@ export const timezoneUtils = {
   },
   
   // マッピングを動的に更新
+  // NOTE: 新しいマッピングシステム (lib/data/locations.ts) は静的なので、
+  // 動的更新は現在サポートされていません。将来的にデータベースベースのマッピングを実装する際に復活させる予定。
   updateCityTimezoneMapping: (updates: TimezoneMappingUpdate[]): void => {
     updates.forEach(update => {
       if (update.confidence === 'high' || update.confidence === 'medium') {
-        // 高信頼度または中信頼度の場合のみ更新
-        CITY_TIMEZONE_MAP[update.city_name.toLowerCase()] = update.timezone
-        logger.debug(`Updated timezone mapping: ${update.city_name} -> ${update.timezone}`)
+        logger.debug(`Timezone mapping suggestion: ${update.city_name} -> ${update.timezone}`)
+        // TODO: データベースまたはFirestoreにマッピングを保存する実装を追加
       }
     })
   },
   
   // 処理済みログをマーク
   markLogsAsProcessed: (logIds: string[]): void => {
-    // ブラウザ環境でのみ実行
-    if (typeof window === 'undefined') return
-    
-    const logs = getFailureLogs()
-    const updatedLogs = logs.map(log => 
-      logIds.includes(log.id) 
-        ? { ...log, status: 'processed' as const }
-        : log
-    )
-    
-    try {
-      localStorage.setItem(TIMEZONE_FAILURE_LOGS_KEY, JSON.stringify(updatedLogs))
-    } catch (error) {
-      logger.error('Failed to update log status:', error)
-    }
+    timezoneFailureLogger.markAsProcessed(logIds)
   },
   
   // バッチ処理の実行
   processBatchUpdate: (): { updates: TimezoneMappingUpdate[], processedCount: number } => {
-    const logs = getFailureLogs()
-    const pendingLogs = logs.filter(log => log.status === 'pending')
+    const pendingLogs = timezoneFailureLogger.getPendingLogs()
     
-    if (pendingLogs.length < BATCH_SIZE) {
+    if (!timezoneFailureLogger.shouldProcessBatch()) {
       return { updates: [], processedCount: 0 }
     }
     

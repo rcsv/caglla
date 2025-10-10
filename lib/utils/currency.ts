@@ -1,67 +1,15 @@
 // 通貨自動検出ユーティリティ
 
-import type { CurrencyFailureLog, CurrencyMappingUpdate, PlaceData } from './types'
-import logger from './logger'
+import type { CurrencyFailureLog, CurrencyMappingUpdate, PlaceData } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
+import { getCurrencyByCountryCode, getCurrencyByCityName } from '@/lib/core/locations'
+import { FailureLogger } from '@/lib/core/failure-logger'
 
-// 国コードから通貨を推定するマッピング
-const COUNTRY_CURRENCY_MAP: Record<string, string> = {
-  // アジア
-  'JP': 'JPY', // 日本
-  'KR': 'KRW', // 韓国
-  'CN': 'CNY', // 中国
-  'HK': 'HKD', // 香港
-  'SG': 'SGD', // シンガポール
-  'TH': 'THB', // タイ
-  'TW': 'TWD', // 台湾
-  'IN': 'INR', // インド
-  'MY': 'MYR', // マレーシア
-  'ID': 'IDR', // インドネシア
-  'PH': 'PHP', // フィリピン
-  'VN': 'VND', // ベトナム
-  
-  // 北米
-  'US': 'USD', // アメリカ
-  'CA': 'CAD', // カナダ
-  'MX': 'MXN', // メキシコ
-  
-  // ヨーロッパ
-  'GB': 'GBP', // イギリス
-  'FR': 'EUR', // フランス
-  'DE': 'EUR', // ドイツ
-  'IT': 'EUR', // イタリア
-  'ES': 'EUR', // スペイン
-  'NL': 'EUR', // オランダ
-  'CH': 'CHF', // スイス
-  'AT': 'EUR', // オーストリア
-  'BE': 'EUR', // ベルギー
-  'SE': 'SEK', // スウェーデン
-  'NO': 'NOK', // ノルウェー
-  'DK': 'DKK', // デンマーク
-  'FI': 'EUR', // フィンランド
-  'PL': 'PLN', // ポーランド
-  'CZ': 'CZK', // チェコ
-  'HU': 'HUF', // ハンガリー
-  'RU': 'RUB', // ロシア
-  
-  // オセアニア
-  'AU': 'AUD', // オーストラリア
-  'NZ': 'NZD', // ニュージーランド
-  
-  // その他
-  'AE': 'AED', // アラブ首長国連邦
-  'SA': 'SAR', // サウジアラビア
-  'IL': 'ILS', // イスラエル
-  'TR': 'TRY', // トルコ
-  'ZA': 'ZAR', // 南アフリカ
-  'BR': 'BRL', // ブラジル
-  'AR': 'ARS', // アルゼンチン
-  'CL': 'CLP', // チリ
-  'CO': 'COP', // コロンビア
-  'PE': 'PEN', // ペルー
-}
+// 通貨失敗ログ管理
+const currencyFailureLogger = new FailureLogger<CurrencyFailureLog>('currency_failure_logs', 50)
 
 // 通貨の詳細情報
-import type { CurrencyInfo } from './types'
+import type { CurrencyInfo } from '@/lib/core/types'
 
 const CURRENCY_INFO: Record<string, CurrencyInfo> = {
   'JPY': { code: 'JPY', name: '日本円', symbol: '¥', country: '日本' },
@@ -103,60 +51,6 @@ const CURRENCY_INFO: Record<string, CurrencyInfo> = {
   'NZD': { code: 'NZD', name: 'ニュージーランドドル', symbol: 'NZ$', country: 'ニュージーランド' },
 }
 
-// ローカルストレージキー
-const CURRENCY_FAILURE_LOGS_KEY = 'currency_failure_logs'
-const BATCH_SIZE = 50 // バッチ処理の閾値
-
-// 失敗ログをローカルストレージに保存
-const saveCurrencyFailureLog = (log: Omit<CurrencyFailureLog, 'id'>): void => {
-  // ブラウザ環境でのみ実行
-  if (typeof window === 'undefined') return
-  
-  try {
-    const existingLogs = getCurrencyFailureLogs()
-    const newLog: CurrencyFailureLog = {
-      ...log,
-      id: `currency_log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    }
-    
-    existingLogs.push(newLog)
-    localStorage.setItem(CURRENCY_FAILURE_LOGS_KEY, JSON.stringify(existingLogs))
-    
-    // バッチサイズに達したら通知
-    if (existingLogs.length >= BATCH_SIZE) {
-      logger.warn(`Currency failure logs reached batch size (${BATCH_SIZE}). Consider processing.`)
-    }
-  } catch (error) {
-    logger.error('Failed to save currency failure log:', error)
-  }
-}
-
-// 失敗ログを取得
-const getCurrencyFailureLogs = (): CurrencyFailureLog[] => {
-  // ブラウザ環境でのみ実行
-  if (typeof window === 'undefined') return []
-  
-  try {
-    const logs = localStorage.getItem(CURRENCY_FAILURE_LOGS_KEY)
-    return logs ? JSON.parse(logs) : []
-  } catch (error) {
-    logger.error('Failed to get currency failure logs:', error)
-    return []
-  }
-}
-
-// 失敗ログをクリア
-const clearCurrencyFailureLogs = (): void => {
-  // ブラウザ環境でのみ実行
-  if (typeof window === 'undefined') return
-  
-  try {
-    localStorage.removeItem(CURRENCY_FAILURE_LOGS_KEY)
-  } catch (error) {
-    logger.error('Failed to clear currency failure logs:', error)
-  }
-}
-
 export const currencyUtils = {
   // 場所情報から通貨を推定（ログ機能付き）
   getCurrencyFromPlace: (placeData: PlaceData, userId?: string): string => {
@@ -171,8 +65,11 @@ export const currencyUtils = {
       (component: any) => component.types.includes('country')
     )?.short_name
     
-    if (countryCode && COUNTRY_CURRENCY_MAP[countryCode]) {
-      return COUNTRY_CURRENCY_MAP[countryCode]
+    if (countryCode) {
+      const currency = getCurrencyByCountryCode(countryCode)
+      if (currency) {
+        return currency
+      }
     }
     detectedCountry = countryCode
     
@@ -180,41 +77,10 @@ export const currencyUtils = {
     const address = placeData.formatted_address || ''
     const addressLower = address.toLowerCase()
     
-    // 主要都市名から国を推定
-    const cityCountryMap: Record<string, string> = {
-      'tokyo': 'JP',
-      'osaka': 'JP',
-      'kyoto': 'JP',
-      'seoul': 'KR',
-      'busan': 'KR',
-      'beijing': 'CN',
-      'shanghai': 'CN',
-      'hong kong': 'HK',
-      'singapore': 'SG',
-      'bangkok': 'TH',
-      'taipei': 'TW',
-      'mumbai': 'IN',
-      'delhi': 'IN',
-      'sydney': 'AU',
-      'melbourne': 'AU',
-      'new york': 'US',
-      'los angeles': 'US',
-      'london': 'GB',
-      'paris': 'FR',
-      'berlin': 'DE',
-      'rome': 'IT',
-      'madrid': 'ES',
-      'amsterdam': 'NL',
-      'zurich': 'CH',
-      'geneva': 'CH',
-      'dubai': 'AE',
-      'abu dhabi': 'AE',
-    }
-    
-    for (const [city, country] of Object.entries(cityCountryMap)) {
-      if (addressLower.includes(city)) {
-        return COUNTRY_CURRENCY_MAP[country] || 'JPY'
-      }
+    // 主要都市名から通貨を直接取得
+    const currency = getCurrencyByCityName(addressLower)
+    if (currency) {
+      return currency
     }
     
     // 3. 都市名検出
@@ -231,7 +97,7 @@ export const currencyUtils = {
     }
     
     // 失敗ログを保存
-    saveCurrencyFailureLog({
+    currencyFailureLogger.save({
       place_data: placeData,
       failure_reason: failureReason,
       detected_city: detectedCity,
@@ -280,12 +146,12 @@ export const currencyUtils = {
   },
 
   // 失敗ログ管理
-  getCurrencyFailureLogs,
-  clearCurrencyFailureLogs,
+  getCurrencyFailureLogs: (): CurrencyFailureLog[] => currencyFailureLogger.getLogs(),
+  clearCurrencyFailureLogs: (): void => currencyFailureLogger.clear(),
   
   // バッチ分析とマッピング更新
   analyzeCurrencyFailureLogs: (): CurrencyMappingUpdate[] => {
-    const logs = getCurrencyFailureLogs()
+    const logs = currencyFailureLogger.getLogs()
     const cityCounts: Record<string, number> = {}
     const countryCounts: Record<string, number> = {}
     
@@ -309,14 +175,17 @@ export const currencyUtils = {
         const countryLogs = logs.filter(log => log.detected_city === city)
         const countryCode = countryLogs[0]?.detected_country
         
-        if (countryCode && COUNTRY_CURRENCY_MAP[countryCode]) {
-          updates.push({
-            city_name: city,
-            currency: COUNTRY_CURRENCY_MAP[countryCode],
-            confidence: count >= 10 ? 'high' : count >= 5 ? 'medium' : 'low',
-            source: 'batch_analysis',
-            created_at: new Date()
-          })
+        if (countryCode) {
+          const currency = getCurrencyByCountryCode(countryCode)
+          if (currency) {
+            updates.push({
+              city_name: city,
+              currency,
+              confidence: count >= 10 ? 'high' : count >= 5 ? 'medium' : 'low',
+              source: 'batch_analysis',
+              created_at: new Date()
+            })
+          }
         }
       })
     
@@ -335,29 +204,14 @@ export const currencyUtils = {
   
   // 処理済みログをマーク
   markCurrencyLogsAsProcessed: (logIds: string[]): void => {
-    // ブラウザ環境でのみ実行
-    if (typeof window === 'undefined') return
-    
-    const logs = getCurrencyFailureLogs()
-    const updatedLogs = logs.map(log => 
-      logIds.includes(log.id) 
-        ? { ...log, status: 'processed' as const }
-        : log
-    )
-    
-    try {
-      localStorage.setItem(CURRENCY_FAILURE_LOGS_KEY, JSON.stringify(updatedLogs))
-    } catch (error) {
-      logger.error('Failed to update currency log status:', error)
-    }
+    currencyFailureLogger.markAsProcessed(logIds)
   },
   
   // バッチ処理の実行
   processCurrencyBatchUpdate: (): { updates: CurrencyMappingUpdate[], processedCount: number } => {
-    const logs = getCurrencyFailureLogs()
-    const pendingLogs = logs.filter(log => log.status === 'pending')
+    const pendingLogs = currencyFailureLogger.getPendingLogs()
     
-    if (pendingLogs.length < BATCH_SIZE) {
+    if (!currencyFailureLogger.shouldProcessBatch()) {
       return { updates: [], processedCount: 0 }
     }
     

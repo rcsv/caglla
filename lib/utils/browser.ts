@@ -1,7 +1,7 @@
 // ブラウザ情報を取得するユーティリティ関数
 
-import type { BrowserInfo } from './types'
-import logger from './logger'
+import type { BrowserInfo } from '@/lib/core/types'
+import logger from '@/lib/core/logger'
 
 // 通貨コードを取得（Intl.NumberFormatを使用）
 export function getCurrencyFromLocale(): string {

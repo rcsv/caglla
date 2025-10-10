@@ -1,17 +1,10 @@
 // Date utility functions
+import { isValidDate as isValidTimestamp, toDateOrNull } from '@/lib/firebase/timestamp-utils'
+
 export const dateUtils = {
-  // Check if a date is valid
+  // Check if a date is valid (delegated to timestamp-utils)
   isValidDate: (date: any): boolean => {
-    if (!date) return false
-    
-    // Handle Firestore Timestamp objects
-    if (date && typeof date === 'object' && date.toDate && typeof date.toDate === 'function') {
-      const d = date.toDate()
-      return !isNaN(d.getTime())
-    }
-    
-    const d = new Date(date)
-    return !isNaN(d.getTime())
+    return isValidTimestamp(date)
   },
 
   // Format date safely
@@ -20,12 +13,9 @@ export const dateUtils = {
       return '日付が設定されていません'
     }
     
-    // Handle Firestore Timestamp objects
-    let d: Date
-    if (date && typeof date === 'object' && date.toDate && typeof date.toDate === 'function') {
-      d = date.toDate()
-    } else {
-      d = new Date(date)
+    const d = toDateOrNull(date)
+    if (!d) {
+      return '日付が設定されていません'
     }
     
     return d.toLocaleDateString('ja-JP', {
@@ -43,18 +33,11 @@ export const dateUtils = {
       return '日付が設定されていません'
     }
     
-    // Handle Firestore Timestamp objects
-    let start: Date, end: Date
-    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
-      start = startDate.toDate()
-    } else {
-      start = new Date(startDate)
-    }
+    const start = toDateOrNull(startDate)
+    const end = toDateOrNull(endDate)
     
-    if (endDate && typeof endDate === 'object' && endDate.toDate && typeof endDate.toDate === 'function') {
-      end = endDate.toDate()
-    } else {
-      end = new Date(endDate)
+    if (!start || !end) {
+      return '日付が設定されていません'
     }
     
     return `${start.toLocaleDateString('ja-JP')} - ${end.toLocaleDateString('ja-JP')}`
@@ -71,13 +54,8 @@ export const dateUtils = {
   isFutureTrip: (startDate: any): boolean => {
     if (!dateUtils.isValidDate(startDate)) return false
     
-    // Handle Firestore Timestamp objects
-    let tripStart: Date
-    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
-      tripStart = startDate.toDate()
-    } else {
-      tripStart = new Date(startDate)
-    }
+    const tripStart = toDateOrNull(startDate)
+    if (!tripStart) return false
     
     tripStart.setHours(0, 0, 0, 0)
     const today = dateUtils.getToday()
@@ -88,13 +66,8 @@ export const dateUtils = {
   isPastTrip: (startDate: any): boolean => {
     if (!dateUtils.isValidDate(startDate)) return false
     
-    // Handle Firestore Timestamp objects
-    let tripStart: Date
-    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
-      tripStart = startDate.toDate()
-    } else {
-      tripStart = new Date(startDate)
-    }
+    const tripStart = toDateOrNull(startDate)
+    if (!tripStart) return false
     
     tripStart.setHours(0, 0, 0, 0)
     const today = dateUtils.getToday()
@@ -110,20 +83,10 @@ export const dateUtils = {
       .sort((a, b) => {
         if (!a.start_date || !b.start_date) return 0
         
-        // Handle Firestore Timestamp objects
-        let dateA: Date, dateB: Date
-        if (a.start_date && typeof a.start_date === 'object' && a.start_date.toDate && typeof a.start_date.toDate === 'function') {
-          dateA = a.start_date.toDate()
-        } else {
-          dateA = new Date(a.start_date)
-        }
+        const dateA = toDateOrNull(a.start_date)
+        const dateB = toDateOrNull(b.start_date)
         
-        if (b.start_date && typeof b.start_date === 'object' && b.start_date.toDate && typeof b.start_date.toDate === 'function') {
-          dateB = b.start_date.toDate()
-        } else {
-          dateB = new Date(b.start_date)
-        }
-        
+        if (!dateA || !dateB) return 0
         return dateA.getTime() - dateB.getTime()
       })
     
@@ -132,20 +95,10 @@ export const dateUtils = {
       .sort((a, b) => {
         if (!a.start_date || !b.start_date) return 0
         
-        // Handle Firestore Timestamp objects
-        let dateA: Date, dateB: Date
-        if (a.start_date && typeof a.start_date === 'object' && a.start_date.toDate && typeof a.start_date.toDate === 'function') {
-          dateA = a.start_date.toDate()
-        } else {
-          dateA = new Date(a.start_date)
-        }
+        const dateA = toDateOrNull(a.start_date)
+        const dateB = toDateOrNull(b.start_date)
         
-        if (b.start_date && typeof b.start_date === 'object' && b.start_date.toDate && typeof b.start_date.toDate === 'function') {
-          dateB = b.start_date.toDate()
-        } else {
-          dateB = new Date(b.start_date)
-        }
-        
+        if (!dateA || !dateB) return 0
         return dateB.getTime() - dateA.getTime()
       })
     
@@ -158,18 +111,11 @@ export const dateUtils = {
       return '日付が設定されていません'
     }
     
-    // Handle Firestore Timestamp objects
-    let start: Date, end: Date
-    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
-      start = startDate.toDate()
-    } else {
-      start = new Date(startDate)
-    }
+    const start = toDateOrNull(startDate)
+    const end = toDateOrNull(endDate)
     
-    if (endDate && typeof endDate === 'object' && endDate.toDate && typeof endDate.toDate === 'function') {
-      end = endDate.toDate()
-    } else {
-      end = new Date(endDate)
+    if (!start || !end) {
+      return '日付が設定されていません'
     }
     
     const today = dateUtils.getToday()
@@ -193,12 +139,9 @@ export const dateUtils = {
       return '日付が設定されていません'
     }
     
-    // Handle Firestore Timestamp objects
-    let start: Date
-    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
-      start = startDate.toDate()
-    } else {
-      start = new Date(startDate)
+    const start = toDateOrNull(startDate)
+    if (!start) {
+      return '日付が設定されていません'
     }
     
     const today = dateUtils.getToday()
@@ -240,18 +183,11 @@ export const dateUtils = {
       return '日付が設定されていません'
     }
     
-    // Handle Firestore Timestamp objects
-    let start: Date, end: Date
-    if (startDate && typeof startDate === 'object' && startDate.toDate && typeof startDate.toDate === 'function') {
-      start = startDate.toDate()
-    } else {
-      start = new Date(startDate)
-    }
+    const start = toDateOrNull(startDate)
+    const end = toDateOrNull(endDate)
     
-    if (endDate && typeof endDate === 'object' && endDate.toDate && typeof endDate.toDate === 'function') {
-      end = endDate.toDate()
-    } else {
-      end = new Date(endDate)
+    if (!start || !end) {
+      return '日付が設定されていません'
     }
     
     const startYear = start.getFullYear()
@@ -306,12 +242,9 @@ export const dateUtils = {
       throw new Error('Invalid date provided')
     }
     
-    // Handle Firestore Timestamp objects
-    let d: Date
-    if (date && typeof date === 'object' && date.toDate && typeof date.toDate === 'function') {
-      d = date.toDate()
-    } else {
-      d = new Date(date)
+    const d = toDateOrNull(date)
+    if (!d) {
+      throw new Error('Invalid date provided')
     }
     
     const year = d.getFullYear()
@@ -348,18 +281,11 @@ export const dateUtils = {
       return false
     }
     
-    // Handle Firestore Timestamp objects
-    let d1: Date, d2: Date
-    if (date1 && typeof date1 === 'object' && date1.toDate && typeof date1.toDate === 'function') {
-      d1 = date1.toDate()
-    } else {
-      d1 = new Date(date1)
-    }
+    const d1 = toDateOrNull(date1)
+    const d2 = toDateOrNull(date2)
     
-    if (date2 && typeof date2 === 'object' && date2.toDate && typeof date2.toDate === 'function') {
-      d2 = date2.toDate()
-    } else {
-      d2 = new Date(date2)
+    if (!d1 || !d2) {
+      return false
     }
     
     return d1.getFullYear() === d2.getFullYear() &&
