@@ -307,10 +307,10 @@ export default function NewTripPage() {
                 </label>
                 <PlaceSearchInput
                   currentPlace={formData.destinationPlace}
-                  onPlaceSelect={(place) => setFormData(prev => ({ 
+                  onPlaceSelect={(place: PlaceData | null) => setFormData(prev => ({ 
                     ...prev, 
-                    destinationPlace: place,
-                    destination: place.name // 後方互換性のため
+                    destinationPlace: place || undefined,
+                    destination: place?.name || '' // 後方互換性のため
                   }))}
                   placeholder="目的地を検索..."
                   disabled={submitting}

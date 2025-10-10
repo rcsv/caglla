@@ -59,7 +59,7 @@ _Note: This is a Next.js + Firebase application, not a traditional MySQL-based s
 - If Firestore access is needed, use existing Firestore helpers in `lib/firestore.ts`.
 
 ### When creating new data structures:
-- Define TypeScript interfaces in `lib/types.ts`.
+- Define TypeScript interfaces in `lib/core/types.ts`.
 - Use Firestore collections instead of SQL tables.
 - Follow Firestore best practices for data modeling.
 
@@ -240,9 +240,9 @@ const customOptimization = (waypoints) => { /* custom logic */ }
 ```
 
 ### Type Definition Management System:
-- **ALWAYS** use centralized type definitions in `lib/types.ts`
+- **ALWAYS** use centralized type definitions in `lib/core/types.ts`
 - **NEVER** define duplicate interfaces across files
-- All shared types should be exported from `lib/types.ts`
+- All shared types should be exported from `lib/core/types.ts`
 
 **Key Type Categories:**
 - User & Authentication: `User`, `UserPreferences`

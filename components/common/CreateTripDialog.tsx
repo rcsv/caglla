@@ -269,9 +269,9 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 </label>
                 <PlaceSearchInput
                   currentPlace={formData.destinationPlace}
-                  onPlaceSelect={(place: PlaceData | undefined) => setFormData(prev => ({ 
+                  onPlaceSelect={(place: PlaceData | null) => setFormData(prev => ({ 
                     ...prev, 
-                    destinationPlace: place || undefined,
+                    destinationPlace: place | undefined,
                     destination: place?.name || '' // 後方互換性のため
                   }))}
                   placeholder="目的地を検索..."

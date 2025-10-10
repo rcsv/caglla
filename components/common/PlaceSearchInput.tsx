@@ -3,14 +3,9 @@ import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers, PlaceSearchResult } from '@/lib/api/google/places'
-import { PlaceData } from '@/lib/core/types'
+import { PlaceData } from '@/lib/core/types'  
+import { PlaceSearchInputProps } from '@/lib/core/types'
 
-interface PlaceSearchInputProps {
-  currentPlace?: PlaceData | null
-  onPlaceSelect: (place: PlaceData | null) => void
-  placeholder?: string
-  disabled?: boolean
-}
 
 /**
  * A controlled place search input that performs debounced queries and shows selectable search results.
@@ -22,6 +17,7 @@ interface PlaceSearchInputProps {
  * @param placeholder - Input placeholder text (defaults to "場所を検索...").
  * @param disabled - If `true`, disables the input and interaction.
  * @returns The input and dropdown UI for searching and selecting places. */
+
 export default function PlaceSearchInput({ 
   currentPlace, 
   onPlaceSelect, 
@@ -112,7 +108,7 @@ export default function PlaceSearchInput({
         formatted_address: place.formatted_address,
         geometry: place.geometry,
         types: place.types,
-      } as any)
+      } as PlaceData) // as any -> PlaceData に変更
       
       setQuery(place.name)
       setShowResults(false)

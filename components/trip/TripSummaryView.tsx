@@ -5,6 +5,7 @@ import TripDistanceDisplay from '@/components/stats/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/stats/TripWeatherDisplay'
 import TripCostDisplay from '@/components/stats/TripCostDisplay'
 import TripHotelDisplay from '@/components/stats/TripHotelDisplay'
+import { dateUtils } from '@/lib/utils/date'
 
 interface TripSummaryViewProps {
   trip: Trip
@@ -62,8 +63,8 @@ export default function TripSummaryView({
                 <div className="lg:col-span-4">
                   <TripWeatherDisplay 
                     destination={trip.destination}
-                    startDate={trip.start_date ? (trip.start_date instanceof Date ? trip.start_date.toISOString().split('T')[0] : trip.start_date) : undefined}
-                    endDate={trip.end_date ? (trip.end_date instanceof Date ? trip.end_date.toISOString().split('T')[0] : trip.end_date) : undefined}
+                    startDate={trip.start_date ? dateUtils.toUrlDateString(trip.start_date) : undefined}
+                    endDate={trip.end_date ? dateUtils.toUrlDateString(trip.end_date) : undefined}
                   />
                 </div>
               </div>
