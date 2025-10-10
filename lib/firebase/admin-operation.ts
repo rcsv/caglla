@@ -1,22 +1,16 @@
-import { adminDb } from './firebase-admin'
-import { COLLECTIONS } from '@/lib/firestore'
-import type { User, Trip, Day, Itinerary, TripUser } from '@/lib/firestore'
+import { adminDb } from './admin'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
+import type { User, Trip, Day, Itinerary, TripUser } from '@/lib/core/types'
+import { convertStandardDates } from './timestamp-utils'
 
 // Helper functions for Firestore Admin operations
 const adminFirestoreHelpers = {
   // Convert Firestore document to typed object
   docToObject: <T>(doc: any): T => {
-    const data = doc.data()
-    return {
+    return convertStandardDates({
       id: doc.id,
-      ...data,
-      created_at: data.created_at?.toDate ? data.created_at.toDate() : data.created_at,
-      updated_at: data.updated_at?.toDate ? data.updated_at.toDate() : data.updated_at,
-      start_date: data.start_date?.toDate ? data.start_date.toDate() : data.start_date,
-      end_date: data.end_date?.toDate ? data.end_date.toDate() : data.end_date,
-      date: data.date?.toDate ? data.date.toDate() : data.date,
-      // destination_place is already an object, no conversion needed
-    } as T
+      ...doc.data(),
+    }) as T
   }
 }
 

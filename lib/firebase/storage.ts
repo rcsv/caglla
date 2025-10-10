@@ -1,6 +1,6 @@
-import { adminDb } from './firebase-admin'
-import logger from './logger'
-import { StorageUsage, StorageFile, StorageQuota } from './types'
+import { adminDb } from './admin'
+import logger from '@/lib/core/logger'
+import { StorageUsage, StorageFile, StorageQuota } from '@/lib/core/types'
 
 // Firebase Admin SDKを使用するためのヘルパー関数
 const getDoc = async (collection: string, docId: string) => {

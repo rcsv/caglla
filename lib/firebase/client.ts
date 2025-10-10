@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import logger from './logger'
+import logger from '@/lib/core/logger'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'

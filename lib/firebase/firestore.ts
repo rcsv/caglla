@@ -12,7 +12,7 @@ import type {
   TripFormData, 
   ItineraryFormData, 
   DayFormData 
-} from './types'
+} from '@/lib/core/types'
 
 // Firestore collection names
 export const COLLECTIONS = {
