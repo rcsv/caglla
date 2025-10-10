@@ -303,8 +303,8 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
               currentPlace={formData.destinationPlace}
               onPlaceSelect={(place) => setFormData(prev => ({ 
                 ...prev, 
-                destinationPlace: place,
-                destination: place.name // 後方互換性のため
+                destinationPlace: place || undefined,
+                destination: place?.name || '' // 後方互換性のため
               }))}
               placeholder="目的地を検索..."
               disabled={saving}
@@ -419,7 +419,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving || !formData.title || dateError}
+            disabled={saving || !formData.title || dateError.length > 0}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
           >
             {saving ? '保存中...' : '保存'}
