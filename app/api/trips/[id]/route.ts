@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { Trip, Day, Itinerary, User } from '@/lib/core/types'
 import { generateUniqueSlug } from '@/lib/utils/slug'
-
+import logger from '@/lib/core/logger'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 
 export async function GET(
@@ -80,7 +80,7 @@ export async function GET(
       
 
       // デバッグ用に、browser consoleに、
-      logger.debug('Day itineraries', { itineraries: itinerariesSnapshot.docs.map(doc => doc.data()) })
+      logger.debug('Day itineraries', { itineraries: itinerariesSnapshot.docs.map((doc: any) => doc.data()) })
 
       const itineraries = itinerariesSnapshot.docs
         .map((itineraryDoc: any) => {
@@ -97,7 +97,7 @@ export async function GET(
       // デバッグ用ログ
       logger.debug('Day itineraries sort_numbers', { 
         dayId: dayDoc.id, 
-        itineraries: itineraries.map(i => ({ id: i.id, title: i.title, sort_number: i.sort_number })) 
+        itineraries: itineraries.map((i: Itinerary) => ({ id: i.id, title: i.title, sort_number: i.sort_number })) 
       })
 
       days.push({
@@ -273,8 +273,8 @@ export async function PUT(
         .get()
       
       const existingSlugs = userTripsSnapshot.docs
-        .filter(doc => doc.id !== tripId) // 現在の旅行を除外
-        .map(doc => doc.data().slug)
+        .filter((doc: any) => doc.id !== tripId) // 現在の旅行を除外
+        .map((doc: any) => doc.data().slug)
         .filter(Boolean)
       
       // 新しいスラッグを生成

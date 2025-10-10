@@ -1,7 +1,7 @@
 // 旅行費用集計ユーティリティ
 
-import { currencyUtils } from './utils/currency'
-import type { CostSummary, TripCostSummary } from './core/types'
+import { currencyUtils } from '@/lib/utils/currency'
+import type { CostSummary, TripCostSummary } from '@/lib/core/types'
 
 // Re-export types for backward compatibility
 export type { CostSummary, TripCostSummary }

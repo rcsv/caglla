@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import ImageUpload from '@/components/ui/ImageUpload'
-import { imageUploadHelpers } from '@/lib/image-upload'
+import { imageUploadHelpers } from '@/lib/storage/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import { PlaceData } from '@/lib/core/types'
 import { useUserData } from '@/lib/contexts/user-data'
@@ -250,7 +250,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   return (
     <div className={`fixed inset-0 bg-black bg-opacity-50 ${getZIndexClass('FLOAT_MODAL')}`} style={{ margin: 0, top: 0 }}>
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <div className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${getZIndexClass('FLOAT_MODAL', 1)}`}>
+        <div className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${getZIndexClass('FLOAT_MODAL')}`}>
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-2xl font-bold text-gray-900">新しい旅行を作成</h2>
@@ -269,10 +269,10 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 </label>
                 <PlaceSearchInput
                   currentPlace={formData.destinationPlace}
-                  onPlaceSelect={(place) => setFormData(prev => ({ 
+                  onPlaceSelect={(place: PlaceData | undefined) => setFormData(prev => ({ 
                     ...prev, 
-                    destinationPlace: place,
-                    destination: place.name // 後方互換性のため
+                    destinationPlace: place || undefined,
+                    destination: place?.name || '' // 後方互換性のため
                   }))}
                   placeholder="目的地を検索..."
                   disabled={submitting}

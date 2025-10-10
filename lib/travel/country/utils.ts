@@ -1,6 +1,7 @@
 // 国名抽出とグループ化のユーティリティ関数
 import { PlaceData } from '@/lib/core/types'
 import { geocodingApiHelpers } from '@/lib/api/google/geocoding'
+import logger from '@/lib/core/logger'
 
 // 国名のマッピング（英語→日本語）
 const COUNTRY_NAMES: { [key: string]: string } = {

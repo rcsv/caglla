@@ -1,6 +1,6 @@
 'use client'
 
-import { CostSummary, aggregateCostsByCurrency, formatMultipleCostSummaries } from '@/lib/cost-aggregation'
+import { CostSummary, aggregateCostsByCurrency, formatMultipleCostSummaries } from '@/lib/travel/cost-aggregation'
 import { currencyUtils } from '@/lib/utils/currency'
 import Card from '@/components/common/Card'
 import { MoneyIcon } from '@/components/common/icons/MoneyIcon'

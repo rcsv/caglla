@@ -2,7 +2,7 @@
 import logger from '@/lib/core/logger'
 
 import { useState, useRef } from 'react'
-import { imageUploadHelpers } from '@/lib/image-upload'
+import { imageUploadHelpers } from '@/lib/storage/image-upload'
 import { useAuth } from '@/lib/contexts/auth'
 
 interface ImageUploadProps {

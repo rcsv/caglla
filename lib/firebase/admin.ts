@@ -10,7 +10,7 @@ let adminDb: any
 let adminAuth: any
 
 try {
-  const { validateServerEnvironment } = require('./env-validation')
+  const { validateServerEnvironment } = require('@/lib/core/env-validation') // @/lib/env-validation.ts に変更できないのか？
   const env = validateServerEnvironment()
   
   firebaseAdminConfig = {

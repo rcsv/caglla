@@ -53,7 +53,7 @@ async function updateStorageUsage(userId: string, file: StorageFile): Promise<{ 
 
 // Firebase IDトークンを取得
 async function getAuthToken(): Promise<string> {
-  const { auth } = await import('./firebase/client')
+  const { auth } = await import('@/lib/firebase/client') // これ、../firebase/client になってるけど、 @/lib/firebase/clientに変更できないのか？
   const user = auth.currentUser
   if (!user) throw new Error('User not authenticated')
   return await user.getIdToken()
