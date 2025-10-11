@@ -126,12 +126,15 @@ export default function SlugBasedTripPage() {
       for (const day of trip.days) {
         const itinerary = day.itineraries?.find(it => it.id === itineraryId)
         if (itinerary) {
+          // クリックされたItineraryが属するDayを選択状態に設定
+          setSelectedDayId(day.id)
+
           setCollapsedDays(prev => {
             const newSet = new Set(prev)
             newSet.delete(day.id)
             return newSet
           })
-          
+
           // POIダイアログを更新
           let placeData = itinerary.place_data
           
