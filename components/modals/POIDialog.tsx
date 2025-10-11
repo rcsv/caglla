@@ -237,7 +237,7 @@ export default function POIDialog({ poiData, onClose, className = '' }: POIDialo
                     {placeDetails.photos.slice(0, 4).map((photo: any, index: number) => (
                       <div key={index} className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
                         <img
-                          src={`https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photoreference=${photo.photo_reference}&key=${process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY}`}
+                          src={placesApiHelpers.getPhotoUrl(photo.photo_reference, 400)}
                           alt={`${poiData.name}の写真${index + 1}`}
                           className="w-full h-full object-cover"
                         />

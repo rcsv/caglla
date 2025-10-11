@@ -208,14 +208,15 @@ export default function ScheduleCard({
     }
   }, [itinerary.place_data?.place_id, itinerary.cost_currency]) // place_idを使用して無限ループを防ぐ
 
-  // 写真のURLを取得
+  // 写真のURLを取得（レスポンシブ対応）
   const getPhotoUrl = () => {
     logger.debug('🖼️ Getting photo URL for:', itinerary.title)
     logger.debug('  place_data:', itinerary.place_data)
     logger.debug('  photos:', itinerary.place_data?.photos)
-    
+
     if (itinerary.place_data?.photos && itinerary.place_data.photos.length > 0) {
-      const photoUrl = placesApiHelpers.getPhotoUrl(itinerary.place_data.photos[0].photo_reference, 300)
+      // レスポンシブなサイズ設定（デフォルト800pxで高解像度）
+      const photoUrl = placesApiHelpers.getPhotoUrl(itinerary.place_data.photos[0].photo_reference, 800)
       logger.debug('  Generated photo URL:', photoUrl)
       return photoUrl
     }

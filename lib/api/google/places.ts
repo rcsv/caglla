@@ -135,13 +135,36 @@ export const placesApiHelpers = {
     }
   },
 
-  // 写真のURLを生成する
-  getPhotoUrl(photoReference: string, maxWidth: number = 400): string {
-    if (!GOOGLE_PLACES_API_KEY) {
+  // 写真のURLを生成する（プロキシ経由でCORS問題を解決）
+  getPhotoUrl(photoReference: string, maxWidth: number = 800): string {
+    if (!photoReference) {
       return ''
     }
-    
-    return `${GOOGLE_PLACES_API_URL}/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`
+
+    // プロキシエンドポイント経由で写真を取得（CORS問題を解決）
+    const params = new URLSearchParams({
+      photoreference: photoReference,
+      maxwidth: maxWidth.toString()
+    })
+
+    return `/api/places/photo?${params.toString()}`
+  },
+
+  // レスポンシブな写真サイズを取得するヘルパー関数
+  getResponsivePhotoSize(containerWidth: number = 400, devicePixelRatio: number = window.devicePixelRatio || 1): number {
+    // デバイスピクセル比を考慮して適切なサイズを計算
+    const baseSize = Math.min(containerWidth * devicePixelRatio, 1600) // 最大1600px
+    return Math.max(baseSize, 200) // 最小200px
+  },
+
+  // 写真のURLをレスポンシブに生成する
+  getResponsivePhotoUrl(photoReference: string, containerWidth: number = 400): string {
+    if (!photoReference) {
+      return ''
+    }
+
+    const size = this.getResponsivePhotoSize(containerWidth)
+    return this.getPhotoUrl(photoReference, size)
   },
 
   // 場所の種類を日本語に変換する
