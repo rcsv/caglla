@@ -144,9 +144,9 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
         
         logger.debug('✅ Data saved to PlacesCache')
 
-        // 画像をキャッシュ
-        if (placeDetails.photos && placeDetails.photos.length > 0) {
-          await cacheImages(placeDetails.photos)
+        // 画像をキャッシュ（detailsを直接参照）
+        if (details?.photos && details.photos.length > 0) {
+          await cacheImages(details.photos)
         }
       } catch (err) {
         logger.error('POI詳細情報の取得に失敗しました:', err)

@@ -156,7 +156,7 @@ export default function TripMap({
         newDirectionsRenderer.setMap(newMap)
 
         // POIマーカーのクリックイベントを検出
-        newMap.addListener('click', (event: any) => {
+        newMap.addListener('click', async (event: any) => {
           // Google Maps標準のPOI情報ウィンドウをキャンセル
           const infoWindows = newMap.get('infoWindows') || []
           infoWindows.forEach((infoWindow: any) => {
@@ -166,33 +166,56 @@ export default function TripMap({
           // クリックされた位置のPOIマーカーを検出
           const clickLatLng = event.latLng
           
-          // Places APIを使用してPOI情報を取得
+          // 新Places API (v1) を使用してPOI情報を取得
           try {
-            const service = new window.google.maps.places.PlacesService(newMap)
-            const request = {
-              location: clickLatLng,
-              radius: 50, // 50メートル以内のPOIを検索
-              type: 'point_of_interest'
-            }
-            
-            service.nearbySearch(request, (results: any[], status: any) => {
-              if (status === window.google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-                // 最も近いPOIを選択
-                const nearestPOI = results[0]
-                const newPoiData = {
-                  placeId: nearestPOI.place_id,
-                  name: nearestPOI.name,
-                  location: {
-                    lat: nearestPOI.geometry.location.lat(),
-                    lng: nearestPOI.geometry.location.lng()
-                  }
-                }
-                setInternalPoiData(newPoiData)
-                onPoiDataUpdate?.(newPoiData)
-              }
+            const response = await fetch('/api/places/nearby', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                location: {
+                  lat: clickLatLng.lat(),
+                  lng: clickLatLng.lng()
+                },
+                radius: 50 // 50メートル以内のPOIを検索
+              })
             })
+
+            if (!response.ok) {
+              throw new Error(`Nearby search failed: ${response.status}`)
+            }
+
+            const data = await response.json()
+            
+            if (data.status === 'OK' && data.results && data.results.length > 0) {
+              // 最も近いPOIを選択
+              const nearestPOI = data.results[0]
+              const newPoiData = {
+                placeId: nearestPOI.place_id,
+                name: nearestPOI.name,
+                location: {
+                  lat: nearestPOI.geometry.location.lat,
+                  lng: nearestPOI.geometry.location.lng
+                }
+              }
+              setInternalPoiData(newPoiData)
+              onPoiDataUpdate?.(newPoiData)
+            } else {
+              // 検索結果なし: 基本的な位置情報のみでPOIデータを作成
+              const newPoiData = {
+                placeId: `manual_${Date.now()}`,
+                name: 'クリックされた場所',
+                location: {
+                  lat: clickLatLng.lat(),
+                  lng: clickLatLng.lng()
+                }
+              }
+              setInternalPoiData(newPoiData)
+              onPoiDataUpdate?.(newPoiData)
+            }
           } catch (error) {
-            console.warn('Places API search failed:', error)
+            logger.warn('Places API search failed:', error)
             // フォールバック: 基本的な位置情報のみでPOIデータを作成
             const newPoiData = {
               placeId: `manual_${Date.now()}`,
