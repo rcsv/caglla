@@ -35,18 +35,22 @@ export async function GET(request: NextRequest) {
     const decodedToken = await adminAuth.verifyIdToken(token)
     const uid = decodedToken.uid
 
-    // ユーザー情報を取得
-    const userDoc = await adminDb.collection('users').doc(uid).get()
+    // ユーザー情報を取得（google_idでクエリ）
+    const userQuery = await adminDb.collection('users')
+      .where('google_id', '==', uid)
+      .limit(1)
+      .get()
     
-    if (!userDoc.exists) {
+    if (userQuery.empty) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    const userDoc = userQuery.docs[0]
     const userData = userDoc.data()
     
     return NextResponse.json({
       planId: userData?.planId || PlanId.SEASON_TRAVELER,
-      userId: uid
+      userId: userDoc.id
     })
   } catch (error) {
     logger.error('Error fetching user plan', error)
@@ -99,8 +103,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid plan ID' }, { status: 400 })
     }
 
+    // ユーザー情報を取得（google_idでクエリ）
+    const userQuery = await adminDb.collection('users')
+      .where('google_id', '==', uid)
+      .limit(1)
+      .get()
+    
+    if (userQuery.empty) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    const userDoc = userQuery.docs[0]
+    
     // ユーザー情報を更新
-    await adminDb.collection('users').doc(uid).update({
+    await adminDb.collection('users').doc(userDoc.id).update({
       planId: planId,
       updated_at: new Date()
     })

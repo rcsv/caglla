@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 import logger from '@/lib/core/logger'
 import { dummyPaymentService, SubscriptionPlan as DummySubscriptionPlan, Subscription, PaymentMethod } from '@/lib/subscription/payment-service'
 import { RestrictionProvider, RestrictionType, PlanId, PLAN_CONFIGS } from '@/lib/subscription/restriction'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 
 // 統一されたSubscriptionPlan型
 export type SubscriptionPlan = DummySubscriptionPlan
@@ -246,6 +247,21 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       
       // サブスクリプションIDをローカルストレージに保存
       localStorage.setItem('subscription_id', subscription.id)
+      
+      // FirestoreのplanIdを更新
+      try {
+        const response = await makeAuthenticatedRequest('/api/user/plan', {
+          method: 'PUT',
+          body: JSON.stringify({ planId })
+        })
+        
+        if (!response.ok) {
+          logger.error('Failed to update plan in Firestore:', await response.text())
+        }
+      } catch (firestoreError) {
+        logger.error('Error updating plan in Firestore:', firestoreError)
+        // Firestoreの更新に失敗してもローカルのサブスクリプションは有効
+      }
       
       // 状態を更新
       await checkSubscription()

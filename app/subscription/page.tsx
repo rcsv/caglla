@@ -5,9 +5,11 @@ import React, { useState } from 'react'
 import { SubscriptionProvider, useSubscription } from '@/lib/contexts/subscription'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { paymentHelpers } from '@/lib/subscription/payment-service'
+import { useUserData } from '@/lib/contexts/user-data'
 
 function SubscriptionContent() {
   const { subscriptionStatus, subscribeToPlan } = useSubscription()
+  const { refreshUserPlan } = useUserData()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isSubscribing, setIsSubscribing] = useState(false)
@@ -19,6 +21,9 @@ function SubscriptionContent() {
       const success = await subscribeToPlan(planId)
       
       if (success) {
+        // プラン情報を更新
+        await refreshUserPlan()
+        
         // URLパラメータで遷移先を指定されている場合はそれを使用
         const returnTo = searchParams.get('returnTo')
         
