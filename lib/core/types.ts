@@ -89,29 +89,44 @@ export interface PlaceData {
       lng: number
     }
   }
+  // Basic Data（無料）
   address_components?: Array<{
     long_name: string
     short_name: string
     types: string[]
   }>
+  vicinity?: string // 周辺情報（短縮住所）
+  business_status?: string // 'OPERATIONAL' | 'CLOSED_TEMPORARILY' | 'CLOSED_PERMANENTLY'
+  types?: string[]
   photos?: Array<{
     photo_reference: string
     height: number
     width: number
   }>
+  url?: string // Google MapsのURL
+  icon?: string // アイコンURL
+  // Contact Data（$3.00/1,000件）
+  formatted_phone_number?: string
+  international_phone_number?: string
+  website?: string
+  opening_hours?: {
+    open_now?: boolean // リアルタイム情報
+    weekday_text?: string[]
+  }
+  // Atmosphere Data（$5.00/1,000件）
   rating?: number
   user_ratings_total?: number
   price_level?: number
-  types?: string[]
-  opening_hours?: {
-    open_now: boolean
-    weekday_text: string[]
-  }
-  international_phone_number?: string
-  website?: string
   editorial_summary?: {
     overview: string
   }
+  reviews?: Array<{
+    author_name: string
+    rating: number
+    text: string
+    time: number
+    relative_time_description?: string
+  }>
 }
 
 // ============================================================================
@@ -130,29 +145,44 @@ export interface PlacesCache {
       lng: number
     }
   }
+  // Basic Data（無料）
   address_components?: Array<{
     long_name: string
     short_name: string
     types: string[]
   }>
+  vicinity?: string
+  business_status?: string
+  types?: string[]
   photos?: Array<{
     photo_reference: string
     height: number
     width: number
   }>
+  url?: string
+  icon?: string
+  // Contact Data（$3.00/1,000件）
+  formatted_phone_number?: string
+  international_phone_number?: string
+  website?: string
+  opening_hours?: {
+    open_now?: boolean // リアルタイム情報（キャッシュから除外推奨）
+    weekday_text?: string[]
+  }
+  // Atmosphere Data（$5.00/1,000件）
   rating?: number
   user_ratings_total?: number
   price_level?: number
-  types?: string[]
-  opening_hours?: {
-    open_now?: boolean // 動的情報なのでキャッシュから除外
-    weekday_text: string[] // 静的情報なのでキャッシュ可能
-  }
-  international_phone_number?: string
-  website?: string
   editorial_summary?: {
     overview: string
   }
+  reviews?: Array<{
+    author_name: string
+    rating: number
+    text: string
+    time: number
+    relative_time_description?: string
+  }>
   // メタデータ
   cached_at: FirestoreDate
   last_accessed: FirestoreDate
@@ -389,14 +419,8 @@ export interface PlaceSearchResult {
   }>
 }
 
-export interface PlaceDetailsResult extends PlaceData {
-  opening_hours?: {
-    open_now: boolean
-    weekday_text: string[]
-  }
-  international_phone_number?: string
-  website?: string
-}
+// PlaceDetailsResultはPlaceDataと同じ（後方互換性のためのエイリアス）
+export interface PlaceDetailsResult extends PlaceData {}
 
 export interface CurrencyInfo {
   code: string

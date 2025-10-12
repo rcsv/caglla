@@ -23,8 +23,8 @@ const CACHE_EXPIRY = {
 } as const
 
 // キャッシュフォーマットバージョン管理
-const CACHE_FORMAT_VERSION = '1.0.0' // メジャー.マイナー.パッチ
-const SUPPORTED_VERSIONS = ['1.0.0'] // サポート対象バージョン
+const CACHE_FORMAT_VERSION = '2.0.0' // メジャー.マイナー.パッチ（新Places API v1対応）
+const SUPPORTED_VERSIONS = ['2.0.0', '1.1.0'] // サポート対象バージョン（1.1.0は互換モード）
 
 export class PlacesCacheManager {
   private db = getFirestore()
@@ -100,23 +100,35 @@ export class PlacesCacheManager {
         access_count: 1
       }
       
-      // undefinedでない値のみ追加
+      // Basic Data（無料）
       if (placeData.address_components) cacheData.address_components = placeData.address_components
+      if (placeData.vicinity) cacheData.vicinity = placeData.vicinity
+      if (placeData.business_status) cacheData.business_status = placeData.business_status
+      if (placeData.types) {
+        // point_of_interestを除外（ほぼ全ての場所に含まれるため）
+        cacheData.types = placeData.types.filter((type: string) => type !== 'point_of_interest')
+      }
       if (placeData.photos) cacheData.photos = placeData.photos
+      if (placeData.url) cacheData.url = placeData.url
+      if (placeData.icon) cacheData.icon = placeData.icon
+      
+      // Contact Data（$3.00/1,000件）
+      if (placeData.formatted_phone_number) cacheData.formatted_phone_number = placeData.formatted_phone_number
+      if (placeData.international_phone_number) cacheData.international_phone_number = placeData.international_phone_number
+      if (placeData.website) cacheData.website = placeData.website
+      if (placeData.opening_hours) {
+        // weekday_textのみキャッシュ（open_nowはリアルタイム情報なので除外）
+        cacheData.opening_hours = {
+          weekday_text: placeData.opening_hours.weekday_text
+        }
+      }
+      
+      // Atmosphere Data（$5.00/1,000件）
       if (placeData.rating !== undefined) cacheData.rating = placeData.rating
       if (placeData.user_ratings_total !== undefined) cacheData.user_ratings_total = placeData.user_ratings_total
       if (placeData.price_level !== undefined) cacheData.price_level = placeData.price_level
-      if (placeData.types) cacheData.types = placeData.types
-      if (placeData.opening_hours) {
-        // open_nowは動的情報なので除外、weekday_textのみキャッシュ
-        cacheData.opening_hours = {
-          weekday_text: placeData.opening_hours.weekday_text
-          // open_nowは除外（リアルタイム情報のため）
-        }
-      }
-      if (placeData.international_phone_number) cacheData.international_phone_number = placeData.international_phone_number
-      if (placeData.website) cacheData.website = placeData.website
       if (placeData.editorial_summary) cacheData.editorial_summary = placeData.editorial_summary
+      if (placeData.reviews) cacheData.reviews = placeData.reviews
       
       // Firestoreに保存
       logger.debug('💾 Saving cache data:', cacheData)
@@ -438,17 +450,27 @@ export const convertPlacesCacheToPlaceData = (placesCache: PlacesCache | null): 
     geometry: placesCache.geometry,
   }
   
-  // オプショナルフィールドのコピー
+  // Basic Data（無料）
   if (placesCache.address_components) placeData.address_components = placesCache.address_components
+  if (placesCache.vicinity) placeData.vicinity = placesCache.vicinity
+  if (placesCache.business_status) placeData.business_status = placesCache.business_status
+  if (placesCache.types) placeData.types = placesCache.types
   if (placesCache.photos) placeData.photos = placesCache.photos
+  if (placesCache.url) placeData.url = placesCache.url
+  if (placesCache.icon) placeData.icon = placesCache.icon
+  
+  // Contact Data（$3.00/1,000件）
+  if (placesCache.formatted_phone_number) placeData.formatted_phone_number = placesCache.formatted_phone_number
+  if (placesCache.international_phone_number) placeData.international_phone_number = placesCache.international_phone_number
+  if (placesCache.website) placeData.website = placesCache.website
+  if (placesCache.opening_hours) placeData.opening_hours = placesCache.opening_hours
+  
+  // Atmosphere Data（$5.00/1,000件）
   if (placesCache.rating !== undefined) placeData.rating = placesCache.rating
   if (placesCache.user_ratings_total !== undefined) placeData.user_ratings_total = placesCache.user_ratings_total
   if (placesCache.price_level !== undefined) placeData.price_level = placesCache.price_level
-  if (placesCache.types) placeData.types = placesCache.types
-  if (placesCache.opening_hours) placeData.opening_hours = placesCache.opening_hours
-  if (placesCache.international_phone_number) placeData.international_phone_number = placesCache.international_phone_number
-  if (placesCache.website) placeData.website = placesCache.website
   if (placesCache.editorial_summary) placeData.editorial_summary = placesCache.editorial_summary
+  if (placesCache.reviews) placeData.reviews = placesCache.reviews
   
   return placeData
 }

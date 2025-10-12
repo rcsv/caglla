@@ -100,11 +100,14 @@ export const placesApiHelpers = {
         place_id: result.place_id,
         name: result.name,
         formatted_address: result.formatted_address,
+        // Basic Data（無料）
         address_components: result.address_components?.map((component: any) => ({
           long_name: component.long_name,
           short_name: component.short_name,
           types: component.types || []
         })),
+        vicinity: result.vicinity,
+        business_status: result.business_status,
         geometry: {
           location: {
             lat: result.geometry.location.lat,
@@ -112,22 +115,35 @@ export const placesApiHelpers = {
           }
         },
         types: result.types || [],
-        rating: result.rating,
-        price_level: result.price_level,
         photos: result.photos?.map((photo: any) => ({
           photo_reference: photo.photo_reference,
           height: photo.height,
           width: photo.width
         })),
+        url: result.url,
+        icon: result.icon,
+        // Contact Data（$3.00/1,000件）
+        formatted_phone_number: result.formatted_phone_number,
+        international_phone_number: result.international_phone_number,
+        website: result.website,
         opening_hours: result.opening_hours ? {
           open_now: result.opening_hours.open_now,
           weekday_text: result.opening_hours.weekday_text || []
         } : undefined,
-        international_phone_number: result.international_phone_number,
-        website: result.website,
+        // Atmosphere Data（$5.00/1,000件）
+        rating: result.rating,
+        user_ratings_total: result.user_ratings_total,
+        price_level: result.price_level,
         editorial_summary: result.editorial_summary ? {
           overview: result.editorial_summary.overview
-        } : undefined
+        } : undefined,
+        reviews: result.reviews?.map((review: any) => ({
+          author_name: review.author_name,
+          rating: review.rating,
+          text: review.text,
+          time: review.time,
+          relative_time_description: review.relative_time_description
+        }))
       }
     } catch (error) {
       logger.error('Error getting place details:', error)

@@ -46,9 +46,9 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={disabled || variant === 'disabled'}
       {...rest}
     >
-      {leftIcon ? <span className="inline-flex items-center">{leftIcon}</span> : null}
+      {leftIcon ? <span className="inline-flex items-center mr-2">{leftIcon}</span> : null}
       <span className="inline-flex items-center">{children}</span>
-      {rightIcon ? <span className="inline-flex items-center">{rightIcon}</span> : null}
+      {rightIcon ? <span className="inline-flex items-center ml-2">{rightIcon}</span> : null}
     </button>
   )
 }

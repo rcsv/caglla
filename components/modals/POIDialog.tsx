@@ -1,10 +1,10 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useState, useEffect } from 'react'
-import { getZIndexClass } from '@/lib/core/z-index'
+import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers } from '@/lib/api/google/places'
 import { getCachedPlace, placesCacheManager } from '@/lib/travel/places-cache'
+import { Button } from '@/components/common/Button'
 
 interface POIDialogProps {
   poiData: {
@@ -15,55 +15,114 @@ interface POIDialogProps {
       lng: number
     }
     placeData?: any // Itinerariesに保存されているplace_data
+    orderNumber?: number // マップピン番号
   } | null
   onClose: () => void
+  onAddToItinerary?: (placeId: string, dayId: string) => void
+  availableDays?: Array<{ id: string; date: string; title?: string }>
   className?: string
 }
 
-export default function POIDialog({ poiData, onClose, className = '' }: POIDialogProps) {
+// 営業時間を解析する関数
+function parseOpeningHours(weekdayText: string[] | undefined) {
+  if (!weekdayText || weekdayText.length === 0) {
+    return null
+  }
+
+  const now = new Date()
+  const today = now.getDay() // 0=日曜日, 1=月曜日, ..., 6=土曜日
+  const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+  
+  // 曜日のマッピング（Google APIは月曜始まり）
+  const dayIndexMap = [6, 0, 1, 2, 3, 4, 5] // [日, 月, 火, 水, 木, 金, 土]
+  const todayText = weekdayText[dayIndexMap[today]]
+  
+  // 営業日を判定
+  const openDays = weekdayText.map(text => {
+    return !text.includes('定休日') && !text.includes('休業日') && !text.includes('closed')
+  })
+  
+  // 今日の営業時間を解析
+  let isOpen = false
+  let currentHours = ''
+  
+  if (todayText) {
+    // "月曜日: 11:00～20:00" のような形式を解析
+    const timeMatch = todayText.match(/(\d{1,2}):(\d{2}).*?(\d{1,2}):(\d{2})/)
+    if (timeMatch) {
+      const openTime = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`
+      const closeTime = `${timeMatch[3].padStart(2, '0')}:${timeMatch[4]}`
+      currentHours = `${openTime} - ${closeTime}`
+      
+      // 現在時刻が営業時間内かチェック
+      isOpen = currentTime >= openTime && currentTime <= closeTime
+    } else if (todayText.includes('24 時間営業') || todayText.includes('24時間営業')) {
+      isOpen = true
+      currentHours = '24時間営業'
+    } else if (todayText.includes('定休日') || todayText.includes('休業日') || todayText.includes('closed')) {
+      isOpen = false
+      currentHours = '定休日'
+    }
+  }
+  
+  return {
+    isOpen,
+    currentHours,
+    openDays,
+    weekdayText
+  }
+}
+
+export default function POIDialog({ poiData, onClose, onAddToItinerary, availableDays, className = '' }: POIDialogProps) {
   const [placeDetails, setPlaceDetails] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showDaySelector, setShowDaySelector] = useState(false)
+  const [showAllHours, setShowAllHours] = useState(false)
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
+  const hoursRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!poiData) return
 
-    // Itinerariesに保存されているplace_dataがある場合はそれを使用
-    if (poiData.placeData) {
-      setPlaceDetails(poiData.placeData)
-      setLoading(false)
-      setError(null)
-      return
-    }
-
-    // place_dataがない場合はPlacesCacheを確認してからAPIを呼び出し
     const fetchPlaceDetails = async () => {
       setLoading(true)
       setError(null)
       
       try {
+        // Itinerariesに保存されているplace_dataがある場合
+        if (poiData.placeData) {
+          // vicinityが存在する場合はそのまま使用
+          if (poiData.placeData.vicinity) {
+            logger.debug('✅ Using place_data with vicinity from Itinerary')
+            setPlaceDetails(poiData.placeData)
+            setLoading(false)
+            return
+          }
+          
+          // vicinityがない場合は古いデータなので、PlacesCacheから補完を試みる
+          logger.debug('⚠️ place_data missing vicinity, checking PlacesCache...')
+          const cachedData = await getCachedPlace(poiData.placeId)
+          if (cachedData && cachedData.vicinity) {
+            logger.debug('✅ Found vicinity in PlacesCache, merging data')
+            setPlaceDetails({
+              ...poiData.placeData,
+              vicinity: cachedData.vicinity,
+              business_status: cachedData.business_status,
+              url: cachedData.url,
+              icon: cachedData.icon
+            })
+            setLoading(false)
+            return
+          }
+        }
+        
         logger.debug('🔍 Checking PlacesCache for place_id:', poiData.placeId)
         
-        // まずPlacesCacheを確認
+        // PlacesCacheを確認
         const cachedData = await getCachedPlace(poiData.placeId)
         if (cachedData) {
           logger.debug('✅ Found cached data:', cachedData.name)
-          
-          // キャッシュデータにopen_nowがない場合、最新の営業状態を取得
-          if (cachedData.opening_hours && cachedData.opening_hours.open_now === undefined) {
-            logger.debug('🔄 Fetching current open_now status...')
-            try {
-              const currentDetails = await placesApiHelpers.getPlaceDetails(poiData.placeId)
-              if (currentDetails.opening_hours?.open_now !== undefined) {
-                // キャッシュデータに最新のopen_nowを追加
-                cachedData.opening_hours.open_now = currentDetails.opening_hours.open_now
-                logger.debug('✅ Updated open_now status:', currentDetails.opening_hours.open_now)
-              }
-            } catch (err) {
-              logger.warn('⚠️ Failed to fetch current open_now status:', err)
-            }
-          }
-          
           setPlaceDetails(cachedData)
           setLoading(false)
           return
@@ -94,30 +153,120 @@ export default function POIDialog({ poiData, onClose, className = '' }: POIDialo
 
   if (!poiData) return null
 
+  const handleAddToDay = (dayId: string) => {
+    if (onAddToItinerary) {
+      onAddToItinerary(poiData.placeId, dayId)
+      setShowDaySelector(false)
+    }
+  }
+
+  // 営業時間の解析
+  const openingHoursInfo = parseOpeningHours(placeDetails?.opening_hours?.weekday_text)
+  
+  // 曜日ラベル
+  const dayLabels = ['日', '月', '火', '水', '木', '金', '土']
+  
+  // ティアドロップマーカー（地図と同じスタイル）
+  const TeardropMarker = ({ number }: { number?: number }) => (
+    <div className="relative inline-block" style={{ width: '30px', height: '30px' }}>
+      <div 
+        className="absolute"
+        style={{
+          width: '30px',
+          height: '30px',
+          backgroundColor: '#EF4444',
+          borderRadius: '50% 50% 50% 0',
+          transform: 'rotate(-45deg)',
+          boxShadow: '1px 1px 3px rgba(0, 0, 0, 0.4)'
+        }}
+      />
+      {number !== undefined && (
+        <div 
+          className="absolute text-white font-bold text-xs"
+          style={{
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
+          {number}
+        </div>
+      )}
+    </div>
+  )
+
   return (
-    <div className={`absolute bottom-4 left-4 right-4 ${getZIndexClass('FLOAT_MODAL')} ${className}`}>
+    <div className={`absolute bottom-4 left-4 right-4 zidx-float-modal ${className}`}>
       <div className="bg-white border-t border-gray-200 shadow-lg rounded-t-lg w-full">
         {/* ヘッダー */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              {poiData.name}
-            </h3>
+        <div className="flex items-center justify-between p-3 border-b border-gray-200">
+          <div className="flex items-center space-x-2 flex-1 min-w-0">
+            <div className="flex-shrink-0">
+              <TeardropMarker number={poiData.orderNumber} />
+            </div>
+            <div className={`flex-1 min-w-0 ${!placeDetails?.vicinity ? 'flex items-center' : ''}`}>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                  {poiData.name}
+                </h3>
+                {placeDetails?.vicinity && (
+                  <p className="text-sm text-gray-600 mt-0.5">
+                    {placeDetails.vicinity}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            aria-label="閉じる"
-          >
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div className="flex items-center space-x-1 ml-2">
+            {onAddToItinerary && availableDays && availableDays.length > 0 && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowDaySelector(!showDaySelector)}
+                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  aria-label="旅程に追加"
+                  title="旅程に追加"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
+                </button>
+                {showDaySelector && (
+                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg zidx-float-modal-content min-w-[200px]">
+                    <div className="p-2">
+                      <div className="text-xs font-medium text-gray-500 px-2 py-1">
+                        追加する日を選択
+                      </div>
+                      {availableDays.map((day) => (
+                        <button
+                          key={day.id}
+                          onClick={() => handleAddToDay(day.id)}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded transition-colors"
+                        >
+                          <div className="font-medium text-gray-900">{day.date}</div>
+                          {day.title && (
+                            <div className="text-xs text-gray-600">{day.title}</div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="閉じる"
+            >
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* コンテンツ */}
-        <div className="p-4 max-h-64 overflow-y-auto rounded-b-lg">
+        <div className="p-3 max-h-80 overflow-y-auto rounded-b-lg">
           {loading && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
@@ -132,117 +281,194 @@ export default function POIDialog({ poiData, onClose, className = '' }: POIDialo
           )}
 
           {placeDetails && (
-            <div className="space-y-4">
-              {/* 基本情報 */}
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">基本情報</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                  {placeDetails.formatted_address && (
-                    <div>
-                      <span className="font-medium">住所:</span> {placeDetails.formatted_address}
-                    </div>
+            <div className="flex gap-3">
+              {/* メインコンテンツ（8割） */}
+              <div className="flex-1 space-y-3 text-sm">
+                {/* 価格帯と評価 */}
+                <div className="flex items-center flex-wrap gap-3">
+                  {placeDetails.price_level && (
+                    <span className="text-gray-700 font-medium">
+                      {'¥'.repeat(placeDetails.price_level)}
+                    </span>
                   )}
-                  {placeDetails.formatted_phone_number && (
-                    <div>
-                      <span className="font-medium">電話:</span> {placeDetails.formatted_phone_number}
-                    </div>
-                  )}
-                  {placeDetails.website && (
-                    <div>
-                      <span className="font-medium">ウェブサイト:</span>{' '}
-                      <a 
-                        href={placeDetails.website} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 underline"
-                      >
-                        公式サイト
-                      </a>
+                  {placeDetails.rating && (
+                    <div className="flex items-center space-x-1.5">
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className={`w-3.5 h-3.5 ${
+                              i < Math.floor(placeDetails.rating)
+                                ? 'text-yellow-400'
+                                : 'text-gray-300'
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="text-gray-700 font-medium">
+                        {placeDetails.rating}
+                      </span>
+                      {placeDetails.user_ratings_total && (
+                        <span className="text-gray-500 text-xs">
+                          ({placeDetails.user_ratings_total.toLocaleString()})
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* 営業時間 */}
-              {placeDetails.opening_hours && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">営業時間</h4>
-                  <div className="text-sm text-gray-600">
-                    {placeDetails.opening_hours.open_now ? (
-                      <span className="text-green-600 font-medium">現在営業中</span>
-                    ) : (
-                      <span className="text-red-600 font-medium">現在休業中</span>
-                    )}
-                    {placeDetails.opening_hours.weekday_text && (
-                      <div className="mt-2 space-y-1">
-                        {placeDetails.opening_hours.weekday_text.map((day: string, index: number) => (
-                          <div key={index} className="text-xs">{day}</div>
-                        ))}
+                {/* 概要（Editorial Summary） */}
+                {placeDetails.editorial_summary?.overview && (
+                  <p className="text-gray-700 leading-relaxed">
+                    {placeDetails.editorial_summary.overview}
+                  </p>
+                )}
+
+                {/* 営業時間 */}
+                {openingHoursInfo && (
+                  <div className="relative">
+                    <div 
+                      className="flex items-center space-x-2 text-xs cursor-pointer"
+                      onMouseEnter={() => setShowAllHours(true)}
+                      onMouseLeave={() => setShowAllHours(false)}
+                    >
+                      <span className={openingHoursInfo.isOpen ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                        {openingHoursInfo.isOpen ? '営業中' : '営業時間外'}
+                      </span>
+                      {openingHoursInfo.currentHours && (
+                        <span className="text-gray-600">{openingHoursInfo.currentHours}</span>
+                      )}
+                      <span className="text-gray-400">|</span>
+                      <div className="flex space-x-1">
+                        {dayLabels.map((day, index) => {
+                          // Google APIは月曜始まりなので、インデックスを調整
+                          const apiIndex = index === 0 ? 6 : index - 1
+                          const isOpen = openingHoursInfo.openDays[apiIndex]
+                          return (
+                            <span
+                              key={index}
+                              className={`${isOpen ? 'text-gray-700' : 'text-gray-300'}`}
+                            >
+                              {day}
+                            </span>
+                          )
+                        })}
+                      </div>
+                    </div>
+                    
+                    {/* ホバー時に全営業時間を表示 */}
+                    {showAllHours && (
+                      <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg p-2 zidx-float-modal-content min-w-[200px] z-50">
+                        <div className="space-y-0.5 text-xs text-gray-700">
+                          {openingHoursInfo.weekdayText.map((day: string, index: number) => (
+                            <div key={index}>{day}</div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* 評価・レビュー */}
-              {placeDetails.rating && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">評価</h4>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <svg
-                          key={i}
-                          className={`w-4 h-4 ${
-                            i < Math.floor(placeDetails.rating)
-                              ? 'text-yellow-400'
-                              : 'text-gray-300'
-                          }`}
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      {placeDetails.rating} ({placeDetails.user_ratings_total}件のレビュー)
+                {/* 営業状況（business_status） */}
+                {placeDetails.business_status && placeDetails.business_status !== 'OPERATIONAL' && (
+                  <div className="flex items-center space-x-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                    <svg className="w-3.5 h-3.5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-yellow-800">
+                      {placeDetails.business_status === 'CLOSED_TEMPORARILY' && '一時休業中'}
+                      {placeDetails.business_status === 'CLOSED_PERMANENTLY' && '閉業'}
                     </span>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* カテゴリ */}
-              {placeDetails.types && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">カテゴリ</h4>
-                  <div className="flex flex-wrap gap-2">
+                {/* レビュー */}
+                {placeDetails.reviews && placeDetails.reviews.length > 0 && (
+                  <div className="space-y-2">
+                    {placeDetails.reviews.slice(0, 2).map((review: any, index: number) => (
+                      <div key={index} className="text-xs border-l-2 border-gray-200 pl-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium text-gray-900">{review.author_name}</span>
+                          <div className="flex items-center space-x-0.5">
+                            <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            <span className="text-gray-600">{review.rating}</span>
+                          </div>
+                        </div>
+                        <p className="text-gray-700 line-clamp-2 leading-relaxed">{review.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* カテゴリ */}
+                {placeDetails.types && placeDetails.types.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
                     {placeDetails.types.slice(0, 5).map((type: string, index: number) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
                       >
                         {type.replace(/_/g, ' ')}
                       </span>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* 写真 */}
+                {/* 連絡先 */}
+                <div className="flex flex-wrap gap-3">
+                  {placeDetails.formatted_phone_number && (
+                    <Button
+                      variant="outline"
+                      size="md"
+                      leftIcon={<span>📞</span>}
+                      onClick={() => window.open(`tel:${placeDetails.formatted_phone_number}`, '_self')}
+                    >
+                      {placeDetails.formatted_phone_number}
+                    </Button>
+                  )}
+                  {placeDetails.website && (
+                    <Button
+                      variant="outline"
+                      size="md"
+                      leftIcon={<span>🌐</span>}
+                      onClick={() => window.open(placeDetails.website, '_blank', 'noopener,noreferrer')}
+                    >
+                      ウェブサイト
+                    </Button>
+                  )}
+                  {placeDetails.url && (
+                    <Button
+                      variant="outline"
+                      size="md"
+                      leftIcon={<span>🗺️</span>}
+                      onClick={() => window.open(placeDetails.url, '_blank', 'noopener,noreferrer')}
+                    >
+                      Google Maps
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* 画像エリア（2割） */}
               {placeDetails.photos && placeDetails.photos.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">写真</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {placeDetails.photos.slice(0, 4).map((photo: any, index: number) => (
-                      <div key={index} className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                        <img
-                          src={placesApiHelpers.getPhotoUrl(photo.photo_reference, 400)}
-                          alt={`${poiData.name}の写真${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+                <div className="w-32 flex-shrink-0">
+                  <div className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group">
+                    <img
+                      src={placesApiHelpers.getPhotoUrl(placeDetails.photos[currentPhotoIndex].photo_reference, 300)}
+                      alt={`${poiData.name}の写真`}
+                      className="w-full h-full object-cover"
+                    />
+                    {placeDetails.photos.length > 1 && (
+                      <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                        +{placeDetails.photos.length - 1}枚
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               )}

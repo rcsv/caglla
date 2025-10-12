@@ -501,6 +501,27 @@ export default function SlugBasedTripPage() {
     // 新規作成されたItineraryを選択し、地図にフォーカス
     setSelectedItineraryId(newItinerary.id)
     setMapFocusMode('single')
+        
+    // POIDialogを表示（place_dataがある場合）
+    if (newItinerary.place_data?.place_id) {
+      setPoiData({
+        placeId: newItinerary.place_data.place_id,
+        name: newItinerary.title,
+        location: {
+          lat: newItinerary.place_data.geometry!.location.lat,
+          lng: newItinerary.place_data.geometry!.location.lng
+        },
+        placeData: newItinerary.place_data
+      })
+    } else if (newItinerary.place_id) {
+      // place_idのみがある場合（place_dataは後で取得される）
+      setPoiData({
+        placeId: newItinerary.place_id,
+        name: newItinerary.title,
+        location: null as any,
+        placeData: null
+      })
+    }
   }
 
   const handleScheduleUpdated = async (updatedItinerary: any) => {

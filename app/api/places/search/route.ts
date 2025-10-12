@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-const GOOGLE_PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place'
+// 新Places API (v1) のエンドポイント
+const GOOGLE_PLACES_API_URL_NEW = 'https://places.googleapis.com/v1/places:searchText'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,59 +23,59 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    logger.debug('Searching for place', { query })
+    logger.debug('Searching for place with new Places API v1', { query })
 
-    // 複数の検索戦略を試行
-    const searchStrategies = [
-      // 1. 元のクエリで検索
-      `${GOOGLE_PLACES_API_URL}/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}&language=ja&region=jp`,
-      // 2. 英語でも検索してみる
-      `${GOOGLE_PLACES_API_URL}/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}&language=en`,
-      // 3. 地域制限なしで検索
-      `${GOOGLE_PLACES_API_URL}/textsearch/json?query=${encodeURIComponent(query)}&key=${GOOGLE_PLACES_API_KEY}&language=ja`
-    ]
+    // 新Places API (v1) を呼び出し
+    const response = await fetch(GOOGLE_PLACES_API_URL_NEW, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.rating,places.userRatingCount,places.priceLevel,places.photos'
+      },
+      body: JSON.stringify({
+        textQuery: query,
+        languageCode: 'ja',
+        regionCode: 'JP',
+        maxResultCount: 20
+      })
+    })
 
-    let lastError: Error | null = null
-    
-    for (let i = 0; i < searchStrategies.length; i++) {
-      const apiUrl = searchStrategies[i]
-      logger.debug('Trying search strategy', { strategyNumber: i + 1 })
-      
-      try {
-        const response = await fetch(apiUrl)
-
-        if (!response.ok) {
-          throw new Error(`Google Places API error: ${response.status}`)
-        }
-
-        const data = await response.json()
-        
-        // ZERO_RESULTSは正常なレスポンス（検索結果なし）
-        if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-          throw new Error(`Google Places API error: ${data.status}`)
-        }
-
-        // 結果が見つかった場合、または最後の戦略の場合は返す
-        if (data.status === 'OK' || i === searchStrategies.length - 1) {
-          return NextResponse.json(data)
-        }
-        
-        // ZERO_RESULTSの場合は次の戦略を試す
-        lastError = new Error(`No results found with strategy ${i + 1}`)
-        
-      } catch (error) {
-        logger.debug('Search strategy failed', { strategyNumber: i + 1, error })
-        lastError = error instanceof Error ? error : new Error('Unknown error')
-        
-        // 最後の戦略でない場合は次の戦略を試す
-        if (i < searchStrategies.length - 1) {
-          continue
-        }
-      }
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      logger.error('Google Places API error:', errorData)
+      throw new Error(`Google Places API error: ${response.status}`)
     }
 
-    // すべての戦略が失敗した場合
-    throw lastError || new Error('All search strategies failed')
+    const data = await response.json()
+    
+    logger.debug('Search results count:', data.places?.length || 0)
+    
+    // 旧API形式に変換
+    const legacyFormat = {
+      status: data.places && data.places.length > 0 ? 'OK' : 'ZERO_RESULTS',
+      results: (data.places || []).map((place: any) => ({
+        place_id: place.id?.replace('places/', ''),
+        name: place.displayName?.text || place.displayName || place.name,
+        formatted_address: place.formattedAddress,
+        geometry: place.location ? {
+          location: {
+            lat: place.location.latitude,
+            lng: place.location.longitude
+          }
+        } : undefined,
+        types: place.types || [],
+        rating: place.rating,
+        price_level: place.priceLevel ? ['FREE', 'INEXPENSIVE', 'MODERATE', 'EXPENSIVE', 'VERY_EXPENSIVE'].indexOf(place.priceLevel) : undefined,
+        photos: place.photos?.map((photo: any) => ({
+          photo_reference: photo.name,
+          height: photo.heightPx,
+          width: photo.widthPx
+        }))
+      }))
+    }
+
+    return NextResponse.json(legacyFormat)
   } catch (error) {
     logger.error('Error in places search proxy', error)
     return NextResponse.json(

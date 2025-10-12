@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-const GOOGLE_PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place'
+const GOOGLE_PLACES_API_URL_OLD = 'https://maps.googleapis.com/maps/api/place'
+const GOOGLE_PLACES_API_URL_NEW = 'https://places.googleapis.com/v1'
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,20 +27,34 @@ export async function GET(request: NextRequest) {
     }
 
     logger.debug('Fetching photo from Places API', {
-      photoReference: photoReference.substring(0, 10) + '...',
+      photoReference: photoReference.substring(0, 20) + '...',
       maxWidth,
       maxHeight
     })
 
-    // Google Places APIから写真を取得
-    const apiUrl = `${GOOGLE_PLACES_API_URL}/photo?maxwidth=${maxWidth}${maxHeight ? `&maxheight=${maxHeight}` : ''}&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`
+    let apiUrl: string
+    let headers: HeadersInit
 
-    const response = await fetch(apiUrl)
+    // 新Places API (v1) の photo name 形式（"places/ChIJ.../photos/..."）か判定
+    if (photoReference.startsWith('places/')) {
+      // 新Places API (v1) を使用
+      apiUrl = `${GOOGLE_PLACES_API_URL_NEW}/${photoReference}/media?maxHeightPx=${maxHeight || maxWidth}&maxWidthPx=${maxWidth}&skipHttpRedirect=false`
+      headers = {
+        'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY
+      }
+    } else {
+      // 旧Places API（後方互換性）
+      apiUrl = `${GOOGLE_PLACES_API_URL_OLD}/photo?maxwidth=${maxWidth}${maxHeight ? `&maxheight=${maxHeight}` : ''}&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`
+      headers = {}
+    }
+
+    const response = await fetch(apiUrl, { headers })
 
     if (!response.ok) {
       logger.error('Failed to fetch photo from Places API', {
         status: response.status,
-        statusText: response.statusText
+        statusText: response.statusText,
+        isNewAPI: photoReference.startsWith('places/')
       })
       return NextResponse.json(
         { error: 'Failed to fetch photo from Places API' },
@@ -48,13 +63,13 @@ export async function GET(request: NextRequest) {
     }
 
     // レスポンスヘッダーをコピーして画像を返す
-    const headers = new Headers()
-    headers.set('Content-Type', response.headers.get('Content-Type') || 'image/jpeg')
-    headers.set('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
+    const responseHeaders = new Headers()
+    responseHeaders.set('Content-Type', response.headers.get('Content-Type') || 'image/jpeg')
+    responseHeaders.set('Cache-Control', 'public, max-age=3600') // 1時間のキャッシュ
 
     return new NextResponse(response.body, {
       status: response.status,
-      headers
+      headers: responseHeaders
     })
 
   } catch (error) {
