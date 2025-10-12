@@ -35,6 +35,12 @@ service firebase.storage {
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
+    // ---- Google Places API 画像キャッシュ ----
+    match /places-photos/{allPaths=**} {
+      // 認証済みユーザーは読み取り・書き込み可能
+      allow read, write: if request.auth != null;
+    }
+
     // ------------- 共通ユーティリティ -------------
 
     // contentType の緩チェック（最終的にはサーバー側でも検証推奨）
