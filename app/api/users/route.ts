@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
         slug: userSlug,
         email: email || decodedToken.email || '',
         profile_image_url: profile_image_url || decodedToken.picture,
-        preferences: preferences || {}
+        preferences: preferences || {},
+        planId: 'season_traveler' // 新規ユーザーはデフォルトで無料プラン
       }
     }
 

@@ -61,6 +61,11 @@ export const adminUserOperations = {
         }
       }
       
+      // 既存ユーザーにplanIdがない場合はデフォルト値を設定
+      if (!existingUser.planId) {
+        updateData.planId = 'season_traveler'
+      }
+      
       // 名前が明示的に変更された場合のみ更新
       if (userData.name && userData.name !== existingUser.name) {
         updateData.name = userData.name

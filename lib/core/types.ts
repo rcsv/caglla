@@ -41,7 +41,7 @@ export interface User {
   preferences?: UserPreferences
   created_at: FirestoreDate
   updated_at: FirestoreDate
-  planId: 'season_traveler' | 'backpacker' | 'globetrotter' | 'planner_pro' | 'enterprise'
+  planId?: 'season_traveler' | 'backpacker' | 'globetrotter' | 'planner_pro' | 'enterprise'
   storageUsage?: StorageUsage
 }
 
