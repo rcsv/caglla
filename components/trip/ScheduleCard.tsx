@@ -7,6 +7,7 @@ import { PlaceData, Itinerary } from '@/lib/core/types'
 import { timezoneUtils } from '@/lib/utils/timezone'
 import { currencyUtils } from '@/lib/utils/currency'
 import { getZIndexClass } from '@/lib/core/z-index'
+import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
 import VenueDistance from './VenueDistance'
 
 // ティアドロップ形状のマーカースタイル（左ペイン用）
@@ -208,21 +209,45 @@ export default function ScheduleCard({
     }
   }, [itinerary.place_data?.place_id, itinerary.cost_currency]) // place_idを使用して無限ループを防ぐ
 
-  // 写真のURLを取得（レスポンシブ対応）
-  const getPhotoUrl = () => {
-    logger.debug('🖼️ Getting photo URL for:', itinerary.title)
-    logger.debug('  place_data:', itinerary.place_data)
-    logger.debug('  photos:', itinerary.place_data?.photos)
+  // 写真のURLを取得（キャッシュ対応）
+  const [cachedImage, setCachedImage] = useState<CachedImageInfo | null>(null)
+  const [imageLoading, setImageLoading] = useState(false)
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
 
-    if (itinerary.place_data?.photos && itinerary.place_data.photos.length > 0) {
-      // レスポンシブなサイズ設定（デフォルト800pxで高解像度）
-      const photoUrl = placesApiHelpers.getPhotoUrl(itinerary.place_data.photos[0].photo_reference, 800)
-      logger.debug('  Generated photo URL:', photoUrl)
-      return photoUrl
+  // 画像のキャッシュ処理
+  useEffect(() => {
+    const loadImage = async () => {
+      if (itinerary.place_data?.photos && itinerary.place_data.photos.length > 0) {
+        const photoReference = itinerary.place_data.photos[0].photo_reference
+        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photoReference, 800)
+        
+        try {
+          setImageLoading(true)
+          const cachedImageResult = await getCachedPlaceImage(photoReference, googlePhotoUrl, {
+            width: 800,
+            height: 600,
+            quality: 85
+          })
+          
+          setCachedImage(cachedImageResult)
+          setPhotoUrl(cachedImageResult.url)
+          logger.debug('  Cached image result:', cachedImageResult)
+        } catch (error) {
+          logger.error('  Failed to get cached image:', error)
+          // フォールバック: 直接Google Photo URLを使用
+          setPhotoUrl(googlePhotoUrl)
+        } finally {
+          setImageLoading(false)
+        }
+      } else {
+        setPhotoUrl(null)
+        setCachedImage(null)
+      }
     }
-    logger.debug('  No photos available')
-    return null
-  }
+
+    loadImage()
+  }, [itinerary.place_data?.photos])
+
 
   // タイトルの編集を開始
   const handleTitleClick = () => {
@@ -576,8 +601,6 @@ export default function ScheduleCard({
   const filteredDaysForMove = availableDays.filter(day => day.id !== itinerary.day_id)
   const filteredDaysForDuplicate = availableDays
 
-  const photoUrl = getPhotoUrl()
-
   // 説明文の展開/折りたたみロジック
   const MAX_CHARS = 150
   const shouldTruncate = description.length > MAX_CHARS
@@ -633,25 +656,50 @@ export default function ScheduleCard({
         <div className={`flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${isSelected ? 'ring-2 ring-red-500 ring-opacity-50' : ''}`}>
           <div className="flex">
             {/* 左側: 画像（16:9アスペクト比） */}
-            <div className="flex-shrink-0 w-32 h-18">
+            <div className="flex-shrink-0 w-32 h-18 relative">
               {photoUrl ? (
-                <img
-                  src={photoUrl}
-                  alt={itinerary.title}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    logger.error('❌ Image load error for:', itinerary.title, photoUrl)
-                    e.currentTarget.style.display = 'none'
-                  }}
-                  onLoad={() => {
-                    logger.debug('✅ Image loaded successfully for:', itinerary.title)
-                  }}
-                />
+                <>
+                  <img
+                    src={photoUrl}
+                    alt={itinerary.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      logger.error('❌ Image load error for:', itinerary.title, photoUrl)
+                      // キャッシュされた画像が読み込めない場合は、元のGoogle Photo URLにフォールバック
+                      if (cachedImage?.cached && itinerary.place_data?.photos?.[0]?.photo_reference) {
+                        const target = e.target as HTMLImageElement
+                        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(itinerary.place_data.photos[0].photo_reference, 800)
+                        target.src = googlePhotoUrl
+                      } else {
+                        e.currentTarget.style.display = 'none'
+                      }
+                    }}
+                    onLoad={() => {
+                      logger.debug('✅ Image loaded successfully for:', itinerary.title)
+                    }}
+                  />
+                  {/* キャッシュ状態インジケーター */}
+                  {cachedImage?.cached && (
+                    <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded-full opacity-75">
+                      C
+                    </div>
+                  )}
+                  {/* ローディングインジケーター */}
+                  {imageLoading && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                      <div className="text-white text-xs">読み込み中...</div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                  </svg>
+                  {imageLoading ? (
+                    <div className="text-gray-500 text-xs">読み込み中...</div>
+                  ) : (
+                    <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                    </svg>
+                  )}
                 </div>
               )}
             </div>

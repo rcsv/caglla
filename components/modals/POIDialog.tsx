@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers } from '@/lib/api/google/places'
 import { getCachedPlace, placesCacheManager } from '@/lib/travel/places-cache'
 import { Button } from '@/components/common/Button'
+import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
 
 interface POIDialogProps {
   poiData: {
@@ -80,6 +81,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
   const [showDaySelector, setShowDaySelector] = useState(false)
   const [showAllHours, setShowAllHours] = useState(false)
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
+  const [cachedImages, setCachedImages] = useState<CachedImageInfo[]>([])
+  const [imageLoading, setImageLoading] = useState(false)
   const hoursRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -140,11 +143,45 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
         await placesCacheManager.fetchAndCachePlace(poiData.placeId)
         
         logger.debug('✅ Data saved to PlacesCache')
+
+        // 画像をキャッシュ
+        if (placeDetails.photos && placeDetails.photos.length > 0) {
+          await cacheImages(placeDetails.photos)
+        }
       } catch (err) {
         logger.error('POI詳細情報の取得に失敗しました:', err)
         setError('POI情報の取得に失敗しました')
       } finally {
         setLoading(false)
+      }
+    }
+
+    const cacheImages = async (photos: any[]) => {
+      if (!photos || photos.length === 0) return
+
+      setImageLoading(true)
+      try {
+        const imagePromises = photos.map(async (photo) => {
+          const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photo.photo_reference, 300)
+          return await getCachedPlaceImage(photo.photo_reference, googlePhotoUrl, {
+            width: 300,
+            height: 300,
+            quality: 80
+          })
+        })
+
+        const cachedImageResults = await Promise.all(imagePromises)
+        setCachedImages(cachedImageResults)
+        
+        logger.debug('POIDialog: 画像キャッシュ完了', {
+          total: cachedImageResults.length,
+          cached: cachedImageResults.filter(img => img.cached).length,
+          new: cachedImageResults.filter(img => !img.cached).length
+        })
+      } catch (error) {
+        logger.error('POIDialog: 画像キャッシュに失敗しました:', error)
+      } finally {
+        setImageLoading(false)
       }
     }
 
@@ -168,13 +205,13 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
   
   // ティアドロップマーカー（地図と同じスタイル）
   const TeardropMarker = ({ number }: { number?: number }) => (
-    <div className="relative inline-block" style={{ width: '30px', height: '30px' }}>
+    <div className="relative inline-block" style={{ width: '26px', height: '26px' }}>
       <div 
         className="absolute"
         style={{
-          width: '30px',
-          height: '30px',
-          backgroundColor: '#EF4444',
+          width: '26px',
+          height: '26px',
+          backgroundColor: '#006400',
           borderRadius: '50% 50% 50% 0',
           transform: 'rotate(-45deg)',
           boxShadow: '1px 1px 3px rgba(0, 0, 0, 0.4)'
@@ -459,14 +496,39 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
               {placeDetails.photos && placeDetails.photos.length > 0 && (
                 <div className="w-32 flex-shrink-0">
                   <div className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group">
-                    <img
-                      src={placesApiHelpers.getPhotoUrl(placeDetails.photos[currentPhotoIndex].photo_reference, 300)}
-                      alt={`${poiData.name}の写真`}
-                      className="w-full h-full object-cover"
-                    />
+                    {cachedImages[currentPhotoIndex] ? (
+                      <img
+                        src={cachedImages[currentPhotoIndex].url}
+                        alt={`${poiData.name}の写真`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // キャッシュされた画像が読み込めない場合は、元のGoogle Photo URLにフォールバック
+                          const target = e.target as HTMLImageElement
+                          target.src = placesApiHelpers.getPhotoUrl(placeDetails.photos[currentPhotoIndex].photo_reference, 300)
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        {imageLoading ? (
+                          <div className="text-gray-500 text-xs">読み込み中...</div>
+                        ) : (
+                          <img
+                            src={placesApiHelpers.getPhotoUrl(placeDetails.photos[currentPhotoIndex].photo_reference, 300)}
+                            alt={`${poiData.name}の写真`}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                    )}
                     {placeDetails.photos.length > 1 && (
                       <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                         +{placeDetails.photos.length - 1}枚
+                      </div>
+                    )}
+                    {/* キャッシュ状態インジケーター */}
+                    {cachedImages[currentPhotoIndex]?.cached && (
+                      <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                        キャッシュ
                       </div>
                     )}
                   </div>
