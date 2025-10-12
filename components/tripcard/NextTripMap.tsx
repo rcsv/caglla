@@ -41,15 +41,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
         
         logger.debug('NextTripMap: 地図の初期化を開始')
         
-        // APIキーの確認
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-        if (!apiKey) {
-          throw new Error('Google Maps APIキーが設定されていません。')
-        }
-        
-        logger.debug('NextTripMap: APIキー確認済み')
-        
-        // 共通ローダーを使用してAPIを読み込み
+        // 共通ローダーを使用してAPIを読み込み（環境変数検証はローダー内で実施）
         await loadGoogleMapsAPI()
         
         if (!mapRef.current || !window.google) {
@@ -69,7 +61,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
           fullscreenControl: false,
           zoomControl: false,
           clickableIcons: false,
-          mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || '6d1d86ef84ec9c9071f1b459', // Map IDを設定
+          mapId: '6d1d86ef84ec9c9071f1b459', // Map IDを設定
         })
 
         logger.debug('NextTripMap: 地図インスタンス作成完了')

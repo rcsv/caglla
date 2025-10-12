@@ -116,13 +116,7 @@ export default function TripMap({
         setLoading(true)
         setError(null)
         
-        // APIキーの確認
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-        if (!apiKey) {
-          throw new Error('Google Maps APIキーが設定されていません。.env.localファイルでNEXT_PUBLIC_GOOGLE_MAPS_API_KEYまたはNEXT_PUBLIC_GOOGLE_PLACES_API_KEYを設定してください。')
-        }
-        
-        // 共通ローダーを使用してAPIを読み込み
+        // 共通ローダーを使用してAPIを読み込み（環境変数検証はローダー内で実施）
         await loadGoogleMapsAPI()
         
         if (!mapRef.current || !window.google) {

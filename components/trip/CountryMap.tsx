@@ -41,7 +41,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
           zoom: 2,
           center: { lat: 20, lng: 0 }, // 世界地図の中心
           mapTypeId: window.google.maps.MapTypeId.ROADMAP,
-          mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || '6d1d86ef84ec9c9071f1b459', // Google Maps Platformで作成したMapID
+          mapId: '6d1d86ef84ec9c9071f1b459', // Google Maps Platformで作成したMapID
           // すべてのコントロールを無効化
           disableDefaultUI: true, // デフォルトのUIを無効化
           zoomControl: false, // ズームコントロールも無効化

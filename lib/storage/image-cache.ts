@@ -1,7 +1,7 @@
 'use client'
 
 import { getStorage, ref, getDownloadURL, uploadBytes, getMetadata } from 'firebase/storage'
-import { app } from '@/lib/firebase/client'
+import app from '@/lib/firebase/client'
 
 const storage = getStorage(app)
 
