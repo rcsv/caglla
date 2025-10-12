@@ -124,7 +124,11 @@ export async function POST(request: NextRequest) {
         // Atmosphere Data
         rating: data.rating,
         user_ratings_total: data.userRatingCount,
-        price_level: data.priceLevel ? ['FREE', 'INEXPENSIVE', 'MODERATE', 'EXPENSIVE', 'VERY_EXPENSIVE'].indexOf(data.priceLevel) : undefined,
+        price_level: data.priceLevel ? (() => {
+          const priceLevels = ['FREE', 'INEXPENSIVE', 'MODERATE', 'EXPENSIVE', 'VERY_EXPENSIVE']
+          const index = priceLevels.indexOf(data.priceLevel)
+          return index >= 0 ? index : undefined
+        })() : undefined,
         editorial_summary: data.editorialSummary?.text ? {
           overview: data.editorialSummary.text
         } : (data.editorialSummary?.overview ? {

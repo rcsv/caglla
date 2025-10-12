@@ -323,7 +323,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
               <div className="flex-1 space-y-3 text-sm">
                 {/* 価格帯と評価 */}
                 <div className="flex items-center flex-wrap gap-3">
-                  {placeDetails.price_level && (
+                  {placeDetails.price_level !== undefined && placeDetails.price_level >= 0 && placeDetails.price_level <= 4 && (
                     <span className="text-gray-700 font-medium">
                       {'¥'.repeat(placeDetails.price_level)}
                     </span>

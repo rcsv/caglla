@@ -66,7 +66,11 @@ export async function POST(request: NextRequest) {
         } : undefined,
         types: place.types || [],
         rating: place.rating,
-        price_level: place.priceLevel ? ['FREE', 'INEXPENSIVE', 'MODERATE', 'EXPENSIVE', 'VERY_EXPENSIVE'].indexOf(place.priceLevel) : undefined,
+        price_level: place.priceLevel ? (() => {
+          const priceLevels = ['FREE', 'INEXPENSIVE', 'MODERATE', 'EXPENSIVE', 'VERY_EXPENSIVE']
+          const index = priceLevels.indexOf(place.priceLevel)
+          return index >= 0 ? index : undefined
+        })() : undefined,
         photos: place.photos?.map((photo: any) => ({
           photo_reference: photo.name,
           height: photo.heightPx,
