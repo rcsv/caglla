@@ -313,7 +313,7 @@ export default function SlugBasedTripPage() {
   }
 
   const handleInsertSchedule = (dayId: string, afterIndex: number) => {
-    logger.debug(`handleInsertSchedule called: dayId=${dayId}, afterIndex=${afterIndex}`)
+    // logger.debug(`handleInsertSchedule called: dayId=${dayId}, afterIndex=${afterIndex}`)
     setSelectedDayId(dayId)
     setInsertAfterIndex(afterIndex) // 指定位置に挿入
     setShowAddScheduleModal(true)
@@ -501,7 +501,7 @@ export default function SlugBasedTripPage() {
     // 新規作成されたItineraryを選択し、地図にフォーカス
     setSelectedItineraryId(newItinerary.id)
     setMapFocusMode('single')
-        
+
     // POIDialogを表示（place_dataがある場合）
     if (newItinerary.place_data?.place_id) {
       setPoiData({
