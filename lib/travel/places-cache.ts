@@ -38,12 +38,12 @@ export class PlacesCacheManager {
   async getCachedPlace(placeId: string): Promise<PlacesCache | null> {
     try {
       logger.debug('🔍 Attempting to get cached place:', placeId)
-      logger.debug('🔐 Auth state:', this.auth.currentUser ? 'authenticated' : 'not authenticated')
+      //logger.debug('🔐 Auth state:', this.auth.currentUser ? 'authenticated' : 'not authenticated')
       const docRef = doc(this.db, COLLECTIONS.PLACES_CACHE, placeId)
       const docSnap = await getDoc(docRef)
       
       if (!docSnap.exists()) {
-        logger.debug('❌ No cached document found for:', placeId)
+        // logger.debug('❌ No cached document found for:', placeId)
         return null
       }
 
@@ -52,7 +52,7 @@ export class PlacesCacheManager {
       
       // バージョン互換性をチェック
       if (!this.isCacheVersionCompatible(data)) {
-        logger.debug('⚠️ Incompatible cache version for:', placeId)
+        //logger.debug('⚠️ Incompatible cache version for:', placeId)
         // 互換性のないキャッシュは削除（非同期）
         this.deleteIncompatibleCache(placeId).catch(err => logger.error('Failed to delete incompatible cache', err))
         return null
@@ -60,7 +60,7 @@ export class PlacesCacheManager {
       
       // キャッシュの有効期限をチェック
       if (this.isCacheExpired(data)) {
-        logger.debug('⚠️ Cached data expired for:', placeId)
+        // logger.debug('⚠️ Cached data expired for:', placeId)
         // 期限切れのキャッシュは削除（非同期）
         this.deleteExpiredCache(1).catch(err => logger.error('Failed to delete expired cache', err))
         return null
@@ -72,7 +72,6 @@ export class PlacesCacheManager {
       return data
     } catch (error) {
       logger.error('❌ Error getting cached place:', error)
-      logger.error('Error details:', error)
       return null
     }
   }
@@ -131,7 +130,7 @@ export class PlacesCacheManager {
       if (placeData.reviews) cacheData.reviews = placeData.reviews
       
       // Firestoreに保存
-      logger.debug('💾 Saving cache data:', cacheData)
+      // logger.debug('💾 Saving cache data:', cacheData)
       const docRef = doc(this.db, COLLECTIONS.PLACES_CACHE, placeId)
       await setDoc(docRef, cacheData)
       logger.debug('✅ Successfully saved to PlacesCache')
@@ -194,7 +193,7 @@ export class PlacesCacheManager {
     if (!isCompatible) {
       logger.debug(`⚠️ Incompatible format_version: ${cacheData.format_version}`)
     } else {
-      logger.debug(`✅ Compatible format_version: ${cacheData.format_version}`)
+      // logger.debug(`✅ Compatible format_version: ${cacheData.format_version}`)
     }
     
     return isCompatible
@@ -230,7 +229,7 @@ export class PlacesCacheManager {
     // 動的情報（営業時間、評価）がある場合は7日間で期限切れ
     if (cacheData.opening_hours || cacheData.rating !== undefined) {
       if (daysSinceCached > CACHE_EXPIRY.DYNAMIC_INFO_DAYS) {
-        logger.debug(`⚠️ Dynamic info expired (${daysSinceCached} days old)`)
+        logger.info(`⚠️ Dynamic info expired (${daysSinceCached} days old)`)
         return true
       }
     }
@@ -238,18 +237,18 @@ export class PlacesCacheManager {
     // 写真がある場合は30日間で期限切れ
     if (cacheData.photos && cacheData.photos.length > 0) {
       if (daysSinceCached > CACHE_EXPIRY.PHOTOS_DAYS) {
-        logger.debug(`⚠️ Photos expired (${daysSinceCached} days old)`)
+        logger.info(`⚠️ Photos expired (${daysSinceCached} days old)`)
         return true
       }
     }
     
     // 基本情報は1年間有効
     if (daysSinceCached > CACHE_EXPIRY.BASIC_INFO_DAYS) {
-      logger.debug(`⚠️ Basic info expired (${daysSinceCached} days old)`)
+      logger.info(`⚠️ Basic info expired (${daysSinceCached} days old)`)
       return true
     }
     
-    logger.debug(`✅ Cache is still valid (${daysSinceCached} days old)`)
+    // logger.debug(`✅ Cache is still valid (${daysSinceCached} days old)`)
     return false
   }
 

@@ -173,29 +173,44 @@ export default function TripMap({
           const clickLatLng = event.latLng
           
           // Places APIを使用してPOI情報を取得
-          const service = new window.google.maps.places.PlacesService(newMap)
-          const request = {
-            location: clickLatLng,
-            radius: 50, // 50メートル以内のPOIを検索
-            type: 'point_of_interest'
-          }
-          
-          service.nearbySearch(request, (results: any[], status: any) => {
-            if (status === window.google.maps.places.PlacesServiceStatus.OK && results.length > 0) {
-              // 最も近いPOIを選択
-              const nearestPOI = results[0]
-              const newPoiData = {
-                placeId: nearestPOI.place_id,
-                name: nearestPOI.name,
-                location: {
-                  lat: nearestPOI.geometry.location.lat(),
-                  lng: nearestPOI.geometry.location.lng()
-                }
-              }
-              setInternalPoiData(newPoiData)
-              onPoiDataUpdate?.(newPoiData)
+          try {
+            const service = new window.google.maps.places.PlacesService(newMap)
+            const request = {
+              location: clickLatLng,
+              radius: 50, // 50メートル以内のPOIを検索
+              type: 'point_of_interest'
             }
-          })
+            
+            service.nearbySearch(request, (results: any[], status: any) => {
+              if (status === window.google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
+                // 最も近いPOIを選択
+                const nearestPOI = results[0]
+                const newPoiData = {
+                  placeId: nearestPOI.place_id,
+                  name: nearestPOI.name,
+                  location: {
+                    lat: nearestPOI.geometry.location.lat(),
+                    lng: nearestPOI.geometry.location.lng()
+                  }
+                }
+                setInternalPoiData(newPoiData)
+                onPoiDataUpdate?.(newPoiData)
+              }
+            })
+          } catch (error) {
+            console.warn('Places API search failed:', error)
+            // フォールバック: 基本的な位置情報のみでPOIデータを作成
+            const newPoiData = {
+              placeId: `manual_${Date.now()}`,
+              name: 'クリックされた場所',
+              location: {
+                lat: clickLatLng.lat(),
+                lng: clickLatLng.lng()
+              }
+            }
+            setInternalPoiData(newPoiData)
+            onPoiDataUpdate?.(newPoiData)
+          }
         })
 
         // Google Maps標準のPOI情報ウィンドウを無効化

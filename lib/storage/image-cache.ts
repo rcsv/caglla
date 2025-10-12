@@ -68,8 +68,15 @@ export class ImageCacheManager {
       this.cache.set(cacheKey, url)
       
       return url
-    } catch (error) {
-      console.warn('Failed to get cached image:', error)
+    } catch (error: any) {
+      if (error.code === 'storage/object-not-found') {
+        // これは正常な動作 - 画像がまだキャッシュされていない
+        console.debug(`🔍 Image not found in Firebase Storage (will cache): ${cacheKey}`)
+      } else if (error.code === 'storage/unauthorized') {
+        console.error(`❌ Permission denied for Firebase Storage: ${cacheKey}`)
+      } else {
+        console.warn(`⚠️ Failed to get cached image from Firebase Storage for ${cacheKey}:`, error.message)
+      }
       return null
     }
   }

@@ -4,7 +4,7 @@ import logger from '@/lib/core/logger'
 
 export async function GET(request: NextRequest) {
   try {
-    logger.debug('Auth debug API called')
+    // logger.debug('Auth debug API called')
     
     // Check if Firebase Admin SDK is initialized
     if (!adminAuth || !adminDb) {
