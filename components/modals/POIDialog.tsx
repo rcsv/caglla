@@ -83,7 +83,10 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [cachedImages, setCachedImages] = useState<CachedImageInfo[]>([])
   const [imageLoading, setImageLoading] = useState(false)
+  const [popupPosition, setPopupPosition] = useState<'bottom' | 'top'>('bottom')
   const hoursRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!poiData) return
@@ -197,6 +200,32 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
     }
   }
 
+  // ポップアップの表示位置を計算する関数
+  const calculatePopupPosition = () => {
+    if (!buttonRef.current) return 'bottom'
+
+    const buttonRect = buttonRef.current.getBoundingClientRect()
+    const viewportHeight = window.innerHeight
+    const buttonBottom = buttonRect.bottom
+    const estimatedPopupHeight = Math.min((availableDays?.length ?? 0) * 60 + 40, 300) // 最大300px
+
+    // ボタンの下に十分なスペースがあるかチェック
+    if (buttonBottom + estimatedPopupHeight < viewportHeight - 20) {
+      return 'bottom'
+    } else {
+      return 'top'
+    }
+  }
+
+  // ポップアップ表示時の位置調整
+  const handleToggleDaySelector = () => {
+    if (!showDaySelector) {
+      const position = calculatePopupPosition()
+      setPopupPosition(position)
+    }
+    setShowDaySelector(!showDaySelector)
+  }
+
   // 営業時間の解析
   const openingHoursInfo = parseOpeningHours(placeDetails?.opening_hours?.weekday_text)
   
@@ -258,7 +287,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
             {onAddToItinerary && availableDays && availableDays.length > 0 && (
               <div className="relative">
                 <button
-                  onClick={() => setShowDaySelector(!showDaySelector)}
+                  ref={buttonRef}
+                  onClick={handleToggleDaySelector}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                   aria-label="旅程に追加"
                   title="旅程に追加"
@@ -268,23 +298,32 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                   </svg>
                 </button>
                 {showDaySelector && (
-                  <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg zidx-float-modal-content min-w-[200px]">
+                  <div 
+                    ref={popupRef}
+                    className={`absolute right-0 bg-white border border-gray-200 rounded-lg shadow-lg zidx-float-modal-content min-w-[200px] max-h-[300px] overflow-y-auto ${
+                      popupPosition === 'bottom' 
+                        ? 'top-full mt-1' 
+                        : 'bottom-full mb-1'
+                    }`}
+                  >
                     <div className="p-2">
-                      <div className="text-xs font-medium text-gray-500 px-2 py-1">
+                      <div className="text-xs font-medium text-gray-500 px-2 py-1 sticky top-0 bg-white border-b border-gray-100">
                         追加する日を選択
                       </div>
-                      {availableDays.map((day) => (
-                        <button
-                          key={day.id}
-                          onClick={() => handleAddToDay(day.id)}
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded transition-colors"
-                        >
-                          <div className="font-medium text-gray-900">{day.date}</div>
-                          {day.title && (
-                            <div className="text-xs text-gray-600">{day.title}</div>
-                          )}
-                        </button>
-                      ))}
+                      <div className="max-h-[240px] overflow-y-auto">
+                        {availableDays.map((day) => (
+                          <button
+                            key={day.id}
+                            onClick={() => handleAddToDay(day.id)}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded transition-colors"
+                          >
+                            <div className="font-medium text-gray-900">{day.date}</div>
+                            {day.title && (
+                              <div className="text-xs text-gray-600">{day.title}</div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
