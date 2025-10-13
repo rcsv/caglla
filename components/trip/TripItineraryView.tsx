@@ -5,6 +5,8 @@ import DayEditor from '@/components/trip/DayEditor'
 import SortableItineraryCard from '@/components/trip/SortableItineraryCard'
 import VenueDistance from '@/components/trip/VenueDistance'
 import VenueInsertButton from '@/components/trip/VenueInsertButton'
+import { ExpandIcon } from '@/components/common/icons/ExpandIcon'
+import { CollapseIcon } from '@/components/common/icons/CollapseIcon'
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
@@ -64,27 +66,31 @@ export default function TripItineraryView({
   }
 
   return (
-    <main className="px-4 pb-4">
+    <main className="px-4 py-8 pb-4">
       {/* Days */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-900">日程</h2>
-          {trip.days && trip.days.length > 0 && (
-            <div className="flex gap-2">
-              <button
-                onClick={expandAllDays}
-                className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                全て展開
-              </button>
-              <button
-                onClick={collapseAllDays}
-                className="px-3 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                全て折りたたみ
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+              {trip.days && trip.days.length > 0 && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={expandAllDays}
+                    className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    title="全て展開"
+                  >
+                    <ExpandIcon />
+                  </button>
+                  <button
+                    onClick={collapseAllDays}
+                    className="p-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                    title="全て折りたたみ"
+                  >
+                    <CollapseIcon />
+                  </button>
+                </div>
+              )}
+          </div>
         </div>
         
         {/* Day Cards - 常に表示 */}
@@ -110,32 +116,59 @@ export default function TripItineraryView({
                   }}
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        #{day.day_number} | {day.date 
-                          ? (() => {
-                              // Firestore Timestamp型またはDate型を処理
-                              let dayDate: Date
-                              if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
-                                // Firestore Timestamp型の場合
-                                dayDate = (day.date as any).toDate()
-                              } else {
-                                // Date型または文字列の場合
-                                dayDate = new Date(day.date as any)
-                              }
-                              
-                              if (isNaN(dayDate.getTime())) {
-                                return '日付が無効です'
-                              }
-                              const month = dayDate.getMonth() + 1
-                              const dayNum = dayDate.getDate()
-                              const dayNames = ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.']
-                              const dayName = dayNames[dayDate.getDay()]
-                              return `${month}/${dayNum} ${dayName}`
-                            })()
-                          : '日付が設定されていません'
-                        }
-                      </h3>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-2xl font-bold italic text-gray-900 mb-1">
+                          Day {day.day_number}
+                        </h3>
+                        <div className={`text-base ${
+                          day.date 
+                            ? (() => {
+                                // Firestore Timestamp型またはDate型を処理
+                                let dayDate: Date
+                                if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
+                                  // Firestore Timestamp型の場合
+                                  dayDate = (day.date as any).toDate()
+                                } else {
+                                  // Date型または文字列の場合
+                                  dayDate = new Date(day.date as any)
+                                }
+                                
+                                if (isNaN(dayDate.getTime())) {
+                                  return 'text-gray-900'
+                                }
+                                const dayOfWeek = dayDate.getDay()
+                                if (dayOfWeek === 6) return 'text-blue-600' // 土曜日
+                                if (dayOfWeek === 0) return 'text-red-600'  // 日曜日
+                                return 'text-gray-900'
+                              })()
+                            : 'text-gray-600'
+                        }`}>
+                          {day.date 
+                            ? (() => {
+                                // Firestore Timestamp型またはDate型を処理
+                                let dayDate: Date
+                                if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
+                                  // Firestore Timestamp型の場合
+                                  dayDate = (day.date as any).toDate()
+                                } else {
+                                  // Date型または文字列の場合
+                                  dayDate = new Date(day.date as any)
+                                }
+                                
+                                if (isNaN(dayDate.getTime())) {
+                                  return '日付が無効です'
+                                }
+                                const month = dayDate.getMonth() + 1
+                                const dayNum = dayDate.getDate()
+                                const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+                                const dayName = dayNames[dayDate.getDay()]
+                                return `${month}/${dayNum} ${dayName}`
+                              })()
+                            : '日付が設定されていません'
+                          }
+                        </div>
+                      </div>
                       {/* 折りたたみアイコン */}
                       <button
                         className="p-1 hover:bg-gray-100 rounded zidx-day-card-button relative"
