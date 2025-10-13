@@ -10,6 +10,9 @@ import POIDialog from '@/components/modals/POIDialog'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { dateUtils } from '@/lib/utils/date'
 
+// マップのズームレベル定数
+const DEFAULT_ZOOM_LEVEL = 14
+
 // ティアドロップ形状のマーカースタイル
 const teardropStyles = `
   .teardrop-marker {
@@ -399,7 +402,7 @@ export default function TripMap({
           
           // 地図を選択された場所にフォーカス
           map.setCenter(position)
-          map.setZoom(17)
+          map.setZoom(DEFAULT_ZOOM_LEVEL)
         }
       })
 
@@ -463,7 +466,7 @@ export default function TripMap({
           lng: selectedItinerary.place_data!.geometry!.location.lng,
         }
         map.setCenter(position)
-        map.setZoom(17)
+        map.setZoom(DEFAULT_ZOOM_LEVEL)
       }
     } else if (validItineraries.length === 1) {
       // 単一のItineraryの場合
@@ -471,7 +474,7 @@ export default function TripMap({
         lat: validItineraries[0].place_data!.geometry!.location.lat,
         lng: validItineraries[0].place_data!.geometry!.location.lng,
       })
-      map.setZoom(17)
+      map.setZoom(DEFAULT_ZOOM_LEVEL)
     } else if (validItineraries.length > 1) {
       // 複数のItineraryの場合：全体を表示
       // DirectionsRendererを再表示
@@ -509,7 +512,7 @@ export default function TripMap({
     }
     
     map.setCenter(position)
-    map.setZoom(17)
+    map.setZoom(DEFAULT_ZOOM_LEVEL)
 
     // 該当するマーカーをハイライト
     markers.forEach((markerData) => {
