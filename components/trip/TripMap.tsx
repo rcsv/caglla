@@ -253,31 +253,17 @@ export default function TripMap({
               setInternalPoiData(newPoiData)
               onPoiDataUpdate?.(newPoiData)
             } else {
-              // 検索結果なし: 基本的な位置情報のみでPOIデータを作成
-              const newPoiData = {
-                placeId: `manual_${Date.now()}`,
-                name: 'クリックされた場所',
-                location: {
-                  lat: clickLatLng.lat(),
-                  lng: clickLatLng.lng()
-                }
-              }
-              setInternalPoiData(newPoiData)
-              onPoiDataUpdate?.(newPoiData)
+              // 検索結果なし: POI情報がない場合はダイアログを表示しない
+              logger.debug('No POI found at clicked location, not showing dialog')
+              setInternalPoiData(null)
+              onPoiDataUpdate?.(null)
             }
           } catch (error) {
             logger.warn('Places API search failed:', error)
-            // フォールバック: 基本的な位置情報のみでPOIデータを作成
-            const newPoiData = {
-              placeId: `manual_${Date.now()}`,
-              name: 'クリックされた場所',
-              location: {
-                lat: clickLatLng.lat(),
-                lng: clickLatLng.lng()
-              }
-            }
-            setInternalPoiData(newPoiData)
-            onPoiDataUpdate?.(newPoiData)
+            // API呼び出し失敗: POI情報が取得できない場合はダイアログを表示しない
+            logger.debug('Places API failed, not showing dialog')
+            setInternalPoiData(null)
+            onPoiDataUpdate?.(null)
           }
         })
 

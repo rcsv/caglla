@@ -48,21 +48,55 @@ function parseOpeningHours(weekdayText: string[] | undefined) {
   let currentHours = ''
   
   if (todayText) {
-    // "月曜日: 11:00～20:00" のような形式を解析
-    const timeMatch = todayText.match(/(\d{1,2}):(\d{2}).*?(\d{1,2}):(\d{2})/)
-    if (timeMatch) {
-      const openTime = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`
-      const closeTime = `${timeMatch[3].padStart(2, '0')}:${timeMatch[4]}`
-      currentHours = `${openTime} - ${closeTime}`
-      
-      // 現在時刻が営業時間内かチェック
-      isOpen = currentTime >= openTime && currentTime <= closeTime
-    } else if (todayText.includes('24 時間営業') || todayText.includes('24時間営業')) {
+    // 24時間営業のチェック
+    if (todayText.includes('24 時間営業') || todayText.includes('24時間営業')) {
       isOpen = true
       currentHours = '24時間営業'
     } else if (todayText.includes('定休日') || todayText.includes('休業日') || todayText.includes('closed')) {
       isOpen = false
       currentHours = '定休日'
+    } else {
+      // 日本語表記を数値表記に変換する関数
+      const convertJapaneseTime = (timeStr: string): string => {
+        return timeStr
+          .replace(/(\d+)時(\d+)分/g, (match, hour, minute) => {
+            return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
+          })
+          .replace(/(\d+)時/g, (match, hour) => {
+            return `${hour.padStart(2, '0')}:00`
+          })
+      }
+      
+      // 営業時間文字列を正規化
+      const normalizedText = convertJapaneseTime(todayText)
+      
+      // 複数の営業時間を分割（カンマ区切り）
+      const timeRanges = normalizedText.split(',').map(range => range.trim())
+      
+      // 各時間範囲を解析
+      const parsedRanges = timeRanges.map(range => {
+        // コロン区切りの時間形式を解析
+        const timeMatch = range.match(/(\d{1,2}):(\d{2}).*?(\d{1,2}):(\d{2})/)
+        if (timeMatch) {
+          return {
+            open: `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`,
+            close: `${timeMatch[3].padStart(2, '0')}:${timeMatch[4]}`
+          }
+        }
+        return null
+      }).filter((range): range is { open: string; close: string } => range !== null)
+      
+      // 現在時刻がどの営業時間内にあるかチェック
+      isOpen = parsedRanges.some(range => 
+        currentTime >= range.open && currentTime <= range.close
+      )
+      
+      // 営業時間表示用文字列を生成
+      if (parsedRanges.length > 0) {
+        currentHours = parsedRanges.map(range => 
+          `${range.open} - ${range.close}`
+        ).join(', ')
+      }
     }
   }
   
@@ -154,6 +188,10 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
       } catch (err) {
         logger.error('POI詳細情報の取得に失敗しました:', err)
         setError('POI情報の取得に失敗しました')
+        // エラーが発生した場合はダイアログを自動的に閉じる
+        setTimeout(() => {
+          onClose()
+        }, 100)
       } finally {
         setLoading(false)
       }
@@ -352,7 +390,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
 
           {error && (
             <div className="text-center py-8">
-              <div className="text-red-500 text-sm">{error}</div>
+              <div className="text-red-500 text-sm">POI情報を取得中にエラーが発生しました</div>
             </div>
           )}
 
