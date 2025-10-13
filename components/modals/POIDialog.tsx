@@ -6,6 +6,7 @@ import { placesApiHelpers } from '@/lib/api/google/places'
 import { getCachedPlace, placesCacheManager } from '@/lib/travel/places-cache'
 import { Button } from '@/components/common/Button'
 import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
+import type { AggregatedVenueData, UnifiedReview } from '@/lib/api/venue-aggregator'
 
 interface POIDialogProps {
   poiData: {
@@ -110,6 +111,8 @@ function parseOpeningHours(weekdayText: string[] | undefined) {
 
 export default function POIDialog({ poiData, onClose, onAddToItinerary, availableDays, className = '' }: POIDialogProps) {
   const [placeDetails, setPlaceDetails] = useState<any>(null)
+  const [aggregatedData, setAggregatedData] = useState<AggregatedVenueData | null>(null)
+  const [unifiedReviews, setUnifiedReviews] = useState<UnifiedReview[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showDaySelector, setShowDaySelector] = useState(false)
@@ -118,9 +121,32 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
   const [cachedImages, setCachedImages] = useState<CachedImageInfo[]>([])
   const [imageLoading, setImageLoading] = useState(false)
   const [popupPosition, setPopupPosition] = useState<'bottom' | 'top'>('bottom')
+  const [showAllReviews, setShowAllReviews] = useState(false)
   const hoursRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const popupRef = useRef<HTMLDivElement>(null)
+
+  // 集約された価格レベルを計算
+  const getAggregatedPriceLevel = (data: AggregatedVenueData | null): number | null => {
+    if (!data) return null
+    
+    // Google Placesの価格レベル
+    if (data.google?.price_level) {
+      return data.google.price_level
+    }
+    
+    // TripAdvisorの価格レベル（文字列 "$" - "$$$$"）
+    if (data.tripAdvisor?.details?.price_level) {
+      return data.tripAdvisor.details.price_level.length
+    }
+    
+    // Foursquareの価格レベル（数値 1-4）
+    if (data.foursquare?.details?.price) {
+      return data.foursquare.details.price
+    }
+    
+    return null
+  }
 
   useEffect(() => {
     if (!poiData) return
@@ -184,6 +210,52 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
         // 画像をキャッシュ（detailsを直接参照）
         if (details?.photos && details.photos.length > 0) {
           await cacheImages(details.photos)
+        }
+
+        // 外部API（TripAdvisor + Foursquare）からの追加情報を取得
+        // サーバーサイドプロキシ経由で取得（CORS回避）
+        logger.debug('🌐 Fetching external venue data via proxy...')
+        try {
+          const response = await fetch('/api/venue/aggregate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(details)
+          })
+          
+          logger.debug('📡 Proxy response status:', response.status, response.statusText)
+          
+          if (response.ok) {
+            const responseData = await response.json()
+            logger.debug('📦 Received data from proxy:', {
+              hasAggregatedData: !!responseData.aggregatedData,
+              hasUnifiedReviews: !!responseData.unifiedReviews,
+              tripAdvisorDetails: !!responseData.aggregatedData?.tripAdvisor?.details,
+              foursquareDetails: !!responseData.aggregatedData?.foursquare?.details,
+              reviewCount: responseData.unifiedReviews?.length || 0
+            })
+            
+            const { aggregatedData: aggregated, unifiedReviews: reviews } = responseData
+            setAggregatedData(aggregated)
+            setUnifiedReviews(reviews)
+            
+            logger.debug('✅ External venue data loaded', {
+              tripAdvisor: !!aggregated.tripAdvisor?.details,
+              foursquare: !!aggregated.foursquare?.details,
+              totalReviews: reviews.length,
+              aggregatedRating: aggregated.aggregatedRating
+            })
+          } else {
+            const errorText = await response.text()
+            logger.warn('⚠️ Failed to fetch external venue data:', {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorText
+            })
+          }
+        } catch (error) {
+          logger.error('❌ Error fetching external venue data:', error)
         }
       } catch (err) {
         logger.error('POI詳細情報の取得に失敗しました:', err)
@@ -400,12 +472,46 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
               <div className="flex-1 space-y-3 text-sm">
                 {/* 価格帯と評価 */}
                 <div className="flex items-center flex-wrap gap-3">
-                  {placeDetails.price_level !== undefined && placeDetails.price_level >= 0 && placeDetails.price_level <= 4 && (
-                    <span className="text-gray-700 font-medium">
-                      {'¥'.repeat(placeDetails.price_level)}
-                    </span>
-                  )}
-                  {placeDetails.rating && (
+                  {/* 統合された評価情報 */}
+                  {aggregatedData?.aggregatedRating ? (
+                    <div className="flex items-center space-x-1.5">
+                      <div className="flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className={`w-3.5 h-3.5 ${
+                              i < Math.floor(aggregatedData.aggregatedRating!.averageRating)
+                                ? 'text-yellow-400'
+                                : 'text-gray-300'
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="text-gray-700 font-medium">
+                        {aggregatedData.aggregatedRating.averageRating.toFixed(1)}
+                      </span>
+                      <span className="text-gray-500 text-xs">
+                        ({aggregatedData.aggregatedRating.totalReviews.toLocaleString()} 件)
+                      </span>
+                      <div className="flex items-center gap-1 ml-1">
+                        {aggregatedData.aggregatedRating.sources.map((source, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600"
+                            title={`${source.source}: ${source.rating} (${source.reviewCount}件)`}
+                          >
+                            {source.source === 'google' && '🗺️'}
+                            {source.source === 'tripadvisor' && '🦉'}
+                            {source.source === 'foursquare' && '📍'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : placeDetails.rating && (
                     <div className="flex items-center space-x-1.5">
                       <div className="flex items-center">
                         {[...Array(5)].map((_, i) => (
@@ -433,6 +539,19 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                       )}
                     </div>
                   )}
+                  
+                  {/* 統合された価格情報 */}
+                  {(() => {
+                    const priceLevel = getAggregatedPriceLevel(aggregatedData)
+                    if (priceLevel) {
+                      return (
+                        <span className="text-gray-700 font-medium">
+                          {'¥'.repeat(priceLevel)}
+                        </span>
+                      )
+                    }
+                    return null
+                  })()}
                 </div>
 
                 {/* 概要（Editorial Summary） */}
@@ -500,21 +619,46 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                   </div>
                 )}
 
-                {/* レビュー */}
-                {placeDetails.reviews && placeDetails.reviews.length > 0 && (
+                {/* 統合レビュー（Google + TripAdvisor + Foursquare） */}
+                {unifiedReviews.length > 0 && (
                   <div className="space-y-2">
-                    {placeDetails.reviews.slice(0, 2).map((review: any, index: number) => (
-                      <div key={index} className="text-xs border-l-2 border-gray-200 pl-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-semibold text-gray-700">レビュー・Tips</h4>
+                      {unifiedReviews.length > 3 && (
+                        <button
+                          onClick={() => setShowAllReviews(!showAllReviews)}
+                          className="text-xs text-blue-600 hover:text-blue-700"
+                        >
+                          {showAllReviews ? '一部を表示' : `すべて表示 (${unifiedReviews.length})`}
+                        </button>
+                      )}
+                    </div>
+                    {(showAllReviews ? unifiedReviews : unifiedReviews.slice(0, 3)).map((review) => (
+                      <div key={review.id} className="text-xs border-l-2 border-gray-200 pl-2">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-gray-900">{review.author_name}</span>
-                          <div className="flex items-center space-x-0.5">
-                            <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                            <span className="text-gray-600">{review.rating}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-medium text-gray-900">{review.author}</span>
+                            <span className="text-xs text-gray-400">
+                              {review.source === 'google' && '🗺️'}
+                              {review.source === 'tripadvisor' && '🦉'}
+                              {review.source === 'foursquare' && '📍'}
+                            </span>
                           </div>
+                          {review.rating && (
+                            <div className="flex items-center space-x-0.5">
+                              <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                              <span className="text-gray-600">{review.rating}</span>
+                            </div>
+                          )}
                         </div>
                         <p className="text-gray-700 line-clamp-2 leading-relaxed">{review.text}</p>
+                        {review.helpful_votes && review.helpful_votes > 0 && (
+                          <div className="mt-1 text-xs text-gray-500">
+                            👍 {review.helpful_votes} 人が参考になったと評価
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

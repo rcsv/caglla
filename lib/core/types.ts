@@ -706,6 +706,9 @@ export interface OptionalEnvVars {
   DB_USER?: string
   DB_PASSWORD?: string
   DB_NAME?: string
+  // External Venue APIs (サーバーサイド専用)
+  TRIPADVISOR_API_KEY?: string
+  FOURSQUARE_API_KEY?: string
 }
 
 // ============================================================================
