@@ -485,7 +485,10 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                 {/* カテゴリ */}
                 {placeDetails.types && placeDetails.types.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {placeDetails.types.slice(0, 5).map((type: string, index: number) => (
+                    {placeDetails.types
+                      .filter((type: string) => type !== 'point_of_interest') // point_of_interestを除外
+                      .slice(0, 5)
+                      .map((type: string, index: number) => (
                       <span
                         key={index}
                         className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
