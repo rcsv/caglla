@@ -2,11 +2,13 @@
 import logger from '@/lib/core/logger'
 
 import { useEffect, useRef, useState } from 'react'
-import { Itinerary } from '@/lib/core/types'
+import { Itinerary, Trip } from '@/lib/core/types'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
 import { routeOptimizer } from '@/lib/travel/route-optimization'
 import { getZIndexClass } from '@/lib/core/z-index'
 import POIDialog from '@/components/modals/POIDialog'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { dateUtils } from '@/lib/utils/date'
 
 // ティアドロップ形状のマーカースタイル
 const teardropStyles = `
@@ -58,6 +60,7 @@ const teardropStyles = `
 
 interface TripMapProps {
   itineraries: Itinerary[]
+  trip?: Trip // 追加: Day 一覧を取得するために必要
   selectedItineraryId?: string | null
   selectedDayId?: string | null
   onItineraryClick?: (itineraryId: string) => void
@@ -67,6 +70,7 @@ interface TripMapProps {
     location: { lat: number; lng: number }
     placeData?: any
   } | null) => void
+  onTripUpdate?: () => void // 追加: trip が更新された時に親に通知
   poiData?: {
     placeId: string
     name: string
@@ -87,10 +91,12 @@ declare global {
 
 export default function TripMap({
   itineraries,
+  trip,
   selectedItineraryId = null,
   selectedDayId = null,
   onItineraryClick,
   onPoiDataUpdate,
+  onTripUpdate,
   poiData,
   className = '',
   focusMode = 'all', // デフォルトは全体表示
@@ -107,6 +113,7 @@ export default function TripMap({
     placeId: string
     name: string
     location: { lat: number; lng: number }
+    placeData?: any
   } | null>(null)
 
   // Google Maps API の読み込み
@@ -573,6 +580,47 @@ export default function TripMap({
           setInternalPoiData(null)
           onPoiDataUpdate?.(null)
         }}
+        onAddToItinerary={async (placeId: string, dayId: string) => {
+          try {
+            const currentPoiData: { placeId: string; name: string; location: { lat: number; lng: number }; placeData?: any } | null = poiData || internalPoiData
+            if (!currentPoiData) return
+
+            // API を呼び出して Day に Itinerary を追加
+            const response = await makeAuthenticatedRequest('/api/itineraries', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                day_id: dayId,
+                place_id: placeId,
+                place_data: currentPoiData.placeData || undefined,
+                title: currentPoiData.name,
+                description: '',
+                location: currentPoiData.location ? `${currentPoiData.location.lat},${currentPoiData.location.lng}` : ''
+              })
+            })
+
+            if (response.ok) {
+              logger.debug('POI を Day に追加しました')
+              // 親コンポーネントに通知して trip を再取得
+              onTripUpdate?.()
+              // POI ダイアログを閉じる
+              setInternalPoiData(null)
+              onPoiDataUpdate?.(null)
+            } else {
+              const error = await response.json()
+              logger.error('POI の追加に失敗しました:', error)
+            }
+          } catch (error) {
+            logger.error('POI の追加でエラーが発生しました:', error)
+          }
+        }}
+        availableDays={trip?.days?.sort((a, b) => (a.day_number || 0) - (b.day_number || 0)).map((day) => ({
+          id: day.id,
+          date: dateUtils.formatDate(day.date, { month: 'long', day: 'numeric', weekday: 'short' }),
+          title: day.description
+        })) || []}
       />
     </div>
   )

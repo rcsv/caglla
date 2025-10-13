@@ -43,6 +43,7 @@ export default function SlugBasedTripPage() {
     placeData?: any
   } | null>(null)
   const [missingPlaceDataCache, setMissingPlaceDataCache] = useState<Map<string, any>>(new Map())
+  const [refreshKey, setRefreshKey] = useState(0) // 追加: trip を再取得するためのキー
 
   // クエリ: view / day を読み取り（デフォルトは summary）
   const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
@@ -274,7 +275,7 @@ export default function SlugBasedTripPage() {
     }
 
     fetchTrip()
-  }, [userSlug, tripSlug, router])
+  }, [userSlug, tripSlug, router, refreshKey])
 
   // 旅行データ読み込み後の初期クエリパラメータ同期
   useEffect(() => {
@@ -945,6 +946,7 @@ export default function SlugBasedTripPage() {
           poiData={poiData}
           onItineraryClick={handleMapMarkerClick}
           onPoiDataUpdate={setPoiData}
+          onTripUpdate={() => setRefreshKey(prev => prev + 1)}
           getFilteredItineraries={getFilteredItineraries}
         />
       }

@@ -18,6 +18,7 @@ interface TripRightPaneProps {
   } | null
   onItineraryClick: (itineraryId: string) => void
   onPoiDataUpdate: (poiData: any) => void
+  onTripUpdate?: () => void // 追加: trip が更新された時に親に通知
   getFilteredItineraries: () => Itinerary[]
 }
 
@@ -37,6 +38,7 @@ export default function TripRightPane({
   poiData,
   onItineraryClick,
   onPoiDataUpdate,
+  onTripUpdate,
   getFilteredItineraries,
 }: TripRightPaneProps) {
   return (
@@ -47,10 +49,12 @@ export default function TripRightPane({
         ) : (
           <TripMap
             itineraries={getFilteredItineraries()}
+            trip={trip}
             selectedItineraryId={selectedItineraryId}
             selectedDayId={selectedDayId}
             onItineraryClick={onItineraryClick}
             onPoiDataUpdate={onPoiDataUpdate}
+            onTripUpdate={onTripUpdate}
             poiData={poiData}
             className="h-full"
             focusMode={mapFocusMode}
