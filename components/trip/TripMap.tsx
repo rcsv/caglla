@@ -12,6 +12,47 @@ import { dateUtils } from '@/lib/utils/date'
 
 // マップのズームレベル定数
 const DEFAULT_ZOOM_LEVEL = 14
+const SMOOTH_PAN_DISTANCE_THRESHOLD = 5 // 約5km（滑らかなパンを使用する距離の閾値）
+
+// 2点間の距離を計算する関数（簡易版）
+const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371 // 地球の半径（km）
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  return R * c
+}
+
+// 滑らかな移動でマップを更新する関数
+const smoothMoveToLocation = (map: any, targetLat: number, targetLng: number, targetZoom: number) => {
+  const currentCenter = map.getCenter()
+  if (!currentCenter) return
+  
+  const currentLat = currentCenter.lat()
+  const currentLng = currentCenter.lng()
+  
+  const distance = calculateDistance(currentLat, currentLng, targetLat, targetLng)
+  
+  if (distance < SMOOTH_PAN_DISTANCE_THRESHOLD) {
+    // 近い場合は滑らかなパン
+    map.panTo({ lat: targetLat, lng: targetLng })
+    
+    // ズームレベルも段階的に変更
+    const currentZoom = map.getZoom()
+    if (currentZoom !== targetZoom) {
+      setTimeout(() => {
+        map.setZoom(targetZoom)
+      }, 300) // パンの完了後にズーム
+    }
+  } else {
+    // 遠い場合は即座に移動
+    map.setCenter({ lat: targetLat, lng: targetLng })
+    map.setZoom(targetZoom)
+  }
+}
 
 // ティアドロップ形状のマーカースタイル
 const teardropStyles = `
@@ -400,9 +441,8 @@ export default function TripMap({
             directionsRenderer.setMap(null)
           }
           
-          // 地図を選択された場所にフォーカス
-          map.setCenter(position)
-          map.setZoom(DEFAULT_ZOOM_LEVEL)
+          // 地図を選択された場所にフォーカス（滑らかなアニメーション）
+          smoothMoveToLocation(map, position.lat, position.lng, DEFAULT_ZOOM_LEVEL)
         }
       })
 
@@ -465,16 +505,16 @@ export default function TripMap({
           lat: selectedItinerary.place_data!.geometry!.location.lat,
           lng: selectedItinerary.place_data!.geometry!.location.lng,
         }
-        map.setCenter(position)
-        map.setZoom(DEFAULT_ZOOM_LEVEL)
+        smoothMoveToLocation(map, position.lat, position.lng, DEFAULT_ZOOM_LEVEL)
       }
     } else if (validItineraries.length === 1) {
       // 単一のItineraryの場合
-      map.setCenter({
-        lat: validItineraries[0].place_data!.geometry!.location.lat,
-        lng: validItineraries[0].place_data!.geometry!.location.lng,
-      })
-      map.setZoom(DEFAULT_ZOOM_LEVEL)
+      smoothMoveToLocation(
+        map,
+        validItineraries[0].place_data!.geometry!.location.lat,
+        validItineraries[0].place_data!.geometry!.location.lng,
+        DEFAULT_ZOOM_LEVEL
+      )
     } else if (validItineraries.length > 1) {
       // 複数のItineraryの場合：全体を表示
       // DirectionsRendererを再表示
@@ -511,8 +551,7 @@ export default function TripMap({
       directionsRenderer.setMap(null)
     }
     
-    map.setCenter(position)
-    map.setZoom(DEFAULT_ZOOM_LEVEL)
+    smoothMoveToLocation(map, position.lat, position.lng, DEFAULT_ZOOM_LEVEL)
 
     // 該当するマーカーをハイライト
     markers.forEach((markerData) => {
