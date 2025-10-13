@@ -9,6 +9,7 @@ import { ExpandIcon } from '@/components/common/icons/ExpandIcon'
 import { CollapseIcon } from '@/components/common/icons/CollapseIcon'
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useEffect, useRef } from 'react'
 
 interface TripItineraryViewProps {
   trip: Trip
@@ -55,6 +56,9 @@ export default function TripItineraryView({
   expandAllDays,
   collapseAllDays,
 }: TripItineraryViewProps) {
+  const itineraryRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const observerRef = useRef<IntersectionObserver | null>(null)
+
   // itinerariesのタイトルを生成する関数
   const generateItinerarySummary = (day: Day): string => {
     if (!day.itineraries || day.itineraries.length === 0) {
@@ -63,6 +67,51 @@ export default function TripItineraryView({
     
     const sortedItineraries = [...day.itineraries].sort((a, b) => a.sort_number - b.sort_number)
     return sortedItineraries.map(itinerary => itinerary.title).join(' → ')
+  }
+
+  // Intersection Observerでスクロール位置を監視
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        // 画面中央より上にある要素を検出
+        const visibleEntries = entries.filter(entry => entry.isIntersecting)
+        if (visibleEntries.length > 0) {
+          // 最初に交差している要素（一番上にある要素）を選択
+          const topEntry = visibleEntries[0]
+          const itineraryId = topEntry.target.getAttribute('data-itinerary-id')
+          if (itineraryId && itineraryId !== selectedItineraryId) {
+            onItineraryClick(itineraryId)
+          }
+        }
+      },
+      {
+        root: null, // ビューポートをルートとして使用
+        rootMargin: '-20% 0px -60% 0px', // 画面中央より上部（上20%〜下40%の範囲）
+        threshold: 0.5, // 50%以上表示されたときにトリガー
+      }
+    )
+
+    // 全てのItineraryカードを監視
+    itineraryRefs.current.forEach((element) => {
+      if (observerRef.current) {
+        observerRef.current.observe(element)
+      }
+    })
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+    }
+  }, [trip, collapsedDays, onItineraryClick, selectedItineraryId])
+
+  // Itinerary要素のref設定
+  const setItineraryRef = (itineraryId: string, element: HTMLDivElement | null) => {
+    if (element) {
+      itineraryRefs.current.set(itineraryId, element)
+    } else {
+      itineraryRefs.current.delete(itineraryId)
+    }
   }
 
   return (
@@ -241,7 +290,12 @@ export default function TripItineraryView({
                                 const nextItinerary = index < (sortedItineraries.length || 0) - 1 ? sortedItineraries[index + 1] : null
                                 
                                 return (
-                                  <div key={itinerary.id} className="relative">
+                                  <div 
+                                    key={itinerary.id} 
+                                    className="relative"
+                                    ref={(el) => setItineraryRef(itinerary.id, el)}
+                                    data-itinerary-id={itinerary.id}
+                                  >
                                     <SortableItineraryCard
                                       itinerary={itinerary}
                                       previousPlace={previousItinerary?.place_data}
