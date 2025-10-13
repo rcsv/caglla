@@ -15,6 +15,7 @@
   --z-index-left-panel-content:      250 ;   /* 左メニュー詳細 */
   --z-index-map-button:              300 ;   /* マップボタン */
   --z-index-map-overlay:             350 ;   /* マップオーバーレイ */
+  --z-index-day-card-button:         375 ;   /* Dayカードの折りたたみ・展開ボタン */
   --z-index-top-menu:                400 ;   /* トップメニュー */
   --z-index-top-menu-content:        450 ;   /* トップメニュー詳細 */
   --z-index-popup-menu:              500 ;   /* ポップアップメニュー */
@@ -36,6 +37,7 @@
 .zidx-left-panel-content { z-index: var(--z-index-left-panel-content); }
 .zidx-map-button {        z-index: var(--z-index-map-button); }
 .zidx-map-overlay {       z-index: var(--z-index-map-overlay); }
+.zidx-day-card-button {   z-index: var(--z-index-day-card-button); }
 .zidx-top-menu {          z-index: var(--z-index-top-menu); }
 .zidx-top-menu-content {  z-index: var(--z-index-top-menu-content); }
 .zidx-popup-menu {        z-index: var(--z-index-popup-menu); }

@@ -103,7 +103,7 @@ export default function TripItineraryView({
               >
                 {/* ヘッダー部分 - 常に表示 */}
                 <div 
-                  className={`flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors ${selectedDayId === day.id ? 'bg-red-50 border-red-200' : ''}`}
+                  className={`flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors zidx-day-card-button relative ${selectedDayId === day.id ? 'bg-red-50 border-red-200' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation()
                     onDayClick(day.id)
@@ -137,14 +137,23 @@ export default function TripItineraryView({
                         }
                       </h3>
                       {/* 折りたたみアイコン */}
-                      <svg 
-                        className={`w-5 h-5 text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
+                      <button
+                        className="p-1 hover:bg-gray-100 rounded zidx-day-card-button relative"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleDayCollapse(day.id)
+                        }}
+                        aria-label={isCollapsed ? '展開' : '折りたたみ'}
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
+                        <svg 
+                          className={`w-5 h-5 text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
                     </div>
                     
                     {/* 縮小表示時の情報 */}
