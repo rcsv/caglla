@@ -300,7 +300,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                 {showDaySelector && (
                   <div 
                     ref={popupRef}
-                    className={`absolute right-0 bg-white border border-gray-200 rounded-lg shadow-lg zidx-float-modal-content min-w-[200px] max-h-[300px] overflow-y-auto ${
+                    className={`absolute right-0 bg-white border border-gray-200 rounded-lg shadow-lg zidx-float-modal-content min-w-[200px] max-h-[300px] overflow-y-auto scrollbar-hide ${
                       popupPosition === 'bottom' 
                         ? 'top-full mt-1' 
                         : 'bottom-full mb-1'
@@ -310,7 +310,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                       <div className="text-xs font-medium text-gray-500 px-2 py-1 sticky top-0 bg-white border-b border-gray-100">
                         追加する日を選択
                       </div>
-                      <div className="max-h-[240px] overflow-y-auto">
+                      <div className="max-h-[240px] overflow-y-auto scrollbar-hide">
                         {availableDays.map((day) => (
                           <button
                             key={day.id}
@@ -342,7 +342,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
         </div>
 
         {/* コンテンツ */}
-        <div className="p-3 max-h-80 overflow-y-auto rounded-b-lg">
+        <div className="p-3 max-h-80 overflow-y-auto scrollbar-hide rounded-b-lg">
           {loading && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
