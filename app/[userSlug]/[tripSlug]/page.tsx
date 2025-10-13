@@ -4,7 +4,7 @@ import logger from '@/lib/core/logger'
 import { useAuth } from '@/lib/contexts/auth'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { notFound } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import AddScheduleModal from '@/components/modals/AddScheduleModal'
 import Loading from '@/components/common/Loading'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
@@ -44,6 +44,8 @@ export default function SlugBasedTripPage() {
   } | null>(null)
   const [missingPlaceDataCache, setMissingPlaceDataCache] = useState<Map<string, any>>(new Map())
   const [refreshKey, setRefreshKey] = useState(0) // 追加: trip を再取得するためのキー
+  const [scrollSyncEnabled, setScrollSyncEnabled] = useState(true) // スクロール連動の有効/無効
+  const isProgrammaticScrollRef = useRef(false) // プログラムによるスクロール中かどうか
 
   // クエリ: view / day を読み取り（デフォルトは summary）
   const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
@@ -119,8 +121,11 @@ export default function SlugBasedTripPage() {
     }
   }
 
-  // Itineraryクリック時のハンドラー
+  // Itineraryクリック時のハンドラー（スクロール連動用）
   const handleItineraryClick = (itineraryId: string) => {
+    // スクロール連動が無効の場合は何もしない
+    if (!scrollSyncEnabled) return
+    
     setSelectedItineraryId(itineraryId)
     setMapFocusMode('single')
     if (trip?.days) {
@@ -171,6 +176,9 @@ export default function SlugBasedTripPage() {
 
   // 地図マーカークリック時のハンドラー
   const handleMapMarkerClick = (itineraryId: string) => {
+    // 地図クリック時はスクロール連動を一時的に無効化
+    setScrollSyncEnabled(false)
+    
     setSelectedItineraryId(itineraryId)
     
     // 個別フォーカスモードに切り替え
@@ -187,14 +195,22 @@ export default function SlugBasedTripPage() {
             return newSet
           })
           
-          // 該当するItineraryにスクロール
+          // 該当するItineraryにスクロール（プログラムによるスクロール）
           setTimeout(() => {
             const element = document.getElementById(`itinerary-${itineraryId}`)
             if (element) {
+              // プログラムによるスクロール開始
+              isProgrammaticScrollRef.current = true
+              
               element.scrollIntoView({ 
                 behavior: 'smooth',
                 block: 'center'
               })
+              
+              // スクロール完了後にフラグをリセット（smooth scrollの完了を待つ）
+              setTimeout(() => {
+                isProgrammaticScrollRef.current = false
+              }, 1000) // smoothスクロールの完了を待つ
             }
           }, 100)
           break
@@ -994,6 +1010,9 @@ export default function SlugBasedTripPage() {
           onUpdateTrip={setTrip}
           expandAllDays={expandAllDays}
           collapseAllDays={collapseAllDays}
+          scrollSyncEnabled={scrollSyncEnabled}
+          onScrollSyncEnabledChange={setScrollSyncEnabled}
+          isProgrammaticScrollRef={isProgrammaticScrollRef}
         />
       )}
 

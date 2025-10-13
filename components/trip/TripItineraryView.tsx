@@ -32,6 +32,9 @@ interface TripItineraryViewProps {
   onUpdateTrip: (updatedTrip: Trip) => void
   expandAllDays: () => void
   collapseAllDays: () => void
+  scrollSyncEnabled?: boolean
+  onScrollSyncEnabledChange?: (enabled: boolean) => void
+  isProgrammaticScrollRef?: React.MutableRefObject<boolean>
 }
 
 export default function TripItineraryView({
@@ -55,9 +58,13 @@ export default function TripItineraryView({
   onUpdateTrip,
   expandAllDays,
   collapseAllDays,
+  scrollSyncEnabled = true,
+  onScrollSyncEnabledChange,
+  isProgrammaticScrollRef,
 }: TripItineraryViewProps) {
   const itineraryRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const observerRef = useRef<IntersectionObserver | null>(null)
+  const isUserScrollingRef = useRef(false)
 
   // itinerariesのタイトルを生成する関数
   const generateItinerarySummary = (day: Day): string => {
@@ -69,10 +76,42 @@ export default function TripItineraryView({
     return sortedItineraries.map(itinerary => itinerary.title).join(' → ')
   }
 
+  // ユーザーがスクロールしたことを検出
+  useEffect(() => {
+    const handleScroll = () => {
+      // プログラムによるスクロール中は何もしない
+      if (isProgrammaticScrollRef?.current) {
+        return
+      }
+      
+      isUserScrollingRef.current = true
+      // スクロール連動が無効の場合、ユーザーがスクロールしたら再開
+      if (!scrollSyncEnabled && onScrollSyncEnabledChange) {
+        onScrollSyncEnabledChange(true)
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, true)
+    return () => {
+      window.removeEventListener('scroll', handleScroll, true)
+    }
+  }, [scrollSyncEnabled, onScrollSyncEnabledChange, isProgrammaticScrollRef])
+
   // Intersection Observerでスクロール位置を監視
   useEffect(() => {
+    // スクロール連動が無効の場合は監視しない
+    if (!scrollSyncEnabled) {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+      return
+    }
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
+        // ユーザーがスクロール中でない場合は何もしない
+        if (!isUserScrollingRef.current) return
+        
         // 画面中央より上にある要素を検出
         const visibleEntries = entries.filter(entry => entry.isIntersecting)
         if (visibleEntries.length > 0) {
@@ -83,6 +122,11 @@ export default function TripItineraryView({
             onItineraryClick(itineraryId)
           }
         }
+        
+        // スクロール検出フラグをリセット
+        setTimeout(() => {
+          isUserScrollingRef.current = false
+        }, 100)
       },
       {
         root: null, // ビューポートをルートとして使用
@@ -103,7 +147,7 @@ export default function TripItineraryView({
         observerRef.current.disconnect()
       }
     }
-  }, [trip, collapsedDays, onItineraryClick, selectedItineraryId])
+  }, [trip, collapsedDays, onItineraryClick, selectedItineraryId, scrollSyncEnabled])
 
   // Itinerary要素のref設定
   const setItineraryRef = (itineraryId: string, element: HTMLDivElement | null) => {
