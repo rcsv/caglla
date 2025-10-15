@@ -190,6 +190,75 @@ export interface PlacesCache {
 }
 
 // ============================================================================
+// アクティビティタグ関連
+// ============================================================================
+
+/**
+ * アクティビティタグ（2段階分類）
+ */
+export interface ActivityTag {
+  primaryCategory: PrimaryCategoryType
+  secondaryCategory: string // 1段階目に応じた詳細カテゴリー
+}
+
+/**
+ * 1段階目カテゴリー（大分類）
+ */
+export type PrimaryCategoryType =
+  | 'transportation'  // 乗り物に乗る
+  | 'shopping'        // 買い物をする
+  | 'dining'          // 食事をする
+  | 'accommodation'   // 宿泊する
+  | 'exploration'     // 探索する
+  | 'adventure'       // 探検する
+  | 'entertainment'   // 遊ぶ
+  | 'culture'         // 文化に触れる
+  | 'wellness'        // 健康志向
+  | 'service'         // サービス提供
+
+/**
+ * チェックリスト項目
+ */
+export interface ChecklistItem {
+  id: string
+  title: string
+  description?: string
+  category: 'preparation' | 'packing' // 行動系準備 or パッキング系
+  done: boolean
+  generatedFrom?: string // 生成元のsecondaryCategory ID
+  isCustom?: boolean // ユーザーが手動追加した項目
+  priority?: 'high' | 'medium' | 'low'
+}
+
+/**
+ * Trip Checklist（旅行全体のチェックリスト）
+ */
+export interface TripChecklist {
+  id: string
+  trip_id: string
+  items: ChecklistItem[]
+  last_generated_at: FirestoreDate
+  created_at: FirestoreDate
+  updated_at: FirestoreDate
+}
+
+/**
+ * アクティビティ統計
+ */
+export interface ActivityStats {
+  primaryCategories: {
+    [key in PrimaryCategoryType]?: {
+      count: number
+      percentage: number
+    }
+  }
+  secondaryCategories: {
+    [key: string]: number
+  }
+  totalActivities: number
+}
+
+// ============================================================================
 // 旅行・旅程関連
 // ============================================================================
 
@@ -208,6 +277,8 @@ export interface Itinerary {
   timezone?: string
   cost_amount?: number | null
   cost_currency?: string
+  // アクティビティタグ（2段階分類）
+  activity_tag?: ActivityTag | null
   created_at: FirestoreDate
   updated_at: FirestoreDate
 }
@@ -293,6 +364,7 @@ export interface ItineraryFormData {
   timezone?: string
   cost_amount?: number | null
   cost_currency?: string
+  activity_tag?: ActivityTag | null
 }
 
 export interface DayFormData {
