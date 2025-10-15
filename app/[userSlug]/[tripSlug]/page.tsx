@@ -1018,7 +1018,7 @@ export default function SlugBasedTripPage() {
 
       {/* Checklist（モバイルではメインに表示）*/}
       {currentView === 'checklist' && (
-        <TripChecklistView />
+        <TripChecklistView tripId={trip.id} />
       )}
 
       {/* Add Schedule Modal */}

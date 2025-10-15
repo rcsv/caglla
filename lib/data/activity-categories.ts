@@ -18,6 +18,7 @@ export interface SecondaryCategoryItem {
 export interface ActivityCategoryMaster {
   primaryCategory: PrimaryCategoryType
   label: string
+  shortLabel: string // 短縮版ラベル（横幅制限対応）
   icon: string
   secondaryCategories: SecondaryCategoryItem[]
 }
@@ -29,6 +30,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'transportation',
     label: '乗り物に乗る',
+    shortLabel: '乗り物',
     icon: '🚆',
     secondaryCategories: [
       { id: 'flight', label: '飛行機', icon: '✈️', description: '国際線・国内線の搭乗' },
@@ -44,6 +46,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'shopping',
     label: '買い物をする',
+    shortLabel: '買い物',
     icon: '🛍️',
     secondaryCategories: [
       { id: 'souvenir', label: 'お土産購入', icon: '🎁', description: 'お土産・記念品の購入' },
@@ -58,6 +61,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'dining',
     label: '食事をする',
+    shortLabel: '食事',
     icon: '🍽️',
     secondaryCategories: [
       { id: 'breakfast', label: '朝食', icon: '🌅', description: 'ホテル朝食・カフェ朝食' },
@@ -73,6 +77,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'accommodation',
     label: '宿泊する',
+    shortLabel: '宿泊',
     icon: '🏨',
     secondaryCategories: [
       { id: 'check_in', label: 'チェックイン作業', icon: '🔑', description: 'ホテル・宿泊施設のチェックイン' },
@@ -87,6 +92,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'exploration',
     label: '探索する',
+    shortLabel: '探索',
     icon: '🔍',
     secondaryCategories: [
       { id: 'city_walk', label: '街歩き', icon: '🚶', description: '市内・町の散策' },
@@ -100,6 +106,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'adventure',
     label: '探検する',
+    shortLabel: '探検',
     icon: '🏔️',
     secondaryCategories: [
       { id: 'hiking', label: 'ハイキング', icon: '🥾', description: '登山道・トレイルハイキング' },
@@ -115,6 +122,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'entertainment',
     label: '遊ぶ',
+    shortLabel: '遊ぶ',
     icon: '🎮',
     secondaryCategories: [
       { id: 'theme_park', label: 'テーマパーク', icon: '🎢', description: '遊園地・テーマパーク' },
@@ -130,6 +138,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'culture',
     label: '文化に触れる',
+    shortLabel: '文化',
     icon: '🏛️',
     secondaryCategories: [
       { id: 'museum', label: '博物館', icon: '🏛️', description: '博物館・科学館' },
@@ -145,6 +154,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'wellness',
     label: '健康志向',
+    shortLabel: '健康',
     icon: '💆',
     secondaryCategories: [
       { id: 'spa', label: 'スパ', icon: '♨️', description: 'スパ・温泉' },
@@ -159,6 +169,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'service',
     label: 'サービス提供',
+    shortLabel: 'サービス',
     icon: '🔧',
     secondaryCategories: [
       { id: 'laundry', label: '洗濯', icon: '👕', description: 'コインランドリー・クリーニング' },
@@ -204,6 +215,14 @@ export function getAllPrimaryCategories(): PrimaryCategoryType[] {
 export function getPrimaryCategoryLabel(primaryCategory: PrimaryCategoryType): string {
   const master = getActivityCategoryMaster(primaryCategory)
   return master ? `${master.icon} ${master.label}` : primaryCategory
+}
+
+/**
+ * PrimaryCategoryの短縮版ラベルを取得（横幅制限対応）
+ */
+export function getPrimaryCategoryShortLabel(primaryCategory: PrimaryCategoryType): string {
+  const master = getActivityCategoryMaster(primaryCategory)
+  return master ? `${master.icon} ${master.shortLabel}` : primaryCategory
 }
 
 /**

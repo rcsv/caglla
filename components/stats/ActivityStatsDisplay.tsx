@@ -1,7 +1,7 @@
 'use client'
 
 import { Trip, ActivityStats, PrimaryCategoryType } from '@/lib/core/types'
-import { getPrimaryCategoryLabel, getSecondaryCategoryLabel } from '@/lib/data/activity-categories'
+import { getPrimaryCategoryShortLabel, getSecondaryCategoryLabel } from '@/lib/data/activity-categories'
 
 interface ActivityStatsDisplayProps {
   trip: Trip
@@ -121,7 +121,7 @@ export default function ActivityStatsDisplay({ trip }: ActivityStatsDisplayProps
           <div key={category} className="space-y-1">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-700">
-                {getPrimaryCategoryLabel(category as PrimaryCategoryType)}
+                {getPrimaryCategoryShortLabel(category as PrimaryCategoryType)}
               </span>
               <span className="text-gray-600 font-medium">
                 {data.percentage}% ({data.count}回)

@@ -6,6 +6,7 @@ import {
   ACTIVITY_CATEGORIES, 
   getActivityCategoryMaster,
   getPrimaryCategoryLabel,
+  getPrimaryCategoryShortLabel,
   getSecondaryCategoryLabel 
 } from '@/lib/data/activity-categories'
 
@@ -97,7 +98,7 @@ export default function ActivityTagSelector({
           <option value="">カテゴリーを選択</option>
           {ACTIVITY_CATEGORIES.map((category) => (
             <option key={category.primaryCategory} value={category.primaryCategory}>
-              {category.icon} {category.label}
+              {category.icon} {category.shortLabel}
             </option>
           ))}
         </select>
@@ -125,7 +126,7 @@ export default function ActivityTagSelector({
         <div className="flex items-center gap-2 text-sm">
           <span className="text-gray-500">選択中:</span>
           <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md">
-            {getPrimaryCategoryLabel(currentTag.primaryCategory)} → {getSecondaryCategoryLabel(currentTag.primaryCategory, currentTag.secondaryCategory)}
+            {getPrimaryCategoryShortLabel(currentTag.primaryCategory)} → {getSecondaryCategoryLabel(currentTag.primaryCategory, currentTag.secondaryCategory)}
           </span>
         </div>
       )}
