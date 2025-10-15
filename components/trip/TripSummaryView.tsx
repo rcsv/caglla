@@ -5,6 +5,7 @@ import TripDistanceDisplay from '@/components/stats/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/stats/TripWeatherDisplay'
 import TripCostDisplay from '@/components/stats/TripCostDisplay'
 import TripHotelDisplay from '@/components/stats/TripHotelDisplay'
+import { SummaryIcon } from '@/components/common/icons/SummaryIcon'
 import { dateUtils } from '@/lib/utils/date'
 
 interface TripSummaryViewProps {
@@ -22,21 +23,16 @@ export default function TripSummaryView({
 }: TripSummaryViewProps) {
   return (
     <div className="px-4 py-4 space-y-6">
-      {/* Trip Description */}
-      {trip.description && (
-        <section id="trip-description" className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h3 className="text-lg font-medium text-gray-700 mb-3">Description</h3>
-          <p className="text-gray-700 whitespace-pre-line">{trip.description}</p>
-        </section>
-      )}
-      
       {/* Summary Header - 折りたたみ可能 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div 
           className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={onToggleSummary}
         >
-          <h2 className="text-xl font-semibold text-gray-800">Summary</h2>
+          <div className="flex items-center gap-2">
+            <SummaryIcon className="w-5 h-5 text-gray-400" />
+            <h2 className="text-xl font-semibold text-gray-800">Summary</h2>
+          </div>
           <svg 
             className={`w-5 h-5 text-gray-400 transition-transform ${summaryCollapsed ? 'rotate-180' : ''}`}
             fill="none" 
@@ -50,6 +46,13 @@ export default function TripSummaryView({
         {/* Summary Content - 折りたたまれていない時のみ表示 */}
         {!summaryCollapsed && (
           <div className="px-4 pb-4 space-y-6">
+            {/* Trip Description - SummaryとAt a glanceの間に配置 */}
+            {trip.description && (
+              <div id="trip-description">
+                <p className="text-gray-700 whitespace-pre-line">{trip.description}</p>
+              </div>
+            )}
+
             {/* At a glance - 総移動距離と天気予報 */}
             <div id="at-a-glance">
               <h3 className="text-lg font-medium text-gray-700 mb-4">At a glance</h3>
