@@ -3,12 +3,13 @@ import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers } from '@/lib/api/google/places'
-import { PlaceData, Itinerary } from '@/lib/core/types'
+import { PlaceData, Itinerary, ActivityTag } from '@/lib/core/types'
 import { timezoneUtils } from '@/lib/utils/timezone'
 import { currencyUtils } from '@/lib/utils/currency'
 import { getZIndexClass } from '@/lib/core/z-index'
 import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
 import VenueDistance from './VenueDistance'
+import ActivityTagSelector from './ActivityTagSelector'
 
 // ティアドロップ形状のマーカースタイル（左ペイン用）
 const teardropStyles = `
@@ -993,6 +994,35 @@ export default function ScheduleCard({
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* アクティビティタグセクション */}
+              <div className="mb-4 px-2">
+                <ActivityTagSelector
+                  currentTag={itinerary.activity_tag}
+                  onTagChange={async (tag) => {
+                    try {
+                      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
+                        method: 'PUT',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          activity_tag: tag
+                        })
+                      })
+
+                      if (response.ok) {
+                        const updatedItinerary = await response.json()
+                        onUpdate?.(updatedItinerary)
+                      } else {
+                        logger.error('Failed to update activity tag')
+                      }
+                    } catch (error) {
+                      logger.error('Error updating activity tag:', error)
+                    }
+                  }}
+                />
               </div>
             </div>
 
