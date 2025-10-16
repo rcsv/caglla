@@ -5,6 +5,7 @@ import TripDistanceDisplay from '@/components/stats/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/stats/TripWeatherDisplay'
 import TripCostDisplay from '@/components/stats/TripCostDisplay'
 import TripHotelDisplay from '@/components/stats/TripHotelDisplay'
+import ActivityStatsDisplay from '@/components/stats/ActivityStatsDisplay'
 import { SummaryIcon } from '@/components/common/icons/SummaryIcon'
 import { dateUtils } from '@/lib/utils/date'
 
@@ -71,6 +72,12 @@ export default function TripSummaryView({
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Activity Statistics - アクティビティタグの統計 */}
+            <div id="activity-statistics">
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Activity Statistics</h3>
+              <ActivityStatsDisplay trip={trip} />
             </div>
 
             {/* Budget / Reservation - 旅行費用とホテル情報 */}
