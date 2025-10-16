@@ -243,6 +243,32 @@ export interface TripChecklist {
 }
 
 /**
+ * Checklist Preset Item（プリセット内のアイテム）
+ */
+export interface ChecklistPresetItem {
+  title: string
+  description?: string
+  category: 'preparation' | 'packing'
+  priority?: 'high' | 'medium' | 'low'
+}
+
+/**
+ * Checklist Preset（ユーザー作成のチェックリストテンプレート）
+ */
+export interface ChecklistPreset {
+  id: string
+  user_id: string
+  title: string
+  description?: string
+  tags?: string[] // 検索用タグ（例: ["winter", "hokkaido", "skiing"]）
+  items: ChecklistPresetItem[]
+  is_public: boolean // 公開/非公開フラグ
+  created_at: FirestoreDate
+  updated_at: FirestoreDate
+  usage_count?: number // 使用回数（人気度の指標）
+}
+
+/**
  * アクティビティ統計
  */
 export interface ActivityStats {

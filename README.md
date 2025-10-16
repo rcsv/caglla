@@ -22,6 +22,7 @@ wanderlogのような機能を提供し、個人の旅行計画を管理でき�
 - 👤 ユーザープロフィール管理
 - 🖼️ 画像アップロード（Firebase Storage）
 - 👥 旅行の共有機能（公開/非公開）
+- ✅ チェックリスト機能（準備・パッキング管理、プリセット共有）
 - 📱 レスポンシブデザイン
 - ⚡ SPA機能（リアルタイム編集）
 
@@ -224,8 +225,29 @@ firebase functions:log
 2. 旅行画像・プロフィール画像の管理
 3. 自動リサイズ・最適化
 
+## 📚 ドキュメント
+
+### 仕様書
+- [チェックリスト機能仕様書](docs/specifications/checklist-feature-specification.md) - 旅行チェックリスト機能の詳細仕様
+- [チェックリスト機能 改善提案仕様書](docs/specifications/checklist-improvements.md) - 検索性・状態保持・UX/運用の改善案
+- [スラッグ生成仕様](docs/slug-generation-specification.md) - URL生成のためのスラッグシステムの詳細仕様
+
+### 開発ガイド
+- [チェックリスト実装ガイド](docs/development/checklist-implementation-guide.md) - チェックリスト機能の実装手順と技術的な詳細
+- [アクティビティタグシステム開発ログ](docs/development/activity-tag-system-development-log.md) - アクティビティタグシステムの開発経緯
+
+### アーキテクチャ
+- [Google Maps Integration](docs/architecture/google-maps-integration.md) - Google Maps APIの統合方法
+- [Photo Caching Strategy](docs/architecture/photo-caching-strategy.md) - 写真キャッシング戦略
+- [Places API Cache Architecture](docs/architecture/places-api-cache-architecture.md) - Places APIのキャッシュアーキテクチャ
+
+### Firebase
+- [Firestore Collections](docs/firebase/firestore-collections.md) - Firestoreコレクション構造
+- [Firestore Setup Guide](docs/firebase/firestore-setup-guide.md) - Firestoreのセットアップ手順
+
 ## 🚀 今後の拡張予定
 
+- ✅ チェックリスト機能（準備・パッキング管理）
 - Google Calendar 同期
 - 旅行の共有・招待機能
 - PDF エクスポート機能
