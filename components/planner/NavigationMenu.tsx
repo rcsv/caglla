@@ -6,6 +6,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import PlannerIcon from '@/components/common/icons/PlannerIcon'
 import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { SummaryIcon } from '@/components/common/icons/SummaryIcon'
+import { CloudIcon } from '@/components/common/icons/CloudIcon'
+import { BookmarkIcon } from '@/components/common/icons/BookmarkIcon'
+import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
+import { ClockIcon } from '@/components/common/icons/ClockIcon'
+import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
+import { PinIcon } from '@/components/common/icons/PinIcon'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
 
@@ -31,6 +37,7 @@ interface MenuItem {
   title: string
   subtitle?: string
   count?: number
+  icon?: React.ReactNode
   onClick: () => void
 }
 
@@ -61,30 +68,35 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
           id: 'weather-forecast',
           title: 'Weather Forecast',
           subtitle: '天気予報',
+          icon: <CloudIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('weather-forecast')
         },
         {
           id: 'reservation',
           title: 'Reservation',
           subtitle: '予約情報',
+          icon: <BookmarkIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('reservation')
         },
         {
           id: 'budget',
           title: 'Budget',
           subtitle: '旅行費用',
+          icon: <MoneyIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('budget')
         },
         {
           id: 'activity-statistics',
           title: 'Activity Statistics',
           subtitle: 'アクティビティ統計',
+          icon: <PieChartIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('activity-statistics')
         },
         {
           id: 'distance-summary',
           title: 'Distance Summary',
           subtitle: '総移動距離',
+          icon: <PinIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('distance-summary')
         }
       ]
@@ -250,10 +262,10 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
           {/* ハンバーガー + Menu トグル */}
           <button
             onClick={() => onToggleCollapse && onToggleCollapse()}
-            className="w-full flex items-center justify-between p-2 text-left hover:bg-gray-50 rounded-lg transition-colors mb-2"
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-2 text-left hover:bg-gray-50 rounded-lg transition-colors mb-2`}
             title="Toggle menu width"
           >
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center ${!isCollapsed ? 'gap-2' : ''}`}>
               <span className="text-gray-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -276,11 +288,11 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                     updateQuery({ view: 'itinerary' })
                   }
                 }}
-                className="w-full flex items-center justify-between p-2 text-left hover:bg-gray-50 rounded-lg transition-colors"
+                className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-2 text-left hover:bg-gray-50 rounded-lg transition-colors`}
                 title={isCollapsed ? section.title : undefined}
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600">{section.icon}</span>
+                <div className={`flex items-center ${!isCollapsed ? 'gap-2' : ''}`}>
+                  <span className="text-gray-600 flex items-center justify-center w-6 h-6">{section.icon}</span>
                   {!isCollapsed && (
                     <span className="font-medium text-gray-900">{section.title}</span>
                   )}
@@ -316,28 +328,43 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                     >
                       {isCollapsed ? (
                         <div className="flex flex-col items-center space-y-1">
-                          <div className="text-[9px] font-medium text-gray-600 uppercase leading-[1.1]">
-                            {getMonthAbbr(item.title)}
-                          </div>
-                          <div className={`text-base font-light leading-[1.1] tracking-tight ${
-                            item.id.startsWith('day-') ? getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day) : 'text-gray-900'
-                          }`}>
-                            {getDayNumber(item.title)}
-                          </div>
+                          {item.id.startsWith('day-') ? (
+                            <>
+                              <div className="text-[9px] font-medium text-gray-600 uppercase leading-[1.1]">
+                                {getMonthAbbr(item.title)}
+                              </div>
+                              <div className={`text-base font-light leading-[1.1] tracking-tight ${
+                                getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day)
+                              }`}>
+                                {getDayNumber(item.title)}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-gray-600 flex items-center justify-center w-6 h-6 mx-auto">
+                              {item.icon}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="flex items-center justify-between">
-                          <div className="flex-1 min-w-0">
-                            <div className={`text-sm font-medium truncate ${
-                              item.id.startsWith('day-') ? getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day) : 'text-gray-900'
-                            }`}>
-                              {item.title}
-                            </div>
-                            {item.subtitle && (
-                              <div className="text-xs text-gray-500 truncate">
-                                {item.subtitle}
-                              </div>
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {item.icon && (
+                              <span className="text-gray-600 flex-shrink-0">
+                                {item.icon}
+                              </span>
                             )}
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-sm font-medium truncate ${
+                                item.id.startsWith('day-') ? getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day) : 'text-gray-900'
+                              }`}>
+                                {item.title}
+                              </div>
+                              {item.subtitle && (
+                                <div className="text-xs text-gray-500 truncate">
+                                  {item.subtitle}
+                                </div>
+                              )}
+                            </div>
                           </div>
                           {item.count !== undefined && item.count > 0 && (
                             <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
