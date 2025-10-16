@@ -11,7 +11,7 @@ import { BookmarkIcon } from '@/components/common/icons/BookmarkIcon'
 import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
 import { ClockIcon } from '@/components/common/icons/ClockIcon'
 import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
-import { PinIcon } from '@/components/common/icons/PinIcon'
+import { LocationIcon } from '@/components/common/icons/LocationIcon'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
 
@@ -94,9 +94,9 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
         },
         {
           id: 'distance-summary',
-          title: 'Distance Summary',
+          title: 'Distances',
           subtitle: '総移動距離',
-          icon: <PinIcon className="w-4 h-4" />,
+          icon: <LocationIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('distance-summary')
         }
       ]
@@ -313,7 +313,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
 
               {/* セクションの子項目 */}
               {section.isExpandable && section.isExpanded && section.children && (
-                <div className={`${isCollapsed ? '' : 'ml-6 mt-1'} space-y-1 ${
+                <div className={`${isCollapsed ? '' : 'ml-2 mt-1'} space-y-1 ${
                   section.id === 'itinerary' ? 'flex-1 overflow-y-auto min-h-0 scrollbar-hide' : ''
                 }`}>
                   {section.children.map((item) => (

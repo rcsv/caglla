@@ -82,9 +82,9 @@ export default function TripSummaryView({
               <ActivityStatsDisplay trip={trip} />
             </div>
 
-            {/* 5. Distance Summary - 総移動距離（統計・振り返り用） */}
+            {/* 5. Distances - 総移動距離（統計・振り返り用） */}
             <div id="distance-summary" className="anchor-offset">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">Distance Summary</h3>
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Distances</h3>
               <TripDistanceDisplay itineraries={getAllItineraries()} />
             </div>
           </div>
