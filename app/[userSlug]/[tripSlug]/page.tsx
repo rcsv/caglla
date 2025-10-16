@@ -47,9 +47,10 @@ export default function SlugBasedTripPage() {
   const [scrollSyncEnabled, setScrollSyncEnabled] = useState(true) // スクロール連動の有効/無効
   const isProgrammaticScrollRef = useRef(false) // プログラムによるスクロール中かどうか
 
-  // クエリ: view / day を読み取り（デフォルトは summary）
+  // クエリ: view / day / section を読み取り（デフォルトは summary）
   const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
   const queryDayParam = searchParams.get('day')
+  const querySectionParam = searchParams.get('section')
 
   // クエリ→状態の同期
   useEffect(() => {
@@ -107,10 +108,17 @@ export default function SlugBasedTripPage() {
 
   // セクションへのナビゲーション機能
   const navigateToSection = (sectionId: string) => {
+    // チェックリスト関連
     if (sectionId === 'checklist') {
-      updateQuery({ view: 'checklist', day: null })
+      updateQuery({ view: 'checklist', day: null, section: null })
       return
     }
+    if (sectionId === 'checklist-preparing' || sectionId === 'checklist-packing') {
+      const section = sectionId.replace('checklist-', '')
+      updateQuery({ view: 'checklist', day: null, section })
+      return
+    }
+    // Summary内の各セクション
     updateQuery({ view: 'summary', day: null })
     const element = document.getElementById(sectionId)
     if (element) {
@@ -316,6 +324,20 @@ export default function SlugBasedTripPage() {
       }
     }
   }, [trip, queryDayParam])
+
+  // Checklistのサブセクション（Preparing/Packing）へスクロール
+  useEffect(() => {
+    if (currentView !== 'checklist') return
+    if (!querySectionParam) return
+    const targetId = `checklist-${querySectionParam}`
+    const element = document.getElementById(targetId)
+    if (element) {
+      // checklistビュー描画直後のため少し遅延してスクロール
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 50)
+    }
+  }, [currentView, querySectionParam])
 
   useEffect(() => {
     if (!loading && !user) {

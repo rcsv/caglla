@@ -120,11 +120,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
           onDayClick?.(day.id)
         }
       })) || []
-    }
-  ]
-
-  // 下付きメニューアイテムの定義
-  const bottomMenuItems = [
+    },
     {
       id: 'checklist',
       title: 'Checklist',
@@ -133,11 +129,33 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      onClick: () => {
-        updateQuery({ view: 'checklist', day: null })
-        onNavigateToSection('checklist')
-      }
-    },
+      isExpandable: true,
+      isExpanded: expandedSections.has('checklist'),
+      children: [
+        {
+          id: 'checklist-preparing',
+          title: 'Preparing',
+          subtitle: '行動系のこと',
+          onClick: () => {
+            updateQuery({ view: 'checklist', day: null, section: 'preparing' as any })
+            onNavigateToSection('checklist-preparing')
+          }
+        },
+        {
+          id: 'checklist-packing',
+          title: 'Packing',
+          subtitle: '持っていくものの準備系',
+          onClick: () => {
+            updateQuery({ view: 'checklist', day: null, section: 'packing' as any })
+            onNavigateToSection('checklist-packing')
+          }
+        }
+      ]
+    }
+  ]
+
+  // 下付きメニューアイテムの定義
+  const bottomMenuItems = [
     {
       id: 'settings',
       title: 'Settings',
@@ -277,7 +295,16 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
             </div>
           </button>
           {menuSections.map((section) => (
-            <div key={section.id} className={`${section.id === 'itinerary' ? 'flex-1 flex flex-col min-h-0' : 'mb-2'}`}>
+            <div
+              key={section.id}
+              className={
+                section.id === 'itinerary'
+                  ? 'flex-1 flex flex-col min-h-0 relative overflow-hidden bg-white zidx-left-panel'
+                  : section.id === 'checklist'
+                    ? 'mb-2 relative zidx-left-panel-content bg-white'
+                    : 'mb-2'
+              }
+            >
               {/* セクションヘッダー */}
               <button
                 onClick={() => {
@@ -286,6 +313,8 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                     updateQuery({ view: 'summary', day: null })
                   } else if (section.id === 'itinerary') {
                     updateQuery({ view: 'itinerary' })
+                  } else if (section.id === 'checklist') {
+                    updateQuery({ view: 'checklist', day: null })
                   }
                 }}
                 className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-2 text-left hover:bg-gray-50 rounded-lg transition-colors`}
@@ -314,7 +343,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
               {/* セクションの子項目 */}
               {section.isExpandable && section.isExpanded && section.children && (
                 <div className={`${isCollapsed ? '' : 'ml-2 mt-1'} space-y-1 ${
-                  section.id === 'itinerary' ? 'flex-1 overflow-y-auto min-h-0 scrollbar-hide' : ''
+                  section.id === 'itinerary' ? 'flex-1 overflow-y-auto min-h-0 scrollbar-hide bg-white' : ''
                 }`}>
                   {section.children.map((item) => (
                     <button
@@ -383,7 +412,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       </div>
 
       {/* 下付きメニュー（Checklist & Settings） */}
-      <div className={`border-t border-gray-200 space-y-1 ${isCollapsed ? 'p-1' : 'p-2'}`}>
+      <div className={`border-t border-gray-200 space-y-1 ${isCollapsed ? 'p-1' : 'p-2'} relative zidx-left-panel-content bg-white`}>
         {bottomMenuItems.map((item) => (
           <button
             key={item.id}
