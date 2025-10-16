@@ -143,6 +143,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
     secondaryCategories: [
       { id: 'museum', label: '博物館', icon: '🏛️', description: '博物館・科学館' },
       { id: 'art_gallery', label: '美術館', icon: '🖼️', description: '美術館・ギャラリー' },
+      { id: 'aquarium', label: '水族館', icon: '🐠', description: '海洋生物の展示・学習施設' },
       { id: 'temple_shrine', label: '寺社仏閣', icon: '⛩️', description: '寺院・神社・教会' },
       { id: 'historical_site', label: '歴史的建造物', icon: '🏰', description: '城・遺跡・史跡' },
       { id: 'local_festival', label: '地域祭り', icon: '🎭', description: '祭り・フェスティバル' },
