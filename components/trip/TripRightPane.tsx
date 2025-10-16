@@ -41,26 +41,27 @@ export default function TripRightPane({
   onTripUpdate,
   getFilteredItineraries,
 }: TripRightPaneProps) {
+  // チェックリストビューの場合は右ペイン自体を非表示（メインコンテンツを全幅表示）
+  if (currentView === 'checklist') {
+    return null
+  }
+
   return (
     <div className="hidden md:block right-pane-responsive flex-shrink-0">
       <div className="h-full bg-gray-100">
-        {currentView === 'checklist' ? (
-          <Checklist />
-        ) : (
-          <TripMap
-            itineraries={getFilteredItineraries()}
-            trip={trip}
-            selectedItineraryId={selectedItineraryId}
-            selectedDayId={selectedDayId}
-            onItineraryClick={onItineraryClick}
-            onPoiDataUpdate={onPoiDataUpdate}
-            onTripUpdate={onTripUpdate}
-            poiData={poiData}
-            className="h-full"
-            focusMode={mapFocusMode}
-            initialCenter={trip.destination_place?.geometry?.location || undefined as any}
-          />
-        )}
+        <TripMap
+          itineraries={getFilteredItineraries()}
+          trip={trip}
+          selectedItineraryId={selectedItineraryId}
+          selectedDayId={selectedDayId}
+          onItineraryClick={onItineraryClick}
+          onPoiDataUpdate={onPoiDataUpdate}
+          onTripUpdate={onTripUpdate}
+          poiData={poiData}
+          className="h-full"
+          focusMode={mapFocusMode}
+          initialCenter={trip.destination_place?.geometry?.location || undefined as any}
+        />
       </div>
     </div>
   )
