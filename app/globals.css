@@ -110,6 +110,11 @@ body {
   z-index: 10;
 }
 
+/* フローティングヘッダに隠れないよう、スクロール時の上部余白を確保 */
+.anchor-offset {
+  scroll-margin-top: 60px; /* FloatingTitleBar: h-[53px] のため余裕を加味して60px */
+}
+
 /* 左メニューからメインコンテンツへのドロップシャドウ効果（768px以下限定） */
 @media (max-width: 768px) {
   .left-nav-shadow {

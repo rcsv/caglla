@@ -1,7 +1,7 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { placesApiHelpers } from '@/lib/api/google/places'
 import { getCachedPlace, placesCacheManager } from '@/lib/travel/places-cache'
 import { Button } from '@/components/common/Button'
@@ -126,8 +126,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
   const buttonRef = useRef<HTMLButtonElement>(null)
   const popupRef = useRef<HTMLDivElement>(null)
 
-  // 集約された価格レベルを計算
-  const getAggregatedPriceLevel = (data: AggregatedVenueData | null): number | null => {
+  // 集約された価格レベルを計算（メモ化）
+  const getAggregatedPriceLevel = useCallback((data: AggregatedVenueData | null): number | null => {
     if (!data) return null
     
     // Google Placesの価格レベル
@@ -146,7 +146,10 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
     }
     
     return null
-  }
+  }, [])
+
+  // 価格レベルをメモ化
+  const priceLevel = useMemo(() => getAggregatedPriceLevel(aggregatedData), [aggregatedData, getAggregatedPriceLevel])
 
   useEffect(() => {
     if (!poiData) return
@@ -541,17 +544,11 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                   )}
                   
                   {/* 統合された価格情報 */}
-                  {(() => {
-                    const priceLevel = getAggregatedPriceLevel(aggregatedData)
-                    if (priceLevel) {
-                      return (
-                        <span className="text-gray-700 font-medium">
-                          {'¥'.repeat(priceLevel)}
-                        </span>
-                      )
-                    }
-                    return null
-                  })()}
+                  {priceLevel && (
+                    <span className="text-gray-700 font-medium">
+                      {'¥'.repeat(priceLevel)}
+                    </span>
+                  )}
                 </div>
 
                 {/* 概要（Editorial Summary） */}

@@ -198,7 +198,7 @@ export default function TripItineraryView({
               <div
                 key={day.id}
                 id={`day-${day.id}`}
-                className="bg-white rounded-lg shadow-sm border border-gray-200"
+                className="bg-white rounded-lg shadow-sm border border-gray-200 anchor-offset"
               >
                 {/* ヘッダー部分 - 常に表示 */}
                 <div 

@@ -58,16 +58,34 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       isExpanded: expandedSections.has('summary'),
       children: [
         {
-          id: 'at-a-glance',
-          title: 'At a glance',
-          subtitle: '移動情報と天気予報',
-          onClick: () => onNavigateToSection('at-a-glance')
+          id: 'weather-forecast',
+          title: 'Weather Forecast',
+          subtitle: '天気予報',
+          onClick: () => onNavigateToSection('weather-forecast')
         },
         {
-          id: 'budget-reservation',
-          title: 'Budget / Reservation',
-          subtitle: '発生費用と予約情報',
-          onClick: () => onNavigateToSection('budget-reservation')
+          id: 'reservation',
+          title: 'Reservation',
+          subtitle: '予約情報',
+          onClick: () => onNavigateToSection('reservation')
+        },
+        {
+          id: 'budget',
+          title: 'Budget',
+          subtitle: '旅行費用',
+          onClick: () => onNavigateToSection('budget')
+        },
+        {
+          id: 'activity-statistics',
+          title: 'Activity Statistics',
+          subtitle: 'アクティビティ統計',
+          onClick: () => onNavigateToSection('activity-statistics')
+        },
+        {
+          id: 'distance-summary',
+          title: 'Distance Summary',
+          subtitle: '総移動距離',
+          onClick: () => onNavigateToSection('distance-summary')
         }
       ]
     },

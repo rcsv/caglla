@@ -140,7 +140,7 @@ export interface FoursquareSearchResult {
 
 class FoursquareAPI {
   private apiKey: string
-  private baseUrl = 'https://api.foursquare.com/v3'
+  private baseUrl = 'https://api.foursquare.com/v3/places'
 
   constructor() {
     this.apiKey = process.env.FOURSQUARE_API_KEY || ''
@@ -195,10 +195,11 @@ class FoursquareAPI {
 
   /**
    * 場所名と座標からFoursquareのロケーションを検索
+   * 新しいPlaces API v3エンドポイントを使用
    */
   async searchPlaces(query: string, lat: number, lng: number, limit: number = 10): Promise<FoursquareSearchResult[]> {
     const response = await this.makeRequest<{ results: FoursquareSearchResult[] }>(
-      '/places/search',
+      '/search',
       {
         query,
         ll: `${lat},${lng}`,
@@ -212,10 +213,11 @@ class FoursquareAPI {
 
   /**
    * Foursquare IDから詳細情報を取得
+   * 新しいPlaces API v3エンドポイントを使用
    */
   async getPlaceDetails(fsqId: string): Promise<FoursquareLocation | null> {
     const response = await this.makeRequest<FoursquareLocation>(
-      `/places/${fsqId}`,
+      `/${fsqId}`,
       {
         fields: [
           'fsq_id',
@@ -246,10 +248,11 @@ class FoursquareAPI {
 
   /**
    * プレイスのTips（ユーザーコメント）を取得
+   * 新しいPlaces API v3エンドポイントを使用
    */
   async getPlaceTips(fsqId: string, limit: number = 10): Promise<FoursquareTip[]> {
     const response = await this.makeRequest<{ results: FoursquareTip[] }>(
-      `/places/${fsqId}/tips`,
+      `/${fsqId}/tips`,
       {
         limit: limit.toString(),
         sort: 'POPULAR' // 人気順
@@ -261,10 +264,11 @@ class FoursquareAPI {
 
   /**
    * プレイスの写真を取得
+   * 新しいPlaces API v3エンドポイントを使用
    */
   async getPlacePhotos(fsqId: string, limit: number = 10): Promise<FoursquarePhoto[]> {
     const response = await this.makeRequest<FoursquarePhoto[]>(
-      `/places/${fsqId}/photos`,
+      `/${fsqId}/photos`,
       {
         limit: limit.toString(),
         sort: 'POPULAR' // 人気順

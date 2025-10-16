@@ -164,8 +164,15 @@ class TripAdvisorAPI {
           status: response.status,
           statusText: response.statusText,
           url: url.replace(this.apiKey, 'REDACTED'),
-          error: errorText
+          error: errorText,
+          headers: Object.fromEntries(response.headers.entries())
         })
+        
+        // 403エラーの場合、APIキーの問題の可能性
+        if (response.status === 403) {
+          logger.error('TripAdvisor 403 Forbidden - API key may be invalid or expired')
+        }
+        
         return null
       }
 
