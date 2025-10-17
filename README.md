@@ -227,6 +227,10 @@ firebase functions:log
 
 ## 📚 ドキュメント
 
+### 変更履歴
+- [CHANGELOG.md](CHANGELOG.md) - 全バージョンの変更履歴
+- [リリースノート](docs/releases/) - 各バージョンの詳細なリリースノート
+
 ### 仕様書
 - [チェックリスト機能仕様書](docs/specifications/checklist-feature-specification.md) - 旅行チェックリスト機能の詳細仕様
 - [チェックリスト機能 改善提案仕様書](docs/specifications/checklist-improvements.md) - 検索性・状態保持・UX/運用の改善案
