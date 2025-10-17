@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
       name, 
       email, 
       profile_image_url, 
+      bio,
+      gender,
       preferences 
     } = body
 
@@ -60,7 +62,9 @@ export async function POST(request: NextRequest) {
         name: userName,
         slug: userSlug,
         email: existingUser.email, // 既存のemailを保持
-        profile_image_url: existingUser.profile_image_url, // 既存の画像を保持
+        profile_image_url: profile_image_url || existingUser.profile_image_url, // 画像更新を許可
+        bio: bio !== undefined ? bio : existingUser.bio, // bio更新を許可
+        gender: gender !== undefined ? gender : existingUser.gender, // gender更新を許可
         preferences: preferences || existingUser.preferences || {}
       }
     } else {
@@ -80,6 +84,8 @@ export async function POST(request: NextRequest) {
         slug: userSlug,
         email: email || decodedToken.email || '',
         profile_image_url: profile_image_url || decodedToken.picture,
+        bio: bio || '',
+        gender: gender || 'prefer_not_to_say',
         preferences: preferences || {},
         planId: 'season_traveler' // 新規ユーザーはデフォルトで無料プラン
       }

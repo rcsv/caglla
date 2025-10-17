@@ -81,6 +81,16 @@ export const adminUserOperations = {
       if (userData.profile_image_url && userData.profile_image_url !== existingUser.profile_image_url) {
         updateData.profile_image_url = userData.profile_image_url
       }
+
+      // bioが明示的に変更された場合のみ更新
+      if (userData.bio !== undefined && userData.bio !== existingUser.bio) {
+        updateData.bio = userData.bio
+      }
+
+      // genderが明示的に変更された場合のみ更新
+      if (userData.gender !== undefined && userData.gender !== existingUser.gender) {
+        updateData.gender = userData.gender
+      }
       
       if (Object.keys(updateData).length > 0) {
         await this.updateUser(existingUser.id, updateData)

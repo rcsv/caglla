@@ -41,6 +41,8 @@ export interface User {
   email: string
   slug?: string // URL-safe スラッグ
   profile_image_url?: string
+  bio?: string // 自己紹介文
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say' // 性別
   preferences?: UserPreferences
   created_at: FirestoreDate
   updated_at: FirestoreDate
