@@ -7,6 +7,7 @@ import CountryMap from '@/components/CountryMap'
 import TripCard from '@/components/tripcard/TripCard'
 import Loading from '@/components/common/Loading'
 import type { Trip } from '@/lib/core/types'
+import { getCountryFlag } from '@/lib/utils/country-flags'
 
 interface CountryStatsProps {
   userId: string
@@ -143,6 +144,9 @@ export default function CountryStats({ userId, className = '' }: CountryStatsPro
                     <div className="flex items-center space-x-3">
                       <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 text-white rounded-full text-sm font-semibold">
                         {index + 1}
+                      </div>
+                      <div className="text-2xl">
+                        {getCountryFlag(group.countryCode)}
                       </div>
                       <div>
                         <div className="font-medium text-gray-800">{group.countryNameJa}</div>

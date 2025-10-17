@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
 import { getZIndexClass } from '@/lib/core/z-index'
 import { PinIcon } from '@/components/common/icons/PinIcon'
+import { getCountryFlag } from '@/lib/utils/country-flags'
 import type { Trip } from '@/lib/core/types'
 
 // SVGアイコンコンポーネント
@@ -203,12 +204,33 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
               <div className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                 <PinIcon className="w-3 h-3" color="#ef4444" />
                 {trip.destination}
+                {trip.destination_place?.address_components && (
+                  <span className="ml-1">
+                    {getCountryFlag(
+                      trip.destination_place.address_components
+                        .find((component: any) => component.types.includes('country'))
+                        ?.short_name || 'unknown'
+                    )}
+                  </span>
+                )}
               </div>
             )}
             {trip.start_date && trip.end_date && (
               <div className="text-xs text-gray-500 flex items-center gap-1">
                 <CalendarIcon className="w-3 h-3 text-blue-500" />
-                {new Date(trip.start_date).toLocaleDateString('ja-JP')} - {new Date(trip.end_date).toLocaleDateString('ja-JP')}
+                {(() => {
+                  const startDate = typeof trip.start_date === 'string' 
+                    ? new Date(trip.start_date) 
+                    : trip.start_date instanceof Date 
+                      ? trip.start_date 
+                      : new Date(trip.start_date.seconds * 1000)
+                  const endDate = typeof trip.end_date === 'string' 
+                    ? new Date(trip.end_date) 
+                    : trip.end_date instanceof Date 
+                      ? trip.end_date 
+                      : new Date(trip.end_date.seconds * 1000)
+                  return `${startDate.toLocaleDateString('ja-JP')} - ${endDate.toLocaleDateString('ja-JP')}`
+                })()}
               </div>
             )}
           </div>

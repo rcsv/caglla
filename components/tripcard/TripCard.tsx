@@ -6,6 +6,7 @@ import { Card } from '@/components/common/Card'
 import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
 import { PinIcon } from '@/components/common/icons/PinIcon'
 import { dateUtils } from '@/lib/utils/date'
+import { getCountryFlag } from '@/lib/utils/country-flags'
 import type { Trip } from '@/lib/core/types'
 
 type TripCardVariant = 'standard' | 'imageFull'
@@ -56,6 +57,17 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
                 <span className="px-2 py-1 bg-white/10 rounded-full flex items-center gap-1">
                   <PinIcon className="w-3 h-3" color="white" />
                   {trip.destination}
+                </span>
+              )}
+              {trip.destination_place?.address_components && (
+                <span className="px-2 py-1 bg-white/10 rounded-full flex items-center gap-1">
+                  <span className="text-sm">
+                    {getCountryFlag(
+                      trip.destination_place.address_components
+                        .find((component: any) => component.types.includes('country'))
+                        ?.short_name || 'unknown'
+                    )}
+                  </span>
                 </span>
               )}
               {trip.start_date && trip.end_date && (

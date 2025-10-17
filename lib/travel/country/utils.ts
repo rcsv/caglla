@@ -1,6 +1,7 @@
 // 国名抽出とグループ化のユーティリティ関数
 import { PlaceData } from '@/lib/core/types'
 import { geocodingApiHelpers } from '@/lib/api/google/geocoding'
+import { getCountryInfo, getCountryNameJa as getCountryNameJaFromFlags } from '@/lib/utils/country-flags'
 import logger from '@/lib/core/logger'
 
 // 国名のマッピング（英語→日本語）
@@ -274,7 +275,7 @@ export async function groupTripsByCountry(trips: Array<{
         const countryInfo = extractCountryFromAddressComponents(trip.destinationPlace.address_components)
         countryCode = countryInfo.countryCode
         countryName = countryInfo.countryName
-        countryNameJa = COUNTRY_NAMES[countryName] || countryName
+        countryNameJa = getCountryNameJaFromFlags(countryName)
         logger.debug('Country from address_components:', countryInfo)
       } else if (trip.destinationPlace.formatted_address) {
         logger.debug('Using formatted_address with Geocoding API')
@@ -282,7 +283,7 @@ export async function groupTripsByCountry(trips: Array<{
         const countryInfo = await extractCountryFromAddress(trip.destinationPlace.formatted_address)
         countryCode = countryInfo.countryCode
         countryName = countryInfo.countryName
-        countryNameJa = COUNTRY_NAMES[countryName] || countryName
+        countryNameJa = getCountryNameJaFromFlags(countryName)
         logger.debug('Country from formatted_address:', countryInfo)
       }
     } else if (trip.destination) {
@@ -291,7 +292,7 @@ export async function groupTripsByCountry(trips: Array<{
       const countryInfo = await extractCountryFromAddress(trip.destination)
       countryCode = countryInfo.countryCode
       countryName = countryInfo.countryName
-      countryNameJa = COUNTRY_NAMES[countryName] || countryName
+      countryNameJa = getCountryNameJa(countryName)
       logger.debug('Country from destination:', countryInfo)
     }
 
@@ -328,18 +329,16 @@ export async function groupTripsByCountry(trips: Array<{
 }
 
 /**
- * 国名を日本語に変換する
+ * 国名を日本語に変換する（新しい包括的システムを使用）
  */
 export function getCountryNameJa(countryName: string): string {
-  return COUNTRY_NAMES[countryName] || countryName
+  return getCountryNameJaFromFlags(countryName)
 }
 
 /**
- * 国コードから日本語名を取得する
+ * 国コードから日本語名を取得する（新しい包括的システムを使用）
  */
 export function getCountryNameJaByCode(countryCode: string): string {
-  const englishName = Object.keys(COUNTRY_NAMES).find(
-    key => key.toLowerCase().replace(/\s+/g, '-') === countryCode
-  )
-  return englishName ? COUNTRY_NAMES[englishName] : countryCode
+  const info = getCountryInfo(countryCode)
+  return info?.countryNameJa || countryCode
 }

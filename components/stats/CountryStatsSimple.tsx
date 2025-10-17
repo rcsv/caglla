@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { CountryGroup } from '@/lib/travel/country/utils'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { PinIcon } from '@/components/common/icons/PinIcon'
+import { getCountryFlag } from '@/lib/utils/country-flags'
 
 interface CountryStatsSimpleProps {
   userId: string
@@ -110,6 +111,9 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
             <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 text-white rounded-full text-sm font-semibold">
                 {index + 1}
+              </div>
+              <div className="text-2xl">
+                {getCountryFlag(group.countryCode)}
               </div>
               <div>
                 <div className="font-medium text-gray-800">{group.countryNameJa}</div>
