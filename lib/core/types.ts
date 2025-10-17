@@ -25,6 +25,8 @@ export type FirestoreDate = FirestoreTimestamp | Date | string
 export interface UserPreferences {
   currency?: string
   home_address?: string
+  // place_cache への参照（ホームエリア）。選択された場所から国コードを導出するために使用
+  home_place_id?: string
   timezone?: string
   language?: string
   theme?: 'light' | 'dark'

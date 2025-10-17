@@ -3,7 +3,8 @@ import { adminDb } from '@/lib/firebase/admin'
 import { checklistGenerator } from '@/lib/checklist-generator'
 import logger from '@/lib/core/logger'
 import { adminAuth } from '@/lib/firebase/admin'
-import { User } from '@/lib/core/types'
+import { User, PlacesCache } from '@/lib/core/types'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
 
 export async function POST(
   request: NextRequest,
@@ -28,6 +29,26 @@ export async function POST(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
     const user = userDoc.data() as User
+
+    // ユーザーの居住国コードを place_cache から解決（home_place_id 優先）
+    if (user.preferences?.home_place_id && !user.preferences.home_country_code) {
+      try {
+        const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(user.preferences.home_place_id).get()
+        if (cacheDoc.exists) {
+          const place = cacheDoc.data() as PlacesCache
+          const countryComponent = place.address_components?.find(c => c.types.includes('country'))
+          if (countryComponent?.short_name) {
+            user.preferences.home_country_code = countryComponent.short_name
+          }
+          // 住所名の補完
+          if (!user.preferences.home_address) {
+            user.preferences.home_address = place.name || place.formatted_address
+          }
+        }
+      } catch (e) {
+        logger.warn('Failed to resolve user home country from place cache', e)
+      }
+    }
 
     // Trip取得（既存のGET /api/trip/[id]のロジックを再利用）
     const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'

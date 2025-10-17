@@ -3,6 +3,8 @@ import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/contexts/auth'
+import PlaceSearchInput from '@/components/common/PlaceSearchInput'
+import type { PlaceData } from '@/lib/core/types'
 import AvatarUpload from '@/components/ui/AvatarUpload'
 import { getZIndexClass } from '@/lib/core/z-index'
 import type { User, UserPreferences, UserSettingsModalProps } from '@/lib/core/types'
@@ -253,14 +255,25 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">ホーム住所</label>
-                  <input
-                    type="text"
-                    value={preferences.home_address || ''}
-                    onChange={(e) => setPreferences(prev => ({ ...prev, home_address: e.target.value }))}
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="例: 東京都渋谷区..."
+                  <label className="block text-sm font-medium text-gray-700">ホームエリア（居住地）</label>
+                  <PlaceSearchInput
+                    currentPlace={preferences.home_place_id && preferences.home_address ? ({
+                      place_id: preferences.home_place_id,
+                      name: preferences.home_address,
+                      formatted_address: preferences.home_address,
+                      geometry: { location: { lat: 0, lng: 0 } }
+                    } as unknown as PlaceData) : undefined}
+                    onPlaceSelect={(place: PlaceData | null) => {
+                      setPreferences(prev => ({
+                        ...prev,
+                        home_place_id: place?.place_id,
+                        home_address: place?.name || ''
+                      }))
+                    }}
+                    placeholder="自宅周辺の市区町村などを検索..."
+                    disabled={saving}
                   />
+                  <p className="mt-1 text-xs text-gray-500">選択した場所の国コードが自動的に判定されます</p>
                 </div>
                 
                 <div>
