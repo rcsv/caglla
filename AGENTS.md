@@ -24,6 +24,7 @@ This project aims to support the creation, editing, and sharing of travel plans.
 ### 📚 Important Documentation
 
 - **スラッグ生成仕様**: `docs/slug-generation-specification.md` - URL生成のためのスラッグシステムの詳細仕様
+- **SVGアイコンガイドライン**: `components/common/icons/AGENTS.md` - SVGアイコンの作成・使用・管理に関する包括的なガイドライン
 
 ---
 
