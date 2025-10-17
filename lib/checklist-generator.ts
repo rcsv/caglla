@@ -4,7 +4,7 @@
  * Itineraryのアクティビティタグに基づき、チェックリスト項目を動的に生成
  */
 
-import { Trip, Itinerary, ChecklistItem, ActivityTag } from '@/lib/core/types'
+import { Trip, Itinerary, ChecklistItem, ActivityTag, User } from '@/lib/core/types'
 import { getChecklistRules } from '@/lib/data/checklist-rules'
 import type { ChecklistCondition } from '@/lib/data/checklist-rules'
 import { dateUtils } from '@/lib/utils/date'
@@ -19,6 +19,7 @@ interface GenerationContext {
   count: number
   duration: number
   destination: DestinationInfo
+  userCountryCode?: string // ユーザーの居住国コード
 }
 
 /**
@@ -29,7 +30,7 @@ export class ChecklistGenerator {
   /**
    * Trip全体のチェックリストを生成
    */
-  async generateTripChecklist(trip: Trip): Promise<ChecklistItem[]> {
+  async generateTripChecklist(trip: Trip, user?: User): Promise<ChecklistItem[]> {
     const items: ChecklistItem[] = []
     const activityCounts = new Map<string, number>()
     
@@ -49,7 +50,7 @@ export class ChecklistGenerator {
     const destination = this.getDestinationInfo(trip)
     
     // 4. 各アクティビティに対応するチェックリスト項目を生成
-    for (const [secondaryCategory, count] of activityCounts.entries()) {
+    for (const [secondaryCategory, count] of Array.from(activityCounts.entries())) {
       const rules = getChecklistRules(secondaryCategory)
       
       rules.forEach(rule => {
@@ -58,7 +59,8 @@ export class ChecklistGenerator {
           if (this.checkCondition(ruleItem.condition, {
             count,
             duration: tripDuration,
-            destination
+            destination,
+            userCountryCode: user?.preferences?.home_country_code
           })) {
             // 動的な値置換（例: {count}日分 → 5日分）
             const title = this.replaceDynamicValues(ruleItem.title, {
@@ -203,7 +205,28 @@ export class ChecklistGenerator {
           return false
         }
         
+        // 国際旅行チェック：ユーザーの居住国と旅行先が異なる場合のみ国際的な項目を表示
+        const isInternationalTrip = context.userCountryCode && 
+                                   context.destination.countryCode && 
+                                   context.userCountryCode !== context.destination.countryCode
+        
         if (condition.countries && context.destination.countryCode) {
+          // 国際的な項目（ESTA、eTA、ETIAS等）は国際旅行の場合のみ表示
+          if (condition.countries.includes('US') || 
+              condition.countries.includes('CA') || 
+              condition.countries.includes('AU') ||
+              condition.countries.includes('NZ') ||
+              condition.countries.includes('GB') ||
+              condition.countries.includes('DE') ||
+              condition.countries.includes('FR') ||
+              condition.countries.includes('IT') ||
+              condition.countries.includes('ES')) {
+            // 国際的な項目は国際旅行の場合のみ
+            if (!isInternationalTrip) {
+              return false
+            }
+          }
+          
           if (!condition.countries.includes(context.destination.countryCode)) {
             return false
           }

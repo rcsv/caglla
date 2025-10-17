@@ -29,6 +29,7 @@ export interface UserPreferences {
   language?: string
   theme?: 'light' | 'dark'
   notifications?: boolean
+  home_country_code?: string // ユーザーの居住国（ISO 3166-1 alpha-2）
 }
 
 export interface User {

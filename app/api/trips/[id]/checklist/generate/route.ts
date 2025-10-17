@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { checklistGenerator } from '@/lib/checklist-generator'
 import logger from '@/lib/core/logger'
+import { adminAuth } from '@/lib/firebase/admin'
+import { User } from '@/lib/core/types'
 
 export async function POST(
   request: NextRequest,
@@ -9,6 +11,23 @@ export async function POST(
 ) {
   try {
     const { id: tripId } = await params
+
+    // 認証チェック
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    
+    const token = authHeader.split('Bearer ')[1]
+    const decodedToken = await adminAuth.verifyIdToken(token)
+    const userId = decodedToken.uid
+
+    // ユーザー情報取得
+    const userDoc = await adminDb.collection('users').doc(userId).get()
+    if (!userDoc.exists) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+    const user = userDoc.data() as User
 
     // Trip取得（既存のGET /api/trip/[id]のロジックを再利用）
     const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
@@ -20,8 +39,8 @@ export async function POST(
     }
     const trip = await tripRes.json()
 
-    // チェックリスト生成
-    const items = await checklistGenerator.generateTripChecklist(trip)
+    // チェックリスト生成（ユーザー情報も渡す）
+    const items = await checklistGenerator.generateTripChecklist(trip, user)
 
     // 保存: trip_checklists/{tripId}
     const checklistRef = adminDb.collection('trip_checklists').doc(tripId)

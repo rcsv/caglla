@@ -264,6 +264,41 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                 </div>
                 
                 <div>
+                  <label className="block text-sm font-medium text-gray-700">居住国</label>
+                  <select
+                    value={preferences.home_country_code || ''}
+                    onChange={(e) => setPreferences(prev => ({ ...prev, home_country_code: e.target.value }))}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">選択してください</option>
+                    <option value="JP">日本</option>
+                    <option value="US">アメリカ合衆国</option>
+                    <option value="CA">カナダ</option>
+                    <option value="AU">オーストラリア</option>
+                    <option value="NZ">ニュージーランド</option>
+                    <option value="GB">イギリス</option>
+                    <option value="DE">ドイツ</option>
+                    <option value="FR">フランス</option>
+                    <option value="IT">イタリア</option>
+                    <option value="ES">スペイン</option>
+                    <option value="KR">韓国</option>
+                    <option value="CN">中国</option>
+                    <option value="TW">台湾</option>
+                    <option value="HK">香港</option>
+                    <option value="SG">シンガポール</option>
+                    <option value="TH">タイ</option>
+                    <option value="MY">マレーシア</option>
+                    <option value="ID">インドネシア</option>
+                    <option value="PH">フィリピン</option>
+                    <option value="VN">ベトナム</option>
+                    <option value="IN">インド</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    チェックリスト生成時に国際旅行かどうかを判定するために使用されます
+                  </p>
+                </div>
+                
+                <div>
                   <label className="block text-sm font-medium text-gray-700">タイムゾーン</label>
                   <input
                     type="text"
