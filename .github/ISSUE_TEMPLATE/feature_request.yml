@@ -1,0 +1,43 @@
+name: ✨ Feature Request
+description: 新しい機能や改善提案を投稿します
+title: "[Feature]: "
+labels: ["enhancement"]
+
+body:
+  - type: input
+    id: summary
+    attributes:
+      label: 概要
+      description: 提案する機能の概要を簡潔に書いてください
+      placeholder: 例）旅行プランの複製機能を追加したい
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: 背景・目的
+      description: なぜこの機能が必要なのか、どんな課題を解決するのか
+      placeholder: |
+        - 同じようなプランを複数作るときに手間がかかる  
+        - テンプレート的に再利用したい
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 提案する内容
+      description: 実装案やイメージを具体的に書いてください
+      placeholder: |
+        - 「プランを複製」ボタンを追加  
+        - 元プランをコピーして新規IDで保存
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 代替案
+      description: 他に検討した方法があれば記載してください
+      placeholder: 例）別プロジェクトにテンプレート機能を実装する
