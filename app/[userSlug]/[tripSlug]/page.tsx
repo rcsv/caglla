@@ -19,9 +19,11 @@ import TripItineraryView from '@/components/trip/TripItineraryView'
 import TripChecklistView from '@/components/trip/TripChecklistView'
 import TripRightPane from '@/components/trip/TripRightPane'
 import { getCachedPlaces } from '@/lib/travel/places-cache'
+import { useUserData } from '@/lib/contexts/user-data'
 
 export default function SlugBasedTripPage() {
   const { user, loading } = useAuth()
+  const { removeTrip } = useUserData()
   const router = useRouter()
   const { userSlug, tripSlug } = useParams<{ userSlug: string; tripSlug: string }>()
   const searchParams = useSearchParams()
@@ -995,7 +997,11 @@ export default function SlugBasedTripPage() {
         <TripHeroSection
           trip={trip}
           onUpdateTrip={setTrip}
-          onDeleteTrip={() => router.push('/')}
+          onDeleteTrip={() => {
+            // コンテキストから旅行を削除してから遷移
+            removeTrip(trip.id)
+            router.push('/home')
+          }}
           onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
       )}
