@@ -1,0 +1,21 @@
+name: 💬 Question
+description: 質問や相談事項を投稿します
+title: "[Question]: "
+labels: ["question"]
+
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: 質問内容
+      description: できるだけ詳しく記載してください
+      placeholder: 例）Firestore のインデックスが効かない原因がわからない
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: 試したこと
+      description: すでに試した対応や調査内容を記載してください
+      placeholder: 例）インデックスを手動で作成したが、クエリで順序が違う
