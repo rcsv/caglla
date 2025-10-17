@@ -54,8 +54,11 @@ function SubscriptionContent() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            🚀 サブスクリプションプラン
+          <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
+            <svg className="w-8 h-8 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M5 15l4-4 2 2 6-6 2 2-6 6 2 2-4 4-6-2 2-2z" />
+            </svg>
+            サブスクリプションプラン
           </h1>
           <p className="text-xl text-gray-600">
             あなたに最適なプランを選択してください
@@ -299,7 +302,13 @@ function SubscriptionContent() {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="text-4xl mb-4">🗺️</div>
+            <div className="flex items-center justify-center mb-4">
+              <svg className="w-10 h-10 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
+                <path d="M8.9 4.4v12.9" />
+                <path d="M14.1 6.5v12.9" />
+              </svg>
+            </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-3">ルート最適化</h3>
               <div className="space-y-2 text-sm text-gray-600">
                 <p><strong>基本:</strong> 徒歩・車・電車での最適ルート</p>

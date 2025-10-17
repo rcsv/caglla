@@ -31,7 +31,11 @@ export default function PremiumFeature({
         <div className="absolute inset-0 bg-white bg-opacity-90 backdrop-blur-sm z-10 rounded-lg">
           <div className="flex flex-col items-center justify-center h-full p-4">
             <div className="text-center mb-4">
-              <div className="text-4xl mb-2">🚀</div>
+              <div className="mb-2 flex items-center justify-center">
+                <svg className="w-10 h-10 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M5 15l4-4 2 2 6-6 2 2-6 6 2 2-4 4-6-2 2-2z" />
+                </svg>
+              </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 プレミアム機能
               </h3>

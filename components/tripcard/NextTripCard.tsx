@@ -8,6 +8,7 @@ import { Button } from '@/components/common/Button'
 import NextTripMap from './NextTripMap'
 import { useUserData } from '@/lib/contexts/user-data'
 import { RestrictionProvider, RestrictionType } from '@/lib/subscription/restriction'
+import { AirplaneIcon } from '@/components/common/icons/AirplaneIcon'
 import type { Trip } from '@/lib/core/types'
 
 interface NextTripCardProps {
@@ -70,7 +71,9 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
               <TripCard trip={nextTrip} variant="imageFull" />
             ) : (
               <div className="h-full bg-gray-50 rounded-lg flex flex-col items-center justify-center p-8">
-                <div className="text-6xl mb-4">✈️</div>
+                <div className="mb-4">
+                  <AirplaneIcon className="w-14 h-14 text-gray-400" />
+                </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">まだ旅行がありません</h3>
                 <p className="text-gray-600 text-center mb-6">
                   最初の旅行を作成して、<br />
@@ -94,7 +97,13 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
             ) : (
               <div className="bg-gray-100 rounded-lg flex items-center justify-center h-full">
                 <div className="text-center">
-                  <div className="text-4xl mb-4">🗺️</div>
+                  <div className="flex items-center justify-center mb-4">
+                    <svg className="w-10 h-10 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
+                      <path d="M8.9 4.4v12.9" />
+                      <path d="M14.1 6.5v12.9" />
+                    </svg>
+                  </div>
                   <p className="text-gray-500 font-medium">旅行マップ</p>
                   <p className="text-sm text-gray-400 mt-2">旅行を作成すると地図が表示されます</p>
                 </div>

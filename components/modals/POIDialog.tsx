@@ -507,9 +507,20 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                             className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600"
                             title={`${source.source}: ${source.rating} (${source.reviewCount}件)`}
                           >
-                            {source.source === 'google' && '🗺️'}
+                            {source.source === 'google' && (
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
+                                <path d="M8.9 4.4v12.9" />
+                                <path d="M14.1 6.5v12.9" />
+                              </svg>
+                            )}
                             {source.source === 'tripadvisor' && '🦉'}
-                            {source.source === 'foursquare' && '📍'}
+                            {source.source === 'foursquare' && (
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                                <circle cx="12" cy="9" r="2" fill="currentColor" />
+                              </svg>
+                            )}
                           </span>
                         ))}
                       </div>
@@ -636,9 +647,20 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium text-gray-900">{review.author}</span>
                             <span className="text-xs text-gray-400">
-                              {review.source === 'google' && '🗺️'}
+                              {review.source === 'google' && (
+                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                  <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
+                                  <path d="M8.9 4.4v12.9" />
+                                  <path d="M14.1 6.5v12.9" />
+                                </svg>
+                              )}
                               {review.source === 'tripadvisor' && '🦉'}
-                              {review.source === 'foursquare' && '📍'}
+                              {review.source === 'foursquare' && (
+                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                                  <circle cx="12" cy="9" r="2" fill="currentColor" />
+                                </svg>
+                              )}
                             </span>
                           </div>
                           {review.rating && (
@@ -684,7 +706,11 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                     <Button
                       variant="outline"
                       size="md"
-                      leftIcon={<span>📞</span>}
+                      leftIcon={(
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.9.3 1.77.54 2.61a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.47-1.07a2 2 0 012.11-.45c.84.24 1.71.42 2.61.54A2 2 0 0122 16.92z" />
+                        </svg>
+                      )}
                       onClick={() => window.open(`tel:${placeDetails.formatted_phone_number}`, '_self')}
                     >
                       {placeDetails.formatted_phone_number}
@@ -694,7 +720,14 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                     <Button
                       variant="outline"
                       size="md"
-                      leftIcon={<span>🌐</span>}
+                      leftIcon={(
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M2 12h20" />
+                          <path d="M12 2a15.3 15.3 0 010 20" />
+                          <path d="M12 2a15.3 15.3 0 000 20" />
+                        </svg>
+                      )}
                       onClick={() => window.open(placeDetails.website, '_blank', 'noopener,noreferrer')}
                     >
                       ウェブサイト
@@ -704,7 +737,13 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                     <Button
                       variant="outline"
                       size="md"
-                      leftIcon={<span>🗺️</span>}
+                      leftIcon={(
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
+                          <path d="M8.9 4.4v12.9" />
+                          <path d="M14.1 6.5v12.9" />
+                        </svg>
+                      )}
                       onClick={() => window.open(placeDetails.url, '_blank', 'noopener,noreferrer')}
                     >
                       Google Maps

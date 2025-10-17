@@ -93,7 +93,13 @@ export default function HomePage() {
             {/* Feature 1 */}
             <div className="group text-center">
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-8 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-105">
-                <div className="text-4xl mb-6">🗺️</div>
+                <div className="flex items-center justify-center mb-6">
+                  <svg className="w-10 h-10 text-white/90" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
+                    <path d="M8.9 4.4v12.9" />
+                    <path d="M14.1 6.5v12.9" />
+                  </svg>
+                </div>
                 <h3 className="text-xl font-bold text-white mb-4">詳細な旅行計画</h3>
                 <p className="text-blue-100 leading-relaxed">
                   日別の旅程、宿泊先、観光スポットまで、すべてを一箇所で管理。Google Mapsと連携した直感的な操作。

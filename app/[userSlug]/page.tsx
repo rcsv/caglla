@@ -9,6 +9,9 @@ import { getCountryFlag, getCountryNameJa } from '@/lib/utils/country-flags'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import AvatarUpload from '@/components/ui/AvatarUpload'
 import { CloseIcon } from '@/components/common/icons/CloseIcon'
+import { PinIcon } from '@/components/common/icons/PinIcon'
+import { MailIcon } from '@/components/common/icons/MailIcon'
+import { UserIcon } from '@/components/common/icons/UserIcon'
 import { getZIndexClass } from '@/lib/core/z-index'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import { extractCountryFromAddress } from '@/lib/travel/country/utils'
@@ -328,13 +331,13 @@ export default function UserProfileBySlugPage() {
                   
                   <div className="space-y-2 text-gray-600">
                     <p className="flex items-center gap-2">
-                      <span className="text-sm">📧</span>
+                      <MailIcon className="w-4 h-4" color="#6b7280" />
                       {profileUser.email}
                     </p>
                     
                     {profileUser.preferences?.home_address && (
                       <p className="flex items-center gap-2">
-                        <span className="text-sm">📍</span>
+                        <PinIcon className="w-4 h-4" color="#6b7280" />
                         {profileUser.preferences.home_address}
                       </p>
                     )}
@@ -350,9 +353,7 @@ export default function UserProfileBySlugPage() {
                     
                     {profileUser.gender && profileUser.gender !== 'prefer_not_to_say' && (
                       <p className="flex items-center gap-2">
-                        <span className="text-sm">
-                          {profileUser.gender === 'male' ? '👨' : profileUser.gender === 'female' ? '👩' : '👤'}
-                        </span>
+                        <UserIcon className="w-4 h-4" color="#6b7280" />
                         {profileUser.gender === 'male' ? '男性' : profileUser.gender === 'female' ? '女性' : 'その他'}
                       </p>
                     )}
@@ -389,7 +390,8 @@ export default function UserProfileBySlugPage() {
                     )}
                     {trip.destination && (
                       <p className="text-gray-500 text-sm mb-3 flex items-center gap-1">
-                        📍 {trip.destination}
+                        <PinIcon className="w-4 h-4" color="#6b7280" />
+                        {trip.destination}
                         {trip.destination_place?.address_components && (
                           <span>
                             {getCountryFlag(

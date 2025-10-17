@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Card } from '@/components/common/Card'
 import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
 import { PinIcon } from '@/components/common/icons/PinIcon'
+import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { dateUtils } from '@/lib/utils/date'
 import { getCountryFlag } from '@/lib/utils/country-flags'
 import type { Trip } from '@/lib/core/types'
@@ -129,8 +130,9 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
         )}
 
         {trip.start_date && trip.end_date && (
-          <p className="text-gray-500 text-sm">
-            📅 {(() => {
+          <p className="text-gray-500 text-sm flex items-center gap-1">
+            <CalendarIcon className="w-4 h-4" color="#6b7280" />
+            {(() => {
               const { futureTrips, pastTrips } = dateUtils.sortTripsByDate([trip])
               if (futureTrips.length > 0) {
                 return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date)
