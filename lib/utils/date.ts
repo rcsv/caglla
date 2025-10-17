@@ -291,5 +291,10 @@ export const dateUtils = {
     return d1.getFullYear() === d2.getFullYear() &&
            d1.getMonth() === d2.getMonth() &&
            d1.getDate() === d2.getDate()
+  },
+
+  // Convert any date format to Date object (returns null if invalid)
+  toDate: (date: any): Date | null => {
+    return toDateOrNull(date)
   }
 }
