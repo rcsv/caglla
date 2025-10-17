@@ -1,0 +1,58 @@
+name: 🐛 Bug Report
+description: バグや不具合を報告します
+title: "[Bug]: "
+labels: ["bug", "needs triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        バグの報告ありがとうございます！  
+        以下の項目をできるだけ詳しく記入してください。
+
+  - type: input
+    id: summary
+    attributes:
+      label: 概要
+      description: バグの簡単な説明
+      placeholder: 例）保存ボタンを押してもデータが保存されない
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: バグを再現するための手順を具体的に記載してください
+      placeholder: |
+        1. 設定画面を開く
+        2. 「保存」ボタンを押す
+        3. エラーメッセージが出る
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待される動作
+      description: 正常時にどう動作するべきか
+      placeholder: 例）保存後、「保存しました」というトースト通知が表示される
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 実行環境
+      description: 発生した環境情報を記載してください
+      placeholder: |
+        - OS: Windows 11 / macOS 14  
+        - ブラウザ: Chrome 120  
+        - アプリバージョン: 1.2.3
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: ログ・スクリーンショット
+      description: 関連するログや画面キャプチャを貼ってください
+      render: shell
