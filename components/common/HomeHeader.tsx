@@ -10,9 +10,9 @@ export interface HomeHeaderProps {
   userName: string
   planName: string
   avatarUrl?: string | null
-  onOpenSettings: () => void
   onLogout: () => void
   onChangePlan?: () => void
+  userSlug?: string
 }
 
 export const HomeHeader: React.FC<HomeHeaderProps> = ({
@@ -20,9 +20,9 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
   userName,
   planName,
   avatarUrl,
-  onOpenSettings,
   onLogout,
   onChangePlan,
+  userSlug,
 }) => {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
@@ -74,8 +74,10 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
 
             {open && (
               <div className={`absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 ${getZIndexClass('POPUP_MENU')}`}>
+                {userSlug && (
+                  <Link href={`/${userSlug}`} onClick={() => setOpen(false)} className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">プロフィール</Link>
+                )}
                 <button onClick={() => { setOpen(false); onChangePlan && onChangePlan() }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">プランを変更</button>
-                <button onClick={() => { setOpen(false); onOpenSettings() }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">設定</button>
                 <button onClick={() => { setOpen(false); onLogout() }} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50">ログアウト</button>
               </div>
             )}

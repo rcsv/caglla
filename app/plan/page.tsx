@@ -10,7 +10,7 @@ import TripCard from '@/components/tripcard/TripCard'
 import Card from '@/components/common/Card'
 import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
-import UserSettingsModal from '@/components/modals/UserSettingsModal'
+// 設定モーダルはプロフィールページへ移行
 
 export default function PlanListPage() {
   const { user, loading, logout } = useAuth()
@@ -41,9 +41,9 @@ export default function PlanListPage() {
         userName={userData?.name || user?.email || 'User'}
         planName={planConfig?.name || 'Season Traveler'}
         avatarUrl={userData?.profile_image_url || user?.photoURL}
-        onOpenSettings={() => setIsSettingsModalOpen(true)}
         onLogout={handleLogout}
         onChangePlan={handleChangePlan}
+        userSlug={userData?.slug}
       />
 
       {/* Main Content */}
@@ -64,11 +64,7 @@ export default function PlanListPage() {
         </Card>
       </main>
 
-      {/* User Settings Modal */}
-      <UserSettingsModal 
-        isOpen={isSettingsModalOpen} 
-        onClose={() => setIsSettingsModalOpen(false)} 
-      />
+      {/* 設定モーダルはプロフィールページに移行したため削除 */}
 
       <HomeFooter />
     </div>

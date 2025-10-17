@@ -64,9 +64,9 @@ export default function HomePage() {
         userName={userData?.name || user?.email || 'User'}
         planName={planConfig?.name || 'Season Traveler'}
         avatarUrl={userData?.profile_image_url || user?.photoURL}
-        onOpenSettings={() => setIsSettingsModalOpen(true)}
         onLogout={handleLogout}
         onChangePlan={handleChangePlan}
+        userSlug={userData?.slug}
       />
 
       {/* Main Content */}
@@ -111,11 +111,7 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* User Settings Modal */}
-      <UserSettingsModal 
-        isOpen={isSettingsModalOpen} 
-        onClose={() => setIsSettingsModalOpen(false)} 
-      />
+      {/* 設定モーダルはプロフィールページに移行したため削除 */}
 
       <HomeFooter />
     </div>
