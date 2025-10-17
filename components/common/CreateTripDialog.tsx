@@ -126,8 +126,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     e.preventDefault()
 
     // 必須項目のバリデーション
-    if (!formData.destination.trim()) {
-      alert('目的地を入力してください。')
+    if (!formData.destinationPlace) {
+      alert('目的地を選択してください。Google Placesから場所を検索して選択してください。')
       return
     }
 
@@ -271,26 +271,17 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                   currentPlace={formData.destinationPlace}
                   onPlaceSelect={(place: PlaceData | null) => setFormData(prev => ({ 
                     ...prev, 
-                    destinationPlace: place | undefined,
+                    destinationPlace: place || undefined,
                     destination: place?.name || '' // 後方互換性のため
                   }))}
-                  placeholder="目的地を検索..."
+                  placeholder="目的地を検索（例: 東京、パリ、ニューヨーク）"
                   disabled={submitting}
                 />
-                {/* 従来のテキスト入力も残す（フォールバック用） */}
-                <div className="mt-2">
-                  <Input
-                    label="または手動で入力"
-                    type="text"
-                    id="destinationText"
-                    name="destination"
-                    value={formData.destination}
-                    onChange={handleInputChange}
-                    placeholder="例: 沖縄県那覇市"
-                    className="text-sm"
-                    required
-                  />
-                </div>
+                {!formData.destinationPlace && (
+                  <p className="mt-2 text-sm text-gray-500">
+                    💡 Google Placesから目的地を選択してください
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -452,7 +443,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 <Button
                   type="submit"
                   variant="primary"
-                  disabled={submitting || !formData.destination.trim() || !formData.startDate || !formData.endDate || !!dateError}
+                  disabled={submitting || !formData.destinationPlace || !formData.startDate || !formData.endDate || !!dateError}
                 >
                   {submitting ? '作成中...' : '旅行を作成'}
                 </Button>

@@ -306,24 +306,14 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
                 destinationPlace: place || undefined,
                 destination: place?.name || '' // 後方互換性のため
               }))}
-              placeholder="目的地を検索..."
+              placeholder="目的地を検索（例: 東京、パリ、ニューヨーク）"
               disabled={saving}
             />
-            {/* 従来のテキスト入力も残す（フォールバック用） */}
-            <div className="mt-2">
-              <label htmlFor="destinationText" className="block text-xs text-gray-500 mb-1">
-                または手動で入力
-              </label>
-              <input
-                type="text"
-                id="destinationText"
-                name="destination"
-                value={formData.destination}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                placeholder="例: 沖縄県那覇市"
-              />
-            </div>
+            {!formData.destinationPlace && formData.destination && (
+              <p className="mt-2 text-sm text-yellow-600">
+                ⚠️ 正確な国情報のため、Google Placesから目的地を選択し直してください
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

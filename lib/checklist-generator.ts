@@ -197,6 +197,12 @@ export class ChecklistGenerator {
         return true
         
       case 'destination':
+        // 国コードまたは大陸コードが不明な場合は、destination系の条件をスキップ
+        // （手動入力で作成された旅行の場合、destination_place_idがないため）
+        if (!context.destination.countryCode && !context.destination.continentCode) {
+          return false
+        }
+        
         if (condition.countries && context.destination.countryCode) {
           if (!condition.countries.includes(context.destination.countryCode)) {
             return false
