@@ -279,7 +279,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 />
                 {!formData.destinationPlace && (
                   <p className="mt-2 text-sm text-gray-500">
-                    💡 Google Placesから目的地を選択してください
+                    <span className="text-red-600 mr-1">*</span>目的地はGoogle Placesから選択してください
                   </p>
                 )}
               </div>

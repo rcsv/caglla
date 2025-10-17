@@ -23,8 +23,8 @@ export default function PlaceSearchInput({
   onPlaceSelect, 
   placeholder = "場所を検索...",
   disabled = false 
-}: PlaceSearchInputProps) {
-  const [query, setQuery] = useState(currentPlace?.name || '')
+}: PlaceSearchInputProps & { initialText?: string }) {
+  const [query, setQuery] = useState(currentPlace?.name || (arguments[0]?.initialText as string) || '')
   const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [showResults, setShowResults] = useState(false)

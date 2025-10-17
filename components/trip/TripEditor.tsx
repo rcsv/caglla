@@ -9,6 +9,7 @@ import { dateUtils } from '@/lib/utils/date'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { imageUploadHelpers } from '@/lib/storage/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
+import { WarningIcon } from '@/components/common/icons/WarningIcon'
 import type { Trip, Day, Itinerary, TripEditorProps } from '@/lib/core/types'
 import { getZIndexClass } from '@/lib/core/z-index'
 
@@ -307,11 +308,12 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
                 destination: place?.name || '' // 後方互換性のため
               }))}
               placeholder="目的地を検索（例: 東京、パリ、ニューヨーク）"
+              initialText={formData.destination}
               disabled={saving}
             />
             {!formData.destinationPlace && formData.destination && (
-              <p className="mt-2 text-sm text-yellow-600">
-                ⚠️ 正確な国情報のため、Google Placesから目的地を選択し直してください
+              <p className="mt-2 text-sm text-yellow-700">
+                <span className="text-red-600 mr-1">*</span>正確な国情報のため、Google Placesから目的地を再選択してください
               </p>
             )}
           </div>
