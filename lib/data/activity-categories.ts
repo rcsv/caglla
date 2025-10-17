@@ -12,6 +12,7 @@ export interface SecondaryCategoryItem {
   id: string
   label: string
   icon?: string
+  iconName?: string // SVGアイコン名（優先）
   description?: string
 }
 
@@ -20,6 +21,7 @@ export interface ActivityCategoryMaster {
   label: string
   shortLabel: string // 短縮版ラベル（横幅制限対応）
   icon: string
+  iconName?: string // SVGアイコン名（優先）
   secondaryCategories: SecondaryCategoryItem[]
 }
 
@@ -32,9 +34,10 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
     label: '乗り物に乗る',
     shortLabel: '乗り物',
     icon: '🚆',
+    iconName: 'train',
     secondaryCategories: [
-      { id: 'flight', label: '飛行機', icon: '✈️', description: '国際線・国内線の搭乗' },
-      { id: 'train', label: '電車', icon: '🚆', description: '鉄道・地下鉄での移動' },
+      { id: 'flight', label: '飛行機', icon: '✈️', iconName: 'airplane', description: '国際線・国内線の搭乗' },
+      { id: 'train', label: '電車', icon: '🚆', iconName: 'train', description: '鉄道・地下鉄での移動' },
       { id: 'bus', label: 'バス', icon: '🚌', description: '高速バス・市内バス' },
       { id: 'taxi', label: 'タクシー', icon: '🚕', description: 'タクシー・配車サービス' },
       { id: 'car_rental', label: 'レンタカー', icon: '🚗', description: 'レンタカーでの移動' },
@@ -48,6 +51,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
     label: '買い物をする',
     shortLabel: '買い物',
     icon: '🛍️',
+    iconName: 'shopping',
     secondaryCategories: [
       { id: 'souvenir', label: 'お土産購入', icon: '🎁', description: 'お土産・記念品の購入' },
       { id: 'grocery', label: '食料品購入', icon: '🛒', description: 'スーパー・コンビニでの買い物' },
@@ -63,6 +67,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
     label: '食事をする',
     shortLabel: '食事',
     icon: '🍽️',
+    iconName: 'dining',
     secondaryCategories: [
       { id: 'breakfast', label: '朝食', icon: '🌅', description: 'ホテル朝食・カフェ朝食' },
       { id: 'lunch', label: '昼食', icon: '☀️', description: 'ランチ・軽食' },
@@ -79,6 +84,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
     label: '宿泊する',
     shortLabel: '宿泊',
     icon: '🏨',
+    iconName: 'hotel',
     secondaryCategories: [
       { id: 'check_in', label: 'チェックイン作業', icon: '🔑', description: 'ホテル・宿泊施設のチェックイン' },
       { id: 'check_out', label: 'チェックアウト作業', icon: '🚪', description: 'ホテル・宿泊施設のチェックアウト' },
@@ -94,6 +100,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
     label: '探索する',
     shortLabel: '探索',
     icon: '🔍',
+    iconName: 'search',
     secondaryCategories: [
       { id: 'city_walk', label: '街歩き', icon: '🚶', description: '市内・町の散策' },
       { id: 'nature_walk', label: '自然散策', icon: '🌳', description: '公園・自然の中の散歩' },

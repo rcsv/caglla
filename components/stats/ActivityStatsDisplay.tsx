@@ -2,6 +2,7 @@
 
 import { Trip, ActivityStats, PrimaryCategoryType } from '@/lib/core/types'
 import { getPrimaryCategoryShortLabel, getSecondaryCategoryLabel } from '@/lib/data/activity-categories'
+import { ChartIcon } from '@/components/common/icons/ChartIcon'
 
 interface ActivityStatsDisplayProps {
   trip: Trip
@@ -86,7 +87,10 @@ export default function ActivityStatsDisplay({ trip }: ActivityStatsDisplayProps
   if (stats.totalActivities === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-medium text-gray-700 mb-4">📊 Activity Analysis</h3>
+        <h3 className="text-lg font-medium text-gray-700 mb-4 flex items-center gap-2">
+          <ChartIcon className="w-5 h-5" color="#6b7280" />
+          Activity Analysis
+        </h3>
         <p className="text-gray-500 text-center py-8">
           アクティビティタグが設定されていません。<br />
           旅程にアクティビティタグを追加すると、ここに統計が表示されます。
@@ -106,7 +110,10 @@ export default function ActivityStatsDisplay({ trip }: ActivityStatsDisplayProps
   
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-medium text-gray-700 mb-4">📊 Activity Analysis</h3>
+      <h3 className="text-lg font-medium text-gray-700 mb-4 flex items-center gap-2">
+        <ChartIcon className="w-5 h-5" color="#6b7280" />
+        Activity Analysis
+      </h3>
       
       {/* 全体サマリー */}
       <div className="mb-6 text-center">

@@ -9,6 +9,8 @@ import {
   getPrimaryCategoryShortLabel,
   getSecondaryCategoryLabel 
 } from '@/lib/data/activity-categories'
+import { ClipboardIcon } from '@/components/common/icons/ClipboardIcon'
+import { IconRenderer } from '@/components/common/icons/IconRenderer'
 
 interface ActivityTagSelectorProps {
   currentTag?: ActivityTag | null
@@ -75,7 +77,10 @@ export default function ActivityTagSelector({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-700">📋 アクティビティ</label>
+        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+          <ClipboardIcon className="w-4 h-4" color="#374151" />
+          アクティビティ
+        </label>
         {(primaryCategory || secondaryCategory) && (
           <button
             onClick={handleClear}
