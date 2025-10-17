@@ -974,6 +974,7 @@ export default function SlugBasedTripPage() {
       onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
       onNavigateToSection={navigateToSection}
       onDayClick={handleDayClick}
+      rightPaneWidth={currentView === 'checklist' ? 'zero' : 'default'}
       rightPane={
         <TripRightPane
           trip={trip}

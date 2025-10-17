@@ -9,6 +9,7 @@ interface TripPageLayoutProps {
   trip: Trip
   children: ReactNode
   rightPane?: ReactNode
+  rightPaneWidth?: 'default' | 'zero' // 右ペインの幅制御
   leftNavExpanded: boolean
   onToggleLeftNav: () => void
   mobileMenuOpen: boolean
@@ -21,6 +22,7 @@ export default function TripPageLayout({
   trip,
   children,
   rightPane,
+  rightPaneWidth = 'default',
   leftNavExpanded,
   onToggleLeftNav,
   mobileMenuOpen,
@@ -71,7 +73,9 @@ export default function TripPageLayout({
       </nav>
 
       {/* Main Content Pane - Scrollable */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide main-content-scrollable main-content-shadow">
+      <div className={`flex-1 overflow-y-auto scrollbar-hide main-content-scrollable main-content-shadow ${
+        rightPaneWidth === 'zero' ? 'main-content-full-width' : ''
+      }`}>
         <FloatingTitleBar 
           title={trip.title} 
           accessLevel={trip.access_level === 'private' ? 'private' : 'public'} 
@@ -81,7 +85,7 @@ export default function TripPageLayout({
       </div>
 
       {/* Right Pane（md以上のみ表示）*/}
-      {rightPane}
+      {rightPaneWidth === 'default' && rightPane}
     </div>
   )
 }
