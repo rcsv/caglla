@@ -253,21 +253,4 @@ body {
   max-width: 100%;
 }
 
-/* レスポンシブ対応の右ペイン */
-.right-pane-responsive {
-  width: 400px; /* デフォルト幅 */
-  min-width: 300px;
-  max-width: 50vw;
-}
-
-@media (min-width: 1024px) {
-  .right-pane-responsive {
-    width: 450px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .right-pane-responsive {
-    width: 500px;
-  }
-}
+/* 右ペインの詳細定義は既存セクション（.right-pane-responsive）を使用する */
