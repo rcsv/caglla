@@ -29,6 +29,19 @@ This project aims to support the creation, editing, and sharing of travel plans.
 
 ---
 
+## 🎨 UI Design Guidelines
+
+### Multi-language Support & Icon-First Design
+- **アイコン優先**: UIは多言語化した際に編集箇所が少なくなるよう、ラベルに相当する文字はなるべく採用せずアイコンのみで表現することを最優先で検討する
+- **SVGアイコン**: アイコンはカラフルなものを使用するとUI全体がゴテゴテするので、SVGでスッキリさせる
+- **一貫性**: 同じ機能には同じアイコンを使用し、ユーザーの学習コストを下げる
+
+### Development Workflow
+- **テスト完了までローカル保持**: 大幅な編集をした際は、remoteにpushせずテストが完了するまでローカルに留める
+- **段階的デプロイ**: 小さな変更を積み重ねて安定性を確保する
+
+---
+
 ## 🔐 Authentication
 
 - Firebase Authentication with Google OAuth is used for login.
