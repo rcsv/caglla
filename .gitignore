@@ -106,3 +106,8 @@ temp/
 
 # private key
 docs/firebase/*.json
+
+# Development & Test Pages (kept in repo but excluded from production builds)
+# These are intentionally tracked in git for development purposes
+# /app/test/
+# /app/dev-tools/
