@@ -28,11 +28,12 @@ export async function POST(request: NextRequest) {
     // Contact Data（$3.00/1,000件）: nationalPhoneNumber, internationalPhoneNumber, websiteUri, regularOpeningHours
     // Atmosphere Data（$5.00/1,000件）: rating, userRatingCount, priceLevel, editorialSummary, reviews
     const fieldMask = [
-      // Basic Data（無料）- addressComponents, viewport, iconBackgroundColor を除外
+      // Basic Data（無料）
       'id',
       'displayName',
       'formattedAddress',
       'location',
+      'addressComponents', // 国コード取得のため追加
       'types',
       'businessStatus',
       'photos',
@@ -100,12 +101,11 @@ export async function POST(request: NextRequest) {
           }
         } : undefined,
         // addressComponents変換
-        // address_components変換（取得しないためコメントアウト）
-        // address_components: data.addressComponents?.map((comp: any) => ({
-        //   long_name: comp.longText,
-        //   short_name: comp.shortText,
-        //   types: comp.types
-        // })),
+        address_components: data.addressComponents?.map((comp: any) => ({
+          long_name: comp.longText,
+          short_name: comp.shortText,
+          types: comp.types
+        })),
         // photos変換（新API v1では photo.name をそのまま使用）
         photos: data.photos?.map((photo: any) => ({
           photo_reference: photo.name, // "places/ChIJ.../photos/XXX" 形式をそのまま保存

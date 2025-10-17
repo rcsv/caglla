@@ -263,12 +263,47 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                       formatted_address: preferences.home_address,
                       geometry: { location: { lat: 0, lng: 0 } }
                     } as unknown as PlaceData) : undefined}
-                    onPlaceSelect={(place: PlaceData | null) => {
+                    onPlaceSelect={async (place: PlaceData | null) => {
                       setPreferences(prev => ({
                         ...prev,
                         home_place_id: place?.place_id,
                         home_address: place?.name || ''
                       }))
+                      
+                      // 場所が選択された場合、詳細情報を取得して国コードを抽出
+                      if (place?.place_id) {
+                        try {
+                          const response = await fetch('/api/places/details', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ placeId: place.place_id })
+                          })
+                          
+                          if (response.ok) {
+                            const data = await response.json()
+                            const addressComponents = data.result?.address_components
+                            if (addressComponents) {
+                              const countryComponent = addressComponents.find((comp: any) => 
+                                comp.types.includes('country')
+                              )
+                              if (countryComponent?.short_name) {
+                                setPreferences(prev => ({
+                                  ...prev,
+                                  home_country_code: countryComponent.short_name
+                                }))
+                              }
+                            }
+                          }
+                        } catch (error) {
+                          logger.error('Failed to get place details for country code:', error)
+                        }
+                      } else {
+                        // 場所がクリアされた場合、国コードもクリア
+                        setPreferences(prev => ({
+                          ...prev,
+                          home_country_code: ''
+                        }))
+                      }
                     }}
                     placeholder="自宅周辺の市区町村などを検索..."
                     disabled={saving}
