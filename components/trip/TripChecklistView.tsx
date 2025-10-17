@@ -5,6 +5,8 @@ import type { ChecklistItem } from '@/lib/core/types'
 import ChecklistPresetModal from '@/components/modals/ChecklistPresetModal'
 import MyPresetsModal from '@/components/modals/MyPresetsModal'
 import PresetLibraryModal from '@/components/modals/PresetLibraryModal'
+import { AirplaneIcon } from '@/components/common/icons/AirplaneIcon'
+import { BackpackIcon } from '@/components/common/icons/BackpackIcon'
 
 interface TripChecklistViewProps {
   tripId?: string
@@ -151,7 +153,10 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
             {/* 行動系準備 */}
             <div id="checklist-preparing" className="border border-gray-200 rounded-lg">
-              <div className="px-3 py-2 border-b text-sm font-medium text-gray-700">✈️ 行動系準備（Preparing）</div>
+              <div className="px-3 py-2 border-b text-sm font-medium text-gray-700 flex items-center gap-2">
+                <AirplaneIcon className="w-4 h-4" color="#3b82f6" />
+                行動系準備（Preparing）
+              </div>
               <ul className="p-3 space-y-2">
                 {prepItems.map(item => (
                   <li key={item.id} className="flex items-center gap-2">
@@ -182,7 +187,10 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
 
             {/* パッキング系 */}
             <div id="checklist-packing" className="border border-gray-200 rounded-lg">
-              <div className="px-3 py-2 border-b text-sm font-medium text-gray-700">🎒 パッキング系（Packing）</div>
+              <div className="px-3 py-2 border-b text-sm font-medium text-gray-700 flex items-center gap-2">
+                <BackpackIcon className="w-4 h-4" color="#ef4444" />
+                パッキング系（Packing）
+              </div>
               <ul className="p-3 space-y-2">
                 {packItems.map(item => (
                   <li key={item.id} className="flex items-center gap-2">

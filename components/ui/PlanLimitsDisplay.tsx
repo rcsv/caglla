@@ -4,6 +4,7 @@ import React from 'react'
 import { SubscriptionPlan } from '@/lib/subscription/payment-service'
 import { UsageStats } from '@/lib/subscription/plan-limits'
 import { PlanLimitChecker, LimitCheckResult, planLimitHelpers } from '@/lib/subscription/plan-limits'
+import { WarningIcon } from '@/components/common/icons/WarningIcon'
 
 interface PlanLimitsDisplayProps {
   plan: SubscriptionPlan
@@ -100,8 +101,9 @@ export default function PlanLimitsDisplay({
 
       {hasAnyLimitExceeded && (
         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800 font-medium">
-            ⚠️ 制限を超過しています
+          <p className="text-sm text-red-800 font-medium flex items-center gap-2">
+            <WarningIcon className="w-4 h-4" color="#dc2626" />
+            制限を超過しています
           </p>
           <p className="text-xs text-red-600 mt-1">
             {PlanLimitChecker.generateLimitExceededMessage(plan, usage)}
