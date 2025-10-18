@@ -4,7 +4,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { getZIndexClass } from '@/lib/core/z-index'
 import ScheduleCard from './ScheduleCard'
-import { Itinerary, PlaceData } from '@/lib/core/types'
+import { Itinerary, PlaceData, Day } from '@/lib/core/types'
 
 interface SortableItineraryCardProps {
   itinerary: Itinerary
@@ -18,11 +18,7 @@ interface SortableItineraryCardProps {
   onDuplicateToDay?: (itineraryId: string, targetDayId: string) => void
   onDelete?: (itineraryId: string) => void
   onItineraryClick?: (itineraryId: string) => void
-  availableDays?: Array<{
-    id: string
-    day_number: number
-    date: string
-  }>
+  availableDays?: Day[]
   isSelected?: boolean
   isFirst?: boolean
   isLast?: boolean

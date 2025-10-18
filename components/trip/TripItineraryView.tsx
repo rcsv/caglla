@@ -363,11 +363,7 @@ export default function TripItineraryView({
                                       isSelected={selectedItineraryId === itinerary.id}
                                       isFirst={index === 0}
                                       isLast={index === (sortedItineraries.length || 0) - 1}
-                                      availableDays={trip.days?.map(d => ({
-                                        id: d.id,
-                                        day_number: d.day_number,
-                                        date: '' // Day型にdateプロパティがないため空文字列を設定
-                                      })) || []}
+                                      availableDays={trip.days as any}
                                     />
                                     
                                     {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}

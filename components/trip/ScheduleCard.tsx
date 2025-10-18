@@ -3,7 +3,7 @@ import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers } from '@/lib/api/google/places'
-import { PlaceData, Itinerary, ActivityTag, ReservationInfo } from '@/lib/core/types'
+import { PlaceData, Itinerary, ActivityTag, ReservationInfo, Day } from '@/lib/core/types'
 import { timezoneUtils } from '@/lib/utils/timezone'
 import { currencyUtils } from '@/lib/utils/currency'
 import { getZIndexClass } from '@/lib/core/z-index'
@@ -55,11 +55,7 @@ interface ScheduleCardProps {
   onDuplicateToDay?: (itineraryId: string, targetDayId: string) => void
   onDelete?: (itineraryId: string) => void
   onItineraryClick?: (itineraryId: string) => void
-  availableDays?: Array<{
-    id: string
-    day_number: number
-    date: string
-  }>
+  availableDays?: Day[]
   dragHandleProps?: {
     attributes: any
     listeners: any
@@ -1247,6 +1243,8 @@ export default function ScheduleCard({
         onSave={handleReservationSave}
         initialReservation={itinerary.reservation || undefined}
         itineraryId={itinerary.id}
+        itinerary={itinerary}
+        day={availableDays.find(day => day.id === itinerary.day_id) || null}
       />
     </div>
   )

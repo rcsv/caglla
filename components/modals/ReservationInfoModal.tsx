@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ReservationInfo, ReservationType, ReservationSite } from '@/lib/core/types'
+import { ReservationInfo, ReservationType, ReservationSite, Itinerary, Day, ActivityTag, PrimaryCategoryType } from '@/lib/core/types'
 import { 
   validateReservationInfo, 
   getReservationTypeLabel, 
@@ -23,6 +23,8 @@ interface ReservationInfoModalProps {
   onSave: (reservation: ReservationInfo) => Promise<void>
   initialReservation?: ReservationInfo | null
   itineraryId: string
+  itinerary?: Itinerary | null
+  day?: Day | null
 }
 
 const RESERVATION_TYPES: { value: ReservationType; label: string; icon: string }[] = [
@@ -52,12 +54,46 @@ const RESERVATION_SITES: { value: ReservationSite; label: string }[] = [
   { value: 'other', label: 'その他' }
 ]
 
+// アクティビティタグから予約タイプへのマッピング
+const getReservationTypeFromActivityTag = (activityTag: ActivityTag | null | undefined): ReservationType | null => {
+  if (!activityTag) return null
+  
+  const { primaryCategory, secondaryCategory } = activityTag
+  // まずセカンダリIDで厳密に判定（マスタはIDで管理されているため）
+  if (secondaryCategory === 'flight') return 'flight'
+  if (secondaryCategory === 'car_rental') return 'rental_car'
+
+  // セカンダリで判定できない場合は一次カテゴリで大まかに判定
+  if (primaryCategory === 'accommodation') return 'hotel'
+  if (primaryCategory === 'dining') return 'dining'
+  if (primaryCategory === 'transportation') return null
+  
+  return null
+}
+
+// Dayの日付から開始日時のデフォルト値を生成
+const getDefaultStartDateTime = (day: Day | null | undefined): Date | null => {
+  if (!day?.date) return null
+  
+  try {
+    const dayDate = new Date((day.date as any).toDate?.() ?? (day.date as string))
+    // 日付の9:00をデフォルトの開始時刻とする
+    dayDate.setHours(9, 0, 0, 0)
+    return dayDate
+  } catch (error) {
+    logger.error('Error parsing day date:', error)
+    return null
+  }
+}
+
 export default function ReservationInfoModal({
   isOpen,
   onClose,
   onSave,
   initialReservation,
-  itineraryId
+  itineraryId,
+  itinerary,
+  day
 }: ReservationInfoModalProps) {
   const [reservation, setReservation] = useState<Partial<ReservationInfo>>({
     type: 'hotel',
@@ -79,15 +115,38 @@ export default function ReservationInfoModal({
       if (initialReservation) {
         setReservation(initialReservation)
       } else {
-        setReservation({
-          type: 'hotel',
+        // 新しい予約の場合、ItineraryとDayの情報からデフォルト値を設定
+        const defaultReservationType = getReservationTypeFromActivityTag(itinerary?.activity_tag) || 'hotel'
+        const defaultStartDateTime = getDefaultStartDateTime(day)
+        
+        const newReservation: Partial<ReservationInfo> = {
+          type: defaultReservationType,
           created_at: new Date(),
           updated_at: new Date()
-        })
+        }
+        
+        // 開始日時を設定（Dayの日付から）
+        if (defaultStartDateTime) {
+          if (defaultReservationType === 'flight') {
+            // 飛行機の場合は出発日時として設定
+            newReservation.departure_at = defaultStartDateTime
+            // 到着日時は出発日時+2時間
+            const arrivalTime = new Date(defaultStartDateTime.getTime() + 2 * 60 * 60 * 1000)
+            newReservation.arrival_at = arrivalTime
+          } else {
+            // その他の場合は開始日時として設定
+            newReservation.start_date = defaultStartDateTime
+            // 終了日時は開始日時+1日
+            const endTime = new Date(defaultStartDateTime.getTime() + 24 * 60 * 60 * 1000)
+            newReservation.end_date = endTime
+          }
+        }
+        
+        setReservation(newReservation)
       }
       setErrors([])
     }
-  }, [isOpen, initialReservation])
+  }, [isOpen, initialReservation, itinerary, day])
 
   // 予約タイプ変更時の処理
   const handleTypeChange = (type: ReservationType) => {
@@ -246,7 +305,18 @@ export default function ReservationInfoModal({
                     ? new Date((reservation.departure_at as any).toDate?.() 
                         ?? (reservation.departure_at as string)).toISOString().slice(0, 16) 
                     : ''}
-                  onChange={(e) => setReservation(prev => ({ ...prev, departure_at: new Date(e.target.value) }))}
+                  onChange={(e) => {
+                    const departureTime = new Date(e.target.value)
+                    setReservation(prev => {
+                      const newReservation = { ...prev, departure_at: departureTime }
+                      // 到着日時が空の場合は出発日時+2時間を自動設定
+                      if (!prev.arrival_at) {
+                        const arrivalTime = new Date(departureTime.getTime() + 2 * 60 * 60 * 1000) // +2時間
+                        newReservation.arrival_at = arrivalTime
+                      }
+                      return newReservation
+                    })
+                  }}
                 />
                 <Input
                   label="到着日時 *"
@@ -257,6 +327,12 @@ export default function ReservationInfoModal({
                         ?? (reservation.arrival_at as string)).toISOString().slice(0, 16) 
                     : ''}
                   onChange={(e) => setReservation(prev => ({ ...prev, arrival_at: new Date(e.target.value) }))}
+                  min={
+                    reservation.departure_at 
+                    ? new Date((reservation.departure_at as any).toDate?.() 
+                        ?? (reservation.departure_at as string)).toISOString().slice(0, 16)
+                    : undefined
+                  }
                 />
               </div>
             </>
@@ -273,7 +349,18 @@ export default function ReservationInfoModal({
                   ? new Date((reservation.start_date as any).toDate?.() 
                       ?? (reservation.start_date as string)).toISOString().slice(0, 16) 
                   : ''}
-                onChange={(e) => setReservation(prev => ({ ...prev, start_date: new Date(e.target.value) }))}
+                onChange={(e) => {
+                  const startTime = new Date(e.target.value)
+                  setReservation(prev => {
+                    const newReservation = { ...prev, start_date: startTime }
+                    // 終了日時が空の場合は開始日時+1日を自動設定
+                    if (!prev.end_date) {
+                      const endTime = new Date(startTime.getTime() + 24 * 60 * 60 * 1000) // +1日
+                      newReservation.end_date = endTime
+                    }
+                    return newReservation
+                  })
+                }}
               />
               <Input
                 label="終了日時 *"
@@ -284,6 +371,12 @@ export default function ReservationInfoModal({
                       ?? (reservation.end_date as string)).toISOString().slice(0, 16) 
                   : ''}
                 onChange={(e) => setReservation(prev => ({ ...prev, end_date: new Date(e.target.value) }))}
+                min={
+                  reservation.start_date 
+                  ? new Date((reservation.start_date as any).toDate?.() 
+                      ?? (reservation.start_date as string)).toISOString().slice(0, 16)
+                  : undefined
+                }
               />
             </div>
           )}
