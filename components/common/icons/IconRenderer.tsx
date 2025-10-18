@@ -35,15 +35,27 @@ export const IconRenderer: React.FC<IconRendererProps> = ({
   className = 'w-4 h-4',
   color = 'currentColor',
 }) => {
+  // Iconify 優先マップ（存在すればこちらを使用）
+  const iconifyMap: Record<string, string> = {
+    train: 'tabler:train',
+    shopping: 'tabler:shopping-bag',
+    dining: 'tabler:tools-kitchen-2',
+    hotel: 'tabler:bed',
+    search: 'tabler:search',
+    airplane: 'tabler:plane',
+    warning: 'tabler:alert-triangle',
+  }
+  if (iconName && iconifyMap[iconName]) {
+    const UnifiedIcon = require('./UnifiedIcon').UnifiedIcon
+    return <UnifiedIcon icon={iconifyMap[iconName]} className={className} color={color} />
+  }
   if (iconName && iconMap[iconName]) {
     const IconComponent = iconMap[iconName]
     return <IconComponent className={className} color={color} />
   }
-  
   if (fallbackEmoji) {
     return <span className={className}>{fallbackEmoji}</span>
   }
-  
   return null
 }
 

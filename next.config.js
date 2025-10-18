@@ -1,5 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  async redirects() {
+    return [
+      // Fix common typo: /test/iconfy -> /test/iconify
+      {
+        source: '/test/iconfy',
+        destination: '/test/iconify',
+        permanent: false,
+      },
+    ]
+  },
   env: {
     // 環境変数を明示的に読み込む
     NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,

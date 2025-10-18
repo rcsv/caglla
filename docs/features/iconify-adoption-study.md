@@ -31,7 +31,7 @@
 - AirplaneIcon: `tabler:plane` / `lucide:plane`
 - TrainIcon: `tabler:train` / `lucide:train`
 - HotelIcon: `tabler:bed` / `lucide:bed`
-- DiningIcon: `tabler:fork-knife` / `lucide:utensils`
+- DiningIcon: `tabler:tools-kitchen-2` / `lucide:utensils`
 - ShoppingIcon: `tabler:shopping-bag` / `lucide:shopping-bag`
 - BackpackIcon: `tabler:backpack` / `lucide:backpack`
 - BookmarkIcon: `tabler:bookmark` / `lucide:bookmark`
