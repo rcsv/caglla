@@ -8,6 +8,7 @@ import type { PlaceData } from '@/lib/core/types'
 import AvatarUpload from '@/components/ui/AvatarUpload'
 import { getZIndexClass } from '@/lib/core/z-index'
 import type { User, UserPreferences, UserSettingsModalProps } from '@/lib/core/types'
+import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from '@/lib/utils/language'
 import { CloseIcon } from '@/components/common/icons/CloseIcon'
 
 export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
@@ -359,13 +360,19 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">言語</label>
-                  <input
-                    type="text"
+                  <select
                     value={preferences.language || ''}
                     onChange={(e) => setPreferences(prev => ({ ...prev, language: e.target.value }))}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="例: ja, en, zh"
-                  />
+                  >
+                    <option value="">自動（ブラウザ設定）</option>
+                    {SUPPORTED_LANGUAGES.map((lang) => (
+                      <option key={lang} value={lang}>
+                        {LANGUAGE_NAMES[lang].native} / {LANGUAGE_NAMES[lang].en} ({lang})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">未選択の場合はブラウザの言語設定を使用します</p>
                 </div>
                 
                 <div>
