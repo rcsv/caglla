@@ -37,6 +37,7 @@ export const IconRenderer: React.FC<IconRendererProps> = ({
 }) => {
   // Iconify 優先マップ（存在すればこちらを使用）
   const iconifyMap: Record<string, string> = {
+    // 既存6種
     train: 'tabler:train',
     shopping: 'tabler:shopping-bag',
     dining: 'tabler:tools-kitchen-2',
@@ -44,6 +45,31 @@ export const IconRenderer: React.FC<IconRendererProps> = ({
     search: 'tabler:search',
     airplane: 'tabler:plane',
     warning: 'tabler:alert-triangle',
+    
+    // 追加アイコン
+    backpack: 'tabler:backpack',
+    bookmark: 'tabler:bookmark',
+    calendar: 'tabler:calendar',
+    chart: 'tabler:chart-bar',
+    clipboard: 'tabler:clipboard-list',
+    clock: 'tabler:clock',
+    close: 'tabler:x',
+    cloud: 'tabler:cloud',
+    collapse: 'tabler:chevron-up',
+    expand: 'tabler:chevron-down',
+    lightbulb: 'tabler:bulb',
+    location: 'tabler:map-pin',
+    mail: 'tabler:mail',
+    menu: 'tabler:menu',
+    money: 'tabler:coins',
+    piechart: 'tabler:chart-pie',
+    pin: 'tabler:pin',
+    planner: 'tabler:clipboard-text',
+    prohibition: 'tabler:ban',
+    publicaccess: 'tabler:world',
+    rocket: 'tabler:rocket',
+    summary: 'tabler:list-details',
+    user: 'tabler:user',
   }
   if (iconName && iconifyMap[iconName]) {
     const UnifiedIcon = require('./UnifiedIcon').UnifiedIcon
