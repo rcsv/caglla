@@ -2,8 +2,10 @@
 
 import React from 'react'
 import { Itinerary, ReservationInfo } from '@/lib/core/types'
-import { getReservationTypeIcon, getReservationTypeLabel } from '@/lib/utils/reservation-utils'
+import { getReservationTypeLabel } from '@/lib/utils/reservation-utils'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
+import { UnifiedIcon } from '@/components/common/icons/UnifiedIcon'
+import { placesApiHelpers } from '@/lib/api/google/places'
 import Card from '@/components/common/Card'
 
 interface TripReservationDisplayProps {
@@ -52,6 +54,15 @@ export default function TripReservationDisplay({
     acc[type].push({ itinerary, reservation })
     return acc
   }, {} as Record<string, Array<{ itinerary: Itinerary; reservation: ReservationInfo }>>)
+
+  // 予約タイプ → Iconify 名のマッピング
+  const iconifyByType: Record<string, string> = {
+    flight: 'tabler:plane',
+    rental_car: 'tabler:car',
+    hotel: 'tabler:bed',
+    dining: 'tabler:tools-kitchen-2',
+    other: 'tabler:bookmark',
+  }
 
   const formatDateTime = (date: any): string => {
     if (!date) return ''
@@ -169,7 +180,7 @@ export default function TripReservationDisplay({
         {Object.entries(reservationsByType).map(([type, typeReservations]) => (
           <div key={type}>
             <div className="flex items-center mb-4">
-              <span className="text-xl mr-2">{getReservationTypeIcon(type as any)}</span>
+              <UnifiedIcon icon={iconifyByType[type as string] || 'tabler:calendar-check'} className="w-5 h-5 mr-2 text-gray-700" />
               <h4 className="text-lg font-semibold text-gray-700">{getReservationTypeLabel(type as any)}</h4>
               <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                 {typeReservations.length}件
@@ -182,15 +193,26 @@ export default function TripReservationDisplay({
                 const timeInfo = type === 'flight' 
                   ? formatTimeWithRule(reservation.departure_at, reservation.arrival_at)
                   : formatTimeWithRule(reservation.start_date, reservation.end_date)
+                const photoRef = itinerary.place_data?.photos?.[0]?.photo_reference
                 
                 return (
                 <div key={itinerary.id} className="w-[220px] bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
                   {/* カードヘッダー（画像付き） */}
-                  <div className="relative h-24 bg-gradient-to-r from-blue-500 to-purple-600">
-                    {/* プレースホルダー画像または実際の画像 */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                      <span className="text-white text-2xl">{getReservationTypeIcon(type as any)}</span>
-                    </div>
+                  <div className="relative h-24 bg-gray-200">
+                    {photoRef ? (
+                      <img
+                        src={placesApiHelpers.getPhotoUrl(photoRef, 400)}
+                        alt={itinerary.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                        <UnifiedIcon icon={iconifyByType[type as string] || 'tabler:calendar-check'} className="w-7 h-7 text-white/90" />
+                      </div>
+                    )}
+                    {/* オーバーレイ */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/40" />
                     {/* オーバーレイ情報 */}
                     <div className="absolute bottom-2 left-2 right-2">
                       <h5 className="font-semibold text-white text-sm truncate drop-shadow-sm">{itinerary.title}</h5>
