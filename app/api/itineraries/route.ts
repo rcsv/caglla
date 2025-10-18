@@ -77,31 +77,44 @@ export async function POST(request: NextRequest) {
           access_count: (placesCache.access_count || 0) + 1 
         }).catch(() => {})
       } else if (place_data?.place_id) {
-        logger.debug('Saving place_data to PlacesCache', { placeId: place_data.place_id })
-        // 受け取った place_data をキャッシュへ保存（API追加コールを避ける）
-        const cachePayload: any = {
-          format_version: '1.0.0',
-          place_id: place_data.place_id,
-          name: place_data.name,
-          formatted_address: place_data.formatted_address,
-          geometry: place_data.geometry,
-          cached_at: new Date(),
-          last_accessed: new Date(),
-          access_count: 1
-        }
-        if (place_data.address_components) cachePayload.address_components = place_data.address_components
-        if (place_data.photos) cachePayload.photos = place_data.photos
-        if (place_data.rating !== undefined) cachePayload.rating = place_data.rating
-        if (place_data.user_ratings_total !== undefined) cachePayload.user_ratings_total = place_data.user_ratings_total
-        if (place_data.price_level !== undefined) cachePayload.price_level = place_data.price_level
-        if (place_data.types) cachePayload.types = place_data.types
-        if (place_data.opening_hours?.weekday_text) cachePayload.opening_hours = { weekday_text: place_data.opening_hours.weekday_text }
-        if (place_data.international_phone_number) cachePayload.international_phone_number = place_data.international_phone_number
-        if (place_data.website) cachePayload.website = place_data.website
-        if (place_data.editorial_summary) cachePayload.editorial_summary = place_data.editorial_summary
+        logger.debug('Saving place_data to PlacesCache (NEW FORMAT)', { placeId: place_data.place_id })
         
-        await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).set(cachePayload)
-        logger.debug('Successfully saved to PlacesCache')
+        // 新形式でのキャッシュ保存（言語対応）
+        try {
+          // TODO: ユーザーの言語設定を取得する必要がある
+          // 現在は日本語として保存（後でユーザー言語設定に対応）
+          const language = 'ja' as any // 暫定：日本語
+          
+          const cachePayload: any = {
+            format_version: '2.0.0', // 新バージョン
+            place_id: place_data.place_id,
+            language: language, // 言語フィールド追加
+            name: place_data.name,
+            formatted_address: place_data.formatted_address,
+            geometry: place_data.geometry,
+            cached_at: new Date(),
+            last_accessed: new Date(),
+            access_count: 1
+          }
+          if (place_data.address_components) cachePayload.address_components = place_data.address_components
+          if (place_data.photos) cachePayload.photos = place_data.photos
+          if (place_data.rating !== undefined) cachePayload.rating = place_data.rating
+          if (place_data.user_ratings_total !== undefined) cachePayload.user_ratings_total = place_data.user_ratings_total
+          if (place_data.price_level !== undefined) cachePayload.price_level = place_data.price_level
+          if (place_data.types) cachePayload.types = place_data.types
+          if (place_data.opening_hours?.weekday_text) cachePayload.opening_hours = { weekday_text: place_data.opening_hours.weekday_text }
+          if (place_data.international_phone_number) cachePayload.international_phone_number = place_data.international_phone_number
+          if (place_data.website) cachePayload.website = place_data.website
+          if (place_data.editorial_summary) cachePayload.editorial_summary = place_data.editorial_summary
+          
+          // 新形式のドキュメントID: {place_id}_{language}
+          const cacheKey = `${resolvedPlaceId}_${language}`
+          await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(cacheKey).set(cachePayload)
+          logger.debug('Successfully saved to PlacesCache (NEW FORMAT)', { cacheKey })
+        } catch (cacheError) {
+          logger.error('Failed to save to PlacesCache (NEW FORMAT):', cacheError)
+          // キャッシュ保存失敗は致命的ではない
+        }
         
         // PlaceDataとして返す（メタデータを除外）
         resolvedPlaceData = {

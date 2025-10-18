@@ -5,7 +5,8 @@ import { groupTripsByCountry } from '@/lib/travel/country/utils'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import { adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import type { PlaceData } from '@/lib/core/types'
+import type { PlaceData, SupportedLanguage } from '@/lib/core/types'
+import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
 
 /**
@@ -185,35 +186,59 @@ export async function POST(request: NextRequest) {
     // UI利便性のため、destination_place を解決して返す
     try {
       if (resolvedDestPlaceId) {
-        const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedDestPlaceId).get()
+        // 新形式でのキャッシュ検索: {place_id}_{language}
+        // ユーザーの言語設定を取得
+        const userLanguage = user ? getUserLanguage(user) : 'ja'
+        const cacheKey = `${resolvedDestPlaceId}_${userLanguage}`
+        
+        const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(cacheKey).get()
         if (cacheDoc.exists) {
           (trip as any).destination_place = cacheDoc.data()
           await cacheDoc.ref.update({ last_accessed: new Date(), access_count: (cacheDoc.data().access_count || 0) + 1 }).catch(() => {})
         } else if (destinationPlace?.place_id) {
           // 受け取ったオブジェクトがあればキャッシュ保存
           const pd = destinationPlace as PlaceData
-          const cachePayload: any = {
-            format_version: '1.0.0',
-            place_id: pd.place_id,
-            name: pd.name,
-            formatted_address: pd.formatted_address,
-            geometry: pd.geometry,
-            cached_at: new Date(),
-            last_accessed: new Date(),
-            access_count: 1
+          // 新形式でのキャッシュ保存（言語対応）
+          let cachePayload: any = null
+          try {
+            // ユーザーの言語設定を取得
+            const language = user ? getUserLanguage(user) : 'ja'
+            
+            cachePayload = {
+              format_version: '2.0.0', // 新バージョン
+              place_id: pd.place_id,
+              language: language, // 言語フィールド追加
+              name: pd.name,
+              formatted_address: pd.formatted_address,
+              geometry: pd.geometry,
+              cached_at: new Date(),
+              last_accessed: new Date(),
+              access_count: 1
+            }
+            if (pd.address_components) cachePayload.address_components = pd.address_components
+            if (pd.photos) cachePayload.photos = pd.photos
+            if (pd.rating !== undefined) cachePayload.rating = pd.rating
+            if (pd.user_ratings_total !== undefined) cachePayload.user_ratings_total = pd.user_ratings_total
+            if (pd.price_level !== undefined) cachePayload.price_level = pd.price_level
+            if (pd.types) cachePayload.types = pd.types
+            if (pd.opening_hours?.weekday_text) cachePayload.opening_hours = { weekday_text: pd.opening_hours.weekday_text }
+            if (pd.international_phone_number) cachePayload.international_phone_number = pd.international_phone_number
+            if (pd.website) cachePayload.website = pd.website
+            if (pd.editorial_summary) cachePayload.editorial_summary = pd.editorial_summary
+            
+            // 新形式のドキュメントID: {place_id}_{language}
+            const cacheKey = `${pd.place_id}_${language}`
+            await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(cacheKey).set(cachePayload)
+            logger.debug('Successfully saved to PlacesCache (NEW FORMAT)', { cacheKey })
+          } catch (cacheError) {
+            logger.error('Failed to save to PlacesCache (NEW FORMAT):', cacheError)
+            // キャッシュ保存失敗は致命的ではない
           }
-          if (pd.address_components) cachePayload.address_components = pd.address_components
-          if (pd.photos) cachePayload.photos = pd.photos
-          if (pd.rating !== undefined) cachePayload.rating = pd.rating
-          if (pd.user_ratings_total !== undefined) cachePayload.user_ratings_total = pd.user_ratings_total
-          if (pd.price_level !== undefined) cachePayload.price_level = pd.price_level
-          if (pd.types) cachePayload.types = pd.types
-          if (pd.opening_hours?.weekday_text) cachePayload.opening_hours = { weekday_text: pd.opening_hours.weekday_text }
-          if (pd.international_phone_number) cachePayload.international_phone_number = pd.international_phone_number
-          if (pd.website) cachePayload.website = pd.website
-          if (pd.editorial_summary) cachePayload.editorial_summary = pd.editorial_summary
-          await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(pd.place_id).set(cachePayload)
-          ;(trip as any).destination_place = cachePayload
+          
+          // キャッシュ保存成功時のみdestination_placeを設定
+          if (cachePayload) {
+            ;(trip as any).destination_place = cachePayload
+          }
         }
       }
     } catch (e) {

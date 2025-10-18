@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { isSupportedLanguage, DEFAULT_LANGUAGE } from '@/lib/utils/language'
+import type { SupportedLanguage } from '@/lib/core/types'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 // 新Places API (v1) のエンドポイント
@@ -14,7 +16,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { query } = await request.json()
+    const { query, language } = await request.json()
     
     if (!query || query.length < 2) {
       return NextResponse.json(
@@ -23,7 +25,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    logger.debug('Searching for place with new Places API v1', { query })
+    // 言語バリデーション
+    const validLanguage: SupportedLanguage = language && isSupportedLanguage(language) 
+      ? language 
+      : DEFAULT_LANGUAGE
+
+    logger.debug('Searching for place with new Places API v1', { query, language: validLanguage })
 
     // 新Places API (v1) を呼び出し
     const response = await fetch(GOOGLE_PLACES_API_URL_NEW, {
@@ -35,8 +42,8 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         textQuery: query,
-        languageCode: 'ja',
-        regionCode: 'JP',
+        languageCode: validLanguage,  // 動的に設定
+        // regionCode を削除（言語で地域を固定しない）
         maxResultCount: 20
       })
     })

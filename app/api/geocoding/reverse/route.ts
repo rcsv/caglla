@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     // Google Geocoding APIを呼び出し
     const response = await fetch(
-      `${GOOGLE_GEOCODING_API_URL}/json?latlng=${lat},${lng}&key=${GOOGLE_GEOCODING_API_KEY}&language=ja&region=jp`
+      `${GOOGLE_GEOCODING_API_URL}/json?latlng=${lat},${lng}&key=${GOOGLE_GEOCODING_API_KEY}&language=en&region=jp`
     )
 
     if (!response.ok) {
