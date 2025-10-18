@@ -18,7 +18,7 @@ interface TripRightPaneProps {
   } | null
   onItineraryClick: (itineraryId: string) => void
   onPoiDataUpdate: (poiData: any) => void
-  onTripUpdate?: () => void // 追加: trip が更新された時に親に通知
+  onAddFromPOI?: (placeId: string, dayId: string) => Promise<void> // POIから追加する際のハンドラー
   getFilteredItineraries: () => Itinerary[]
 }
 
@@ -38,7 +38,7 @@ export default function TripRightPane({
   poiData,
   onItineraryClick,
   onPoiDataUpdate,
-  onTripUpdate,
+  onAddFromPOI,
   getFilteredItineraries,
 }: TripRightPaneProps) {
   // チェックリストビューの場合は右ペイン自体を非表示（メインコンテンツを全幅表示）
@@ -56,7 +56,7 @@ export default function TripRightPane({
           selectedDayId={selectedDayId}
           onItineraryClick={onItineraryClick}
           onPoiDataUpdate={onPoiDataUpdate}
-          onTripUpdate={onTripUpdate}
+          onAddFromPOI={onAddFromPOI}
           poiData={poiData}
           className="h-full"
           focusMode={mapFocusMode}

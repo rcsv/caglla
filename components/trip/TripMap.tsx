@@ -114,7 +114,7 @@ interface TripMapProps {
     location: { lat: number; lng: number }
     placeData?: any
   } | null) => void
-  onTripUpdate?: () => void // 追加: trip が更新された時に親に通知
+  onAddFromPOI?: (placeId: string, dayId: string) => Promise<void> // POIから追加する際のハンドラー
   poiData?: {
     placeId: string
     name: string
@@ -140,7 +140,7 @@ export default function TripMap({
   selectedDayId = null,
   onItineraryClick,
   onPoiDataUpdate,
-  onTripUpdate,
+  onAddFromPOI,
   poiData,
   className = '',
   focusMode = 'all', // デフォルトは全体表示
@@ -609,39 +609,15 @@ export default function TripMap({
           onPoiDataUpdate?.(null)
         }}
         onAddToItinerary={async (placeId: string, dayId: string) => {
-          try {
-            const currentPoiData: { placeId: string; name: string; location: { lat: number; lng: number }; placeData?: any } | null = poiData || internalPoiData
-            if (!currentPoiData) return
-
-            // API を呼び出して Day に Itinerary を追加
-            const response = await makeAuthenticatedRequest('/api/itineraries', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                day_id: dayId,
-                place_id: placeId,
-                place_data: currentPoiData.placeData || undefined,
-                title: currentPoiData.name,
-                description: '',
-                location: currentPoiData.location ? `${currentPoiData.location.lat},${currentPoiData.location.lng}` : ''
-              })
-            })
-
-            if (response.ok) {
-              logger.debug('POI を Day に追加しました')
-              // 親コンポーネントに通知して trip を再取得
-              onTripUpdate?.()
-              // POI ダイアログを閉じる
-              setInternalPoiData(null)
-              onPoiDataUpdate?.(null)
-            } else {
-              const error = await response.json()
-              logger.error('POI の追加に失敗しました:', error)
-            }
-          } catch (error) {
-            logger.error('POI の追加でエラーが発生しました:', error)
+          if (onAddFromPOI) {
+            // 親コンポーネントの新しいハンドラーを使用（ローディング状態付き）
+            await onAddFromPOI(placeId, dayId)
+            // POI ダイアログを閉じる
+            setInternalPoiData(null)
+            onPoiDataUpdate?.(null)
+          } else {
+            // フォールバック: 古い動作（デバッグ用）
+            logger.warn('onAddFromPOI is not provided, POI add功能が利用できません')
           }
         }}
         availableDays={trip?.days?.sort((a, b) => (a.day_number || 0) - (b.day_number || 0)).map((day) => ({

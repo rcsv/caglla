@@ -48,6 +48,7 @@ export default function SlugBasedTripPage() {
   const [refreshKey, setRefreshKey] = useState(0) // 追加: trip を再取得するためのキー
   const [scrollSyncEnabled, setScrollSyncEnabled] = useState(true) // スクロール連動の有効/無効
   const isProgrammaticScrollRef = useRef(false) // プログラムによるスクロール中かどうか
+  const [loadingDayIds, setLoadingDayIds] = useState<Set<string>>(new Set()) // 日程ごとのローディング状態
 
   // クエリ: view / day / section を読み取り（デフォルトは summary）
   const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
@@ -569,6 +570,58 @@ export default function SlugBasedTripPage() {
     }
   }
 
+  // POIDialogからItineraryを追加する際のハンドラー
+  const handleAddFromPOI = async (placeId: string, dayId: string) => {
+    try {
+      // ローディング状態を設定
+      setLoadingDayIds(prev => new Set(prev).add(dayId))
+      
+      const currentPoiData = poiData
+      if (!currentPoiData) return
+
+      // API を呼び出して Day に Itinerary を追加
+      const response = await makeAuthenticatedRequest('/api/itineraries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          day_id: dayId,
+          place_id: placeId,
+          place_data: currentPoiData.placeData || undefined,
+          title: currentPoiData.name,
+          description: '',
+          location: currentPoiData.location ? `${currentPoiData.location.lat},${currentPoiData.location.lng}` : ''
+        })
+      })
+
+      if (response.ok) {
+        const newItinerary = await response.json()
+        logger.debug('POI を Day に追加しました:', newItinerary)
+        
+        // ローカル状態を更新（handleScheduleAdded と同じロジック）
+        handleScheduleAdded(newItinerary)
+        
+        // POI ダイアログを閉じる
+        setPoiData(null)
+      } else {
+        const error = await response.json()
+        logger.error('POI の追加に失敗しました:', error)
+        alert('POIの追加に失敗しました')
+      }
+    } catch (error) {
+      logger.error('POI の追加でエラーが発生しました:', error)
+      alert('POIの追加に失敗しました')
+    } finally {
+      // ローディング状態を解除
+      setLoadingDayIds(prev => {
+        const next = new Set(prev)
+        next.delete(dayId)
+        return next
+      })
+    }
+  }
+
   const handleScheduleUpdated = async (updatedItinerary: any) => {
     if (!trip) return
 
@@ -991,7 +1044,7 @@ export default function SlugBasedTripPage() {
           poiData={poiData}
           onItineraryClick={handleMapMarkerClick}
           onPoiDataUpdate={setPoiData}
-          onTripUpdate={() => setRefreshKey(prev => prev + 1)}
+          onAddFromPOI={handleAddFromPOI}
           getFilteredItineraries={getFilteredItineraries}
         />
       }
@@ -1027,6 +1080,7 @@ export default function SlugBasedTripPage() {
           collapsedDays={collapsedDays}
           selectedDayId={selectedDayId}
           selectedItineraryId={selectedItineraryId}
+          loadingDayIds={loadingDayIds}
           onToggleDayCollapse={toggleDayCollapse}
           onDayClick={handleDayClick}
           onAddSchedule={handleAddSchedule}

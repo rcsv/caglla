@@ -15,6 +15,7 @@ interface TripItineraryViewProps {
   collapsedDays: Set<string>
   selectedDayId: string | null
   selectedItineraryId: string | null
+  loadingDayIds?: Set<string>
   onToggleDayCollapse: (dayId: string) => void
   onDayClick: (dayId: string) => void
   onAddSchedule: (dayId: string) => void
@@ -41,6 +42,7 @@ export default function TripItineraryView({
   collapsedDays,
   selectedDayId,
   selectedItineraryId,
+  loadingDayIds = new Set(),
   onToggleDayCollapse,
   onDayClick,
   onAddSchedule,
@@ -310,6 +312,14 @@ export default function TripItineraryView({
                         })
                       }} 
                     />
+
+                    {/* ローディング状態の表示 */}
+                    {loadingDayIds.has(day.id) && (
+                      <div className="mt-6 flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-2"></div>
+                        <span className="text-sm text-blue-700">スケジュールを追加中...</span>
+                      </div>
+                    )}
 
                     {sortedItineraries && sortedItineraries.length > 0 ? (
                       <div className="mt-6">

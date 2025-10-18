@@ -3,14 +3,16 @@ import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers } from '@/lib/api/google/places'
-import { PlaceData, Itinerary, ActivityTag } from '@/lib/core/types'
+import { PlaceData, Itinerary, ActivityTag, ReservationInfo } from '@/lib/core/types'
 import { timezoneUtils } from '@/lib/utils/timezone'
 import { currencyUtils } from '@/lib/utils/currency'
 import { getZIndexClass } from '@/lib/core/z-index'
 import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
+import { getReservationTypeIcon, generateReservationSummary } from '@/lib/utils/reservation-utils'
 import VenueDistance from './VenueDistance'
 import ActivityTagSelector from './ActivityTagSelector'
 import { IconRenderer } from '../common/icons/IconRenderer'
+import ReservationInfoModal from '../modals/ReservationInfoModal'
 
 // ティアドロップ形状のマーカースタイル（左ペイン用）
 const teardropStyles = `
@@ -123,6 +125,39 @@ export default function ScheduleCard({
   const menuRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
+  
+  // 予約モーダルの状態管理
+  const [showReservationModal, setShowReservationModal] = useState(false)
+
+  // 予約情報の保存処理
+  const handleReservationSave = async (reservation: ReservationInfo) => {
+    try {
+      setIsSaving(true)
+      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reservation: reservation
+        })
+      })
+
+      if (response.ok) {
+        const updatedItinerary = await response.json()
+        onUpdate?.(updatedItinerary)
+        logger.info('予約情報を保存しました:', reservation)
+      } else {
+        logger.error('予約情報の保存に失敗しました')
+        throw new Error('予約情報の保存に失敗しました')
+      }
+    } catch (error) {
+      logger.error('予約情報の保存中にエラーが発生しました:', error)
+      throw error
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   // メニューの外側クリックで閉じる
   useEffect(() => {
@@ -525,6 +560,10 @@ export default function ScheduleCard({
         break
       case 'duplicateToDay':
         setShowDuplicateSelector(true)
+        break
+      case 'reservation':
+        setShowMenu(false)
+        setShowReservationModal(true)
         break
       case 'delete':
         setShowMenu(false)
@@ -982,7 +1021,13 @@ export default function ScheduleCard({
                     {/* 予約要素 */}
                     <div className="flex items-center space-x-1">
                       <IconRenderer iconName="reservation" className="w-4 h-4" color="#8B5CF6" />
-                      <span className="text-sm text-gray-500 cursor-pointer hover:text-purple-600 hover:bg-purple-50 px-2 py-1 rounded transition-colors">
+                      <span 
+                        className="text-sm text-gray-500 cursor-pointer hover:text-purple-600 hover:bg-purple-50 px-2 py-1 rounded transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowReservationModal(true)
+                        }}
+                      >
                         予約
                       </span>
                     </div>
@@ -1156,6 +1201,20 @@ export default function ScheduleCard({
                     </div>
                     <hr className="my-1" />
                     <button
+                      onClick={() => handleMenuAction('reservation')}
+                      className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center space-x-2"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8 0a2 2 0 114 0 2 2 0 01-4 0z" clipRule="evenodd" />
+                      </svg>
+                      <span>予約情報</span>
+                      {itinerary.reservation && (
+                        <span className="ml-auto text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                          {getReservationTypeIcon(itinerary.reservation.type)}
+                        </span>
+                      )}
+                    </button>
+                    <button
                       onClick={() => handleMenuAction('delete')}
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
                     >
@@ -1180,6 +1239,15 @@ export default function ScheduleCard({
           <path d="M4 0C1.79 0 0 1.79 0 4c0 2.21 4 8 4 8s4-5.79 4-8c0-2.21-1.79-4-4-4z" fill="currentColor"/>
         </svg>
       </div>
+      
+      {/* 予約情報モーダル */}
+      <ReservationInfoModal
+        isOpen={showReservationModal}
+        onClose={() => setShowReservationModal(false)}
+        onSave={handleReservationSave}
+        initialReservation={itinerary.reservation || undefined}
+        itineraryId={itinerary.id}
+      />
     </div>
   )
 }

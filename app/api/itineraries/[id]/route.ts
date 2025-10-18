@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import { generateReservationSummary } from '@/lib/utils/reservation-utils'
 
 export async function PUT(
   request: NextRequest,
@@ -41,7 +42,7 @@ export async function PUT(
       return NextResponse.json(updatedItinerary)
     } else {
       // 通常の更新リクエスト
-      const { title, description, start_time, end_time, timezone, cost_amount, cost_currency, activity_tag } = body
+      const { title, description, start_time, end_time, timezone, cost_amount, cost_currency, activity_tag, reservation } = body
       
       const itineraryRef = adminDb.collection('itineraries').doc(id)
       
@@ -57,6 +58,24 @@ export async function PUT(
       if (cost_amount !== undefined) updateData.cost_amount = cost_amount
       if (cost_currency !== undefined) updateData.cost_currency = cost_currency
       if (activity_tag !== undefined) updateData.activity_tag = activity_tag
+      if (reservation !== undefined) {
+        updateData.reservation = reservation
+        // 予約情報が存在する場合、関連フィールドも更新
+        updateData.reservation_exists = !!reservation
+        if (reservation?.type) updateData.reservation_type = reservation.type
+        if (reservation?.start_date) updateData.reservation_start_ts = reservation.start_date
+        if (reservation?.end_date) updateData.reservation_end_ts = reservation.end_date
+        if (reservation?.departure_at) updateData.reservation_start_ts = reservation.departure_at
+        if (reservation?.arrival_at) updateData.reservation_end_ts = reservation.arrival_at
+        // 予約サマリーを生成（場所名はitineraryのplace_dataから取得）
+        if (reservation) {
+          // 既存のitineraryデータを取得してplace_dataから場所名を取得
+          const currentDoc = await itineraryRef.get()
+          const currentData = currentDoc.data()
+          const placeName = currentData?.place_data?.name
+          updateData.reservation_summary = generateReservationSummary(reservation, placeName)
+        }
+      }
       
       await itineraryRef.update(updateData)
       
