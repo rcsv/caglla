@@ -206,14 +206,24 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData(prev => {
+      const newFormData = { ...prev, [name]: value }
+      
+      // 出発日が変更された場合、帰宅日を自動的に出発日と同じ日にする
+      if (name === 'startDate' && value && !prev.endDate) {
+        newFormData.endDate = value
+      }
+      
+      return newFormData
+    })
     
     // 日付が変更された場合は即座にバリデーションを実行
     if (name === 'startDate' || name === 'endDate') {
       const newFormData = { ...formData, [name]: value }
+      // 出発日が変更された場合、帰宅日も更新する
+      if (name === 'startDate' && value && !formData.endDate) {
+        newFormData.endDate = value
+      }
       const dateValidationError = validateDates(newFormData.startDate, newFormData.endDate)
       setDateError(dateValidationError)
     }
@@ -305,6 +315,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                   onChange={handleInputChange}
                   required
                   error={dateError ? '日付エラー' : undefined}
+                  min={formData.startDate || undefined}
                 />
               </div>
 

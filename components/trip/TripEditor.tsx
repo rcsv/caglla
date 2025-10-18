@@ -220,14 +220,24 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData(prev => {
+      const newFormData = { ...prev, [name]: value }
+      
+      // 出発日が変更された場合、帰宅日を自動的に出発日と同じ日にする（帰宅日が空の場合のみ）
+      if (name === 'startDate' && value && !prev.endDate) {
+        newFormData.endDate = value
+      }
+      
+      return newFormData
+    })
     
     // 日付が変更された場合は即座にバリデーションを実行
     if (name === 'startDate' || name === 'endDate') {
       const newFormData = { ...formData, [name]: value }
+      // 出発日が変更された場合、帰宅日も更新する（帰宅日が空の場合のみ）
+      if (name === 'startDate' && value && !formData.endDate) {
+        newFormData.endDate = value
+      }
       const dateValidationError = validateDates(newFormData.startDate, newFormData.endDate)
       setDateError(dateValidationError)
     }
@@ -344,6 +354,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
                 name="endDate"
                 value={formData.endDate}
                 onChange={handleInputChange}
+                min={formData.startDate || undefined}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   dateError ? 'border-red-300' : 'border-gray-300'
                 }`}
