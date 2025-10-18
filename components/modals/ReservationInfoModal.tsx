@@ -86,6 +86,21 @@ const getDefaultStartDateTime = (day: Day | null | undefined): Date | null => {
   }
 }
 
+// Day の日付と "HH:mm" 形式の時刻文字列を合成して Date を生成
+const combineDayAndTime = (day: Day | null | undefined, time: string | null | undefined): Date | null => {
+  if (!day?.date || !time) return null
+  try {
+    const [hh, mm] = time.split(':').map((v) => parseInt(v, 10))
+    if (Number.isNaN(hh) || Number.isNaN(mm)) return null
+    const date = new Date((day.date as any).toDate?.() ?? (day.date as string))
+    date.setHours(hh, mm, 0, 0)
+    return date
+  } catch (e) {
+    logger.error('Failed to combine day and time:', e)
+    return null
+  }
+}
+
 export default function ReservationInfoModal({
   isOpen,
   onClose,
@@ -117,7 +132,10 @@ export default function ReservationInfoModal({
       } else {
         // 新しい予約の場合、ItineraryとDayの情報からデフォルト値を設定
         const defaultReservationType = getReservationTypeFromActivityTag(itinerary?.activity_tag) || 'hotel'
-        const defaultStartDateTime = getDefaultStartDateTime(day)
+        // 時刻継承: Itineraryに時刻があればDayと合成。なければDayのデフォルト(09:00)
+        const inheritedStart = combineDayAndTime(day, itinerary?.start_time)
+        const inheritedEnd = combineDayAndTime(day, itinerary?.end_time)
+        const defaultStartDateTime = inheritedStart || getDefaultStartDateTime(day)
         
         const newReservation: Partial<ReservationInfo> = {
           type: defaultReservationType,
@@ -125,20 +143,28 @@ export default function ReservationInfoModal({
           updated_at: new Date()
         }
         
-        // 開始日時を設定（Dayの日付から）
+        // 開始日時を設定（Itineraryの時刻優先、なければDay基準）
         if (defaultStartDateTime) {
           if (defaultReservationType === 'flight') {
             // 飛行機の場合は出発日時として設定
             newReservation.departure_at = defaultStartDateTime
-            // 到着日時は出発日時+2時間
-            const arrivalTime = new Date(defaultStartDateTime.getTime() + 2 * 60 * 60 * 1000)
-            newReservation.arrival_at = arrivalTime
+            // 到着日時は Itineraryのend_time があれば優先、なければ +2時間
+            if (inheritedEnd) {
+              newReservation.arrival_at = inheritedEnd
+            } else {
+              const arrivalTime = new Date(defaultStartDateTime.getTime() + 2 * 60 * 60 * 1000)
+              newReservation.arrival_at = arrivalTime
+            }
           } else {
             // その他の場合は開始日時として設定
             newReservation.start_date = defaultStartDateTime
-            // 終了日時は開始日時+1日
-            const endTime = new Date(defaultStartDateTime.getTime() + 24 * 60 * 60 * 1000)
-            newReservation.end_date = endTime
+            // 終了日時は Itineraryのend_time があれば同日で合成、なければ +1日
+            if (inheritedEnd) {
+              newReservation.end_date = inheritedEnd
+            } else {
+              const endTime = new Date(defaultStartDateTime.getTime() + 24 * 60 * 60 * 1000)
+              newReservation.end_date = endTime
+            }
           }
         }
         
