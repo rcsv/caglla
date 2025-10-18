@@ -5,6 +5,7 @@ import TripDistanceDisplay from '@/components/stats/TripDistanceDisplay'
 import TripWeatherDisplay from '@/components/stats/TripWeatherDisplay'
 import TripCostDisplay from '@/components/stats/TripCostDisplay'
 import TripHotelDisplay from '@/components/stats/TripHotelDisplay'
+import TripReservationDisplay from '@/components/stats/TripReservationDisplay'
 import ActivityStatsDisplay from '@/components/stats/ActivityStatsDisplay'
 import { SummaryIcon } from '@/components/common/icons/SummaryIcon'
 import { dateUtils } from '@/lib/utils/date'
@@ -64,10 +65,9 @@ export default function TripSummaryView({
               />
             </div>
 
-            {/* 2. Reservation - 予約情報の確認 */}
-            <div id="reservation" className="anchor-offset">
-              <h3 className="text-lg font-medium text-gray-700 mb-4">Reservation</h3>
-              <TripHotelDisplay />
+            {/* 2. Reservations - 予約情報の確認 */}
+            <div id="reservations" className="anchor-offset">
+              <TripReservationDisplay itineraries={getAllItineraries()} />
             </div>
 
             {/* 3. Budget - 旅行費用の管理 */}
