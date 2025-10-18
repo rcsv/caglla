@@ -9,9 +9,9 @@ export interface AirplaneIconProps extends React.SVGProps<SVGSVGElement> {
 }
 
 export const AirplaneIcon: React.FC<AirplaneIconProps> = ({
-  className = 'w-6 h-6',
+  className = 'w-4 h-4',
   color = 'currentColor',
-  strokeWidth = 1.8,
+  strokeWidth = 2,
   ...rest
 }) => (
   <svg
@@ -27,9 +27,9 @@ export const AirplaneIcon: React.FC<AirplaneIconProps> = ({
     className={className}
     {...rest}
   >
-    {/* Simple airplane silhouette */}
-    <path d="M3 12l8 1 3 7h1l1-6 6 1v-1l-6-3 1-6h-1l-4 5-8-1v2z" />
-    <path d="M8 13l-3 3" />
+    {/* 小サイズで識別しやすい紙飛行機スタイル */}
+    <path d="M3 11.5l18-7-7 18-3.5-6.5L3 11.5z" />
+    <path d="M14 5l-3.5 10" />
   </svg>
 )
 
