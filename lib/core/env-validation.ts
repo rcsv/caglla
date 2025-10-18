@@ -3,6 +3,11 @@
 import type { RequiredEnvVars, OptionalEnvVars } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 
+// グローバル型定義の拡張
+declare global {
+  var __envWarningShown: boolean | undefined
+}
+
 export class EnvValidationError extends Error {
   constructor(message: string) {
     super(message)

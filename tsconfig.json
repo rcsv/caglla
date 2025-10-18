@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
+    
     "target": "es5",
     "lib": ["dom", "dom.iterable", "es6"],
-    "allowJs": true,
+    
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -24,5 +27,11 @@
     "types": ["node", "react"],
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    },
+    "require": ["tsconfig-paths/register"]
+  }
 }
