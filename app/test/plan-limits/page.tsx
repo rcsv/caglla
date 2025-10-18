@@ -3,11 +3,14 @@ import logger from '@/lib/core/logger'
 
 import React, { useState } from 'react'
 import { SubscriptionProvider, useSubscription } from '@/lib/contexts/subscription'
-import { UsageStats } from '@/lib/subscription/plan-limits'
+import { UsageStats, PlanLimitChecker } from '@/lib/subscription/plan-limits'
 import PlanLimitsDisplay from '@/components/ui/PlanLimitsDisplay'
 
+// 動的レンダリングを強制（プリレンダリングを無効化）
+export const dynamic = 'force-dynamic'
+
 function PlanLimitsTestContent() {
-  const { subscriptionStatus, checkPlanLimits } = useSubscription()
+  const { subscriptionStatus } = useSubscription()
   const [usage, setUsage] = useState<UsageStats>({
     travelCount: 2,
     totalTravelDays: 3,
@@ -22,7 +25,19 @@ function PlanLimitsTestContent() {
     }))
   }
 
-  const checks = checkPlanLimits(usage)
+  // プランがロードされるまで待機
+  if (!subscriptionStatus.plan) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">プラン情報を読み込んでいます...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const checks = PlanLimitChecker.checkAllLimits(subscriptionStatus.plan, usage)
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

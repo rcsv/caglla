@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
 
+// 動的レンダリングを強制（request.headersを使用するため）
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // logger.debug('Auth debug API called')

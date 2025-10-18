@@ -1,13 +1,16 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import { SubscriptionProvider, useSubscription } from '@/lib/contexts/subscription'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { paymentHelpers } from '@/lib/subscription/payment-service'
 import { useUserData } from '@/lib/contexts/user-data'
 
-function SubscriptionContent() {
+// 動的レンダリングを強制（プリレンダリングを無効化）
+export const dynamic = 'force-dynamic'
+
+function SubscriptionContentInner() {
   const { subscriptionStatus, subscribeToPlan } = useSubscription()
   const { refreshUserPlan } = useUserData()
   const router = useRouter()
@@ -418,6 +421,21 @@ function SubscriptionContent() {
         </div>
       </div>
     </div>
+  )
+}
+
+function SubscriptionContent() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <SubscriptionContentInner />
+    </Suspense>
   )
 }
 

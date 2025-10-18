@@ -4,6 +4,9 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import type { Trip, User } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 
+// 動的レンダリングを強制（request.headersを使用するため）
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Check if Firebase Admin SDK is initialized

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 
+// 動的レンダリングを強制（request.urlを使用するため）
+export const dynamic = 'force-dynamic'
+
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_PLACES_API_URL_OLD = 'https://maps.googleapis.com/maps/api/place'
 const GOOGLE_PLACES_API_URL_NEW = 'https://places.googleapis.com/v1'

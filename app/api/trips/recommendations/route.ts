@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { adminTripOperations } from '@/lib/firebase/admin-operation'
 
+// 動的レンダリングを強制（request.urlを使用するため）
+export const dynamic = 'force-dynamic'
+
 // ランダムな公開旅行を返すAPI（認証不要）
 export async function GET(request: NextRequest) {
   try {

@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import type { Trip } from '@/lib/core/types'
+import type { QueryDocumentSnapshot } from 'firebase-admin/firestore'
 import logger from '@/lib/core/logger'
+
+// 動的レンダリングを強制（request.headersを使用するため）
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     logger.debug('Public trips found', { count: tripsSnapshot.docs.length })
 
-    const trips = tripsSnapshot.docs.map(doc => ({
+    const trips = tripsSnapshot.docs.map((doc: QueryDocumentSnapshot) => ({
       id: doc.id,
       ...doc.data()
     })) as Trip[]

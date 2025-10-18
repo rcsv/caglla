@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import type { QueryDocumentSnapshot } from 'firebase-admin/firestore'
 
 // POST: プリセット作成
 export async function POST(request: NextRequest) {
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
     }
 
     const snapshot = await presetsQuery.limit(50).get()
-    const presets = snapshot.docs.map(doc => doc.data())
+    const presets = snapshot.docs.map((doc: QueryDocumentSnapshot) => doc.data())
 
     // クライアント側で検索フィルタ（Firestoreの全文検索制限のため）
     let filteredPresets = presets

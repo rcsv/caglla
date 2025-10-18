@@ -3,6 +3,9 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
 import { PlanId } from '@/lib/subscription/restriction'
 
+// 動的レンダリングを強制（request.headersを使用するため）
+export const dynamic = 'force-dynamic'
+
 // 開発環境用のフォールバック（Firebase Admin SDKが利用できない場合）
 const DEV_USER_PLANS: Record<string, PlanId> = {}
 
