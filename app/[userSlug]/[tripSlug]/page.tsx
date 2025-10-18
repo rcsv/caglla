@@ -239,13 +239,17 @@ export default function SlugBasedTripPage() {
 
       try {
         setTripLoading(true)
+        logger.debug('Fetching trip data:', { userSlug, tripSlug })
         const tripData = await getTripBySlugs(userSlug, tripSlug)
         
         if (!tripData) {
+          logger.error('Trip not found:', { userSlug, tripSlug })
           // 旅行が見つからない場合はnotFound()を呼び出し
           notFound()
           return
         }
+        
+        logger.debug('Trip data found:', { tripId: tripData.id, title: tripData.title })
         
         setTrip(tripData)
         

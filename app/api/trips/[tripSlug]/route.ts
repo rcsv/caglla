@@ -13,20 +13,32 @@ import { COLLECTIONS } from '@/lib/firebase/firestore'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const { id: tripId } = await params
+    const { tripSlug } = await params
 
-    if (!tripId) {
+    if (!tripSlug) {
       return NextResponse.json(
-        { error: 'Trip ID is required' },
+        { error: 'Trip slug is required' },
         { status: 400 }
       )
     }
 
-    // Tripを取得
-    const tripDoc = await adminDb.collection(COLLECTIONS.TRIPS).doc(tripId).get()
+    // tripSlug -> tripId を解決
+    const tripQuery = await adminDb
+      .collection(COLLECTIONS.TRIPS)
+      .where('slug', '==', tripSlug)
+      .limit(1)
+      .get()
+    if (tripQuery.empty) {
+      return NextResponse.json(
+        { error: 'Trip not found' },
+        { status: 404 }
+      )
+    }
+    const tripDoc = tripQuery.docs[0]
+    const tripId = tripDoc.id
     
     if (!tripDoc.exists) {
       return NextResponse.json(
@@ -156,7 +168,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
     const { id: tripId } = await params
@@ -323,7 +335,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
     const { id: tripId } = await params

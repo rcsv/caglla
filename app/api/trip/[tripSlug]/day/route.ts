@@ -5,7 +5,7 @@ import { adminDayOperations, adminTripOperations } from '@/lib/firebase/admin-op
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
     // Get authorization header

@@ -5,7 +5,7 @@ import logger from '@/lib/core/logger'
 // GET: 取得
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
     const { id: tripId } = await params
@@ -24,7 +24,7 @@ export async function GET(
 // PUT: 更新（itemsの部分更新や完了状態変更、カスタム項目の追加など）
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
     const { id: tripId } = await params

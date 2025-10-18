@@ -8,7 +8,7 @@ import { planSaveOperations } from '@/lib/travel/plan-save'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ planSlug: string }> }
 ) {
   try {
     // 認証チェック

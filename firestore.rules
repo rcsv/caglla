@@ -21,9 +21,7 @@ service cloud.firestore {
     match /trips/{tripId} {
       // Trip owner can read and write
       allow read, write: if request.auth != null && 
-        (request.auth.uid == resource.data.user_id || 
-         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         request.auth.uid == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.google_id);
+        request.auth.uid == resource.data.user_id;
       
       // Allow creation for authenticated users
       allow create: if request.auth != null && 

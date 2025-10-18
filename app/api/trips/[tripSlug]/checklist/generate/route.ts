@@ -8,7 +8,7 @@ import { COLLECTIONS } from '@/lib/firebase/firestore'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
     const { id: tripId } = await params

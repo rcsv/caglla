@@ -5,7 +5,7 @@ import logger from '@/lib/core/logger'
 // POST: プリセットを適用
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
     // 認証チェック

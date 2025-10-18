@@ -223,17 +223,25 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
  * @returns 旅行データ（creator情報付き）またはnull
  */
 export async function getTripBySlugs(userSlug: string, tripSlug: string): Promise<Trip | null> {
+  logger.debug('getTripBySlugs called:', { userSlug, tripSlug })
+  
   // 1. userSlug から user を取得
   const user = await getUserBySlug(userSlug)
   if (!user) {
+    logger.error('User not found:', { userSlug })
     return null
   }
+  
+  logger.debug('User found:', { userId: user.google_id, userName: user.name })
   
   // 2. tripSlug と user.google_id から trip を取得
   const trip = await getTripBySlug(tripSlug, user.google_id)
   if (!trip) {
+    logger.error('Trip not found:', { tripSlug, userId: user.google_id })
     return null
   }
+  
+  logger.debug('Trip found:', { tripId: trip.id, tripTitle: trip.title })
   
   // 3. creator情報を追加
   return {

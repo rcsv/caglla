@@ -5,7 +5,7 @@ import logger from '@/lib/core/logger'
 // GET: プリセット詳細取得
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ presetSlug: string }> }
 ) {
   try {
     // 認証チェック
@@ -43,7 +43,7 @@ export async function GET(
 // PUT: プリセット更新
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ presetSlug: string }> }
 ) {
   try {
     // 認証チェック
@@ -92,7 +92,7 @@ export async function PUT(
 // DELETE: プリセット削除
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ presetSlug: string }> }
 ) {
   try {
     // 認証チェック
