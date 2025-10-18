@@ -25,6 +25,8 @@ This project aims to support the creation, editing, and sharing of travel plans.
 
 - **スラッグ生成仕様**: `docs/slug-generation-specification.md` - URL生成のためのスラッグシステムの詳細仕様
 - **SVGアイコンガイドライン**: `components/common/icons/AGENTS.md` - SVGアイコンの作成・使用・管理に関する包括的なガイドライン
+- **i18n多言語対応仕様**: `docs/specifications/i18n-specification.md` - Google Places API多言語対応の詳細仕様
+- **i18n実装チェックリスト**: `docs/specifications/i18n-implementation-checklist.md` - 多言語対応の実装タスク管理
 - **リリースノート**: `docs/releases/` - 各バージョンのリリースノートとロードマップ
 
 ### 🚀 Release Roadmap
@@ -35,15 +37,21 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **日付入力UX改善**: 自動設定・バリデーション
 - **リリースノート**: `docs/releases/v1.7.0.md`
 
-#### **v1.7.1** 📋 Planned
-- **ドキュメント更新**: リリースノート、ユーザーガイド、FAQ
-- **マイナー改善**: UI/UXの細かな調整
+#### **v1.7.1** 🌍 Planned
+- **Google Places API 多言語対応**: 9言語でのPlaces情報取得・表示
+- **言語別キャッシュシステム**: 複合キー方式での効率的なキャッシュ管理
+- **ユーザー言語設定**: 言語選択・自動検出機能
 - **リリースノート**: `docs/releases/v1.7.1.md`
 
-#### **v1.7.2** 🔍 Planned
+#### **v1.7.2** 📋 Planned
+- **ドキュメント更新**: リリースノート、ユーザーガイド、FAQ
+- **マイナー改善**: UI/UXの細かな調整
+- **リリースノート**: `docs/releases/v1.7.2.md`
+
+#### **v1.7.3** 🔍 Planned
 - **検索・フィルタリング**: 予約情報の検索・絞り込み機能
 - **エクスポート機能**: PDF、CSV、JSON、iCal形式でのエクスポート
-- **リリースノート**: `docs/releases/v1.7.2.md`
+- **リリースノート**: `docs/releases/v1.7.3.md`
 
 #### **v1.8.0** 🔔 Planned
 - **予約リマインダー**: 出発前のスマート通知機能
