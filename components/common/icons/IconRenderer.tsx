@@ -67,6 +67,7 @@ export const IconRenderer: React.FC<IconRendererProps> = ({
     planner: 'tabler:clipboard-text',
     prohibition: 'tabler:ban',
     publicaccess: 'tabler:world',
+    reservation: 'tabler:calendar-check',
     rocket: 'tabler:rocket',
     summary: 'tabler:list-details',
     user: 'tabler:user',
