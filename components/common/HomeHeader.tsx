@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import PlannerIcon from '@/components/common/icons/PlannerIcon'
+import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { getZIndexClass } from '@/lib/core/z-index'
 
 export interface HomeHeaderProps {
@@ -45,7 +45,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
           <div className="flex items-center gap-6">
             <Link href="/home" className="flex items-center gap-2 text-gray-900">
               <span className="inline-flex items-center justify-center rounded-lg bg-emerald-500 text-white font-bold h-8 w-8">
-                <PlannerIcon className="h-5 w-5" />
+                <IconRenderer iconName="planner" className="h-5 w-5" />
               </span>
               <span className="text-xl font-bold">{appName}</span>
             </Link>

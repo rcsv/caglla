@@ -3,9 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Card } from '@/components/common/Card'
-import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
-import { PinIcon } from '@/components/common/icons/PinIcon'
-import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
+import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { dateUtils } from '@/lib/utils/date'
 import { getCountryFlag } from '@/lib/utils/country-flags'
 import type { Trip } from '@/lib/core/types'
@@ -43,7 +41,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           )}
           {/* Top-right badge */}
           <div className="absolute top-3 right-3">
-            <PublicAccessBadge accessLevel={trip.access_level === 'public' ? 'public' : 'private'} />
+            <IconRenderer iconName="publicaccess" className="w-3 h-3" />
           </div>
           {/* Bottom gradient overlay */}
           <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
@@ -56,7 +54,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-white/85">
               {trip.destination && (
                 <span className="px-2 py-1 bg-white/10 rounded-full flex items-center gap-1">
-                  <PinIcon className="w-3 h-3" color="white" />
+                  <IconRenderer iconName="pin" className="w-3 h-3" color="white" />
                   {trip.destination}
                 </span>
               )}
@@ -117,21 +115,21 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
 
         <div className="flex justify-between items-start mb-3">
           <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{trip.title}</h3>
-          <PublicAccessBadge accessLevel={trip.access_level === 'public' ? 'public' : 'private'} />
+          <IconRenderer iconName="publicaccess" className="w-3 h-3" />
         </div>
 
         {trip.description && <p className="text-gray-600 text-sm mb-3 line-clamp-2">{trip.description}</p>}
 
         {trip.destination && (
           <p className="text-gray-500 text-sm mb-3 flex items-center gap-1">
-            <PinIcon className="w-4 h-4" color="#6b7280" />
+            <IconRenderer iconName="pin" className="w-4 h-4" color="#6b7280" />
             {trip.destination}
           </p>
         )}
 
         {trip.start_date && trip.end_date && (
           <p className="text-gray-500 text-sm flex items-center gap-1">
-            <CalendarIcon className="w-4 h-4" color="#6b7280" />
+            <IconRenderer iconName="calendar" className="w-4 h-4" color="#6b7280" />
             {(() => {
               const { futureTrips, pastTrips } = dateUtils.sortTripsByDate([trip])
               if (futureTrips.length > 0) {

@@ -8,7 +8,7 @@ import { Button } from '@/components/common/Button'
 import NextTripMap from './NextTripMap'
 import { useUserData } from '@/lib/contexts/user-data'
 import { RestrictionProvider, RestrictionType } from '@/lib/subscription/restriction'
-import { AirplaneIcon } from '@/components/common/icons/AirplaneIcon'
+import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import type { Trip } from '@/lib/core/types'
 
 interface NextTripCardProps {
@@ -72,7 +72,7 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
             ) : (
               <div className="h-full bg-gray-50 rounded-lg flex flex-col items-center justify-center p-8">
                 <div className="mb-4">
-                  <AirplaneIcon className="w-14 h-14 text-gray-400" />
+                  <IconRenderer iconName="airplane" className="w-14 h-14 text-gray-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">まだ旅行がありません</h3>
                 <p className="text-gray-600 text-center mb-6">

@@ -5,8 +5,7 @@ import DayEditor from '@/components/trip/DayEditor'
 import SortableItineraryCard from '@/components/trip/SortableItineraryCard'
 import VenueDistance from '@/components/trip/VenueDistance'
 import VenueInsertButton from '@/components/trip/VenueInsertButton'
-import { ExpandIcon } from '@/components/common/icons/ExpandIcon'
-import { CollapseIcon } from '@/components/common/icons/CollapseIcon'
+import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useEffect, useRef } from 'react'
@@ -172,14 +171,14 @@ export default function TripItineraryView({
                     className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                     title="全て展開"
                   >
-                    <ExpandIcon />
+                    <IconRenderer iconName="expand" />
                   </button>
                   <button
                     onClick={collapseAllDays}
                     className="p-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
                     title="全て折りたたみ"
                   >
-                    <CollapseIcon />
+                    <IconRenderer iconName="collapse" />
                   </button>
                 </div>
               )}
