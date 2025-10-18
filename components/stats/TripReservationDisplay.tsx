@@ -94,117 +94,146 @@ export default function TripReservationDisplay({
       } 
       className={className}
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         {Object.entries(reservationsByType).map(([type, typeReservations]) => (
-          <div key={type} className="border-l-4 border-purple-200 pl-4">
-            <div className="flex items-center mb-2">
-              <span className="text-lg mr-2">{getReservationTypeIcon(type as any)}</span>
-              <h4 className="font-medium text-gray-700">{getReservationTypeLabel(type as any)}</h4>
-              <span className="ml-2 text-sm text-gray-500">({typeReservations.length}件)</span>
+          <div key={type}>
+            <div className="flex items-center mb-4">
+              <span className="text-xl mr-2">{getReservationTypeIcon(type as any)}</span>
+              <h4 className="text-lg font-semibold text-gray-700">{getReservationTypeLabel(type as any)}</h4>
+              <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                {typeReservations.length}件
+              </span>
             </div>
             
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {typeReservations.map(({ itinerary, reservation }) => (
-                <div key={itinerary.id} className="bg-gray-50 rounded-lg p-3">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h5 className="font-medium text-gray-800">{itinerary.title}</h5>
-                      {itinerary.location && (
-                        <p className="text-sm text-gray-600">{itinerary.location}</p>
-                      )}
-                      
-                      {/* 日時情報 */}
-                      <div className="mt-2 text-sm text-gray-600">
-                        {type === 'flight' ? (
-                          <div className="space-y-1">
-                            {reservation.departure_at && (
-                              <div className="flex items-center">
-                                <IconRenderer iconName="airplane" className="w-4 h-4 mr-1" color="#6B7280" />
-                                <span>出発: {formatDateTime(reservation.departure_at)}</span>
-                                {reservation.departure_airport && (
-                                  <span className="ml-2 font-mono text-xs bg-gray-200 px-1 rounded">
-                                    {reservation.departure_airport}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                            {reservation.arrival_at && (
-                              <div className="flex items-center">
-                                <IconRenderer iconName="airplane" className="w-4 h-4 mr-1" color="#6B7280" />
-                                <span>到着: {formatDateTime(reservation.arrival_at)}</span>
-                                {reservation.arrival_airport && (
-                                  <span className="ml-2 font-mono text-xs bg-gray-200 px-1 rounded">
-                                    {reservation.arrival_airport}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                            {reservation.flight_number && (
-                              <div className="flex items-center">
-                                <IconRenderer iconName="airplane" className="w-4 h-4 mr-1" color="#6B7280" />
-                                <span className="font-mono">{reservation.flight_number}</span>
-                                {reservation.airline && (
-                                  <span className="ml-2 text-xs">{reservation.airline}</span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="space-y-1">
-                            {reservation.start_date && (
-                              <div className="flex items-center">
-                                <IconRenderer iconName="clock" className="w-4 h-4 mr-1" color="#6B7280" />
-                                <span>開始: {formatDateTime(reservation.start_date)}</span>
-                              </div>
-                            )}
-                            {reservation.end_date && (
-                              <div className="flex items-center">
-                                <IconRenderer iconName="clock" className="w-4 h-4 mr-1" color="#6B7280" />
-                                <span>終了: {formatDateTime(reservation.end_date)}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* 予約詳細 */}
-                      <div className="mt-2 space-y-1">
-                        {reservation.confirmation_number && (
-                          <div className="flex items-center text-sm">
-                            <IconRenderer iconName="clipboard" className="w-4 h-4 mr-1" color="#6B7280" />
-                            <span className="font-mono text-xs bg-blue-100 px-2 py-1 rounded">
-                              {reservation.confirmation_number}
-                            </span>
-                          </div>
-                        )}
-                        {reservation.reservation_site && (
-                          <div className="flex items-center text-sm text-gray-600">
-                            <IconRenderer iconName="link" className="w-4 h-4 mr-1" color="#6B7280" />
-                            <span>{reservation.reservation_site}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* アクションボタン */}
-                    <div className="flex flex-col space-y-1 ml-2">
-                      {reservation.reservation_url && (
-                        <a
-                          href={reservation.reservation_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
-                        >
-                          予約サイト
-                        </a>
-                      )}
-                    </div>
+                <div key={itinerary.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+                  {/* カードヘッダー */}
+                  <div className="p-4 border-b border-gray-100">
+                    <h5 className="font-semibold text-gray-900 text-sm truncate">{itinerary.title}</h5>
+                    {itinerary.location && (
+                      <p className="text-xs text-gray-600 mt-1 truncate">{itinerary.location}</p>
+                    )}
                   </div>
                   
-                  {/* メモ */}
-                  {reservation.notes && (
-                    <div className="mt-2 p-2 bg-white rounded border-l-2 border-purple-200">
-                      <p className="text-sm text-gray-700">{reservation.notes}</p>
+                  {/* カードボディ */}
+                  <div className="p-4 space-y-3">
+                    {/* 日時情報 */}
+                    <div className="space-y-2">
+                      {type === 'flight' ? (
+                        <>
+                          {reservation.departure_at && (
+                            <div className="flex items-center text-xs">
+                              <IconRenderer iconName="airplane" className="w-3 h-3 mr-2 text-blue-500" />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-700">出発</div>
+                                <div className="text-gray-600">{formatDateTime(reservation.departure_at)}</div>
+                                {reservation.departure_airport && (
+                                  <div className="font-mono text-xs bg-gray-100 px-1 rounded mt-1 inline-block">
+                                    {reservation.departure_airport}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {reservation.arrival_at && (
+                            <div className="flex items-center text-xs">
+                              <IconRenderer iconName="airplane" className="w-3 h-3 mr-2 text-green-500" />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-700">到着</div>
+                                <div className="text-gray-600">{formatDateTime(reservation.arrival_at)}</div>
+                                {reservation.arrival_airport && (
+                                  <div className="font-mono text-xs bg-gray-100 px-1 rounded mt-1 inline-block">
+                                    {reservation.arrival_airport}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {reservation.flight_number && (
+                            <div className="flex items-center text-xs">
+                              <IconRenderer iconName="airplane" className="w-3 h-3 mr-2 text-gray-500" />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-700">便名</div>
+                                <div className="font-mono text-gray-600">{reservation.flight_number}</div>
+                                {reservation.airline && (
+                                  <div className="text-gray-500 mt-1">{reservation.airline}</div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {reservation.start_date && (
+                            <div className="flex items-center text-xs">
+                              <IconRenderer iconName="clock" className="w-3 h-3 mr-2 text-blue-500" />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-700">開始</div>
+                                <div className="text-gray-600">{formatDateTime(reservation.start_date)}</div>
+                              </div>
+                            </div>
+                          )}
+                          {reservation.end_date && (
+                            <div className="flex items-center text-xs">
+                              <IconRenderer iconName="clock" className="w-3 h-3 mr-2 text-green-500" />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-700">終了</div>
+                                <div className="text-gray-600">{formatDateTime(reservation.end_date)}</div>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* 予約詳細 */}
+                    <div className="space-y-2">
+                      {reservation.confirmation_number && (
+                        <div className="flex items-center text-xs">
+                          <IconRenderer iconName="clipboard" className="w-3 h-3 mr-2 text-purple-500" />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-700">確認番号</div>
+                            <div className="font-mono text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded mt-1 inline-block">
+                              {reservation.confirmation_number}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {reservation.reservation_site && (
+                        <div className="flex items-center text-xs">
+                          <IconRenderer iconName="link" className="w-3 h-3 mr-2 text-gray-500" />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-700">予約サイト</div>
+                            <div className="text-gray-600">{reservation.reservation_site}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* メモ */}
+                    {reservation.notes && (
+                      <div className="text-xs">
+                        <div className="font-medium text-gray-700 mb-1">メモ</div>
+                        <div className="text-gray-600 bg-gray-50 p-2 rounded text-xs line-clamp-2">
+                          {reservation.notes}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* カードフッター */}
+                  {reservation.reservation_url && (
+                    <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
+                      <a
+                        href={reservation.reservation_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                      >
+                        <IconRenderer iconName="link" className="w-3 h-3 mr-1" />
+                        予約サイトへ
+                      </a>
                     </div>
                   )}
                 </div>
