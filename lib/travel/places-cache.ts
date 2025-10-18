@@ -7,10 +7,11 @@
 
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, orderBy, limit, writeBatch } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
-import { PlacesCache, PlaceData } from '../core/types'
+import { PlacesCache, PlaceData, SupportedLanguage } from '../core/types'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import logger from '@/lib/core/logger'
 import { placesApiHelpers } from '@/lib/api/google/places'
+import { DEFAULT_LANGUAGE } from '@/lib/utils/language'
 
 // キャッシュの有効期限設定
 const CACHE_EXPIRY = {
@@ -79,12 +80,13 @@ export class PlacesCacheManager {
   /**
    * Google Places APIからデータを取得してキャッシュに保存
    * @param placeId Google Places APIのplace_id
+   * @param language 言語コード（デフォルト: 'ja'）
    * @returns 取得したデータ
    */
-  async fetchAndCachePlace(placeId: string): Promise<PlacesCache | null> {
+  async fetchAndCachePlace(placeId: string, language: SupportedLanguage = DEFAULT_LANGUAGE): Promise<PlacesCache | null> {
     try {
       // Google Places APIからデータを取得
-      const placeData = await placesApiHelpers.getPlaceDetails(placeId)
+      const placeData = await placesApiHelpers.getPlaceDetails(placeId, language)
       
       // PlacesCache形式に変換（undefined値を除外）
       const cacheData: any = {
@@ -129,11 +131,12 @@ export class PlacesCacheManager {
       if (placeData.editorial_summary) cacheData.editorial_summary = placeData.editorial_summary
       if (placeData.reviews) cacheData.reviews = placeData.reviews
       
-      // Firestoreに保存
+      // Firestoreに保存（新形式: {place_id}_{language}）
       // logger.debug('💾 Saving cache data:', cacheData)
-      const docRef = doc(this.db, COLLECTIONS.PLACES_CACHE, placeId)
+      const cacheKey = `${placeId}_${language}`
+      const docRef = doc(this.db, COLLECTIONS.PLACES_CACHE, cacheKey)
       await setDoc(docRef, cacheData)
-      logger.debug('✅ Successfully saved to PlacesCache')
+      logger.debug('✅ Successfully saved to PlacesCache (NEW FORMAT)', { cacheKey })
       
       return cacheData
     } catch (error) {

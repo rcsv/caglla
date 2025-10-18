@@ -19,7 +19,7 @@ export const geocodingApiHelpers = {
     try {
       // サーバーサイドでは直接Google Geocoding APIを呼び出し
       const response = await fetch(
-        `${GOOGLE_GEOCODING_API_URL}/json?address=${encodeURIComponent(address)}&key=${GOOGLE_GEOCODING_API_KEY}&language=ja&region=jp`
+        `${GOOGLE_GEOCODING_API_URL}/json?address=${encodeURIComponent(address)}&key=${GOOGLE_GEOCODING_API_KEY}&language=en&region=jp`
       )
 
       if (!response.ok) {
@@ -50,7 +50,7 @@ export const geocodingApiHelpers = {
     try {
       // サーバーサイドでは直接Google Geocoding APIを呼び出し
       const response = await fetch(
-        `${GOOGLE_GEOCODING_API_URL}/json?latlng=${lat},${lng}&key=${GOOGLE_GEOCODING_API_KEY}&language=ja&region=jp`
+        `${GOOGLE_GEOCODING_API_URL}/json?latlng=${lat},${lng}&key=${GOOGLE_GEOCODING_API_KEY}&language=en&region=jp`
       )
 
       if (!response.ok) {

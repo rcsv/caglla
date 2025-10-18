@@ -204,7 +204,7 @@ export class WeatherApiHelpers {
     const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
     if (googleApiKey) {
       try {
-        const googleGeocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(destination)}&key=${googleApiKey}&language=ja`
+        const googleGeocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(destination)}&key=${googleApiKey}&language=en`
         logger.debug('Google Geocoding API request URL:', googleGeocodingUrl.replace(googleApiKey, '***'))
         
         const response = await fetch(googleGeocodingUrl)
@@ -236,7 +236,7 @@ export class WeatherApiHelpers {
 
     // Fallback to Open-Meteo Geocoding API
     try {
-      const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination)}&count=1&language=ja&format=json`
+      const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(destination)}&count=1&language=en&format=json`
       logger.debug('Open-Meteo Geocoding API request URL:', geocodingUrl)
       
       const response = await fetch(geocodingUrl)

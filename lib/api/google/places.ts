@@ -1,7 +1,8 @@
 // Google Places API integration utilities
 import { PlaceData } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import type { PlaceSearchResult, PlaceDetailsResult } from '@/lib/core/types'
+import { getUserLanguage, DEFAULT_LANGUAGE } from '@/lib/utils/language'
+import type { PlaceSearchResult, PlaceDetailsResult, SupportedLanguage, User } from '@/lib/core/types'
 
 // Re-export types for backward compatibility
 export type { PlaceSearchResult, PlaceDetailsResult }
@@ -12,7 +13,10 @@ const GOOGLE_PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place'
 
 export const placesApiHelpers = {
   // 場所を検索する
-  async searchPlaces(query: string): Promise<PlaceSearchResult[]> {
+  async searchPlaces(
+    query: string, 
+    language: SupportedLanguage = DEFAULT_LANGUAGE
+  ): Promise<PlaceSearchResult[]> {
     if (!GOOGLE_PLACES_API_KEY) {
       throw new Error('Google Places API key is not configured')
     }
@@ -27,7 +31,7 @@ export const placesApiHelpers = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query })
+        body: JSON.stringify({ query, language })
       })
 
       logger.debug('Search response status:', response.status)
@@ -69,7 +73,10 @@ export const placesApiHelpers = {
   },
 
   // 場所の詳細情報を取得する
-  async getPlaceDetails(placeId: string): Promise<PlaceDetailsResult> {
+  async getPlaceDetails(
+    placeId: string, 
+    language: SupportedLanguage = DEFAULT_LANGUAGE
+  ): Promise<PlaceDetailsResult> {
     if (!GOOGLE_PLACES_API_KEY) {
       throw new Error('Google Places API key is not configured')
     }
@@ -81,7 +88,7 @@ export const placesApiHelpers = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ placeId })
+        body: JSON.stringify({ placeId, language })
       })
 
       if (!response.ok) {
@@ -183,44 +190,17 @@ export const placesApiHelpers = {
     return this.getPhotoUrl(photoReference, size)
   },
 
-  // 場所の種類を日本語に変換する
+  // 場所の種類を英語で表示する（多言語対応のため日本語ラベルを廃止）
   getTypeLabel(type: string): string {
-    const typeLabels: { [key: string]: string } = {
-      'tourist_attraction': '観光地',
-      'restaurant': 'レストラン',
-      'lodging': '宿泊施設',
-      'shopping_mall': 'ショッピングモール',
-      'airport': '空港',
-      'train_station': '駅',
-      'bus_station': 'バス停',
-      'hospital': '病院',
-      'bank': '銀行',
-      'gas_station': 'ガソリンスタンド',
-      'park': '公園',
-      'museum': '博物館',
-      'church': '教会',
-      'temple': '寺院',
-      'shrine': '神社',
-      'zoo': '動物園',
-      'aquarium': '水族館',
-      'amusement_park': '遊園地',
-      'beach': 'ビーチ',
-      'mountain': '山',
-      'lake': '湖',
-      'river': '川',
-      'island': '島',
-      'city': '都市',
-      'administrative_area_level_1': '都道府県',
-      'administrative_area_level_2': '市区町村',
-      'country': '国'
-    }
-
-    return typeLabels[type] || type
+    // シンプルに英語のまま表示（多言語対応のため）
+    // 日本語ラベルは廃止して、英語のまま表示することでバグ感を解消
+    return type
   },
 
-  // 価格レベルを日本語に変換する
+  // 価格レベルを英語で表示する（多言語対応のため日本語ラベルを廃止）
   getPriceLevelLabel(priceLevel: number): string {
-    const labels = ['無料', '安い', '普通', '高い', 'とても高い']
-    return labels[priceLevel] || '不明'
+    // シンプルに英語のまま表示（多言語対応のため）
+    const labels = ['Free', 'Inexpensive', 'Moderate', 'Expensive', 'Very Expensive']
+    return labels[priceLevel] || 'Unknown'
   }
 }

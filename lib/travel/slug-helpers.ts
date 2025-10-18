@@ -4,11 +4,12 @@
  */
 
 import { getFirestore, collection, query, where, getDocs, doc, getDoc, orderBy } from 'firebase/firestore'
-import type { Trip, User, PlacesCache, Itinerary } from '../core/types'
+import type { Trip, User, PlacesCache, Itinerary, SupportedLanguage } from '../core/types'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import { placesCacheManager } from '@/lib/travel/places-cache'
 import logger from '@/lib/core/logger'
 import { convertStandardDates, toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { getFallbackLanguages, getUserLanguage } from '@/lib/utils/language'
 
 /**
  * userSlug から user データを取得
@@ -65,13 +66,43 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
       ...tripDoc.data(),
     }) as Trip
 
-    // destination_place_id がある場合は places_cache から解決
+    // destination_place_id がある場合は places_cache から解決（新形式 {place_id}_{language} を優先）
     const destinationPlaceId: string | undefined = (tripDoc.data() as any).destination_place_id
     if (destinationPlaceId) {
       try {
-        const destDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, destinationPlaceId))
-        if (destDoc.exists()) {
-          ;(tripData as any).destination_place = destDoc.data() as PlacesCache
+        const preferred: SupportedLanguage = getUserLanguage() as SupportedLanguage
+        const fallbacks = getFallbackLanguages(preferred)
+
+        let resolved: PlacesCache | null = null
+        for (const lang of fallbacks) {
+          const cacheKey = `${destinationPlaceId}_${lang}`
+          try {
+            const destDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, cacheKey))
+            if (destDoc.exists()) {
+              resolved = destDoc.data() as PlacesCache
+              break
+            }
+          } catch {}
+        }
+
+        // レガシー形式のフォールバック（place_id のみ）
+        if (!resolved) {
+          try {
+            const legacyDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, destinationPlaceId))
+            if (legacyDoc.exists()) {
+              resolved = legacyDoc.data() as PlacesCache
+            }
+          } catch {}
+        }
+
+        if (resolved) {
+          ;(tripData as any).destination_place = resolved
+        } else {
+          // キャッシュが無い場合はフェッチしてキャッシュ（UX向上）
+          const fetched = await placesCacheManager.fetchAndCachePlace(destinationPlaceId, preferred)
+          if (fetched) {
+            ;(tripData as any).destination_place = fetched as unknown as PlacesCache
+          }
         }
       } catch {}
     }
@@ -123,9 +154,32 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
           // 見つからない場合のみ既存の place_data をフォールバックとして利用する
           if ((data as any).place_id) {
             try {
-              const cacheDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, (data as any).place_id))
-              if (cacheDoc.exists()) {
-                const placesCache = cacheDoc.data() as any
+              const preferred: SupportedLanguage = getUserLanguage() as SupportedLanguage
+              const fallbacks = getFallbackLanguages(preferred)
+
+              let placesCache: any | null = null
+              for (const lang of fallbacks) {
+                const cacheKey = `${(data as any).place_id}_${lang}`
+                try {
+                  const cacheDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, cacheKey))
+                  if (cacheDoc.exists()) {
+                    placesCache = cacheDoc.data()
+                    break
+                  }
+                } catch {}
+              }
+
+              // レガシー形式のフォールバック
+              if (!placesCache) {
+                try {
+                  const legacyDoc = await getDoc(doc(db, COLLECTIONS.PLACES_CACHE, (data as any).place_id))
+                  if (legacyDoc.exists()) {
+                    placesCache = legacyDoc.data()
+                  }
+                } catch {}
+              }
+
+              if (placesCache) {
                 // PlacesCacheからPlaceDataに変換（メタデータを除外）
                 itineraryBase.place_data = {
                   place_id: placesCache.place_id,
@@ -154,7 +208,7 @@ export async function getTripBySlug(tripSlug: string, userId: string): Promise<T
                   // フォールバックもない場合、APIから取得してキャッシュ
                   logger.info(`Fetching place_data from API for "${data.title}"`)
                   try {
-                    const fetchedPlaceData = await placesCacheManager.fetchAndCachePlace((data as any).place_id)
+                    const fetchedPlaceData = await placesCacheManager.fetchAndCachePlace((data as any).place_id, preferred)
                     if (fetchedPlaceData) {
                       // PlacesCacheからPlaceDataに変換
                       itineraryBase.place_data = {

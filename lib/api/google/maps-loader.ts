@@ -1,5 +1,7 @@
 import { Loader } from '@googlemaps/js-api-loader'
 import { validateClientEnvironment } from '@/lib/core/env-validation'
+import { getUserLanguage } from '@/lib/utils/language'
+import type { SupportedLanguage } from '@/lib/core/types'
 
 // Google Maps APIのシングルトンインスタンス
 let loaderInstance: Loader | null = null
@@ -10,7 +12,7 @@ let loadPromise: Promise<void> | null = null
  * Google Maps APIを一度だけ読み込む共通ローダー
  * 複数のコンポーネントから呼び出されても重複読み込みを防ぐ
  */
-export async function loadGoogleMapsAPI(): Promise<void> {
+export async function loadGoogleMapsAPI(language?: SupportedLanguage): Promise<void> {
   // 既に読み込み済みの場合は即座に返す
   if (isLoaded) {
     return Promise.resolve()
@@ -27,12 +29,20 @@ export async function loadGoogleMapsAPI(): Promise<void> {
     const env = validateClientEnvironment({ suppressWarnings: true })
     const apiKey = env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 
+    if (!apiKey) {
+      throw new Error('Google Maps API key not found')
+    }
+
+    // 言語設定を取得（ユーザー設定または指定された言語）
+    const userLanguage = language || getUserLanguage() || 'en'
+    
     // 新しいローダーインスタンスを作成
     if (!loaderInstance) {
       loaderInstance = new Loader({
         apiKey,
         version: 'weekly',
-        libraries: ['places', 'marker', 'geometry']
+        libraries: ['places', 'marker', 'geometry'],
+        language: userLanguage
       })
     }
   } catch (error) {
@@ -43,11 +53,19 @@ export async function loadGoogleMapsAPI(): Promise<void> {
                    process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || 
                    'dev-fallback-key'
 
+    if (!apiKey) {
+      throw new Error('Google Maps API key not found')
+    }
+
+    // 言語設定を取得（ユーザー設定または指定された言語）
+    const userLanguage = language || getUserLanguage() || 'en'
+    
     if (!loaderInstance) {
       loaderInstance = new Loader({
         apiKey,
         version: 'weekly',
-        libraries: ['places', 'marker', 'geometry']
+        libraries: ['places', 'marker', 'geometry'],
+        language: userLanguage
       })
     }
   }
