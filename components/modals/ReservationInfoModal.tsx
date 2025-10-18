@@ -101,6 +101,23 @@ const combineDayAndTime = (day: Day | null | undefined, time: string | null | un
   }
 }
 
+// datetime-local 入力用にローカルタイムの文字列 (YYYY-MM-DDTHH:mm) を生成
+const formatForDatetimeLocal = (value: any): string => {
+  if (!value) return ''
+  try {
+    const d: Date = new Date((value as any).toDate?.() ?? (value as string))
+    if (isNaN(d.getTime())) return ''
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mm = String(d.getMinutes()).padStart(2, '0')
+    return `${y}-${m}-${day}T${hh}:${mm}`
+  } catch {
+    return ''
+  }
+}
+
 export default function ReservationInfoModal({
   isOpen,
   onClose,
@@ -326,11 +343,7 @@ export default function ReservationInfoModal({
                 <Input
                   label="出発日時 *"
                   type="datetime-local"
-                  value={
-                    reservation.departure_at 
-                    ? new Date((reservation.departure_at as any).toDate?.() 
-                        ?? (reservation.departure_at as string)).toISOString().slice(0, 16) 
-                    : ''}
+                  value={formatForDatetimeLocal(reservation.departure_at)}
                   onChange={(e) => {
                     const departureTime = new Date(e.target.value)
                     setReservation(prev => {
@@ -347,16 +360,11 @@ export default function ReservationInfoModal({
                 <Input
                   label="到着日時 *"
                   type="datetime-local"
-                  value={
-                    reservation.arrival_at 
-                    ? new Date((reservation.arrival_at as any).toDate?.() 
-                        ?? (reservation.arrival_at as string)).toISOString().slice(0, 16) 
-                    : ''}
+                  value={formatForDatetimeLocal(reservation.arrival_at)}
                   onChange={(e) => setReservation(prev => ({ ...prev, arrival_at: new Date(e.target.value) }))}
                   min={
                     reservation.departure_at 
-                    ? new Date((reservation.departure_at as any).toDate?.() 
-                        ?? (reservation.departure_at as string)).toISOString().slice(0, 16)
+                    ? formatForDatetimeLocal(reservation.departure_at)
                     : undefined
                   }
                 />
@@ -370,11 +378,7 @@ export default function ReservationInfoModal({
               <Input
                 label="開始日時 *"
                 type="datetime-local"
-                value={
-                  reservation.start_date 
-                  ? new Date((reservation.start_date as any).toDate?.() 
-                      ?? (reservation.start_date as string)).toISOString().slice(0, 16) 
-                  : ''}
+                value={formatForDatetimeLocal(reservation.start_date)}
                 onChange={(e) => {
                   const startTime = new Date(e.target.value)
                   setReservation(prev => {
@@ -391,16 +395,11 @@ export default function ReservationInfoModal({
               <Input
                 label="終了日時 *"
                 type="datetime-local"
-                value={
-                  reservation.end_date 
-                  ? new Date((reservation.end_date as any).toDate?.() 
-                      ?? (reservation.end_date as string)).toISOString().slice(0, 16) 
-                  : ''}
+                value={formatForDatetimeLocal(reservation.end_date)}
                 onChange={(e) => setReservation(prev => ({ ...prev, end_date: new Date(e.target.value) }))}
                 min={
                   reservation.start_date 
-                  ? new Date((reservation.start_date as any).toDate?.() 
-                      ?? (reservation.start_date as string)).toISOString().slice(0, 16)
+                  ? formatForDatetimeLocal(reservation.start_date)
                   : undefined
                 }
               />
