@@ -3,13 +3,12 @@ import logger from '@/lib/core/logger'
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { CloseIcon } from '@/components/common/icons/CloseIcon'
+import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { dateUtils } from '@/lib/utils/date'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { imageUploadHelpers } from '@/lib/storage/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
-import { WarningIcon } from '@/components/common/icons/WarningIcon'
 import type { Trip, Day, Itinerary, TripEditorProps } from '@/lib/core/types'
 import { getZIndexClass } from '@/lib/core/z-index'
 
@@ -262,7 +261,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">旅行情報を編集</h2>
               <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                <CloseIcon className="w-6 h-6" />
+                <IconRenderer iconName="close" className="w-6 h-6" />
               </button>
             </div>
         

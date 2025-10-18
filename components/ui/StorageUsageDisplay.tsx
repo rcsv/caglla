@@ -4,8 +4,7 @@ import logger from '@/lib/core/logger'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/contexts/auth'
 import { StorageUsage, StorageQuota } from '@/lib/core/types'
-import { WarningIcon } from '@/components/common/icons/WarningIcon'
-import { ProhibitionIcon } from '@/components/common/icons/ProhibitionIcon'
+import { IconRenderer } from '@/components/common/icons/IconRenderer'
 
 interface StorageUsageDisplayProps {
   className?: string
@@ -205,7 +204,7 @@ export default function StorageUsageDisplay({
           
           {usagePercentage >= 80 && (
             <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800 flex items-center gap-1">
-              <WarningIcon className="w-3 h-3" color="#d97706" />
+              <IconRenderer iconName="warning" className="w-3 h-3" color="#d97706" />
               ストレージ使用量が{usagePercentage >= 90 ? '90%' : '80%'}を超えています。
               {usagePercentage >= 90 && ' プランのアップグレードを検討してください。'}
             </div>
@@ -213,7 +212,7 @@ export default function StorageUsageDisplay({
 
           {usagePercentage >= 100 && (
             <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded text-xs text-red-800 flex items-center gap-1">
-              <ProhibitionIcon className="w-3 h-3" color="#dc2626" />
+              <IconRenderer iconName="prohibition" className="w-3 h-3" color="#dc2626" />
               ストレージ制限に達しています。ファイルを削除するか、プランをアップグレードしてください。
             </div>
           )}
