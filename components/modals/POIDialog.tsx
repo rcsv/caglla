@@ -7,6 +7,8 @@ import { getCachedPlace, placesCacheManager } from '@/lib/travel/places-cache'
 import { Button } from '@/components/common/Button'
 import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
 import type { AggregatedVenueData, UnifiedReview } from '@/lib/api/venue-aggregator'
+import { useAuth } from '@/lib/contexts/auth'
+import { getUserLanguage } from '@/lib/utils/language'
 
 interface POIDialogProps {
   poiData: {
@@ -110,6 +112,7 @@ function parseOpeningHours(weekdayText: string[] | undefined) {
 }
 
 export default function POIDialog({ poiData, onClose, onAddToItinerary, availableDays, className = '' }: POIDialogProps) {
+  const { user } = useAuth()
   const [placeDetails, setPlaceDetails] = useState<any>(null)
   const [aggregatedData, setAggregatedData] = useState<AggregatedVenueData | null>(null)
   const [unifiedReviews, setUnifiedReviews] = useState<UnifiedReview[]>([])
@@ -199,14 +202,17 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
         
         logger.debug('❌ No cached data found, calling Google Places API...')
         
+        // ユーザーの言語設定を取得してPlaces APIに渡す
+        const language = getUserLanguage(user as any)
+        
         // キャッシュにない場合はAPIを呼び出し
-        const details = await placesApiHelpers.getPlaceDetails(poiData.placeId)
+        const details = await placesApiHelpers.getPlaceDetails(poiData.placeId, language)
         setPlaceDetails(details)
         
         logger.debug('💾 Saving to PlacesCache...')
         
-        // APIで取得したデータをキャッシュに保存
-        await placesCacheManager.fetchAndCachePlace(poiData.placeId)
+        // APIで取得したデータをキャッシュに保存（言語指定）
+        await placesCacheManager.fetchAndCachePlace(poiData.placeId, language)
         
         logger.debug('✅ Data saved to PlacesCache')
 

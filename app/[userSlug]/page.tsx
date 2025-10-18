@@ -15,6 +15,7 @@ import { UserIcon } from '@/components/common/icons/UserIcon'
 import { getZIndexClass } from '@/lib/core/z-index'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import { extractCountryFromAddress } from '@/lib/travel/country/utils'
+import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from '@/lib/utils/language'
 
 export default function UserProfileBySlugPage() {
   const { user, loading } = useAuth()
@@ -33,7 +34,8 @@ export default function UserProfileBySlugPage() {
     home_address: '',
     home_place_id: '',
     home_country_code: '',
-    gender: 'prefer_not_to_say' as 'male' | 'female' | 'other' | 'prefer_not_to_say'
+    gender: 'prefer_not_to_say' as 'male' | 'female' | 'other' | 'prefer_not_to_say',
+    language: ''
   })
 
   useEffect(() => {
@@ -58,7 +60,8 @@ export default function UserProfileBySlugPage() {
           home_address: data.user.preferences?.home_address || '',
           home_place_id: data.user.preferences?.home_place_id || '',
           home_country_code: data.user.preferences?.home_country_code || '',
-          gender: data.user.gender || 'prefer_not_to_say'
+          gender: data.user.gender || 'prefer_not_to_say',
+          language: data.user.preferences?.language || ''
         })
         
         // 初回セットアップの判定（bio、home_country_code、genderがすべて空の場合）
@@ -93,7 +96,8 @@ export default function UserProfileBySlugPage() {
           preferences: {
             home_address: editForm.home_address,
             home_place_id: editForm.home_place_id || undefined,
-            home_country_code: editForm.home_country_code
+            home_country_code: editForm.home_country_code,
+            language: editForm.language || undefined
           }
         })
       })
@@ -297,6 +301,25 @@ export default function UserProfileBySlugPage() {
                       <option value="female">女性</option>
                       <option value="other">その他</option>
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">言語設定</label>
+                    <select
+                      value={editForm.language}
+                      onChange={(e) => setEditForm({...editForm, language: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">自動（ブラウザ設定）</option>
+                      {SUPPORTED_LANGUAGES.map((lang) => (
+                        <option key={lang} value={lang}>
+                          {LANGUAGE_NAMES[lang].native} / {LANGUAGE_NAMES[lang].en} ({lang})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      場所検索の結果言語に影響します。未選択時はブラウザの言語設定を使用します。
+                    </p>
                   </div>
 
                   <div className="flex space-x-3">

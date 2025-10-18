@@ -180,7 +180,8 @@ export default function TripMap({
         document.head.appendChild(styleElement)
 
         // AdvancedMarkerElement用のmapIdを設定
-        const defaultCenter = initialCenter || { lat: 35.6762, lng: 139.6503 } // 東京
+        // Trip目的地または指定された初期中心位置を使用（フォールバックは東京）
+        const defaultCenter = initialCenter || { lat: 35.6762, lng: 139.6503 }
         const newMap = new window.google.maps.Map(mapRef.current, {
           zoom: 10,
           center: defaultCenter,

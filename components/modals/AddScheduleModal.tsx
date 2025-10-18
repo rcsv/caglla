@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react'
 import { placesApiHelpers, PlaceSearchResult } from '@/lib/api/google/places'
 import { CloseIcon } from '@/components/common/icons/CloseIcon'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { useAuth } from '@/lib/contexts/auth'
+import { getUserLanguage } from '@/lib/utils/language'
 
 interface AddScheduleModalProps {
   isOpen: boolean
@@ -35,6 +37,7 @@ export default function AddScheduleModal({
   onScheduleAdded,
   insertAfterIndex
 }: AddScheduleModalProps) {
+  const { user } = useAuth()
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -63,7 +66,9 @@ export default function AddScheduleModal({
 
     setIsSearching(true)
     try {
-      const results = await placesApiHelpers.searchPlaces(query)
+      // ユーザーの言語設定を取得してPlaces APIに渡す
+      const language = getUserLanguage(user as any)
+      const results = await placesApiHelpers.searchPlaces(query, language)
       setSearchResults(results)
     } catch (error) {
       logger.error('Error searching places:', error)

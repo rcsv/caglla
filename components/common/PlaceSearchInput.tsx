@@ -5,6 +5,8 @@ import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers, PlaceSearchResult } from '@/lib/api/google/places'
 import { PlaceData } from '@/lib/core/types'  
 import { PlaceSearchInputProps } from '@/lib/core/types'
+import { useAuth } from '@/lib/contexts/auth'
+import { getUserLanguage } from '@/lib/utils/language'
 
 
 /**
@@ -24,6 +26,7 @@ export default function PlaceSearchInput({
   placeholder = "場所を検索...",
   disabled = false 
 }: PlaceSearchInputProps & { initialText?: string }) {
+  const { user } = useAuth()
   const [query, setQuery] = useState(currentPlace?.name || (arguments[0]?.initialText as string) || '')
   const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -77,7 +80,9 @@ export default function PlaceSearchInput({
     setError(null)
 
     try {
-      const results = await placesApiHelpers.searchPlaces(searchQuery)
+      // ユーザーの言語設定を取得してPlaces APIに渡す
+      const language = getUserLanguage(user as any)
+      const results = await placesApiHelpers.searchPlaces(searchQuery, language)
       setSearchResults(results)
       setShowResults(true)
       setError(null) // 成功時はエラーをクリア

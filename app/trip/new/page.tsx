@@ -190,6 +190,8 @@ export default function NewTripPage() {
           description: formData.description,
           destination: formData.destination,
           destinationPlaceId: formData.destinationPlace?.place_id,
+          // 初期レンダリング用の最小限データを一緒に送る（キャッシュ保存の保険）
+          destinationPlace: formData.destinationPlace,
           startDate: formData.startDate,
           endDate: formData.endDate,
           accessLevel: formData.accessLevel,

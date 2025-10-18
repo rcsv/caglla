@@ -159,6 +159,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
           description: formData.description,
           destination: formData.destination,
           destinationPlaceId: formData.destinationPlace?.place_id,
+          // 初期レンダリング用に最小限の場所オブジェクトも送る（キャッシュミス時の即時保存）
+          destinationPlace: formData.destinationPlace,
           startDate: formData.startDate,
           endDate: formData.endDate,
           accessLevel: formData.accessLevel,

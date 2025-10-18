@@ -51,8 +51,8 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
 
         logger.debug('NextTripMap: Google Maps API読み込み完了')
 
-        // デフォルトの中心地（東京）
-        const defaultCenter = { lat: 35.6762, lng: 139.6503 }
+        // Trip目的地を優先、フォールバックは東京
+        const defaultCenter = trip.destination_place?.geometry?.location || { lat: 35.6762, lng: 139.6503 }
         
         const newMap = new window.google.maps.Map(mapRef.current, {
           zoom: 10,
@@ -148,16 +148,16 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
             updateMapAndMarker(center, zoom)
           },
           (error) => {
-            logger.debug('NextTripMap: 位置情報取得エラー、東京をデフォルトとして使用', error)
-            // エラーの場合は東京をデフォルトとして使用
-            const center = { lat: 35.6762, lng: 139.6503 }
+            logger.debug('NextTripMap: 位置情報取得エラー、Trip目的地または東京をデフォルトとして使用', error)
+            // エラーの場合はTrip目的地または東京をデフォルトとして使用
+            const center = trip.destination_place?.geometry?.location || { lat: 35.6762, lng: 139.6503 }
             const zoom = 10
             updateMapAndMarker(center, zoom)
           }
         )
       } else {
-        logger.debug('NextTripMap: 位置情報API非対応、東京をデフォルトとして使用')
-        const center = { lat: 35.6762, lng: 139.6503 }
+        logger.debug('NextTripMap: 位置情報API非対応、Trip目的地または東京をデフォルトとして使用')
+        const center = trip.destination_place?.geometry?.location || { lat: 35.6762, lng: 139.6503 }
         const zoom = 10
         updateMapAndMarker(center, zoom)
       }
