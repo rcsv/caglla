@@ -25,6 +25,31 @@ This project aims to support the creation, editing, and sharing of travel plans.
 
 - **スラッグ生成仕様**: `docs/slug-generation-specification.md` - URL生成のためのスラッグシステムの詳細仕様
 - **SVGアイコンガイドライン**: `components/common/icons/AGENTS.md` - SVGアイコンの作成・使用・管理に関する包括的なガイドライン
+- **リリースノート**: `docs/releases/` - 各バージョンのリリースノートとロードマップ
+
+### 🚀 Release Roadmap
+
+#### **v1.7.0** ✅ Released (2024-12-19)
+- **予約情報管理機能**: ReservationInfoModal、TripReservationDisplay
+- **Iconify統合**: 絵文字からSVGアイコンへの刷新
+- **日付入力UX改善**: 自動設定・バリデーション
+- **リリースノート**: `docs/releases/v1.7.0.md`
+
+#### **v1.7.1** 📋 Planned
+- **ドキュメント更新**: リリースノート、ユーザーガイド、FAQ
+- **マイナー改善**: UI/UXの細かな調整
+- **リリースノート**: `docs/releases/v1.7.1.md`
+
+#### **v1.7.2** 🔍 Planned
+- **検索・フィルタリング**: 予約情報の検索・絞り込み機能
+- **エクスポート機能**: PDF、CSV、JSON、iCal形式でのエクスポート
+- **リリースノート**: `docs/releases/v1.7.2.md`
+
+#### **v1.8.0** 🔔 Planned
+- **予約リマインダー**: 出発前のスマート通知機能
+- **予約共有**: 旅行メンバーとの予約情報共有
+- **予約テンプレート**: よく使う予約情報のテンプレート化
+- **リリースノート**: `docs/releases/v1.8.0.md`
 
 ---
 
