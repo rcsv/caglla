@@ -7,6 +7,7 @@ import { PlaceData } from '@/lib/core/types'
 import { PlaceSearchInputProps } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
+import { useClickOutside } from '@/hooks/useClickOutside'
 
 
 /**
@@ -35,19 +36,10 @@ export default function PlaceSearchInput({
   const searchTimeoutRef = useRef<NodeJS.Timeout>()
   const inputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // 外部クリックで検索結果を閉じる
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (resultsRef.current && !resultsRef.current.contains(event.target as Node) &&
-          inputRef.current && !inputRef.current.contains(event.target as Node)) {
-        setShowResults(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  useClickOutside(containerRef, () => setShowResults(false))
 
   // 検索クエリの変更を監視
   useEffect(() => {
@@ -142,7 +134,7 @@ export default function PlaceSearchInput({
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={containerRef}>
       <div className="relative">
         <input
           ref={inputRef}

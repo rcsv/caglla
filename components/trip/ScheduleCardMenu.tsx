@@ -209,7 +209,7 @@ export function ScheduleCardMenu({
                 
                 {/* 日程選択のカスケードメニュー */}
                 {showDaySelector && (
-                  <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[10000]">
+                  <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 zidx-popup-menu-content">
                     <div className="py-1">
                       {filteredDaysForMove.length > 0 ? (
                         filteredDaysForMove.map((day) => (
@@ -254,7 +254,7 @@ export function ScheduleCardMenu({
                 
                 {/* 複製用のカスケードメニュー */}
                 {showDuplicateSelector && (
-                  <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[10000]">
+                  <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 zidx-popup-menu-content">
                     <div className="py-1">
                       {availableDays.length > 0 ? (
                         availableDays.map((day) => (

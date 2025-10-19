@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { getZIndexClass } from '@/lib/core/z-index'
+import { useClickOutside } from '@/hooks/useClickOutside'
 
 export interface HomeHeaderProps {
   appName?: string
@@ -27,15 +28,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('click', handler)
-    return () => document.removeEventListener('click', handler)
-  }, [])
+  useClickOutside(menuRef, () => setOpen(false))
 
   return (
     <header className="bg-white shadow-sm border-b">
