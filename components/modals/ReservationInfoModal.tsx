@@ -193,7 +193,7 @@ export default function ReservationInfoModal({
 
   // 予約タイプ変更時の処理
   const handleTypeChange = (type: ReservationType) => {
-    setReservation(prev => ({
+    setReservation((prev: any) => ({
       ...prev,
       type,
       // タイプ変更時に関連フィールドをクリア
@@ -310,14 +310,14 @@ export default function ReservationInfoModal({
                 <Input
                   label="便名 *"
                   value={reservation.flight_number || ''}
-                  onChange={(e) => setReservation(prev => ({ ...prev, flight_number: e.target.value.toUpperCase() }))}
+                  onChange={(e) => setReservation((prev: any) => ({ ...prev, flight_number: e.target.value.toUpperCase() }))}
                   placeholder="例: ANA123, JAL456"
                   error={validateFlightNumberField(reservation.flight_number || '') || undefined}
                 />
                 <Input
                   label="航空会社"
                   value={reservation.airline || ''}
-                  onChange={(e) => setReservation(prev => ({ ...prev, airline: e.target.value }))}
+                  onChange={(e) => setReservation((prev: any) => ({ ...prev, airline: e.target.value }))}
                   placeholder="例: ANA, JAL"
                 />
               </div>
@@ -326,14 +326,14 @@ export default function ReservationInfoModal({
                 <Input
                   label="出発空港 *"
                   value={reservation.departure_airport || ''}
-                  onChange={(e) => setReservation(prev => ({ ...prev, departure_airport: e.target.value.toUpperCase() }))}
+                  onChange={(e) => setReservation((prev: any) => ({ ...prev, departure_airport: e.target.value.toUpperCase() }))}
                   placeholder="例: NRT, HND"
                   error={validateAirportCodeField(reservation.departure_airport || '') || undefined}
                 />
                 <Input
                   label="到着空港 *"
                   value={reservation.arrival_airport || ''}
-                  onChange={(e) => setReservation(prev => ({ ...prev, arrival_airport: e.target.value.toUpperCase() }))}
+                  onChange={(e) => setReservation((prev: any) => ({ ...prev, arrival_airport: e.target.value.toUpperCase() }))}
                   placeholder="例: ITM, KIX"
                   error={validateAirportCodeField(reservation.arrival_airport || '') || undefined}
                 />
@@ -346,7 +346,7 @@ export default function ReservationInfoModal({
                   value={formatForDatetimeLocal(reservation.departure_at)}
                   onChange={(e) => {
                     const departureTime = new Date(e.target.value)
-                    setReservation(prev => {
+                    setReservation((prev: any) => {
                       const newReservation = { ...prev, departure_at: departureTime }
                       // 到着日時が空の場合は出発日時+2時間を自動設定
                       if (!prev.arrival_at) {
@@ -361,7 +361,7 @@ export default function ReservationInfoModal({
                   label="到着日時 *"
                   type="datetime-local"
                   value={formatForDatetimeLocal(reservation.arrival_at)}
-                  onChange={(e) => setReservation(prev => ({ ...prev, arrival_at: new Date(e.target.value) }))}
+                  onChange={(e) => setReservation((prev: any) => ({ ...prev, arrival_at: new Date(e.target.value) }))}
                   min={
                     reservation.departure_at 
                     ? formatForDatetimeLocal(reservation.departure_at)
@@ -381,7 +381,7 @@ export default function ReservationInfoModal({
                 value={formatForDatetimeLocal(reservation.start_date)}
                 onChange={(e) => {
                   const startTime = new Date(e.target.value)
-                  setReservation(prev => {
+                  setReservation((prev: any) => {
                     const newReservation = { ...prev, start_date: startTime }
                     // 終了日時が空の場合は開始日時+1日を自動設定
                     if (!prev.end_date) {
@@ -396,7 +396,7 @@ export default function ReservationInfoModal({
                 label="終了日時 *"
                 type="datetime-local"
                 value={formatForDatetimeLocal(reservation.end_date)}
-                onChange={(e) => setReservation(prev => ({ ...prev, end_date: new Date(e.target.value) }))}
+                onChange={(e) => setReservation((prev: any) => ({ ...prev, end_date: new Date(e.target.value) }))}
                 min={
                   reservation.start_date 
                   ? formatForDatetimeLocal(reservation.start_date)
@@ -411,13 +411,13 @@ export default function ReservationInfoModal({
             <Input
               label="予約確認番号"
               value={reservation.confirmation_number || ''}
-              onChange={(e) => setReservation(prev => ({ ...prev, confirmation_number: e.target.value }))}
+              onChange={(e) => setReservation((prev: any) => ({ ...prev, confirmation_number: e.target.value }))}
               placeholder="予約確認番号"
             />
             <Select
               label="予約サイト"
               value={reservation.reservation_site || ''}
-              onChange={(e) => setReservation(prev => ({ ...prev, reservation_site: e.target.value as ReservationSite }))}
+              onChange={(e) => setReservation((prev: any) => ({ ...prev, reservation_site: e.target.value as ReservationSite }))}
               options={[
                 { value: '', label: '選択してください' },
                 ...RESERVATION_SITES.map(site => ({ value: site.value, label: site.label }))
@@ -428,7 +428,7 @@ export default function ReservationInfoModal({
           <Input
             label="予約サイトURL"
             value={reservation.reservation_url || ''}
-            onChange={(e) => setReservation(prev => ({ ...prev, reservation_url: e.target.value }))}
+            onChange={(e) => setReservation((prev: any) => ({ ...prev, reservation_url: e.target.value }))}
             placeholder="https://example.com"
             type="url"
           />
@@ -436,7 +436,7 @@ export default function ReservationInfoModal({
           <Textarea
             label="メモ"
             value={reservation.notes || ''}
-            onChange={(e) => setReservation(prev => ({ ...prev, notes: e.target.value }))}
+            onChange={(e) => setReservation((prev: any) => ({ ...prev, notes: e.target.value }))}
             placeholder="追加のメモや情報"
             rows={3}
           />
