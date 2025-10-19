@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>縦型予約カード</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://unpkg.com/lucide-static@latest/font/lucide.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f9fafb;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center py-10 gap-6">
+
+  <!-- ✈️ Flight Card -->
+  <div class="w-[280px] bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-200">
+    <img src="https://source.unsplash.com/400x200/?airport" alt="airport" class="w-full h-36 object-cover">
+    <div class="p-4">
+      <div class="flex items-center gap-2 mb-1">
+        <i class="lucide-plane text-blue-500"></i>
+        <h3 class="font-semibold text-sm text-gray-800 leading-tight">Pittsburgh International Airport</h3>
+      </div>
+      <p class="text-xs text-gray-500 mb-3">1000 Airport Blvd</p>
+
+      <div class="text-gray-900 font-semibold text-lg leading-none">10/20 06:00</div>
+      <div class="text-xs text-gray-500 mb-3">〜 06:30</div>
+
+      <div class="flex flex-wrap items-center gap-1 mb-2">
+        <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md text-xs font-medium">ANA123</span>
+        <span class="text-xs text-gray-600">HND → PIT</span>
+      </div>
+
+      <div class="bg-purple-100 text-purple-700 w-fit px-2 py-0.5 rounded-md text-[11px] font-medium mb-3">
+        123456789
+      </div>
+
+      <p class="text-xs text-gray-400 italic mb-3">特になし</p>
+
+      <button class="w-full bg-blue-600 text-white py-2 text-sm rounded-xl hover:bg-blue-700 transition">
+        予約サイト
+      </button>
+      <p class="text-[10px] text-right text-gray-400 mt-1">skyscanner</p>
+    </div>
+  </div>
+
+  <!-- 🍽️ Restaurant Card -->
+  <div class="w-[280px] bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-200">
+    <img src="https://source.unsplash.com/400x200/?restaurant,bar" alt="restaurant" class="w-full h-36 object-cover">
+    <div class="p-4">
+      <div class="flex items-center gap-2 mb-1">
+        <i class="lucide-utensils text-orange-500"></i>
+        <h3 class="font-semibold text-sm text-gray-800 leading-tight">El Charro Tacos and Tequila Bar</h3>
+      </div>
+      <p class="text-xs text-gray-500 mb-3">561 S Broadway</p>
+
+      <div class="text-gray-900 font-semibold text-lg leading-none">10/20 09:00</div>
+      <div class="text-xs text-gray-500 mb-3">〜 10/21 09:00</div>
+
+      <div class="bg-purple-100 text-purple-700 w-fit px-2 py-0.5 rounded-md text-[11px] font-medium mb-2">
+        AAAA
+      </div>
+
+      <p class="text-[10px] text-right text-gray-400 mt-1">opentable</p>
+    </div>
+  </div>
+
+</body>
+</html>

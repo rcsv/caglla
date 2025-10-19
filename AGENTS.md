@@ -37,27 +37,26 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **日付入力UX改善**: 自動設定・バリデーション
 - **リリースノート**: `docs/releases/v1.7.0.md`
 
-#### **v1.7.1** 🌍 Planned
+#### **v1.7.2** ✅ Released (2024-12-19)
+- **予約情報表示改善**: 航空チケット風デザイン、vicinity対応ほか
+- **リリースノート**: `docs/releases/v1.7.2.md`
+
+#### **v1.8.0** 🌍 Planned
 - **Google Places API 多言語対応**: 9言語でのPlaces情報取得・表示
 - **言語別キャッシュシステム**: 複合キー方式での効率的なキャッシュ管理
 - **ユーザー言語設定**: 言語選択・自動検出機能
-- **リリースノート**: `docs/releases/v1.7.1.md`
+- **リリースノート**: `docs/releases/v1.8.0.md`
 
-#### **v1.7.2** 📋 Planned
-- **ドキュメント更新**: リリースノート、ユーザーガイド、FAQ
-- **マイナー改善**: UI/UXの細かな調整
-- **リリースノート**: `docs/releases/v1.7.2.md`
-
-#### **v1.7.3** 🔍 Planned
+#### **v1.9.0** 🔍 Planned
 - **検索・フィルタリング**: 予約情報の検索・絞り込み機能
 - **エクスポート機能**: PDF、CSV、JSON、iCal形式でのエクスポート
-- **リリースノート**: `docs/releases/v1.7.3.md`
+- **リリースノート**: `docs/releases/v1.9.0.md`
 
-#### **v1.8.0** 🔔 Planned
+#### **v1.10.0** 🔔 Planned
 - **予約リマインダー**: 出発前のスマート通知機能
 - **予約共有**: 旅行メンバーとの予約情報共有
 - **予約テンプレート**: よく使う予約情報のテンプレート化
-- **リリースノート**: `docs/releases/v1.8.0.md`
+- **リリースノート**: `docs/releases/v1.10.0.md`
 
 ---
 
