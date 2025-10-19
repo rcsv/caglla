@@ -19,6 +19,8 @@ import { isValidAmount } from '@/lib/utils/amount-validation'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { DragHandle } from '../common/DragHandle'
 import { TeardropMarker } from '../common/TeardropMarker'
+import { useItineraryEditor } from '@/hooks/useItineraryEditor'
+import { ScheduleCardMenu } from './ScheduleCardMenu'
 
 interface ScheduleCardProps {
   itinerary: Itinerary
@@ -68,26 +70,23 @@ export default function ScheduleCard({
   const [title, setTitle] = useState(itinerary.title || '')
   const [startTime, setStartTime] = useState(itinerary.start_time || '')
   const [endTime, setEndTime] = useState(itinerary.end_time || '')
-  const [isSaving, setIsSaving] = useState(false)
-  const [showMenu, setShowMenu] = useState(false)
-  const [showDaySelector, setShowDaySelector] = useState(false)
-  const [showDuplicateSelector, setShowDuplicateSelector] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const [isEditingTime, setIsEditingTime] = useState(false)
   const [tempStartTime, setTempStartTime] = useState(itinerary.start_time || '')
   const [tempEndTime, setTempEndTime] = useState(itinerary.end_time || '')
   const [destinationTimezone, setDestinationTimezone] = useState('UTC')
-  const [userTimezone, setUserTimezone] = useState('UTC')
   const [isEditingCost, setIsEditingCost] = useState(false)
   const [tempCostAmount, setTempCostAmount] = useState(itinerary.cost_amount?.toString() || '')
   const [tempCostCurrency, setTempCostCurrency] = useState(itinerary.cost_currency || 'JPY')
-  const menuRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const [cachedImage, setCachedImage] = useState<CachedImageInfo | null>(null)
   const [imageLoading, setImageLoading] = useState(false)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [showReservationModal, setShowReservationModal] = useState(false)
+
+  // useItineraryEditorフックを使用
+  const { updateField, updateFields, isSaving } = useItineraryEditor(itinerary, onUpdate)
 
   useEffect(() => {
     setTitle(itinerary.title || '')
@@ -106,10 +105,6 @@ export default function ScheduleCard({
       setDescription(itinerary.description || '')
     }
   }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.description, itinerary.place_data?.editorial_summary?.overview, itinerary.timezone])
-
-  useEffect(() => {
-    setUserTimezone(timezoneUtils.getBrowserTimezone())
-  }, [])
 
   useEffect(() => {
     if (itinerary.place_data) {
@@ -159,98 +154,19 @@ export default function ScheduleCard({
     loadImage()
   }, [itinerary.place_data?.photos])
 
-  // メニューの外側クリックで閉じる
-  useClickOutside(menuRef, () => {
-    setShowMenu(false)
-    setShowDaySelector(false)
-    setShowDuplicateSelector(false)
-  })
-
-  // メニューが開いている時にスクロールやリサイズで位置を更新
-  useEffect(() => {
-    if (!showMenu) return
-    const updateMenuPosition = () => {
-      setShowMenu(false)
-      setTimeout(() => setShowMenu(true), 0)
-    }
-    window.addEventListener('scroll', updateMenuPosition, true)
-    window.addEventListener('resize', updateMenuPosition)
-    return () => {
-      window.removeEventListener('scroll', updateMenuPosition, true)
-      window.removeEventListener('resize', updateMenuPosition)
-    }
-  }, [showMenu])
 
   const handleReservationSave = async (reservation: ReservationInfo) => {
-    try {
-      setIsSaving(true)
-      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reservation })
-      })
-      if (response.ok) {
-        const updatedItinerary = await response.json()
-        onUpdate?.(updatedItinerary)
-        logger.info('予約情報を保存しました:', reservation)
-      } else {
-        logger.error('予約情報の保存に失敗しました')
-        throw new Error('予約情報の保存に失敗しました')
-      }
-    } catch (error) {
-      logger.error('予約情報の保存中にエラーが発生しました:', error)
-      throw error
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleTimeUpdate = async (field: 'start_time' | 'end_time', value: string) => {
-    try {
-      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [field]: value })
-      })
-      if (response.ok) {
-        const updatedItinerary = await response.json()
-        onUpdate?.(updatedItinerary)
-      }
-    } catch (error) {
-      logger.error('Error updating time:', error)
+    const result = await updateField('reservation', reservation)
+    if (result.success) {
+      logger.info('予約情報を保存しました:', reservation)
+    } else if (result.error !== 'aborted') {
+      logger.error('予約情報の保存に失敗しました')
+      throw new Error('予約情報の保存に失敗しました')
     }
   }
 
   const handleTimezoneUpdate = async (timezone: string) => {
-    try {
-      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ timezone })
-      })
-      if (response.ok) {
-        const updatedItinerary = await response.json()
-        onUpdate?.(updatedItinerary)
-      }
-    } catch (error) {
-      logger.error('Error updating timezone:', error)
-    }
-  }
-
-  const handleCurrencyUpdate = async (currency: string) => {
-    try {
-      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cost_currency: currency })
-      })
-      if (response.ok) {
-        const updatedItinerary = await response.json()
-        onUpdate?.(updatedItinerary)
-      }
-    } catch (error) {
-      logger.error('Error updating currency:', error)
-    }
+    await updateField('timezone', timezone)
   }
 
   const handleTimeEditStart = () => {
@@ -260,32 +176,18 @@ export default function ScheduleCard({
   }
 
   const handleTimeSave = async () => {
-    setIsSaving(true)
-    try {
-      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          start_time: tempStartTime,
-          end_time: tempEndTime,
-          timezone: destinationTimezone
-        })
-      })
-      if (response.ok) {
-        const updatedItinerary = await response.json()
-        setStartTime(tempStartTime)
-        setEndTime(tempEndTime)
-        onUpdate?.(updatedItinerary)
-        setIsEditingTime(false)
-      } else {
-        logger.error('Failed to update time')
-        alert('時間の更新に失敗しました')
-      }
-    } catch (error) {
-      logger.error('Error updating time:', error)
+    const result = await updateFields({
+      start_time: tempStartTime,
+      end_time: tempEndTime,
+      timezone: destinationTimezone
+    })
+    if (result.success) {
+      setStartTime(tempStartTime)
+      setEndTime(tempEndTime)
+      setIsEditingTime(false)
+    } else if (result.error !== 'aborted') {
+      logger.error('Failed to update time')
       alert('時間の更新に失敗しました')
-    } finally {
-      setIsSaving(false)
     }
   }
 
@@ -302,27 +204,16 @@ export default function ScheduleCard({
   }
 
   const handleCostSave = async () => {
-    setIsSaving(true)
-    try {
-      const costAmount = tempCostAmount ? parseFloat(tempCostAmount) : undefined
-      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cost_amount: costAmount, cost_currency: tempCostCurrency })
-      })
-      if (response.ok) {
-        const updatedItinerary = await response.json()
-        onUpdate?.(updatedItinerary)
-        setIsEditingCost(false)
-      } else {
-        logger.error('Failed to update cost')
-        alert('費用の更新に失敗しました')
-      }
-    } catch (error) {
-      logger.error('Error updating cost:', error)
+    const costAmount = tempCostAmount ? parseFloat(tempCostAmount) : undefined
+    const result = await updateFields({
+      cost_amount: costAmount,
+      cost_currency: tempCostCurrency
+    })
+    if (result.success) {
+      setIsEditingCost(false)
+    } else if (result.error !== 'aborted') {
+      logger.error('Failed to update cost')
       alert('費用の更新に失敗しました')
-    } finally {
-      setIsSaving(false)
     }
   }
 
@@ -331,90 +222,6 @@ export default function ScheduleCard({
     setTempCostCurrency(itinerary.cost_currency || 'JPY')
     setIsEditingCost(false)
   }
-
-  const handleMenuAction = (action: string) => {
-    switch (action) {
-      case 'moveUp':
-        setShowMenu(false)
-        onMoveUp?.()
-        break
-      case 'moveDown':
-        setShowMenu(false)
-        onMoveDown?.()
-        break
-      case 'moveToDay':
-        setShowDaySelector(true)
-        break
-      case 'duplicateToDay':
-        setShowDuplicateSelector(true)
-        break
-      case 'reservation':
-        setShowMenu(false)
-        setShowReservationModal(true)
-        break
-      case 'delete':
-        setShowMenu(false)
-        if (confirm('このVenueを削除しますか？')) {
-          onDelete?.(itinerary.id)
-        }
-        break
-    }
-  }
-
-  // 日程選択の処理
-  const handleDaySelect = async (targetDayId: string) => {
-    setShowDaySelector(false)
-    setShowMenu(false)
-
-    if (targetDayId === itinerary.day_id) {
-      return
-    }
-
-    try {
-      const response = await fetch('/api/itineraries/move-to-day', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itinerary_id: itinerary.id, target_day_id: targetDayId })
-      })
-      if (response.ok) {
-        const updatedItinerary = await response.json()
-        onMoveToDay?.(itinerary.id, targetDayId)
-      } else {
-        logger.error('Failed to move itinerary')
-        alert('日程の移動に失敗しました')
-      }
-    } catch (error) {
-      logger.error('Error moving itinerary:', error)
-      alert('日程の移動に失敗しました')
-    }
-  }
-
-  // 日程複製の処理
-  const handleDuplicateSelect = async (targetDayId: string) => {
-    setShowDuplicateSelector(false)
-    setShowMenu(false)
-
-    try {
-      const response = await fetch('/api/itineraries/duplicate-to-day', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itinerary_id: itinerary.id, target_day_id: targetDayId })
-      })
-      if (response.ok) {
-        const duplicatedItinerary = await response.json()
-        onDuplicateToDay?.(itinerary.id, targetDayId)
-      } else {
-        logger.error('Failed to duplicate itinerary')
-        alert('日程の複製に失敗しました')
-      }
-    } catch (error) {
-      logger.error('Error duplicating itinerary:', error)
-      alert('日程の複製に失敗しました')
-    }
-  }
-
-  const filteredDaysForMove = availableDays.filter(day => day.id !== itinerary.day_id)
-  const filteredDaysForDuplicate = availableDays
 
   const MAX_CHARS = 150
   const shouldTruncate = description.length > MAX_CHARS
@@ -508,24 +315,7 @@ export default function ScheduleCard({
                     autoFocus
                     onBlur={async () => {
                       if (title !== itinerary.title) {
-                        setIsSaving(true)
-                        try {
-                          const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ title })
-                          })
-                          if (response.ok) {
-                            const updatedItinerary = await response.json()
-                            onUpdate?.(updatedItinerary)
-                          } else {
-                            logger.error('Failed to update title')
-                          }
-                        } catch (error) {
-                          logger.error('Error updating title:', error)
-                        } finally {
-                          setIsSaving(false)
-                        }
+                        await updateField('title', title)
                       }
                       setIsEditingTitle(false)
                     }}
@@ -567,24 +357,7 @@ export default function ScheduleCard({
                     autoFocus
                     onBlur={async () => {
                       if (description !== itinerary.description) {
-                        setIsSaving(true)
-                        try {
-                          const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ description })
-                          })
-                          if (response.ok) {
-                            const updatedItinerary = await response.json()
-                            onUpdate?.(updatedItinerary)
-                          } else {
-                            logger.error('Failed to update description')
-                          }
-                        } catch (error) {
-                          logger.error('Error updating description:', error)
-                        } finally {
-                          setIsSaving(false)
-                        }
+                        await updateField('description', description)
                       }
                       setIsEditingDescription(false)
                     }}
@@ -818,183 +591,27 @@ export default function ScheduleCard({
               <div className="mb-4 px-2">
                 <ActivityTagSelector
                   currentTag={itinerary.activity_tag}
-                  onTagChange={async (tag) => {
-                    try {
-                      const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ activity_tag: tag })
-                      })
-                      if (response.ok) {
-                        const updatedItinerary = await response.json()
-                        onUpdate?.(updatedItinerary)
-                      } else {
-                        logger.error('Failed to update activity tag')
-                      }
-                    } catch (error) {
-                      logger.error('Error updating activity tag:', error)
-                    }
-                  }}
+                  onTagChange={(tag) => updateField('activity_tag', tag)}
                 />
               </div>
             </div>
 
             {/* 右側: ハンバーガーメニュー */}
-            <div className="flex-shrink-0 p-4">
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setShowMenu(!showMenu)}
-                  className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                >
-                  <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                </button>
-
-              {/* ドロップダウンメニュー */}
-              {showMenu && (
-                <div className={`fixed bg-white rounded-md shadow-lg border border-gray-200 ${getZIndexClass('POPUP_MENU')}`} 
-                     style={{
-                       top: menuRef.current ? menuRef.current.getBoundingClientRect().bottom + 4 : 0,
-                       left: menuRef.current ? menuRef.current.getBoundingClientRect().left : 0,
-                       width: '192px' // w-48 = 12rem = 192px
-                     }}>
-                  <div className="py-1">
-                    <button
-                      onClick={() => handleMenuAction('moveUp')}
-                      disabled={isFirst}
-                      className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
-                        isFirst 
-                          ? 'text-gray-400 cursor-not-allowed' 
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                      </svg>
-                      <span>上に移動</span>
-                    </button>
-                    <button
-                      onClick={() => handleMenuAction('moveDown')}
-                      disabled={isLast}
-                      className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
-                        isLast 
-                          ? 'text-gray-400 cursor-not-allowed' 
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                      <span>下に移動</span>
-                    </button>
-                    <div className="relative">
-                      <button
-                        onClick={() => handleMenuAction('moveToDay')}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
-                          </svg>
-                          <span>別の日程に移動</span>
-                        </div>
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      {showDaySelector && (
-                        <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[10000]">
-                          <div className="py-1">
-                            {filteredDaysForMove.length > 0 ? (
-                              filteredDaysForMove.map((day) => (
-                                <button
-                                  key={day.id}
-                                  onClick={() => handleDaySelect(day.id)}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                                >
-                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                                  </svg>
-                                  <span>日程 {day.day_number}</span>
-                                </button>
-                              ))
-                            ) : (
-                              <div className="px-4 py-2 text-sm text-gray-500">移動可能な日程がありません</div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <div className="relative">
-                      <button
-                        onClick={() => handleMenuAction('duplicateToDay')}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M8 2a1 1 0 000 2h2a1 1 0 100-2H8z" />
-                            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
-                          </svg>
-                          <span>別の日程に複製</span>
-                        </div>
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                      {showDuplicateSelector && (
-                        <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[10000]">
-                          <div className="py-1">
-                            {filteredDaysForDuplicate.length > 0 ? (
-                              filteredDaysForDuplicate.map((day) => (
-                                <button
-                                  key={day.id}
-                                  onClick={() => handleDuplicateSelect(day.id)}
-                                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                                >
-                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                                  </svg>
-                                  <span>日程 {day.day_number}</span>
-                                </button>
-                              ))
-                            ) : (
-                              <div className="px-4 py-2 text-sm text-gray-500">複製可能な日程がありません</div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <hr className="my-1" />
-                    <button
-                      onClick={() => handleMenuAction('reservation')}
-                      className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center space-x-2"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a2 2 0 114 0 2 2 0 01-4 0zm8 0a2 2 0 114 0 2 2 0 01-4 0z" clipRule="evenodd" />
-                      </svg>
-                      <span>予約情報</span>
-                      {itinerary.reservation && (
-                        <span className="ml-auto text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                          {getReservationTypeIcon(itinerary.reservation.type)}
-                        </span>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleMenuAction('delete')}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clipRule="evenodd" />
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                      <span>Venue削除</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-              </div>
-            </div>
+            <ScheduleCardMenu
+              isFirst={isFirst}
+              isLast={isLast}
+              availableDays={availableDays}
+              currentDayId={itinerary.day_id}
+              itineraryId={itinerary.id}
+              hasReservation={!!itinerary.reservation}
+              reservationType={itinerary.reservation?.type}
+              onMoveUp={() => onMoveUp?.()}
+              onMoveDown={() => onMoveDown?.()}
+              onMoveToDay={(dayId) => onMoveToDay?.(itinerary.id, dayId)}
+              onDuplicateToDay={(dayId) => onDuplicateToDay?.(itinerary.id, dayId)}
+              onReservation={() => setShowReservationModal(true)}
+              onDelete={() => onDelete?.(itinerary.id)}
+            />
           </div>
         </div>
       </div>
