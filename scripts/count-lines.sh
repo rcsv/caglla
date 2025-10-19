@@ -120,8 +120,8 @@ echo ""
 TOTAL_LINES=0
 FILE_COUNT=0
 
-# ロックファイルを除外
-FILE_LIST=$(echo "$FILE_LIST" | grep -v lock || true)
+# ロックファイルと.mdファイルを除外
+FILE_LIST=$(echo "$FILE_LIST" | grep -v lock | grep -v '\.md$' || true)
 
 while IFS= read -r file; do
     if [ -f "$file" ]; then
