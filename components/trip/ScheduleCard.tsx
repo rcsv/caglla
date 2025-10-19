@@ -12,6 +12,7 @@ import ReservationInfoModal from '../modals/ReservationInfoModal'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { DragHandle } from '../common/DragHandle'
 import { TeardropMarker } from '../common/TeardropMarker'
+import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { useItineraryEditor } from '@/hooks/useItineraryEditor'
 import { ScheduleCardMenu } from './ScheduleCardMenu'
 import { InlineTimeEditor } from '../common/InlineTimeEditor'
@@ -236,7 +237,7 @@ export default function ScheduleCard({
       id={`itinerary-${itinerary.id}`}
     >
       <div 
-        className="flex items-start space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 -m-2 transition-colors"
+        className="flex items-start space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-1 -m-3 transition-colors"
         onClick={() => onItineraryClick?.(itinerary.id)}
       >
         {/* ドラッグハンドル（アイコンのみ） */}
@@ -244,11 +245,7 @@ export default function ScheduleCard({
           <DragHandle {...dragHandleProps} isDragging={isDragging} />
         )}
 
-        {/* ソート番号（ティアドロップ形状） */}
-        <TeardropMarker 
-          number={displayNumber || itinerary.sort_number} 
-          isSelected={isSelected}
-        />
+        {/* 外側ティアドロップは削除し、横幅を広げる */}
 
         {/* カード本体 */}
         <div className={`flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${isSelected ? 'ring-2 ring-red-500 ring-opacity-50' : ''}`}>
@@ -260,7 +257,16 @@ export default function ScheduleCard({
               cachedImage={cachedImage}
               imageLoading={imageLoading}
               photoReference={itinerary.place_data?.photos?.[0]?.photo_reference}
-            />
+            >
+              {/* 画像左上に数字入りティアドロップ（Google Maps対応の番号と一致） */}
+              <div className="absolute top-1.5 left-1.5 pointer-events-none">
+                <TeardropMarker 
+                  number={displayNumber || itinerary.sort_number}
+                  isSelected={isSelected}
+                  className="mt-1.5 ml-1.5"
+                />
+              </div>
+            </ScheduleCardImage>
 
             {/* 中央: メインコンテンツ */}
             <div className="flex-1 p-4 min-w-0">

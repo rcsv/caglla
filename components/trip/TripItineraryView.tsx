@@ -323,13 +323,14 @@ export default function TripItineraryView({
 
                     {sortedItineraries && sortedItineraries.length > 0 ? (
                       <div className="mt-6">
-                        <div className="flex justify-between items-center mb-4">
-                          <h4 className="font-medium text-gray-900">スケジュール</h4>
+                        <div className="flex justify-end items-center mb-4">
                           <button
                             onClick={() => onAddSchedule(day.id)}
-                            className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                            title="Venueを追加"
+                            aria-label="Venueを追加"
                           >
-                            Venue / Point of Interest を追加
+                            <IconRenderer iconName="plus" />
                           </button>
                         </div>
                         <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
@@ -424,12 +425,13 @@ export default function TripItineraryView({
                       </div>
                     ) : (
                       <div className="text-center py-8 text-gray-500">
-                        <p>まだスケジュールがありません</p>
                         <button
                           onClick={() => onAddSchedule(day.id)}
-                          className="text-blue-600 hover:text-blue-800 font-medium"
+                          className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors mx-auto"
+                          title="Venueを追加"
+                          aria-label="Venueを追加"
                         >
-                          Venue / Point of Interest を追加
+                          <IconRenderer iconName="plus" className="w-5 h-5" />
                         </button>
                       </div>
                     )}

@@ -8,6 +8,7 @@ interface ScheduleCardImageProps {
   cachedImage: CachedImageInfo | null
   imageLoading: boolean
   photoReference?: string
+  children?: React.ReactNode
 }
 
 export function ScheduleCardImage({
@@ -15,7 +16,8 @@ export function ScheduleCardImage({
   title,
   cachedImage,
   imageLoading,
-  photoReference
+  photoReference,
+  children
 }: ScheduleCardImageProps) {
   return (
     <div className="flex-shrink-0 w-32 h-18 relative">
@@ -47,6 +49,12 @@ export function ScheduleCardImage({
           {imageLoading && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
               <div className="text-white text-xs">読み込み中...</div>
+            </div>
+          )}
+          {/* overlay content */}
+          {children && (
+            <div className="absolute inset-0 pointer-events-none">
+              {children}
             </div>
           )}
         </>
