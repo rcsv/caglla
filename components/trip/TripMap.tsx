@@ -4,6 +4,8 @@ import logger from '@/lib/core/logger'
 import { useEffect, useRef, useState } from 'react'
 import { Itinerary, Trip } from '@/lib/core/types'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
+import { useAuth } from '@/lib/contexts/auth'
+import { getUserLanguage } from '@/lib/utils/language'
 import { routeOptimizer } from '@/lib/travel/route-optimization'
 import { getZIndexClass } from '@/lib/core/z-index'
 import POIDialog from '@/components/modals/POIDialog'
@@ -105,6 +107,7 @@ export default function TripMap({
   const [directionsRenderer, setDirectionsRenderer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
   const [internalPoiData, setInternalPoiData] = useState<{
     placeId: string
     name: string
@@ -119,8 +122,8 @@ export default function TripMap({
         setLoading(true)
         setError(null)
         
-        // 共通ローダーを使用してAPIを読み込み（環境変数検証はローダー内で実施）
-        await loadGoogleMapsAPI()
+        // 共通ローダーを使用してAPIを読み込み（ユーザー言語を付与）
+        await loadGoogleMapsAPI(getUserLanguage(user as any))
         
         if (!mapRef.current || !window.google) {
           throw new Error('Google Maps APIの読み込みに失敗しました')

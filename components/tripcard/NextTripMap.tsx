@@ -3,6 +3,8 @@ import logger from '@/lib/core/logger'
 
 import { useEffect, useRef, useState } from 'react'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
+import { useAuth } from '@/lib/contexts/auth'
+import { getUserLanguage } from '@/lib/utils/language'
 import { getZIndexClass } from '@/lib/core/z-index'
 import { PinIcon } from '@/components/common/icons/PinIcon'
 import { getCountryFlag } from '@/lib/utils/country-flags'
@@ -32,6 +34,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
   const [map, setMap] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
 
   // Google Maps API の読み込み
   useEffect(() => {
@@ -42,8 +45,8 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
         
         logger.debug('NextTripMap: 地図の初期化を開始')
         
-        // 共通ローダーを使用してAPIを読み込み（環境変数検証はローダー内で実施）
-        await loadGoogleMapsAPI()
+        // 共通ローダーを使用してAPIを読み込み（ユーザー言語を付与）
+        await loadGoogleMapsAPI(getUserLanguage(user as any))
         
         if (!mapRef.current || !window.google) {
           throw new Error('Google Maps APIの読み込みに失敗しました')

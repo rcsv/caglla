@@ -4,6 +4,8 @@ import logger from '@/lib/core/logger'
 import { useEffect, useRef, useState } from 'react'
 import { CountryGroup } from '@/lib/travel/country/utils'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
+import { useAuth } from '@/lib/contexts/auth'
+import { getUserLanguage } from '@/lib/utils/language'
 
 // Google Maps APIの型定義
 declare global {
@@ -24,6 +26,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
   const [markers, setMarkers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
 
   useEffect(() => {
     const initMap = async () => {
@@ -31,8 +34,8 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         setLoading(true)
         setError(null)
 
-        // 共通ローダーを使用してAPIを読み込み
-        await loadGoogleMapsAPI()
+        // 共通ローダーを使用してAPIを読み込み（ユーザー言語を付与）
+        await loadGoogleMapsAPI(getUserLanguage(user as any))
 
         if (!mapRef.current) return
 
