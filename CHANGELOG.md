@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > バージョニング方針: 本プロジェクトはSemVerに準拠します。詳細は `docs/development/versioning.md` を参照してください。
 
+## [1.8.0] - 2025-10-19
+
+### Added
+- **バージョニング方針の策定**
+  - Semantic Versioning 2.0.0（SemVer）への正式準拠
+  - `docs/development/versioning.md` の新規作成
+  - Public APIの範囲定義（API Routes、URLスキーマ、Firestoreスキーマ、環境変数）
+  - 変更種別の判定基準（MAJOR/MINOR/PATCHの明確化）
+
+- **リリースロードマップの再編**
+  - v1.9.0: Places多言語対応（旧v1.7.1計画）
+  - v1.10.0: 検索・エクスポート（旧v1.7.3計画）
+  - v1.11.0: 通知・共有・テンプレート（旧v1.8.0計画）
+  - リリースノート v1.9.0, v1.10.0, v1.11.0 の整備
+
+### Changed
+- **`AGENTS.md`**: ロードマップをSemVerに整合
+- **`CHANGELOG.md`**: SemVer準拠の注記を追加
+- **リリース計画**: 版番号の再編成と整理
+
+### Technical
+- **バージョニング基準の確立**
+  - MAJOR: 互換破壊（API/URL/保存形式の非互換変更）
+  - MINOR: 後方互換のある機能追加・大規模UI刷新（互換維持）
+  - PATCH: バグ修正・内部改善（契約不変）
+
 ## [1.7.2] - 2024-12-19
 
 ### Added
