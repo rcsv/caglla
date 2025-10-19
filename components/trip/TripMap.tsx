@@ -54,54 +54,6 @@ const smoothMoveToLocation = (map: any, targetLat: number, targetLng: number, ta
   }
 }
 
-// ティアドロップ形状のマーカースタイル
-const teardropStyles = `
-  .teardrop-marker {
-    width: 30px;
-    height: 30px;
-    position: relative;
-    background-color: #3B82F6;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .teardrop-marker:hover {
-    transform: rotate(-45deg) scale(1.1);
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
-  }
-  .teardrop-marker::after {
-    content: '';
-    width: 12px;
-    height: 12px;
-    margin: 9px 0 0 9px;
-    position: absolute;
-    border-radius: 50%;
-    background-color: #fff;
-    display: none; /* 白抜きを非表示 */
-  }
-  .teardrop-marker.selected {
-    background-color: #EF4444;
-    transform: rotate(-45deg) scale(1.2);
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
-  }
-  .teardrop-marker.selected::after {
-    background-color: #fff;
-    display: none; /* 選択時も白抜きを非表示 */
-  }
-  .teardrop-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(45deg);
-    color: white;
-    font-weight: bold;
-    font-size: 12px;
-    pointer-events: none;
-  }
-`
-
 interface TripMapProps {
   itineraries: Itinerary[]
   trip?: Trip // 追加: Day 一覧を取得するために必要
@@ -173,11 +125,6 @@ export default function TripMap({
         if (!mapRef.current || !window.google) {
           throw new Error('Google Maps APIの読み込みに失敗しました')
         }
-
-        // CSSスタイルをDOMに追加
-        const styleElement = document.createElement('style')
-        styleElement.textContent = teardropStyles
-        document.head.appendChild(styleElement)
 
         // AdvancedMarkerElement用のmapIdを設定
         // Trip目的地または指定された初期中心位置を使用（フォールバックは東京）
