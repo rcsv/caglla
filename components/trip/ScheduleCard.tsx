@@ -13,35 +13,9 @@ import VenueDistance from './VenueDistance'
 import ActivityTagSelector from './ActivityTagSelector'
 import { IconRenderer } from '../common/icons/IconRenderer'
 import ReservationInfoModal from '../modals/ReservationInfoModal'
-
-// ティアドロップ形状のマーカースタイル（左ペイン用）
-const teardropStyles = `
-  .teardrop-marker-left {
-    width: 30px;
-    height: 30px;
-    position: relative;
-    background-color: #3B82F6;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
-    transition: all 0.2s ease;
-  }
-  .teardrop-marker-left.selected {
-    background-color: #EF4444;
-    transform: rotate(-45deg) scale(1.1);
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
-  }
-  .teardrop-label-left {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(45deg);
-    color: white;
-    font-weight: bold;
-    font-size: 12px;
-    pointer-events: none;
-  }
-`
+import { TIMEZONE_OPTIONS } from '@/lib/data/timezone-options'
+import { isValidTimeFormat, formatTimeForDisplay } from '@/lib/utils/time-validation'
+import { isValidAmount } from '@/lib/utils/amount-validation'
 
 interface ScheduleCardProps {
   itinerary: Itinerary
@@ -85,20 +59,6 @@ export default function ScheduleCard({
   isFirst = false,
   isLast = false
 }: ScheduleCardProps) {
-  
-  // CSSスタイルをDOMに追加
-  useEffect(() => {
-    const styleElement = document.createElement('style')
-    styleElement.textContent = teardropStyles
-    document.head.appendChild(styleElement)
-    
-    return () => {
-      // クリーンアップ時にスタイルを削除
-      if (document.head.contains(styleElement)) {
-        document.head.removeChild(styleElement)
-      }
-    }
-  }, [])
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [description, setDescription] = useState(itinerary.description || '')
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -121,24 +81,119 @@ export default function ScheduleCard({
   const menuRef = useRef<HTMLDivElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
-  
-  // 予約モーダルの状態管理
+  const [cachedImage, setCachedImage] = useState<CachedImageInfo | null>(null)
+  const [imageLoading, setImageLoading] = useState(false)
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [showReservationModal, setShowReservationModal] = useState(false)
 
-  // 予約情報の保存処理
+  useEffect(() => {
+    setTitle(itinerary.title || '')
+    setStartTime(itinerary.start_time || '')
+    setEndTime(itinerary.end_time || '')
+    setTempStartTime(itinerary.start_time || '')
+    setTempEndTime(itinerary.end_time || '')
+    if (itinerary.timezone) {
+      setDestinationTimezone(itinerary.timezone)
+    } else {
+      setDestinationTimezone('UTC')
+    }
+    if (itinerary.place_data?.editorial_summary?.overview && !itinerary.description) {
+      setDescription(itinerary.place_data.editorial_summary.overview)
+    } else {
+      setDescription(itinerary.description || '')
+    }
+  }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.description, itinerary.place_data?.editorial_summary?.overview, itinerary.timezone])
+
+  useEffect(() => {
+    setUserTimezone(timezoneUtils.getBrowserTimezone())
+  }, [])
+
+  useEffect(() => {
+    if (itinerary.place_data) {
+      const detectedTimezone = timezoneUtils.getTimezoneFromPlace(itinerary.place_data)
+      if (detectedTimezone !== 'UTC') {
+        setDestinationTimezone(detectedTimezone)
+        handleTimezoneUpdate(detectedTimezone)
+      }
+    }
+  }, [itinerary.place_data?.place_id])
+
+  useEffect(() => {
+    if (itinerary.place_data && !itinerary.cost_currency) {
+      const detectedCurrency = currencyUtils.getCurrencyFromPlace(itinerary.place_data)
+      if (detectedCurrency !== 'JPY') {
+        setTempCostCurrency(detectedCurrency)
+      }
+    }
+  }, [itinerary.place_data?.place_id, itinerary.cost_currency])
+
+  useEffect(() => {
+    const loadImage = async () => {
+      if (itinerary.place_data?.photos && itinerary.place_data.photos.length > 0) {
+        const photoReference = itinerary.place_data.photos[0].photo_reference
+        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photoReference, 800)
+        try {
+          setImageLoading(true)
+          const cachedImageResult = await getCachedPlaceImage(photoReference, googlePhotoUrl, {
+            width: 800,
+            height: 600,
+            quality: 85
+          })
+          setCachedImage(cachedImageResult)
+          setPhotoUrl(cachedImageResult.url)
+          logger.debug('  Cached image result:', cachedImageResult)
+        } catch (error) {
+          logger.error('  Failed to get cached image:', error)
+          setPhotoUrl(googlePhotoUrl)
+        } finally {
+          setImageLoading(false)
+        }
+      } else {
+        setPhotoUrl(null)
+        setCachedImage(null)
+      }
+    }
+    loadImage()
+  }, [itinerary.place_data?.photos])
+
+  // メニューの外側クリックで閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false)
+        setShowDaySelector(false)
+        setShowDuplicateSelector(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  // メニューが開いている時にスクロールやリサイズで位置を更新
+  useEffect(() => {
+    if (!showMenu) return
+    const updateMenuPosition = () => {
+      setShowMenu(false)
+      setTimeout(() => setShowMenu(true), 0)
+    }
+    window.addEventListener('scroll', updateMenuPosition, true)
+    window.addEventListener('resize', updateMenuPosition)
+    return () => {
+      window.removeEventListener('scroll', updateMenuPosition, true)
+      window.removeEventListener('resize', updateMenuPosition)
+    }
+  }, [showMenu])
+
   const handleReservationSave = async (reservation: ReservationInfo) => {
     try {
       setIsSaving(true)
       const response = await fetch(`/api/itineraries/${itinerary.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          reservation: reservation
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reservation })
       })
-
       if (response.ok) {
         const updatedItinerary = await response.json()
         onUpdate?.(updatedItinerary)
@@ -155,228 +210,13 @@ export default function ScheduleCard({
     }
   }
 
-  // メニューの外側クリックで閉じる
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false)
-        setShowDaySelector(false)
-        setShowDuplicateSelector(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
-
-  // メニューが開いている時にスクロールやリサイズで位置を更新
-  useEffect(() => {
-    if (!showMenu) return
-
-    const updateMenuPosition = () => {
-      // メニューの位置を再計算するために強制的に再レンダリング
-      setShowMenu(false)
-      setTimeout(() => setShowMenu(true), 0)
-    }
-
-    window.addEventListener('scroll', updateMenuPosition, true)
-    window.addEventListener('resize', updateMenuPosition)
-
-    return () => {
-      window.removeEventListener('scroll', updateMenuPosition, true)
-      window.removeEventListener('resize', updateMenuPosition)
-    }
-  }, [showMenu])
-
-  // itineraryの変更時にタイトルと時間を更新
-  useEffect(() => {
-    setTitle(itinerary.title || '')
-    setStartTime(itinerary.start_time || '')
-    setEndTime(itinerary.end_time || '')
-    setTempStartTime(itinerary.start_time || '')
-    setTempEndTime(itinerary.end_time || '')
-    
-    // タイムゾーンは既存の値を保持し、なければUTCをデフォルトに
-    if (itinerary.timezone) {
-      setDestinationTimezone(itinerary.timezone)
-    } else {
-      setDestinationTimezone('UTC')
-    }
-    
-    // 説明欄の初期値を設定（editorial_summaryがあれば使用、なければ既存のdescription）
-    if (itinerary.place_data?.editorial_summary?.overview && !itinerary.description) {
-      setDescription(itinerary.place_data.editorial_summary.overview)
-    } else {
-      setDescription(itinerary.description || '')
-    }
-  }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.description, itinerary.place_data?.editorial_summary?.overview, itinerary.timezone]) // itinerary.timezoneを追加
-
-  // ブラウザのタイムゾーンを取得
-  useEffect(() => {
-    setUserTimezone(timezoneUtils.getBrowserTimezone())
-  }, [])
-
-  // 場所情報からタイムゾーンを自動取得
-  useEffect(() => {
-    if (itinerary.place_data) {
-      const detectedTimezone = timezoneUtils.getTimezoneFromPlace(itinerary.place_data)
-      if (detectedTimezone !== 'UTC') {
-        setDestinationTimezone(detectedTimezone)
-        // タイムゾーンを自動保存
-        handleTimezoneUpdate(detectedTimezone)
-      }
-    }
-  }, [itinerary.place_data?.place_id]) // place_idを使用して無限ループを防ぐ
-
-  // 場所情報から通貨を自動取得
-  useEffect(() => {
-    if (itinerary.place_data && !itinerary.cost_currency) {
-      const detectedCurrency = currencyUtils.getCurrencyFromPlace(itinerary.place_data)
-      if (detectedCurrency !== 'JPY') {
-        setTempCostCurrency(detectedCurrency)
-        // 通貨の保存は手動で行う（自動保存を無効化）
-        // handleCurrencyUpdate(detectedCurrency)
-      }
-    }
-  }, [itinerary.place_data?.place_id, itinerary.cost_currency]) // place_idを使用して無限ループを防ぐ
-
-  // 写真のURLを取得（キャッシュ対応）
-  const [cachedImage, setCachedImage] = useState<CachedImageInfo | null>(null)
-  const [imageLoading, setImageLoading] = useState(false)
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
-
-  // 画像のキャッシュ処理
-  useEffect(() => {
-    const loadImage = async () => {
-      if (itinerary.place_data?.photos && itinerary.place_data.photos.length > 0) {
-        const photoReference = itinerary.place_data.photos[0].photo_reference
-        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photoReference, 800)
-        
-        try {
-          setImageLoading(true)
-          const cachedImageResult = await getCachedPlaceImage(photoReference, googlePhotoUrl, {
-            width: 800,
-            height: 600,
-            quality: 85
-          })
-          
-          setCachedImage(cachedImageResult)
-          setPhotoUrl(cachedImageResult.url)
-          logger.debug('  Cached image result:', cachedImageResult)
-        } catch (error) {
-          logger.error('  Failed to get cached image:', error)
-          // フォールバック: 直接Google Photo URLを使用
-          setPhotoUrl(googlePhotoUrl)
-        } finally {
-          setImageLoading(false)
-        }
-      } else {
-        setPhotoUrl(null)
-        setCachedImage(null)
-      }
-    }
-
-    loadImage()
-  }, [itinerary.place_data?.photos])
-
-
-  // タイトルの編集を開始
-  const handleTitleClick = () => {
-    setIsEditingTitle(true)
-  }
-
-  // タイトルの編集を保存
-  const handleTitleSave = async () => {
-    if (title !== itinerary.title) {
-      setIsSaving(true)
-      try {
-        const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            title
-          })
-        })
-
-        if (response.ok) {
-          const updatedItinerary = await response.json()
-          onUpdate?.(updatedItinerary)
-        } else {
-          logger.error('Failed to update title')
-        }
-      } catch (error) {
-        logger.error('Error updating title:', error)
-      } finally {
-        setIsSaving(false)
-      }
-    }
-    setIsEditingTitle(false)
-  }
-
-  // タイトルの編集をキャンセル
-  const handleTitleCancel = () => {
-    setTitle(itinerary.title || '')
-    setIsEditingTitle(false)
-  }
-
-  // メモの編集を開始
-  const handleDescriptionClick = () => {
-    setIsEditingDescription(true)
-  }
-
-  // メモの編集を保存
-  const handleDescriptionSave = async () => {
-    if (description !== itinerary.description) {
-      setIsSaving(true)
-      try {
-        const response = await fetch(`/api/itineraries/${itinerary.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            description
-          })
-        })
-
-        if (response.ok) {
-          const updatedItinerary = await response.json()
-          onUpdate?.(updatedItinerary)
-        } else {
-          logger.error('Failed to update description')
-        }
-      } catch (error) {
-        logger.error('Error updating description:', error)
-      } finally {
-        setIsSaving(false)
-      }
-    }
-    setIsEditingDescription(false)
-  }
-
-  // メモの編集をキャンセル
-  const handleDescriptionCancel = () => {
-    setDescription(itinerary.description || '')
-    setIsEditingDescription(false)
-  }
-
-  // 時間の更新
   const handleTimeUpdate = async (field: 'start_time' | 'end_time', value: string) => {
     try {
       const response = await fetch(`/api/itineraries/${itinerary.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          [field]: value
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value })
       })
-
       if (response.ok) {
         const updatedItinerary = await response.json()
         onUpdate?.(updatedItinerary)
@@ -386,19 +226,13 @@ export default function ScheduleCard({
     }
   }
 
-  // タイムゾーンの更新
   const handleTimezoneUpdate = async (timezone: string) => {
     try {
       const response = await fetch(`/api/itineraries/${itinerary.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          timezone
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timezone })
       })
-
       if (response.ok) {
         const updatedItinerary = await response.json()
         onUpdate?.(updatedItinerary)
@@ -408,19 +242,13 @@ export default function ScheduleCard({
     }
   }
 
-  // 通貨の更新
   const handleCurrencyUpdate = async (currency: string) => {
     try {
       const response = await fetch(`/api/itineraries/${itinerary.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          cost_currency: currency
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cost_currency: currency })
       })
-
       if (response.ok) {
         const updatedItinerary = await response.json()
         onUpdate?.(updatedItinerary)
@@ -430,30 +258,24 @@ export default function ScheduleCard({
     }
   }
 
-  // 時間編集を開始
   const handleTimeEditStart = () => {
     setTempStartTime(startTime)
     setTempEndTime(endTime)
     setIsEditingTime(true)
   }
 
-  // 時間編集を保存
   const handleTimeSave = async () => {
     setIsSaving(true)
     try {
-      // 開始時間と終了時間を同時に更新
       const response = await fetch(`/api/itineraries/${itinerary.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           start_time: tempStartTime,
           end_time: tempEndTime,
           timezone: destinationTimezone
         })
       })
-
       if (response.ok) {
         const updatedItinerary = await response.json()
         setStartTime(tempStartTime)
@@ -472,44 +294,27 @@ export default function ScheduleCard({
     }
   }
 
-  // 時間編集をキャンセル
   const handleTimeCancel = () => {
     setTempStartTime(startTime)
     setTempEndTime(endTime)
     setIsEditingTime(false)
   }
 
-  // 時間フォーマットのバリデーション
-  const isValidTimeFormat = (time: string) => {
-    if (!time) return true // 空の場合は有効
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/
-    return timeRegex.test(time)
-  }
-
-  // 費用編集を開始
   const handleCostEditStart = () => {
     setTempCostAmount(itinerary.cost_amount?.toString() || '')
     setTempCostCurrency(itinerary.cost_currency || 'JPY')
     setIsEditingCost(true)
   }
 
-  // 費用編集を保存
   const handleCostSave = async () => {
     setIsSaving(true)
     try {
       const costAmount = tempCostAmount ? parseFloat(tempCostAmount) : undefined
-      
       const response = await fetch(`/api/itineraries/${itinerary.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          cost_amount: costAmount,
-          cost_currency: tempCostCurrency
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cost_amount: costAmount, cost_currency: tempCostCurrency })
       })
-
       if (response.ok) {
         const updatedItinerary = await response.json()
         onUpdate?.(updatedItinerary)
@@ -526,21 +331,12 @@ export default function ScheduleCard({
     }
   }
 
-  // 費用編集をキャンセル
   const handleCostCancel = () => {
     setTempCostAmount(itinerary.cost_amount?.toString() || '')
     setTempCostCurrency(itinerary.cost_currency || 'JPY')
     setIsEditingCost(false)
   }
 
-  // 数値のバリデーション
-  const isValidAmount = (amount: string) => {
-    if (!amount) return true // 空の場合は有効
-    const num = parseFloat(amount)
-    return !isNaN(num) && num >= 0
-  }
-
-  // メニューアイテムのクリック処理
   const handleMenuAction = (action: string) => {
     switch (action) {
       case 'moveUp':
@@ -574,23 +370,17 @@ export default function ScheduleCard({
   const handleDaySelect = async (targetDayId: string) => {
     setShowDaySelector(false)
     setShowMenu(false)
-    
+
     if (targetDayId === itinerary.day_id) {
-      return // 同じ日程の場合は何もしない
+      return
     }
 
     try {
       const response = await fetch('/api/itineraries/move-to-day', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          itinerary_id: itinerary.id,
-          target_day_id: targetDayId
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itinerary_id: itinerary.id, target_day_id: targetDayId })
       })
-
       if (response.ok) {
         const updatedItinerary = await response.json()
         onMoveToDay?.(itinerary.id, targetDayId)
@@ -608,19 +398,13 @@ export default function ScheduleCard({
   const handleDuplicateSelect = async (targetDayId: string) => {
     setShowDuplicateSelector(false)
     setShowMenu(false)
-    
+
     try {
       const response = await fetch('/api/itineraries/duplicate-to-day', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          itinerary_id: itinerary.id,
-          target_day_id: targetDayId
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itinerary_id: itinerary.id, target_day_id: targetDayId })
       })
-
       if (response.ok) {
         const duplicatedItinerary = await response.json()
         onDuplicateToDay?.(itinerary.id, targetDayId)
@@ -634,11 +418,9 @@ export default function ScheduleCard({
     }
   }
 
-  // 利用可能な日程をフィルタリング（移動時は自身の日程を除外、複製時は全て表示）
   const filteredDaysForMove = availableDays.filter(day => day.id !== itinerary.day_id)
   const filteredDaysForDuplicate = availableDays
 
-  // 説明文の展開/折りたたみロジック
   const MAX_CHARS = 150
   const shouldTruncate = description.length > MAX_CHARS
   const displayText = shouldTruncate && !isExpanded 
@@ -647,14 +429,6 @@ export default function ScheduleCard({
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded)
-  }
-
-  // 時刻フォーマットを一般ユーザー向けに変更（08:00 → 8:00）
-  const formatTimeForDisplay = (time: string): string => {
-    if (!time) return '--:--'
-    const [hours, minutes] = time.split(':')
-    const hour = parseInt(hours, 10)
-    return `${hour}:${minutes}`
   }
 
   return (
@@ -702,26 +476,23 @@ export default function ScheduleCard({
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       logger.error('❌ Image load error for:', itinerary.title, photoUrl)
-                      // キャッシュされた画像が読み込めない場合は、元のGoogle Photo URLにフォールバック
                       if (cachedImage?.cached && itinerary.place_data?.photos?.[0]?.photo_reference) {
                         const target = e.target as HTMLImageElement
                         const googlePhotoUrl = placesApiHelpers.getPhotoUrl(itinerary.place_data.photos[0].photo_reference, 800)
                         target.src = googlePhotoUrl
                       } else {
-                        e.currentTarget.style.display = 'none'
+                        ;(e.currentTarget as HTMLImageElement).style.display = 'none'
                       }
                     }}
                     onLoad={() => {
                       logger.debug('✅ Image loaded successfully for:', itinerary.title)
                     }}
                   />
-                  {/* キャッシュ状態インジケーター */}
                   {cachedImage?.cached && (
                     <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded-full opacity-75">
                       C
                     </div>
                   )}
-                  {/* ローディングインジケーター */}
                   {imageLoading && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                       <div className="text-white text-xs">読み込み中...</div>
@@ -752,19 +523,42 @@ export default function ScheduleCard({
                     onChange={(e) => setTitle(e.target.value)}
                     className="font-semibold text-gray-900 text-lg bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 flex-1"
                     autoFocus
-                    onBlur={handleTitleSave}
+                    onBlur={async () => {
+                      if (title !== itinerary.title) {
+                        setIsSaving(true)
+                        try {
+                          const response = await fetch(`/api/itineraries/${itinerary.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ title })
+                          })
+                          if (response.ok) {
+                            const updatedItinerary = await response.json()
+                            onUpdate?.(updatedItinerary)
+                          } else {
+                            logger.error('Failed to update title')
+                          }
+                        } catch (error) {
+                          logger.error('Error updating title:', error)
+                        } finally {
+                          setIsSaving(false)
+                        }
+                      }
+                      setIsEditingTitle(false)
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        handleTitleSave()
+                        ;(e.target as HTMLInputElement).blur()
                       } else if (e.key === 'Escape') {
-                        handleTitleCancel()
+                        setTitle(itinerary.title || '')
+                        setIsEditingTitle(false)
                       }
                     }}
                   />
                 ) : (
                   <h4 
                     className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                    onClick={handleTitleClick}
+                    onClick={() => setIsEditingTitle(true)}
                   >
                     {itinerary.title}
                   </h4>
@@ -788,18 +582,41 @@ export default function ScheduleCard({
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                     rows={2}
                     autoFocus
-                    onBlur={handleDescriptionSave}
+                    onBlur={async () => {
+                      if (description !== itinerary.description) {
+                        setIsSaving(true)
+                        try {
+                          const response = await fetch(`/api/itineraries/${itinerary.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ description })
+                          })
+                          if (response.ok) {
+                            const updatedItinerary = await response.json()
+                            onUpdate?.(updatedItinerary)
+                          } else {
+                            logger.error('Failed to update description')
+                          }
+                        } catch (error) {
+                          logger.error('Error updating description:', error)
+                        } finally {
+                          setIsSaving(false)
+                        }
+                      }
+                      setIsEditingDescription(false)
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && e.ctrlKey) {
-                        handleDescriptionSave()
+                        ;(e.target as HTMLTextAreaElement).blur()
                       } else if (e.key === 'Escape') {
-                        handleDescriptionCancel()
+                        setDescription(itinerary.description || '')
+                        setIsEditingDescription(false)
                       }
                     }}
                   />
                 ) : (
                   <div
-                    onClick={handleDescriptionClick}
+                    onClick={() => setIsEditingDescription(true)}
                     className="cursor-pointer text-sm text-gray-700 hover:bg-gray-50 p-2 rounded border border-transparent hover:border-gray-200 min-h-[2.5rem]"
                   >
                     {description ? (
@@ -874,22 +691,9 @@ export default function ScheduleCard({
                         }}
                         className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="UTC">UTC</option>
-                        <option value="Asia/Tokyo">Asia/Tokyo (日本)</option>
-                        <option value="America/New_York">America/New_York (ニューヨーク)</option>
-                        <option value="America/Los_Angeles">America/Los_Angeles (ロサンゼルス)</option>
-                        <option value="Europe/London">Europe/London (ロンドン)</option>
-                        <option value="Europe/Paris">Europe/Paris (パリ)</option>
-                        <option value="Asia/Seoul">Asia/Seoul (ソウル)</option>
-                        <option value="Asia/Shanghai">Asia/Shanghai (上海)</option>
-                        <option value="Asia/Hong_Kong">Asia/Hong_Kong (香港)</option>
-                        <option value="Asia/Singapore">Asia/Singapore (シンガポール)</option>
-                        <option value="Asia/Bangkok">Asia/Bangkok (バンコク)</option>
-                        <option value="Asia/Kolkata">Asia/Kolkata (インド)</option>
-                        <option value="Australia/Sydney">Australia/Sydney (シドニー)</option>
-                        <option value="Pacific/Honolulu">Pacific/Honolulu (ハワイ)</option>
-                        <option value="Pacific/Guam">Pacific/Guam (グアム)</option>
-                        <option value="Pacific/Saipan">Pacific/Saipan (サイパン)</option>
+                        {TIMEZONE_OPTIONS.map((tz) => (
+                          <option key={tz.value} value={tz.value}>{tz.label}</option>
+                        ))}
                       </select>
                     </div>
                     <div className="flex space-x-2">
@@ -911,9 +715,7 @@ export default function ScheduleCard({
                     {(!isValidTimeFormat(tempStartTime) || !isValidTimeFormat(tempEndTime)) && (
                       <p className="text-xs text-red-500">正しい時間形式で入力してください (例: 16:00)</p>
                     )}
-                    <p className="text-xs text-gray-400">
-                      Enterで保存、Escapeでキャンセル
-                    </p>
+                    <p className="text-xs text-gray-400">Enterで保存、Escapeでキャンセル</p>
                   </div>
                 ) : isEditingCost ? (
                   <div className="space-y-2">
@@ -968,9 +770,7 @@ export default function ScheduleCard({
                     {!isValidAmount(tempCostAmount) && (
                       <p className="text-xs text-red-500">正しい金額を入力してください</p>
                     )}
-                    <p className="text-xs text-gray-400">
-                      Enterで保存、Escapeでキャンセル
-                    </p>
+                    <p className="text-xs text-gray-400">Enterで保存、Escapeでキャンセル</p>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-4">
@@ -1039,14 +839,9 @@ export default function ScheduleCard({
                     try {
                       const response = await fetch(`/api/itineraries/${itinerary.id}`, {
                         method: 'PUT',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                          activity_tag: tag
-                        })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ activity_tag: tag })
                       })
-
                       if (response.ok) {
                         const updatedItinerary = await response.json()
                         onUpdate?.(updatedItinerary)
@@ -1125,8 +920,6 @@ export default function ScheduleCard({
                           <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                         </svg>
                       </button>
-                      
-                      {/* 日程選択のカスケードメニュー */}
                       {showDaySelector && (
                         <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[10000]">
                           <div className="py-1">
@@ -1144,9 +937,7 @@ export default function ScheduleCard({
                                 </button>
                               ))
                             ) : (
-                              <div className="px-4 py-2 text-sm text-gray-500">
-                                移動可能な日程がありません
-                              </div>
+                              <div className="px-4 py-2 text-sm text-gray-500">移動可能な日程がありません</div>
                             )}
                           </div>
                         </div>
@@ -1168,8 +959,6 @@ export default function ScheduleCard({
                           <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                         </svg>
                       </button>
-                      
-                      {/* 複製用のカスケードメニュー */}
                       {showDuplicateSelector && (
                         <div className="absolute left-full top-0 ml-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-[10000]">
                           <div className="py-1">
@@ -1187,9 +976,7 @@ export default function ScheduleCard({
                                 </button>
                               ))
                             ) : (
-                              <div className="px-4 py-2 text-sm text-gray-500">
-                                複製可能な日程がありません
-                              </div>
+                              <div className="px-4 py-2 text-sm text-gray-500">複製可能な日程がありません</div>
                             )}
                           </div>
                         </div>

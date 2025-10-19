@@ -254,3 +254,32 @@ body {
 }
 
 /* 右ペインの詳細定義は既存セクション（.right-pane-responsive）を使用する */
+
+/* ティアドロップ形状のマーカー（左ペイン用） */
+.teardrop-marker-left {
+  width: 30px;
+  height: 30px;
+  position: relative;
+  background-color: #3B82F6;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+  transition: all 0.2s ease;
+}
+
+.teardrop-marker-left.selected {
+  background-color: #EF4444;
+  transform: rotate(-45deg) scale(1.1);
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.teardrop-label-left {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+  pointer-events: none;
+}
