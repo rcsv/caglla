@@ -6,21 +6,18 @@ import { placesApiHelpers } from '@/lib/api/google/places'
 import { PlaceData, Itinerary, ActivityTag, ReservationInfo, Day } from '@/lib/core/types'
 import { timezoneUtils } from '@/lib/utils/timezone'
 import { currencyUtils } from '@/lib/utils/currency'
-import { getZIndexClass } from '@/lib/core/z-index'
 import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
-import { getReservationTypeIcon, generateReservationSummary } from '@/lib/utils/reservation-utils'
-import VenueDistance from './VenueDistance'
 import ActivityTagSelector from './ActivityTagSelector'
-import { IconRenderer } from '../common/icons/IconRenderer'
 import ReservationInfoModal from '../modals/ReservationInfoModal'
-import { TIMEZONE_OPTIONS } from '@/lib/data/timezone-options'
-import { isValidTimeFormat, formatTimeForDisplay } from '@/lib/utils/time-validation'
-import { isValidAmount } from '@/lib/utils/amount-validation'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { DragHandle } from '../common/DragHandle'
 import { TeardropMarker } from '../common/TeardropMarker'
 import { useItineraryEditor } from '@/hooks/useItineraryEditor'
 import { ScheduleCardMenu } from './ScheduleCardMenu'
+import { InlineTimeEditor } from '../common/InlineTimeEditor'
+import { InlineCostEditor } from '../common/InlineCostEditor'
+import { ScheduleInfoDisplay } from './ScheduleInfoDisplay'
+import { ScheduleCardImage } from './ScheduleCardImage'
 
 interface ScheduleCardProps {
   itinerary: Itinerary
@@ -257,50 +254,13 @@ export default function ScheduleCard({
         <div className={`flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${isSelected ? 'ring-2 ring-red-500 ring-opacity-50' : ''}`}>
           <div className="flex">
             {/* 左側: 画像（16:9アスペクト比） */}
-            <div className="flex-shrink-0 w-32 h-18 relative">
-              {photoUrl ? (
-                <>
-                  <img
-                    src={photoUrl}
-                    alt={itinerary.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      logger.error('❌ Image load error for:', itinerary.title, photoUrl)
-                      if (cachedImage?.cached && itinerary.place_data?.photos?.[0]?.photo_reference) {
-                        const target = e.target as HTMLImageElement
-                        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(itinerary.place_data.photos[0].photo_reference, 800)
-                        target.src = googlePhotoUrl
-                      } else {
-                        ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-                      }
-                    }}
-                    onLoad={() => {
-                      logger.debug('✅ Image loaded successfully for:', itinerary.title)
-                    }}
-                  />
-                  {cachedImage?.cached && (
-                    <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded-full opacity-75">
-                      C
-                    </div>
-                  )}
-                  {imageLoading && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                      <div className="text-white text-xs">読み込み中...</div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                  {imageLoading ? (
-                    <div className="text-gray-500 text-xs">読み込み中...</div>
-                  ) : (
-                    <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-              )}
-            </div>
+            <ScheduleCardImage
+              photoUrl={photoUrl}
+              title={itinerary.title}
+              cachedImage={cachedImage}
+              imageLoading={imageLoading}
+              photoReference={itinerary.place_data?.photos?.[0]?.photo_reference}
+            />
 
             {/* 中央: メインコンテンツ */}
             <div className="flex-1 p-4 min-w-0">
@@ -405,185 +365,40 @@ export default function ScheduleCard({
               {/* 時間・費用・予約を1行にインラインで配置 */}
               <div className="mb-4 p-2">
                 {isEditingTime ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-gray-700">開始時間:</label>
-                      <input
-                        type="time"
-                        value={tempStartTime}
-                        onChange={(e) => setTempStartTime(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleTimeSave()
-                          } else if (e.key === 'Escape') {
-                            handleTimeCancel()
-                          }
-                        }}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        autoFocus
-                      />
-                      <label className="text-sm font-medium text-gray-700">終了時間:</label>
-                      <input
-                        type="time"
-                        value={tempEndTime}
-                        onChange={(e) => setTempEndTime(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleTimeSave()
-                          } else if (e.key === 'Escape') {
-                            handleTimeCancel()
-                          }
-                        }}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-gray-700">タイムゾーン:</label>
-                      <select
-                        value={destinationTimezone}
-                        onChange={(e) => {
-                          setDestinationTimezone(e.target.value)
-                          handleTimezoneUpdate(e.target.value)
-                        }}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        {TIMEZONE_OPTIONS.map((tz) => (
-                          <option key={tz.value} value={tz.value}>{tz.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={handleTimeSave}
-                        disabled={isSaving || !isValidTimeFormat(tempStartTime) || !isValidTimeFormat(tempEndTime)}
-                        className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                      >
-                        {isSaving ? '保存中...' : '保存'}
-                      </button>
-                      <button
-                        onClick={handleTimeCancel}
-                        disabled={isSaving}
-                        className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                      >
-                        キャンセル
-                      </button>
-                    </div>
-                    {(!isValidTimeFormat(tempStartTime) || !isValidTimeFormat(tempEndTime)) && (
-                      <p className="text-xs text-red-500">正しい時間形式で入力してください (例: 16:00)</p>
-                    )}
-                    <p className="text-xs text-gray-400">Enterで保存、Escapeでキャンセル</p>
-                  </div>
+                  <InlineTimeEditor
+                    startTime={tempStartTime}
+                    endTime={tempEndTime}
+                    timezone={destinationTimezone}
+                    onStartTimeChange={setTempStartTime}
+                    onEndTimeChange={setTempEndTime}
+                    onTimezoneChange={(tz) => {
+                      setDestinationTimezone(tz)
+                      handleTimezoneUpdate(tz)
+                    }}
+                    onSave={handleTimeSave}
+                    onCancel={handleTimeCancel}
+                    isSaving={isSaving}
+                  />
                 ) : isEditingCost ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-gray-700">金額:</label>
-                      <input
-                        type="number"
-                        value={tempCostAmount}
-                        onChange={(e) => setTempCostAmount(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleCostSave()
-                          } else if (e.key === 'Escape') {
-                            handleCostCancel()
-                          }
-                        }}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-24"
-                        placeholder="0"
-                        min="0"
-                        step="0.01"
-                        autoFocus
-                      />
-                      <label className="text-sm font-medium text-gray-700">通貨:</label>
-                      <select
-                        value={tempCostCurrency}
-                        onChange={(e) => setTempCostCurrency(e.target.value)}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                      >
-                        {currencyUtils.getAvailableCurrencies().map((currency) => (
-                          <option key={currency.code} value={currency.code}>
-                            {currency.code} ({currency.name})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={handleCostSave}
-                        disabled={isSaving || !isValidAmount(tempCostAmount)}
-                        className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                      >
-                        {isSaving ? '保存中...' : '保存'}
-                      </button>
-                      <button
-                        onClick={handleCostCancel}
-                        disabled={isSaving}
-                        className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                      >
-                        キャンセル
-                      </button>
-                    </div>
-                    {!isValidAmount(tempCostAmount) && (
-                      <p className="text-xs text-red-500">正しい金額を入力してください</p>
-                    )}
-                    <p className="text-xs text-gray-400">Enterで保存、Escapeでキャンセル</p>
-                  </div>
+                  <InlineCostEditor
+                    amount={tempCostAmount}
+                    currency={tempCostCurrency}
+                    onAmountChange={setTempCostAmount}
+                    onCurrencyChange={setTempCostCurrency}
+                    onSave={handleCostSave}
+                    onCancel={handleCostCancel}
+                    isSaving={isSaving}
+                  />
                 ) : (
-                  <div className="flex items-center space-x-4">
-                    {/* 時間要素 */}
-                    <div className="flex items-center space-x-1">
-                      <IconRenderer iconName="clock" className="w-4 h-4" color="#3B82F6" />
-                      {startTime || endTime ? (
-                        <span 
-                          className="text-sm text-gray-600 cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                          onClick={handleTimeEditStart}
-                        >
-                          {formatTimeForDisplay(startTime)} - {formatTimeForDisplay(endTime)}
-                        </span>
-                      ) : (
-                        <span 
-                          className="text-sm text-gray-500 cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                          onClick={handleTimeEditStart}
-                        >
-                          時間
-                        </span>
-                      )}
-                    </div>
-
-                    {/* 費用要素 */}
-                    <div className="flex items-center space-x-1">
-                      <IconRenderer iconName="money" className="w-4 h-4" color="#10B981" />
-                      {itinerary.cost_amount ? (
-                        <span 
-                          className="text-sm text-gray-600 cursor-pointer hover:text-green-600 hover:bg-green-50 px-2 py-1 rounded transition-colors"
-                          onClick={handleCostEditStart}
-                        >
-                          {currencyUtils.formatAmount(itinerary.cost_amount, itinerary.cost_currency || 'JPY')}
-                        </span>
-                      ) : (
-                        <span 
-                          className="text-sm text-gray-500 cursor-pointer hover:text-green-600 hover:bg-green-50 px-2 py-1 rounded transition-colors"
-                          onClick={handleCostEditStart}
-                        >
-                          費用
-                        </span>
-                      )}
-                    </div>
-
-                    {/* 予約要素 */}
-                    <div className="flex items-center space-x-1">
-                      <IconRenderer iconName="reservation" className="w-4 h-4" color="#8B5CF6" />
-                      <span 
-                        className="text-sm text-gray-500 cursor-pointer hover:text-purple-600 hover:bg-purple-50 px-2 py-1 rounded transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setShowReservationModal(true)
-                        }}
-                      >
-                        予約
-                      </span>
-                    </div>
-                  </div>
+                  <ScheduleInfoDisplay
+                    startTime={startTime}
+                    endTime={endTime}
+                    costAmount={itinerary.cost_amount ?? undefined}
+                    costCurrency={itinerary.cost_currency ?? undefined}
+                    onTimeEdit={handleTimeEditStart}
+                    onCostEdit={handleCostEditStart}
+                    onReservationEdit={() => setShowReservationModal(true)}
+                  />
                 )}
               </div>
 
