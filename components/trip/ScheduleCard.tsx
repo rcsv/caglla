@@ -16,6 +16,9 @@ import ReservationInfoModal from '../modals/ReservationInfoModal'
 import { TIMEZONE_OPTIONS } from '@/lib/data/timezone-options'
 import { isValidTimeFormat, formatTimeForDisplay } from '@/lib/utils/time-validation'
 import { isValidAmount } from '@/lib/utils/amount-validation'
+import { useClickOutside } from '@/hooks/useClickOutside'
+import { DragHandle } from '../common/DragHandle'
+import { TeardropMarker } from '../common/TeardropMarker'
 
 interface ScheduleCardProps {
   itinerary: Itinerary
@@ -157,19 +160,11 @@ export default function ScheduleCard({
   }, [itinerary.place_data?.photos])
 
   // メニューの外側クリックで閉じる
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false)
-        setShowDaySelector(false)
-        setShowDuplicateSelector(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [])
+  useClickOutside(menuRef, () => {
+    setShowMenu(false)
+    setShowDaySelector(false)
+    setShowDuplicateSelector(false)
+  })
 
   // メニューが開いている時にスクロールやリサイズで位置を更新
   useEffect(() => {
@@ -442,26 +437,14 @@ export default function ScheduleCard({
       >
         {/* ドラッグハンドル（アイコンのみ） */}
         {dragHandleProps && (
-          <div 
-            {...dragHandleProps.attributes}
-            {...dragHandleProps.listeners}
-            className={`p-1 cursor-grab active:cursor-grabbing hover:bg-gray-100 rounded transition-colors mt-4 ${isDragging ? 'opacity-50' : ''}`}
-            title="ドラッグして順序を変更"
-          >
-            <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M7 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM7 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM7 14a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 2a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 8a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM13 14a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" />
-            </svg>
-          </div>
+          <DragHandle {...dragHandleProps} isDragging={isDragging} />
         )}
 
         {/* ソート番号（ティアドロップ形状） */}
-        <div className="relative mt-3">
-          <div className={`teardrop-marker-left ${isSelected ? 'selected' : ''}`}>
-            <div className="teardrop-label-left">
-              {displayNumber || itinerary.sort_number}
-            </div>
-          </div>
-        </div>
+        <TeardropMarker 
+          number={displayNumber || itinerary.sort_number} 
+          isSelected={isSelected}
+        />
 
         {/* カード本体 */}
         <div className={`flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${isSelected ? 'ring-2 ring-red-500 ring-opacity-50' : ''}`}>
