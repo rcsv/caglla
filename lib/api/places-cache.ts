@@ -1,5 +1,5 @@
 // Places API キャッシュ管理
-import { db } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
 import { getCacheKey, getFallbackLanguages } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
 import type { PlacesCache, SupportedLanguage, PlaceDetailsResult } from '@/lib/core/types'
@@ -20,7 +20,7 @@ export async function getPlaceFromCache(
 ): Promise<PlacesCache | null> {
   try {
     const cacheKey = getCacheKey(placeId, language)
-    const docRef = db.collection(PLACES_CACHE_COLLECTION).doc(cacheKey)
+    const docRef = adminDb.collection(PLACES_CACHE_COLLECTION).doc(cacheKey)
     const doc = await docRef.get()
     
     if (!doc.exists) {
@@ -34,7 +34,7 @@ export async function getPlaceFromCache(
     docRef.update({
       last_accessed: new Date(),
       access_count: (doc.data()?.access_count || 0) + 1
-    }).catch(err => {
+    }).catch((err: any) => {
       logger.warn('Failed to update cache metadata:', err)
     })
     
@@ -90,7 +90,7 @@ export async function savePlaceToCache(
 ): Promise<void> {
   try {
     const cacheKey = getCacheKey(placeData.place_id, language)
-    const docRef = db.collection(PLACES_CACHE_COLLECTION).doc(cacheKey)
+    const docRef = adminDb.collection(PLACES_CACHE_COLLECTION).doc(cacheKey)
     
     const cacheData: PlacesCache = {
       ...placeData,
@@ -171,7 +171,7 @@ export async function deletePlaceCache(
 ): Promise<void> {
   try {
     const cacheKey = getCacheKey(placeId, language)
-    const docRef = db.collection(PLACES_CACHE_COLLECTION).doc(cacheKey)
+    const docRef = adminDb.collection(PLACES_CACHE_COLLECTION).doc(cacheKey)
     
     await docRef.delete()
     
@@ -198,7 +198,7 @@ export async function cleanupOldCache(
   try {
     const cutoffDate = new Date(Date.now() - maxAgeMs)
     
-    const snapshot = await db.collection(PLACES_CACHE_COLLECTION)
+    const snapshot = await adminDb.collection(PLACES_CACHE_COLLECTION)
       .where('last_accessed', '<', cutoffDate)
       .limit(batchSize)
       .get()
@@ -208,8 +208,8 @@ export async function cleanupOldCache(
       return 0
     }
     
-    const batch = db.batch()
-    snapshot.docs.forEach(doc => {
+    const batch = adminDb.batch()
+    snapshot.docs.forEach((doc: any) => {
       batch.delete(doc.ref)
     })
     
