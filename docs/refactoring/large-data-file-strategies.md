@@ -773,3 +773,275 @@ store/
 **ステータス**: 戦略提案完了  
 **推奨**: ドメイン別分割（戦略1）
 
+---
+
+## 🎯 実践的リファクタリング戦略（推奨）
+
+### 提案：フォルダ構成と移行プラン
+
+**結論**: `/lib/model/...` にまとめるのは理にかなっているが、**責務（データ・モデル・型・ロジック）の境界をはっきりさせること**が最も重要。
+
+---
+
+### 推奨フォルダ構成（最終形）
+
+```
+lib/
+├─ data/                     # 実データ（アプリが使うマスタデータ・静的データ）
+│  └─ checklist-rules/       # ← 大きなルール群はここ（コード or JSON）
+│     ├─ index.ts
+│     ├─ transportation.ts
+│     ├─ accommodation.ts
+│     └─ ...
+│
+├─ model/                    # ドメインモデル（型＋ビジネスロジックに近いもの）
+│  ├─ checklist/             # checklist に関連するモデル/ユーティリティ
+│  │  ├─ index.ts
+│  │  ├─ generator.ts
+│  │  └─ types.ts            # checklist-specific types (軽め)
+│  └─ itinerary/             # 他ドメインも同様
+│     ├─ index.ts
+│     └─ types.ts
+│
+├─ core/                     # 共有インフラ（ユーティリティ、共通型、API型）
+│  └─ types/                 # ← 既存の types.ts をここに分割
+│     ├─ index.ts            # 再エクスポート（後方互換）
+│     ├─ user.ts
+│     ├─ trip.ts
+│     ├─ itinerary.ts
+│     └─ common.ts
+│
+└─ api/ / ui/ / components/  # 既存のまま（例）
+```
+
+**理由**:
+* `data/` = 大きな静的データ（ルール）を置く場所
+* `model/` = 「型 + そのドメインに密着したロジック」
+* `core/types/` = プロジェクト横断の型
+* 責務が明確で追いやすい
+* `lib/core/types/index.ts` を残しておけば既存 `import { X } from '@/lib/core/types'` は**変更不要**
+
+---
+
+### 命名規則の指針
+
+* ディレクトリ名は単数／複数で迷うが、**ドメインは単数形（model/checklist）か複数形（data/checklist-rules）を混在させない**
+* ファイル名は `kebab-case`（例：`transportation.ts`）か `camelCase` に統一
+* プロジェクト規約に合わせる
+
+---
+
+### types 分割の具体例
+
+**lib/core/types/index.ts**:
+```typescript
+export * from './user'
+export * from './trip'
+export * from './itinerary'
+export * from './common'
+```
+
+**lib/core/types/trip.ts**:
+```typescript
+export interface Trip {
+  id: string
+  userId: string
+  title: string
+  startDate: string // DateではなくISO文字列にすることを推奨（シリアライズ性）
+  endDate: string
+  // ...
+}
+
+export interface Day { /* ... */ }
+```
+
+**ポイント**: `Date` をそのまま使うとサーバ/クライアントのシリアライズで混乱する。可能なら `string (ISO)` を推奨型にする。
+
+---
+
+### checklist-rules の分割（実例）
+
+**lib/data/checklist-rules/index.ts**:
+```typescript
+export { TRANSPORTATION_RULES } from './transportation'
+export { ACCOMMODATION_RULES } from './accommodation'
+
+// 互換のため全結合も提供
+import { TRANSPORTATION_RULES } from './transportation'
+import { ACCOMMODATION_RULES } from './accommodation'
+
+export const CHECKLIST_RULES = [
+  ...TRANSPORTATION_RULES,
+  ...ACCOMMODATION_RULES,
+  // ...
+]
+
+export function getRulesByCategory(category: string) { /* ... */ }
+```
+
+---
+
+### 後方互換性を壊さない移行手順
+
+#### 1. 新ディレクトリ作成
+
+```bash
+git checkout -b chore/split-types-and-rules
+mkdir -p lib/data/checklist-rules lib/core/types lib/model/checklist
+```
+
+#### 2. 分割ファイルを新しく作る（まずはコピーで安全に）
+
+```bash
+# 例：transportation を新規作成（手作業で切り出し）
+# or
+git mv lib/data/checklist-rules.ts lib/data/checklist-rules/legacy.ts
+# その後 legacy を分割ファイルに分岐して編集
+```
+
+> 重要: `git mv` すると履歴は残るが、`git mv + edit` で履歴追跡しやすくなる。完全に削除するのは最後。
+
+#### 3. lib/core/types.ts を分割
+
+```bash
+git mv lib/core/types.ts lib/core/types/legacy.ts
+# 次に user.ts/trip.ts/... を作る。最後に types/index.ts を作成して export *
+```
+
+#### 4. CIで型チェック・ビルドを回す
+
+```bash
+npm run type-check
+npm run build
+```
+
+#### 5. 既存のimportは変更不要
+
+`lib/core/types` の index で吸収するので**通常は変更不要**。ただし同名の型衝突や名前空間を入れた場合はインポート先を修正する。
+
+#### 6. テスト：ルール個数、動作が同じことを確認
+
+```bash
+# 例: ルール数チェック Node スクリプト（簡易）
+node scripts/verify-rule-count.js
+```
+
+#### 7. 最後に legacy を削除してコミット
+
+```bash
+git rm lib/core/types/legacy.ts lib/data/checklist-rules/legacy.ts
+git commit -m "refactor: Split types and checklist rules into domains"
+```
+
+---
+
+### インポート変更が大量に発生する場合の対処
+
+* 既存の `import { Trip } from '@/lib/core/types'` を **そのまま生かす** のがベスト
+* `index.ts` で全再エクスポートすることで互換性を保てる
+* それでもパスを直したい場合は `codemod`（jscodeshift）や `ripgrep+sed` で一括変換
+
+```bash
+# 例: ripgrep to list files
+rg "from '@/lib/core/types'" -l | xargs -n1 sed -i "s#@/lib/core/types#@/lib/core/types/index#g"
+```
+
+（実行前に必ずバックアップ or git stash）
+
+---
+
+### 循環依存の回避（最重要）
+
+分割で最も破滅的なのは**循環依存**。
+
+**対策**:
+* `lib/core/types/common.ts` に共通インターフェース（ID、Result、Error型など）を置く
+* 片方向の依存に限定する（例：`model/*` が `core/types/*` を参照するが逆は避ける）
+* 型だけが必要なら `type-only` import (`import type { X } from '...'`) を使う
+
+**依存グラフのチェック**:
+```bash
+npx madge --circular lib
+npx madge --image deps.png lib
+```
+
+---
+
+### JSON外部化 or YAML にするか？
+
+* ルール群（100個超）は**将来、CMS化や非エンジニア編集**を考えるなら JSON/YAML に外出しする価値あり
+* ただし型安全性が落ちるので `zod` 等でバリデーションを必須化すること
+* **現状は TypeScript ソースのまま分割するのが手間最小で堅実**
+
+---
+
+### 開発者体験（DX）向上の小技
+
+1. **各大フォルダに README.md を置く**
+   - 用途、主要エクスポート、移行メモを記載
+
+2. **lib/data/checklist-rules/README.md**
+   - 「ルールの追加手順」「ID命名規約」を書く
+
+3. **Prettier/ESLint でファイル長制限**
+   - 長いファイルは折りたたまれづらいので分割推奨
+
+4. **VSCode の paths エイリアス**
+   - `tsconfig.json` で `@/lib/core/types` が指す場所を明確にする
+
+**tsconfig.json 例**:
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/lib/core/types": ["lib/core/types/index.ts"]
+    }
+  }
+}
+```
+
+---
+
+### テスト & チェックリスト
+
+- [ ] 新ディレクトリ作成
+- [ ] 分割ファイルを作る（コピー→検査）
+- [ ] `lib/core/types/index.ts` を作り再エクスポート
+- [ ] `npm run type-check` を通す
+- [ ] アプリの主要フロー（チェックリスト生成）を手動で確認
+- [ ] CI がパスすることを確認
+- [ ] legacyファイルを削除してコミット
+
+---
+
+### 移行の優先順位
+
+1. **まずは `checklist-rules` の分割から**
+   - 影響範囲が限定的で安全
+   - 各ファイルが200-400行程度になり、編集しやすくなる
+
+2. **次に `types.ts` の分割**
+   - 影響範囲が大きいので慎重に
+   - 後回しでもOK
+
+3. **最後に `model/` ディレクトリの整備**
+   - ビジネスロジックをドメイン別に整理
+   - 長期的な保守性向上
+
+---
+
+### 最後に（直言）
+
+* いまの配置（`/lib/core/types` と `/lib/data/checklist-rules`）でも十分まとまってるが、**「model と data を分ける」** という設計は長期的に効く
+* 特に大人数で触るなら今回の分割は絶対にやったほうがいい
+* 面倒に思うなら、まずは `checklist-rules` の分割から手を付けること
+* 型の分割は影響範囲が大きいので、後回しでもOK
+
+---
+
+**更新者**: User + AI Assistant  
+**ステータス**: 実践的移行プラン追加完了  
+**推奨**: 段階的リファクタリング（checklist-rules → types → model）
+
