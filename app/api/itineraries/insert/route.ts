@@ -145,6 +145,7 @@ export async function POST(request: NextRequest) {
           place_id: placesCache.place_id,
           name: placesCache.name,
           formatted_address: placesCache.formatted_address,
+          vicinity: (placesCache as any).vicinity,
           geometry: placesCache.geometry,
           address_components: placesCache.address_components,
           photos: placesCache.photos,
@@ -178,6 +179,7 @@ export async function POST(request: NextRequest) {
             language: language, // 言語フィールド追加
             name: place_data.name,
             formatted_address: place_data.formatted_address,
+            vicinity: (place_data as any).vicinity,
             geometry: place_data.geometry,
             cached_at: new Date(),
             last_accessed: new Date(),
@@ -208,6 +210,7 @@ export async function POST(request: NextRequest) {
           place_id: place_data.place_id,
           name: place_data.name,
           formatted_address: place_data.formatted_address,
+          vicinity: (place_data as any).vicinity,
           geometry: place_data.geometry,
           address_components: place_data.address_components,
           photos: place_data.photos,

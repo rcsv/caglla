@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2024-12-19
+
+### Added
+- **航空チケット風デザイン**
+  - 飛行機予約にANAチケット風の特別レイアウトを適用
+  - 空港コードの強調表示（`text-3xl`サイズ）
+  - フライト番号の階層化（`text-2xl`サイズ、青色強調）
+  - 飛行機アイコンの中央配置
+  - 出発・到着時刻の左右分離表示
+
+- **情報階層の最適化**
+  - 左寄せレイアウトの採用（センタリング回避）
+  - ラベル付き表示（Flight、Departure、Arrival、Confirmation）
+  - 青色の統一（主要情報の視認性向上）
+
+- **住所表示の改善**
+  - Google Places APIの`vicinity`フィールド対応
+  - フォールバック処理（`formatted_address`の最初の部分を表示）
+  - 住所の簡略化（カンマ区切りで最初の要素のみ）
+
+- **企業名表示の改善**
+  - 予約サイト名のフッター配置
+  - ボタンと企業名の重なり解消
+  - 主要予約サイトのロゴ画像対応
+  - footnote風デザインの採用
+
+### Changed
+- **UI/UX改善**
+  - カードサイズの拡大（220px → 280px）
+  - 画像高さの調整（24px → 28px）
+  - パディングの最適化（より余裕のあるレイアウト）
+
+- **API修正**
+  - `itineraries/route.ts`と`insert/route.ts`で`vicinity`フィールドを正しく保存・返却
+  - Places Cacheに`vicinity`フィールドを追加
+  - 既存データとの互換性を確保
+
+### Technical
+- **型定義**
+  - `vicinity`フィールドの型安全性確保
+  - フォールバック処理の型定義
+
+- **コンポーネント**
+  - `TripReservationDisplay`の大幅リファクタリング
+  - 予約タイプ別の条件分岐レイアウト
+  - レスポンシブデザインの改善
+
 ## [1.7.0] - 2024-12-19
 
 ### Added
