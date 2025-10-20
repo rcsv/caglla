@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminTripOperations, adminTripUserOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import type { Trip, User } from '@/lib/core/types'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
+import { resolveDestinationPlace } from '@/lib/api/places-cache'
+import { getUserLanguage } from '@/lib/utils/language'
+import type { Trip, User, PlacesCache } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 
 // 動的レンダリングを強制（request.headersを使用するため）
@@ -73,23 +76,66 @@ export async function GET(request: NextRequest) {
       trips = trips.slice(0, limit)
     }
 
-    // Add creator information to trips
-    const tripsWithCreator = await Promise.all(
+    // Enrich trips: add creator and resolve destination_place from places_cache when available
+    const tripsWithDetails = await Promise.all(
       trips.map(async (trip) => {
+        let creator: User | undefined
+        let destinationPlace = (trip as any).destination_place
+
+        // creator 情報
         try {
-          const creator = await adminUserOperations.getUserByGoogleId(trip.user_id)
-          return {
-            ...trip,
-            creator
-          }
+          creator = await adminUserOperations.getUserByGoogleId(trip.user_id) || undefined
         } catch (error) {
           logger.error('Error fetching creator for trip', error, { tripId: trip.id })
-          return trip
+        }
+
+        // destination_place 解決（共通化された関数を使用）
+        try {
+          const anyTrip: any = trip as any
+          if (!destinationPlace && anyTrip.destination_place_id) {
+            console.log('🔍 Resolving destination_place for trip:', {
+              tripId: trip.id,
+              destination_place_id: anyTrip.destination_place_id
+            })
+            
+            // サーバーサイドではユーザー情報が無いことが多いので、
+            // 言語はデフォルトフォールバック戦略で決定（getUserLanguageはserverではDEFAULTを返すため使用しない）
+            // 呼び出し側（クライアントや上位API）でユーザー言語を渡すのが望ましいが、
+            // ここでは安全側として 'en' を優先（Places v1 のベースライン言語）
+            const lang: any = 'en'
+            destinationPlace = await resolveDestinationPlace(anyTrip.destination_place_id, lang)
+            
+            console.log('🔍 Places Cache lookup result:', {
+              found: !!destinationPlace,
+              place_id: destinationPlace?.place_id,
+              name: destinationPlace?.name,
+              hasGeometry: !!destinationPlace?.geometry
+            })
+            
+            if (destinationPlace) {
+              console.log('✅ Successfully resolved destination_place:', {
+                place_id: destinationPlace.place_id,
+                name: destinationPlace.name,
+                geometry: destinationPlace.geometry
+              })
+            } else {
+              console.log('❌ Places Cache not found for any language:', anyTrip.destination_place_id)
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error resolving destination_place for trip:', error, { tripId: trip.id })
+          logger.error('Error resolving destination_place for trip', error, { tripId: trip.id })
+        }
+
+        return {
+          ...trip,
+          ...(creator ? { creator } : {}),
+          ...(destinationPlace ? { destination_place: destinationPlace } : {})
         }
       })
     )
 
-    return NextResponse.json({ trips: tripsWithCreator })
+    return NextResponse.json({ trips: tripsWithDetails })
   } catch (error) {
     logger.error('Error fetching trips', error)
     return NextResponse.json(

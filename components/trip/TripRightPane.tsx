@@ -20,6 +20,10 @@ interface TripRightPaneProps {
   onPoiDataUpdate: (poiData: any) => void
   onAddFromPOI?: (placeId: string, dayId: string) => Promise<void> // POIから追加する際のハンドラー
   getFilteredItineraries: () => Itinerary[]
+  // 追加: スクロール連動の状態/制御を右ペイン→地図へ伝播
+  scrollSyncEnabled?: boolean
+  onRequestEnableScrollSync?: () => void
+  onMapInteractionStart?: () => void
 }
 
 declare global {
@@ -40,6 +44,9 @@ export default function TripRightPane({
   onPoiDataUpdate,
   onAddFromPOI,
   getFilteredItineraries,
+  scrollSyncEnabled,
+  onRequestEnableScrollSync,
+  onMapInteractionStart,
 }: TripRightPaneProps) {
   // チェックリストビューの場合は右ペイン自体を非表示（メインコンテンツを全幅表示）
   if (currentView === 'checklist') {
@@ -61,6 +68,9 @@ export default function TripRightPane({
           className="h-full"
           focusMode={mapFocusMode}
           initialCenter={trip.destination_place?.geometry?.location || undefined as any}
+          onMapInteractionStart={onMapInteractionStart}
+          scrollSyncEnabled={scrollSyncEnabled}
+          onRequestEnableScrollSync={onRequestEnableScrollSync}
         />
       </div>
     </div>

@@ -191,7 +191,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
 
             // マーカークリック時に情報ウィンドウを表示
             marker.addListener('click', () => {
-              infoWindow.open(newMap, marker)
+              // infoWindow.open(newMap, marker)
             })
 
             newMarkers.push(marker)

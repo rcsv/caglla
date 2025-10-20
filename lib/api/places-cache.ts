@@ -2,7 +2,7 @@
 import { adminDb } from '@/lib/firebase/admin'
 import { getCacheKey, getFallbackLanguages } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
-import type { PlacesCache, SupportedLanguage, PlaceDetailsResult } from '@/lib/core/types'
+import type { PlacesCache, SupportedLanguage, PlaceDetailsResult, PlaceData } from '@/lib/core/types'
 
 const PLACES_CACHE_COLLECTION = 'places_cache'
 const CACHE_FORMAT_VERSION = '2.0.0'
@@ -113,6 +113,56 @@ export async function savePlaceToCache(
   } catch (error) {
     logger.error('Error saving place to cache:', error)
     throw error
+  }
+}
+
+/**
+ * PlacesCacheからPlaceDataに変換（メタデータを除外）
+ * 
+ * @param placesCache - PlacesCacheオブジェクト
+ * @returns PlaceDataオブジェクト
+ */
+export function convertPlacesCacheToPlaceData(placesCache: PlacesCache): PlaceData {
+  return {
+    place_id: placesCache.place_id,
+    name: placesCache.name,
+    formatted_address: placesCache.formatted_address,
+    geometry: placesCache.geometry,
+    address_components: placesCache.address_components,
+    photos: placesCache.photos,
+    rating: placesCache.rating,
+    user_ratings_total: placesCache.user_ratings_total,
+    price_level: placesCache.price_level,
+    types: placesCache.types,
+    opening_hours: placesCache.opening_hours,
+    international_phone_number: placesCache.international_phone_number,
+    website: placesCache.website,
+    editorial_summary: placesCache.editorial_summary,
+  }
+}
+
+/**
+ * destination_place_idからPlaceDataを解決（言語サフィックス対応）
+ * 
+ * @param destinationPlaceId - Google Places API の place_id
+ * @param preferredLanguage - 優先言語（デフォルト: ユーザー言語）
+ * @returns 解決されたPlaceData、見つからない場合はnull
+ */
+export async function resolveDestinationPlace(
+  destinationPlaceId: string,
+  preferredLanguage: SupportedLanguage
+): Promise<PlaceData | null> {
+  try {
+    const placesCache = await getPlaceFromCacheWithFallback(destinationPlaceId, preferredLanguage)
+    
+    if (placesCache) {
+      return convertPlacesCacheToPlaceData(placesCache)
+    }
+    
+    return null
+  } catch (error) {
+    logger.error('Error resolving destination place:', error, { destinationPlaceId })
+    return null
   }
 }
 

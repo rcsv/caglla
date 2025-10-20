@@ -133,6 +133,18 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
 
     logger.debug('NextTripMap: 旅行情報に基づいて地図を更新', trip.destination)
 
+    // デバッグ: tripの座標情報を詳細ログ出力
+    console.log('🗺️ NextTripMap trip debug:', {
+      tripId: trip.id,
+      title: trip.title,
+      destination: trip.destination,
+      destination_place_id: trip.destination_place_id,
+      destination_place: trip.destination_place,
+      destination_place_geometry: trip.destination_place?.geometry,
+      destination_place_location: trip.destination_place?.geometry?.location,
+      hasLocation: !!(trip.destination_place?.geometry?.location)
+    })
+
     // 旅行データの座標のみを使用（ブラウザ現在地には依存しない）
     const center = trip.destination_place?.geometry?.location || TOKYO_CENTER
     const zoom = trip.destination_place?.geometry?.location ? 11 : 10
