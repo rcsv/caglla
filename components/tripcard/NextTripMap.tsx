@@ -28,6 +28,9 @@ declare global {
   }
 }
 
+// 東京のデフォルト座標（DRY原則に従って定数化）
+const TOKYO_CENTER = { lat: 35.6762, lng: 139.6503 }
+
 export default function NextTripMap({ trip, className = '' }: NextTripMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const markerRef = useRef<any>(null)
@@ -54,11 +57,12 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
 
         logger.debug('NextTripMap: Google Maps API読み込み完了')
 
-        // Trip目的地を優先、フォールバックは東京
-        const defaultCenter = trip.destination_place?.geometry?.location || { lat: 35.6762, lng: 139.6503 }
+        // Trip目的地を優先、フォールバックは東京（ズームレベルも一貫性を保つ）
+        const defaultCenter = trip.destination_place?.geometry?.location || TOKYO_CENTER
+        const defaultZoom = trip.destination_place?.geometry?.location ? 11 : 10
         
         const newMap = new window.google.maps.Map(mapRef.current, {
-          zoom: 10,
+          zoom: defaultZoom,
           center: defaultCenter,
           mapTypeControl: false,
           streetViewControl: false,
@@ -129,7 +133,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
     logger.debug('NextTripMap: 旅行情報に基づいて地図を更新', trip.destination)
 
     // 旅行データの座標のみを使用（ブラウザ現在地には依存しない）
-    const center = trip.destination_place?.geometry?.location || { lat: 35.6762, lng: 139.6503 }
+    const center = trip.destination_place?.geometry?.location || TOKYO_CENTER
     const zoom = trip.destination_place?.geometry?.location ? 11 : 10
     logger.debug('NextTripMap: 旅行データの座標を使用（現在地のフォールバック無効化）', center)
     updateMapAndMarker(center, zoom)
