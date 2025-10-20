@@ -8,6 +8,7 @@ import { getUserLanguage } from '@/lib/utils/language'
 import { getZIndexClass } from '@/lib/core/z-index'
 import { PinIcon } from '@/components/common/icons/PinIcon'
 import { getCountryFlag } from '@/lib/utils/country-flags'
+import { dateUtils } from '@/lib/utils/date'
 import type { Trip } from '@/lib/core/types'
 
 // SVGアイコンコンポーネント
@@ -222,17 +223,14 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
               <div className="text-xs text-gray-500 flex items-center gap-1">
                 <CalendarIcon className="w-3 h-3 text-blue-500" />
                 {(() => {
-                  const startDate = typeof trip.start_date === 'string' 
-                    ? new Date(trip.start_date) 
-                    : trip.start_date instanceof Date 
-                      ? trip.start_date 
-                      : new Date(trip.start_date.seconds * 1000)
-                  const endDate = typeof trip.end_date === 'string' 
-                    ? new Date(trip.end_date) 
-                    : trip.end_date instanceof Date 
-                      ? trip.end_date 
-                      : new Date(trip.end_date.seconds * 1000)
-                  return `${startDate.toLocaleDateString('ja-JP')} - ${endDate.toLocaleDateString('ja-JP')}`
+                  const { futureTrips, pastTrips } = dateUtils.sortTripsByDate([trip])
+                  if (futureTrips.length > 0) {
+                    return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date)
+                  } else if (pastTrips.length > 0) {
+                    return dateUtils.formatPastTripDate(trip.start_date, trip.end_date)
+                  } else {
+                    return dateUtils.formatDateRange(trip.start_date, trip.end_date)
+                  }
                 })()}
               </div>
             )}
