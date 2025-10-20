@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminTripOperations, adminTripUserOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import type { Trip, User } from '@/lib/core/types'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
+import type { Trip, User, PlacesCache } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 
 // 動的レンダリングを強制（request.headersを使用するため）
@@ -73,23 +74,57 @@ export async function GET(request: NextRequest) {
       trips = trips.slice(0, limit)
     }
 
-    // Add creator information to trips
-    const tripsWithCreator = await Promise.all(
+    // Enrich trips: add creator and resolve destination_place from places_cache when available
+    const tripsWithDetails = await Promise.all(
       trips.map(async (trip) => {
+        let creator: User | undefined
+        let destinationPlace = (trip as any).destination_place
+
+        // creator 情報
         try {
-          const creator = await adminUserOperations.getUserByGoogleId(trip.user_id)
-          return {
-            ...trip,
-            creator
-          }
+          creator = await adminUserOperations.getUserByGoogleId(trip.user_id) || undefined
         } catch (error) {
           logger.error('Error fetching creator for trip', error, { tripId: trip.id })
-          return trip
+        }
+
+        // destination_place 解決（Homeの地図センタリング用に最低限 geometry を返す）
+        try {
+          const anyTrip: any = trip as any
+          if (!destinationPlace && anyTrip.destination_place_id) {
+            const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(anyTrip.destination_place_id).get()
+            if (cacheDoc.exists) {
+              const placesCache = cacheDoc.data() as PlacesCache
+              destinationPlace = {
+                place_id: placesCache.place_id,
+                name: placesCache.name,
+                formatted_address: placesCache.formatted_address,
+                geometry: placesCache.geometry,
+                address_components: placesCache.address_components,
+                photos: placesCache.photos,
+                rating: placesCache.rating,
+                user_ratings_total: placesCache.user_ratings_total,
+                price_level: placesCache.price_level,
+                types: placesCache.types,
+                opening_hours: placesCache.opening_hours as any,
+                international_phone_number: placesCache.international_phone_number,
+                website: placesCache.website,
+                editorial_summary: placesCache.editorial_summary,
+              }
+            }
+          }
+        } catch (error) {
+          logger.error('Error resolving destination_place for trip', error, { tripId: trip.id })
+        }
+
+        return {
+          ...trip,
+          ...(creator ? { creator } : {}),
+          ...(destinationPlace ? { destination_place: destinationPlace } : {})
         }
       })
     )
 
-    return NextResponse.json({ trips: tripsWithCreator })
+    return NextResponse.json({ trips: tripsWithDetails })
   } catch (error) {
     logger.error('Error fetching trips', error)
     return NextResponse.json(
