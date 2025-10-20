@@ -4,8 +4,14 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import { resolveDestinationPlace } from '@/lib/api/places-cache'
 import { getUserLanguage } from '@/lib/utils/language'
-import type { Trip, User, PlacesCache } from '@/lib/core/types'
+import type { Trip, User, PlacesCache, PlaceData } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
+
+// API応答用の拡張型（destination_placeを含む）
+interface TripWithDestination extends Trip {
+  destination_place?: PlaceData
+  creator?: User
+}
 
 // 動的レンダリングを強制（request.headersを使用するため）
 export const dynamic = 'force-dynamic'
@@ -78,9 +84,9 @@ export async function GET(request: NextRequest) {
 
     // Enrich trips: add creator and resolve destination_place from places_cache when available
     const tripsWithDetails = await Promise.all(
-      trips.map(async (trip) => {
+      trips.map(async (trip): Promise<TripWithDestination> => {
         let creator: User | undefined
-        let destinationPlace = (trip as any).destination_place
+        let destinationPlace: PlaceData | undefined = undefined
 
         // creator 情報
         try {
@@ -91,19 +97,18 @@ export async function GET(request: NextRequest) {
 
         // destination_place 解決（共通化された関数を使用）
         try {
-          const anyTrip: any = trip as any
-          if (!destinationPlace && anyTrip.destination_place_id) {
+          if (!destinationPlace && trip.destination_place_id) {
             console.log('🔍 Resolving destination_place for trip:', {
               tripId: trip.id,
-              destination_place_id: anyTrip.destination_place_id
+              destination_place_id: trip.destination_place_id
             })
             
             // サーバーサイドではユーザー情報が無いことが多いので、
             // 言語はデフォルトフォールバック戦略で決定（getUserLanguageはserverではDEFAULTを返すため使用しない）
             // 呼び出し側（クライアントや上位API）でユーザー言語を渡すのが望ましいが、
             // ここでは安全側として 'en' を優先（Places v1 のベースライン言語）
-            const lang: any = 'en'
-            destinationPlace = await resolveDestinationPlace(anyTrip.destination_place_id, lang)
+            const lang = 'en'
+            destinationPlace = await resolveDestinationPlace(trip.destination_place_id, lang) || undefined
             
             console.log('🔍 Places Cache lookup result:', {
               found: !!destinationPlace,
@@ -119,7 +124,7 @@ export async function GET(request: NextRequest) {
                 geometry: destinationPlace.geometry
               })
             } else {
-              console.log('❌ Places Cache not found for any language:', anyTrip.destination_place_id)
+              console.log('❌ Places Cache not found for any language:', trip.destination_place_id)
             }
           }
         } catch (error) {

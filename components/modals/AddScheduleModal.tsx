@@ -7,12 +7,14 @@ import { CloseIcon } from '@/components/common/icons/CloseIcon'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
+import type { Itinerary } from '@/lib/core/types'
 
-interface AddScheduleModalProps {
+// コンポーネント固有のProps型（中央集約型とは別の用途）
+interface AddScheduleModalComponentProps {
   isOpen: boolean
   onClose: () => void
   dayId: string
-  onScheduleAdded: (schedule: any) => void
+  onScheduleAdded: (schedule: Itinerary) => void
   insertAfterIndex?: number // 挿入位置を指定（undefinedの場合は最後に追加）
 }
 
@@ -36,7 +38,7 @@ export default function AddScheduleModal({
   dayId, 
   onScheduleAdded,
   insertAfterIndex
-}: AddScheduleModalProps) {
+}: AddScheduleModalComponentProps) {
   const { user } = useAuth()
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([])
@@ -67,7 +69,7 @@ export default function AddScheduleModal({
     setIsSearching(true)
     try {
       // ユーザーの言語設定を取得してPlaces APIに渡す
-      const language = getUserLanguage(user as any)
+      const language = getUserLanguage(user)
       const results = await placesApiHelpers.searchPlaces(query, language)
       setSearchResults(results)
     } catch (error) {

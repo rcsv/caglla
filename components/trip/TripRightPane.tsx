@@ -14,10 +14,10 @@ interface TripRightPaneProps {
     placeId: string
     name: string
     location: { lat: number; lng: number }
-    placeData?: any
+    placeData?: import('@/lib/core/types').PlaceData
   } | null
   onItineraryClick: (itineraryId: string) => void
-  onPoiDataUpdate: (poiData: any) => void
+  onPoiDataUpdate: (poiData: { placeId: string; name: string; location: { lat: number; lng: number }; placeData?: import('@/lib/core/types').PlaceData } | null) => void
   onAddFromPOI?: (placeId: string, dayId: string) => Promise<void> // POIから追加する際のハンドラー
   getFilteredItineraries: () => Itinerary[]
   // 追加: スクロール連動の状態/制御を右ペイン→地図へ伝播
@@ -28,7 +28,7 @@ interface TripRightPaneProps {
 
 declare global {
   interface Window {
-    google: any
+    google: typeof google
     initMap: () => void
   }
 }
@@ -67,7 +67,7 @@ export default function TripRightPane({
           poiData={poiData}
           className="h-full"
           focusMode={mapFocusMode}
-          initialCenter={trip.destination_place?.geometry?.location || undefined as any}
+          initialCenter={trip.destination_place?.geometry?.location || undefined}
           onMapInteractionStart={onMapInteractionStart}
           scrollSyncEnabled={scrollSyncEnabled}
           onRequestEnableScrollSync={onRequestEnableScrollSync}

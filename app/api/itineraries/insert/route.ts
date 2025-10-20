@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb, adminAuth } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import type { PlaceData, PlacesCache } from '@/lib/core/types'
+import type { PlaceData, PlacesCache, Itinerary } from '@/lib/core/types'
 import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
 
@@ -52,10 +52,10 @@ export async function POST(request: NextRequest) {
       .orderBy('sort_number', 'asc')
       .get()
     
-    const existingItineraries = existingItinerariesSnapshot.docs.map((doc: any) => ({
+    const existingItineraries = existingItinerariesSnapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot): Itinerary => ({
       id: doc.id,
       ...doc.data()
-    }))
+    } as Itinerary))
 
     // 挿入位置に基づいて新しいsort_numberを計算
     let newSortNumber: number
@@ -75,12 +75,12 @@ export async function POST(request: NextRequest) {
     if (insertAfterIndex < 0 || insertAfterIndex >= existingItineraries.length) {
       // 最後に追加する場合
       newSortNumber = existingItineraries.length > 0 
-        ? Math.max(...existingItineraries.map((i: any) => i.sort_number || 0)) + 1 
+        ? Math.max(...existingItineraries.map((i: Itinerary) => i.sort_number || 0)) + 1 
         : 1
     } else {
       // 指定位置に挿入する場合
       // insertAfterIndexは表示番号（1ベース）
-      let itinerariesToUpdate: any[] = []
+      let itinerariesToUpdate: Itinerary[] = []
       
       if (insertAfterIndex > 0 && insertAfterIndex <= existingItineraries.length) {
         // insertAfterIndex番目の後に挿入するので、sort_numberはinsertAfterIndex + 1
@@ -89,11 +89,11 @@ export async function POST(request: NextRequest) {
         logger.debug('Insert after display index', { insertAfterIndex, newSortNumber })
         
         // 新しいsort_number以降のitinerariesのsort_numberを1つずつ増やす
-        itinerariesToUpdate = existingItineraries.filter((i: any) => (i.sort_number || 0) >= newSortNumber)
+        itinerariesToUpdate = existingItineraries.filter((i: Itinerary) => (i.sort_number || 0) >= newSortNumber)
       } else {
         // 範囲外の場合は最後に追加
         newSortNumber = existingItineraries.length > 0 
-          ? Math.max(...existingItineraries.map((i: any) => i.sort_number || 0)) + 1 
+          ? Math.max(...existingItineraries.map((i: Itinerary) => i.sort_number || 0)) + 1 
           : 1
         itinerariesToUpdate = []
       }

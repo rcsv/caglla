@@ -2,7 +2,7 @@
 import logger from '@/lib/core/logger'
 
 import { useEffect, useRef, useState } from 'react'
-import { Itinerary, Trip } from '@/lib/core/types'
+import { Itinerary, Trip, PlaceData } from '@/lib/core/types'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
@@ -29,7 +29,7 @@ const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: numbe
 }
 
 // 滑らかな移動でマップを更新する関数
-const smoothMoveToLocation = (map: any, targetLat: number, targetLng: number, targetZoom: number) => {
+const smoothMoveToLocation = (map: google.maps.Map, targetLat: number, targetLng: number, targetZoom: number) => {
   const currentCenter = map.getCenter()
   if (!currentCenter) return
   
@@ -66,14 +66,14 @@ interface TripMapProps {
     placeId: string
     name: string
     location: { lat: number; lng: number }
-    placeData?: any
+    placeData?: PlaceData
   } | null) => void
   onAddFromPOI?: (placeId: string, dayId: string) => Promise<void> // POIから追加する際のハンドラー
   poiData?: {
     placeId: string
     name: string
     location: { lat: number; lng: number }
-    placeData?: any
+    placeData?: PlaceData
   } | null
   className?: string
   focusMode?: 'all' | 'day' | 'single' // フォーカスモードを追加
@@ -87,7 +87,7 @@ interface TripMapProps {
 
 declare global {
   interface Window {
-    google: any
+    google: typeof google
     initMap: () => void
   }
 }

@@ -11,6 +11,8 @@ import ActivityTagSelector from './ActivityTagSelector'
 import ReservationInfoModal from '../modals/ReservationInfoModal'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { DragHandle } from '../common/DragHandle'
+import type { DraggableAttributes } from '@dnd-kit/core'
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 import { TeardropMarker } from '../common/TeardropMarker'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { useItineraryEditor } from '@/hooks/useItineraryEditor'
@@ -25,7 +27,7 @@ interface ScheduleCardProps {
   displayNumber?: number
   previousPlace?: PlaceData | null
   nextPlace?: PlaceData | null
-  onUpdate?: (updatedItinerary: any) => void
+  onUpdate?: (updatedItinerary: Itinerary) => void
   onMoveUp?: () => void
   onMoveDown?: () => void
   onMoveToDay?: (itineraryId: string, targetDayId: string) => void
@@ -34,8 +36,8 @@ interface ScheduleCardProps {
   onItineraryClick?: (itineraryId: string) => void
   availableDays?: Day[]
   dragHandleProps?: {
-    attributes: any
-    listeners: any
+    attributes: DraggableAttributes
+    listeners: SyntheticListenerMap
   }
   isDragging?: boolean
   isSelected?: boolean

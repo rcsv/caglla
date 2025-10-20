@@ -5,9 +5,14 @@ import { groupTripsByCountry } from '@/lib/travel/country/utils'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import { adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import type { PlaceData, SupportedLanguage } from '@/lib/core/types'
+import type { PlaceData, SupportedLanguage, Trip, PlacesCacheInput } from '@/lib/core/types'
 import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
+
+// API応答用の拡張型（destination_placeを含む）
+interface TripWithDestination extends Trip {
+  destination_place?: PlaceData
+}
 
 /**
  * Retrieve trips for the authenticated user, optionally grouped by country.
@@ -193,13 +198,14 @@ export async function POST(request: NextRequest) {
         
         const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(cacheKey).get()
         if (cacheDoc.exists) {
-          (trip as any).destination_place = cacheDoc.data()
+          const tripWithDest = trip as TripWithDestination
+          tripWithDest.destination_place = cacheDoc.data() as PlaceData
           await cacheDoc.ref.update({ last_accessed: new Date(), access_count: (cacheDoc.data().access_count || 0) + 1 }).catch(() => {})
         } else if (destinationPlace?.place_id) {
           // 受け取ったオブジェクトがあればキャッシュ保存
           const pd = destinationPlace as PlaceData
           // 新形式でのキャッシュ保存（言語対応）
-          let cachePayload: any = null
+          let cachePayload: PlacesCacheInput | null = null
           try {
             // ユーザーの言語設定を取得
             const language = user ? getUserLanguage(user) : 'ja'
@@ -237,7 +243,8 @@ export async function POST(request: NextRequest) {
           
           // キャッシュ保存成功時のみdestination_placeを設定
           if (cachePayload) {
-            ;(trip as any).destination_place = cachePayload
+            const tripWithDest = trip as TripWithDestination
+            tripWithDest.destination_place = cachePayload
           }
         }
       }

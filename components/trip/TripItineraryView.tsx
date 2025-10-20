@@ -9,6 +9,7 @@ import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useEffect, useRef } from 'react'
+import { toDate } from '@/lib/firebase/timestamp-utils'
 
 interface TripItineraryViewProps {
   trip: Trip
@@ -21,7 +22,7 @@ interface TripItineraryViewProps {
   onAddSchedule: (dayId: string) => void
   onInsertSchedule: (dayId: string, afterIndex: number) => void
   onAddDay: () => void
-  onScheduleUpdated: (updatedItinerary: any) => void
+  onScheduleUpdated: (updatedItinerary: Itinerary) => void
   onMoveUp: (itineraryId: string, dayId: string) => void
   onMoveDown: (itineraryId: string, dayId: string) => void
   onMoveToDay: (itineraryId: string, targetDayId: string) => void
@@ -217,17 +218,10 @@ export default function TripItineraryView({
                         <div className={`text-base ${
                           day.date 
                             ? (() => {
-                                // Firestore Timestamp型またはDate型を処理
                                 let dayDate: Date
-                                if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
-                                  // Firestore Timestamp型の場合
-                                  dayDate = (day.date as any).toDate()
-                                } else {
-                                  // Date型または文字列の場合
-                                  dayDate = new Date(day.date as any)
-                                }
-                                
-                                if (isNaN(dayDate.getTime())) {
+                                try {
+                                  dayDate = toDate(day.date)
+                                } catch {
                                   return 'text-gray-900'
                                 }
                                 const dayOfWeek = dayDate.getDay()
@@ -239,17 +233,10 @@ export default function TripItineraryView({
                         }`}>
                           {day.date 
                             ? (() => {
-                                // Firestore Timestamp型またはDate型を処理
                                 let dayDate: Date
-                                if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
-                                  // Firestore Timestamp型の場合
-                                  dayDate = (day.date as any).toDate()
-                                } else {
-                                  // Date型または文字列の場合
-                                  dayDate = new Date(day.date as any)
-                                }
-                                
-                                if (isNaN(dayDate.getTime())) {
+                                try {
+                                  dayDate = toDate(day.date)
+                                } catch {
                                   return '日付が無効です'
                                 }
                                 const month = dayDate.getMonth() + 1
@@ -300,13 +287,13 @@ export default function TripItineraryView({
                 {!isCollapsed && (
                   <div className="px-6 pb-6">
                     <DayEditor 
-                      day={day as any} 
+                      day={day} 
                       itinerarySummary={itinerarySummary}
-                      onUpdate={(updatedDay: any) => {
+                      onUpdate={(updatedDay: Day) => {
                         onUpdateTrip({
                           ...trip,
                           days: trip.days?.map(d => 
-                            d.id === updatedDay.id ? updatedDay as any : d
+                            d.id === updatedDay.id ? updatedDay : d
                           ) || []
                         })
                       }} 
@@ -363,7 +350,7 @@ export default function TripItineraryView({
                                       isSelected={selectedItineraryId === itinerary.id}
                                       isFirst={index === 0}
                                       isLast={index === (sortedItineraries.length || 0) - 1}
-                                      availableDays={trip.days as any}
+                                      availableDays={trip.days}
                                     />
                                     
                                     {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}

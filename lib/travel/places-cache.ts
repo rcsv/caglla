@@ -8,6 +8,7 @@
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, orderBy, limit, writeBatch } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import { PlacesCache, PlaceData, SupportedLanguage } from '../core/types'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import logger from '@/lib/core/logger'
 import { placesApiHelpers } from '@/lib/api/google/places'
@@ -212,18 +213,10 @@ export class PlacesCacheManager {
       return true // cached_atがない場合は期限切れとする
     }
     
-    // FirestoreDate型を適切に処理
-    let cachedAt: Date
-    if (typeof cacheData.cached_at === 'string') {
-      cachedAt = new Date(cacheData.cached_at)
-    } else if (cacheData.cached_at instanceof Date) {
-      cachedAt = cacheData.cached_at
-    } else if ('toDate' in cacheData.cached_at && typeof cacheData.cached_at.toDate === 'function') {
-      // Firestore Timestamp型
-      cachedAt = cacheData.cached_at.toDate()
-    } else {
+    const cachedAt = toDateOrNull(cacheData.cached_at)
+    if (!cachedAt) {
       logger.error('Invalid cached_at type:', typeof cacheData.cached_at, cacheData.cached_at)
-      return true // 不明な型の場合は期限切れとする
+      return true
     }
     
     const now = new Date()

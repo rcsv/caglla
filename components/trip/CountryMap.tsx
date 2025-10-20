@@ -8,11 +8,7 @@ import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
 
 // Google Maps APIの型定義
-declare global {
-  interface Window {
-    google: any
-  }
-}
+declare global { interface Window { google: typeof google } }
 import { getCountryCoordinate } from '@/lib/travel/country/coordinates'
 
 interface CountryMapProps {
@@ -22,8 +18,8 @@ interface CountryMapProps {
 
 export default function CountryMap({ countryGroups, className = '' }: CountryMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
-  const [map, setMap] = useState<any>(null)
-  const [markers, setMarkers] = useState<any[]>([])
+  const [map, setMap] = useState<google.maps.Map | null>(null)
+  const [markers, setMarkers] = useState<Array<google.maps.marker.AdvancedMarkerElement>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
@@ -35,7 +31,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         setError(null)
 
         // 共通ローダーを使用してAPIを読み込み（ユーザー言語を付与）
-        await loadGoogleMapsAPI(getUserLanguage(user as any))
+        await loadGoogleMapsAPI(getUserLanguage(user))
 
         if (!mapRef.current) return
 
@@ -43,7 +39,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         const newMap = new window.google.maps.Map(mapRef.current, {
           zoom: 2,
           center: { lat: 20, lng: 0 }, // 世界地図の中心
-          mapTypeId: window.google.maps.MapTypeId.ROADMAP,
+          // mapTypeId はMapIDと併用しない
           mapId: '6d1d86ef84ec9c9071f1b459', // Google Maps Platformで作成したMapID
           // すべてのコントロールを無効化
           disableDefaultUI: true, // デフォルトのUIを無効化
@@ -60,10 +56,10 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         setMap(newMap)
 
         // 既存のマーカーをクリア
-        markers.forEach(marker => marker.map = null)
+        markers.forEach(marker => marker.setMap(null))
 
         // 新しいマーカーを作成
-        const newMarkers: any[] = []
+        const newMarkers: google.maps.marker.AdvancedMarkerElement[] = []
 
         countryGroups.forEach((group, index) => {
           const coordinate = getCountryCoordinate(group.countryCode)
@@ -122,10 +118,8 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         if (newMarkers.length > 0) {
           const bounds = new window.google.maps.LatLngBounds()
           newMarkers.forEach(marker => {
-            const position = marker.position
-            if (position) {
-              bounds.extend(position)
-            }
+            const pos: any = (marker as any).position || (marker as any).getPosition?.()
+            if (pos) bounds.extend(pos)
           })
           newMap.fitBounds(bounds)
           

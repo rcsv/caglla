@@ -7,6 +7,8 @@ import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { UnifiedIcon } from '@/components/common/icons/UnifiedIcon'
 import { placesApiHelpers } from '@/lib/api/google/places'
 import Card from '@/components/common/Card'
+import { toDate, toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import type { FirestoreDate } from '@/lib/core/types'
 
 interface TripReservationDisplayProps {
   itineraries: Itinerary[]
@@ -82,106 +84,63 @@ export default function TripReservationDisplay({
     jalan: 'https://logos-world.net/wp-content/uploads/2021/08/Jalan-Logo.png',
   }
 
-  const formatDateTime = (date: any): string => {
+  const formatDateTime = (date: FirestoreDate | null | undefined): string => {
     if (!date) return ''
-    try {
-      const d = new Date((date as any).toDate?.() ?? (date as string))
-      if (isNaN(d.getTime())) return ''
-      return d.toLocaleString('ja-JP', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    } catch {
-      return ''
-    }
+    const d = toDateOrNull(date)
+    if (!d) return ''
+    return d.toLocaleString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
   // 時刻表示ルールに基づくフォーマット関数
-  const formatTimeWithRule = (startDate: any, endDate: any): { start: string; end: string } => {
-    if (!startDate) return { start: '', end: '' }
-    
-    try {
-      const start = new Date((startDate as any).toDate?.() ?? (startDate as string))
-      const end = endDate ? new Date((endDate as any).toDate?.() ?? (endDate as string)) : null
-      
-      if (isNaN(start.getTime())) return { start: '', end: '' }
-      
-      // 開始時刻のフォーマット（常に表示）
-      const startFormatted = start.toLocaleString('ja-JP', {
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-      
-      if (!end || isNaN(end.getTime())) {
-        return { start: startFormatted, end: '' }
-      }
-      
-      // 終了時刻の表示ルール
-      const startYear = start.getFullYear()
-      const startMonth = start.getMonth()
-      const startDay = start.getDate()
-      
-      const endYear = end.getFullYear()
-      const endMonth = end.getMonth()
-      const endDay = end.getDate()
-      
-      let endFormatted = ''
-      
-      if (startYear === endYear && startMonth === endMonth && startDay === endDay) {
-        // 同じ日: 時刻のみ
-        endFormatted = end.toLocaleString('ja-JP', {
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      } else if (startYear === endYear && startMonth === endMonth) {
-        // 同じ月: 日付と時刻
-        endFormatted = end.toLocaleString('ja-JP', {
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      } else if (startYear === endYear) {
-        // 同じ年: 月・日・時刻
-        endFormatted = end.toLocaleString('ja-JP', {
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      } else {
-        // 異なる年: 年・月・日・時刻
-        endFormatted = end.toLocaleString('ja-JP', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      }
-      
-      return { start: startFormatted, end: endFormatted }
-    } catch {
-      return { start: '', end: '' }
+  const formatTimeWithRule = (
+    startDate: FirestoreDate | null | undefined,
+    endDate: FirestoreDate | null | undefined
+  ): { start: string; end: string } => {
+    const start = startDate ? toDateOrNull(startDate) : null
+    const end = endDate ? toDateOrNull(endDate) : null
+    if (!start) return { start: '', end: '' }
+
+    const startFormatted = start.toLocaleString('ja-JP', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+
+    if (!end) return { start: startFormatted, end: '' }
+
+    const startYear = start.getFullYear()
+    const startMonth = start.getMonth()
+    const startDay = start.getDate()
+
+    const endYear = end.getFullYear()
+    const endMonth = end.getMonth()
+    const endDay = end.getDate()
+
+    let endFormatted = ''
+    if (startYear === endYear && startMonth === endMonth && startDay === endDay) {
+      endFormatted = end.toLocaleString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+    } else if (startYear === endYear && startMonth === endMonth) {
+      endFormatted = end.toLocaleString('ja-JP', { day: '2-digit', hour: '2-digit', minute: '2-digit' })
+    } else if (startYear === endYear) {
+      endFormatted = end.toLocaleString('ja-JP', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+    } else {
+      endFormatted = end.toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
     }
+
+    return { start: startFormatted, end: endFormatted }
   }
 
-  const formatTime = (date: any): string => {
-    if (!date) return ''
-    try {
-      const d = new Date((date as any).toDate?.() ?? (date as string))
-      if (isNaN(d.getTime())) return ''
-      return d.toLocaleTimeString('ja-JP', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    } catch {
-      return ''
-    }
+  const formatTime = (date: FirestoreDate | null | undefined): string => {
+    const d = date ? toDateOrNull(date) : null
+    if (!d) return ''
+    return d.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
   }
 
   return (

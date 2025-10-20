@@ -2,7 +2,8 @@
 import { adminDb } from '@/lib/firebase/admin'
 import { getCacheKey, getFallbackLanguages } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
-import type { PlacesCache, SupportedLanguage, PlaceDetailsResult, PlaceData } from '@/lib/core/types'
+import type { PlacesCache, PlacesCacheInput, SupportedLanguage, PlaceDetailsResult, PlaceData } from '@/lib/core/types'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 
 const PLACES_CACHE_COLLECTION = 'places_cache'
 const CACHE_FORMAT_VERSION = '2.0.0'
@@ -92,13 +93,13 @@ export async function savePlaceToCache(
     const cacheKey = getCacheKey(placeData.place_id, language)
     const docRef = adminDb.collection(PLACES_CACHE_COLLECTION).doc(cacheKey)
     
-    const cacheData: PlacesCache = {
+    const cacheData: PlacesCacheInput = {
       ...placeData,
       format_version: CACHE_FORMAT_VERSION,
       place_id: placeData.place_id,
       language: language,
-      cached_at: new Date() as any,
-      last_accessed: new Date() as any,
+      cached_at: new Date(),
+      last_accessed: new Date(),
       access_count: 1
     }
     
@@ -201,9 +202,12 @@ export async function getPlaceMultiLanguage(
 export function isCacheStale(cached: PlacesCache, maxAgeMs: number = 14 * 24 * 60 * 60 * 1000): boolean {
   if (!cached.cached_at) return true
   
-  const cachedTime = cached.cached_at instanceof Date 
-    ? cached.cached_at.getTime() 
-    : new Date(cached.cached_at as any).getTime()
+  const cachedDate = toDateOrNull(cached.cached_at)
+  // 日時変換失敗や無効な値は期限切れとして扱う
+  if (!cachedDate) return true
+  
+  const cachedTime = cachedDate.getTime()
+  if (isNaN(cachedTime)) return true
   
   const age = Date.now() - cachedTime
   return age > maxAgeMs

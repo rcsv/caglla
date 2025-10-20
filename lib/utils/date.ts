@@ -1,14 +1,15 @@
 // Date utility functions
 import { isValidDate as isValidTimestamp, toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import type { FirestoreDate } from '@/lib/core/types'
 
 export const dateUtils = {
   // Check if a date is valid (delegated to timestamp-utils)
-  isValidDate: (date: any): boolean => {
+  isValidDate: (date: FirestoreDate | null | undefined): boolean => {
     return isValidTimestamp(date)
   },
 
   // Format date safely
-  formatDate: (date: any, options?: Intl.DateTimeFormatOptions): string => {
+  formatDate: (date: FirestoreDate, options?: Intl.DateTimeFormatOptions): string => {
     if (!dateUtils.isValidDate(date)) {
       return '日付が設定されていません'
     }
@@ -28,7 +29,7 @@ export const dateUtils = {
   },
 
   // Format date range safely with unified rules
-  formatDateRange: (startDate: any, endDate: any): string => {
+  formatDateRange: (startDate: FirestoreDate, endDate: FirestoreDate): string => {
     if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
       return '日付が設定されていません'
     }
@@ -84,7 +85,7 @@ export const dateUtils = {
   },
 
   // Check if a trip is in the future (start date is today or later)
-  isFutureTrip: (startDate: any): boolean => {
+  isFutureTrip: (startDate: FirestoreDate | null | undefined): boolean => {
     if (!dateUtils.isValidDate(startDate)) return false
     
     const tripStart = toDateOrNull(startDate)
@@ -96,7 +97,7 @@ export const dateUtils = {
   },
 
   // Check if a trip is in the past (start date is before today)
-  isPastTrip: (startDate: any): boolean => {
+  isPastTrip: (startDate: FirestoreDate | null | undefined): boolean => {
     if (!dateUtils.isValidDate(startDate)) return false
     
     const tripStart = toDateOrNull(startDate)
@@ -108,10 +109,10 @@ export const dateUtils = {
   },
 
   // Sort trips by date (future trips ascending, past trips descending)
-  sortTripsByDate: (trips: any[]): { futureTrips: any[], pastTrips: any[] } => {
+  sortTripsByDate: <T extends { start_date?: FirestoreDate }>(trips: T[]): { futureTrips: T[], pastTrips: T[] } => {
     const today = dateUtils.getToday()
     
-    const futureTrips = trips
+    const futureTrips: T[] = trips
       .filter(trip => dateUtils.isFutureTrip(trip.start_date))
       .sort((a, b) => {
         if (!a.start_date || !b.start_date) return 0
@@ -123,7 +124,7 @@ export const dateUtils = {
         return dateA.getTime() - dateB.getTime()
       })
     
-    const pastTrips = trips
+    const pastTrips: T[] = trips
       .filter(trip => dateUtils.isPastTrip(trip.start_date))
       .sort((a, b) => {
         if (!a.start_date || !b.start_date) return 0
@@ -139,7 +140,7 @@ export const dateUtils = {
   },
 
   // Format future trip date range with unified rules
-  formatFutureTripDate: (startDate: any, endDate: any): string => {
+  formatFutureTripDate: (startDate: FirestoreDate, endDate: FirestoreDate): string => {
     if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
       return '日付が設定されていません'
     }
@@ -194,7 +195,7 @@ export const dateUtils = {
   },
 
   // Format past trip date range with relative time
-  formatPastTripDate: (startDate: any, endDate: any): string => {
+  formatPastTripDate: (startDate: FirestoreDate, endDate: FirestoreDate): string => {
     if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
       return '日付が設定されていません'
     }
@@ -238,7 +239,7 @@ export const dateUtils = {
   },
 
   // Format trip date range in compact format
-  formatTripDateRange: (startDate: any, endDate: any): string => {
+  formatTripDateRange: (startDate: FirestoreDate, endDate: FirestoreDate): string => {
     if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
       return '日付が設定されていません'
     }
@@ -297,7 +298,7 @@ export const dateUtils = {
   },
 
   // Convert date to yyyy-mm-dd format for URL parameters
-  toUrlDateString: (date: any): string => {
+  toUrlDateString: (date: FirestoreDate): string => {
     if (!dateUtils.isValidDate(date)) {
       throw new Error('Invalid date provided')
     }
@@ -336,7 +337,7 @@ export const dateUtils = {
   },
 
   // Check if two dates are the same day (ignoring time)
-  isSameDay: (date1: any, date2: any): boolean => {
+  isSameDay: (date1: FirestoreDate, date2: FirestoreDate): boolean => {
     if (!dateUtils.isValidDate(date1) || !dateUtils.isValidDate(date2)) {
       return false
     }
@@ -354,7 +355,7 @@ export const dateUtils = {
   },
 
   // Convert any date format to Date object (returns null if invalid)
-  toDate: (date: any): Date | null => {
+  toDate: (date: FirestoreDate | null | undefined): Date | null => {
     return toDateOrNull(date)
   }
 }

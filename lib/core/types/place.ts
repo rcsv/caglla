@@ -127,3 +127,19 @@ export interface PlacesCache {
   access_count: number
 }
 
+/**
+ * Firestore保存用（日時フィールドはDate）
+ */
+export interface PlacesCacheInput extends Omit<PlacesCache, 'cached_at' | 'last_accessed'> {
+  cached_at: Date
+  last_accessed: Date
+}
+
+/**
+ * Firestore取得用（日時フィールドはFirestoreDate）
+ */
+export interface PlacesCacheDocument extends Omit<PlacesCache, 'cached_at' | 'last_accessed'> {
+  cached_at: FirestoreDate
+  last_accessed: FirestoreDate
+}
+

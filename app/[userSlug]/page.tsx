@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/contexts/auth'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import type { Trip, User, PlaceData } from '@/lib/core/types'
+import type { Trip, User, PlaceData, Gender } from '@/lib/core/types'
 import { getCountryFlag, getCountryNameJa } from '@/lib/utils/country-flags'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import AvatarUpload from '@/components/ui/AvatarUpload'
@@ -293,7 +293,7 @@ export default function UserProfileBySlugPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">性別</label>
                     <select
                       value={editForm.gender}
-                      onChange={(e) => setEditForm({...editForm, gender: e.target.value as any})}
+                      onChange={(e) => setEditForm({...editForm, gender: e.target.value as Gender})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     >
                       <option value="prefer_not_to_say">回答しない</option>

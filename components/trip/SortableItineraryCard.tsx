@@ -11,7 +11,7 @@ interface SortableItineraryCardProps {
   displayNumber?: number
   previousPlace?: PlaceData | null
   nextPlace?: PlaceData | null
-  onUpdate?: (updatedItinerary: any) => void
+  onUpdate?: (updatedItinerary: Itinerary) => void
   onMoveUp?: () => void
   onMoveDown?: () => void
   onMoveToDay?: (itineraryId: string, targetDayId: string) => void

@@ -7,6 +7,7 @@ import { getCachedPlace, placesCacheManager } from '@/lib/travel/places-cache'
 import { Button } from '@/components/common/Button'
 import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
 import type { AggregatedVenueData, UnifiedReview } from '@/lib/api/venue-aggregator'
+import type { PlaceData } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
 
@@ -18,7 +19,7 @@ interface POIDialogProps {
       lat: number
       lng: number
     }
-    placeData?: any // Itinerariesに保存されているplace_data
+    placeData?: PlaceData // Itinerariesに保存されているplace_data
     orderNumber?: number // マップピン番号
   } | null
   onClose: () => void

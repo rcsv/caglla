@@ -1,6 +1,9 @@
+import type { DraggableAttributes } from '@dnd-kit/core'
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
+
 interface DragHandleProps {
-  attributes?: any
-  listeners?: any
+  attributes?: DraggableAttributes
+  listeners?: SyntheticListenerMap
   isDragging?: boolean
   className?: string
 }
