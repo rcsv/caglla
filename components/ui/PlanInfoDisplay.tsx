@@ -50,11 +50,13 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
   }
 
   const plan = planConfig
-  const planNameClass = (() => {
-    const base = 'text-sm'
-    if (userPlanId === 'backpacker') return `${base} text-blue-600`
-    if (userPlanId === 'globetrotter') return `${base} text-purple-600`
-    return `${base} text-gray-900`
+  const isPaidPlan = userPlanId !== 'season_traveler'
+
+  const planTitleClass = (() => {
+    const id = String(userPlanId)
+    if (id.includes('globetrotter')) return 'text-purple-600'
+    if (id.includes('backpacker')) return 'text-blue-600'
+    return 'text-gray-900'
   })()
 
   // 旅行数制限のプログレスバー
@@ -65,18 +67,9 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
 
   return (
     <div className={`bg-white rounded-lg border p-4 ${className}`}>
-      {/* ヘッダー */}
+      {/* ヘッダー（プラン名のみ表示） */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              利用プラン
-            </h3>
-            <p className={planNameClass}>
-              {plan.name}
-            </p>
-          </div>
-        </div>
+        <h3 className={`text-xl font-semibold ${planTitleClass}`}>{plan.name}</h3>
       </div>
 
       {/* 制限情報 */}
