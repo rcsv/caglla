@@ -22,7 +22,7 @@ interface TripItineraryViewProps {
   onAddSchedule: (dayId: string) => void
   onInsertSchedule: (dayId: string, afterIndex: number) => void
   onAddDay: () => void
-  onScheduleUpdated: (updatedItinerary: any) => void
+  onScheduleUpdated: (updatedItinerary: Itinerary) => void
   onMoveUp: (itineraryId: string, dayId: string) => void
   onMoveDown: (itineraryId: string, dayId: string) => void
   onMoveToDay: (itineraryId: string, targetDayId: string) => void
@@ -287,13 +287,13 @@ export default function TripItineraryView({
                 {!isCollapsed && (
                   <div className="px-6 pb-6">
                     <DayEditor 
-                      day={day as any} 
+                      day={day} 
                       itinerarySummary={itinerarySummary}
-                      onUpdate={(updatedDay: any) => {
+                      onUpdate={(updatedDay: Day) => {
                         onUpdateTrip({
                           ...trip,
                           days: trip.days?.map(d => 
-                            d.id === updatedDay.id ? updatedDay as any : d
+                            d.id === updatedDay.id ? updatedDay : d
                           ) || []
                         })
                       }} 
