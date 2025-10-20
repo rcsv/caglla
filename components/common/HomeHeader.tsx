@@ -69,11 +69,11 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                 <div className="text-sm font-medium text-gray-900 truncate max-w-[160px]">{userName}</div>
                 <div className="text-xs text-gray-500 truncate max-w-[160px]">{planName}</div>
               </div>
-              <span className={`inline-flex p-[1px] rounded-full ${avatarBorderClass}`}>
+              <span className={`inline-flex p-[2px] rounded-full ${avatarBorderClass}`}>
                 <img
                   src={avatarUrl || '/default-avatar.png'}
                   alt="avatar"
-                  className="h-9 w-9 rounded-full object-cover bg-white"
+                  className="h-9 w-9 rounded-full object-cover bg-white ring-1 ring-white"
                 />
               </span>
             </button>
