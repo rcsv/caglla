@@ -1,4 +1,5 @@
 import { ReservationInfo, ReservationType, ReservationSite } from '@/lib/core/types'
+import { toDate, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 
 /**
  * 予約情報のバリデーション
@@ -47,16 +48,20 @@ export function validateReservationInfo(reservation: Partial<ReservationInfo>): 
 
   // 日時の論理チェック
   if (reservation.start_date && reservation.end_date) {
-    const startTime = (reservation.start_date instanceof Date ? reservation.start_date : typeof reservation.start_date === 'string' ? new Date(reservation.start_date) : reservation.start_date.toDate()).getTime()
-    const endTime = (reservation.end_date instanceof Date ? reservation.end_date : typeof reservation.end_date === 'string' ? new Date(reservation.end_date) : reservation.end_date.toDate()).getTime()
+    const start = toDateOrNull(reservation.start_date)
+    const end = toDateOrNull(reservation.end_date)
+    const startTime = start ? start.getTime() : NaN
+    const endTime = end ? end.getTime() : NaN
     if (startTime >= endTime) {
       errors.push('終了日時は開始日時より後である必要があります')
     }
   }
 
   if (reservation.departure_at && reservation.arrival_at) {
-    const departureTime = (reservation.departure_at instanceof Date ? reservation.departure_at : typeof reservation.departure_at === 'string' ? new Date(reservation.departure_at) : reservation.departure_at.toDate()).getTime()
-    const arrivalTime = (reservation.arrival_at instanceof Date ? reservation.arrival_at : typeof reservation.arrival_at === 'string' ? new Date(reservation.arrival_at) : reservation.arrival_at.toDate()).getTime()
+    const departure = toDateOrNull(reservation.departure_at)
+    const arrival = toDateOrNull(reservation.arrival_at)
+    const departureTime = departure ? departure.getTime() : NaN
+    const arrivalTime = arrival ? arrival.getTime() : NaN
     if (departureTime >= arrivalTime) {
       errors.push('到着日時は出発日時より後である必要があります')
     }
@@ -187,8 +192,10 @@ export function generateReservationSummary(reservation: ReservationInfo, placeNa
     return `${flightNumber} ${departure}→${arrival}`
   } else {
     const name = placeName || '場所未設定'
-    const startDate = reservation.start_date ? (reservation.start_date instanceof Date ? reservation.start_date : typeof reservation.start_date === 'string' ? new Date(reservation.start_date) : reservation.start_date.toDate()).toLocaleDateString('ja-JP') : ''
-    const endDate = reservation.end_date ? (reservation.end_date instanceof Date ? reservation.end_date : typeof reservation.end_date === 'string' ? new Date(reservation.end_date) : reservation.end_date.toDate()).toLocaleDateString('ja-JP') : ''
+    const start = reservation.start_date ? toDateOrNull(reservation.start_date) : null
+    const end = reservation.end_date ? toDateOrNull(reservation.end_date) : null
+    const startDate = start ? start.toLocaleDateString('ja-JP') : ''
+    const endDate = end ? end.toLocaleDateString('ja-JP') : ''
     
     if (startDate && endDate) {
       return `${name} (${startDate} - ${endDate})`
@@ -219,12 +226,12 @@ export function convertReservationForFirestore(reservation: ReservationInfo): an
 export function convertReservationFromFirestore(data: any): ReservationInfo {
   return {
     ...data,
-    // FirestoreのTimestampをDateに変換
-    start_date: data.start_date?.toDate?.() || data.start_date,
-    end_date: data.end_date?.toDate?.() || data.end_date,
-    departure_at: data.departure_at?.toDate?.() || data.departure_at,
-    arrival_at: data.arrival_at?.toDate?.() || data.arrival_at,
-    created_at: data.created_at?.toDate?.() || data.created_at,
-    updated_at: data.updated_at?.toDate?.() || data.updated_at
+    // FirestoreのTimestampをDateに変換（安全）
+    start_date: toDateOrNull(data.start_date) || data.start_date,
+    end_date: toDateOrNull(data.end_date) || data.end_date,
+    departure_at: toDateOrNull(data.departure_at) || data.departure_at,
+    arrival_at: toDateOrNull(data.arrival_at) || data.arrival_at,
+    created_at: toDateOrNull(data.created_at) || data.created_at,
+    updated_at: toDateOrNull(data.updated_at) || data.updated_at
   }
 }

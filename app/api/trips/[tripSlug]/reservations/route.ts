@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 
 /**
  * GET /api/trips/[tripSlug]/reservations
@@ -120,8 +121,8 @@ export async function GET(
         day_number: dayData.day_number || 0,
         reservation_type: data.reservation_type,
         reservation_summary: data.reservation_summary,
-        reservation_start_ts: data.reservation_start_ts?.toDate?.()?.toISOString() || data.reservation_start_ts,
-        reservation_end_ts: data.reservation_end_ts?.toDate?.()?.toISOString() || data.reservation_end_ts,
+        reservation_start_ts: (toDateOrNull(data.reservation_start_ts)?.toISOString()) || data.reservation_start_ts,
+        reservation_end_ts: (toDateOrNull(data.reservation_end_ts)?.toISOString()) || data.reservation_end_ts,
         reservation_site: data.reservation?.reservation_site,
         confirmation_number: data.reservation?.confirmation_number,
         // 詳細ページへのリンク（slug が判明していれば slug ベースで返す）

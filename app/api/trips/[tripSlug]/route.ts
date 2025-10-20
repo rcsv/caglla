@@ -10,6 +10,7 @@ import { Trip, Day, Itinerary, User } from '@/lib/core/types'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import logger from '@/lib/core/logger'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 
 export async function GET(
   request: NextRequest,
@@ -58,10 +59,10 @@ export async function GET(
     // Convert Firestore Timestamps to Date objects
     const convertedTripData = {
       ...tripData,
-      created_at: tripData.created_at?.toDate ? tripData.created_at.toDate() : tripData.created_at,
-      updated_at: tripData.updated_at?.toDate ? tripData.updated_at.toDate() : tripData.updated_at,
-      start_date: tripData.start_date?.toDate ? tripData.start_date.toDate() : tripData.start_date,
-      end_date: tripData.end_date?.toDate ? tripData.end_date.toDate() : tripData.end_date,
+      created_at: toDateOrNull(tripData.created_at) || tripData.created_at,
+      updated_at: toDateOrNull(tripData.updated_at) || tripData.updated_at,
+      start_date: toDateOrNull(tripData.start_date) || tripData.start_date,
+      end_date: toDateOrNull(tripData.end_date) || tripData.end_date,
     }
 
     // Daysを取得
@@ -78,9 +79,9 @@ export async function GET(
       // Convert Firestore Timestamps to Date objects for day data
       const convertedDayData = {
         ...dayData,
-        created_at: dayData.created_at?.toDate ? dayData.created_at.toDate() : dayData.created_at,
-        updated_at: dayData.updated_at?.toDate ? dayData.updated_at.toDate() : dayData.updated_at,
-        date: dayData.date?.toDate ? dayData.date.toDate() : dayData.date,
+        created_at: toDateOrNull(dayData.created_at) || dayData.created_at,
+        updated_at: toDateOrNull(dayData.updated_at) || dayData.updated_at,
+        date: toDateOrNull(dayData.date) || dayData.date,
       }
       
       // 各DayのItinerariesを取得（sort_number順でソート）
@@ -100,8 +101,8 @@ export async function GET(
           return {
             id: itineraryDoc.id,
             ...itineraryData,
-            created_at: itineraryData.created_at?.toDate ? itineraryData.created_at.toDate() : itineraryData.created_at,
-            updated_at: itineraryData.updated_at?.toDate ? itineraryData.updated_at.toDate() : itineraryData.updated_at,
+            created_at: toDateOrNull(itineraryData.created_at) || itineraryData.created_at,
+            updated_at: toDateOrNull(itineraryData.updated_at) || itineraryData.updated_at,
           } as Itinerary
         })
         .sort((a: Itinerary, b: Itinerary) => (a.sort_number || 0) - (b.sort_number || 0)) // 念のためJavaScript側でもソート（FirestoreでorderBy済み）
@@ -201,8 +202,8 @@ export async function PUT(
     }
 
     // 日程が変更されたかチェック
-    const originalStartDate = tripData.start_date?.toDate ? tripData.start_date.toDate() : tripData.start_date
-    const originalEndDate = tripData.end_date?.toDate ? tripData.end_date.toDate() : tripData.end_date
+    const originalStartDate = toDateOrNull(tripData.start_date) || tripData.start_date
+    const originalEndDate = toDateOrNull(tripData.end_date) || tripData.end_date
     const newStartDate = body.startDate ? new Date(body.startDate) : undefined
     const newEndDate = body.endDate ? new Date(body.endDate) : undefined
     
@@ -312,10 +313,10 @@ export async function PUT(
     // Convert Firestore Timestamps to Date objects
     const convertedUpdatedTripData = {
       ...updatedTripData,
-      created_at: updatedTripData.created_at?.toDate ? updatedTripData.created_at.toDate() : updatedTripData.created_at,
-      updated_at: updatedTripData.updated_at?.toDate ? updatedTripData.updated_at.toDate() : updatedTripData.updated_at,
-      start_date: updatedTripData.start_date?.toDate ? updatedTripData.start_date.toDate() : updatedTripData.start_date,
-      end_date: updatedTripData.end_date?.toDate ? updatedTripData.end_date.toDate() : updatedTripData.end_date,
+      created_at: toDateOrNull(updatedTripData.created_at) || updatedTripData.created_at,
+      updated_at: toDateOrNull(updatedTripData.updated_at) || updatedTripData.updated_at,
+      start_date: toDateOrNull(updatedTripData.start_date) || updatedTripData.start_date,
+      end_date: toDateOrNull(updatedTripData.end_date) || updatedTripData.end_date,
     }
     
     const updatedTrip = {

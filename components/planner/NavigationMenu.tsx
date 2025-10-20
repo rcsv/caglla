@@ -14,6 +14,7 @@ import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
 import { LocationIcon } from '@/components/common/icons/LocationIcon'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
+import { toDate } from '@/lib/firebase/timestamp-utils'
 
 interface NavigationMenuProps {
   trip: Trip
@@ -171,17 +172,10 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
 
   // 日付のタイトルを生成（簡潔版）
   function getDayTitle(day: Day): string {
-    // Firestore Timestamp型またはDate型を処理
     let date: Date
-    if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
-      // Firestore Timestamp型の場合
-      date = (day.date as any).toDate()
-    } else {
-      // Date型または文字列の場合
-      date = new Date(day.date as any)
-    }
-    
-    if (isNaN(date.getTime())) {
+    try {
+      date = toDate(day.date)
+    } catch {
       return `Day ${day.day_number}`
     }
     const month = date.getMonth() + 1
@@ -206,17 +200,10 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
   }
 
   function getDayColor(day: Day): string {
-    // Firestore Timestamp型またはDate型を処理
     let date: Date
-    if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
-      // Firestore Timestamp型の場合
-      date = (day.date as any).toDate()
-    } else {
-      // Date型または文字列の場合
-      date = new Date(day.date as any)
-    }
-    
-    if (isNaN(date.getTime())) {
+    try {
+      date = toDate(day.date)
+    } catch {
       return 'text-gray-900'
     }
     const dayOfWeek = date.getDay()

@@ -28,7 +28,7 @@ interface TripRightPaneProps {
 
 declare global {
   interface Window {
-    google: any
+    google: typeof google
     initMap: () => void
   }
 }
@@ -67,7 +67,7 @@ export default function TripRightPane({
           poiData={poiData}
           className="h-full"
           focusMode={mapFocusMode}
-          initialCenter={trip.destination_place?.geometry?.location || undefined as any}
+          initialCenter={trip.destination_place?.geometry?.location || undefined}
           onMapInteractionStart={onMapInteractionStart}
           scrollSyncEnabled={scrollSyncEnabled}
           onRequestEnableScrollSync={onRequestEnableScrollSync}

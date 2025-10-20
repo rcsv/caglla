@@ -10,6 +10,7 @@ import { PinIcon } from '@/components/common/icons/PinIcon'
 import { getCountryFlag } from '@/lib/utils/country-flags'
 import { dateUtils } from '@/lib/utils/date'
 import type { Trip } from '@/lib/core/types'
+import type { GoogleMapsAPI } from '@/lib/core/types/google-maps'
 
 // SVGアイコンコンポーネント
 const CalendarIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -24,9 +25,7 @@ interface NextTripMapProps {
 }
 
 declare global {
-  interface Window {
-    google: any
-  }
+  interface Window { google: typeof google }
 }
 
 // 東京のデフォルト座標（DRY原則に従って定数化）
@@ -34,8 +33,8 @@ const TOKYO_CENTER = { lat: 35.6762, lng: 139.6503 }
 
 export default function NextTripMap({ trip, className = '' }: NextTripMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
-  const markerRef = useRef<any>(null)
-  const [map, setMap] = useState<any>(null)
+  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | google.maps.Marker | null>(null)
+  const [map, setMap] = useState<google.maps.Map | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
@@ -50,7 +49,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
         logger.debug('NextTripMap: 地図の初期化を開始')
         
         // 共通ローダーを使用してAPIを読み込み（ユーザー言語を付与）
-        await loadGoogleMapsAPI(getUserLanguage(user as any))
+        await loadGoogleMapsAPI(getUserLanguage(user))
         
         if (!mapRef.current || !window.google) {
           throw new Error('Google Maps APIの読み込みに失敗しました')

@@ -3,6 +3,7 @@ import { adminTripOperations, adminDayOperations, adminItineraryOperations } fro
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { PlacesCache, FirestoreDate } from '@/lib/core/types'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import logger from '@/lib/core/logger'
 
 /**
@@ -254,18 +255,15 @@ export async function PUT(
     }
     
     // 日付を正規化するヘルパー関数
-    const normalizeDate = (date: Date | string | FirestoreDate): Date => {
+  const normalizeDate = (date: Date | string | FirestoreDate): Date => {
       if (date instanceof Date) return new Date(date.getFullYear(), date.getMonth(), date.getDate())
       if (typeof date === 'string') {
         const d = new Date(date)
         return new Date(d.getFullYear(), d.getMonth(), d.getDate())
       }
-      // FirestoreTimestamp の場合
-      if ('toDate' in date && typeof date.toDate === 'function') {
-        const d = date.toDate()
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate())
-      }
-      throw new Error('Invalid date type')
+      const d = toDateOrNull(date)
+      if (!d) throw new Error('Invalid date type')
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate())
     }
     
     // 日付のキーを生成するヘルパー関数
@@ -275,8 +273,8 @@ export async function PUT(
     }
     
     // 日程が変更された場合の処理
-    const startDateChanged = !compareDates(toDate(originalStartDate), newStartDate)
-    const endDateChanged = !compareDates(toDate(originalEndDate), newEndDate)
+    const startDateChanged = !compareDates(toDateOrNull(originalStartDate) || undefined, newStartDate)
+    const endDateChanged = !compareDates(toDateOrNull(originalEndDate) || undefined, newEndDate)
     
     if ((startDateChanged || endDateChanged) && newStartDate && newEndDate) {
       logger.debug('Trip dates changed, updating days documents', {

@@ -16,6 +16,8 @@ import Button from '@/components/common/Button'
 import Input from '@/components/common/Input'
 import Select from '@/components/common/Select'
 import Textarea from '@/components/common/Textarea'
+import { toDate, toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import type { FirestoreDate } from '@/lib/core/types'
 
 interface ReservationInfoModalProps {
   isOpen: boolean
@@ -76,7 +78,7 @@ const getDefaultStartDateTime = (day: Day | null | undefined): Date | null => {
   if (!day?.date) return null
   
   try {
-    const dayDate = new Date((day.date as any).toDate?.() ?? (day.date as string))
+    const dayDate = toDate(day.date)
     // 日付の9:00をデフォルトの開始時刻とする
     dayDate.setHours(9, 0, 0, 0)
     return dayDate
@@ -92,7 +94,7 @@ const combineDayAndTime = (day: Day | null | undefined, time: string | null | un
   try {
     const [hh, mm] = time.split(':').map((v) => parseInt(v, 10))
     if (Number.isNaN(hh) || Number.isNaN(mm)) return null
-    const date = new Date((day.date as any).toDate?.() ?? (day.date as string))
+    const date = toDate(day.date)
     date.setHours(hh, mm, 0, 0)
     return date
   } catch (e) {
@@ -102,20 +104,15 @@ const combineDayAndTime = (day: Day | null | undefined, time: string | null | un
 }
 
 // datetime-local 入力用にローカルタイムの文字列 (YYYY-MM-DDTHH:mm) を生成
-const formatForDatetimeLocal = (value: any): string => {
-  if (!value) return ''
-  try {
-    const d: Date = new Date((value as any).toDate?.() ?? (value as string))
-    if (isNaN(d.getTime())) return ''
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    const hh = String(d.getHours()).padStart(2, '0')
-    const mm = String(d.getMinutes()).padStart(2, '0')
-    return `${y}-${m}-${day}T${hh}:${mm}`
-  } catch {
-    return ''
-  }
+const formatForDatetimeLocal = (value: FirestoreDate | null | undefined): string => {
+  const d = value ? toDateOrNull(value) : null
+  if (!d) return ''
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${y}-${m}-${day}T${hh}:${mm}`
 }
 
 export default function ReservationInfoModal({

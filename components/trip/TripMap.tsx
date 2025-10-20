@@ -29,7 +29,7 @@ const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: numbe
 }
 
 // 滑らかな移動でマップを更新する関数
-const smoothMoveToLocation = (map: any, targetLat: number, targetLng: number, targetZoom: number) => {
+const smoothMoveToLocation = (map: google.maps.Map, targetLat: number, targetLng: number, targetZoom: number) => {
   const currentCenter = map.getCenter()
   if (!currentCenter) return
   
@@ -87,7 +87,7 @@ interface TripMapProps {
 
 declare global {
   interface Window {
-    google: any
+    google: typeof google
     initMap: () => void
   }
 }

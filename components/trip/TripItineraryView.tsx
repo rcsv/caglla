@@ -9,6 +9,7 @@ import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useEffect, useRef } from 'react'
+import { toDate } from '@/lib/firebase/timestamp-utils'
 
 interface TripItineraryViewProps {
   trip: Trip
@@ -217,17 +218,10 @@ export default function TripItineraryView({
                         <div className={`text-base ${
                           day.date 
                             ? (() => {
-                                // Firestore Timestamp型またはDate型を処理
                                 let dayDate: Date
-                                if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
-                                  // Firestore Timestamp型の場合
-                                  dayDate = (day.date as any).toDate()
-                                } else {
-                                  // Date型または文字列の場合
-                                  dayDate = new Date(day.date as any)
-                                }
-                                
-                                if (isNaN(dayDate.getTime())) {
+                                try {
+                                  dayDate = toDate(day.date)
+                                } catch {
                                   return 'text-gray-900'
                                 }
                                 const dayOfWeek = dayDate.getDay()
@@ -239,17 +233,10 @@ export default function TripItineraryView({
                         }`}>
                           {day.date 
                             ? (() => {
-                                // Firestore Timestamp型またはDate型を処理
                                 let dayDate: Date
-                                if (day.date && typeof day.date === 'object' && 'toDate' in day.date && typeof day.date.toDate === 'function') {
-                                  // Firestore Timestamp型の場合
-                                  dayDate = (day.date as any).toDate()
-                                } else {
-                                  // Date型または文字列の場合
-                                  dayDate = new Date(day.date as any)
-                                }
-                                
-                                if (isNaN(dayDate.getTime())) {
+                                try {
+                                  dayDate = toDate(day.date)
+                                } catch {
                                   return '日付が無効です'
                                 }
                                 const month = dayDate.getMonth() + 1

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { adminAuth } from '@/lib/firebase/admin'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { adminDayOperations, adminTripOperations } from '@/lib/firebase/admin-operation'
 
 export async function POST(
@@ -36,7 +37,7 @@ export async function POST(
       if (lastDay && lastDay.date) {
         const lastDate = lastDay.date instanceof Date ? lastDay.date : 
                         typeof lastDay.date === 'string' ? new Date(lastDay.date) :
-                        'toDate' in lastDay.date ? lastDay.date.toDate() : new Date()
+                        toDateOrNull(lastDay.date) || new Date()
         newDate = new Date(lastDate)
         newDate.setDate(newDate.getDate() + 1)
       } else {
