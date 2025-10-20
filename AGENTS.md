@@ -42,6 +42,11 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **予約情報表示改善**: 航空チケット風デザイン、vicinity対応ほか
 - **リリースノート**: `docs/releases/v1.7.2.md`
 
+#### **v1.7.3** ✅ Released (2025-10-20)
+- **ドキュメント追加**: v1.12.0新機能仕様書の追加（Gmail連携、Calendar連携、AI最適化、ファイルアップロード）
+- **ロードマップ更新**: AGENTS.mdロードマップにv1.12.0エントリー追加
+- **リリースノート**: `docs/releases/v1.7.3.md`
+
 #### **v1.8.0** ✅ Released (2025-10-19)
 - **バージョニング方針の策定**: SemVer準拠の詳細仕様
 - **リリースロードマップ再編**: 新しいバージョン体系への移行
@@ -70,7 +75,7 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **Google Calendar連携**: 旅程とGoogleカレンダーの双方向同期
 - **AI旅程最適化アシスタント**: OpenAI GPT-4による旅程自動生成・最適化
 - **クォータ管理付きファイルアップロード**: プラン別ストレージ管理・画像圧縮・重複排除
-- **リリースノート**: `docs/releases/v1.12.0.md`
+- **仕様書**: `docs/specifications/v1.12.0-features-summary.md`
 
 ---
 
