@@ -2,7 +2,7 @@
 import logger from '@/lib/core/logger'
 
 import { useEffect, useRef, useState } from 'react'
-import { Itinerary, Trip } from '@/lib/core/types'
+import { Itinerary, Trip, PlaceData } from '@/lib/core/types'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
@@ -66,14 +66,14 @@ interface TripMapProps {
     placeId: string
     name: string
     location: { lat: number; lng: number }
-    placeData?: any
+    placeData?: PlaceData
   } | null) => void
   onAddFromPOI?: (placeId: string, dayId: string) => Promise<void> // POIから追加する際のハンドラー
   poiData?: {
     placeId: string
     name: string
     location: { lat: number; lng: number }
-    placeData?: any
+    placeData?: PlaceData
   } | null
   className?: string
   focusMode?: 'all' | 'day' | 'single' // フォーカスモードを追加

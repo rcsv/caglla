@@ -14,10 +14,10 @@ interface TripRightPaneProps {
     placeId: string
     name: string
     location: { lat: number; lng: number }
-    placeData?: any
+    placeData?: import('@/lib/core/types').PlaceData
   } | null
   onItineraryClick: (itineraryId: string) => void
-  onPoiDataUpdate: (poiData: any) => void
+  onPoiDataUpdate: (poiData: { placeId: string; name: string; location: { lat: number; lng: number }; placeData?: import('@/lib/core/types').PlaceData } | null) => void
   onAddFromPOI?: (placeId: string, dayId: string) => Promise<void> // POIから追加する際のハンドラー
   getFilteredItineraries: () => Itinerary[]
   // 追加: スクロール連動の状態/制御を右ペイン→地図へ伝播
