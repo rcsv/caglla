@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminTripOperations, adminTripUserOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
+import { getPlaceFromCacheWithFallback } from '@/lib/api/places-cache'
+import { getUserLanguage } from '@/lib/utils/language'
 import type { Trip, User, PlacesCache } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 
@@ -87,7 +89,7 @@ export async function GET(request: NextRequest) {
           logger.error('Error fetching creator for trip', error, { tripId: trip.id })
         }
 
-        // destination_place 解決（Homeの地図センタリング用に最低限 geometry を返す）
+        // destination_place 解決（言語サフィックス対応でPlaces Cacheから取得）
         try {
           const anyTrip: any = trip as any
           if (!destinationPlace && anyTrip.destination_place_id) {
@@ -96,21 +98,22 @@ export async function GET(request: NextRequest) {
               destination_place_id: anyTrip.destination_place_id
             })
             
-            const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(anyTrip.destination_place_id).get()
+            // 言語サフィックス対応のフォールバック検索を使用
+            const preferredLanguage = getUserLanguage() as any
+            const placesCache = await getPlaceFromCacheWithFallback(
+              anyTrip.destination_place_id, 
+              preferredLanguage
+            )
+            
             console.log('🔍 Places Cache lookup result:', {
-              exists: cacheDoc.exists,
-              hasData: cacheDoc.exists ? !!cacheDoc.data() : false
+              found: !!placesCache,
+              language: preferredLanguage,
+              place_id: placesCache?.place_id,
+              name: placesCache?.name,
+              hasGeometry: !!placesCache?.geometry
             })
             
-            if (cacheDoc.exists) {
-              const placesCache = cacheDoc.data() as PlacesCache
-              console.log('🔍 Places Cache data:', {
-                place_id: placesCache.place_id,
-                name: placesCache.name,
-                hasGeometry: !!placesCache.geometry,
-                geometry: placesCache.geometry
-              })
-              
+            if (placesCache) {
               destinationPlace = {
                 place_id: placesCache.place_id,
                 name: placesCache.name,
@@ -133,7 +136,7 @@ export async function GET(request: NextRequest) {
                 geometry: destinationPlace.geometry
               })
             } else {
-              console.log('❌ Places Cache document not found for:', anyTrip.destination_place_id)
+              console.log('❌ Places Cache not found for any language:', anyTrip.destination_place_id)
             }
           }
         } catch (error) {
