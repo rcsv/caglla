@@ -128,43 +128,11 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
 
     logger.debug('NextTripMap: 旅行情報に基づいて地図を更新', trip.destination)
 
-    // destination_placeの座標を優先使用
-    if (trip.destination_place?.geometry?.location) {
-      const center = {
-        lat: trip.destination_place.geometry.location.lat,
-        lng: trip.destination_place.geometry.location.lng
-      }
-      const zoom = 11
-      logger.debug('NextTripMap: destination_placeの座標を使用', center)
-      updateMapAndMarker(center, zoom)
-    } else {
-      // フォールバック: ブラウザの位置情報を取得
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const center = {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            }
-            const zoom = 10
-            logger.debug('NextTripMap: ブラウザの位置情報を使用', center)
-            updateMapAndMarker(center, zoom)
-          },
-          (error) => {
-            logger.debug('NextTripMap: 位置情報取得エラー、Trip目的地または東京をデフォルトとして使用', error)
-            // エラーの場合はTrip目的地または東京をデフォルトとして使用
-            const center = trip.destination_place?.geometry?.location || { lat: 35.6762, lng: 139.6503 }
-            const zoom = 10
-            updateMapAndMarker(center, zoom)
-          }
-        )
-      } else {
-        logger.debug('NextTripMap: 位置情報API非対応、Trip目的地または東京をデフォルトとして使用')
-        const center = trip.destination_place?.geometry?.location || { lat: 35.6762, lng: 139.6503 }
-        const zoom = 10
-        updateMapAndMarker(center, zoom)
-      }
-    }
+    // 旅行データの座標のみを使用（ブラウザ現在地には依存しない）
+    const center = trip.destination_place?.geometry?.location || { lat: 35.6762, lng: 139.6503 }
+    const zoom = trip.destination_place?.geometry?.location ? 11 : 10
+    logger.debug('NextTripMap: 旅行データの座標を使用（現在地のフォールバック無効化）', center)
+    updateMapAndMarker(center, zoom)
 
   }, [map, trip])
 
