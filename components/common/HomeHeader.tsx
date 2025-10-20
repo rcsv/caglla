@@ -37,6 +37,13 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
     return 'bg-gray-200'
   })()
 
+  const planNameClass = (() => {
+    const base = 'text-xs text-gray-500 truncate max-w-[160px]'
+    return (planName || '').toLowerCase().includes('globetrotter')
+      ? `${base} font-mono`
+      : base
+  })()
+
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4 py-4">
@@ -63,7 +70,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             <button onClick={() => setOpen(v => !v)} className="flex items-center gap-3">
               <div className="text-right leading-tight">
                 <div className="text-sm font-medium text-gray-900 truncate max-w-[160px]">{userName}</div>
-                <div className="text-xs text-gray-500 truncate max-w-[160px]">{planName}</div>
+                <div className={planNameClass}>{planName}</div>
               </div>
               <span className={`inline-flex p-[2px] rounded-full ${avatarBorderClass}`}>
                 <img
