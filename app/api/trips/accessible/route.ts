@@ -91,9 +91,26 @@ export async function GET(request: NextRequest) {
         try {
           const anyTrip: any = trip as any
           if (!destinationPlace && anyTrip.destination_place_id) {
+            console.log('🔍 Resolving destination_place for trip:', {
+              tripId: trip.id,
+              destination_place_id: anyTrip.destination_place_id
+            })
+            
             const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(anyTrip.destination_place_id).get()
+            console.log('🔍 Places Cache lookup result:', {
+              exists: cacheDoc.exists,
+              hasData: cacheDoc.exists ? !!cacheDoc.data() : false
+            })
+            
             if (cacheDoc.exists) {
               const placesCache = cacheDoc.data() as PlacesCache
+              console.log('🔍 Places Cache data:', {
+                place_id: placesCache.place_id,
+                name: placesCache.name,
+                hasGeometry: !!placesCache.geometry,
+                geometry: placesCache.geometry
+              })
+              
               destinationPlace = {
                 place_id: placesCache.place_id,
                 name: placesCache.name,
@@ -110,9 +127,17 @@ export async function GET(request: NextRequest) {
                 website: placesCache.website,
                 editorial_summary: placesCache.editorial_summary,
               }
+              console.log('✅ Successfully resolved destination_place:', {
+                place_id: destinationPlace.place_id,
+                name: destinationPlace.name,
+                geometry: destinationPlace.geometry
+              })
+            } else {
+              console.log('❌ Places Cache document not found for:', anyTrip.destination_place_id)
             }
           }
         } catch (error) {
+          console.error('❌ Error resolving destination_place for trip:', error, { tripId: trip.id })
           logger.error('Error resolving destination_place for trip', error, { tripId: trip.id })
         }
 
