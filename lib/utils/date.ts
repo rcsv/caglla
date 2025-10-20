@@ -27,7 +27,7 @@ export const dateUtils = {
     })
   },
 
-  // Format date range safely
+  // Format date range safely with unified rules
   formatDateRange: (startDate: any, endDate: any): string => {
     if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
       return '日付が設定されていません'
@@ -40,7 +40,40 @@ export const dateUtils = {
       return '日付が設定されていません'
     }
     
-    return `${start.toLocaleDateString('ja-JP')} - ${end.toLocaleDateString('ja-JP')}`
+    // Calculate trip duration (more accurate calculation)
+    const tripDuration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    
+    // Apply unified date range formatting rules (without relative time)
+    return dateUtils.formatUnifiedDateRangeWithoutRelativeTime(start, end, tripDuration)
+  },
+
+  // Unified date range formatting without relative time information
+  formatUnifiedDateRangeWithoutRelativeTime: (start: Date, end: Date, tripDuration: number): string => {
+    const startYear = start.getFullYear()
+    const startMonth = start.getMonth() + 1
+    const startDay = start.getDate()
+    
+    const endYear = end.getFullYear()
+    const endMonth = end.getMonth() + 1
+    const endDay = end.getDate()
+    
+    // Rule 1: Single day - don't show end date
+    if (startYear === endYear && startMonth === endMonth && startDay === endDay) {
+      return `${startMonth}/${startDay}`
+    }
+    
+    // Rule 2: Same month - omit end month
+    if (startYear === endYear && startMonth === endMonth) {
+      return `${startMonth}/${startDay} - ${endDay}`
+    }
+    
+    // Rule 3: Same year - omit end year
+    if (startYear === endYear) {
+      return `${startMonth}/${startDay} - ${endMonth}/${endDay}`
+    }
+    
+    // Rule 4: Different years - show both years
+    return `${startYear}/${startMonth}/${startDay} - ${endYear}/${endMonth}/${endDay}`
   },
 
   // Get today's date (start of day)
@@ -105,7 +138,7 @@ export const dateUtils = {
     return { futureTrips, pastTrips }
   },
 
-  // Format future trip date range with days until and duration
+  // Format future trip date range with unified rules
   formatFutureTripDate: (startDate: any, endDate: any): string => {
     if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
       return '日付が設定されていません'
@@ -123,14 +156,41 @@ export const dateUtils = {
     // Calculate days until trip
     const daysUntil = Math.ceil((start.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
     
-    // Calculate trip duration
-    const tripDuration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    // Calculate trip duration (more accurate calculation)
+    const tripDuration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
     
-    // Format dates (M/D format)
-    const startFormatted = `${start.getMonth() + 1}/${start.getDate()}`
-    const endFormatted = `${end.getMonth() + 1}/${end.getDate()}`
+    // Apply unified date range formatting rules
+    return dateUtils.formatUnifiedDateRange(start, end, daysUntil, tripDuration)
+  },
+
+  // Unified date range formatting with consistent rules
+  formatUnifiedDateRange: (start: Date, end: Date, daysUntil: number, tripDuration: number): string => {
+    const startYear = start.getFullYear()
+    const startMonth = start.getMonth() + 1
+    const startDay = start.getDate()
     
-    return `${startFormatted} - ${endFormatted} (${daysUntil}日後、${tripDuration}日間)`
+    const endYear = end.getFullYear()
+    const endMonth = end.getMonth() + 1
+    const endDay = end.getDate()
+    
+    // Rule 1: Single day - don't show end date
+    if (startYear === endYear && startMonth === endMonth && startDay === endDay) {
+      const durationText = tripDuration === 1 ? '日帰り' : `${tripDuration}日間`
+      return `${startMonth}/${startDay} (${daysUntil}日後、${durationText})`
+    }
+    
+    // Rule 2: Same month - omit end month
+    if (startYear === endYear && startMonth === endMonth) {
+      return `${startMonth}/${startDay} - ${endDay} (${daysUntil}日後、${tripDuration}日間)`
+    }
+    
+    // Rule 3: Same year - omit end year
+    if (startYear === endYear) {
+      return `${startMonth}/${startDay} - ${endMonth}/${endDay} (${daysUntil}日後、${tripDuration}日間)`
+    }
+    
+    // Rule 4: Different years - show both years
+    return `${startYear}/${startMonth}/${startDay} - ${endYear}/${endMonth}/${endDay} (${daysUntil}日後、${tripDuration}日間)`
   },
 
   // Format past trip date range with relative time
