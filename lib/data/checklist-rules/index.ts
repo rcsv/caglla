@@ -6,6 +6,7 @@
 
 // 型定義のエクスポート
 export type { ChecklistCondition, ChecklistRuleItem, ChecklistGenerationRule } from './types'
+import type { ChecklistGenerationRule } from './types'
 
 // 各カテゴリのルールをエクスポート
 export { TRANSPORTATION_RULES } from './transportation'
@@ -47,7 +48,7 @@ export const CHECKLIST_RULES = [
 /**
  * カテゴリ別にルールを取得
  */
-export function getRulesByCategory(category: string): any[] {
+export function getRulesByCategory(category: string): ChecklistGenerationRule[] {
   switch (category.toLowerCase()) {
     case 'transportation': return TRANSPORTATION_RULES
     case 'shopping': return SHOPPING_RULES
@@ -66,13 +67,13 @@ export function getRulesByCategory(category: string): any[] {
 /**
  * SecondaryCategoryIDからチェックリスト生成ルールを取得（後方互換性）
  */
-export function getChecklistRules(secondaryCategoryId: string): any[] {
+export function getChecklistRules(secondaryCategoryId: string): ChecklistGenerationRule[] {
   return CHECKLIST_RULES.filter(rule => rule.secondaryCategory === secondaryCategoryId)
 }
 
 /**
  * 全てのルールを取得（後方互換性）
  */
-export function getAllChecklistRules(): any[] {
+export function getAllChecklistRules(): ChecklistGenerationRule[] {
   return CHECKLIST_RULES
 }

@@ -1,7 +1,7 @@
 // 旅行費用集計ユーティリティ
 
 import { currencyUtils } from '@/lib/utils/currency'
-import type { CostSummary, TripCostSummary } from '@/lib/core/types'
+import type { CostSummary, TripCostSummary, Itinerary } from '@/lib/core/types'
 
 // Re-export types for backward compatibility
 export type { CostSummary, TripCostSummary }
@@ -9,7 +9,7 @@ export type { CostSummary, TripCostSummary }
 /**
  * Itinerariesの配列から通貨単位毎の費用を集計する
  */
-export function aggregateCostsByCurrency(itineraries: any[]): TripCostSummary {
+export function aggregateCostsByCurrency(itineraries: Itinerary[]): TripCostSummary {
   const costMap = new Map<string, { total: number; count: number }>()
   
   // 各Itineraryの費用を集計

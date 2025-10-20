@@ -4,9 +4,10 @@ import { CostSummary, aggregateCostsByCurrency, formatMultipleCostSummaries } fr
 import { currencyUtils } from '@/lib/utils/currency'
 import Card from '@/components/common/Card'
 import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
+import type { Itinerary } from '@/lib/core/types'
 
 interface TripCostDisplayProps {
-  itineraries: any[]
+  itineraries: Itinerary[]
   className?: string
 }
 
