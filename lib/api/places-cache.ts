@@ -1,8 +1,8 @@
 // Places API キャッシュ管理
 import { adminDb } from '@/lib/firebase/admin'
-import { getCacheKey, getFallbackLanguages, getUserLanguage } from '@/lib/utils/language'
+import { getCacheKey, getFallbackLanguages } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
-import type { PlacesCache, SupportedLanguage, PlaceDetailsResult } from '@/lib/core/types'
+import type { PlacesCache, SupportedLanguage, PlaceDetailsResult, PlaceData } from '@/lib/core/types'
 
 const PLACES_CACHE_COLLECTION = 'places_cache'
 const CACHE_FORMAT_VERSION = '2.0.0'
@@ -122,7 +122,7 @@ export async function savePlaceToCache(
  * @param placesCache - PlacesCacheオブジェクト
  * @returns PlaceDataオブジェクト
  */
-export function convertPlacesCacheToPlaceData(placesCache: PlacesCache): any {
+export function convertPlacesCacheToPlaceData(placesCache: PlacesCache): PlaceData {
   return {
     place_id: placesCache.place_id,
     name: placesCache.name,
@@ -134,7 +134,7 @@ export function convertPlacesCacheToPlaceData(placesCache: PlacesCache): any {
     user_ratings_total: placesCache.user_ratings_total,
     price_level: placesCache.price_level,
     types: placesCache.types,
-    opening_hours: placesCache.opening_hours as any,
+    opening_hours: placesCache.opening_hours,
     international_phone_number: placesCache.international_phone_number,
     website: placesCache.website,
     editorial_summary: placesCache.editorial_summary,
@@ -150,11 +150,10 @@ export function convertPlacesCacheToPlaceData(placesCache: PlacesCache): any {
  */
 export async function resolveDestinationPlace(
   destinationPlaceId: string,
-  preferredLanguage?: SupportedLanguage
-): Promise<any | null> {
+  preferredLanguage: SupportedLanguage
+): Promise<PlaceData | null> {
   try {
-    const language = preferredLanguage || getUserLanguage() as any
-    const placesCache = await getPlaceFromCacheWithFallback(destinationPlaceId, language)
+    const placesCache = await getPlaceFromCacheWithFallback(destinationPlaceId, preferredLanguage)
     
     if (placesCache) {
       return convertPlacesCacheToPlaceData(placesCache)

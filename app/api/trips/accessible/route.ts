@@ -3,6 +3,7 @@ import { adminTripOperations, adminTripUserOperations, adminUserOperations } fro
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import { resolveDestinationPlace } from '@/lib/api/places-cache'
+import { getUserLanguage } from '@/lib/utils/language'
 import type { Trip, User, PlacesCache } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 
@@ -97,7 +98,12 @@ export async function GET(request: NextRequest) {
               destination_place_id: anyTrip.destination_place_id
             })
             
-            destinationPlace = await resolveDestinationPlace(anyTrip.destination_place_id)
+            // サーバーサイドではユーザー情報が無いことが多いので、
+            // 言語はデフォルトフォールバック戦略で決定（getUserLanguageはserverではDEFAULTを返すため使用しない）
+            // 呼び出し側（クライアントや上位API）でユーザー言語を渡すのが望ましいが、
+            // ここでは安全側として 'en' を優先（Places v1 のベースライン言語）
+            const lang: any = 'en'
+            destinationPlace = await resolveDestinationPlace(anyTrip.destination_place_id, lang)
             
             console.log('🔍 Places Cache lookup result:', {
               found: !!destinationPlace,
