@@ -42,16 +42,16 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **予約情報表示改善**: 航空チケット風デザイン、vicinity対応ほか
 - **リリースノート**: `docs/releases/v1.7.2.md`
 
-#### **v1.7.3** ✅ Released (2025-10-20)
-- **ドキュメント追加**: v1.12.0新機能仕様書の追加（Gmail連携、Calendar連携、AI最適化、ファイルアップロード）
-- **ロードマップ更新**: AGENTS.mdロードマップにv1.12.0エントリー追加
-- **リリースノート**: `docs/releases/v1.7.3.md`
-
 #### **v1.8.0** ✅ Released (2025-10-19)
 - **バージョニング方針の策定**: SemVer準拠の詳細仕様
 - **リリースロードマップ再編**: 新しいバージョン体系への移行
 - **ドキュメント整備**: versioning.md、リリースノート更新
 - **リリースノート**: `docs/releases/v1.8.0.md`
+
+#### **v1.8.1** ✅ Released (2025-10-20)
+- **ドキュメント追加**: v1.12.0新機能仕様書の追加（Gmail連携、Calendar連携、AI最適化、ファイルアップロード）
+- **ロードマップ更新**: AGENTS.mdロードマップにv1.12.0エントリー追加
+- **リリースノート**: `docs/releases/v1.8.1.md`
 
 #### **v1.9.0** 🌍 Planned
 - **Google Places API 多言語対応**: 9言語でのPlaces情報取得・表示
