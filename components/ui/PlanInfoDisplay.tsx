@@ -50,7 +50,12 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
   }
 
   const plan = planConfig
-  const isPaidPlan = userPlanId !== 'season_traveler'
+  const planNameClass = (() => {
+    const base = 'text-sm'
+    if (userPlanId === 'backpacker') return `${base} text-blue-600`
+    if (userPlanId === 'globetrotter') return `${base} text-purple-600`
+    return `${base} text-gray-900`
+  })()
 
   // 旅行数制限のプログレスバー
   const maxTrips = plan.limits[RestrictionType.MAX_TRIPS]
@@ -63,16 +68,11 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
       {/* ヘッダー */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
-          {isPaidPlan && (
-            <div className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-              有料プラン
-            </div>
-          )}
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
               利用プラン
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className={planNameClass}>
               {plan.name}
             </p>
           </div>
