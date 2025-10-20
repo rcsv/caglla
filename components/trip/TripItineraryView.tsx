@@ -86,10 +86,7 @@ export default function TripItineraryView({
       }
       
       isUserScrollingRef.current = true
-      // スクロール連動が無効の場合、ユーザーがスクロールしたら再開
-      if (!scrollSyncEnabled && onScrollSyncEnabledChange) {
-        onScrollSyncEnabledChange(true)
-      }
+      // 以前は「スクロールで自動復帰」していたが、地図操作からの誤復帰を防ぐため廃止
     }
 
     window.addEventListener('scroll', handleScroll, true)
@@ -112,6 +109,8 @@ export default function TripItineraryView({
       (entries) => {
         // ユーザーがスクロール中でない場合は何もしない
         if (!isUserScrollingRef.current) return
+        // プログラムによるスクロール中は何もしない
+        if (isProgrammaticScrollRef?.current) return
         
         // 画面中央より上にある要素を検出
         const visibleEntries = entries.filter(entry => entry.isIntersecting)

@@ -1046,6 +1046,11 @@ export default function SlugBasedTripPage() {
           onPoiDataUpdate={setPoiData}
           onAddFromPOI={handleAddFromPOI}
           getFilteredItineraries={getFilteredItineraries}
+          // 地図側の操作によりスクロール連動を即停止
+          onMapInteractionStart={() => setScrollSyncEnabled(false)}
+          // 右上オーバーレイの「連動を再開」ボタン
+          onRequestEnableScrollSync={() => setScrollSyncEnabled(true)}
+          scrollSyncEnabled={scrollSyncEnabled}
         />
       }
     >
