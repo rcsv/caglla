@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminTripOperations, adminDayOperations, adminItineraryOperations } from '@/lib/firebase/admin-operation'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import type { PlacesCache, FirestoreDate } from '@/lib/core/types'
+import type { PlacesCache, FirestoreDate, PlaceData, Trip } from '@/lib/core/types'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import logger from '@/lib/core/logger'
+
+// API応答用の拡張型（destination_placeを含む）
+interface TripWithDestination extends Trip {
+  destination_place?: PlaceData
+}
 
 /**
  * FirestoreDateをDateオブジェクトに変換
@@ -43,14 +48,14 @@ export async function GET(
     }
 
     // destination_place を places_cache から解決
+    let tripWithDest: TripWithDestination = trip
     try {
-      const anyTrip: any = trip as any
-      if (anyTrip.destination_place_id && !anyTrip.destination_place) {
-        const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(anyTrip.destination_place_id).get()
+      if (trip.destination_place_id && !tripWithDest.destination_place) {
+        const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(trip.destination_place_id).get()
         if (cacheDoc.exists) {
           const placesCache = cacheDoc.data() as PlacesCache
           // PlacesCacheからPlaceDataに変換（メタデータを除外）
-          anyTrip.destination_place = {
+          tripWithDest.destination_place = {
             place_id: placesCache.place_id,
             name: placesCache.name,
             formatted_address: placesCache.formatted_address,
@@ -61,7 +66,7 @@ export async function GET(
             user_ratings_total: placesCache.user_ratings_total,
             price_level: placesCache.price_level,
             types: placesCache.types,
-            opening_hours: placesCache.opening_hours as any,
+            opening_hours: placesCache.opening_hours,
             international_phone_number: placesCache.international_phone_number,
             website: placesCache.website,
             editorial_summary: placesCache.editorial_summary,
@@ -100,7 +105,7 @@ export async function GET(
                     user_ratings_total: placesCache.user_ratings_total,
                     price_level: placesCache.price_level,
                     types: placesCache.types,
-                    opening_hours: placesCache.opening_hours as any,
+                    opening_hours: placesCache.opening_hours,
                     international_phone_number: placesCache.international_phone_number,
                     website: placesCache.website,
                     editorial_summary: placesCache.editorial_summary,
@@ -126,7 +131,7 @@ export async function GET(
                 user_ratings_total: placesCache.user_ratings_total,
                 price_level: placesCache.price_level,
                 types: placesCache.types,
-                opening_hours: placesCache.opening_hours as any,
+                opening_hours: placesCache.opening_hours,
                 international_phone_number: placesCache.international_phone_number,
                 website: placesCache.website,
                 editorial_summary: placesCache.editorial_summary,

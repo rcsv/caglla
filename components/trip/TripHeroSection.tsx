@@ -50,8 +50,8 @@ export default function TripHeroSection({
             </button>
           </div>
           <TripEditor 
-            trip={trip as any} 
-            onUpdate={(updatedTrip: any) => onUpdateTrip(updatedTrip)} 
+            trip={trip} 
+            onUpdate={onUpdateTrip} 
             onDelete={onDeleteTrip}
           />
         </div>

@@ -175,8 +175,8 @@ export default function SlugBasedTripPage() {
             setPoiData({
               placeId: itinerary.place_id,
               name: itinerary.title,
-              location: null as any, // 位置情報は後でAPIから取得
-              placeData: null // place_dataは後でAPIから取得
+              location: { lat: 0, lng: 0 }, // 位置情報は後でAPIから取得
+              placeData: undefined // place_dataは後でAPIから取得
             })
           }
           break
@@ -564,8 +564,8 @@ export default function SlugBasedTripPage() {
       setPoiData({
         placeId: newItinerary.place_id,
         name: newItinerary.title,
-        location: null as any,
-        placeData: null
+        location: { lat: 0, lng: 0 },
+        placeData: undefined
       })
     }
   }
