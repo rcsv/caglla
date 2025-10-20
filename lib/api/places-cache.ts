@@ -203,7 +203,11 @@ export function isCacheStale(cached: PlacesCache, maxAgeMs: number = 14 * 24 * 6
   if (!cached.cached_at) return true
   
   const cachedDate = toDateOrNull(cached.cached_at)
-  const cachedTime = cachedDate ? cachedDate.getTime() : NaN
+  // 日時変換失敗や無効な値は期限切れとして扱う
+  if (!cachedDate) return true
+  
+  const cachedTime = cachedDate.getTime()
+  if (isNaN(cachedTime)) return true
   
   const age = Date.now() - cachedTime
   return age > maxAgeMs

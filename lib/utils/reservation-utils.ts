@@ -50,9 +50,11 @@ export function validateReservationInfo(reservation: Partial<ReservationInfo>): 
   if (reservation.start_date && reservation.end_date) {
     const start = toDateOrNull(reservation.start_date)
     const end = toDateOrNull(reservation.end_date)
-    const startTime = start ? start.getTime() : NaN
-    const endTime = end ? end.getTime() : NaN
-    if (startTime >= endTime) {
+    
+    // 日時変換失敗を明示的に検出
+    if (!start || !end) {
+      errors.push('開始日時または終了日時が無効です')
+    } else if (start.getTime() >= end.getTime()) {
       errors.push('終了日時は開始日時より後である必要があります')
     }
   }
@@ -60,9 +62,11 @@ export function validateReservationInfo(reservation: Partial<ReservationInfo>): 
   if (reservation.departure_at && reservation.arrival_at) {
     const departure = toDateOrNull(reservation.departure_at)
     const arrival = toDateOrNull(reservation.arrival_at)
-    const departureTime = departure ? departure.getTime() : NaN
-    const arrivalTime = arrival ? arrival.getTime() : NaN
-    if (departureTime >= arrivalTime) {
+    
+    // 日時変換失敗を明示的に検出
+    if (!departure || !arrival) {
+      errors.push('出発日時または到着日時が無効です')
+    } else if (departure.getTime() >= arrival.getTime()) {
       errors.push('到着日時は出発日時より後である必要があります')
     }
   }

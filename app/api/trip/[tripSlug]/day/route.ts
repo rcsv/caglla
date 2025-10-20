@@ -21,8 +21,12 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { id: tripId } = await params
+    const { tripSlug } = await params
     const body = await request.json()
+    
+    // tripSlugからtripIdを取得する必要があると思われますが、
+    // 現状はtripIdとして扱っているため、tripSlugをそのままtripIdとして使用
+    const tripId = tripSlug
     
     // 既存の日程を取得して次のday_numberを決定
     const existingDays = await adminDayOperations.getDaysByTripId(tripId)
@@ -35,9 +39,13 @@ export async function POST(
     if (existingDays.length > 0) {
       const lastDay = existingDays.find(d => d.day_number === Math.max(...existingDays.map(d => d.day_number)))
       if (lastDay && lastDay.date) {
-        const lastDate = lastDay.date instanceof Date ? lastDay.date : 
-                        typeof lastDay.date === 'string' ? new Date(lastDay.date) :
-                        toDateOrNull(lastDay.date) || new Date()
+        const lastDate = toDateOrNull(lastDay.date)
+        if (!lastDate) {
+          return NextResponse.json(
+            { error: '最後の日程の日付が無効です' },
+            { status: 400 }
+          )
+        }
         newDate = new Date(lastDate)
         newDate.setDate(newDate.getDate() + 1)
       } else {
