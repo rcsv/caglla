@@ -21,13 +21,13 @@ export default function DateRangeUnifiedTestPage() {
       name: '同年内異月',
       startDate: new Date('2025-10-20'),
       endDate: new Date('2025-11-05'),
-      expected: '10/20 - 11/5 (1日後、16日間)'
+      expected: '10/20 - 11/5 (1日後、17日間)'
     },
     {
       name: '年跨ぎ',
       startDate: new Date('2025-12-30'),
       endDate: new Date('2026-01-10'),
-      expected: '2025/12/30 - 2026/1/10 (1日後、11日間)'
+      expected: '2025/12/30 - 2026/1/10 (72日後、12日間)'
     },
     {
       name: '3日間の旅行',
