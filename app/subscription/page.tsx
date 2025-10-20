@@ -6,6 +6,8 @@ import { SubscriptionProvider, useSubscription } from '@/lib/contexts/subscripti
 import { useRouter, useSearchParams } from 'next/navigation'
 import { paymentHelpers } from '@/lib/subscription/payment-service'
 import { useUserData } from '@/lib/contexts/user-data'
+import UnifiedIcon from '@/components/common/icons/UnifiedIcon'
+import HomeFooter from '@/components/common/HomeFooter'
 
 // 動的レンダリングを強制（プリレンダリングを無効化）
 export const dynamic = 'force-dynamic'
@@ -16,9 +18,11 @@ function SubscriptionContentInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isSubscribing, setIsSubscribing] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const handleSubscribe = async (planId: string) => {
     setIsSubscribing(true)
+    setErrorMessage(null)
     
     try {
       const success = await subscribeToPlan(planId)
@@ -43,11 +47,11 @@ function SubscriptionContentInner() {
           }
         }
       } else {
-        alert('サブスクリプションの処理中にエラーが発生しました')
+        setErrorMessage('サブスクリプションの処理に失敗しました。時間をおいて再度お試しください。')
       }
     } catch (error) {
       logger.error('Subscription error:', error)
-      alert('サブスクリプションの処理中にエラーが発生しました')
+      setErrorMessage('サブスクリプションの処理中にエラーが発生しました。')
     } finally {
       setIsSubscribing(false)
     }
@@ -56,11 +60,20 @@ function SubscriptionContentInner() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-6xl mx-auto px-4">
+        {/* 戻るリンク */}
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+          >
+            <UnifiedIcon icon="mdi:arrow-left" className="w-5 h-5"/>
+            戻る
+          </button>
+        </div>
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
-            <svg className="w-8 h-8 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M5 15l4-4 2 2 6-6 2 2-6 6 2 2-4 4-6-2 2-2z" />
-            </svg>
+            <UnifiedIcon icon="mdi:crown-outline" className="w-8 h-8 text-purple-600"/>
             サブスクリプションプラン
           </h1>
           <p className="text-xl text-gray-600">
@@ -69,6 +82,11 @@ function SubscriptionContentInner() {
         </div>
 
         {/* 現在のプラン表示 */}
+        {errorMessage && (
+          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-6">
+            {errorMessage}
+          </div>
+        )}
         {subscriptionStatus.plan && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
             <h2 className="text-lg font-semibold text-blue-900 mb-2">
@@ -159,7 +177,8 @@ function SubscriptionContentInner() {
           {/* Backpackerプラン */}
           <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-blue-500 relative">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+              <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                <UnifiedIcon icon="mdi:star-outline" className="w-4 h-4"/>
                 おすすめ
               </span>
             </div>
@@ -227,7 +246,8 @@ function SubscriptionContentInner() {
           {/* Globetrotterプラン */}
           <div className="bg-white rounded-lg shadow-lg p-8 border-2 border-purple-500 relative">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <span className="bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+              <span className="bg-purple-500 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
+                <UnifiedIcon icon="mdi:diamond-stone" className="w-4 h-4"/>
                 プレミアム
               </span>
             </div>
@@ -300,18 +320,17 @@ function SubscriptionContentInner() {
         {/* 機能詳細 */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            🎯 主要機能の詳細
+            <span className="inline-flex items-center gap-2 justify-center">
+              <UnifiedIcon icon="mdi:target-variant" className="w-7 h-7 text-gray-700"/>
+              主要機能の詳細
+            </span>
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <svg className="w-10 h-10 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
-                <path d="M8.9 4.4v12.9" />
-                <path d="M14.1 6.5v12.9" />
-              </svg>
-            </div>
+              <div className="flex items-center justify-center mb-4">
+                <UnifiedIcon icon="mdi:map-outline" className="w-10 h-10 text-gray-600"/>
+              </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-3">ルート最適化</h3>
               <div className="space-y-2 text-sm text-gray-600">
                 <p><strong>基本:</strong> 徒歩・車・電車での最適ルート</p>
@@ -321,7 +340,9 @@ function SubscriptionContentInner() {
             </div>
             
             <div className="text-center">
-              <div className="text-4xl mb-4">📄</div>
+              <div className="flex items-center justify-center mb-4">
+                <UnifiedIcon icon="mdi:file-pdf-box" className="w-10 h-10 text-gray-600"/>
+              </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-3">PDF出力</h3>
               <div className="space-y-2 text-sm text-gray-600">
                 <p><strong>基本:</strong> 透かし入り・シンプル</p>
@@ -331,7 +352,9 @@ function SubscriptionContentInner() {
             </div>
             
             <div className="text-center">
-              <div className="text-4xl mb-4">👥</div>
+              <div className="flex items-center justify-center mb-4">
+                <UnifiedIcon icon="mdi:account-multiple-outline" className="w-10 h-10 text-gray-600"/>
+              </div>
               <h3 className="text-lg font-semibold text-gray-800 mb-3">共同編集</h3>
               <div className="space-y-2 text-sm text-gray-600">
                 <p><strong>Backpacker:</strong> 閲覧のみ共有</p>
@@ -345,7 +368,10 @@ function SubscriptionContentInner() {
         {/* 価格比較表 */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            📊 プラン比較表
+            <span className="inline-flex items-center gap-2 justify-center">
+              <UnifiedIcon icon="mdi:chart-bar" className="w-7 h-7 text-gray-700"/>
+              プラン比較表
+            </span>
           </h2>
           
           <div className="overflow-x-auto">
@@ -413,11 +439,8 @@ function SubscriptionContentInner() {
         </div>
 
         {/* フッター */}
-        <div className="text-center text-sm text-gray-500 space-y-2">
-          <p>💳 デモ環境では実際の決済は行われません</p>
-          <p>🔄 30日間の無料トライアル付き</p>
-          <p>❌ いつでもキャンセル可能</p>
-          <p>📞 サポート: support@caglla.com</p>
+        <div className="mt-8">
+          <HomeFooter />
         </div>
       </div>
     </div>

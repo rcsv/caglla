@@ -180,8 +180,21 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       const plans = await dummyPaymentService.getPlans()
       const paymentMethods = await dummyPaymentService.getPaymentMethods('demo_user')
       
-      // デモ用にローカルストレージからサブスクリプションIDを取得
-      const storedSubscriptionId = localStorage.getItem('subscription_id')
+      // デモ用: 保存済みサブスクリプションIDを取得（localStorage → sessionStorage の順で探索）
+      const getStoredSubscriptionId = (): string | null => {
+        try {
+          const v = localStorage.getItem('subscription_id')
+          if (v) return v
+        } catch (e) {
+          // 読み取りエラーは握りつぶしてフォールバック
+        }
+        try {
+          return sessionStorage.getItem('subscription_id')
+        } catch (e) {
+          return null
+        }
+      }
+      const storedSubscriptionId = getStoredSubscriptionId()
       
       if (storedSubscriptionId) {
         const subscription = await dummyPaymentService.getSubscription(storedSubscriptionId)
@@ -245,8 +258,22 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         30 // 30日間のトライアル
       )
       
-      // サブスクリプションIDをローカルストレージに保存
-      localStorage.setItem('subscription_id', subscription.id)
+      // サブスクリプションIDを保存（localStorage → 失敗時 sessionStorage）
+      const setStoredSubscriptionId = (value: string) => {
+        try {
+          localStorage.setItem('subscription_id', value)
+          return
+        } catch (e) {
+          // QuotaExceededError などで保存できない場合は sessionStorage へ
+        }
+        try {
+          sessionStorage.setItem('subscription_id', value)
+        } catch (e) {
+          // どちらも保存できない場合は継続（ステートは更新されるため体験は維持）
+          logger.warn('Failed to persist subscription_id in storage')
+        }
+      }
+      setStoredSubscriptionId(subscription.id)
       
       // FirestoreのplanIdを更新
       try {
@@ -387,7 +414,8 @@ export function useSubscription() {
 // デバッグ用：ダミーデータをリセット
 export const resetDemoData = () => {
   dummyPaymentService.resetDemoData()
-  localStorage.removeItem('subscription_id')
+  try { localStorage.removeItem('subscription_id') } catch {}
+  try { sessionStorage.removeItem('subscription_id') } catch {}
   window.location.reload()
 }
 

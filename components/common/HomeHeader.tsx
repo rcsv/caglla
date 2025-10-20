@@ -30,6 +30,17 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
 
   useClickOutside(menuRef, () => setOpen(false))
 
+  const avatarBorderClass = (() => {
+    const n = (planName || '').toLowerCase()
+    if (n.includes('globetrotter')) {
+      return 'bg-gradient-to-r from-purple-500 to-emerald-400'
+    }
+    if (n.includes('backpacker')) {
+      return 'bg-gradient-to-r from-blue-500 to-emerald-400'
+    }
+    return 'bg-gray-200'
+  })()
+
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4 py-4">
@@ -58,11 +69,13 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                 <div className="text-sm font-medium text-gray-900 truncate max-w-[160px]">{userName}</div>
                 <div className="text-xs text-gray-500 truncate max-w-[160px]">{planName}</div>
               </div>
-              <img
-                src={avatarUrl || '/default-avatar.png'}
-                alt="avatar"
-                className="h-9 w-9 rounded-full object-cover border border-gray-200"
-              />
+              <span className={`inline-flex p-[1px] rounded-full ${avatarBorderClass}`}>
+                <img
+                  src={avatarUrl || '/default-avatar.png'}
+                  alt="avatar"
+                  className="h-9 w-9 rounded-full object-cover bg-white"
+                />
+              </span>
             </button>
 
             {open && (
