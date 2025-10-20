@@ -78,6 +78,11 @@ interface TripMapProps {
   className?: string
   focusMode?: 'all' | 'day' | 'single' // フォーカスモードを追加
   initialCenter?: { lat: number; lng: number } // 初期センター位置（未指定時は東京）
+  // 追加: 地図操作を親へ通知（スクロール連動の即停止用）
+  onMapInteractionStart?: () => void
+  // 追加: スクロール連動状態と明示的再開の要求
+  scrollSyncEnabled?: boolean
+  onRequestEnableScrollSync?: () => void
 }
 
 declare global {
@@ -98,7 +103,10 @@ export default function TripMap({
   poiData,
   className = '',
   focusMode = 'all', // デフォルトは全体表示
-  initialCenter
+  initialCenter,
+  onMapInteractionStart,
+  scrollSyncEnabled,
+  onRequestEnableScrollSync
 }: TripMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<any>(null)
@@ -143,12 +151,14 @@ export default function TripMap({
             position: window.google.maps.ControlPosition.TOP_RIGHT,
           },
           mapId: 'trip-map-teardrop-markers', // AdvancedMarkerElement用のmapId
-          clickableIcons: false, // POIのクリックを無効化
+          clickableIcons: true, // POIのクリックを有効化（カスタムダイアログを表示）
         })
 
         const newDirectionsService = new window.google.maps.DirectionsService()
         const newDirectionsRenderer = new window.google.maps.DirectionsRenderer({
           suppressMarkers: true,
+          // ビューポートは常にアプリ側で制御する（自動でセンターやズームを変更しない）
+          preserveViewport: true,
           polylineOptions: {
             strokeColor: '#3B82F6',
             strokeWeight: 4,
@@ -159,6 +169,8 @@ export default function TripMap({
 
         // POIマーカーのクリックイベントを検出
         newMap.addListener('click', async (event: any) => {
+          // 地図上の明示的なユーザー操作を検出（同期を即停止させる）
+          onMapInteractionStart?.()
           // Google Maps標準のPOI情報ウィンドウをキャンセル
           const infoWindows = newMap.get('infoWindows') || []
           infoWindows.forEach((infoWindow: any) => {
@@ -180,7 +192,7 @@ export default function TripMap({
                   lat: clickLatLng.lat(),
                   lng: clickLatLng.lng()
                 },
-                radius: 50 // 50メートル以内のPOIを検索
+                radius: 200 // 200メートル以内のPOIを検索（クリック検出の感度を向上）
               })
             })
 
@@ -220,6 +232,7 @@ export default function TripMap({
 
         // Google Maps標準のPOI情報ウィンドウを無効化
         newMap.addListener('poi_click', (event: any) => {
+          onMapInteractionStart?.()
           // デフォルトのPOI情報ウィンドウをキャンセル
           event.stop()
           
@@ -238,6 +251,17 @@ export default function TripMap({
             onPoiDataUpdate?.(newPoiData)
           }
         })
+
+        // ユーザーの地図操作（パン/ズーム開始）を検出
+        newMap.addListener('dragstart', () => onMapInteractionStart?.())
+        newMap.addListener('zoom_changed', () => onMapInteractionStart?.())
+
+        // コンテナのポインタ/タッチ開始も検出（モバイルのジェスチャーを早期捕捉）
+        if (mapRef.current) {
+          const handler = () => onMapInteractionStart?.()
+          mapRef.current.addEventListener('pointerdown', handler, { passive: true })
+          mapRef.current.addEventListener('touchstart', handler, { passive: true })
+        }
 
         setMap(newMap)
         setDirectionsService(newDirectionsService)
@@ -428,6 +452,11 @@ export default function TripMap({
       )
     }
 
+    // スクロール連動が停止中は地図位置を自動で動かさない
+    if (!scrollSyncEnabled) {
+      return
+    }
+
     // マップのビューを調整（フォーカスモードに応じて）
     if (focusMode === 'single' && selectedItineraryId) {
       // 個別フォーカスモード：選択されたItineraryのみにフォーカス
@@ -468,11 +497,12 @@ export default function TripMap({
       })
       map.fitBounds(bounds)
     }
-  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId, initialCenter])
+  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId, initialCenter, scrollSyncEnabled])
 
   // 選択されたItineraryにフォーカスする機能
   useEffect(() => {
-    if (!map || !selectedItineraryId) return
+    // 同期停止中は自動フォーカスさせない
+    if (!map || !selectedItineraryId || !scrollSyncEnabled) return
 
     const selectedItinerary = itineraries.find(itinerary => itinerary.id === selectedItineraryId)
     if (!selectedItinerary?.place_data?.geometry?.location) return
@@ -549,6 +579,34 @@ export default function TripMap({
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* 同期状態のオーバーレイ（右上） */}
+      <div className={`absolute top-4 right-4 ${getZIndexClass('TOP_MENU')}`}>
+        <div className="flex items-center gap-2 bg-white/90 backdrop-blur rounded-full border border-gray-200 px-3 py-1 shadow-md">
+          <div className={`w-2 h-2 rounded-full ${scrollSyncEnabled ? 'bg-green-500' : 'bg-gray-400'}`} title={scrollSyncEnabled ? '同期中' : '同期停止'} />
+          <span className="text-xs text-gray-700">{scrollSyncEnabled ? '同期中' : '同期OFF'}</span>
+          {!scrollSyncEnabled && (
+            <button
+              onClick={() => {
+                try {
+                  if (!map) {
+                    console.warn('地図が初期化されていません。連動を再開できません。')
+                    return
+                  }
+                  onRequestEnableScrollSync?.()
+                } catch (error) {
+                  console.error('連動再開エラー:', error)
+                }
+              }}
+              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              disabled={!map}
+              title={!map ? '地図の読み込みを待っています' : 'スクロール連動を再開'}
+            >
+              連動を再開
+            </button>
+          )}
         </div>
       </div>
       

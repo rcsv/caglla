@@ -318,3 +318,42 @@ body {
   font-size: 12px;
   pointer-events: none;
 }
+
+/* Google Maps 標準情報ウィンドウを非表示 */
+/* POIクリック時の標準吹き出しを抑止し、カスタムダイアログのみを表示 */
+.gm-style-iw {
+  display: none !important;
+}
+
+.gm-style-iw-c {
+  display: none !important;
+}
+
+.gm-style-iw-d {
+  display: none !important;
+}
+
+.gm-style-iw-t {
+  display: none !important;
+}
+
+.gm-style-iw-t::after {
+  display: none !important;
+}
+
+.gm-style-iw-t::before {
+  display: none !important;
+}
+
+/* 追加の吹き出し矢印要素を非表示 */
+.gm-style-iw-b {
+  display: none !important;
+}
+
+.gm-style-iw-b::after {
+  display: none !important;
+}
+
+.gm-style-iw-b::before {
+  display: none !important;
+}
