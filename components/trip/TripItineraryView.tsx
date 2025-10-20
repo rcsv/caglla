@@ -350,7 +350,7 @@ export default function TripItineraryView({
                                       isSelected={selectedItineraryId === itinerary.id}
                                       isFirst={index === 0}
                                       isLast={index === (sortedItineraries.length || 0) - 1}
-                                      availableDays={trip.days as any}
+                                      availableDays={trip.days}
                                     />
                                     
                                     {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}
