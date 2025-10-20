@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminTripOperations, adminTripUserOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import { getPlaceFromCacheWithFallback } from '@/lib/api/places-cache'
-import { getUserLanguage } from '@/lib/utils/language'
+import { resolveDestinationPlace } from '@/lib/api/places-cache'
 import type { Trip, User, PlacesCache } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 
@@ -89,7 +88,7 @@ export async function GET(request: NextRequest) {
           logger.error('Error fetching creator for trip', error, { tripId: trip.id })
         }
 
-        // destination_place 解決（言語サフィックス対応でPlaces Cacheから取得）
+        // destination_place 解決（共通化された関数を使用）
         try {
           const anyTrip: any = trip as any
           if (!destinationPlace && anyTrip.destination_place_id) {
@@ -98,38 +97,16 @@ export async function GET(request: NextRequest) {
               destination_place_id: anyTrip.destination_place_id
             })
             
-            // 言語サフィックス対応のフォールバック検索を使用
-            const preferredLanguage = getUserLanguage() as any
-            const placesCache = await getPlaceFromCacheWithFallback(
-              anyTrip.destination_place_id, 
-              preferredLanguage
-            )
+            destinationPlace = await resolveDestinationPlace(anyTrip.destination_place_id)
             
             console.log('🔍 Places Cache lookup result:', {
-              found: !!placesCache,
-              language: preferredLanguage,
-              place_id: placesCache?.place_id,
-              name: placesCache?.name,
-              hasGeometry: !!placesCache?.geometry
+              found: !!destinationPlace,
+              place_id: destinationPlace?.place_id,
+              name: destinationPlace?.name,
+              hasGeometry: !!destinationPlace?.geometry
             })
             
-            if (placesCache) {
-              destinationPlace = {
-                place_id: placesCache.place_id,
-                name: placesCache.name,
-                formatted_address: placesCache.formatted_address,
-                geometry: placesCache.geometry,
-                address_components: placesCache.address_components,
-                photos: placesCache.photos,
-                rating: placesCache.rating,
-                user_ratings_total: placesCache.user_ratings_total,
-                price_level: placesCache.price_level,
-                types: placesCache.types,
-                opening_hours: placesCache.opening_hours as any,
-                international_phone_number: placesCache.international_phone_number,
-                website: placesCache.website,
-                editorial_summary: placesCache.editorial_summary,
-              }
+            if (destinationPlace) {
               console.log('✅ Successfully resolved destination_place:', {
                 place_id: destinationPlace.place_id,
                 name: destinationPlace.name,
