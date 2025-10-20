@@ -9,7 +9,8 @@ import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
 import type { Itinerary } from '@/lib/core/types'
 
-interface AddScheduleModalProps {
+// コンポーネント固有のProps型（中央集約型とは別の用途）
+interface AddScheduleModalComponentProps {
   isOpen: boolean
   onClose: () => void
   dayId: string
@@ -37,7 +38,7 @@ export default function AddScheduleModal({
   dayId, 
   onScheduleAdded,
   insertAfterIndex
-}: AddScheduleModalProps) {
+}: AddScheduleModalComponentProps) {
   const { user } = useAuth()
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<PlaceSearchResult[]>([])

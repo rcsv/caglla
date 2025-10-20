@@ -86,8 +86,7 @@ export async function GET(request: NextRequest) {
     const tripsWithDetails = await Promise.all(
       trips.map(async (trip): Promise<TripWithDestination> => {
         let creator: User | undefined
-        const tripWithDest = trip as TripWithDestination
-        let destinationPlace = tripWithDest.destination_place
+        let destinationPlace: PlaceData | undefined = undefined
 
         // creator 情報
         try {

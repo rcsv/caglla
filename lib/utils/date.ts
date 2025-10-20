@@ -1,6 +1,6 @@
 // Date utility functions
 import { isValidDate as isValidTimestamp, toDateOrNull } from '@/lib/firebase/timestamp-utils'
-import type { FirestoreDate, Trip } from '@/lib/core/types'
+import type { FirestoreDate } from '@/lib/core/types'
 
 export const dateUtils = {
   // Check if a date is valid (delegated to timestamp-utils)
