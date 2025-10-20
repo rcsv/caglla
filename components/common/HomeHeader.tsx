@@ -32,12 +32,8 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
 
   const avatarBorderClass = (() => {
     const n = (planName || '').toLowerCase()
-    if (n.includes('globetrotter')) {
-      return 'bg-gradient-to-r from-purple-500 to-emerald-400'
-    }
-    if (n.includes('backpacker')) {
-      return 'bg-gradient-to-r from-blue-500 to-emerald-400'
-    }
+    if (n.includes('globetrotter')) return 'bg-purple-500'
+    if (n.includes('backpacker')) return 'bg-blue-500'
     return 'bg-gray-200'
   })()
 
