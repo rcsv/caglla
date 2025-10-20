@@ -38,10 +38,11 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
   })()
 
   const planNameClass = (() => {
-    const base = 'text-xs text-gray-500 truncate max-w-[160px]'
-    return (planName || '').toLowerCase().includes('globetrotter')
-      ? `${base} font-mono`
-      : base
+    const n = (planName || '').toLowerCase()
+    const base = 'text-xs truncate max-w-[160px]'
+    if (n.includes('globetrotter')) return `${base} font-mono text-purple-600`
+    if (n.includes('backpacker')) return `${base} text-blue-600`
+    return `${base} text-gray-500`
   })()
 
   return (
