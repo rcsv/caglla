@@ -366,6 +366,8 @@ export function exportTripToICal(trip: Trip): string {
   lines.push(`X-WR-CALNAME:${escapeICalValue(trip.title)}`)
   lines.push('CALSCALE:GREGORIAN')
   lines.push('METHOD:PUBLISH')
+  lines.push('REFRESH-INTERVAL;VALUE=DURATION:PT1H') // 1時間ごとに自動更新
+  lines.push('X-PUBLISHED-TTL:PT1H') // カレンダーアプリへのヒント
   
   // 各Itineraryをイベントとして追加
   trip.days?.forEach(day => {
@@ -435,6 +437,8 @@ export function exportReservationsToICal(trip: Trip): string {
   lines.push(`X-WR-CALNAME:${escapeICalValue(trip.title)} - Reservations`)
   lines.push('CALSCALE:GREGORIAN')
   lines.push('METHOD:PUBLISH')
+  lines.push('REFRESH-INTERVAL;VALUE=DURATION:PT1H') // 1時間ごとに自動更新
+  lines.push('X-PUBLISHED-TTL:PT1H') // カレンダーアプリへのヒント
   
   // 予約情報を持つItineraryのみをイベントとして追加
   trip.days?.forEach(day => {

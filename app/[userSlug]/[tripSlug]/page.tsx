@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import AddScheduleModal from '@/components/modals/AddScheduleModal'
 import ExportDataModal from '@/components/modals/ExportDataModal'
+import ICalPublishModal from '@/components/modals/ICalPublishModal'
 import Loading from '@/components/common/Loading'
 import { Icon } from '@iconify/react'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
@@ -33,6 +34,7 @@ export default function SlugBasedTripPage() {
   const [tripLoading, setTripLoading] = useState(true)
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
+  const [showICalPublishModal, setShowICalPublishModal] = useState(false)
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
   const [insertAfterIndex, setInsertAfterIndex] = useState<number | undefined>(undefined)
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set())
@@ -1038,14 +1040,24 @@ export default function SlugBasedTripPage() {
       onDayClick={handleDayClick}
       rightPaneWidth={currentView === 'checklist' ? 'zero' : 'default'}
       titleBarActions={
-        <button
-          onClick={() => setShowExportModal(true)}
-          className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          title="データエクスポート"
-        >
-          <Icon icon="mdi:download" className="w-5 h-5" />
-          <span className="hidden sm:inline">Export</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowICalPublishModal(true)}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            title="iCal公開設定"
+          >
+            <Icon icon="mdi:calendar-sync" className="w-5 h-5" />
+            <span className="hidden sm:inline">iCal</span>
+          </button>
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            title="データエクスポート"
+          >
+            <Icon icon="mdi:download" className="w-5 h-5" />
+            <span className="hidden sm:inline">Export</span>
+          </button>
+        </div>
       }
       rightPane={
         <TripRightPane
@@ -1147,6 +1159,16 @@ export default function SlugBasedTripPage() {
           isOpen={showExportModal}
           onClose={() => setShowExportModal(false)}
           trip={trip}
+        />
+      )}
+
+      {/* iCal Publish Modal */}
+      {showICalPublishModal && (
+        <ICalPublishModal
+          isOpen={showICalPublishModal}
+          onClose={() => setShowICalPublishModal(false)}
+          trip={trip}
+          onUpdate={setTrip}
         />
       )}
     </TripPageLayout>

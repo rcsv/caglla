@@ -72,6 +72,8 @@ export interface Trip {
   status: string
   access_level: AccessLevel | 'private' | 'public'  // 後方互換性のため両方許可
   image_url?: string
+  ical_public_token?: string // iCal公開用トークン（UUID）
+  ical_enabled?: boolean // iCal公開が有効かどうか
   created_at: FirestoreDate
   updated_at: FirestoreDate
   days?: Day[]
