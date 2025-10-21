@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase/admin'
+import { adminDb, adminAuth } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { PlaceData, PlacesCache, PlacesCacheInput, SupportedLanguage } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
@@ -13,6 +13,23 @@ import logger from '@/lib/core/logger'
  */
 export async function POST(request: NextRequest) {
   try {
+    // 認証チェック
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    }
+
+    const idToken = authHeader.split('Bearer ')[1]
+    let decodedToken
+    try {
+      decodedToken = await adminAuth.verifyIdToken(idToken)
+    } catch (error) {
+      logger.error('Token verification failed:', error)
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 })
+    }
+
+    const userId = decodedToken.uid
+
     const { day_id, place_id, place_data, title, description, location } = await request.json()
 
     if (!day_id || !title || (!place_id && !place_data?.place_id)) {
@@ -22,6 +39,27 @@ export async function POST(request: NextRequest) {
       )
     }
     const resolvedPlaceId: string = place_id || place_data.place_id
+
+    // 認可チェック: day → trip の所有権確認
+    const dayDoc = await adminDb.collection(COLLECTIONS.DAYS).doc(day_id).get()
+    if (!dayDoc.exists) {
+      return NextResponse.json({ error: 'Day not found' }, { status: 404 })
+    }
+
+    const dayData = dayDoc.data()
+    if (!dayData?.trip_id) {
+      return NextResponse.json({ error: 'Day has no trip_id' }, { status: 400 })
+    }
+
+    const tripDoc = await adminDb.collection(COLLECTIONS.TRIPS).doc(dayData.trip_id).get()
+    if (!tripDoc.exists) {
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    }
+
+    const tripData = tripDoc.data()
+    if (tripData?.user_id !== userId) {
+      return NextResponse.json({ error: 'Forbidden: You do not own this trip' }, { status: 403 })
+    }
 
     // 同じday_idの既存のitinerariesを取得してsort_numberを決定
     const itinerariesRef = adminDb.collection(COLLECTIONS.ITINERARIES)
@@ -229,6 +267,23 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // 認証チェック
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    }
+
+    const idToken = authHeader.split('Bearer ')[1]
+    let decodedToken
+    try {
+      decodedToken = await adminAuth.verifyIdToken(idToken)
+    } catch (error) {
+      logger.error('Token verification failed:', error)
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 })
+    }
+
+    const userId = decodedToken.uid
+
     const { searchParams } = new URL(request.url)
     const dayId = searchParams.get('day_id')
     
@@ -237,6 +292,27 @@ export async function GET(request: NextRequest) {
         { error: 'day_id parameter is required' },
         { status: 400 }
       )
+    }
+
+    // 認可チェック: day → trip の所有権確認
+    const dayDoc = await adminDb.collection(COLLECTIONS.DAYS).doc(dayId).get()
+    if (!dayDoc.exists) {
+      return NextResponse.json({ error: 'Day not found' }, { status: 404 })
+    }
+
+    const dayData = dayDoc.data()
+    if (!dayData?.trip_id) {
+      return NextResponse.json({ error: 'Day has no trip_id' }, { status: 400 })
+    }
+
+    const tripDoc = await adminDb.collection(COLLECTIONS.TRIPS).doc(dayData.trip_id).get()
+    if (!tripDoc.exists) {
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    }
+
+    const tripData = tripDoc.data()
+    if (tripData?.user_id !== userId) {
+      return NextResponse.json({ error: 'Forbidden: You do not own this trip' }, { status: 403 })
     }
 
     // 指定されたday_idのitinerariesを取得

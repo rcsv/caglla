@@ -23,12 +23,21 @@ This project aims to support the creation, editing, and sharing of travel plans.
 
 ### 📚 Important Documentation
 
+#### 開発・運用
+- **ブランチ戦略**: `docs/development/branch-strategy.md` - Git Flowベースのブランチ戦略とサポートブランチ運用
+- **EOLポリシー**: `docs/development/eol-policy.md` - サポートブランチのライフサイクルとEnd of Life管理
+- **バージョニング方針**: `docs/development/versioning.md` - セマンティックバージョニングの詳細仕様
+
+#### 技術仕様
 - **スラッグ生成仕様**: `docs/slug-generation-specification.md` - URL生成のためのスラッグシステムの詳細仕様
 - **SVGアイコンガイドライン**: `components/common/icons/AGENTS.md` - SVGアイコンの作成・使用・管理に関する包括的なガイドライン
 - **i18n多言語対応仕様**: `docs/specifications/i18n-specification.md` - Google Places API多言語対応の詳細仕様
 - **i18n実装チェックリスト**: `docs/specifications/i18n-implementation-checklist.md` - 多言語対応の実装タスク管理
 - **v1.12.0新機能仕様**: `docs/specifications/v1.12.0-features-summary.md` - Gmail連携・Calendar連携・AI最適化・ファイルアップロード
+
+#### リリース
 - **リリースノート**: `docs/releases/` - 各バージョンのリリースノートとロードマップ
+- **セキュリティ**: `docs/security/` - セキュリティ問題の記録と対応状況
 
 ### 🚀 Release Roadmap
 
@@ -54,6 +63,29 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **PlacesCache型の厳密化**: PlacesCacheInput/Documentの型分離
 - **Trip/Day/Itinerary型の完全活用**: データモデル層の型安全性向上
 - **リリースノート**: `docs/releases/v1.8.1.md`
+
+#### **v1.8.2** ✅ Released (2025-10-21) 🔒
+- **セキュリティパッチ**: API認証・認可の実装
+- **Bearer token検証**: POST/GETエンドポイントの保護
+- **所有権確認**: day → trip の認可チェック
+- **エラーハンドリング**: 401, 403, 404の適切な返却
+- **リリースノート**: `docs/releases/v1.8.2.md`
+- **ブランチ**: `support/v1.8`（サポートブランチから初リリース）
+
+---
+
+### 🌿 サポートブランチ
+
+#### **support/v1.8** (Active Support)
+- **状態**: ✅ アクティブサポート中
+- **最新バージョン**: v1.8.2
+- **作成日**: 2025-10-21
+- **アクティブサポート終了予定**: v1.9.0リリース時
+- **EOL予定**: v1.9.0リリース後30日
+- **対象**: v1.8系のセキュリティパッチ・バグ修正
+- **ドキュメント**: `docs/development/eol-policy.md`
+
+---
 
 #### **v1.9.0** 🌍 Planned
 - **Google Places API 多言語対応**: 9言語でのPlaces情報取得・表示
