@@ -4,6 +4,14 @@ import React from 'react'
 import { HomeHeader } from '@/components/common/HomeHeader'
 import { HomeFooter } from '@/components/common/HomeFooter'
 
+/**
+ * 利用規約ページコンポーネント
+ * 
+ * サービスの利用規約を表示するページです。
+ * サービスの利用条件、禁止事項、免責事項などを記載しています。
+ * 
+ * @returns {JSX.Element} 利用規約ページのJSX要素
+ */
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

@@ -4,16 +4,34 @@ import React, { useState } from 'react'
 import { HomeHeader } from '@/components/common/HomeHeader'
 import { HomeFooter } from '@/components/common/HomeFooter'
 
+/**
+ * お問い合わせページコンポーネント
+ * 
+ * ユーザーからのお問い合わせを受け付けるフォームページです。
+ * フォーム送信、バリデーション、送信状態管理を行います。
+ * 
+ * @returns {JSX.Element} お問い合わせページのJSX要素
+ */
 export default function ContactPage() {
+  /** フォームデータの状態管理 */
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
     message: ''
   })
+  
+  /** 送信中の状態管理 */
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  /** 送信結果の状態管理 */
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
+  /**
+   * フォーム送信ハンドラー
+   * 
+   * @param {React.FormEvent} e - フォーム送信イベント
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -26,6 +44,11 @@ export default function ContactPage() {
     }, 1000)
   }
 
+  /**
+   * フォーム入力変更ハンドラー
+   * 
+   * @param {React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>} e - 入力変更イベント
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,

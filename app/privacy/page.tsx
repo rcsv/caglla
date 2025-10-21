@@ -4,6 +4,14 @@ import React from 'react'
 import { HomeHeader } from '@/components/common/HomeHeader'
 import { HomeFooter } from '@/components/common/HomeFooter'
 
+/**
+ * プライバシーポリシーページコンポーネント
+ * 
+ * サービスのプライバシーポリシーを表示するページです。
+ * 個人情報の収集、利用、保護に関する方針を記載しています。
+ * 
+ * @returns {JSX.Element} プライバシーポリシーページのJSX要素
+ */
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

@@ -3,11 +3,25 @@
 import React from 'react'
 import Link from 'next/link'
 
+/**
+ * フッターコンポーネントのプロパティ
+ */
 export interface HomeFooterProps {
+  /** フッターに追加表示する子要素（オプション） */
   children?: React.ReactNode
 }
 
+/**
+ * ホームページ用フッターコンポーネント
+ * 
+ * サイトのフッター情報とナビゲーションリンクを表示します。
+ * デスクトップとモバイルで異なるレイアウトを提供します。
+ * 
+ * @param {HomeFooterProps} props - コンポーネントのプロパティ
+ * @returns {JSX.Element} フッターコンポーネントのJSX要素
+ */
 export const HomeFooter: React.FC<HomeFooterProps> = ({ children }) => {
+  /** フッターに表示するナビゲーションリンクの配列 */
   const footerLinks = [
     { href: '/privacy', label: 'プライバシーポリシー' },
     { href: '/terms', label: '利用規約' },
