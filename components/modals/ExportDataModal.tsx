@@ -6,8 +6,10 @@ import type { Trip } from '@/lib/core/types'
 import { 
   downloadTripAsJson, 
   downloadTripAsCSV, 
+  downloadTripAsICal,
   downloadReservationsAsJson, 
-  downloadReservationsAsCSV 
+  downloadReservationsAsCSV,
+  downloadReservationsAsICal
 } from '@/lib/utils/export-helpers'
 import Button from '@/components/common/Button'
 import { Icon } from '@iconify/react'
@@ -19,7 +21,7 @@ interface ExportDataModalProps {
 }
 
 type ExportType = 'trip' | 'reservations'
-type ExportFormat = 'json' | 'csv'
+type ExportFormat = 'json' | 'csv' | 'ical'
 
 export default function ExportDataModal({ isOpen, onClose, trip }: ExportDataModalProps) {
   const [exportType, setExportType] = useState<ExportType>('trip')
@@ -37,10 +39,14 @@ export default function ExportDataModal({ isOpen, onClose, trip }: ExportDataMod
         downloadTripAsJson(trip)
       } else if (exportType === 'trip' && exportFormat === 'csv') {
         downloadTripAsCSV(trip)
+      } else if (exportType === 'trip' && exportFormat === 'ical') {
+        downloadTripAsICal(trip)
       } else if (exportType === 'reservations' && exportFormat === 'json') {
         downloadReservationsAsJson(trip)
       } else if (exportType === 'reservations' && exportFormat === 'csv') {
         downloadReservationsAsCSV(trip)
+      } else if (exportType === 'reservations' && exportFormat === 'ical') {
+        downloadReservationsAsICal(trip)
       }
 
       // 成功後に少し待ってから閉じる
@@ -65,13 +71,19 @@ export default function ExportDataModal({ isOpen, onClose, trip }: ExportDataMod
     if (exportType === 'trip') {
       if (exportFormat === 'json') {
         return '旅程全体のデータ（旅行情報、日程、Itinerary、予約情報）をJSON形式でエクスポートします。'
+      } else if (exportFormat === 'csv') {
+        return '旅程全体のItinerary一覧をCSV形式でエクスポートします。Excel等で編集可能です。'
+      } else {
+        return '旅程全体のItineraryをiCalendar形式でエクスポートします。Google Calendar、Apple Calendar等に取り込めます。'
       }
-      return '旅程全体のItinerary一覧をCSV形式でエクスポートします。Excel等で編集可能です。'
     } else {
       if (exportFormat === 'json') {
         return '予約情報のみをJSON形式でエクスポートします。'
+      } else if (exportFormat === 'csv') {
+        return '予約情報のみをCSV形式でエクスポートします。Excel等で編集可能です。'
+      } else {
+        return '予約情報のみをiCalendar形式でエクスポートします。カレンダーアプリに取り込んで予定管理・通知設定ができます。'
       }
-      return '予約情報のみをCSV形式でエクスポートします。Excel等で編集可能です。'
     }
   }
 
@@ -153,7 +165,7 @@ export default function ExportDataModal({ isOpen, onClose, trip }: ExportDataMod
             <label className="block text-sm font-medium text-gray-700 mb-3">
               ファイル形式
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                 style={{ borderColor: exportFormat === 'json' ? '#3B82F6' : '#E5E7EB' }}>
                 <input
@@ -192,6 +204,27 @@ export default function ExportDataModal({ isOpen, onClose, trip }: ExportDataMod
                   </div>
                   <p className="text-xs text-gray-600 mt-1">
                     Excel対応
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                style={{ borderColor: exportFormat === 'ical' ? '#3B82F6' : '#E5E7EB' }}>
+                <input
+                  type="radio"
+                  name="exportFormat"
+                  value="ical"
+                  checked={exportFormat === 'ical'}
+                  onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
+                  className="mr-3"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 font-medium text-gray-900">
+                    <Icon icon="mdi:calendar" className="w-5 h-5 text-blue-600" />
+                    iCal
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    カレンダー連携
                   </p>
                 </div>
               </label>

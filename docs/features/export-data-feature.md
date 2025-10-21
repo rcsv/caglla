@@ -1,4 +1,4 @@
-# CSV/JSONエクスポート機能
+# データエクスポート機能（CSV/JSON/iCal）
 
 **実装日**: 2025-10-21  
 **バージョン**: v1.9.0候補  
@@ -8,7 +8,7 @@
 
 ## 📋 概要
 
-Trip全体のデータおよび予約情報をCSV/JSON形式でエクスポートする機能を実装しました。バックアップ、データ分析、他ツールとの連携に活用できます。
+Trip全体のデータおよび予約情報をCSV/JSON/iCal形式でエクスポートする機能を実装しました。バックアップ、データ分析、カレンダー連携、他ツールとの連携に活用できます。
 
 ---
 
@@ -17,6 +17,7 @@ Trip全体のデータおよび予約情報をCSV/JSON形式でエクスポー�
 ### 1. エクスポート形式
 - **JSON形式**: 完全なデータ構造を保持（Trip、Day、Itinerary、予約情報）
 - **CSV形式**: Excel等の表計算ソフトで開ける形式
+- **iCal形式**: Google Calendar、Apple Calendar等のカレンダーアプリに取り込める形式
 
 ### 2. エクスポート種類
 - **旅程全体**: Trip全体のデータ（日程、Itinerary、予約情報を含む）
@@ -26,6 +27,12 @@ Trip全体のデータおよび予約情報をCSV/JSON形式でエクスポー�
 - **エクスポートボタン**: Tripページのタイトルバーに配置
 - **エクスポートモーダル**: データタイプとファイル形式を選択
 - **ワンクリックダウンロード**: ブラウザで直接ダウンロード
+
+### 4. iCalendar機能
+- **RFC 5545準拠**: 標準仕様に準拠したiCalendar形式
+- **イベント情報**: タイトル、説明、場所、日時を含む
+- **アラーム機能**: 飛行機・ホテル予約の24時間前に自動通知
+- **タイムゾーン対応**: UTC形式での日時管理
 
 ---
 
@@ -41,13 +48,18 @@ Trip全体のデータおよび予約情報をCSV/JSON形式でエクスポー�
 - `exportReservationsToJson(trip)`: 予約情報のみをJSON形式で変換
 - `exportTripToItineraryCSV(trip)`: Itinerary一覧をCSV形式で変換
 - `exportReservationsToCSV(trip)`: 予約情報をCSV形式で変換
+- `exportTripToICal(trip)`: Trip全体をiCal形式で変換
+- `exportReservationsToICal(trip)`: 予約情報のみをiCal形式で変換
 - `downloadTripAsJson(trip)`: Trip全体をJSON形式でダウンロード
 - `downloadTripAsCSV(trip)`: Trip全体をCSV形式でダウンロード
+- `downloadTripAsICal(trip)`: Trip全体をiCal形式でダウンロード
 - `downloadReservationsAsJson(trip)`: 予約情報をJSON形式でダウンロード
 - `downloadReservationsAsCSV(trip)`: 予約情報をCSV形式でダウンロード
+- `downloadReservationsAsICal(trip)`: 予約情報をiCal形式でダウンロード
 
 **特徴:**
 - CSVエスケープ処理（カンマ、改行、ダブルクォート対応）
+- iCalエスケープ処理（RFC 5545準拠）
 - Firestoreタイムスタンプの自動変換（ISO 8601形式）
 - UTF-8対応
 
@@ -56,7 +68,7 @@ Trip全体のデータおよび予約情報をCSV/JSON形式でエクスポー�
 
 **機能:**
 - データタイプ選択（旅程全体 / 予約情報のみ）
-- ファイル形式選択（JSON / CSV）
+- ファイル形式選択（JSON / CSV / iCal）
 - 説明テキスト表示
 - エクスポート実行
 
