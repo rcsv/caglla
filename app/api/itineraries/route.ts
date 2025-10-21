@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import type { PlaceData, PlacesCache } from '@/lib/core/types'
+import type { PlaceData, PlacesCache, PlacesCacheInput, SupportedLanguage } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 
 /**
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
           place_id: placesCache.place_id,
           name: placesCache.name,
           formatted_address: placesCache.formatted_address,
-          vicinity: (placesCache as any).vicinity,
+          vicinity: placesCache.vicinity,
           geometry: placesCache.geometry,
           address_components: placesCache.address_components,
           photos: placesCache.photos,
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
           user_ratings_total: placesCache.user_ratings_total,
           price_level: placesCache.price_level,
           types: placesCache.types,
-          opening_hours: placesCache.opening_hours as any,
+          opening_hours: placesCache.opening_hours,
           international_phone_number: placesCache.international_phone_number,
           website: placesCache.website,
           editorial_summary: placesCache.editorial_summary,
@@ -84,15 +84,15 @@ export async function POST(request: NextRequest) {
         try {
           // TODO: ユーザーの言語設定を取得する必要がある
           // 現在は日本語として保存（後でユーザー言語設定に対応）
-          const language = 'ja' as any // 暫定：日本語
+          const language: SupportedLanguage = 'ja' // 暫定：日本語
           
-          const cachePayload: any = {
+          const cachePayload: PlacesCacheInput = {
             format_version: '2.0.0', // 新バージョン
             place_id: place_data.place_id,
             language: language, // 言語フィールド追加
             name: place_data.name,
             formatted_address: place_data.formatted_address,
-            vicinity: (place_data as any).vicinity,
+            vicinity: place_data.vicinity,
             geometry: place_data.geometry,
             cached_at: new Date(),
             last_accessed: new Date(),
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
           place_id: place_data.place_id,
           name: place_data.name,
           formatted_address: place_data.formatted_address,
-          vicinity: (place_data as any).vicinity,
+          vicinity: place_data.vicinity,
           geometry: place_data.geometry,
           address_components: place_data.address_components,
           photos: place_data.photos,
@@ -149,12 +149,13 @@ export async function POST(request: NextRequest) {
           if (resp.ok) {
             const data = await resp.json()
             const result = data.result
-            const cachePayload: any = {
+            const cachePayload: PlacesCacheInput = {
               format_version: '1.0.0',
               place_id: result.place_id,
+              language: 'ja', // v1.0.0互換性のためデフォルト値
               name: result.name,
               formatted_address: result.formatted_address,
-              vicinity: (result as any).vicinity,
+              vicinity: result.vicinity,
               geometry: { location: { lat: result.geometry.location.lat, lng: result.geometry.location.lng } },
               cached_at: new Date(),
               last_accessed: new Date(),
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
               place_id: result.place_id,
               name: result.name,
               formatted_address: result.formatted_address,
-              vicinity: (result as any).vicinity,
+              vicinity: result.vicinity,
               geometry: { location: { lat: result.geometry.location.lat, lng: result.geometry.location.lng } },
               address_components: result.address_components,
               photos: result.photos,
