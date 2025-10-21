@@ -47,6 +47,13 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **ドキュメント整備**: versioning.md、リリースノート更新
 - **リリースノート**: `docs/releases/v1.8.0.md`
 
+#### **v1.8.1** ✅ Released (2025-10-21)
+- **型安全性改善**: Phase 1-3で約88箇所の`as any`を削減
+- **Firestoreタイムスタンプ型の安全化**: toDate/toDateOrNullの活用
+- **PlacesCache型の厳密化**: PlacesCacheInput/Documentの型分離
+- **Trip/Day/Itinerary型の完全活用**: データモデル層の型安全性向上
+- **リリースノート**: `docs/releases/v1.8.1.md`
+
 #### **v1.9.0** 🌍 Planned
 - **Google Places API 多言語対応**: 9言語でのPlaces情報取得・表示
 - **言語別キャッシュシステム**: 複合キー方式での効率的なキャッシュ管理
