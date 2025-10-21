@@ -73,7 +73,7 @@ export default function PlaceSearchInput({
 
     try {
       // ユーザーの言語設定を取得してPlaces APIに渡す
-      const language = getUserLanguage(user as any)
+      const language = getUserLanguage(user)
       const results = await placesApiHelpers.searchPlaces(searchQuery, language)
       setSearchResults(results)
       setShowResults(true)
@@ -105,7 +105,7 @@ export default function PlaceSearchInput({
         formatted_address: place.formatted_address,
         geometry: place.geometry,
         types: place.types,
-      } as PlaceData) // as any -> PlaceData に変更
+      } as PlaceData) // PlaceData型にキャスト
       
       setQuery(place.name)
       setShowResults(false)
