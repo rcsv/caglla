@@ -7,9 +7,10 @@ import { getZIndexClass } from '@/lib/core/z-index'
 export interface FloatingTitleBarProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string
   accessLevel: 'public' | 'private'
+  actions?: React.ReactNode
 }
 
-export default function FloatingTitleBar({ title, accessLevel, className, ...rest }: FloatingTitleBarProps) {
+export default function FloatingTitleBar({ title, accessLevel, actions, className, ...rest }: FloatingTitleBarProps) {
   const hasCustomZIndex = typeof className === 'string' && (className.includes('zidx-') || className.includes('z-['))
   return (
     <div
@@ -23,6 +24,7 @@ export default function FloatingTitleBar({ title, accessLevel, className, ...res
       <div className="flex items-center justify-between w-full">
         <div className="text-sm md:text-base font-semibold text-gray-900 truncate">{title}</div>
         <div className="flex items-center gap-2">
+          {actions}
           <PublicAccessBadge accessLevel={accessLevel} />
         </div>
       </div>

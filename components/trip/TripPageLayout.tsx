@@ -16,6 +16,7 @@ interface TripPageLayoutProps {
   onToggleMobileMenu: () => void
   onNavigateToSection: (sectionId: string) => void
   onDayClick: (dayId: string) => void
+  titleBarActions?: ReactNode // タイトルバーに追加のアクション（エクスポートボタンなど）
 }
 
 export default function TripPageLayout({
@@ -29,6 +30,7 @@ export default function TripPageLayout({
   onToggleMobileMenu,
   onNavigateToSection,
   onDayClick,
+  titleBarActions,
 }: TripPageLayoutProps) {
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -79,6 +81,7 @@ export default function TripPageLayout({
         <FloatingTitleBar 
           title={trip.title} 
           accessLevel={trip.access_level === 'private' ? 'private' : 'public'} 
+          actions={titleBarActions}
           className="zidx-top-menu" 
         />
         {children}

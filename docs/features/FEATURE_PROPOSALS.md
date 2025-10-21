@@ -2,6 +2,8 @@
 
 このドキュメントは、Caglla Travel Managerの将来的な機能提案をまとめたものです。
 
+> 💡 簡潔な機能リストについては、[`docs/wish-features.md`](../wish-features.md) も参照してください。
+
 ## 📋 提案一覧
 
 ### 1. Google Calendar 連携機能
@@ -22,10 +24,10 @@ CagllaとGoogle Calendarを連携し、旅行スケジュールの自動同期�
 - **タイムゾーン対応の強化**: 旅行先の現地時刻で表示
 
 #### 実装フェーズ
-- **Phase 1**: 旅行日程の自動カレンダー同期（実装難易度: ⭐⭐⭐）- v1.12.0予定
-- **Phase 2**: Itineraryの詳細スケジュール同期（実装難易度: ⭐⭐⭐⭐）- v1.13.0予定
-- **Phase 3**: 共同編集者とのカレンダー共有（実装難易度: ⭐⭐⭐）- v1.14.0予定
-- **Phase 4**: インポート・リマインダー機能（実装難易度: ⭐⭐⭐⭐）- v1.15.0以降予定
+- **Phase 1**: 旅行日程の自動カレンダー同期（実装難易度: ⭐⭐⭐）
+- **Phase 2**: Itineraryの詳細スケジュール同期（実装難易度: ⭐⭐⭐⭐）
+- **Phase 3**: 共同編集者とのカレンダー共有（実装難易度: ⭐⭐⭐）
+- **Phase 4**: インポート・リマインダー機能（実装難易度: ⭐⭐⭐⭐）
 
 #### プラン別機能
 
@@ -124,7 +126,7 @@ CagllaとGoogle Calendarを連携し、旅行スケジュールの自動同期�
    - Itineraryクリック時の地図フォーカス
    - 実装難易度が低く、即座に効果を実感できる
 
-2. **Google Calendar連携 - Phase 1（v1.12.0予定）**
+2. **Google Calendar連携 - Phase 1**
    - 旅行日程の自動カレンダー同期
    - OAuth認証基盤の構築
    - 有料プラン（Backpacker以上）の魅力向上
@@ -133,7 +135,7 @@ CagllaとGoogle Calendarを連携し、旅行スケジュールの自動同期�
 3. **左ペインとGoogle Mapsの連動強化 - Phase 2**
    - Daysエリアクリック時の地図フィルタリング
 
-4. **Google Calendar連携 - Phase 2（v1.13.0予定）**
+4. **Google Calendar連携 - Phase 2**
    - Itineraryの詳細スケジュール同期
    - タイムゾーン対応の実装
    
@@ -141,7 +143,7 @@ CagllaとGoogle Calendarを連携し、旅行スケジュールの自動同期�
    - Planner Pro（2,480円プラン）の実装
 
 ### 優先度: 低
-6. **Google Calendar連携 - Phase 3, 4（v1.14.0以降予定）**
+6. **Google Calendar連携 - Phase 3, 4**
    - 共同編集者とのカレンダー共有
    - カレンダーからのインポート
    - リマインダー・通知機能

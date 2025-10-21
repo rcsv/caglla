@@ -33,10 +33,10 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **SVGアイコンガイドライン**: `components/common/icons/AGENTS.md` - SVGアイコンの作成・使用・管理に関する包括的なガイドライン
 - **i18n多言語対応仕様**: `docs/specifications/i18n-specification.md` - Google Places API多言語対応の詳細仕様
 - **i18n実装チェックリスト**: `docs/specifications/i18n-implementation-checklist.md` - 多言語対応の実装タスク管理
-- **v1.12.0新機能仕様**: `docs/specifications/v1.12.0-features-summary.md` - Gmail連携・Calendar連携・AI最適化・ファイルアップロード
+- **機能要望リスト**: `docs/wish-features.md` - 将来実装したい機能のアイデア集
 
 #### リリース
-- **リリースノート**: `docs/releases/` - 各バージョンのリリースノートとロードマップ
+- **リリースノート**: `docs/releases/` - 各バージョンのリリース履歴
 - **セキュリティ**: `docs/security/` - セキュリティ問題の記録と対応状況
 
 ### 🚀 Release Roadmap
@@ -72,6 +72,10 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **リリースノート**: `docs/releases/v1.8.2.md`
 - **ブランチ**: `support/v1.8`（サポートブランチから初リリース）
 
+#### 💡 将来の機能開発
+将来実装したい機能については、`docs/wish-features.md` を参照してください。  
+優先度や実装難易度を考慮しながら、柔軟に開発を進めていきます。
+
 ---
 
 ### 🌿 サポートブランチ
@@ -84,34 +88,6 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **EOL予定**: v1.9.0リリース後30日
 - **対象**: v1.8系のセキュリティパッチ・バグ修正
 - **ドキュメント**: `docs/development/eol-policy.md`
-
----
-
-#### **v1.9.0** 🌍 Planned
-- **Google Places API 多言語対応**: 9言語でのPlaces情報取得・表示
-- **言語別キャッシュシステム**: 複合キー方式での効率的なキャッシュ管理
-- **ユーザー言語設定**: 言語選択・自動検出機能
-- **リリースノート**: `docs/releases/v1.9.0.md`
-
-#### **v1.10.0** 🔍 Planned
-- **検索・フィルタリング**: 予約情報の検索・絞り込み機能
-- **エクスポート機能**: PDF、CSV、JSON、iCal形式でのエクスポート
-- **リリースノート**: `docs/releases/v1.10.0.md`
-
-#### **v1.11.0** 🔔 Planned
-- **予約リマインダー**: 出発前のスマート通知機能
-- **予約共有**: 旅行メンバーとの予約情報共有
-- **予約テンプレート**: よく使う予約情報のテンプレート化
-- **リリースノート**: `docs/releases/v1.11.0.md`
-
-#### **v1.12.0** 🤖 Planned
-- **Gmail連携自動予約抽出**: Gmail APIで予約確認メールを自動検出・情報抽出
-- **Google Calendar連携**: 旅程とGoogleカレンダーの双方向同期
-- **AI旅程最適化アシスタント**: OpenAI GPT-4による旅程自動生成・最適化
-- **クォータ管理付きファイルアップロード**: プラン別ストレージ管理・画像圧縮・重複排除
-- **仕様書**: `docs/specifications/v1.12.0-features-summary.md`
-
----
 
 ---
 
