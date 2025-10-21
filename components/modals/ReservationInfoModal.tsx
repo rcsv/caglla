@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { ReservationInfo, ReservationType, ReservationSite, Itinerary, Day, ActivityTag, PrimaryCategoryType } from '@/lib/core/types'
+import { ReservationInfo, ReservationType, ReservationSite, Itinerary, Day, ActivityTag, PrimaryCategoryType, ReservationTemplate } from '@/lib/core/types'
 import { 
   validateReservationInfo, 
   getReservationTypeLabel, 
@@ -16,8 +16,10 @@ import Button from '@/components/common/Button'
 import Input from '@/components/common/Input'
 import Select from '@/components/common/Select'
 import Textarea from '@/components/common/Textarea'
+import ReservationTemplateModal from '@/components/modals/ReservationTemplateModal'
 import { toDate, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import type { FirestoreDate } from '@/lib/core/types'
+import { Icon } from '@iconify/react'
 
 interface ReservationInfoModalProps {
   isOpen: boolean
@@ -133,6 +135,7 @@ export default function ReservationInfoModal({
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -207,6 +210,19 @@ export default function ReservationInfoModal({
   }
 
   // 保存処理
+  // テンプレートから予約情報を読み込む
+  const handleLoadTemplate = (template: ReservationTemplate) => {
+    setReservation(prev => ({
+      ...prev,
+      type: template.type,
+      reservation_site: template.reservation_site,
+      airline: template.airline,
+      departure_airport: template.departure_airport,
+      arrival_airport: template.arrival_airport,
+      notes: template.notes,
+    }))
+  }
+
   const handleSave = async () => {
     try {
       setIsSaving(true)
@@ -252,9 +268,21 @@ export default function ReservationInfoModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center zidx-dialog-overlay">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">
-            {initialReservation ? '予約情報を編集' : '予約情報を追加'}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold">
+              {initialReservation ? '予約情報を編集' : '予約情報を追加'}
+            </h2>
+            {!initialReservation && (
+              <button
+                onClick={() => setShowTemplateModal(true)}
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                title="テンプレートから読み込む"
+              >
+                <Icon icon="mdi:bookmark-multiple" className="w-4 h-4" />
+                <span className="hidden sm:inline">テンプレート</span>
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -460,5 +488,18 @@ export default function ReservationInfoModal({
   )
 
   if (!mounted) return null
-  return createPortal(modal, document.body)
+  
+  return (
+    <>
+      {createPortal(modal, document.body)}
+      {showTemplateModal && (
+        <ReservationTemplateModal
+          isOpen={showTemplateModal}
+          onClose={() => setShowTemplateModal(false)}
+          onSelectTemplate={handleLoadTemplate}
+          reservationType={reservation.type}
+        />
+      )}
+    </>
+  )
 }

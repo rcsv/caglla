@@ -98,5 +98,14 @@ service cloud.firestore {
       // Allow creation for authenticated users
       allow create: if request.auth != null && request.auth.uid == userId;
     }
+    
+    // Reservation templates collection rules
+    match /reservation_templates/{templateId} {
+      // Users can read and write their own templates
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.user_id;
+      
+      // Allow creation for authenticated users
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.user_id;
+    }
   }
 }

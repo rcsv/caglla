@@ -74,6 +74,7 @@ export interface Trip {
   image_url?: string
   ical_public_token?: string // iCal公開用トークン（UUID）
   ical_enabled?: boolean // iCal公開が有効かどうか
+  ical_last_accessed_at?: FirestoreDate // iCal最終アクセス日時（統計用）
   created_at: FirestoreDate
   updated_at: FirestoreDate
   days?: Day[]

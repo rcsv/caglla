@@ -26,6 +26,9 @@ export * from './trip'
 // 予約
 export * from './reservation'
 
+// 予約テンプレート
+export * from './reservation-template'
+
 // API・フォーム
 export * from './api'
 

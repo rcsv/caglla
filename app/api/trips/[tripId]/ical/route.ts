@@ -95,16 +95,21 @@ export async function GET(
 
     trip.days = days
 
-    // 6. iCal生成
+    // 6. アクセスログ更新（非同期、エラーは無視）
+    db.collection('trips').doc(params.tripId).update({
+      ical_last_accessed_at: new Date(),
+    }).catch(err => console.error('Failed to update ical_last_accessed_at:', err))
+
+    // 7. iCal生成
     const icalContent = type === 'reservations' 
       ? exportReservationsToICal(trip)
       : exportTripToICal(trip)
 
-    // 7. ETag生成（キャッシュ用）
+    // 8. ETag生成（キャッシュ用）
     const lastModified = trip.updated_at
     const etag = `"${trip.id}-${lastModified}"`
     
-    // 8. If-None-Matchヘッダーチェック（304 Not Modified対応）
+    // 9. If-None-Matchヘッダーチェック（304 Not Modified対応）
     const clientEtag = request.headers.get('if-none-match')
     if (clientEtag === etag) {
       return new NextResponse(null, { 
@@ -116,7 +121,7 @@ export async function GET(
       })
     }
 
-    // 9. レスポンス
+    // 10. レスポンス
     const filename = type === 'reservations'
       ? `${trip.slug || trip.id}_reservations.ics`
       : `${trip.slug || trip.id}_itinerary.ics`
