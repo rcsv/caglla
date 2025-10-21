@@ -27,6 +27,7 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **SVGアイコンガイドライン**: `components/common/icons/AGENTS.md` - SVGアイコンの作成・使用・管理に関する包括的なガイドライン
 - **i18n多言語対応仕様**: `docs/specifications/i18n-specification.md` - Google Places API多言語対応の詳細仕様
 - **i18n実装チェックリスト**: `docs/specifications/i18n-implementation-checklist.md` - 多言語対応の実装タスク管理
+- **v1.12.0新機能仕様**: `docs/specifications/v1.12.0-features-summary.md` - Gmail連携・Calendar連携・AI最適化・ファイルアップロード
 - **リリースノート**: `docs/releases/` - 各バージョンのリリースノートとロードマップ
 
 ### 🚀 Release Roadmap
@@ -70,6 +71,13 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **予約共有**: 旅行メンバーとの予約情報共有
 - **予約テンプレート**: よく使う予約情報のテンプレート化
 - **リリースノート**: `docs/releases/v1.11.0.md`
+
+#### **v1.12.0** 🤖 Planned
+- **Gmail連携自動予約抽出**: Gmail APIで予約確認メールを自動検出・情報抽出
+- **Google Calendar連携**: 旅程とGoogleカレンダーの双方向同期
+- **AI旅程最適化アシスタント**: OpenAI GPT-4による旅程自動生成・最適化
+- **クォータ管理付きファイルアップロード**: プラン別ストレージ管理・画像圧縮・重複排除
+- **仕様書**: `docs/specifications/v1.12.0-features-summary.md`
 
 ---
 
