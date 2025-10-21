@@ -118,7 +118,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         if (newMarkers.length > 0) {
           const bounds = new window.google.maps.LatLngBounds()
           newMarkers.forEach(marker => {
-            const pos: any = (marker as any).position || (marker as any).getPosition?.()
+            const pos = marker.getPosition?.()
             if (pos) bounds.extend(pos)
           })
           newMap.fitBounds(bounds)

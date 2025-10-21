@@ -48,9 +48,11 @@ This project aims to support the creation, editing, and sharing of travel plans.
 - **ドキュメント整備**: versioning.md、リリースノート更新
 - **リリースノート**: `docs/releases/v1.8.0.md`
 
-#### **v1.8.1** ✅ Released (2025-10-20)
-- **ドキュメント追加**: v1.12.0新機能仕様書の追加（Gmail連携、Calendar連携、AI最適化、ファイルアップロード）
-- **ロードマップ更新**: AGENTS.mdロードマップにv1.12.0エントリー追加
+#### **v1.8.1** ✅ Released (2025-10-21)
+- **型安全性改善**: Phase 1-3で約88箇所の`as any`を削減
+- **Firestoreタイムスタンプ型の安全化**: toDate/toDateOrNullの活用
+- **PlacesCache型の厳密化**: PlacesCacheInput/Documentの型分離
+- **Trip/Day/Itinerary型の完全活用**: データモデル層の型安全性向上
 - **リリースノート**: `docs/releases/v1.8.1.md`
 
 #### **v1.9.0** 🌍 Planned

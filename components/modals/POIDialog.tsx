@@ -204,7 +204,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
         logger.debug('❌ No cached data found, calling Google Places API...')
         
         // ユーザーの言語設定を取得してPlaces APIに渡す
-        const language = getUserLanguage(user as any)
+        const language = getUserLanguage(user)
         
         // キャッシュにない場合はAPIを呼び出し
         const details = await placesApiHelpers.getPlaceDetails(poiData.placeId, language)

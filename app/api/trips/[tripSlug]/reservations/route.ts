@@ -44,7 +44,8 @@ export async function GET(
     // userSlug も可能なら解決（リンク生成用）
     let userSlug: string | null = null
     try {
-      const userId = (tripDoc.data() as any)?.user_id
+      const tripData = tripDoc.data()
+      const userId = tripData?.user_id
       if (userId) {
         const userSnap = await adminDb
           .collection('users')
@@ -52,7 +53,8 @@ export async function GET(
           .limit(1)
           .get()
         if (!userSnap.empty) {
-          userSlug = (userSnap.docs[0].data() as any)?.slug || null
+          const userData = userSnap.docs[0].data()
+          userSlug = userData?.slug || null
         }
       }
     } catch {}

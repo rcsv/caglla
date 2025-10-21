@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb, adminAuth } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import type { PlaceData, PlacesCache, Itinerary } from '@/lib/core/types'
+import type { PlaceData, PlacesCache, PlacesCacheInput, Itinerary, SupportedLanguage } from '@/lib/core/types'
 import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
 
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       for (const itinerary of itinerariesToUpdate) {
         const docRef = itinerariesRef.doc(itinerary.id)
         batch.update(docRef, { 
-          sort_number: (itinerary as any).sort_number + 1,
+          sort_number: itinerary.sort_number + 1,
           updated_at: new Date()
         })
       }
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
           place_id: placesCache.place_id,
           name: placesCache.name,
           formatted_address: placesCache.formatted_address,
-          vicinity: (placesCache as any).vicinity,
+          vicinity: placesCache.vicinity,
           geometry: placesCache.geometry,
           address_components: placesCache.address_components,
           photos: placesCache.photos,
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
           user_ratings_total: placesCache.user_ratings_total,
           price_level: placesCache.price_level,
           types: placesCache.types,
-          opening_hours: placesCache.opening_hours as any,
+          opening_hours: placesCache.opening_hours,
           international_phone_number: placesCache.international_phone_number,
           website: placesCache.website,
           editorial_summary: placesCache.editorial_summary,
@@ -171,15 +171,15 @@ export async function POST(request: NextRequest) {
           // ユーザーの言語設定を取得
           // TODO: ユーザー情報を取得して言語設定を使用
           // 現在は日本語として保存（ユーザー情報取得後に修正予定）
-          const language = 'ja' as any // 暫定：日本語
+          const language: SupportedLanguage = 'ja' // 暫定：日本語
           
-          const cachePayload: any = {
+          const cachePayload: PlacesCacheInput = {
             format_version: '2.0.0', // 新バージョン
             place_id: place_data.place_id,
             language: language, // 言語フィールド追加
             name: place_data.name,
             formatted_address: place_data.formatted_address,
-            vicinity: (place_data as any).vicinity,
+            vicinity: place_data.vicinity,
             geometry: place_data.geometry,
             cached_at: new Date(),
             last_accessed: new Date(),
@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
           place_id: place_data.place_id,
           name: place_data.name,
           formatted_address: place_data.formatted_address,
-          vicinity: (place_data as any).vicinity,
+          vicinity: place_data.vicinity,
           geometry: place_data.geometry,
           address_components: place_data.address_components,
           photos: place_data.photos,

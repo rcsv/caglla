@@ -3,6 +3,7 @@
 import React from 'react'
 import { Itinerary, ReservationInfo } from '@/lib/core/types'
 import { getReservationTypeLabel } from '@/lib/utils/reservation-utils'
+import type { ReservationType } from '@/lib/core/types'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { UnifiedIcon } from '@/components/common/icons/UnifiedIcon'
 import { placesApiHelpers } from '@/lib/api/google/places'
@@ -158,7 +159,7 @@ export default function TripReservationDisplay({
           <div key={type}>
             <div className="flex items-center mb-4">
               <UnifiedIcon icon={iconifyByType[type as string] || 'tabler:calendar-check'} className="w-5 h-5 mr-2 text-gray-700" />
-              <h4 className="text-lg font-semibold text-gray-700">{getReservationTypeLabel(type as any)}</h4>
+              <h4 className="text-lg font-semibold text-gray-700">{getReservationTypeLabel(type as ReservationType)}</h4>
               <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                 {typeReservations.length}件
               </span>

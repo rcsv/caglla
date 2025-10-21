@@ -131,7 +131,7 @@ export default function TripMap({
         setError(null)
         
         // 共通ローダーを使用してAPIを読み込み（ユーザー言語を付与）
-        await loadGoogleMapsAPI(getUserLanguage(user as any))
+        await loadGoogleMapsAPI(getUserLanguage(user))
         
         if (!mapRef.current || !window.google) {
           throw new Error('Google Maps APIの読み込みに失敗しました')
