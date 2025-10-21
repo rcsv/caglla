@@ -311,6 +311,12 @@ Closes #26
 
 ## 🔗 関連リンク
 
+### 内部ドキュメント
+- **EOLポリシー**: `docs/development/eol-policy.md` - サポートブランチのライフサイクル管理
+- **バージョニング方針**: `docs/development/versioning.md` - セマンティックバージョニング詳細
+- **リリースプロセス**: `docs/development/release-process.md` - リリース手順（作成予定）
+
+### 外部リファレンス
 - **セマンティックバージョニング**: https://semver.org/
 - **Git Flow**: https://nvie.com/posts/a-successful-git-branching-model/
 - **Conventional Commits**: https://www.conventionalcommits.org/
