@@ -47,5 +47,7 @@ export interface OptionalEnvVars {
   // External Venue APIs (サーバーサイド専用)
   TRIPADVISOR_API_KEY?: string
   FOURSQUARE_API_KEY?: string
+  // SelectPdf API (サーバーサイド専用)
+  SELECTPDF_API_KEY?: string
 }
 

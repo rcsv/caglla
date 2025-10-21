@@ -562,3 +562,99 @@ export function downloadReservationsAsICal(trip: Trip) {
   downloadFile(content, filename, 'text/calendar;charset=utf-8')
 }
 
+// ============================================================================
+// PDF エクスポート (SelectPdf API経由)
+// ============================================================================
+
+/**
+ * Trip全体をPDF形式でエクスポート (SelectPdf API経由)
+ * 
+ * @param tripId トリップID
+ * @param token 認証トークン
+ * @param onProgress 進捗コールバック (optional)
+ * @throws Error if API call fails or user plan doesn't allow PDF export
+ */
+export async function exportTripToPdf(
+  tripId: string,
+  token: string,
+  onProgress?: (message: string) => void
+): Promise<void> {
+  try {
+    onProgress?.('PDF生成中...')
+
+    const response = await fetch(`/api/trips/${tripId}/pdf`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      
+      if (response.status === 403) {
+        if (errorData.message?.includes('Upgrade Required')) {
+          throw new Error('PDF Export requires Backpacker plan or higher. Please upgrade your plan.')
+        }
+        throw new Error('You do not have permission to export this trip.')
+      }
+      
+      if (response.status === 401) {
+        throw new Error('Authentication failed. Please log in again.')
+      }
+      
+      if (response.status === 404) {
+        throw new Error('Trip not found.')
+      }
+      
+      if (response.status === 503) {
+        throw new Error('PDF export service is currently unavailable.')
+      }
+      
+      throw new Error(errorData.error || 'PDF generation failed')
+    }
+
+    onProgress?.('PDFをダウンロード中...')
+
+    // PDFをBlobとして取得
+    const blob = await response.blob()
+    
+    // Content-Dispositionヘッダーからファイル名を取得
+    const contentDisposition = response.headers.get('content-disposition')
+    let filename = 'trip_itinerary.pdf'
+    
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      if (filenameMatch && filenameMatch[1]) {
+        filename = decodeURIComponent(filenameMatch[1].replace(/['"]/g, ''))
+      }
+    }
+
+    // ダウンロード
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+
+    onProgress?.('完了！')
+  } catch (error) {
+    console.error('PDF export error:', error)
+    throw error
+  }
+}
+
+/**
+ * PDFエクスポートが利用可能かチェック
+ * 
+ * @param userPlan ユーザーのプラン
+ * @returns PDFエクスポートが利用可能かどうか
+ */
+export function canExportToPdf(userPlan: string): boolean {
+  // season_traveler (無料プラン) は PDF エクスポートを利用できない
+  return userPlan !== 'season_traveler'
+}
+

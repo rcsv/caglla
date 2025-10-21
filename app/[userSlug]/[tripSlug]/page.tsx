@@ -23,10 +23,11 @@ import TripChecklistView from '@/components/trip/TripChecklistView'
 import TripRightPane from '@/components/trip/TripRightPane'
 import { getCachedPlaces } from '@/lib/travel/places-cache'
 import { useUserData } from '@/lib/contexts/user-data'
+import { exportTripToPdf, canExportToPdf } from '@/lib/utils/export-helpers'
 
 export default function SlugBasedTripPage() {
   const { user, loading } = useAuth()
-  const { removeTrip } = useUserData()
+  const { removeTrip, userData } = useUserData()
   const router = useRouter()
   const { userSlug, tripSlug } = useParams<{ userSlug: string; tripSlug: string }>()
   const searchParams = useSearchParams()
@@ -35,6 +36,7 @@ export default function SlugBasedTripPage() {
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
   const [showICalPublishModal, setShowICalPublishModal] = useState(false)
+  const [pdfExporting, setPdfExporting] = useState(false)
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
   const [insertAfterIndex, setInsertAfterIndex] = useState<number | undefined>(undefined)
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set())
@@ -112,6 +114,35 @@ export default function SlugBasedTripPage() {
       else params.set(key, value)
     })
     router.push(`?${params.toString()}`, { scroll: false })
+  }
+
+  // PDF エクスポート
+  const handlePdfExport = async () => {
+    if (!trip || !user) return
+    
+    const userPlan = userData?.planId || 'season_traveler'
+    
+    if (!canExportToPdf(userPlan)) {
+      alert('PDF出力にはBackpackerプラン以上が必要です。')
+      return
+    }
+
+    try {
+      setPdfExporting(true)
+      const token = await user.getIdToken()
+      
+      await exportTripToPdf(trip.id, token, (message) => {
+        logger.debug('PDF Export:', message)
+      })
+      
+      // 成功通知（オプション）
+      logger.info('PDF export completed successfully')
+    } catch (error: any) {
+      logger.error('PDF export failed:', error)
+      alert(error.message || 'PDF出力に失敗しました。')
+    } finally {
+      setPdfExporting(false)
+    }
   }
 
   // セクションへのナビゲーション機能
@@ -1048,6 +1079,32 @@ export default function SlugBasedTripPage() {
           >
             <Icon icon="mdi:calendar-sync" className="w-5 h-5" />
             <span className="hidden sm:inline">iCal</span>
+          </button>
+          <button
+            onClick={handlePdfExport}
+            disabled={pdfExporting || !canExportToPdf(userData?.planId || 'season_traveler')}
+            className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+              canExportToPdf(userData?.planId || 'season_traveler')
+                ? 'text-gray-700 hover:bg-gray-100'
+                : 'text-gray-400 cursor-not-allowed'
+            }`}
+            title={
+              canExportToPdf(userData?.planId || 'season_traveler')
+                ? 'PDF出力'
+                : 'PDF出力（Backpackerプラン以上）'
+            }
+          >
+            {pdfExporting ? (
+              <>
+                <Icon icon="mdi:loading" className="w-5 h-5 animate-spin" />
+                <span className="hidden sm:inline">処理中...</span>
+              </>
+            ) : (
+              <>
+                <Icon icon="mdi:file-pdf-box" className="w-5 h-5" />
+                <span className="hidden sm:inline">PDF</span>
+              </>
+            )}
           </button>
           <button
             onClick={() => setShowExportModal(true)}
