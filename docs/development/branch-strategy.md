@@ -37,19 +37,19 @@
 **現在のサポートブランチ**:
 - `support/v1.8` - v1.8系のセキュリティ・バグ修正
 
-**マージ元**:
-- `hotfix/v1.8.x` ブランチ（セキュリティパッチ）
-- `bugfix/v1.8.x` ブランチ（バグ修正）
+**作業方法**:
+- `support/v1.8` ブランチ上で直接実装
+- コミット後にタグ作成（例: `v1.8.2`）
 
 **リリースフロー**:
 ```
-support/v1.8 → hotfix/v1.8.2 → PR → support/v1.8 → v1.8.2タグ
+support/v1.8 → 修正実装 → コミット → push → v1.8.2タグ作成 → リリース
 ```
 
 **保護設定**:
-- ✅ Direct push禁止
-- ✅ Pull Request必須
-- ✅ レビュー必須
+- ✅ 管理者のみpush可能
+- ✅ 重要な変更はレビュー推奨
+- ✅ タグ作成は慎重に実施
 
 ---
 
@@ -74,24 +74,25 @@ support/v1.8 → hotfix/v1.8.2 → PR → support/v1.8 → v1.8.2タグ
 
 ---
 
-### 4. `hotfix/v1.x.x` ブランチ（緊急修正）
+### 4. hotfix（緊急修正）
 
-**命名規則**: `hotfix/v1.x.x` （バージョン番号を含む）
+**実装場所**: `support/v1.x` ブランチ上で直接作業
 
 **例**:
-- `hotfix/v1.8.2` - セキュリティパッチ
-- `hotfix/v1.8.3` - 緊急バグ修正
+- `support/v1.8` で v1.8.2 のセキュリティパッチを実装
+- `support/v1.8` で v1.8.3 の緊急バグ修正を実装
 
-**作成元**: `support/v1.8`  
-**マージ先**: `support/v1.8` および `main`（必要に応じて）
+**ワークフロー**:
+1. `support/v1.x`ブランチをcheckout
+2. 修正実装・コミット
+3. push & タグ作成（例: `v1.8.2`）
+4. GitHub Releaseの作成
+5. `main`に反映（必要に応じてcherry-pick）
 
-**ライフサイクル**:
-1. `support/v1.x`からブランチ作成
-2. 修正実装
-3. Pull Request作成
-4. レビュー・マージ
-5. タグ作成（例: `v1.8.2`）
-6. ブランチ削除
+**注意**: 
+- support/*ブランチは保護されているため、直接pushには権限が必要
+- 小規模なパッチに適している
+- 大規模な変更の場合は別途feature branchを検討
 
 ---
 
@@ -169,27 +170,27 @@ git branch -d feature/gmail-integration
 ### セキュリティパッチ（PATCH）
 
 ```bash
-# 1. サポートブランチからhotfixブランチを作成
+# 1. サポートブランチをcheckout
 git checkout support/v1.8
 git pull
-git checkout -b hotfix/v1.8.2
 
 # 2. 修正実装
 git add .
 git commit -m "security: API認証・認可の実装"
 
-# 3. Push & PR作成（support/v1.8へ）
-git push -u origin hotfix/v1.8.2
+# 3. Push
+git push
 
-# 4. レビュー・マージ後、タグ作成
-git checkout support/v1.8
-git pull
+# 4. タグ作成
 git tag v1.8.2
 git push origin v1.8.2
 
-# 5. mainにも反映（必要に応じて）
+# 5. GitHub Releaseの作成（GitHubウェブUI）
+
+# 6. mainにも反映（必要に応じて）
 git checkout main
 git cherry-pick <commit-hash>
+git push
 ```
 
 ---
