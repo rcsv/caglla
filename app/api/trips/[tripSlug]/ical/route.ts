@@ -1,29 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFirestore } from 'firebase-admin/firestore'
-import { initializeFirebaseAdmin } from '@/lib/firebase/admin'
+
 import { exportTripToICal, exportReservationsToICal } from '@/lib/utils/export-helpers'
 import { validateICalToken } from '@/lib/utils/ical-token'
 import type { Trip, Day, Itinerary } from '@/lib/core/types'
 
 // Firebase Admin初期化
-initializeFirebaseAdmin()
 const db = getFirestore()
 
 /**
  * iCal公開API
- * GET /api/trips/[tripId]/ical?token=xxx&type=trip|reservations
+ * GET /api/trips/[tripSlug]/ical?token=xxx&type=trip|reservations
+ * Note: tripSlug parameter contains tripId (UUID) for backward compatibility
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { tripId: string } }
+  { params }: { params: { tripSlug: string } }
 ) {
   try {
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
     const type = searchParams.get('type') || 'trip' // 'trip' or 'reservations'
 
-    // 1. Trip取得
-    const tripDoc = await db.collection('trips').doc(params.tripId).get()
+    // 1. Trip取得 (tripSlug parameter contains tripId)
+    const tripDoc = await db.collection('trips').doc(params.tripSlug).get()
     
     if (!tripDoc.exists) {
       return new NextResponse('Trip not found', { status: 404 })
@@ -61,7 +61,7 @@ export async function GET(
     // 4. Days取得（サブコレクション）
     const daysSnapshot = await db
       .collection('trips')
-      .doc(params.tripId)
+      .doc(params.tripSlug)
       .collection('days')
       .orderBy('day_number', 'asc')
       .get()
@@ -78,7 +78,7 @@ export async function GET(
       // 5. Itineraries取得（サブコレクション）
       const itinerariesSnapshot = await db
         .collection('trips')
-        .doc(params.tripId)
+        .doc(params.tripSlug)
         .collection('days')
         .doc(dayDoc.id)
         .collection('itineraries')
@@ -96,7 +96,7 @@ export async function GET(
     trip.days = days
 
     // 6. アクセスログ更新（非同期、エラーは無視）
-    db.collection('trips').doc(params.tripId).update({
+    db.collection('trips').doc(params.tripSlug).update({
       ical_last_accessed_at: new Date(),
     }).catch(err => console.error('Failed to update ical_last_accessed_at:', err))
 

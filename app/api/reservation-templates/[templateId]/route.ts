@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
-import { initializeFirebaseAdmin } from '@/lib/firebase/admin'
+
 import { verifyAuthToken } from '@/lib/api/auth-helpers'
 import type { ReservationTemplateInput } from '@/lib/core/types'
 
 // Firebase Admin初期化
-initializeFirebaseAdmin()
 const db = getFirestore()
 
 /**

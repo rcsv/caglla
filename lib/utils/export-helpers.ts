@@ -575,14 +575,14 @@ export function downloadReservationsAsICal(trip: Trip) {
  * @throws Error if API call fails or user plan doesn't allow PDF export
  */
 export async function exportTripToPdf(
-  tripId: string,
+  tripSlugOrId: string,
   token: string,
   onProgress?: (message: string) => void
 ): Promise<void> {
   try {
     onProgress?.('PDF生成中...')
 
-    const response = await fetch(`/api/trips/${tripId}/pdf`, {
+    const response = await fetch(`/api/trips/${tripSlugOrId}/pdf`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`

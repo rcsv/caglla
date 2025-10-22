@@ -6,7 +6,7 @@ import type { Trip } from '@/lib/core/types'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import Button from '@/components/common/Button'
 import { Icon } from '@iconify/react'
-import { useSubscription } from '@/lib/contexts/subscription-context'
+import { useSubscription } from '@/lib/contexts/subscription'
 
 interface ICalPublishModalProps {
   isOpen: boolean

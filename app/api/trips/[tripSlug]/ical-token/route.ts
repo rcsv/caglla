@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFirestore } from 'firebase-admin/firestore'
-import { initializeFirebaseAdmin } from '@/lib/firebase/admin'
+import { getAuth } from 'firebase-admin/auth'
+
 import { generateICalToken } from '@/lib/utils/ical-token'
-import { verifyAuthToken } from '@/lib/api/auth-helpers'
 
 // Firebase Admin初期化
-initializeFirebaseAdmin()
 const db = getFirestore()
+const auth = getAuth()
 
 /**
  * iCal公開トークン生成・取得API
@@ -19,7 +19,7 @@ const db = getFirestore()
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { tripId: string } }
+  { params }: { params: { tripSlug: string } }
 ) {
   try {
     // 1. 認証チェック
@@ -29,7 +29,7 @@ export async function POST(
     }
 
     // 2. Trip取得
-    const tripDoc = await db.collection('trips').doc(params.tripId).get()
+    const tripDoc = await db.collection('trips').doc(params.tripSlug).get()
     
     if (!tripDoc.exists) {
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
@@ -38,12 +38,12 @@ export async function POST(
     const trip = tripDoc.data()
     
     // 3. 所有権確認
-    if (trip?.user_id !== user.uid) {
+    if (trip?.user_id !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // 4. ユーザープラン確認（Backpacker以上）
-    const userDoc = await db.collection('users').doc(user.uid).get()
+    const userDoc = await db.collection('users').doc(userId).get()
     const userData = userDoc.data()
     const userPlan = userData?.plan || 'season_traveler'
     
@@ -62,7 +62,7 @@ export async function POST(
     }
 
     // 6. Tripを更新
-    await db.collection('trips').doc(params.tripId).update({
+    await db.collection('trips').doc(params.tripSlug).update({
       ical_public_token: token,
       ical_enabled: true,
       updated_at: new Date(),
@@ -70,8 +70,8 @@ export async function POST(
 
     // 7. iCal URLを生成
     const baseUrl = request.headers.get('origin') || 'https://caglla.app'
-    const icalUrl = `${baseUrl}/api/trips/${params.tripId}/ical?token=${token}&type=trip`
-    const reservationsUrl = `${baseUrl}/api/trips/${params.tripId}/ical?token=${token}&type=reservations`
+    const icalUrl = `${baseUrl}/api/trips/${params.tripSlug}/ical?token=${token}&type=trip`
+    const reservationsUrl = `${baseUrl}/api/trips/${params.tripSlug}/ical?token=${token}&type=reservations`
 
     return NextResponse.json({
       success: true,
@@ -94,17 +94,26 @@ export async function POST(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { tripId: string } }
+  { params }: { params: { tripSlug: string } }
 ) {
   try {
     // 1. 認証チェック
-    const user = await verifyAuthToken(request)
-    if (!user) {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const token = authHeader.substring(7)
+    let userId: string
+    try {
+      const decodedToken = await auth.verifyIdToken(token)
+      userId = decodedToken.uid
+    } catch (error) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // 2. Trip取得
-    const tripDoc = await db.collection('trips').doc(params.tripId).get()
+    const tripDoc = await db.collection('trips').doc(params.tripSlug).get()
     
     if (!tripDoc.exists) {
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
@@ -113,12 +122,12 @@ export async function DELETE(
     const trip = tripDoc.data()
     
     // 3. 所有権確認
-    if (trip?.user_id !== user.uid) {
+    if (trip?.user_id !== userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // 4. Tripを更新（無効化）
-    await db.collection('trips').doc(params.tripId).update({
+    await db.collection('trips').doc(params.tripSlug).update({
       ical_enabled: false,
       updated_at: new Date(),
     })

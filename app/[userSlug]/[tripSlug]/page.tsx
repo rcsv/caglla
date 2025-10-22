@@ -130,8 +130,9 @@ export default function SlugBasedTripPage() {
     try {
       setPdfExporting(true)
       const token = await user.getIdToken()
+      logger.debug('PDF Export: token obtained', { tokenLength: token.length })
       
-      await exportTripToPdf(trip.id, token, (message) => {
+      await exportTripToPdf(trip.slug || trip.id, token, (message) => {
         logger.debug('PDF Export:', message)
       })
       
