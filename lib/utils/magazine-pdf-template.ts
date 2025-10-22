@@ -202,13 +202,13 @@ export function generateMagazineStyles(): string {
       /* Yuji Boku版のタイトルスタイル */
       .cover-title-yuji {
         font-family: 'Yuji Boku', 'Hiragino Mincho Pro', 'Yu Mincho', serif;
-        font-size: 180px;
+        font-size: 150px;
         font-weight: normal;
         color: white;
-        margin-bottom: 40px; /* 10mm ≈ 40px */
+        margin-bottom: 80px; /* 20mm ≈ 80px */
         letter-spacing: 2px;
         text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
-        text-align: center;
+        text-align: right;
         line-height: 0.9;
       }
       
@@ -620,7 +620,7 @@ export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Pr
       ${qrCodeHtml}
       <div class="cover-content">
         <div>
-          <div class="cover-title">旅のしおり</div>
+          <div class="cover-title-yuji">旅のしおり</div>
           <!-- Yuji Bokuに変更する場合: <div class="cover-title-yuji">旅のしおり</div> -->
           <div class="cover-subtitle">${escapeHtml((trip as any).name || '無題の旅行')}</div>
           <div class="cover-meta">
