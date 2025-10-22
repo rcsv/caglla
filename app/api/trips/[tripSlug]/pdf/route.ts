@@ -48,8 +48,8 @@ async function callSelectPdfApi(params: {
 /**
  * トリップデータをHTMLに変換（旅行雑誌風PDF用）
  */
-function generatePdfHtml(data: TripPdfData): string {
-  return generateMagazinePdfHtml(data)
+async function generatePdfHtml(data: TripPdfData, tripUrl?: string): Promise<string> {
+  return await generateMagazinePdfHtml(data, tripUrl)
 }
 
 /**
@@ -279,9 +279,12 @@ export async function GET(
 
     // 6. トリップデータの取得
     const tripData = await fetchTripData(trip, days)
+    
+    // トリップURLの生成
+    const tripUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${(trip as any).user_slug}/${tripSlug}`
 
     // 7. HTMLの生成
-    const html = generatePdfHtml(tripData)
+    const html = await generatePdfHtml(tripData, tripUrl)
     logger.debug('PDF API: HTML content generated', { 
       htmlLength: html.length,
       htmlPreview: html.substring(0, 500) + '...'

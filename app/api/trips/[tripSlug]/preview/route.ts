@@ -20,7 +20,7 @@ import logger from '@/lib/core/logger'
 /**
  * トリップデータをHTMLに変換（プレビュー用）
  */
-function generatePreviewHtml(data: TripPdfData): string {
+async function generatePreviewHtml(data: TripPdfData, tripUrl?: string): Promise<string> {
   // プレビュー用の追加スタイルを追加
   const previewStyles = `
     <style>
@@ -84,7 +84,7 @@ function generatePreviewHtml(data: TripPdfData): string {
     </style>
   `
   
-  const html = generateMagazinePdfHtml(data)
+  const html = await generateMagazinePdfHtml(data, tripUrl)
   
   // プレビューヘッダーとコントロールを追加
   const previewHeader = `
@@ -285,9 +285,12 @@ export async function GET(
 
     // 4. トリップデータの取得
     const tripData = await fetchTripData(trip, days)
+    
+    // トリップURLの生成
+    const tripUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${(trip as any).user_slug}/${tripSlug}`
 
     // 5. HTMLの生成
-    const html = generatePreviewHtml(tripData)
+    const html = await generatePreviewHtml(tripData, tripUrl)
     logger.debug('Preview API: HTML content generated', { 
       htmlLength: html.length,
       htmlPreview: html.substring(0, 500) + '...'

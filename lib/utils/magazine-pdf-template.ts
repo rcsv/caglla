@@ -12,6 +12,7 @@
 import type { Trip, Day, Itinerary } from '@/lib/core/types'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { dateUtils } from '@/lib/utils/date'
+import QRCode from 'qrcode'
 
 export interface TripPdfData {
   trip: Trip
@@ -44,6 +45,26 @@ export function escapeHtml(text: string | undefined | null): string {
     "'": '&#039;'
   }
   return text.replace(/[&<>"']/g, m => map[m])
+}
+
+/**
+ * QRコードを生成
+ */
+async function generateQRCode(url: string): Promise<string> {
+  try {
+    const qrDataURL = await QRCode.toDataURL(url, {
+      width: 64,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    })
+    return qrDataURL
+  } catch (error) {
+    console.error('QR code generation failed:', error)
+    return ''
+  }
 }
 
 /**
@@ -129,6 +150,40 @@ export function generateMagazineStyles(): string {
         align-items: center;
         text-align: center;
         padding: 160px 80px; /* 40mm ≈ 160px, 20mm ≈ 80px */
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .cover-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        z-index: 1;
+      }
+      
+      .cover-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 2;
+      }
+      
+      .cover-content {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
       }
       
       .cover-title {
@@ -137,6 +192,7 @@ export function generateMagazineStyles(): string {
         color: #2563eb;
         margin-bottom: 80px; /* 20mm ≈ 80px */
         letter-spacing: 2px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
       }
       
       .cover-subtitle {
@@ -144,12 +200,14 @@ export function generateMagazineStyles(): string {
         font-weight: 300;
         color: #333;
         margin-bottom: 40px; /* 10mm ≈ 40px */
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
       }
       
       .cover-meta {
         font-size: 14pt;
         color: #666;
         margin-bottom: 120px; /* 30mm ≈ 120px */
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
       }
       
       .cover-features {
@@ -179,6 +237,52 @@ export function generateMagazineStyles(): string {
       .cover-feature-desc {
         font-size: 10pt;
         color: #666;
+      }
+      
+      /* 縦書きテキスト */
+      .vertical-text {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        font-size: 8pt;
+        color: rgba(255, 255, 255, 0.7);
+        letter-spacing: 2px;
+        line-height: 1.8;
+        z-index: 4;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
+      
+      /* QRコード */
+      .cover-qr {
+        position: absolute;
+        bottom: 40px;
+        right: 40px;
+        width: 80px;
+        height: 80px;
+        background: white;
+        padding: 8px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        z-index: 4;
+      }
+      
+      .cover-qr img {
+        width: 100%;
+        height: 100%;
+      }
+      
+      .cover-qr-label {
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 8pt;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        white-space: nowrap;
       }
       
       /* 目次ページスタイル */
@@ -466,34 +570,62 @@ export function generateMagazineStyles(): string {
 /**
  * 表紙ページを生成
  */
-export function generateCoverPage(data: TripPdfData): string {
+export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Promise<string> {
   const { trip } = data
   const startDate = trip.start_date ? dateUtils.formatDate(toDateOrNull(trip.start_date) || new Date()) : '未定'
   const endDate = trip.end_date ? dateUtils.formatDate(toDateOrNull(trip.end_date) || new Date()) : '未定'
   
+  // 背景画像のURL（旅行データから取得）
+  const backgroundImage = trip.cover_image || trip.image_url || ''
+  
+  // QRコード生成
+  let qrCodeHtml = ''
+  if (tripUrl) {
+    const qrDataURL = await generateQRCode(tripUrl)
+    if (qrDataURL) {
+      qrCodeHtml = `
+        <div class="cover-qr">
+          <img src="${qrDataURL}" alt="QR Code" />
+          <div class="cover-qr-label">Trip URL</div>
+        </div>
+      `
+    }
+  }
+  
+  // 縦書きテキスト（JOURNEY OF FREEDOM風）
+  const verticalText = 'JOURNEY OF FREEDOM'
+  
   return `
     <div class="page cover-page">
-      <div class="cover-title">Caglla</div>
-      <div class="cover-subtitle">${escapeHtml(trip.name || '無題の旅行')}</div>
-      <div class="cover-meta">
-        ${startDate} 〜 ${endDate}
-        ${trip.destination ? `<br>📍 ${escapeHtml(trip.destination)}` : ''}
-      </div>
-      <div class="cover-features">
-        <div class="cover-feature">
-          <div class="cover-feature-icon">🏨</div>
-          <div class="cover-feature-title">宿泊先</div>
-          <div class="cover-feature-desc">厳選されたホテル・宿泊施設</div>
+      ${backgroundImage ? `<div class="cover-background" style="background-image: url('${backgroundImage}')"></div>` : ''}
+      <div class="cover-overlay"></div>
+      <div class="vertical-text">${verticalText}</div>
+      ${qrCodeHtml}
+      <div class="cover-content">
+        <div>
+          <div class="cover-title">Caglla</div>
+          <div class="cover-subtitle">${escapeHtml(trip.name || '無題の旅行')}</div>
+          <div class="cover-meta">
+            ${startDate} 〜 ${endDate}
+            ${trip.destination ? `<br>📍 ${escapeHtml(trip.destination)}` : ''}
+          </div>
         </div>
-        <div class="cover-feature">
-          <div class="cover-feature-icon">🎯</div>
-          <div class="cover-feature-title">主要アクティビティ</div>
-          <div class="cover-feature-desc">現地の魅力を最大限に</div>
-        </div>
-        <div class="cover-feature">
-          <div class="cover-feature-icon">🗺️</div>
-          <div class="cover-feature-title">詳細ルート</div>
-          <div class="cover-feature-desc">最適化された旅程プラン</div>
+        <div class="cover-features">
+          <div class="cover-feature">
+            <div class="cover-feature-icon">🏨</div>
+            <div class="cover-feature-title">宿泊先</div>
+            <div class="cover-feature-desc">厳選されたホテル・宿泊施設</div>
+          </div>
+          <div class="cover-feature">
+            <div class="cover-feature-icon">🎯</div>
+            <div class="cover-feature-title">主要アクティビティ</div>
+            <div class="cover-feature-desc">現地の魅力を最大限に</div>
+          </div>
+          <div class="cover-feature">
+            <div class="cover-feature-icon">🗺️</div>
+            <div class="cover-feature-title">詳細ルート</div>
+            <div class="cover-feature-desc">最適化された旅程プラン</div>
+          </div>
         </div>
       </div>
     </div>
@@ -784,11 +916,11 @@ export function generateBackCoverPage(data: TripPdfData): string {
 /**
  * 完全なPDF用HTMLドキュメントを生成
  */
-export function generateMagazinePdfHtml(data: TripPdfData): string {
+export async function generateMagazinePdfHtml(data: TripPdfData, tripUrl?: string): Promise<string> {
   const { trip } = data
   
   const pages = [
-    generateCoverPage(data),
+    await generateCoverPage(data, tripUrl),
     generateTocPage(data),
     generateReservationsPage(data),
     generateItineraryPages(data),
