@@ -186,13 +186,33 @@ export function generateMagazineStyles(): string {
         justify-content: space-between;
       }
       
+      /* Google Fonts - 日本語筆文字フォント */
+      @import url('https://fonts.googleapis.com/css2?family=New+Tegomin&family=Yuji+Boku&display=swap');
+      
+      /* 表紙タイトルスタイル */
       .cover-title {
-        font-size: 48pt;
-        font-weight: 300;
-        color: #2563eb;
+        font-family: 'New Tegomin', serif;
+        font-size: 180px;
+        font-weight: normal;
+        color: white;
         margin-bottom: 80px; /* 20mm ≈ 80px */
         letter-spacing: 2px;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+        text-align: center;
+        line-height: 0.9;
+      }
+      
+      /* Yuji Boku版のタイトルスタイル（オプション） */
+      .cover-title-yuji {
+        font-family: 'Yuji Boku', serif;
+        font-size: 180px;
+        font-weight: normal;
+        color: white;
+        margin-bottom: 80px; /* 20mm ≈ 80px */
+        letter-spacing: 2px;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+        text-align: center;
+        line-height: 0.9;
       }
       
       .cover-subtitle {
@@ -603,7 +623,9 @@ export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Pr
       ${qrCodeHtml}
       <div class="cover-content">
         <div>
-          <div class="cover-title">Caglla</div>
+          <div class="cover-title">旅のしおり</div>
+          <!-- フォント比較用（コメントアウト） -->
+          <!-- <div class="cover-title-yuji">旅のしおり</div> -->
           <div class="cover-subtitle">${escapeHtml(trip.name || '無題の旅行')}</div>
           <div class="cover-meta">
             ${startDate} 〜 ${endDate}
