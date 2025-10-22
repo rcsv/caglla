@@ -146,6 +146,15 @@ export default function SlugBasedTripPage() {
     }
   }
 
+  // PDF プレビュー
+  const handlePdfPreview = () => {
+    if (!trip) return
+    
+    // 開発者ツールページに遷移
+    const previewUrl = `/dev-tools/pdf-preview/${trip.slug || trip.id}`
+    window.open(previewUrl, '_blank')
+  }
+
   // セクションへのナビゲーション機能
   const navigateToSection = (sectionId: string) => {
     // チェックリスト関連
@@ -1080,6 +1089,14 @@ export default function SlugBasedTripPage() {
           >
             <Icon icon="mdi:calendar-sync" className="w-5 h-5" />
             <span className="hidden sm:inline">iCal</span>
+          </button>
+          <button
+            onClick={handlePdfPreview}
+            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            title="PDFプレビュー（デザイン確認用）"
+          >
+            <Icon icon="mdi:eye" className="w-5 h-5" />
+            <span className="hidden sm:inline">Preview</span>
           </button>
           <button
             onClick={handlePdfExport}

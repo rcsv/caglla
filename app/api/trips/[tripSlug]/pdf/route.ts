@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import type { Trip, Day, Itinerary } from '@/lib/core/types'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
-import { dateUtils } from '@/lib/utils/date'
+import { generateMagazinePdfHtml, type TripPdfData } from '@/lib/utils/magazine-pdf-template'
 import logger from '@/lib/core/logger'
 
 interface SelectPdfErrorResponse {
@@ -19,11 +19,7 @@ interface SelectPdfErrorResponse {
   status: number
 }
 
-interface TripPdfData {
-  trip: Trip
-  days: Day[]
-  itinerariesByDay: Record<string, Itinerary[]>
-}
+// TripPdfData型はmagazine-pdf-templateからインポート
 
 /**
  * SelectPdf APIへのリクエストを実行
@@ -33,6 +29,12 @@ async function callSelectPdfApi(params: {
   url?: string
   html?: string
   base_url?: string
+  page_numbers?: boolean
+  page_numbers_template?: string
+  page_numbers_font_size?: number
+  page_numbers_font_color?: string
+  page_numbers_position?: string
+  page_numbers_alignment?: string
 }): Promise<Response> {
   const response = await fetch('https://selectpdf.com/api2/convert/', {
     method: 'POST',
@@ -44,198 +46,10 @@ async function callSelectPdfApi(params: {
 }
 
 /**
- * トリップデータをHTMLに変換
+ * トリップデータをHTMLに変換（旅行雑誌風PDF用）
  */
-function generateTripHtml(data: TripPdfData): string {
-  const { trip, days, itinerariesByDay } = data
-  
-  // スタイリング
-  const styles = `
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { 
-        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-        line-height: 1.6;
-        color: #333;
-        padding: 40px;
-        font-size: 12pt;
-      }
-      .header {
-        border-bottom: 3px solid #2563eb;
-        padding-bottom: 20px;
-        margin-bottom: 30px;
-      }
-      .title { 
-        font-size: 24pt;
-        font-weight: bold;
-        color: #1e40af;
-        margin-bottom: 10px;
-      }
-      .trip-meta {
-        color: #666;
-        font-size: 11pt;
-      }
-      .day-section {
-        page-break-inside: avoid;
-        margin-bottom: 30px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 20px;
-        background: #f9fafb;
-      }
-      .day-header {
-        font-size: 16pt;
-        font-weight: bold;
-        color: #1e40af;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #ddd;
-      }
-      .itinerary-item {
-        margin-bottom: 15px;
-        padding: 12px;
-        background: white;
-        border-left: 4px solid #3b82f6;
-        border-radius: 4px;
-      }
-      .itinerary-time {
-        font-weight: bold;
-        color: #2563eb;
-        margin-bottom: 5px;
-      }
-      .itinerary-name {
-        font-size: 13pt;
-        font-weight: bold;
-        margin-bottom: 5px;
-      }
-      .itinerary-description {
-        color: #666;
-        font-size: 9pt;
-        margin-bottom: 3px;
-        line-height: 1.3;
-      }
-      .itinerary-note {
-        color: #666;
-        font-size: 10pt;
-        margin-top: 5px;
-        white-space: pre-wrap;
-      }
-      .itinerary-address {
-        color: #888;
-        font-size: 9pt;
-        margin-top: 3px;
-      }
-      .footer {
-        margin-top: 40px;
-        padding-top: 20px;
-        border-top: 2px solid #e5e7eb;
-        text-align: center;
-        color: #999;
-        font-size: 9pt;
-      }
-      .no-itineraries {
-        color: #999;
-        font-style: italic;
-        padding: 20px;
-        text-align: center;
-      }
-    </style>
-  `
-  
-  // ヘッダー
-  const startDate = trip.start_date ? dateUtils.formatDate(toDateOrNull(trip.start_date) || new Date()) : '未定'
-  const endDate = trip.end_date ? dateUtils.formatDate(toDateOrNull(trip.end_date) || new Date()) : '未定'
-  
-  const header = `
-    <div class="header">
-      <div class="title">${escapeHtml(trip.name || '無題の旅行')}</div>
-      <div class="trip-meta">
-        📅 ${startDate} 〜 ${endDate}
-        ${trip.destination ? ` | 📍 ${escapeHtml(trip.destination)}` : ''}
-      </div>
-    </div>
-  `
-  
-  // 日程セクション
-  const daySections = days
-    .sort((a, b) => {
-      const dateA = toDateOrNull(a.date)
-      const dateB = toDateOrNull(b.date)
-      if (!dateA || !dateB) return 0
-      return dateA.getTime() - dateB.getTime()
-    })
-    .map((day, index) => {
-      const dayDate = toDateOrNull(day.date)
-      const dayTitle = dayDate 
-        ? `${dateUtils.formatDate(dayDate)} (${index + 1}日目)`
-        : `${index + 1}日目`
-      
-      const itineraries = itinerariesByDay[day.id] || []
-      const sortedItineraries = itineraries
-        .sort((a, b) => {
-          const timeA = a.start_time || ''
-          const timeB = b.start_time || ''
-          return timeA.localeCompare(timeB)
-        })
-      
-      const itineraryItems = sortedItineraries.length > 0
-        ? sortedItineraries.map(item => `
-            <div class="itinerary-item">
-              ${item.start_time ? `<div class="itinerary-time">⏰ ${item.start_time}</div>` : ''}
-              <div class="itinerary-name">${escapeHtml(item.title || item.name || '無題の旅程')}</div>
-              ${item.description ? `<div class="itinerary-description">${escapeHtml(item.description)}</div>` : ''}
-              ${item.note ? `<div class="itinerary-note">${escapeHtml(item.note)}</div>` : ''}
-              ${item.address ? `<div class="itinerary-address">📍 ${escapeHtml(item.address)}</div>` : ''}
-            </div>
-          `).join('')
-        : '<div class="no-itineraries">予定なし</div>'
-      
-      return `
-        <div class="day-section">
-          <div class="day-header">${dayTitle}</div>
-          ${itineraryItems}
-        </div>
-      `
-    }).join('')
-  
-  // フッター
-  const footer = `
-    <div class="footer">
-      Generated by Caglla Travel Manager | ${new Date().toLocaleDateString('ja-JP')}
-    </div>
-  `
-  
-  return `
-    <!DOCTYPE html>
-    <html lang="ja">
-    <head>
-      <meta charset="UTF-8">
-      <title>${escapeHtml(trip.name || '無題の旅行')} - 旅程表</title>
-      ${styles}
-    </head>
-    <body>
-      ${header}
-      ${daySections}
-      ${footer}
-    </body>
-    </html>
-  `
-}
-
-/**
- * HTML特殊文字をエスケープ
- */
-function escapeHtml(text: string | undefined | null): string {
-  if (!text) return ''
-  
-  const map: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  }
-  return text.replace(/[&<>"']/g, m => map[m])
+function generatePdfHtml(data: TripPdfData): string {
+  return generateMagazinePdfHtml(data)
 }
 
 /**
@@ -295,10 +109,10 @@ async function validateTripOwnership(
   logger.debug('PDF API: days collection query result', { 
     tripId: trip.id, 
     daysCount: daysSnapshot.size,
-    dayIds: daysSnapshot.docs.map(doc => doc.id)
+    dayIds: daysSnapshot.docs.map((doc: any) => doc.id)
   })
   
-  const days = daysSnapshot.docs.map(doc => ({
+  const days = daysSnapshot.docs.map((doc: any) => ({
     id: doc.id,
     ...doc.data()
   })) as Day[]
@@ -361,7 +175,7 @@ async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPdfData> {
       .orderBy('sort_number', 'asc')
       .get()
 
-    const itineraries = itinerariesSnapshot.docs.map(doc => ({
+    const itineraries = itinerariesSnapshot.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data()
     })) as Itinerary[]
@@ -369,7 +183,7 @@ async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPdfData> {
     logger.debug('PDF API: itineraries found for day', { 
       dayId: day.id, 
       itinerariesCount: itineraries.length,
-      itineraryNames: itineraries.map(i => i.name || i.title || 'No name'),
+      itineraryNames: itineraries.map(i => i.title || 'No name'),
       sampleItinerary: itineraries[0] // 最初の旅程アイテムの構造を確認
     })
     
@@ -467,7 +281,7 @@ export async function GET(
     const tripData = await fetchTripData(trip, days)
 
     // 7. HTMLの生成
-    const html = generateTripHtml(tripData)
+    const html = generatePdfHtml(tripData)
     logger.debug('PDF API: HTML content generated', { 
       htmlLength: html.length,
       htmlPreview: html.substring(0, 500) + '...'
@@ -477,7 +291,13 @@ export async function GET(
     const apiResponse = await callSelectPdfApi({
       key: apiKey,
       html,
-      base_url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      base_url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      page_numbers: false, // ページ番号を無効化
+      page_numbers_template: '', // ページ番号テンプレートを空に
+      page_numbers_font_size: 0, // フォントサイズを0に
+      page_numbers_font_color: 'transparent', // 透明色に設定
+      page_numbers_position: 'none', // 位置を無効化
+      page_numbers_alignment: 'none' // 配置を無効化
     })
 
     // 9. エラーハンドリング

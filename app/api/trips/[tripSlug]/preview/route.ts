@@ -1,0 +1,312 @@
+/**
+ * HTML Preview API
+ * トリップ旅程をHTMLとしてプレビュー表示
+ * PDFデザイン開発用のコスト削減機能
+ * 
+ * Authentication: Bearer token required
+ * Authorization: Trip owner only
+ * Plan Requirements: None (プレビューは無料)
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import type { Trip, Day, Itinerary } from '@/lib/core/types'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { generateMagazinePdfHtml, type TripPdfData } from '@/lib/utils/magazine-pdf-template'
+import logger from '@/lib/core/logger'
+
+// TripPdfData型はmagazine-pdf-templateからインポート
+
+/**
+ * トリップデータをHTMLに変換（プレビュー用）
+ */
+function generatePreviewHtml(data: TripPdfData): string {
+  // プレビュー用の追加スタイルを追加
+  const previewStyles = `
+    <style>
+      body { 
+        background: #f8f9fa;
+      }
+      .preview-header {
+        background: #2563eb;
+        color: white;
+        padding: 20px;
+        margin: -20px -20px 30px -20px;
+        text-align: center;
+        font-size: 14pt;
+        font-weight: bold;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+      }
+      .preview-controls {
+        background: white;
+        border: 2px solid #2563eb;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 60px 0 30px 0;
+        text-align: center;
+        position: sticky;
+        top: 60px;
+        z-index: 999;
+      }
+      .preview-controls button {
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 10px;
+        font-size: 12pt;
+      }
+      .preview-controls button:hover {
+        background: #1d4ed8;
+      }
+      .preview-controls .info {
+        color: #666;
+        font-size: 10pt;
+        margin-top: 10px;
+      }
+      .page {
+        margin-bottom: 20px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      @media print {
+        body { background: white; }
+        .preview-header, .preview-controls { display: none; }
+        .page { box-shadow: none; margin-bottom: 0; }
+      }
+    </style>
+  `
+  
+  const html = generateMagazinePdfHtml(data)
+  
+  // プレビューヘッダーとコントロールを追加
+  const previewHeader = `
+    <div class="preview-header">
+      📄 PDFデザインプレビュー - 旅行雑誌風デザイン
+    </div>
+  `
+  
+  const previewControls = `
+    <div class="preview-controls">
+      <button onclick="window.print()">🖨️ 印刷プレビュー</button>
+      <button onclick="window.location.reload()">🔄 リロード</button>
+      <button onclick="window.close()">❌ 閉じる</button>
+      <div class="info">
+        💡 このプレビューは旅行雑誌風PDFと同じデザインです。印刷プレビューでPDF出力時の見た目を確認できます。
+      </div>
+    </div>
+  `
+  
+  // HTMLにプレビュー要素を挿入
+  return html.replace(
+    '<head>',
+    `<head>${previewStyles}`
+  ).replace(
+    '<body>',
+    `<body>${previewHeader}${previewControls}`
+  )
+}
+
+/**
+ * ユーザーの認証・認可チェック
+ */
+async function authenticateUser(request: NextRequest): Promise<{ userId: string } | NextResponse> {
+  const authHeader = request.headers.get('authorization')
+  logger.debug('Preview API: auth header check', { hasHeader: !!authHeader, startsWithBearer: authHeader?.startsWith('Bearer ') })
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    logger.error('Preview API: missing or invalid auth header')
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const token = authHeader.substring(7)
+  logger.debug('Preview API: token extracted', { tokenLength: token.length })
+  
+  try {
+    const decodedToken = await adminAuth.verifyIdToken(token)
+    logger.debug('Preview API: token verified', { userId: decodedToken.uid })
+    return { userId: decodedToken.uid }
+  } catch (error) {
+    logger.error('Preview API: token verification failed:', error)
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+}
+
+/**
+ * トリップの所有権確認とデータ取得
+ */
+async function validateTripOwnership(
+  tripId: string,
+  userId: string
+): Promise<{ trip: Trip; days: Day[] } | NextResponse> {
+  const tripRef = adminDb.collection('trips').doc(tripId)
+  const tripDoc = await tripRef.get()
+
+  if (!tripDoc.exists) {
+    return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+  }
+
+  const trip = { id: tripDoc.id, ...tripDoc.data() } as Trip
+  logger.debug('Preview API: trip data retrieved', { tripUserId: trip.user_id, authUserId: userId })
+
+  if (trip.user_id !== userId) {
+    logger.error('Preview API: trip ownership check failed', { tripUserId: trip.user_id, authUserId: userId })
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // 日程データを取得（独立したコレクションから）
+  const daysSnapshot = await adminDb
+    .collection('days')
+    .where('trip_id', '==', trip.id)
+    .orderBy('day_number', 'asc')
+    .get()
+    
+  logger.debug('Preview API: days collection query result', { 
+    tripId: trip.id, 
+    daysCount: daysSnapshot.size,
+    dayIds: daysSnapshot.docs.map(doc => doc.id)
+  })
+  
+  const days = daysSnapshot.docs.map((doc: any) => ({
+    id: doc.id,
+    ...doc.data()
+  })) as Day[]
+
+  return { trip, days }
+}
+
+/**
+ * 全旅程データを取得
+ */
+async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPreviewData> {
+  const itinerariesByDay: Record<string, Itinerary[]> = {}
+  logger.debug('Preview API: fetching trip data', { tripId: trip.id, daysCount: days.length })
+
+  // 各日程の旅程アイテムを取得（独立したコレクションから）
+  for (const day of days) {
+    logger.debug('Preview API: fetching itineraries for day', { dayId: day.id, dayDate: day.date })
+    
+    const itinerariesSnapshot = await adminDb
+      .collection('itineraries')
+      .where('day_id', '==', day.id)
+      .orderBy('sort_number', 'asc')
+      .get()
+
+    const itineraries = itinerariesSnapshot.docs.map((doc: any) => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Itinerary[]
+    
+    logger.debug('Preview API: itineraries found for day', { 
+      dayId: day.id, 
+      itinerariesCount: itineraries.length,
+      itineraryNames: itineraries.map(i => i.title || 'No name'),
+      sampleItinerary: itineraries[0] // 最初の旅程アイテムの構造を確認
+    })
+    
+    itinerariesByDay[day.id] = itineraries
+  }
+
+  logger.debug('Preview API: trip data fetch completed', { 
+    totalDays: days.length,
+    totalItineraries: Object.values(itinerariesByDay).flat().length
+  })
+
+  return { trip, days, itinerariesByDay }
+}
+
+/**
+ * GET /api/trips/[tripSlug]/preview
+ * トリップをHTMLとしてプレビュー表示
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { tripSlug: string } }
+) {
+  try {
+    const { tripSlug } = params
+    logger.debug('Preview API: request received', { tripSlug })
+
+    // 1. 認証チェック
+    const authResult = await authenticateUser(request)
+    if ('userId' in authResult === false) {
+      logger.error('Preview API: authentication failed')
+      return authResult // NextResponse (error)
+    }
+    const { userId } = authResult
+    logger.debug('Preview API: authentication successful', { userId })
+
+    // 2. tripSlug（またはdocument id）から実ドキュメントIDを解決
+    const resolvedTripId = await (async () => {
+      // まずはドキュメントIDとして試す
+      logger.debug('Preview API: resolving trip id (try as document id)', { tryId: tripSlug })
+      const byId = await adminDb.collection('trips').doc(tripSlug).get()
+      logger.debug('Preview API: doc by id result', { exists: byId.exists })
+      if (byId.exists) {
+        logger.debug('Preview API: resolved by document id', { tripId: byId.id })
+        return byId.id
+      }
+      // 見つからなければ slug で検索
+      logger.debug('Preview API: resolving trip id (query by slug)', { slug: tripSlug })
+      const bySlugSnap = await adminDb
+        .collection('trips')
+        .where('slug', '==', tripSlug)
+        .limit(1)
+        .get()
+      logger.debug('Preview API: query by slug result', { empty: bySlugSnap.empty, size: bySlugSnap.size })
+      if (!bySlugSnap.empty) {
+        const foundId = bySlugSnap.docs[0].id
+        logger.debug('Preview API: resolved by slug', { tripId: foundId })
+        return foundId
+      }
+      return null
+    })()
+
+    if (!resolvedTripId) {
+      logger.error('Preview API: Trip not found after resolution', { tripSlug })
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    }
+
+    // 3. トリップの所有権確認
+    const ownershipResult = await validateTripOwnership(resolvedTripId, userId)
+    if ('trip' in ownershipResult === false) {
+      logger.error('Preview API: ownership validation failed', { resolvedTripId, userId })
+      return ownershipResult // NextResponse (error)
+    }
+    const { trip, days } = ownershipResult
+    logger.debug('Preview API: ownership validated', { tripId: trip.id, tripUserId: (trip as any).user_id, userId, dayCount: days.length })
+
+    // 4. トリップデータの取得
+    const tripData = await fetchTripData(trip, days)
+
+    // 5. HTMLの生成
+    const html = generatePreviewHtml(tripData)
+    logger.debug('Preview API: HTML content generated', { 
+      htmlLength: html.length,
+      htmlPreview: html.substring(0, 500) + '...'
+    })
+
+    // 6. HTML返却
+    return new NextResponse(html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-cache'
+      }
+    })
+
+  } catch (error) {
+    logger.error('Preview export error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
