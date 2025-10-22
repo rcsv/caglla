@@ -186,29 +186,26 @@ export function generateMagazineStyles(): string {
         justify-content: space-between;
       }
       
-      /* Google Fonts - 日本語筆文字フォント */
-      @import url('https://fonts.googleapis.com/css2?family=New+Tegomin&family=Yuji+Boku&display=swap');
-      
-      /* 表紙タイトルスタイル */
+      /* 表紙タイトルスタイル - New Tegomin */
       .cover-title {
-        font-family: 'New Tegomin', serif;
+        font-family: 'New Tegomin', 'Hiragino Mincho Pro', 'Yu Mincho', serif;
         font-size: 180px;
         font-weight: normal;
         color: white;
-        margin-bottom: 80px; /* 20mm ≈ 80px */
+        margin-bottom: 40px; /* 10mm ≈ 40px */
         letter-spacing: 2px;
         text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
         text-align: center;
         line-height: 0.9;
       }
       
-      /* Yuji Boku版のタイトルスタイル（オプション） */
+      /* Yuji Boku版のタイトルスタイル */
       .cover-title-yuji {
-        font-family: 'Yuji Boku', serif;
+        font-family: 'Yuji Boku', 'Hiragino Mincho Pro', 'Yu Mincho', serif;
         font-size: 180px;
         font-weight: normal;
         color: white;
-        margin-bottom: 80px; /* 20mm ≈ 80px */
+        margin-bottom: 40px; /* 10mm ≈ 40px */
         letter-spacing: 2px;
         text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
         text-align: center;
@@ -596,7 +593,7 @@ export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Pr
   const endDate = trip.end_date ? dateUtils.formatDate(toDateOrNull(trip.end_date) || new Date()) : '未定'
   
   // 背景画像のURL（旅行データから取得）
-  const backgroundImage = trip.cover_image || trip.image_url || ''
+  const backgroundImage = (trip as any).cover_image || (trip as any).image_url || ''
   
   // QRコード生成
   let qrCodeHtml = ''
@@ -624,9 +621,10 @@ export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Pr
       <div class="cover-content">
         <div>
           <div class="cover-title">旅のしおり</div>
-          <!-- フォント比較用（コメントアウト） -->
-          <!-- <div class="cover-title-yuji">旅のしおり</div> -->
-          <div class="cover-subtitle">${escapeHtml(trip.name || '無題の旅行')}</div>
+          <div style="font-size: 12pt; color: rgba(255,255,255,0.7); text-align: center; margin-bottom: 20px;">New Tegomin</div>
+          <div class="cover-title-yuji">旅のしおり</div>
+          <div style="font-size: 12pt; color: rgba(255,255,255,0.7); text-align: center; margin-bottom: 20px;">Yuji Boku</div>
+          <div class="cover-subtitle">${escapeHtml((trip as any).name || '無題の旅行')}</div>
           <div class="cover-meta">
             ${startDate} 〜 ${endDate}
             ${trip.destination ? `<br>📍 ${escapeHtml(trip.destination)}` : ''}
@@ -675,7 +673,7 @@ export function generateTocPage(data: TripPdfData): string {
   return `
     <div class="page toc-page">
       <div class="page-header">
-        <div>${escapeHtml(trip.name || '無題の旅行').toUpperCase()} - TABLE OF CONTENTS</div>
+        <div>${escapeHtml((trip as any).name || '無題の旅行').toUpperCase()} - TABLE OF CONTENTS</div>
       </div>
       
       <div class="toc-header">
@@ -684,7 +682,7 @@ export function generateTocPage(data: TripPdfData): string {
       
       <div class="toc-content">
         <div class="toc-left">
-          <div class="toc-main-title">${escapeHtml(trip.name || '無題の旅行')}</div>
+          <div class="toc-main-title">${escapeHtml((trip as any).name || '無題の旅行')}</div>
           <div class="toc-meta">${days.length}日間の旅行 | ${startDate} - ${endDate}</div>
           
           <div class="toc-section">
@@ -751,7 +749,7 @@ export function generateReservationsPage(data: TripPdfData): string {
   return `
     <div class="page reservations-page">
       <div class="page-header">
-        <div>${escapeHtml(data.trip.name || '無題の旅行').toUpperCase()} - RESERVATIONS</div>
+        <div>${escapeHtml((data.trip as any).name || '無題の旅行').toUpperCase()} - RESERVATIONS</div>
       </div>
       
       <div class="page-title">Reservations</div>
@@ -801,8 +799,8 @@ export function generateItineraryPages(data: TripPdfData): string {
               ${item.start_time ? `<div class="itinerary-time">⏰ ${item.start_time}</div>` : ''}
               <div class="itinerary-name">${escapeHtml(item.title || '無題の旅程')}</div>
               ${item.description ? `<div class="itinerary-description">${escapeHtml(item.description)}</div>` : ''}
-              ${item.note ? `<div class="itinerary-note">${escapeHtml(item.note)}</div>` : ''}
-              ${item.address ? `<div class="itinerary-address">📍 ${escapeHtml(item.address)}</div>` : ''}
+              ${(item as any).note ? `<div class="itinerary-note">${escapeHtml((item as any).note)}</div>` : ''}
+              ${(item as any).address ? `<div class="itinerary-address">📍 ${escapeHtml((item as any).address)}</div>` : ''}
             </div>
           `).join('')
         : '<div class="reservations-content">予定なし</div>'
@@ -810,7 +808,7 @@ export function generateItineraryPages(data: TripPdfData): string {
       return `
         <div class="page itinerary-page">
           <div class="page-header">
-            <div>${escapeHtml(trip.name || '無題の旅行').toUpperCase()} - DAILY SCHEDULE</div>
+            <div>${escapeHtml((trip as any).name || '無題の旅行').toUpperCase()} - DAILY SCHEDULE</div>
           </div>
           
           <div class="day-title">${dayTitle}</div>
@@ -833,7 +831,7 @@ export function generateEmergencyPage(data: TripPdfData): string {
   return `
     <div class="page emergency-page">
       <div class="page-header">
-        <div>${escapeHtml(trip.name || '無題の旅行').toUpperCase()} - EMERGENCY CONTACTS</div>
+        <div>${escapeHtml((trip as any).name || '無題の旅行').toUpperCase()} - EMERGENCY CONTACTS</div>
       </div>
       
       <div class="page-title">Emergency Contacts</div>
@@ -892,7 +890,7 @@ export function generateMemoPage(data: TripPdfData): string {
   return `
     <div class="page memo-page">
       <div class="page-header">
-        <div>${escapeHtml(trip.name || '無題の旅行').toUpperCase()} - MEMO</div>
+        <div>${escapeHtml((trip as any).name || '無題の旅行').toUpperCase()} - MEMO</div>
       </div>
       
       <div class="page-title">Memo</div>
@@ -958,7 +956,10 @@ export async function generateMagazinePdfHtml(data: TripPdfData, tripUrl?: strin
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${escapeHtml(trip.name || '無題の旅行')} - Travel Companion</title>
+      <title>${escapeHtml((trip as any).name || '無題の旅行')} - Travel Companion</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=New+Tegomin&family=Yuji+Boku&display=swap" rel="stylesheet">
       ${generateMagazineStyles()}
     </head>
     <body>
