@@ -20,8 +20,8 @@ class Logger {
 
   constructor() {
     // 環境に応じたデフォルト設定
-    const isDevelopment = process.env.NODE_ENV === 'development'
-    const isTest = process.env.NODE_ENV === 'test'
+    const isDevelopment = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development'
+    const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
     
     this.config = {
       level: isDevelopment ? LogLevel.DEBUG : isTest ? LogLevel.WARN : LogLevel.ERROR,
@@ -99,7 +99,7 @@ class Logger {
       return {
         name: data.name,
         message: data.message,
-        stack: process.env.NODE_ENV === 'development' ? data.stack : undefined,
+        stack: (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') ? data.stack : undefined,
       }
     }
     if (typeof Promise !== 'undefined' && data instanceof Promise) {
@@ -183,7 +183,7 @@ class Logger {
       
       if (error instanceof Error) {
         // 本番環境ではスタックトレースを隠す
-        if (process.env.NODE_ENV === 'production') {
+        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') {
           console.error(this.formatMessage('ERROR', message), error.message, ...sanitizedArgs)
         } else {
           console.error(this.formatMessage('ERROR', message), error, ...sanitizedArgs)

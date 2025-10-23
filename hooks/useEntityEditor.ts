@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import logger from '@/lib/core/logger'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 
 interface UpdateResult<T = any> {
   success: boolean
@@ -71,9 +72,8 @@ export function useEntityEditor<T extends { id: string }>(
     
     try {
       const entityId = entity[idField] as string
-      const response = await fetch(`/api/${apiPath}/${entityId}`, {
+      const response = await makeAuthenticatedRequest(`/api/${apiPath}/${entityId}`, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: value }),
         signal: abortController.signal
       })
@@ -137,9 +137,8 @@ export function useEntityEditor<T extends { id: string }>(
     
     try {
       const entityId = entity[idField] as string
-      const response = await fetch(`/api/${apiPath}/${entityId}`, {
+      const response = await makeAuthenticatedRequest(`/api/${apiPath}/${entityId}`, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates),
         signal: abortController.signal
       })
