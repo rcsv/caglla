@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFirestore } from 'firebase-admin/firestore'
+import { adminDb } from '@/lib/firebase/admin'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 
 import { exportTripToICal, exportReservationsToICal } from '@/lib/utils/export-helpers'
 import { validateICalToken } from '@/lib/utils/ical-token'
 import type { Trip, Day, Itinerary } from '@/lib/core/types'
-
-// Firebase Admin初期化
-const db = getFirestore()
 
 /**
  * iCal公開API
@@ -23,7 +21,7 @@ export async function GET(
     const type = searchParams.get('type') || 'trip' // 'trip' or 'reservations'
 
     // 1. Trip取得 (tripSlug parameter contains tripId)
-    const tripDoc = await db.collection('trips').doc(params.tripSlug).get()
+    const tripDoc = await adminDb.collection('trips').doc(params.tripSlug).get()
     
     if (!tripDoc.exists) {
       return new NextResponse('Trip not found', { status: 404 })
@@ -58,13 +56,31 @@ export async function GET(
       })
     }
 
-    // 4. Days取得（サブコレクション）
-    const daysSnapshot = await db
-      .collection('trips')
-      .doc(params.tripSlug)
+    // 4. Days取得（独立コレクションとして試行）
+    console.log(`[iCal Debug] Fetching days for trip: ${params.tripSlug}`)
+    
+    // まず独立コレクションとして試行
+    let daysSnapshot = await adminDb
       .collection('days')
+      .where('trip_id', '==', params.tripSlug)
       .orderBy('day_number', 'asc')
       .get()
+    
+    console.log(`[iCal Debug] Days snapshot size (independent collection): ${daysSnapshot.size}`)
+    
+    // もし独立コレクションにデータがない場合は、サブコレクションとして試行
+    if (daysSnapshot.size === 0) {
+      console.log(`[iCal Debug] No days found in independent collection, trying subcollection`)
+      daysSnapshot = await adminDb
+        .collection('trips')
+        .doc(params.tripSlug)
+        .collection('days')
+        .orderBy('day_number', 'asc')
+        .get()
+      console.log(`[iCal Debug] Days snapshot size (subcollection): ${daysSnapshot.size}`)
+    }
+    
+    console.log(`[iCal Debug] Days snapshot docs:`, daysSnapshot.docs.map((doc: any) => ({ id: doc.id, data: doc.data() })))
 
     const days: Day[] = []
     
@@ -75,17 +91,35 @@ export async function GET(
         id: dayDoc.id,
       }
 
-      // 5. Itineraries取得（サブコレクション）
-      const itinerariesSnapshot = await db
-        .collection('trips')
-        .doc(params.tripSlug)
-        .collection('days')
-        .doc(dayDoc.id)
+      // 5. Itineraries取得（独立コレクションとして試行）
+      console.log(`[iCal Debug] Fetching itineraries for day: ${dayDoc.id}`)
+      
+      // まず独立コレクションとして試行
+      let itinerariesSnapshot = await adminDb
         .collection('itineraries')
+        .where('day_id', '==', dayDoc.id)
         .orderBy('sort_number', 'asc')
         .get()
+      
+      console.log(`[iCal Debug] Itineraries snapshot size (independent collection) for day ${dayDoc.id}: ${itinerariesSnapshot.size}`)
+      
+      // もし独立コレクションにデータがない場合は、サブコレクションとして試行
+      if (itinerariesSnapshot.size === 0) {
+        console.log(`[iCal Debug] No itineraries found in independent collection, trying subcollection`)
+        itinerariesSnapshot = await adminDb
+          .collection('trips')
+          .doc(params.tripSlug)
+          .collection('days')
+          .doc(dayDoc.id)
+          .collection('itineraries')
+          .orderBy('sort_number', 'asc')
+          .get()
+        console.log(`[iCal Debug] Itineraries snapshot size (subcollection) for day ${dayDoc.id}: ${itinerariesSnapshot.size}`)
+      }
+      
+      console.log(`[iCal Debug] Itineraries docs:`, itinerariesSnapshot.docs.map((doc: any) => ({ id: doc.id, title: doc.data().title })))
 
-      day.itineraries = itinerariesSnapshot.docs.map(itineraryDoc => ({
+      day.itineraries = itinerariesSnapshot.docs.map((itineraryDoc: any) => ({
         ...itineraryDoc.data(),
         id: itineraryDoc.id,
       })) as Itinerary[]
@@ -96,18 +130,33 @@ export async function GET(
     trip.days = days
 
     // 6. アクセスログ更新（非同期、エラーは無視）
-    db.collection('trips').doc(params.tripSlug).update({
+    adminDb.collection('trips').doc(params.tripSlug).update({
       ical_last_accessed_at: new Date(),
-    }).catch(err => console.error('Failed to update ical_last_accessed_at:', err))
+    }).catch((err: any) => console.error('Failed to update ical_last_accessed_at:', err))
 
     // 7. iCal生成
+    console.log(`[iCal Debug] Generating ${type} iCal for trip: ${trip.id} (${trip.title})`)
+    console.log(`[iCal Debug] Trip data:`, {
+      id: trip.id,
+      title: trip.title,
+      start_date: trip.start_date,
+      end_date: trip.end_date,
+      days_count: trip.days?.length || 0,
+      total_itineraries: trip.days?.reduce((sum, day) => sum + (day.itineraries?.length || 0), 0) || 0
+    })
+    
     const icalContent = type === 'reservations' 
       ? exportReservationsToICal(trip)
       : exportTripToICal(trip)
+    
+    console.log(`[iCal Debug] Generated ${type} iCal content (${icalContent.length} chars):`)
+    console.log('='.repeat(80))
+    console.log(icalContent)
+    console.log('='.repeat(80))
 
     // 8. ETag生成（キャッシュ用）
-    const lastModified = trip.updated_at
-    const etag = `"${trip.id}-${lastModified}"`
+    const lastModified = toDateOrNull(trip.updated_at) || new Date()
+    const etag = `"${trip.id}-${lastModified.getTime()}"`
     
     // 9. If-None-Matchヘッダーチェック（304 Not Modified対応）
     const clientEtag = request.headers.get('if-none-match')

@@ -357,6 +357,9 @@ function combineDateAndTime(dayDate: any, time: string | undefined): Date | null
  * Trip全体をiCal形式でエクスポート（全Itinerary）
  */
 export function exportTripToICal(trip: Trip): string {
+  console.log(`[iCal Export Debug] Starting trip iCal export for: ${trip.title}`)
+  console.log(`[iCal Export Debug] Trip has ${trip.days?.length || 0} days`)
+  
   const lines: string[] = []
   
   // ヘッダー
@@ -369,9 +372,22 @@ export function exportTripToICal(trip: Trip): string {
   lines.push('REFRESH-INTERVAL;VALUE=DURATION:PT1H') // 1時間ごとに自動更新
   lines.push('X-PUBLISHED-TTL:PT1H') // カレンダーアプリへのヒント
   
+  let eventCount = 0
+  
   // 各Itineraryをイベントとして追加
   trip.days?.forEach(day => {
+    console.log(`[iCal Export Debug] Processing day ${day.day_number} with ${day.itineraries?.length || 0} itineraries`)
+    
     day.itineraries?.forEach(itinerary => {
+      // 時刻が設定されていないItineraryはスキップ
+      if (!itinerary.start_time) {
+        console.log(`[iCal Export Debug] Skipping event without start_time: ${itinerary.title}`)
+        return
+      }
+      
+      eventCount++
+      console.log(`[iCal Export Debug] Adding event ${eventCount}: ${itinerary.title}`)
+      
       lines.push('BEGIN:VEVENT')
       
       // UID（ユニークID）
@@ -390,19 +406,10 @@ export function exportTripToICal(trip: Trip): string {
         lines.push(`LOCATION:${escapeICalValue(itinerary.location)}`)
       }
       
-      // 日時
-      if (itinerary.start_time) {
-        const startDate = combineDateAndTime(day.date, itinerary.start_time)
-        if (startDate) {
-          lines.push(`DTSTART:${formatICalDateTime(startDate)}`)
-        }
-      } else {
-        // 時刻がない場合は終日イベント
-        const dayDate = formatDate(day.date)
-        if (dayDate) {
-          const date = new Date(dayDate)
-          lines.push(`DTSTART;VALUE=DATE:${formatICalDate(date)}`)
-        }
+      // 日時（start_timeが必須）
+      const startDate = combineDateAndTime(day.date, itinerary.start_time)
+      if (startDate) {
+        lines.push(`DTSTART:${formatICalDateTime(startDate)}`)
       }
       
       if (itinerary.end_time) {
@@ -421,13 +428,18 @@ export function exportTripToICal(trip: Trip): string {
   
   lines.push('END:VCALENDAR')
   
-  return lines.join('\r\n')
+  const result = lines.join('\r\n')
+  console.log(`[iCal Export Debug] Completed trip iCal export: ${eventCount} events, ${result.length} chars`)
+  
+  return result
 }
 
 /**
  * 予約情報のみをiCal形式でエクスポート
  */
 export function exportReservationsToICal(trip: Trip): string {
+  console.log(`[iCal Export Debug] Starting reservations iCal export for: ${trip.title}`)
+  
   const lines: string[] = []
   
   // ヘッダー
@@ -440,10 +452,15 @@ export function exportReservationsToICal(trip: Trip): string {
   lines.push('REFRESH-INTERVAL;VALUE=DURATION:PT1H') // 1時間ごとに自動更新
   lines.push('X-PUBLISHED-TTL:PT1H') // カレンダーアプリへのヒント
   
+  let reservationCount = 0
+  
   // 予約情報を持つItineraryのみをイベントとして追加
   trip.days?.forEach(day => {
     day.itineraries?.forEach(itinerary => {
       if (!itinerary.reservation) return
+      
+      reservationCount++
+      console.log(`[iCal Export Debug] Adding reservation ${reservationCount}: ${itinerary.title}`)
       
       const res = itinerary.reservation as ReservationInfo
       
@@ -541,7 +558,10 @@ export function exportReservationsToICal(trip: Trip): string {
   
   lines.push('END:VCALENDAR')
   
-  return lines.join('\r\n')
+  const result = lines.join('\r\n')
+  console.log(`[iCal Export Debug] Completed reservations iCal export: ${reservationCount} reservations, ${result.length} chars`)
+  
+  return result
 }
 
 /**
