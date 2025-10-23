@@ -71,6 +71,7 @@ export const IconRenderer: React.FC<IconRendererProps> = ({
     rocket: 'tabler:rocket',
     summary: 'tabler:list-details',
     user: 'tabler:user',
+    plus: 'tabler:plus',
   }
   if (iconName && iconifyMap[iconName]) {
     const UnifiedIcon = require('./UnifiedIcon').UnifiedIcon
