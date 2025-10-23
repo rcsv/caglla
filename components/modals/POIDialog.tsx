@@ -10,6 +10,7 @@ import type { AggregatedVenueData, UnifiedReview } from '@/lib/api/venue-aggrega
 import type { PlaceData } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
+import ImageGalleryModal from './ImageGalleryModal'
 
 interface POIDialogProps {
   poiData: {
@@ -126,6 +127,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
   const [imageLoading, setImageLoading] = useState(false)
   const [popupPosition, setPopupPosition] = useState<'bottom' | 'top'>('bottom')
   const [showAllReviews, setShowAllReviews] = useState(false)
+  const [showImageGallery, setShowImageGallery] = useState(false)
   const hoursRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const popupRef = useRef<HTMLDivElement>(null)
@@ -344,6 +346,18 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
       setPopupPosition(position)
     }
     setShowDaySelector(!showDaySelector)
+  }
+
+  // イメージギャラリーを開く
+  const handleOpenImageGallery = () => {
+    if (placeDetails?.photos && placeDetails.photos.length > 0) {
+      setShowImageGallery(true)
+    }
+  }
+
+  // イメージギャラリーを閉じる
+  const handleCloseImageGallery = () => {
+    setShowImageGallery(false)
   }
 
   // 営業時間の解析
@@ -762,7 +776,10 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
               {/* 画像エリア（2割） */}
               {placeDetails.photos && placeDetails.photos.length > 0 && (
                 <div className="w-32 flex-shrink-0">
-                  <div className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group">
+                  <div 
+                    className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group hover:opacity-90 transition-opacity"
+                    onClick={handleOpenImageGallery}
+                  >
                     {cachedImages[currentPhotoIndex] ? (
                       <img
                         src={cachedImages[currentPhotoIndex].url}
@@ -798,6 +815,14 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                         キャッシュ
                       </div>
                     )}
+                    {/* クリック可能インジケーター */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg className="w-6 h-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -805,6 +830,17 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
           )}
         </div>
       </div>
+
+      {/* イメージギャラリーモーダル */}
+      {placeDetails?.photos && placeDetails.photos.length > 0 && (
+        <ImageGalleryModal
+          isOpen={showImageGallery}
+          onClose={handleCloseImageGallery}
+          images={placeDetails.photos}
+          placeName={poiData.name}
+          initialIndex={currentPhotoIndex}
+        />
+      )}
     </div>
   )
 }
