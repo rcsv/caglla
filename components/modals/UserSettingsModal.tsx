@@ -1,7 +1,7 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/lib/contexts/auth'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import type { PlaceData } from '@/lib/core/types'
@@ -22,17 +22,7 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
   const [hasUserInteracted, setHasUserInteracted] = useState(false)
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  useEffect(() => {
-    if (isOpen && user) {
-      fetchUserData()
-      // モーダルが開かれた時に状態をリセット
-      setNameError(null)
-      setNameSuccess(null)
-      setHasUserInteracted(false)
-    }
-  }, [isOpen, user])
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       const response = await fetch('/api/users', {
         headers: {
@@ -48,7 +38,17 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
     } catch (error) {
       logger.error('Failed to fetch user data:', error)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (isOpen && user) {
+      fetchUserData()
+      // モーダルが開かれた時に状態をリセット
+      setNameError(null)
+      setNameSuccess(null)
+      setHasUserInteracted(false)
+    }
+  }, [isOpen, user, fetchUserData])
 
   const checkSlugAvailability = async (name: string) => {
     if (!name.trim()) {

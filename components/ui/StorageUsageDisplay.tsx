@@ -1,7 +1,7 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/contexts/auth'
 import { StorageUsage, StorageQuota } from '@/lib/core/types'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
@@ -35,16 +35,7 @@ export default function StorageUsageDisplay({
   const [deleting, setDeleting] = useState<string | null>(null)
   const { user } = useAuth()
 
-  useEffect(() => {
-    if (!user) {
-      setLoading(false)
-      return
-    }
-
-    fetchStorageUsage()
-  }, [user])
-
-  const fetchStorageUsage = async () => {
+  const fetchStorageUsage = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -71,7 +62,16 @@ export default function StorageUsageDisplay({
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
+
+    fetchStorageUsage()
+  }, [user, fetchStorageUsage])
 
   const deleteFile = async (fileId: string) => {
     if (!user) return

@@ -74,7 +74,7 @@ export default function TripDistanceDisplay({
     }
 
     calculateTotalDistance()
-  }, [placesKey])
+  }, [placesKey, itineraries])
 
   if (isLoading) {
     return (

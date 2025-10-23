@@ -88,7 +88,7 @@ export default function VenueDistance({
     }
 
     calculateDistance()
-  }, [placesKey])
+  }, [placesKey, fromPlace, toPlace, mode])
 
   if (!fromPlace || !toPlace) {
     return null

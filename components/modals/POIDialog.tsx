@@ -2,6 +2,7 @@
 import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import Image from 'next/image'
 import { placesApiHelpers } from '@/lib/api/google/places'
 import { getCachedPlace, placesCacheManager } from '@/lib/travel/places-cache'
 import { Button } from '@/components/common/Button'
@@ -781,9 +782,11 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                     onClick={handleOpenImageGallery}
                   >
                     {cachedImages[currentPhotoIndex] ? (
-                      <img
+                      <Image
                         src={cachedImages[currentPhotoIndex].url}
                         alt={`${poiData.name}の写真`}
+                        width={128}
+                        height={128}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           // キャッシュされた画像が読み込めない場合は、元のGoogle Photo URLにフォールバック
@@ -796,9 +799,11 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                         {imageLoading ? (
                           <div className="text-gray-500 text-xs">読み込み中...</div>
                         ) : (
-                          <img
+                          <Image
                             src={placesApiHelpers.getPhotoUrl(placeDetails.photos[currentPhotoIndex].photo_reference, 300)}
                             alt={`${poiData.name}の写真`}
+                            width={128}
+                            height={128}
                             className="w-full h-full object-cover"
                           />
                         )}

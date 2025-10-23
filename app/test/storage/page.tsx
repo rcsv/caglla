@@ -1,7 +1,7 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/contexts/auth'
 import ImageUpload from '@/components/ui/ImageUpload'
 import StorageUsageDisplay from '@/components/ui/StorageUsageDisplay'
@@ -35,9 +35,9 @@ export default function StorageTestPage() {
     }
 
     fetchStorageData()
-  }, [user])
+  }, [user, fetchStorageData])
 
-  const fetchStorageData = async () => {
+  const fetchStorageData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -65,7 +65,7 @@ export default function StorageTestPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
 
   const handleImageChange = (imageUrl: string | null) => {
     setTestImageUrl(imageUrl)

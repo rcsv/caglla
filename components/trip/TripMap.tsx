@@ -385,7 +385,7 @@ export default function TripMap({
     }
 
     initializeMap()
-  }, [])
+  }, [initialCenter, onPoiDataUpdate])
 
   // itineraries が変更された時にマーカーとルートを更新
   useEffect(() => {
@@ -607,7 +607,7 @@ export default function TripMap({
       })
       map.fitBounds(bounds)
     }
-  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId, initialCenter, scrollSyncEnabled])
+  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId, initialCenter, scrollSyncEnabled, markers, onItineraryClick, onPoiDataUpdate])
 
   // 選択されたItineraryにフォーカスする機能
   useEffect(() => {
@@ -640,7 +640,7 @@ export default function TripMap({
         markerData.element.className = 'teardrop-marker'
       }
     })
-  }, [selectedItineraryId, map, markers, itineraries])
+  }, [selectedItineraryId, map, markers, itineraries, directionsRenderer])
 
   return (
     <div className={`relative ${className}`}>

@@ -91,7 +91,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
 
       return () => clearTimeout(timeoutId)
     }
-  }, [formData.destination])
+  }, [formData.destination, formData.imageUrl])
 
   // 旅行日数の計算
   const calculateTravelDays = (startDate: string, endDate: string): number => {

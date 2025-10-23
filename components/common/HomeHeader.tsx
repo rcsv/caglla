@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { getZIndexClass } from '@/lib/core/z-index'
 import { useClickOutside } from '@/hooks/useClickOutside'
@@ -74,9 +75,11 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                 <div className={planNameClass}>{planName}</div>
               </div>
               <span className={`inline-flex p-[2px] rounded-full ${avatarBorderClass}`}>
-                <img
+                <Image
                   src={avatarUrl || '/default-avatar.png'}
                   alt="avatar"
+                  width={36}
+                  height={36}
                   className="h-9 w-9 rounded-full object-cover bg-white ring-1 ring-white"
                 />
               </span>

@@ -2,6 +2,7 @@
 import logger from '@/lib/core/logger'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { placesApiHelpers } from '@/lib/api/google/places'
 import { PlaceData, Itinerary, ActivityTag, ReservationInfo, Day } from '@/lib/core/types'
 import { timezoneUtils } from '@/lib/utils/timezone'
@@ -114,7 +115,7 @@ export default function ScheduleCard({
         handleTimezoneUpdate(detectedTimezone)
       }
     }
-  }, [itinerary.place_data?.place_id])
+  }, [itinerary.place_data?.place_id, handleTimezoneUpdate, itinerary.place_data])
 
   useEffect(() => {
     if (itinerary.place_data && !itinerary.cost_currency) {
@@ -123,7 +124,7 @@ export default function ScheduleCard({
         setTempCostCurrency(detectedCurrency)
       }
     }
-  }, [itinerary.place_data?.place_id, itinerary.cost_currency])
+  }, [itinerary.place_data?.place_id, itinerary.cost_currency, itinerary.place_data])
 
   useEffect(() => {
     const loadImage = async () => {

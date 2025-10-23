@@ -1,7 +1,7 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/contexts/auth'
 import { useRouter } from 'next/navigation'
 import AvatarUpload from '@/components/ui/AvatarUpload'
@@ -20,13 +20,7 @@ export default function UserSettingsPage() {
     }
   }, [user, loading, router])
 
-  useEffect(() => {
-    if (user) {
-      fetchUserData()
-    }
-  }, [user])
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       const response = await fetch('/api/users', {
         headers: {
@@ -42,7 +36,13 @@ export default function UserSettingsPage() {
     } catch (error) {
       logger.error('Failed to fetch user data:', error)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (user) {
+      fetchUserData()
+    }
+  }, [user, fetchUserData])
 
   const handleSave = async () => {
     setSaving(true)
