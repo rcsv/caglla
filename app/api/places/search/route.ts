@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { query, language } = await request.json()
+    const { query, language, locationBias } = await request.json()
     
     if (!query || query.length < 2) {
       return NextResponse.json(
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       ? language 
       : DEFAULT_LANGUAGE
 
-    logger.debug('Searching for place with new Places API v1', { query, language: validLanguage })
+    logger.debug('Searching for place with new Places API v1', { query, language: validLanguage, hasLocationBias: !!locationBias })
 
     // 新Places API (v1) を呼び出し
     const response = await fetch(GOOGLE_PLACES_API_URL_NEW, {
@@ -44,7 +44,9 @@ export async function POST(request: NextRequest) {
         textQuery: query,
         languageCode: validLanguage,  // 動的に設定
         // regionCode を削除（言語で地域を固定しない）
-        maxResultCount: 20
+        maxResultCount: 20,
+        // locationBias を条件付きで追加（地図の現在位置を考慮した検索）
+        ...(locationBias && { locationBias })
       })
     })
 

@@ -15,7 +15,11 @@ export const placesApiHelpers = {
   // 場所を検索する
   async searchPlaces(
     query: string, 
-    language: SupportedLanguage = DEFAULT_LANGUAGE
+    language: SupportedLanguage = DEFAULT_LANGUAGE,
+    locationBias?: {
+      circle?: { center: { latitude: number; longitude: number }; radius: number }
+      rectangle?: { low: { latitude: number; longitude: number }; high: { latitude: number; longitude: number } }
+    }
   ): Promise<PlaceSearchResult[]> {
     if (!GOOGLE_PLACES_API_KEY) {
       throw new Error('Google Places API key is not configured')
@@ -31,7 +35,7 @@ export const placesApiHelpers = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query, language })
+        body: JSON.stringify({ query, language, locationBias })
       })
 
       logger.debug('Search response status:', response.status)

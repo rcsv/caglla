@@ -9,7 +9,26 @@ export async function PUT(
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
+    
+    // リクエストボディの検証
+    let body
+    try {
+      const text = await request.text()
+      if (!text || text.trim() === '') {
+        logger.warn('Empty request body received for itinerary update', { id })
+        return NextResponse.json(
+          { error: 'Request body is required' },
+          { status: 400 }
+        )
+      }
+      body = JSON.parse(text)
+    } catch (parseError) {
+      logger.error('Invalid JSON in request body', { id, error: parseError })
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      )
+    }
     
     // reorderリクエストかどうかを判定
     if (body.day_id !== undefined && body.sort_number !== undefined) {
