@@ -42,33 +42,41 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
     setError(null)
 
     try {
-      const response = await makeAuthenticatedRequest<{
-        success: boolean
-        token: string
-        urls: { trip: string; reservations: string }
-        error?: string
-        required_plan?: string
-      }>(`/api/trips/${trip.id}/ical-token`, {
+      const res = await makeAuthenticatedRequest(`/api/trips/${trip.id}/ical-token`, {
         method: 'POST',
       })
 
-      if (response.error) {
-        if (response.required_plan) {
-          setError('iCal公開機能はBackpacker以上のプランで利用できます')
-        } else {
-          setError(response.error)
+      if (!res.ok) {
+        // エラー本文から詳細を取得
+        try {
+          const data = await res.json()
+          if (data?.required_plan) {
+            setError('iCal公開機能はBackpacker以上のプランで利用できます')
+          } else if (data?.error) {
+            setError(data.error)
+          } else {
+            setError('iCal公開の有効化に失敗しました')
+          }
+        } catch {
+          setError('iCal公開の有効化に失敗しました')
         }
         setIsLoading(false)
         return
       }
 
-      setICalUrls(response.urls)
+      const data: {
+        success: boolean
+        token: string
+        urls: { trip: string; reservations: string }
+      } = await res.json()
+
+      setICalUrls(data.urls)
       
       // Tripを更新
       if (onUpdate) {
         onUpdate({
           ...trip,
-          ical_public_token: response.token,
+          ical_public_token: data.token,
           ical_enabled: true,
         })
       }
@@ -90,9 +98,20 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
     setError(null)
 
     try {
-      await makeAuthenticatedRequest(`/api/trips/${trip.id}/ical-token`, {
+      const res = await makeAuthenticatedRequest(`/api/trips/${trip.id}/ical-token`, {
         method: 'DELETE',
       })
+
+      if (!res.ok) {
+        try {
+          const data = await res.json()
+          setError(data?.error || 'iCal公開の無効化に失敗しました')
+        } catch {
+          setError('iCal公開の無効化に失敗しました')
+        }
+        setIsLoading(false)
+        return
+      }
 
       setICalUrls(null)
       

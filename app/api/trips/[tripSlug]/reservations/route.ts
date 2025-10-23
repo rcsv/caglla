@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
+import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import logger from '@/lib/core/logger'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 
@@ -27,25 +28,17 @@ export async function GET(
     const limit = parseInt(searchParams.get('limit') || '20', 10)
     const startAfter = searchParams.get('startAfter')
     
-    // tripSlug -> tripId 解決（slugベース）
-    const tripQuery = await adminDb.collection('trips')
-      .where('slug', '==', tripSlug)
-      .limit(1)
-      .get()
-    if (tripQuery.empty) {
-      return NextResponse.json(
-        { error: 'Trip not found (slug)' },
-        { status: 404 }
-      )
+    // tripSlug は id/slug どちらでも解決可能に
+    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
+    if (!resolved) {
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
     }
-    const tripDoc = tripQuery.docs[0]
-    const tripId = tripDoc.id
+    const tripId = resolved.id
 
     // userSlug も可能なら解決（リンク生成用）
     let userSlug: string | null = null
     try {
-      const tripData = tripDoc.data()
-      const userId = tripData?.user_id
+      const userId = resolved.trip.user_id
       if (userId) {
         const userSnap = await adminDb
           .collection('users')

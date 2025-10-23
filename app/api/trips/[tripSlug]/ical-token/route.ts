@@ -3,6 +3,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 
 import { generateICalToken } from '@/lib/utils/ical-token'
+import { verifyAuthToken } from '@/lib/api/auth-helpers'
 
 // Firebase Admin初期化
 const db = getFirestore()
@@ -28,13 +29,18 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // 2. Trip取得
-    const tripDoc = await db.collection('trips').doc(params.tripSlug).get()
-    
-    if (!tripDoc.exists) {
+    const userId = user.uid
+
+    // 2. Trip取得（id/slug 両対応の解決ヘルパー）
+    const { adminTripOperations } = await import('@/lib/firebase/admin-operation')
+    const resolved = await adminTripOperations.resolveTripByIdOrSlug(params.tripSlug)
+    const resolvedTripId = resolved?.id || null
+
+    if (!resolvedTripId) {
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
     }
 
+    const tripDoc = await db.collection('trips').doc(resolvedTripId).get()
     const trip = tripDoc.data()
     
     // 3. 所有権確認
@@ -43,9 +49,15 @@ export async function POST(
     }
 
     // 4. ユーザープラン確認（Backpacker以上）
-    const userDoc = await db.collection('users').doc(userId).get()
-    const userData = userDoc.data()
-    const userPlan = userData?.plan || 'season_traveler'
+    // usersコレクションはgoogle_idで管理しているため、uidで検索する
+    const userQuery = await db
+      .collection('users')
+      .where('google_id', '==', userId)
+      .limit(1)
+      .get()
+    const userData = userQuery.empty ? undefined : userQuery.docs[0].data()
+    // 後方互換: planId と plan の両方に対応
+    const userPlan = (userData?.planId || userData?.plan || 'season_traveler') as string
     
     if (userPlan === 'season_traveler') {
       return NextResponse.json({ 
@@ -62,7 +74,7 @@ export async function POST(
     }
 
     // 6. Tripを更新
-    await db.collection('trips').doc(params.tripSlug).update({
+    await db.collection('trips').doc(resolvedTripId).update({
       ical_public_token: token,
       ical_enabled: true,
       updated_at: new Date(),
@@ -70,8 +82,8 @@ export async function POST(
 
     // 7. iCal URLを生成
     const baseUrl = request.headers.get('origin') || 'https://caglla.app'
-    const icalUrl = `${baseUrl}/api/trips/${params.tripSlug}/ical?token=${token}&type=trip`
-    const reservationsUrl = `${baseUrl}/api/trips/${params.tripSlug}/ical?token=${token}&type=reservations`
+    const icalUrl = `${baseUrl}/api/trips/${resolvedTripId}/ical?token=${token}&type=trip`
+    const reservationsUrl = `${baseUrl}/api/trips/${resolvedTripId}/ical?token=${token}&type=reservations`
 
     return NextResponse.json({
       success: true,
@@ -98,27 +110,37 @@ export async function DELETE(
 ) {
   try {
     // 1. 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    const user = await verifyAuthToken(request)
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const token = authHeader.substring(7)
-    let userId: string
-    try {
-      const decodedToken = await auth.verifyIdToken(token)
-      userId = decodedToken.uid
-    } catch (error) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const userId = user.uid
 
-    // 2. Trip取得
-    const tripDoc = await db.collection('trips').doc(params.tripSlug).get()
-    
-    if (!tripDoc.exists) {
+    // 2. Trip取得（tripSlugからtripIdへの解決）
+    const resolvedTripId = await (async () => {
+      // まずはドキュメントIDとして試す
+      const byId = await db.collection('trips').doc(params.tripSlug).get()
+      if (byId.exists) {
+        return byId.id
+      }
+      // 見つからなければ slug で検索
+      const bySlugSnap = await db
+        .collection('trips')
+        .where('slug', '==', params.tripSlug)
+        .limit(1)
+        .get()
+      if (!bySlugSnap.empty) {
+        return bySlugSnap.docs[0].id
+      }
+      return null
+    })()
+
+    if (!resolvedTripId) {
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
     }
 
+    const tripDoc = await db.collection('trips').doc(resolvedTripId).get()
     const trip = tripDoc.data()
     
     // 3. 所有権確認
@@ -127,7 +149,7 @@ export async function DELETE(
     }
 
     // 4. Tripを更新（無効化）
-    await db.collection('trips').doc(params.tripSlug).update({
+    await db.collection('trips').doc(resolvedTripId).update({
       ical_enabled: false,
       updated_at: new Date(),
     })

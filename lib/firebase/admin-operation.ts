@@ -110,6 +110,31 @@ export const adminUserOperations = {
 
 // Trip operations (Admin SDK version)
 export const adminTripOperations = {
+  /**
+   * tripId or tripSlug いずれかを受け取り、確実に Trip を解決する
+   * - まずはIDとして doc() 直叩き
+   * - 見つからなければ slug フィールドで検索
+   * 見つからない場合は null
+   */
+  async resolveTripByIdOrSlug(idOrSlug: string): Promise<{ id: string; trip: Trip } | null> {
+    // Try as document ID
+    const byId = await adminDb.collection(COLLECTIONS.TRIPS).doc(idOrSlug).get()
+    if (byId.exists) {
+      return { id: byId.id, trip: adminFirestoreHelpers.docToObject<Trip>(byId) }
+    }
+
+    // Fallback to slug query
+    const bySlugSnap = await adminDb
+      .collection(COLLECTIONS.TRIPS)
+      .where('slug', '==', idOrSlug)
+      .limit(1)
+      .get()
+
+    if (bySlugSnap.empty) return null
+
+    const docSnap = bySlugSnap.docs[0]
+    return { id: docSnap.id, trip: adminFirestoreHelpers.docToObject<Trip>(docSnap) }
+  },
   async createTrip(tripData: Omit<Trip, 'id' | 'created_at' | 'updated_at'>): Promise<Trip> {
     const docRef = await adminDb.collection(COLLECTIONS.TRIPS).add({
       ...tripData,
