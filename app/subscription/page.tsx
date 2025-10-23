@@ -31,21 +31,24 @@ function SubscriptionContentInner() {
         // プラン情報を更新
         await refreshUserPlan()
         
-        // URLパラメータで遷移先を指定されている場合はそれを使用
-        const returnTo = searchParams.get('returnTo')
-        
-        if (returnTo) {
-          router.push(returnTo)
-        } else {
-          // デフォルトの遷移先
-          if (planId === 'season_traveler') {
-            // 無料プランに戻った場合はホームページへ
-            router.push('/')
+        // 少し待ってから遷移（状態の同期を確実にするため）
+        setTimeout(() => {
+          // URLパラメータで遷移先を指定されている場合はそれを使用
+          const returnTo = searchParams.get('returnTo')
+          
+          if (returnTo) {
+            router.push(returnTo)
           } else {
-            // 有料プランにアップグレードした場合は旅行一覧ページへ
-            router.push('/home')
+            // デフォルトの遷移先
+            if (planId === 'season_traveler') {
+              // 無料プランに戻った場合はホームページへ
+              router.push('/')
+            } else {
+              // 有料プランにアップグレードした場合は旅行一覧ページへ
+              router.push('/home')
+            }
           }
-        }
+        }, 500)
       } else {
         setErrorMessage('サブスクリプションの処理に失敗しました。時間をおいて再度お試しください。')
       }

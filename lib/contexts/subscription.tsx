@@ -5,6 +5,7 @@ import logger from '@/lib/core/logger'
 import { dummyPaymentService, SubscriptionPlan as DummySubscriptionPlan, Subscription, PaymentMethod } from '@/lib/subscription/payment-service'
 import { RestrictionProvider, RestrictionType, PlanId, PLAN_CONFIGS } from '@/lib/subscription/restriction'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { useUserData } from '@/lib/contexts/user-data'
 
 // 統一されたSubscriptionPlan型
 export type SubscriptionPlan = DummySubscriptionPlan
@@ -162,6 +163,7 @@ const DEMO_PLANS: SubscriptionPlan[] = [
 ]
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
+  const { userPlanId } = useUserData()
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
     isSubscribed: false,
     plan: null,
@@ -240,6 +242,12 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   }
 
   const useRouteOptimization = (): boolean => {
+    // デバッグログを追加
+    logger.debug('useRouteOptimization called:', {
+      planId: subscriptionStatus.plan?.id,
+      planName: subscriptionStatus.plan?.name,
+      hasRouteOptimization: hasFeature(RestrictionType.ROUTE_OPTIMIZATION)
+    })
     return hasFeature(RestrictionType.ROUTE_OPTIMIZATION)
   }
 
@@ -284,14 +292,28 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         
         if (!response.ok) {
           logger.error('Failed to update plan in Firestore:', await response.text())
+        } else {
+          logger.debug('Successfully updated plan in Firestore:', { planId })
         }
       } catch (firestoreError) {
         logger.error('Error updating plan in Firestore:', firestoreError)
         // Firestoreの更新に失敗してもローカルのサブスクリプションは有効
       }
       
-      // 状態を更新
-      await checkSubscription()
+      // 状態を更新（UserDataProviderとの同期も含む）
+      // userPlanIdが設定されている場合は、checkSubscriptionではなく直接状態を更新
+      if (userPlanId) {
+        const plan = DEMO_PLANS.find(p => p.id === userPlanId)
+        if (plan) {
+          setSubscriptionStatus(prev => ({
+            ...prev,
+            plan: plan,
+            isSubscribed: userPlanId !== 'season_traveler'
+          }))
+        }
+      } else {
+        await checkSubscription()
+      }
       
       return true
     } catch (error) {
@@ -370,8 +392,26 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     return can(RestrictionType.MAX_STORAGE_GB, photosPerTrip) // ストレージ制限として扱う
   }
 
+  // UserDataProviderのプラン情報と同期
   useEffect(() => {
-    checkSubscription()
+    if (userPlanId) {
+      logger.debug('Syncing subscription with user plan:', { userPlanId })
+      const plan = DEMO_PLANS.find(p => p.id === userPlanId)
+      if (plan) {
+        setSubscriptionStatus(prev => ({
+          ...prev,
+          plan: plan,
+          isSubscribed: userPlanId !== 'season_traveler'
+        }))
+      }
+    }
+  }, [userPlanId])
+
+  useEffect(() => {
+    // userPlanIdが設定されていない場合のみcheckSubscriptionを実行
+    if (!userPlanId) {
+      checkSubscription()
+    }
   }, [])
 
   const value: SubscriptionContextType = {
