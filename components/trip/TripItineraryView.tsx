@@ -31,6 +31,7 @@ interface TripItineraryViewProps {
   onItineraryClick: (itineraryId: string) => void
   onDragEnd: (event: DragEndEvent) => void
   onUpdateTrip: (updatedTrip: Trip) => void
+  onReorderItineraries: (dayId: string, reorderedItineraries: Itinerary[]) => void
   expandAllDays: () => void
   collapseAllDays: () => void
   scrollSyncEnabled?: boolean
@@ -58,6 +59,7 @@ export default function TripItineraryView({
   onItineraryClick,
   onDragEnd,
   onUpdateTrip,
+  onReorderItineraries,
   expandAllDays,
   collapseAllDays,
   scrollSyncEnabled = true,
@@ -289,6 +291,7 @@ export default function TripItineraryView({
                     <DayEditor 
                       day={day} 
                       itinerarySummary={itinerarySummary}
+                      itineraries={sortedItineraries}
                       onUpdate={(updatedDay: Day) => {
                         onUpdateTrip({
                           ...trip,
@@ -297,6 +300,7 @@ export default function TripItineraryView({
                           ) || []
                         })
                       }} 
+                      onReorderItineraries={onReorderItineraries}
                     />
 
                     {/* ローディング状態の表示 */}

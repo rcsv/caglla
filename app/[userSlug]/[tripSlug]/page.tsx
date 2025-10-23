@@ -937,6 +937,59 @@ export default function SlugBasedTripPage() {
     }
   }
 
+  // ルート最適化による並び替え処理
+  const handleReorderItineraries = async (dayId: string, reorderedItineraries: Itinerary[]) => {
+    if (!trip) return
+
+    try {
+      // sort_numberを更新
+      const updates = reorderedItineraries.map((item, index) => ({
+        id: item.id,
+        day_id: dayId,
+        sort_number: index + 1
+      }))
+
+      const response = await makeAuthenticatedRequest('/api/itineraries/reorder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          dayId: dayId,
+          itineraryIds: updates.map(update => update.id)
+        })
+      })
+      
+      if (response.ok) {
+        // UIを更新
+        setTrip(prevTrip => {
+          if (!prevTrip) return prevTrip
+          return {
+            ...prevTrip,
+            days: prevTrip.days?.map(d => {
+              if (d.id === dayId) {
+                return {
+                  ...d,
+                  itineraries: reorderedItineraries.map((item, index) => ({
+                    ...item,
+                    sort_number: index + 1
+                  }))
+                }
+              }
+              return d
+            }) || []
+          }
+        })
+      } else {
+        logger.error('Failed to reorder itineraries')
+        alert('順序の更新に失敗しました')
+      }
+    } catch (error) {
+      logger.error('Error reordering itineraries:', error)
+      alert('順序の更新に失敗しました')
+    }
+  }
+
   // 上下移動の処理
   const handleMoveUp = async (itineraryId: string, dayId: string) => {
     if (!trip) return
@@ -1200,6 +1253,7 @@ export default function SlugBasedTripPage() {
           onItineraryClick={handleItineraryClick}
           onDragEnd={handleDragEnd}
           onUpdateTrip={setTrip}
+          onReorderItineraries={handleReorderItineraries}
           expandAllDays={expandAllDays}
           collapseAllDays={collapseAllDays}
           scrollSyncEnabled={scrollSyncEnabled}
