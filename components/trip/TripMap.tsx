@@ -203,7 +203,7 @@ export default function TripMap({
         const scale = 1.25
         const icon = {
           path: pinPath,
-          fillColor: '#8B5CF6', // green-500
+          fillColor: '#F59E0B', // 温かみのある印象
           fillOpacity: 1,
           strokeColor: '#FFFFFF',
           strokeWeight: 2,
