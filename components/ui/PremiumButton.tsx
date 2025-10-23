@@ -30,7 +30,8 @@ export default function PremiumButton({
     canUseFeature,
     isSubscribed: subscriptionStatus.isSubscribed,
     planId: subscriptionStatus.plan?.id,
-    planName: subscriptionStatus.plan?.name
+    planName: subscriptionStatus.plan?.name,
+    hasRouteOptimization: subscriptionStatus.plan?.features?.includes('ルート最適化機能')
   })
 
   const handleClick = () => {
@@ -72,10 +73,10 @@ export default function PremiumButton({
 
       {/* ホバー時のツールチップ */}
       {isHovered && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
+        <div className="absolute bottom-full left-0 mb-2 z-50">
           <div className="bg-gray-800 text-white text-sm px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
             {featureName}はBackpackerプラン以上で利用可能です
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+            <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
           </div>
         </div>
       )}
