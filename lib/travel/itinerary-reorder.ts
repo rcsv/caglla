@@ -2,6 +2,8 @@
  * Itineraryの並び替え機能
  */
 
+import logger from '@/lib/core/logger'
+
 export interface ReorderItinerariesRequest {
   dayId: string
   itineraryIds: string[]

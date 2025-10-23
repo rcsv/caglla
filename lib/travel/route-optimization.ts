@@ -3,6 +3,8 @@
  * デバウンス機能とキャッシュ機能でAPI呼び出しを最小化
  */
 
+import logger from '@/lib/core/logger'
+
 export interface RouteCacheKey {
   origin: string
   destination: string
