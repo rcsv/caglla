@@ -3,6 +3,7 @@ import logger from '@/lib/core/logger'
 
 import { useEffect, useRef, useState } from 'react'
 import { Itinerary, Trip, PlaceData } from '@/lib/core/types'
+import type { PlaceSearchResult } from '@/lib/core/types'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
@@ -11,6 +12,7 @@ import { getZIndexClass } from '@/lib/core/z-index'
 import POIDialog from '@/components/modals/POIDialog'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { dateUtils } from '@/lib/utils/date'
+import MapSearchOverlay from './MapSearchOverlay'
 
 // マップのズームレベル定数
 const DEFAULT_ZOOM_LEVEL = 14
@@ -122,6 +124,114 @@ export default function TripMap({
     location: { lat: number; lng: number }
     placeData?: any
   } | null>(null)
+  const [searchMarker, setSearchMarker] = useState<any>(null) // 検索結果のマーカー
+  const [searchResultMarkers, setSearchResultMarkers] = useState<any[]>([]) // 一覧検索のピン
+
+  // 地図の現在のビューポートを取得する関数
+  const getMapViewport = () => {
+    if (!map) return { center: undefined, bounds: undefined }
+    
+    const center = map.getCenter()
+    const bounds = map.getBounds()
+    
+    return {
+      center: center ? { lat: center.lat(), lng: center.lng() } : undefined,
+      bounds: bounds ? {
+        north: bounds.getNorthEast().lat(),
+        south: bounds.getSouthWest().lat(),
+        east: bounds.getNorthEast().lng(),
+        west: bounds.getSouthWest().lng()
+      } : undefined
+    }
+  }
+
+  // 検索結果の場所にパン・ズームするハンドラー
+  const handleSearchPlaceChosen = (place: PlaceData) => {
+    if (!map || !place.geometry?.location) return
+
+    const { lat, lng } = place.geometry.location
+    
+    // 既存の検索マーカーをクリア
+    if (searchMarker) {
+      searchMarker.map = null
+    }
+
+    // 検索結果用のカスタムマーカー要素を作成
+    const searchMarkerElement = document.createElement('div')
+    searchMarkerElement.className = 'search-result-marker'
+    searchMarkerElement.innerHTML = `
+      <div class="w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+        </svg>
+      </div>
+    `
+
+    // 新しい検索マーカーを作成
+    const marker = new window.google.maps.marker.AdvancedMarkerElement({
+      map,
+      position: { lat, lng },
+      title: place.name,
+      content: searchMarkerElement
+    })
+
+    setSearchMarker(marker)
+
+    // 地図を選択された場所にパン・ズーム
+    smoothMoveToLocation(map, lat, lng, DEFAULT_ZOOM_LEVEL)
+    
+    // 地図操作を検出（スクロール連動を停止）
+    onMapInteractionStart?.()
+  }
+
+  // 検索結果一覧のピンをDROPアニメーションで順次描画
+  const handleSearchResultsUpdated = (results: PlaceSearchResult[]) => {
+    if (!map) return
+
+    // 既存の検索結果ピンをクリア
+    searchResultMarkers.forEach((m) => m.setMap(null))
+    setSearchResultMarkers([])
+
+    // 先頭から順にストンストン落とす（最大10件）
+    const limited = results.slice(0, 10)
+    limited.forEach((r, index) => {
+      const pos = r.geometry?.location
+      if (!pos) return
+      setTimeout(() => {
+        // Google標準に近いピン形状（Materialの場所ピンパス）を色違いで使用
+        const pinPath = 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z'
+        const scale = 1.25
+        const icon = {
+          path: pinPath,
+          fillColor: '#8B5CF6', // green-500
+          fillOpacity: 1,
+          strokeColor: '#FFFFFF',
+          strokeWeight: 2,
+          scale,
+          anchor: new window.google.maps.Point(12 * scale, 24 * scale),
+        } as google.maps.Symbol
+
+        const mk = new window.google.maps.Marker({
+          map,
+          position: { lat: pos.lat, lng: pos.lng },
+          title: r.name,
+          animation: window.google.maps.Animation.DROP,
+          icon,
+        })
+        // クリックでPOIDialogを開く
+        mk.addListener('click', () => {
+          const newPoiData = {
+            placeId: r.place_id,
+            name: r.name,
+            location: { lat: pos.lat, lng: pos.lng },
+          }
+          setInternalPoiData(newPoiData)
+          onPoiDataUpdate?.(newPoiData)
+        })
+        setSearchResultMarkers(prev => [...prev, mk])
+      }, index * 120)
+    })
+  }
 
   // Google Maps API の読み込み
   useEffect(() => {
@@ -559,6 +669,16 @@ export default function TripMap({
       )}
       
       <div ref={mapRef} className="w-full h-full" />
+      
+      {/* 検索オーバーレイ */}
+      <MapSearchOverlay
+        onPlaceChosen={handleSearchPlaceChosen}
+        getMapViewport={getMapViewport}
+        onSearchResultsUpdated={handleSearchResultsUpdated}
+        hideSuggestions
+        placeholder="場所を検索..."
+        position="top-center"
+      />
       
       {/* マップのオーバーレイ情報 */}
       <div className={`absolute top-4 left-4 bg-white rounded-lg shadow-xl border border-gray-200 p-3 max-w-xs ${getZIndexClass('MAIN_CONTENT')}`}>
