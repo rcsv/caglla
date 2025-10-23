@@ -1,0 +1,118 @@
+# Firebase App Hosting Configuration
+# https://firebase.google.com/docs/app-hosting
+
+# ランタイム設定
+runConfig:
+  # Node.js 22を使用（package.jsonのvolta設定に合わせる）
+  runtime: nodejs22
+  
+  # 環境変数の設定
+  env:
+    # Firebase Configuration (クライアント側)
+    - key: NEXT_PUBLIC_FIREBASE_API_KEY
+      value: ${NEXT_PUBLIC_FIREBASE_API_KEY}
+    - key: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+      value: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+    - key: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      value: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+    - key: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+      value: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+    - key: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+      value: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+    - key: NEXT_PUBLIC_FIREBASE_APP_ID
+      value: ${NEXT_PUBLIC_FIREBASE_APP_ID}
+    
+    # Firebase Admin SDK Configuration (サーバー側)
+    - key: FIREBASE_PROJECT_ID
+      value: ${FIREBASE_PROJECT_ID}
+    - key: FIREBASE_CLIENT_EMAIL
+      value: ${FIREBASE_CLIENT_EMAIL}
+    - key: FIREBASE_PRIVATE_KEY
+      value: ${FIREBASE_PRIVATE_KEY}
+    
+    # Google APIs Configuration
+    - key: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+      value: ${NEXT_PUBLIC_GOOGLE_PLACES_API_KEY}
+    - key: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+      value: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+    - key: NEXT_PUBLIC_GOOGLE_MAP_ID
+      value: ${NEXT_PUBLIC_GOOGLE_MAP_ID}
+    
+    # App URL (本番環境用)
+    - key: NEXT_PUBLIC_APP_URL
+      value: ${NEXT_PUBLIC_APP_URL}
+    
+    # Optional APIs (必要に応じて設定)
+    - key: NEXT_PUBLIC_UNSPLASH_APP_ID
+      value: ${NEXT_PUBLIC_UNSPLASH_APP_ID}
+    - key: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
+      value: ${NEXT_PUBLIC_UNSPLASH_ACCESS_KEY}
+    - key: UNSPLASH_SECRET_KEY
+      value: ${UNSPLASH_SECRET_KEY}
+    
+    # External APIs (サーバーサイド専用)
+    - key: TRIPADVISOR_API_KEY
+      value: ${TRIPADVISOR_API_KEY}
+    - key: FOURSQUARE_API_KEY
+      value: ${FOURSQUARE_API_KEY}
+    - key: SELECTPDF_API_KEY
+      value: ${SELECTPDF_API_KEY}
+    
+    # SendGrid Configuration
+    - key: SENDGRID_API_KEY
+      value: ${SENDGRID_API_KEY}
+
+# ビルド設定
+buildConfig:
+  # ビルドコマンド
+  buildCommand: npm run build
+  
+  # 出力ディレクトリ（Next.jsのデフォルト）
+  outputDirectory: .next
+  
+  # Node.js バージョン
+  nodeVersion: 22
+
+# デプロイ設定
+deployConfig:
+  # リージョン（アジア太平洋地域を推奨）
+  region: asia-northeast1
+  
+  # スケーリング設定
+  scaling:
+    minInstances: 1
+    maxInstances: 10
+  
+  # ヘルスチェック設定
+  healthCheck:
+    path: /api/health
+    timeoutSeconds: 30
+  
+  # カスタムドメイン設定（必要に応じて）
+  # customDomains:
+  #   - your-domain.com
+  #   - www.your-domain.com
+
+# セキュリティ設定
+security:
+  # HTTPS強制
+  forceHttps: true
+  
+  # セキュリティヘッダー
+  headers:
+    - name: X-Frame-Options
+      value: DENY
+    - name: X-Content-Type-Options
+      value: nosniff
+    - name: X-XSS-Protection
+      value: 1; mode=block
+    - name: Referrer-Policy
+      value: strict-origin-when-cross-origin
+
+# ログ設定
+logging:
+  level: info
+  
+# モニタリング設定
+monitoring:
+  enabled: true
