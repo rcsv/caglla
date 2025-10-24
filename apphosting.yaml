@@ -14,61 +14,61 @@ runConfig:
   # Node.js 22を使用（package.jsonのvolta設定に合わせる）
   runtime: nodejs22
   
-  # 環境変数の設定（直接設定 - 開発用）
+  # 環境変数の設定（Google Cloud Secret Manager連携）
   env:
-    # Firebase Configuration (クライアント側) - 直接設定
+    # Firebase Configuration (クライアント側) - Secret Managerから取得
     - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-      value: "your-firebase-api-key"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_API_KEY/versions/latest
     - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-      value: "caglla-fb.firebaseapp.com"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN/versions/latest
     - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-      value: "caglla-fb"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_PROJECT_ID/versions/latest
     - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-      value: "caglla-fb.appspot.com"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET/versions/latest
     - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-      value: "your-messaging-sender-id"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID/versions/latest
     - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-      value: "your-firebase-app-id"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_APP_ID/versions/latest
     
-    # Firebase Admin SDK Configuration (サーバー側) - 直接設定
+    # Firebase Admin SDK Configuration (サーバー側) - Secret Managerから取得
     - variable: FIREBASE_PROJECT_ID
-      value: "caglla-fb"
+      secret: projects/caglla-fb/secrets/FIREBASE_PROJECT_ID/versions/latest
     - variable: FIREBASE_CLIENT_EMAIL
-      value: "your-service-account@caglla-fb.iam.gserviceaccount.com"
+      secret: projects/caglla-fb/secrets/FIREBASE_CLIENT_EMAIL/versions/latest
     - variable: FIREBASE_PRIVATE_KEY
-      value: "your-private-key"
+      secret: projects/caglla-fb/secrets/FIREBASE_PRIVATE_KEY/versions/latest
     
-    # Google APIs Configuration - 直接設定
+    # Google APIs Configuration - Secret Managerから取得
     - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-      value: "your-google-places-api-key"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_PLACES_API_KEY/versions/latest
     - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      value: "your-google-maps-api-key"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_MAPS_API_KEY/versions/latest
     - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
-      value: "your-google-map-id"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_MAP_ID/versions/latest
     
-    # App URL - 直接設定
+    # App URL (本番環境用) - Secret Managerから取得
     - variable: NEXT_PUBLIC_APP_URL
-      value: "https://your-app-url.com"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_APP_URL/versions/latest
     
-    # Optional APIs - 直接設定
+    # Optional APIs (必要に応じて設定) - Secret Managerから取得
     - variable: NEXT_PUBLIC_UNSPLASH_APP_ID
-      value: "your-unsplash-app-id"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_UNSPLASH_APP_ID/versions/latest
     - variable: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
-      value: "your-unsplash-access-key"
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_UNSPLASH_ACCESS_KEY/versions/latest
     - variable: UNSPLASH_SECRET_KEY
-      value: "your-unsplash-secret-key"
+      secret: projects/caglla-fb/secrets/UNSPLASH_SECRET_KEY/versions/latest
     
-    # External APIs - 直接設定
+    # External APIs (サーバーサイド専用) - Secret Managerから取得
     - variable: TRIPADVISOR_API_KEY
-      value: "your-tripadvisor-api-key"
+      secret: projects/caglla-fb/secrets/TRIPADVISOR_API_KEY/versions/latest
     - variable: FOURSQUARE_API_KEY
-      value: "your-foursquare-api-key"
+      secret: projects/caglla-fb/secrets/FOURSQUARE_API_KEY/versions/latest
     - variable: SELECTPDF_API_KEY
-      value: "your-selectpdf-api-key"
+      secret: projects/caglla-fb/secrets/SELECTPDF_API_KEY/versions/latest
     
-    # SendGrid Configuration - 直接設定
+    # SendGrid Configuration - Secret Managerから取得
     - variable: SENDGRID_API_KEY
-      value: "your-sendgrid-api-key"
+      secret: projects/caglla-fb/secrets/SENDGRID_API_KEY/versions/latest
 
 # ビルド設定
 buildConfig:
