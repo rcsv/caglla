@@ -20,6 +20,11 @@ function isDevelopment(): boolean {
   return process.env.NODE_ENV === 'development'
 }
 
+// ビルド時かどうかを判定
+function isBuildTime(): boolean {
+  return process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build'
+}
+
 export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
   const requiredVars: (keyof RequiredEnvVars)[] = [
     'NEXT_PUBLIC_FIREBASE_API_KEY',
@@ -41,6 +46,14 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
   for (const varName of requiredVars) {
     if (!process.env[varName]) {
       missingVars.push(varName)
+    }
+  }
+
+  // ビルド時は環境変数の検証をスキップ
+  if (isBuildTime()) {
+    logger.debug('🔧 Build time: Environment variables validation skipped')
+    return {
+      ...process.env as unknown as RequiredEnvVars & OptionalEnvVars
     }
   }
 

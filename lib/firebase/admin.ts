@@ -28,20 +28,35 @@ try {
   
   logger.debug('✅ Firebase Admin SDK initialized successfully')
 } catch (error) {
-  logger.error('❌ Firebase Admin SDK initialization failed:', error)
-  logger.error('Please ensure all required environment variables are set:')
-  logger.error('  - FIREBASE_PROJECT_ID')
-  logger.error('  - FIREBASE_CLIENT_EMAIL')
-  logger.error('  - FIREBASE_PRIVATE_KEY')
-  logger.error('\nRefer to env.example for required configuration.')
-  
-  // フォールバック設定を削除：環境変数が不足している場合は起動を停止
-  throw new Error('Firebase Admin SDK initialization failed due to missing or invalid environment variables')
+  // ビルド時は環境変数の検証エラーを無視
+  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
+    logger.debug('🔧 Build time: Firebase Admin SDK initialization skipped')
+    // ビルド時はダミーの設定で初期化をスキップ
+    firebaseAdminConfig = null
+    app = null
+    adminDb = null
+    adminAuth = null
+  } else {
+    logger.error('❌ Firebase Admin SDK initialization failed:', error)
+    logger.error('Please ensure all required environment variables are set:')
+    logger.error('  - FIREBASE_PROJECT_ID')
+    logger.error('  - FIREBASE_CLIENT_EMAIL')
+    logger.error('  - FIREBASE_PRIVATE_KEY')
+    logger.error('\nRefer to env.example for required configuration.')
+    
+    // フォールバック設定を削除：環境変数が不足している場合は起動を停止
+    throw new Error('Firebase Admin SDK initialization failed due to missing or invalid environment variables')
+  }
 }
 
 // IDトークンの検証関数
 export async function verifyIdToken(token: string) {
   if (!adminAuth) {
+    // ビルド時はエラーを投げない
+    if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
+      logger.debug('🔧 Build time: Firebase Admin Auth verification skipped')
+      return null
+    }
     throw new Error('Firebase Admin Auth not initialized')
   }
   return await adminAuth.verifyIdToken(token)
