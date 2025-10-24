@@ -44,6 +44,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  
+  // 静的生成から除外するページ
+  output: 'standalone',
+  
   async redirects() {
     return [
       // Fix common typo: /test/iconfy -> /test/iconify
@@ -54,6 +58,12 @@ const nextConfig = {
       },
     ]
   },
+  
+  // 静的生成を無効化するページ
+  async generateStaticParams() {
+    return []
+  },
+  
   env: {
     // 環境変数を明示的に読み込む
     NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
