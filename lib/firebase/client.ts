@@ -4,15 +4,35 @@ import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
-// 環境変数を直接process.envから取得（Next.jsビルド時にバンドルされる）
-// Firebase App Hostingでは、ランタイム環境変数として設定される
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
+// Firebase App Hostingの統合環境変数を使用
+let firebaseConfig: any
+
+try {
+  // Firebase App Hostingが提供する統合環境変数を優先使用
+  if (process.env.FIREBASE_WEBAPP_CONFIG) {
+    firebaseConfig = JSON.parse(process.env.FIREBASE_WEBAPP_CONFIG)
+  } else {
+    // フォールバック: 個別の環境変数を使用
+    firebaseConfig = {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
+    }
+  }
+} catch (error) {
+  logger.error('❌ Failed to parse Firebase configuration:', error)
+  // 最終フォールバック
+  firebaseConfig = {
+    apiKey: '',
+    authDomain: '',
+    projectId: '',
+    storageBucket: '',
+    messagingSenderId: '',
+    appId: '',
+  }
 }
 
 // 環境変数の検証
