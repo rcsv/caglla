@@ -4,8 +4,15 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { verifyAuthToken } from '@/lib/api/auth-helpers'
 import type { ReservationTemplate, ReservationTemplateInput } from '@/lib/core/types'
 
-// Firebase Admin初期化
-const db = getFirestore()
+// Firebase Admin初期化（ビルド時対応）
+function getFirestoreInstance() {
+  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
+    return null
+  }
+  return getFirestore()
+}
+
+const db = getFirestoreInstance()
 
 /**
  * GET /api/reservation-templates - ユーザーのテンプレート一覧を取得

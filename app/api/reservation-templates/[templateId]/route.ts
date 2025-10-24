@@ -4,8 +4,16 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 import { verifyAuthToken } from '@/lib/api/auth-helpers'
 import type { ReservationTemplateInput } from '@/lib/core/types'
 
-// Firebase Admin初期化
-const db = getFirestore()
+// Firebase Admin初期化（ビルド時対応）
+function getFirestoreInstance() {
+  // ビルド時はFirestoreインスタンスを返さない
+  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
+    return null
+  }
+  return getFirestore()
+}
+
+const db = getFirestoreInstance()
 
 /**
  * PUT /api/reservation-templates/[templateId] - テンプレート更新
@@ -15,6 +23,11 @@ export async function PUT(
   { params }: { params: { templateId: string } }
 ) {
   try {
+    // ビルド時は早期リターン
+    if (!db) {
+      return NextResponse.json({ error: 'Service unavailable during build' }, { status: 503 })
+    }
+
     // 認証チェック
     const user = await verifyAuthToken(request)
     if (!user) {
@@ -89,6 +102,11 @@ export async function DELETE(
   { params }: { params: { templateId: string } }
 ) {
   try {
+    // ビルド時は早期リターン
+    if (!db) {
+      return NextResponse.json({ error: 'Service unavailable during build' }, { status: 503 })
+    }
+
     // 認証チェック
     const user = await verifyAuthToken(request)
     if (!user) {
@@ -138,6 +156,11 @@ export async function POST(
   { params }: { params: { templateId: string } }
 ) {
   try {
+    // ビルド時は早期リターン
+    if (!db) {
+      return NextResponse.json({ error: 'Service unavailable during build' }, { status: 503 })
+    }
+
     // 認証チェック
     const user = await verifyAuthToken(request)
     if (!user) {
