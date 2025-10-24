@@ -72,28 +72,8 @@ runConfig:
 
 # ビルド設定
 buildConfig:
-  # ビルドコマンド（環境変数を設定してからビルド）
-  buildCommand: |
-    export NEXT_PUBLIC_FIREBASE_API_KEY=$(gcloud secrets versions access latest --secret="NEXT_PUBLIC_FIREBASE_API_KEY" --project="caglla-fb") &&
-    export NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=$(gcloud secrets versions access latest --secret="NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN" --project="caglla-fb") &&
-    export NEXT_PUBLIC_FIREBASE_PROJECT_ID=$(gcloud secrets versions access latest --secret="NEXT_PUBLIC_FIREBASE_PROJECT_ID" --project="caglla-fb") &&
-    export NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=$(gcloud secrets versions access latest --secret="NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET" --project="caglla-fb") &&
-    export NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$(gcloud secrets versions access latest --secret="NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID" --project="caglla-fb") &&
-    export NEXT_PUBLIC_FIREBASE_APP_ID=$(gcloud secrets versions access latest --secret="NEXT_PUBLIC_FIREBASE_APP_ID" --project="caglla-fb") &&
-    export NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=$(gcloud secrets versions access latest --secret="NEXT_PUBLIC_GOOGLE_PLACES_API_KEY" --project="caglla-fb") &&
-    export NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$(gcloud secrets versions access latest --secret="NEXT_PUBLIC_GOOGLE_MAPS_API_KEY" --project="caglla-fb") &&
-    export NEXT_PUBLIC_GOOGLE_MAP_ID=$(gcloud secrets versions access latest --secret="NEXT_PUBLIC_GOOGLE_MAP_ID" --project="caglla-fb") &&
-    export NEXT_PUBLIC_APP_URL=$(gcloud secrets versions access latest --secret="NEXT_PUBLIC_APP_URL" --project="caglla-fb") &&
-    pnpm install --no-frozen-lockfile && pnpm run build
-  
-  # 出力ディレクトリ（Next.jsのデフォルト）
-  outputDirectory: .next
-  
-  # Node.js バージョン
-  nodeVersion: 22
-  
-  # pnpmバージョン指定（現在のバージョン）
-  pnpmVersion: 10.18.3
+  # Next.jsのビルドコマンド（Firebase App Hostingが自動的に実行）
+  # pnpmVersion: 10.18.3
   
   # package.jsonの依存関係情報（参考）
   dependencies:
