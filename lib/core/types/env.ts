@@ -38,6 +38,7 @@ export interface RequiredEnvVars {
  */
 export interface OptionalEnvVars {
   NEXT_PUBLIC_GOOGLE_MAP_ID?: string
+  NEXT_PUBLIC_APP_URL?: string
   UNSPLASH_ACCESS_KEY?: string
   UNSPLASH_SECRET_KEY?: string
   DB_HOST?: string

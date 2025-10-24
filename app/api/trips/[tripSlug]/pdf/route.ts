@@ -12,6 +12,7 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import type { Trip, Day, Itinerary } from '@/lib/core/types'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { generateMagazinePdfHtml, type TripPdfData } from '@/lib/utils/magazine-pdf-template'
+import { generateTripUrl } from '@/lib/utils/app-url'
 import logger from '@/lib/core/logger'
 
 interface SelectPdfErrorResponse {
@@ -281,7 +282,7 @@ export async function GET(
     const tripData = await fetchTripData(trip, days)
     
     // トリップURLの生成
-    const tripUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/${(trip as any).user_slug}/${tripSlug}`
+    const tripUrl = generateTripUrl((trip as any).user_slug, tripSlug)
 
     // 7. HTMLの生成
     const html = await generatePdfHtml(tripData, tripUrl)
@@ -294,7 +295,7 @@ export async function GET(
     const apiResponse = await callSelectPdfApi({
       key: apiKey,
       html,
-      base_url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      base_url: generateTripUrl((trip as any).user_slug, tripSlug).replace(`/${(trip as any).user_slug}/${tripSlug}`, ''),
       page_numbers: false, // ページ番号を無効化
       page_numbers_template: '', // ページ番号テンプレートを空に
       page_numbers_font_size: 0, // フォントサイズを0に
