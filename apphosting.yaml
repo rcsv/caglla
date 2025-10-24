@@ -75,6 +75,49 @@ buildConfig:
   # Next.jsのビルドコマンド（Firebase App Hostingが自動的に実行）
   # pnpmVersion: 10.18.3
   
+  # ビルド時環境変数（Secret Managerから取得）
+  env:
+    - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_API_KEY/versions/latest
+      availability:
+        - BUILD
+    - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN/versions/latest
+      availability:
+        - BUILD
+    - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_PROJECT_ID/versions/latest
+      availability:
+        - BUILD
+    - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET/versions/latest
+      availability:
+        - BUILD
+    - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID/versions/latest
+      availability:
+        - BUILD
+    - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_APP_ID/versions/latest
+      availability:
+        - BUILD
+    - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_PLACES_API_KEY/versions/latest
+      availability:
+        - BUILD
+    - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_MAPS_API_KEY/versions/latest
+      availability:
+        - BUILD
+    - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_MAP_ID/versions/latest
+      availability:
+        - BUILD
+    - variable: NEXT_PUBLIC_APP_URL
+      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_APP_URL/versions/latest
+      availability:
+        - BUILD
+  
   # package.jsonの依存関係情報（参考）
   dependencies:
     # 主要な依存関係
