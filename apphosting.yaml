@@ -64,14 +64,17 @@ runConfig:
 
 # ビルド設定
 buildConfig:
-  # ビルドコマンド
-  buildCommand: npm run build
+  # ビルドコマンド（pnpmを使用、frozen-lockfileを無効化）
+  buildCommand: pnpm install --no-frozen-lockfile && pnpm run build
   
   # 出力ディレクトリ（Next.jsのデフォルト）
   outputDirectory: .next
   
   # Node.js バージョン
   nodeVersion: 22
+  
+  # pnpmバージョン指定
+  pnpmVersion: 10.18.3
 
 # デプロイ設定
 deployConfig:
