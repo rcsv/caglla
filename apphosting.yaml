@@ -40,43 +40,43 @@ runConfig:
     
     # Firebase Admin SDK Configuration (サーバー側) - Secret Managerから取得
     - variable: FIREBASE_PROJECT_ID
-      secret: projects/caglla-fb/secrets/FIREBASE_PROJECT_ID/versions/latest
+      secret: projects/17375032053/secrets/FIREBASE_PROJECT_ID
     - variable: FIREBASE_CLIENT_EMAIL
-      secret: projects/caglla-fb/secrets/FIREBASE_CLIENT_EMAIL/versions/latest
+      secret: projects/17375032053/secrets/FIREBASE_CLIENT_EMAIL
     - variable: FIREBASE_PRIVATE_KEY
-      secret: projects/caglla-fb/secrets/FIREBASE_PRIVATE_KEY/versions/latest
+      secret: projects/17375032053/secrets/FIREBASE_PRIVATE_KEY
     
     # Google APIs Configuration - Secret Managerから取得
     - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_PLACES_API_KEY/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
     - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_MAPS_API_KEY/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
     - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_MAP_ID/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_GOOGLE_MAP_ID
     
     # App URL (本番環境用) - Secret Managerから取得
     - variable: NEXT_PUBLIC_APP_URL
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_APP_URL/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_APP_URL
     
     # Optional APIs (必要に応じて設定) - Secret Managerから取得
     - variable: NEXT_PUBLIC_UNSPLASH_APP_ID
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_UNSPLASH_APP_ID/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_UNSPLASH_APP_ID
     - variable: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_UNSPLASH_ACCESS_KEY/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
     - variable: UNSPLASH_SECRET_KEY
-      secret: projects/caglla-fb/secrets/UNSPLASH_SECRET_KEY/versions/latest
+      secret: projects/17375032053/secrets/UNSPLASH_SECRET_KEY
     
     # External APIs (サーバーサイド専用) - Secret Managerから取得
     - variable: TRIPADVISOR_API_KEY
-      secret: projects/caglla-fb/secrets/TRIPADVISOR_API_KEY/versions/latest
+      secret: projects/17375032053/secrets/TRIPADVISOR_API_KEY
     - variable: FOURSQUARE_API_KEY
-      secret: projects/caglla-fb/secrets/FOURSQUARE_API_KEY/versions/latest
+      secret: projects/17375032053/secrets/FOURSQUARE_API_KEY
     - variable: SELECTPDF_API_KEY
-      secret: projects/caglla-fb/secrets/SELECTPDF_API_KEY/versions/latest
+      secret: projects/17375032053/secrets/SELECTPDF_API_KEY
     
     # SendGrid Configuration - Secret Managerから取得
     - variable: SENDGRID_API_KEY
-      secret: projects/caglla-fb/secrets/SENDGRID_API_KEY/versions/latest
+      secret: projects/17375032053/secrets/SENDGRID_API_KEY
 
 # ビルド設定
 buildConfig:
@@ -86,43 +86,43 @@ buildConfig:
   # ビルド時環境変数（Secret Managerから取得）
   env:
     - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_API_KEY/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_FIREBASE_API_KEY
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_PROJECT_ID/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_FIREBASE_PROJECT_ID
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_FIREBASE_APP_ID/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_FIREBASE_APP_ID
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_PLACES_API_KEY/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_MAPS_API_KEY/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_GOOGLE_MAP_ID/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_GOOGLE_MAP_ID
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_APP_URL
-      secret: projects/caglla-fb/secrets/NEXT_PUBLIC_APP_URL/versions/latest
+      secret: projects/17375032053/secrets/NEXT_PUBLIC_APP_URL
       availability:
         - BUILD
   
