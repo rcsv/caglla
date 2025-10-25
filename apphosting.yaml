@@ -40,11 +40,11 @@ runConfig:
     
     # Firebase Admin SDK Configuration (サーバー側) - Secret Managerから取得
     - variable: FIREBASE_PROJECT_ID
-      secret: FIREBASE_PROJECT_ID
+      secret: caglla-firebase-project-id
     - variable: FIREBASE_CLIENT_EMAIL
-      secret: FIREBASE_CLIENT_EMAIL
+      secret: caglla-firebase-client-email
     - variable: FIREBASE_PRIVATE_KEY
-      secret: FIREBASE_PRIVATE_KEY
+      secret: caglla-firebase-private-key
     
     # Google APIs Configuration - Secret Managerから取得
     - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
