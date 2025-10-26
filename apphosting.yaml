@@ -15,29 +15,7 @@ runConfig:
   runtime: nodejs22
   
   # 環境変数の設定（Google Cloud Secret Manager連携）
-  # const firebaseConfig = {
-  # apiKey: "AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4",
-  # authDomain: "caglla-fb.firebaseapp.com",
-  # projectId: "caglla-fb",
-  # storageBucket: "caglla-fb.firebasestorage.app",
-  # messagingSenderId: "17375032053",
-  # appId: "1:17375032053:web:e1f99ead356f5421c1cbbc"
-  # };
   env:
-    # Firebase Configuration (クライアント側) - Secret Managerから取得
-    - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-      value: AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4
-    - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-      value: caglla-fb.firebaseapp.com
-    - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-      value: caglla-fb
-    - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-      value: caglla-fb.firebasestorage.app
-    - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-      value: 17375032053
-    - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-      value: 1:17375032053:web:e1f99ead356f5421c1cbbc
-    
     # Firebase Admin SDK Configuration (サーバー側) - Secret Managerから取得
     - variable: FIREBASE_CLIENT_EMAIL
       secret: caglla-firebase-client-email
@@ -81,30 +59,30 @@ buildConfig:
   # Next.jsのビルドコマンド（Firebase App Hostingが自動的に実行）
   # pnpmVersion: 10.18.3
   
-  # ビルド時環境変数（Secret Managerから取得）
+  # ビルド時環境変数（クライアント側用）
   env:
     - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-      secret: NEXT_PUBLIC_FIREBASE_API_KEY
+      value: AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-      secret: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+      value: caglla-fb.firebaseapp.com
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-      secret: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      value: caglla-fb
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-      secret: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+      value: caglla-fb.firebasestorage.app
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-      secret: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+      value: 17375032053
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-      secret: NEXT_PUBLIC_FIREBASE_APP_ID
+      value: 1:17375032053:web:e1f99ead356f5421c1cbbc
       availability:
         - BUILD
     - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
