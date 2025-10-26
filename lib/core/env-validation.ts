@@ -98,36 +98,26 @@ export function validateServerEnvironment(): RequiredEnvVars & OptionalEnvVars {
 
 // クライアントサイドでの環境変数検証（NEXT_PUBLIC_プレフィックスのみ）
 export function validateClientEnvironment(options: { suppressWarnings?: boolean } = {}): Partial<RequiredEnvVars> {
-  // クライアントサイドでの環境変数アクセス用のヘルパー
-  const getEnv = (key: string): string | undefined => {
-    if (typeof window === 'undefined') {
-      // サーバーサイド
-      return process.env[key]
-    }
-    // クライアントサイド: Next.jsがビルド時にインライン化した値を取得
-    // @ts-ignore - 動的に環境変数にアクセスするための回避策
-    return globalThis.__env?.[key] || process.env[key]
+  // 静的環境変数アクセス（Next.jsがビルド時に置き換える）
+  // 注意: process.env.NEXT_PUBLIC_* への直接アクセスのみがビルド時に置き換えられる
+  const env = {
+    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY,
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+    NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
   }
-
-  const clientVars: (keyof RequiredEnvVars)[] = [
-    'NEXT_PUBLIC_FIREBASE_API_KEY',
-    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-    'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-    'NEXT_PUBLIC_FIREBASE_APP_ID',
-    'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY',
-    'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY',
-    'NEXT_PUBLIC_UNSPLASH_ACCESS_KEY'
-  ]
 
   const missingVars: string[] = []
   
-  // 環境変数のチェック（デバッグログは抑制）
-  for (const varName of clientVars) {
-    const value = getEnv(varName)
+  // 環境変数のチェック
+  for (const [key, value] of Object.entries(env)) {
     if (!value) {
-      missingVars.push(varName)
+      missingVars.push(key)
     }
   }
 
@@ -151,14 +141,14 @@ export function validateClientEnvironment(options: { suppressWarnings?: boolean 
   }
 
   return {
-    NEXT_PUBLIC_FIREBASE_API_KEY: getEnv('NEXT_PUBLIC_FIREBASE_API_KEY') || 'dev-fallback',
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: getEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN') || 'dev-project.firebaseapp.com',
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: getEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID') || 'dev-project',
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: getEnv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET') || 'dev-project.appspot.com',
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: getEnv('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID') || '123456789',
-    NEXT_PUBLIC_FIREBASE_APP_ID: getEnv('NEXT_PUBLIC_FIREBASE_APP_ID') || '1:123456789:web:abcdef',
-    NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: getEnv('NEXT_PUBLIC_GOOGLE_PLACES_API_KEY') || 'dev-google-places-key',
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: getEnv('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY') || 'dev-google-maps-key',
-    NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: getEnv('NEXT_PUBLIC_UNSPLASH_ACCESS_KEY') || 'dev-unsplash-key'
+    NEXT_PUBLIC_FIREBASE_API_KEY: env.NEXT_PUBLIC_FIREBASE_API_KEY || 'dev-fallback',
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'dev-project.firebaseapp.com',
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dev-project',
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'dev-project.appspot.com',
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+    NEXT_PUBLIC_FIREBASE_APP_ID: env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789:web:abcdef',
+    NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || 'dev-google-places-key',
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'dev-google-maps-key',
+    NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 'dev-unsplash-key'
   }
 }
