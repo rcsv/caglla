@@ -1,206 +1,131 @@
-# Firebase App Hosting Configuration
-# https://firebase.google.com/docs/app-hosting
-
-# アプリケーション情報
-appConfig:
-  # package.jsonから取得した情報
-  name: caglla
-  version: 1.8.2
-  description: Travel management app inspired by wanderlog
-  private: true
-
-# ランタイム設定
+# Settings for Backend (on Cloud Run).
+# See https://firebase.google.com/docs/app-hosting/configure#cloud-run
 runConfig:
-  # Node.js 22を使用（package.jsonのvolta設定に合わせる）
-  runtime: nodejs22
-  
-  # 環境変数の設定（Google Cloud Secret Manager連携）
-  # const firebaseConfig = {
-  # apiKey: "AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4",
-  # authDomain: "caglla-fb.firebaseapp.com",
-  # projectId: "caglla-fb",
-  # storageBucket: "caglla-fb.firebasestorage.app",
-  # messagingSenderId: "17375032053",
-  # appId: "1:17375032053:web:e1f99ead356f5421c1cbbc"
-  # };
-  env:
-    # Firebase Configuration (クライアント側) - Secret Managerから取得
-    - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-      value: AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4
-    - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-      value: caglla-fb.firebaseapp.com
-    - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-      value: caglla-fb
-    - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-      value: caglla-fb.firebasestorage.app
-    - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-      value: 17375032053
-    - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-      value: 1:17375032053:web:e1f99ead356f5421c1cbbc
-    
-    # Firebase Admin SDK Configuration (サーバー側) - Secret Managerから取得
-    - variable: FIREBASE_PROJECT_ID
-      secret: caglla-firebase-project-id
-    - variable: FIREBASE_CLIENT_EMAIL
-      secret: caglla-firebase-client-email
-    - variable: FIREBASE_PRIVATE_KEY
-      secret: caglla-firebase-private-key
-    
-    # Google APIs Configuration - Secret Managerから取得
-    - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-      secret: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-    - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      secret: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-    - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
-      secret: NEXT_PUBLIC_GOOGLE_MAP_ID
-    
-    # App URL (本番環境用) - Secret Managerから取得
-    - variable: NEXT_PUBLIC_APP_URL
-      secret: NEXT_PUBLIC_APP_URL
-    
-    # Optional APIs (必要に応じて設定) - Secret Managerから取得
-    - variable: NEXT_PUBLIC_UNSPLASH_APP_ID
-      secret: NEXT_PUBLIC_UNSPLASH_APP_ID
-    - variable: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
-      secret: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
-    - variable: UNSPLASH_SECRET_KEY
-      secret: UNSPLASH_SECRET_KEY
-    
-    # External APIs (サーバーサイド専用) - Secret Managerから取得
-    - variable: TRIPADVISOR_API_KEY
-      secret: TRIPADVISOR_API_KEY
-    - variable: FOURSQUARE_API_KEY
-      secret: FOURSQUARE_API_KEY
-    - variable: SELECTPDF_API_KEY
-      secret: SELECTPDF_API_KEY
-    
-    # SendGrid Configuration - Secret Managerから取得
-    - variable: SENDGRID_API_KEY
-      secret: SENDGRID_API_KEY
+  minInstances: 0
+  # maxInstances: 100
+  # concurrency: 80
+  # cpu: 1
+  # memoryMiB: 512
 
-# ビルド設定
-buildConfig:
-  # Next.jsのビルドコマンド（Firebase App Hostingが自動的に実行）
-  # pnpmVersion: 10.18.3
-  
-  # ビルド時環境変数（Secret Managerから取得）
-  env:
-    - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-      secret: NEXT_PUBLIC_FIREBASE_API_KEY
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-      secret: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-      secret: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-      secret: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-      secret: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-      secret: NEXT_PUBLIC_FIREBASE_APP_ID
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-      secret: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      secret: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
-      secret: NEXT_PUBLIC_GOOGLE_MAP_ID
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_APP_URL
-      secret: NEXT_PUBLIC_APP_URL
-      availability:
-        - BUILD
-  
-  # package.jsonの依存関係情報（参考）
-  dependencies:
-    # 主要な依存関係
-    next: "^14.2.33"
-    react: "18.3.1"
-    react-dom: "18.3.1"
-    typescript: "^5.9.3"
-    firebase: "^10.14.1"
-    firebase-admin: "^13.5.0"
-    "@google-cloud/secret-manager": "^6.1.1"
-    "@googlemaps/js-api-loader": "^1.16.10"
-    "@iconify/react": "6.0.2"
-    "@dnd-kit/core": "^6.3.1"
-    "@dnd-kit/sortable": "^10.0.0"
-    "@dnd-kit/utilities": "^3.2.2"
-    "@types/qrcode": "^1.5.5"
-    qrcode: "^1.5.4"
-    axios: "^1.12.2"
-    mysql2: "^3.15.2"
-    firebase-tools: "^14.20.0"
-  
-  # package.jsonのスクリプト情報（参考）
-  scripts:
-    dev: "next dev"
-    build: "next build"
-    start: "next start"
-    lint: "next lint"
-    migrate: "ts-node src/migrate.ts"
-    flush-itineraries: "ts-node scripts/flush-itineraries.ts"
-    manage-itineraries: "ts-node scripts/manage-itineraries.ts"
-    simple-flush: "ts-node scripts/simple-flush.ts"
-    admin-flush: "ts-node scripts/admin-flush.ts"
-    api-flush: "ts-node scripts/api-flush.ts"
-    setup-secrets: "ts-node scripts/setup-secrets.ts"
+# Environment variables and secrets.
+env:
+  # Configure environment variables.
+  # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
+  # - variable: MESSAGE
+  #   value: Hello world!
+  #   availability:
+  #     - BUILD
+  #     - RUNTIME
+  # --- 1. 
+  # Firebase Configuration
+  # Fireabase app-id
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:17375032053:web:e1f99ead356f5421c1cbbc
 
-# デプロイ設定
-deployConfig:
-  # リージョン（アジア太平洋地域を推奨）
-  region: asia-northeast1
-  
-  # スケーリング設定
-  scaling:
-    minInstances: 1
-    maxInstances: 10
-  
-  # ヘルスチェック設定
-  healthCheck:
-    path: /api/health
-    timeoutSeconds: 30
-  
-  # カスタムドメイン設定（必要に応じて）
-  # customDomains:
-  #   - your-domain.com
-  #   - www.your-domain.com
+  # firebase project-id
+  - variable: FIREBASE_PROJECT_ID
+    value: caglla-fb
 
-# セキュリティ設定
-security:
-  # HTTPS強制
-  forceHttps: true
-  
-  # セキュリティヘッダー
-  headers:
-    - name: X-Frame-Options
-      value: DENY
-    - name: X-Content-Type-Options
-      value: nosniff
-    - name: X-XSS-Protection
-      value: 1; mode=block
-    - name: Referrer-Policy
-      value: strict-origin-when-cross-origin
+  # firebase project-id
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: caglla-fb
 
-# ログ設定
-logging:
-  level: info
+  # firebase auth-domain
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: caglla-fb.firebaseapp.com
+
+  # firebase storage-bucket
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: caglla-fb.firebasestorage.app
+
+  # firebase messaging-sender-id
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: 17375032053
+
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4
+
+      
+
+
+
+  # Grant access to secrets in Cloud Secret Manager.
+  # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
+  # Firebase Admin SDK Configuraiton
+  - variable: FIREBASE_CLIENT_EMAIL
+    secret: caglla-firebase-client-email
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: caglla-firebase-private-key
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+    secret: caglla-google-places-api-key
+    availability:
+      - BUILD
   
-# モニタリング設定
-monitoring:
-  enabled: true
+  - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    secret: caglla-google-maps-api-key
+    availability:
+      - BUILD
+  
+  - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
+    secret: caglla-google-map-id
+    availability:
+      - BUILD
+  
+  # --- 3. Sendgrid
+  # firebase functions も利用している可能性があるので、secrets mangager のキー名普遍
+  - variable: SENDGRID_API_KEY
+    secret: SENDGRID_API_KEY
+    availability:
+      - RUNTIME
+  
+  # --- 4. Unsplash
+  - variable: NEXT_PUBLIC_UNSPLASH_APP_ID
+    secret: caglla-unsplash-app-id
+    availability:
+      - BUILD
+  
+  - variable: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
+    secret: caglla-unsplash-access-key
+    availability:
+      - BUILD
+  
+  - variable: UNSPLASH_SECRET_KEY
+    secret: caglla-unsplash-secret-key
+    availability:
+      - RUNTIME
+  
+  # --- 5. TripAdvisor
+  - variable: TRIPADVISOR_API_KEY
+    secret: caglla-tripadvisor-api-key
+    availability:
+      - RUNTIME
+  
+  # --- 6. Foursquare
+  - variable: FOURSQUARE_API_KEY
+    secret: caglla-foursquare-api-key
+    availability:
+      - RUNTIME
+  
+  # --- 7. SelectPDF
+  - variable: SELECTPDF_API_KEY
+    secret: caglla-selectpdf-api-key
+    availability:
+      - RUNTIME
+  
+  # --- 8. Node.js
+  - variable: NODE_ENV
+    value: production
+
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://caglla.travel
+
+  - variable: NEXTAUTH_URL
+    value: https://caglla.travel/
