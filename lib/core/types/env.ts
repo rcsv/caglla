@@ -19,7 +19,6 @@ export interface RequiredEnvVars {
   NEXT_PUBLIC_FIREBASE_APP_ID: string
   
   // Firebase Admin SDK Configuration
-  FIREBASE_PROJECT_ID: string
   FIREBASE_CLIENT_EMAIL: string
   FIREBASE_PRIVATE_KEY: string
   

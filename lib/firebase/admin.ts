@@ -3,33 +3,21 @@ import logger from '@/lib/core/logger'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 
-// Firebase Admin SDK の初期化（最小限検証版）
+// Firebase Admin SDK の初期化（厳格なエラーハンドリング）
 let firebaseAdminConfig: any
 let app: any
 let adminDb: any
 let adminAuth: any
 
 try {
-  // 環境変数の直接確認（env-validationをスキップ）
-  const projectId = process.env.FIREBASE_PROJECT_ID
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY
-
-  logger.debug('🔍 Environment variables check:', {
-    FIREBASE_PROJECT_ID: !!projectId,
-    FIREBASE_CLIENT_EMAIL: !!clientEmail,
-    FIREBASE_PRIVATE_KEY: !!privateKey
-  })
-
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error(`Missing required environment variables: PROJECT_ID=${!!projectId}, CLIENT_EMAIL=${!!clientEmail}, PRIVATE_KEY=${!!privateKey}`)
-  }
-
+  const { validateServerEnvironment } = require('@/lib/core/env-validation') // @/lib/env-validation.ts に変更できないのか？
+  const env = validateServerEnvironment()
+  
   firebaseAdminConfig = {
     credential: cert({
-      projectId: projectId,
-      clientEmail: clientEmail,
-      privateKey: privateKey.replace(/\\n/g, '\n'),
+      projectId: env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      clientEmail: env.FIREBASE_CLIENT_EMAIL,
+      privateKey: env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
     }),
   }
   
@@ -43,34 +31,33 @@ try {
   // ビルド時は環境変数の検証エラーを無視
   if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
     logger.debug('🔧 Build time: Firebase Admin SDK initialization skipped')
+    // ビルド時はダミーの設定で初期化をスキップ
     firebaseAdminConfig = null
     app = null
     adminDb = null
     adminAuth = null
   } else {
     logger.error('❌ Firebase Admin SDK initialization failed:', error)
-    logger.error('Environment variables status:')
-    logger.error(`  - FIREBASE_PROJECT_ID: ${!!process.env.FIREBASE_PROJECT_ID}`)
-    logger.error(`  - FIREBASE_CLIENT_EMAIL: ${!!process.env.FIREBASE_CLIENT_EMAIL}`)
-    logger.error(`  - FIREBASE_PRIVATE_KEY: ${!!process.env.FIREBASE_PRIVATE_KEY}`)
+    logger.error('Please ensure all required environment variables are set:')
+    logger.error('  - NEXT_PUBLIC_FIREBASE_PROJECT_ID')
+    logger.error('  - FIREBASE_CLIENT_EMAIL')
+    logger.error('  - FIREBASE_PRIVATE_KEY')
+    logger.error('\nRefer to env.example for required configuration.')
     
-    // エラーを投げずにnullのままにする（検証用）
-    firebaseAdminConfig = null
-    app = null
-    adminDb = null
-    adminAuth = null
+    // フォールバック設定を削除：環境変数が不足している場合は起動を停止
+    throw new Error('Firebase Admin SDK initialization failed due to missing or invalid environment variables')
   }
 }
 
 // IDトークンの検証関数
 export async function verifyIdToken(token: string) {
   if (!adminAuth) {
+    // ビルド時はエラーを投げない
     if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
       logger.debug('🔧 Build time: Firebase Admin Auth verification skipped')
       return null
     }
-    logger.warn('⚠️ Firebase Admin Auth not initialized')
-    return null
+    throw new Error('Firebase Admin Auth not initialized')
   }
   return await adminAuth.verifyIdToken(token)
 }

@@ -33,7 +33,6 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
     'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
     'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
     'NEXT_PUBLIC_FIREBASE_APP_ID',
-    'FIREBASE_PROJECT_ID',
     'FIREBASE_CLIENT_EMAIL',
     'FIREBASE_PRIVATE_KEY',
     'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY',
@@ -72,13 +71,6 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
     }
     
     throw new EnvValidationError(message)
-  }
-
-  // Firebase Project IDの一貫性チェック（本番環境のみ）
-  if (!isDevelopment() && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID !== process.env.FIREBASE_PROJECT_ID) {
-    throw new EnvValidationError(
-      'Firebase Project ID mismatch: NEXT_PUBLIC_FIREBASE_PROJECT_ID and FIREBASE_PROJECT_ID must be the same'
-    )
   }
 
   return {

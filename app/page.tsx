@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { Button } from '@/components/common/Button'
 import Loading from '@/components/common/Loading'
+import EnvironmentDebugger from '@/components/debug/EnvironmentDebugger'
 
 export default function HomePage() {
   const { user, loading, signInWithGoogle } = useAuth()
@@ -73,6 +74,15 @@ export default function HomePage() {
                 無料で始められます
               </p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Environment Debugger Section */}
+      <div className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <EnvironmentDebugger />
           </div>
         </div>
       </div>
