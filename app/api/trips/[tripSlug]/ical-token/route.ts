@@ -5,23 +5,9 @@ import { getAuth } from 'firebase-admin/auth'
 import { generateICalToken } from '@/lib/utils/ical-token'
 import { verifyAuthToken } from '@/lib/api/auth-helpers'
 
-// Firebase Admin初期化（ビルド時対応）
-function getFirestoreInstance() {
-  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
-    return null
-  }
-  return getFirestore()
-}
-
-function getAuthInstance() {
-  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build') {
-    return null
-  }
-  return getAuth()
-}
-
-const db = getFirestoreInstance()
-const auth = getAuthInstance()
+// Firebase Admin初期化
+const db = getFirestore()
+const auth = getAuth()
 
 /**
  * iCal公開トークン生成・取得API
