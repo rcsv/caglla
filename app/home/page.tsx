@@ -48,18 +48,6 @@ export default function HomePage() {
   const { futureTrips, pastTrips } = dateUtils.sortTripsByDate(trips)
   const nextTrip = futureTrips[0] // 次の旅行プラン（1件のみ）
 
-  // デバッグ: nextTripのデータ構造を確認
-  console.log('🔍 nextTrip debug:', {
-    hasNextTrip: !!nextTrip,
-    tripId: nextTrip?.id,
-    title: nextTrip?.title,
-    destination: nextTrip?.destination,
-    destination_place_id: nextTrip?.destination_place_id,
-    destination_place: nextTrip?.destination_place,
-    destination_place_geometry: nextTrip?.destination_place?.geometry,
-    destination_place_location: nextTrip?.destination_place?.geometry?.location
-  })
-
   const handleLogout = async () => {
     await logout()
     router.push('/')

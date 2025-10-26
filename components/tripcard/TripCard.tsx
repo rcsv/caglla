@@ -37,6 +37,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
               src={trip.image_url}
               alt={trip.title}
               fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className={`object-cover ${isPastTrip ? 'sepia' : ''}`}
               style={isPastTrip ? { filter: 'sepia(0.25) contrast(1.05) brightness(0.95)' } : {}}
             />
