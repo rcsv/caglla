@@ -23,8 +23,9 @@ class Logger {
     const isDevelopment = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development'
     const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
     
+    // デバッグログが大量に出力される問題を回避するため、開発環境でも INFO レベルに設定
     this.config = {
-      level: isDevelopment ? LogLevel.DEBUG : isTest ? LogLevel.WARN : LogLevel.ERROR,
+      level: isDevelopment ? LogLevel.INFO : isTest ? LogLevel.WARN : LogLevel.ERROR,
       enableColors: isDevelopment,
       enableTimestamp: true,
     }
