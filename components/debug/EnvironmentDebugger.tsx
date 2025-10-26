@@ -17,22 +17,22 @@ export default function EnvironmentDebugger() {
   // クライアント側の環境変数をチェック
   useEffect(() => {
     const clientEnvVars = [
-      'NEXT_PUBLIC_FIREBASE_API_KEY',
-      'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-      'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-      'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-      'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-      'NEXT_PUBLIC_FIREBASE_APP_ID',
-      'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY',
-      'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY',
-      'NEXT_PUBLIC_GOOGLE_MAP_ID',
-      'NEXT_PUBLIC_APP_URL',
+    { name: 'NEXT_PUBLIC_FIREBASE_API_KEY', value: process.env.NEXT_PUBLIC_FIREBASE_API_KEY },
+    { name: 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', value: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN },
+    { name: 'NEXT_PUBLIC_FIREBASE_PROJECT_ID', value: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID },
+    { name: 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', value: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET },
+    { name: 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID', value: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID },
+    { name: 'NEXT_PUBLIC_FIREBASE_APP_ID', value: process.env.NEXT_PUBLIC_FIREBASE_APP_ID },
+    { name: 'NEXT_PUBLIC_GOOGLE_PLACES_API_KEY', value: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY },
+    { name: 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY', value: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY },
+    { name: 'NEXT_PUBLIC_GOOGLE_MAP_ID', value: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID },
+    { name: 'NEXT_PUBLIC_APP_URL', value: process.env.NEXT_PUBLIC_APP_URL },
     ]
 
-    const clientStatus: EnvironmentStatus[] = clientEnvVars.map(varName => ({
-      variable: varName,
-      value: process.env[varName],
-      status: process.env[varName] ? 'available' : 'missing',
+    const clientStatus: EnvironmentStatus[] = clientEnvVars.map(({ name, value }) => ({
+      variable: name,
+      value: value,
+      status: value ? 'available' : 'missing',
       source: 'client'
     }))
 
