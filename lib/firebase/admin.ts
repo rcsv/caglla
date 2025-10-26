@@ -10,19 +10,31 @@ let adminDb: any
 let adminAuth: any
 
 try {
-  const { validateServerEnvironment } = require('@/lib/core/env-validation')
-  const env = validateServerEnvironment()
+  // 環境変数の直接取得（fallbackあり）
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY
   
-  // 環境変数の存在確認
-  if (!env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || !env.FIREBASE_CLIENT_EMAIL || !env.FIREBASE_PRIVATE_KEY) {
-    throw new Error('Required environment variables are missing')
+  logger.debug('🔍 Checking environment variables...')
+  logger.debug(`Project ID: ${projectId ? 'Set' : 'Missing'}`)
+  logger.debug(`Client Email: ${clientEmail ? 'Set' : 'Missing'}`)
+  logger.debug(`Private Key: ${privateKey ? 'Set' : 'Missing'}`)
+  
+  if (!projectId || !clientEmail || !privateKey) {
+    const missing = []
+    if (!projectId) missing.push('NEXT_PUBLIC_FIREBASE_PROJECT_ID or FIREBASE_PROJECT_ID')
+    if (!clientEmail) missing.push('FIREBASE_CLIENT_EMAIL')
+    if (!privateKey) missing.push('FIREBASE_PRIVATE_KEY')
+    
+    logger.error(`❌ Missing environment variables: ${missing.join(', ')}`)
+    throw new Error(`Required environment variables are missing: ${missing.join(', ')}`)
   }
   
   firebaseAdminConfig = {
     credential: cert({
-      projectId: env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: env.FIREBASE_CLIENT_EMAIL,
-      privateKey: env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      projectId: projectId,
+      clientEmail: clientEmail,
+      privateKey: privateKey.replace(/\\n/g, '\n'),
     }),
   }
   
@@ -35,7 +47,7 @@ try {
 } catch (error) {
   logger.error('❌ Firebase Admin SDK initialization failed:', error)
   logger.error('Please ensure all required environment variables are set:')
-  logger.error('  - NEXT_PUBLIC_FIREBASE_PROJECT_ID')
+  logger.error('  - NEXT_PUBLIC_FIREBASE_PROJECT_ID or FIREBASE_PROJECT_ID')
   logger.error('  - FIREBASE_CLIENT_EMAIL')
   logger.error('  - FIREBASE_PRIVATE_KEY')
   logger.error('\nRefer to env.example for required configuration.')
