@@ -16,31 +16,92 @@ env:
   #   availability:
   #     - BUILD
   #     - RUNTIME
-  # Firebase Configuration (クライアント側)
-  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: "AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4"
-  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: "caglla-fb.firebaseapp.com"
-  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: "caglla-fb"
-  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: "caglla-fb.firebasestorage.app"
-  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: "17375032053"
+  # --- 1. 
+  # Firebase Configuration
+  # Fireabase app-id
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: "1:17375032053:web:e1f99ead356f5421c1cbbc"
+    value: 1:17375032053:web:e1f99ead356f5421c1cbbc
+    availability:
+      - BUILD
+  # firebase project-id
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: caglla-fb
+    availability:
+      - BUILD
+  # firebase auth-domain
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: caglla-fb.firebaseapp.com
+    availability:
+      - BUILD
+  # firebase storage-bucket
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: caglla-fb.firebasestorage.app
+    availability:
+      - BUILD
+  # firebase messaging-sender-id
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: 17375032053
+    availability:
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4
+    availability:
+      - BUILD
+      
 
-  # Google APIs Configuration
-  - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-    secret: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-  - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-    secret: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-  - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
-    secret: NEXT_PUBLIC_GOOGLE_MAP_ID
+
 
   # Grant access to secrets in Cloud Secret Manager.
   # See https://firebase.google.com/docs/app-hosting/configure#secret-parameters
+  # Firebase Admin SDK Configuraiton
   - variable: FIREBASE_CLIENT_EMAIL
     secret: caglla-firebase-client-email
+
   - variable: FIREBASE_PRIVATE_KEY
     secret: caglla-firebase-private-key
+
+  - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+    secret: caglla-google-places-api-key
+  
+  - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    secret: caglla-google-maps-api-key
+  
+  - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
+    secret: caglla-google-map-id
+  
+  # --- 3. Sendgrid
+  # firebase functions も利用している可能性があるので、secrets mangager のキー名普遍
+  - variable: SENDGRID_API_KEY
+    secret: SENDGRID_API_KEY
+  
+  # --- 4. Unsplash
+  - variable: NEXT_PUBLIC_UNSPLASH_APP_ID
+    secret: caglla-unsplash-app-id
+  
+  - variable: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
+    secret: caglla-unsplash-access-key
+  
+  - variable: UNSPLASH_SECRET_KEY
+    secret: caglla-unsplash-secret-key
+  
+  # --- 5. TripAdvisor
+  - variable: TRIPADVISOR_API_KEY
+    secret: caglla-tripadvisor-api-key
+  
+  # --- 6. Foursquare
+  - variable: FOURSQUARE_API_KEY
+    secret: caglla-foursquare-api-key
+  
+  # --- 7. SelectPDF
+  - variable: SELECTPDF_API_KEY
+    secret: caglla-selectpdf-api-key
+  
+  # --- 8. Node.js
+  - variable: NODE_ENV
+    value: production
+    availability:
+      - BUILD
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://caglla.travel
+    availability:
+      - BUILD
