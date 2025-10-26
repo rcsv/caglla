@@ -61,7 +61,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             <nav className="hidden md:flex items-center gap-4 text-sm">
               <Link href="/home" className="text-gray-600 hover:text-gray-900">Travel Guide</Link>
               <Link href="/memories" className="text-gray-600 hover:text-gray-900">Memories</Link>
-              {process.env.NODE_ENV === 'development' && (
+              {typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && (
                 <Link href="/dev-tools" className="text-gray-600 hover:text-gray-900">Dev Tools</Link>
               )}
             </nav>

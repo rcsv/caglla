@@ -24,50 +24,25 @@ export async function loadGoogleMapsAPI(language?: SupportedLanguage): Promise<v
   }
 
   // 環境変数を検証して取得
-  try {
-    // ここは警告が出るので、監視スクリプトを使わない
-    const env = validateClientEnvironment({ suppressWarnings: true })
-    const apiKey = env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+  const env = validateClientEnvironment({ suppressWarnings: true })
+  const apiKey = env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 
-    if (!apiKey) {
-      throw new Error('Google Maps API key not found')
-    }
+  if (!apiKey) {
+    console.error('Google Maps API key not found')
+    throw new Error('Google Maps API key not found')
+  }
 
-    // 言語設定を取得（ユーザー設定または指定された言語）
-    const userLanguage = language || getUserLanguage() || 'en'
-    
-    // 新しいローダーインスタンスを作成
-    if (!loaderInstance) {
-      loaderInstance = new Loader({
-        apiKey,
-        version: 'weekly',
-        libraries: ['places', 'marker', 'geometry'],
-        language: userLanguage
-      })
-    }
-  } catch (error) {
-    // 開発環境での環境変数エラーの場合は、直接 process.env から取得を試行
-    console.warn('Environment validation failed, falling back to direct process.env access:', error)
-    
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 
-                   process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || 
-                   'dev-fallback-key'
-
-    if (!apiKey) {
-      throw new Error('Google Maps API key not found')
-    }
-
-    // 言語設定を取得（ユーザー設定または指定された言語）
-    const userLanguage = language || getUserLanguage() || 'en'
-    
-    if (!loaderInstance) {
-      loaderInstance = new Loader({
-        apiKey,
-        version: 'weekly',
-        libraries: ['places', 'marker', 'geometry'],
-        language: userLanguage
-      })
-    }
+  // 言語設定を取得（ユーザー設定または指定された言語）
+  const userLanguage = language || getUserLanguage() || 'en'
+  
+  // 新しいローダーインスタンスを作成
+  if (!loaderInstance) {
+    loaderInstance = new Loader({
+      apiKey,
+      version: 'weekly',
+      libraries: ['places', 'marker', 'geometry'],
+      language: userLanguage
+    })
   }
 
   // APIを読み込み

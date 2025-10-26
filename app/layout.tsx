@@ -24,7 +24,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               // Suppress content-visibility warnings in development
-              if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+              if (typeof window !== 'undefined' && typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development') {
                 const originalWarn = console.warn;
                 console.warn = function(...args) {
                   if (args[0] && args[0].includes && args[0].includes('Rendering was performed in a subtree hidden by content-visibility')) {

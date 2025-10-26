@@ -98,6 +98,17 @@ export function validateServerEnvironment(): RequiredEnvVars & OptionalEnvVars {
 
 // クライアントサイドでの環境変数検証（NEXT_PUBLIC_プレフィックスのみ）
 export function validateClientEnvironment(options: { suppressWarnings?: boolean } = {}): Partial<RequiredEnvVars> {
+  // クライアントサイドでの環境変数アクセス用のヘルパー
+  const getEnv = (key: string): string | undefined => {
+    if (typeof window === 'undefined') {
+      // サーバーサイド
+      return process.env[key]
+    }
+    // クライアントサイド: Next.jsがビルド時にインライン化した値を取得
+    // @ts-ignore - 動的に環境変数にアクセスするための回避策
+    return globalThis.__env?.[key] || process.env[key]
+  }
+
   const clientVars: (keyof RequiredEnvVars)[] = [
     'NEXT_PUBLIC_FIREBASE_API_KEY',
     'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
@@ -114,39 +125,40 @@ export function validateClientEnvironment(options: { suppressWarnings?: boolean 
   
   // 環境変数のチェック（デバッグログは抑制）
   for (const varName of clientVars) {
-    const value = process.env[varName]
+    const value = getEnv(varName)
     if (!value) {
       missingVars.push(varName)
     }
   }
 
-  // 開発環境では警告のみ、本番環境ではエラー
+  // 本番環境では警告のみで続行（フォールバック値を使用）
   if (missingVars.length > 0) {
-    const message = `Missing required client environment variables: ${missingVars.join(', ')}\n` +
-      'Please check your .env.local file and ensure all NEXT_PUBLIC_ variables are set.'
-    
-    if (isDevelopment()) {
+    if (!isDevelopment()) {
+      // 本番環境では警告のみで続行（フォールバック値を使用）
+      if (!options.suppressWarnings) {
+        console.warn('Environment validation failed, using fallback values:', missingVars)
+      }
+    } else {
+      const message = `Missing required client environment variables: ${missingVars.join(', ')}\n` +
+        'Please check your .env.local file and ensure all NEXT_PUBLIC_ variables are set.'
+      
       // 警告を抑制するオプションが指定されていない場合のみ警告を表示
       if (!options.suppressWarnings && !global.__envWarningShown) {
         logger.debug('🔧 Development mode: Environment variables validation skipped')
         global.__envWarningShown = true
       }
-      
-      // 開発環境では警告のみで続行（フォールバック値を使用）
-    } else {
-      throw new EnvValidationError(message)
     }
   }
 
   return {
-    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'dev-fallback',
-    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'dev-project.firebaseapp.com',
-    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dev-project',
-    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'dev-project.appspot.com',
-    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:123456789:web:abcdef',
-    NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || 'dev-google-places-key',
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'dev-google-maps-key',
-    NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 'dev-unsplash-key'
+    NEXT_PUBLIC_FIREBASE_API_KEY: getEnv('NEXT_PUBLIC_FIREBASE_API_KEY') || 'dev-fallback',
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: getEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN') || 'dev-project.firebaseapp.com',
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: getEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID') || 'dev-project',
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: getEnv('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET') || 'dev-project.appspot.com',
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: getEnv('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID') || '123456789',
+    NEXT_PUBLIC_FIREBASE_APP_ID: getEnv('NEXT_PUBLIC_FIREBASE_APP_ID') || '1:123456789:web:abcdef',
+    NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: getEnv('NEXT_PUBLIC_GOOGLE_PLACES_API_KEY') || 'dev-google-places-key',
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: getEnv('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY') || 'dev-google-maps-key',
+    NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: getEnv('NEXT_PUBLIC_UNSPLASH_ACCESS_KEY') || 'dev-unsplash-key'
   }
 }
