@@ -112,10 +112,10 @@ export default function ScheduleCard({
       const detectedTimezone = timezoneUtils.getTimezoneFromPlace(itinerary.place_data)
       if (detectedTimezone !== 'UTC') {
         setDestinationTimezone(detectedTimezone)
-        handleTimezoneUpdate(detectedTimezone)
+        updateField('timezone', detectedTimezone)
       }
     }
-  }, [itinerary.place_data?.place_id, handleTimezoneUpdate, itinerary.place_data])
+  }, [itinerary.place_data?.place_id, itinerary.place_data])
 
   useEffect(() => {
     if (itinerary.place_data && !itinerary.cost_currency) {
