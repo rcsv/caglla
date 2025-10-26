@@ -1,30 +1,20 @@
-# Firebase App Hosting Configuration
+# Firebase App Hosting Configuration - 最小限検証版
 # https://firebase.google.com/docs/app-hosting
 
 # アプリケーション情報
 appConfig:
-  # package.jsonから取得した情報
   name: caglla
   version: 1.8.2
-  description: Travel management app inspired by wanderlog
+  description: Travel management app - minimal test
   private: true
 
 # ランタイム設定
 runConfig:
-  # Node.js 22を使用（package.jsonのvolta設定に合わせる）
   runtime: nodejs22
   
-  # 環境変数の設定（Google Cloud Secret Manager連携）
-  # const firebaseConfig = {
-  # apiKey: "AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4",
-  # authDomain: "caglla-fb.firebaseapp.com",
-  # projectId: "caglla-fb",
-  # storageBucket: "caglla-fb.firebasestorage.app",
-  # messagingSenderId: "17375032053",
-  # appId: "1:17375032053:web:e1f99ead356f5421c1cbbc"
-  # };
+  # 最小限の環境変数（ハードコード値で検証）
   env:
-    # Firebase Configuration (クライアント側) - Secret Managerから取得
+    # Firebase Configuration (クライアント側) - ハードコード
     - variable: NEXT_PUBLIC_FIREBASE_API_KEY
       value: AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4
     - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
@@ -40,153 +30,32 @@ runConfig:
     
     # Firebase Admin SDK Configuration (サーバー側) - Secret Managerから取得
     - variable: FIREBASE_PROJECT_ID
-      secret: caglla-firebase-project-id
+      secret: projects/caglla-fb/secrets/FIREBASE_PROJECT_ID/versions/latest
     - variable: FIREBASE_CLIENT_EMAIL
-      secret: caglla-firebase-client-email
+      secret: projects/caglla-fb/secrets/FIREBASE_CLIENT_EMAIL/versions/latest
     - variable: FIREBASE_PRIVATE_KEY
-      secret: caglla-firebase-private-key
-    
-    # Google APIs Configuration - Secret Managerから取得
-    - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-      secret: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-    - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      secret: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-    - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
-      secret: NEXT_PUBLIC_GOOGLE_MAP_ID
-    
-    # App URL (本番環境用) - Secret Managerから取得
-    - variable: NEXT_PUBLIC_APP_URL
-      secret: NEXT_PUBLIC_APP_URL
-    
-    # Optional APIs (必要に応じて設定) - Secret Managerから取得
-    - variable: NEXT_PUBLIC_UNSPLASH_APP_ID
-      secret: NEXT_PUBLIC_UNSPLASH_APP_ID
-    - variable: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
-      secret: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
-    - variable: UNSPLASH_SECRET_KEY
-      secret: UNSPLASH_SECRET_KEY
-    
-    # External APIs (サーバーサイド専用) - Secret Managerから取得
-    - variable: TRIPADVISOR_API_KEY
-      secret: TRIPADVISOR_API_KEY
-    - variable: FOURSQUARE_API_KEY
-      secret: FOURSQUARE_API_KEY
-    - variable: SELECTPDF_API_KEY
-      secret: SELECTPDF_API_KEY
-    
-    # SendGrid Configuration - Secret Managerから取得
-    - variable: SENDGRID_API_KEY
-      secret: SENDGRID_API_KEY
+      secret: projects/caglla-fb/secrets/FIREBASE_PRIVATE_KEY/versions/latest
 
 # ビルド設定
 buildConfig:
-  # Next.jsのビルドコマンド（Firebase App Hostingが自動的に実行）
-  # pnpmVersion: 10.18.3
-  
-  # ビルド時環境変数（Secret Managerから取得）
-  env:
-    - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-      secret: NEXT_PUBLIC_FIREBASE_API_KEY
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-      secret: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-      secret: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-      secret: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-      secret: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-      secret: NEXT_PUBLIC_FIREBASE_APP_ID
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-      secret: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      secret: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
-      secret: NEXT_PUBLIC_GOOGLE_MAP_ID
-      availability:
-        - BUILD
-    - variable: NEXT_PUBLIC_APP_URL
-      secret: NEXT_PUBLIC_APP_URL
-      availability:
-        - BUILD
-  
-  # package.jsonの依存関係情報（参考）
-  dependencies:
-    # 主要な依存関係
-    next: "^14.2.33"
-    react: "18.3.1"
-    react-dom: "18.3.1"
-    typescript: "^5.9.3"
-    firebase: "^10.14.1"
-    firebase-admin: "^13.5.0"
-    "@google-cloud/secret-manager": "^6.1.1"
-    "@googlemaps/js-api-loader": "^1.16.10"
-    "@iconify/react": "6.0.2"
-    "@dnd-kit/core": "^6.3.1"
-    "@dnd-kit/sortable": "^10.0.0"
-    "@dnd-kit/utilities": "^3.2.2"
-    "@types/qrcode": "^1.5.5"
-    qrcode: "^1.5.4"
-    axios: "^1.12.2"
-    mysql2: "^3.15.2"
-    firebase-tools: "^14.20.0"
-  
-  # package.jsonのスクリプト情報（参考）
-  scripts:
-    dev: "next dev"
-    build: "next build"
-    start: "next start"
-    lint: "next lint"
-    migrate: "ts-node src/migrate.ts"
-    flush-itineraries: "ts-node scripts/flush-itineraries.ts"
-    manage-itineraries: "ts-node scripts/manage-itineraries.ts"
-    simple-flush: "ts-node scripts/simple-flush.ts"
-    admin-flush: "ts-node scripts/admin-flush.ts"
-    api-flush: "ts-node scripts/api-flush.ts"
-    setup-secrets: "ts-node scripts/setup-secrets.ts"
+  buildCommand: pnpm install --no-frozen-lockfile && pnpm run build
+  outputDirectory: .next
+  nodeVersion: 22
+  pnpmVersion: 10.18.3
 
 # デプロイ設定
 deployConfig:
-  # リージョン（アジア太平洋地域を推奨）
   region: asia-northeast1
-  
-  # スケーリング設定
   scaling:
     minInstances: 1
-    maxInstances: 10
-  
-  # ヘルスチェック設定
+    maxInstances: 3
   healthCheck:
     path: /api/health
     timeoutSeconds: 30
-  
-  # カスタムドメイン設定（必要に応じて）
-  # customDomains:
-  #   - your-domain.com
-  #   - www.your-domain.com
 
 # セキュリティ設定
 security:
-  # HTTPS強制
   forceHttps: true
-  
-  # セキュリティヘッダー
   headers:
     - name: X-Frame-Options
       value: DENY
@@ -200,7 +69,7 @@ security:
 # ログ設定
 logging:
   level: info
-  
+
 # モニタリング設定
 monitoring:
   enabled: true
