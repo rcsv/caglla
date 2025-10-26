@@ -18,17 +18,17 @@ env:
   #     - RUNTIME
   # Firebase Configuration (クライアント側)
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
-    value: AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4
+    value: "AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4"
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: caglla-fb.firebaseapp.com
+    value: "caglla-fb.firebaseapp.com"
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: caglla-fb
+    value: "caglla-fb"
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: caglla-fb.firebasestorage.app
+    value: "caglla-fb.firebasestorage.app"
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
     value: "17375032053"
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
-    value: 1:17375032053:web:e1f99ead356f5421c1cbbc
+    value: "1:17375032053:web:e1f99ead356f5421c1cbbc"
 
   # Google APIs Configuration
   - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
