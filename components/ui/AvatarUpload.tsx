@@ -2,6 +2,7 @@
 import logger from '@/lib/core/logger'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { imageUploadHelpers } from '@/lib/storage/image-upload'
 
 interface AvatarUploadProps {
@@ -80,9 +81,11 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
           <div className="relative">
             {currentImageUrl ? (
               <div className="relative">
-                <img
+                <Image
                   src={currentImageUrl}
                   alt="プロフィール画像"
+                  width={80}
+                  height={80}
                   className="w-20 h-20 object-cover rounded-full border-2 border-gray-300"
                 />
                 {!disabled && (

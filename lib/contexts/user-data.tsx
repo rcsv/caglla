@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import logger from '@/lib/core/logger'
 import { useAuth } from '@/lib/contexts/auth'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
@@ -62,7 +62,7 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
   const [tripsError, setTripsError] = useState<string | null>(null)
 
   // ユーザー情報を取得
-  const refreshUserData = async () => {
+  const refreshUserData = useCallback(async () => {
     if (!user) return
     
     try {
@@ -86,10 +86,10 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
     } finally {
       setUserDataLoading(false)
     }
-  }
+  }, [user])
 
   // ユーザープラン情報を取得
-  const refreshUserPlan = async () => {
+  const refreshUserPlan = useCallback(async () => {
     if (!user) return
     
     try {
@@ -120,10 +120,10 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
     } finally {
       setPlanLoading(false)
     }
-  }
+  }, [user])
 
   // 旅行データを取得
-  const refreshTrips = async () => {
+  const refreshTrips = useCallback(async () => {
     if (!user) return
     
     try {
@@ -145,7 +145,7 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
     } finally {
       setTripsLoading(false)
     }
-  }
+  }, [user])
 
   // 旅行を追加
   const addTrip = (trip: Trip) => {
@@ -175,7 +175,7 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
       refreshUserPlan()
       refreshTrips()
     }
-  }, [user])
+  }, [user, refreshUserData, refreshUserPlan, refreshTrips])
 
   const value: UserDataContextType = {
     // ユーザー情報

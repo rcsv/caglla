@@ -142,7 +142,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
     if (countryGroups.length > 0) {
       initMap()
     }
-  }, [countryGroups])
+  }, [countryGroups, markers])
 
   if (loading) {
     return (

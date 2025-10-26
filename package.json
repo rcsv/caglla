@@ -13,12 +13,14 @@
     "manage-itineraries": "ts-node scripts/manage-itineraries.ts",
     "simple-flush": "ts-node scripts/simple-flush.ts",
     "admin-flush": "ts-node scripts/admin-flush.ts",
-    "api-flush": "ts-node scripts/api-flush.ts"
+    "api-flush": "ts-node scripts/api-flush.ts",
+    "setup-secrets": "ts-node scripts/setup-secrets.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@google-cloud/secret-manager": "^6.1.1",
     "@googlemaps/js-api-loader": "^1.16.10",
     "@iconify/react": "6.0.2",
     "@types/qrcode": "^1.5.5",

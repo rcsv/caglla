@@ -1,6 +1,7 @@
 import { placesApiHelpers } from '@/lib/api/google/places'
 import { CachedImageInfo } from '@/lib/storage/image-cache'
 import logger from '@/lib/core/logger'
+import Image from 'next/image'
 
 interface ScheduleCardImageProps {
   photoUrl: string | null
@@ -23,9 +24,11 @@ export function ScheduleCardImage({
     <div className="flex-shrink-0 w-32 h-18 relative">
       {photoUrl ? (
         <>
-          <img
+          <Image
             src={photoUrl}
             alt={title}
+            width={128}
+            height={72}
             className="w-full h-full object-cover"
             onError={(e) => {
               logger.error('❌ Image load error for:', title, photoUrl)

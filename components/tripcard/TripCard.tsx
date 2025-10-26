@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Card } from '@/components/common/Card'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { dateUtils } from '@/lib/utils/date'
@@ -32,10 +33,11 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
         <div className="relative overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition bg-gray-900 h-[28rem]">
           {/* Image */}
           {trip.image_url && (
-            <img
+            <Image
               src={trip.image_url}
               alt={trip.title}
-              className={`absolute inset-0 w-full h-full object-cover ${isPastTrip ? 'sepia' : ''}`}
+              fill
+              className={`object-cover ${isPastTrip ? 'sepia' : ''}`}
               style={isPastTrip ? { filter: 'sepia(0.25) contrast(1.05) brightness(0.95)' } : {}}
             />
           )}
@@ -97,9 +99,11 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
         {trip.image_url && (
           <div className="mb-4">
             <div className={`relative w-full h-32 rounded-lg overflow-hidden ${isPastTrip ? 'shadow-inner-burned' : ''}`}>
-              <img
+              <Image
                 src={trip.image_url}
                 alt={trip.title}
+                width={400}
+                height={128}
                 className={`w-full h-32 object-cover rounded-lg ${isPastTrip ? 'sepia filter-grayscale-20' : ''}`}
                 style={isPastTrip ? { filter: 'sepia(0.3) contrast(1.1) brightness(0.9)' } : {}}
               />

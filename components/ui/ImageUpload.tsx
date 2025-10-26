@@ -2,6 +2,7 @@
 import logger from '@/lib/core/logger'
 
 import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { imageUploadHelpers } from '@/lib/storage/image-upload'
 import { useAuth } from '@/lib/contexts/auth'
 
@@ -176,9 +177,11 @@ export default function ImageUpload({
         {currentImageUrl ? (
           <div className="space-y-3">
             <div className="relative">
-              <img
+              <Image
                 src={currentImageUrl}
                 alt="旅行画像"
+                width={400}
+                height={192}
                 className="w-full h-48 object-cover rounded-lg border border-gray-300"
               />
               {!disabled && (

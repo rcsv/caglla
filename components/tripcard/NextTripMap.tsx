@@ -1,7 +1,7 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
@@ -86,7 +86,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
   }, [])
 
   // マーカーを作成・更新する関数
-  const updateMapAndMarker = (center: { lat: number; lng: number }, zoom: number) => {
+  const updateMapAndMarker = useCallback((center: { lat: number; lng: number }, zoom: number) => {
     if (!map || !trip) return
 
     // 地図の中心とズームを更新
@@ -124,7 +124,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
     markerRef.current = newMarker
     
     logger.debug('NextTripMap: 地図の中心を更新', center, 'ズーム:', zoom)
-  }
+  }, [map, trip])
 
   // trip の情報に基づいて地図を更新
   useEffect(() => {
@@ -150,7 +150,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
     logger.debug('NextTripMap: 旅行データの座標を使用（現在地のフォールバック無効化）', center)
     updateMapAndMarker(center, zoom)
 
-  }, [map, trip])
+  }, [map, trip, updateMapAndMarker])
 
   return (
     <div className={`relative h-full ${className}`}>

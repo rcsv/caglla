@@ -15,6 +15,7 @@ export async function PUT(
   { params }: { params: { templateId: string } }
 ) {
   try {
+
     // 認証チェック
     const user = await verifyAuthToken(request)
     if (!user) {
@@ -89,6 +90,7 @@ export async function DELETE(
   { params }: { params: { templateId: string } }
 ) {
   try {
+
     // 認証チェック
     const user = await verifyAuthToken(request)
     if (!user) {
@@ -138,6 +140,7 @@ export async function POST(
   { params }: { params: { templateId: string } }
 ) {
   try {
+
     // 認証チェック
     const user = await verifyAuthToken(request)
     if (!user) {
