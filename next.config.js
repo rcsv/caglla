@@ -48,6 +48,27 @@ const nextConfig = {
   // Firebase App Hosting用の設定
   output: 'standalone',
   
+  // 画像の外部ドメイン設定
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+    ],
+  },
+  
   async redirects() {
     return []
   },

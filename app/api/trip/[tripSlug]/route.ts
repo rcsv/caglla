@@ -39,13 +39,15 @@ export async function GET(
   { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const { id: tripId } = await params
+    const { tripSlug } = await params
 
-    // Get trip details
-    const trip = await adminTripOperations.getTripById(tripId)
-    if (!trip) {
+    // Resolve trip by slug or id
+    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
+    if (!resolved) {
       return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
     }
+    
+    const { id: tripId, trip } = resolved
 
     // destination_place を places_cache から解決
     let tripWithDest: TripWithDestination = trip
@@ -215,7 +217,7 @@ export async function PUT(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { id: tripId } = await params
+    const { tripSlug } = await params
     const body = await request.json()
     
     const {
@@ -230,16 +232,22 @@ export async function PUT(
       imageUrl
     } = body
 
+    // Resolve trip by slug or id
+    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
+    if (!resolved) {
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    }
+    
+    const { id: tripId, trip } = resolved
+
     // Verify user owns this trip
-    const trip = await adminTripOperations.getTripById(tripId)
-    if (!trip || trip.user_id !== userId) {
+    if (trip.user_id !== userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
     // 日程が変更されたかチェック
-    const originalTrip = await adminTripOperations.getTripById(tripId)
-    const originalStartDate = originalTrip?.start_date
-    const originalEndDate = originalTrip?.end_date
+    const originalStartDate = trip?.start_date
+    const originalEndDate = trip?.end_date
     const newStartDate = startDate ? new Date(startDate) : undefined
     const newEndDate = endDate ? new Date(endDate) : undefined
     
