@@ -44,8 +44,7 @@ env:
 
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4
-
-      
+  
 
 
 
@@ -68,11 +67,13 @@ env:
     secret: caglla-google-places-api-key
     availability:
       - BUILD
+      - RUNTIME
   
   - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
     secret: caglla-google-maps-api-key
     availability:
       - BUILD
+      - RUNTIME
   
   - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
     secret: caglla-google-map-id
@@ -87,15 +88,11 @@ env:
       - RUNTIME
   
   # --- 4. Unsplash
-  - variable: NEXT_PUBLIC_UNSPLASH_APP_ID
-    secret: caglla-unsplash-app-id
-    availability:
-      - BUILD
-  
   - variable: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
     secret: caglla-unsplash-access-key
     availability:
       - BUILD
+      - RUNTIME
   
   - variable: UNSPLASH_SECRET_KEY
     secret: caglla-unsplash-secret-key
