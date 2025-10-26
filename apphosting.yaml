@@ -55,11 +55,13 @@ env:
   - variable: FIREBASE_CLIENT_EMAIL
     secret: caglla-firebase-client-email
     availability:
+      - BUILD
       - RUNTIME
 
   - variable: FIREBASE_PRIVATE_KEY
     secret: caglla-firebase-private-key
     availability:
+      - BUILD
       - RUNTIME
 
   - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
@@ -124,3 +126,6 @@ env:
 
   - variable: NEXT_PUBLIC_APP_URL
     value: https://caglla.travel
+
+  - variable: NEXTAUTH_URL
+    value: https://caglla.travel/
