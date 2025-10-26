@@ -17,15 +17,20 @@ export class EnvValidationError extends Error {
 
 // 開発環境では環境変数の検証を緩和
 function isDevelopment(): boolean {
-  return process.env.NODE_ENV === 'development'
+  return typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'development'
 }
 
 // ビルド時かどうかを判定
 function isBuildTime(): boolean {
-  return process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build'
+  return typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE === 'phase-production-build'
 }
 
 export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
+  // process.envが存在しない場合はエラーをスロー
+  if (typeof process === 'undefined' || !process.env) {
+    throw new EnvValidationError('process.env is not available in this context')
+  }
+
   const requiredVars: (keyof RequiredEnvVars)[] = [
     'NEXT_PUBLIC_FIREBASE_API_KEY',
     'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
@@ -75,7 +80,7 @@ export function validateEnvironment(): RequiredEnvVars & OptionalEnvVars {
   }
 
   // Firebase Project IDの一貫性チェック（本番環境のみ）
-  if (!isDevelopment() && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID !== process.env.FIREBASE_PROJECT_ID) {
+  if (!isDevelopment() && process.env && process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID !== process.env.FIREBASE_PROJECT_ID) {
     throw new EnvValidationError(
       'Firebase Project ID mismatch: NEXT_PUBLIC_FIREBASE_PROJECT_ID and FIREBASE_PROJECT_ID must be the same'
     )
