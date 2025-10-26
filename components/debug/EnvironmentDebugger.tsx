@@ -167,6 +167,11 @@ export default function EnvironmentDebugger() {
                 {process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? 'Available' : 'Missing'}
               </span>
             </div>
+            <div className="mt-2 text-xs text-gray-500">
+              <div>API Key: {process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? 'Set' : 'Not Set'}</div>
+              <div>Project ID: {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'caglla-fb (fallback)'}</div>
+              <div>Auth Domain: {process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'caglla-fb.firebaseapp.com (fallback)'}</div>
+            </div>
           </div>
         </div>
       </div>
