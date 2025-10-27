@@ -17,6 +17,10 @@ const customJestConfig = {
     '**/__tests__/**/*.test.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)'
   ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/e2e/'  // E2E tests are run separately with Playwright
+  ],
   collectCoverageFrom: [
     'components/**/*.{js,jsx,ts,tsx}',
     'hooks/**/*.{js,jsx,ts,tsx}',
