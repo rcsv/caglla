@@ -17,7 +17,20 @@ export const timezoneUtils = {
     let detectedCountry: string | undefined
     let failureReason: TimezoneFailureLog['failure_reason'] | null = null
     
-    // 1. 都市名から推定
+    // 1. 国コードから推定（最も正確）
+    const countryCode = placeData.address_components?.find(
+      (component: any) => component.types.includes('country')
+    )?.short_name
+    
+    if (countryCode) {
+      const timezone = getTimezoneByCountryCode(countryCode)
+      if (timezone && timezone !== 'UTC') {
+        return timezone
+      }
+    }
+    detectedCountry = countryCode
+    
+    // 2. 都市名から推定（完全一致）
     const cityName = placeData.name?.toLowerCase()
     if (cityName) {
       const timezone = getTimezoneByCityName(cityName)
@@ -27,27 +40,33 @@ export const timezoneUtils = {
     }
     detectedCity = cityName
     
-    // 2. 住所から都市名を抽出して推定
-    const address = placeData.formatted_address || ''
-    const addressLower = address.toLowerCase()
+    // 3. 都市名から推定（部分一致）- 新しい改善
+    // "Los Angeles Airport" や "New York, NY" のような複合名に対応
+    const placesToCheck = [
+      placeData.name,
+      placeData.formatted_address
+    ].filter(Boolean).map(s => s!.toLowerCase())
     
-    const timezoneFromAddress = getTimezoneByCityName(addressLower)
-    if (timezoneFromAddress) {
-      return timezoneFromAddress
-    }
-    
-    // 3. 国コードから推定
-    const countryCode = placeData.address_components?.find(
-      (component: any) => component.types.includes('country')
-    )?.short_name
-    
-    if (countryCode) {
-      const timezone = getTimezoneByCountryCode(countryCode)
-      if (timezone) {
-        return timezone
+    for (const text of placesToCheck) {
+      // 主要都市名を部分一致で検索
+      const cities = [
+        'tokyo', 'osaka', 'kyoto', 'new york', 'los angeles', 'san francisco',
+        'london', 'paris', 'rome', 'berlin', 'madrid', 'amsterdam',
+        'seoul', 'beijing', 'shanghai', 'singapore', 'bangkok', 'hong kong',
+        'sydney', 'melbourne', 'auckland', 'honolulu',
+        'mumbai', 'delhi', 'bangalore', 'chennai', 'kolkata',
+        'dubai', 'moscow', 'istanbul', 'chicago', 'las vegas', 'miami'
+      ]
+      
+      for (const city of cities) {
+        if (text.includes(city)) {
+          const timezone = getTimezoneByCityName(city)
+          if (timezone) {
+            return timezone
+          }
+        }
       }
     }
-    detectedCountry = countryCode
     
     // 4. 推定失敗 - ログに記録
     if (!detectedCity && !detectedCountry) {
@@ -64,7 +83,7 @@ export const timezoneUtils = {
       failure_reason: failureReason,
       detected_city: detectedCity,
       detected_country: detectedCountry,
-      formatted_address: address,
+      formatted_address: placeData.formatted_address || '',
       created_at: new Date(),
       user_id: userId,
       status: 'pending'
