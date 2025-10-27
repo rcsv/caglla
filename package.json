@@ -11,6 +11,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:all": "pnpm test && pnpm test:e2e",
     "migrate": "ts-node src/migrate.ts",
     "flush-itineraries": "ts-node scripts/flush-itineraries.ts",
     "manage-itineraries": "ts-node scripts/manage-itineraries.ts",
@@ -39,6 +43,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
