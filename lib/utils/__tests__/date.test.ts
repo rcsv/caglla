@@ -85,6 +85,88 @@ describe('dateUtils', () => {
       expect(result.futureTrips).toEqual([])
       expect(result.pastTrips).toEqual([])
     })
+
+    it('should sort future trips in ascending order', () => {
+      const today = new Date()
+      const day1 = new Date(today)
+      day1.setDate(day1.getDate() + 1)
+      
+      const day2 = new Date(today)
+      day2.setDate(day2.getDate() + 2)
+      
+      const day3 = new Date(today)
+      day3.setDate(day3.getDate() + 3)
+
+      const trips = [
+        { id: '3', start_date: day3 } as any,
+        { id: '1', start_date: day1 } as any,
+        { id: '2', start_date: day2 } as any,
+      ]
+
+      const result = dateUtils.sortTripsByDate(trips)
+      expect(result.futureTrips[0].id).toBe('1')
+      expect(result.futureTrips[1].id).toBe('2')
+      expect(result.futureTrips[2].id).toBe('3')
+    })
+
+    it('should sort past trips in descending order', () => {
+      const today = new Date()
+      const day1 = new Date(today)
+      day1.setDate(day1.getDate() - 1)
+      
+      const day2 = new Date(today)
+      day2.setDate(day2.getDate() - 2)
+      
+      const day3 = new Date(today)
+      day3.setDate(day3.getDate() - 3)
+
+      const trips = [
+        { id: '1', start_date: day1 } as any,
+        { id: '3', start_date: day3 } as any,
+        { id: '2', start_date: day2 } as any,
+      ]
+
+      const result = dateUtils.sortTripsByDate(trips)
+      expect(result.pastTrips[0].id).toBe('1')
+      expect(result.pastTrips[1].id).toBe('2')
+      expect(result.pastTrips[2].id).toBe('3')
+    })
+  })
+
+  describe('isFutureTrip', () => {
+    it('should return true for future dates', () => {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      expect(dateUtils.isFutureTrip(tomorrow)).toBe(true)
+    })
+
+    it('should return false for past dates', () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      expect(dateUtils.isFutureTrip(yesterday)).toBe(false)
+    })
+
+    it('should return false for null dates', () => {
+      expect(dateUtils.isFutureTrip(null)).toBe(false)
+    })
+  })
+
+  describe('isPastTrip', () => {
+    it('should return true for past dates', () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      expect(dateUtils.isPastTrip(yesterday)).toBe(true)
+    })
+
+    it('should return false for future dates', () => {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      expect(dateUtils.isPastTrip(tomorrow)).toBe(false)
+    })
+
+    it('should return false for null dates', () => {
+      expect(dateUtils.isPastTrip(null)).toBe(false)
+    })
   })
 })
 
