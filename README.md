@@ -31,7 +31,7 @@ wanderlogのような機能を提供し、個人の旅行計画を管理でき�
 ### 1. 依存関係のインストール
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2. 環境変数の設定
@@ -67,7 +67,7 @@ NEXT_PUBLIC_GOOGLE_PLACES_API_KEY=your_google_places_api_key_here
 ### 4. 開発サーバーの起動
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 アプリケーションは http://localhost:3000 で起動します。
@@ -201,7 +201,7 @@ firebase emulators:start
 
 ```bash
 # 開発サーバーのログ
-npm run dev
+pnpm dev
 
 # Firebase ログ
 firebase functions:log

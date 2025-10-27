@@ -607,7 +607,7 @@ export default function TripMap({
       })
       map.fitBounds(bounds)
     }
-  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId, initialCenter, scrollSyncEnabled, markers, onItineraryClick, onPoiDataUpdate])
+  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId, initialCenter, scrollSyncEnabled, onItineraryClick, onPoiDataUpdate])
 
   // 選択されたItineraryにフォーカスする機能
   useEffect(() => {

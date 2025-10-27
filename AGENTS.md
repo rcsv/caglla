@@ -384,21 +384,34 @@ const timezone = 'Asia/Tokyo' // Hardcoded timezone
 
 ## 📦 Setup Notes
 
-- Install dependencies: `npm install`
+- Install dependencies: `pnpm install`
 - Environment vars required:
   - Firebase: `NEXT_PUBLIC_FIREBASE_*` (API_KEY, AUTH_DOMAIN, PROJECT_ID, etc.)
   - Google APIs: `NEXT_PUBLIC_GOOGLE_PLACES_API_KEY`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
   - Firebase Admin: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`
-- Start dev server: `npm run dev`
+- Start dev server: `pnpm dev`
 - Firebase project setup required (Authentication, Firestore, Storage).
+
+**Note**: This project uses `pnpm` as the package manager for better performance and disk space efficiency.
 
 ---
 
-## 🧪 Future Support for Agents
+## 🧪 Testing & Quality Assurance
 
 - Linting: ESLint + Prettier
-- Unit testing: Mocha or Jest (planned)
+- Unit testing: **Jest + React Testing Library** (✅ Implemented in v2)
+  - Utilities testing: `lib/utils/__tests__/`
+  - Component testing: Planned
+  - Custom hooks testing: Planned
 - PDF Export (via server-side Puppeteer or SelectPDF): TBD
+
+**Test Commands:**
+```bash
+pnpm test              # Run all tests
+pnpm test:watch        # Run tests in watch mode
+pnpm test:coverage     # Run tests with coverage report
+pnpm test -- lib/utils # Run specific directory tests
+```
 
 ---
 
@@ -419,7 +432,7 @@ This is a Next.js application with Firebase backend. To set up the development e
 
 1. **Install dependencies**:
 ```bash
-npm install
+pnpm install
 ```
 
 2. **Set up environment variables**:
@@ -428,7 +441,7 @@ npm install
 
 3. **Start development server**:
 ```bash
-npm run dev
+pnpm dev
 ```
 
 4. **Firebase setup**:
