@@ -68,6 +68,64 @@ body {
     rgb(var(--background-start-rgb));
 }
 
+/* ===== Hero big text with image clip ===== */
+.bg-text-image {
+  background-image: url('/upgraded-points.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: bg-pan-vertical 40s linear infinite alternate;
+}
+
+@keyframes bg-pan-vertical {
+  0% { background-position: center top; }
+  100% { background-position: center bottom; }
+}
+
+/* Left rail accent for about page */
+.page-rail {
+  position: relative;
+  padding-left: 2.5rem;
+  --rail-offset: 1.5rem;
+}
+
+.page-rail::before {
+  content: "";
+  position: absolute;
+  left: var(--rail-offset);
+  top: -4rem;
+  bottom: -4rem;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.35) 0%, rgba(148, 163, 184, 0.1) 100%);
+}
+
+@media (min-width: 768px) {
+  .page-rail {
+    padding-left: 3.5rem;
+    --rail-offset: 2rem;
+  }
+}
+
+.headline-marker {
+  position: relative;
+  padding-left: clamp(2rem, 4vw, 4rem);
+}
+
+.headline-marker::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--rail-offset) - 3px);
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(5, 150, 105, 1) 0%, rgba(52, 211, 153, 1) 100%);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
