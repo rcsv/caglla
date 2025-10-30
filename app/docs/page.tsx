@@ -14,6 +14,7 @@ import { WarningIcon } from '@/components/common/icons/WarningIcon'
 import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
 
 export default function DocsPage() {
+  const { t } = require('@/lib/i18n')
   const [query, setQuery] = React.useState('')
 
   const guides = [
@@ -105,22 +106,20 @@ export default function DocsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-9">
             <h1 className="leading-[0.8] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold uppercase text-[clamp(3.5rem,10vw,9rem)]">
-              <span className="block">Documentation</span>
-              <span className="block">Guides & Specs</span>
+              <span className="block">{t('docs.title1')}</span>
+              <span className="block">{t('docs.title2')}</span>
             </h1>
           </div>
           <div className="lg:col-span-3 flex items-end">
             <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 border border-gray-200">
-              <p className="text-lg md:text-xl text-gray-800 leading-relaxed">
-                Caglla の使い方・仕様・ベストプラクティスをここから辿れます。
-              </p>
+              <p className="text-lg md:text-xl text-gray-800 leading-relaxed">{t('docs.intro')}</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Search */}
-      <Section title="Search">
+      <Section title={t('docs.search.title')}>
         <SolidCard className="p-6 md:p-8">
           <div className="relative">
             <span className="absolute left-3 top-2.5 text-gray-400">
@@ -129,7 +128,7 @@ export default function DocsPage() {
             <input
               type="text"
               className="w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="ガイドを検索（例：Itinerary、Maps、環境変数）"
+              placeholder={t('docs.search.placeholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -138,7 +137,7 @@ export default function DocsPage() {
       </Section>
 
       {/* Guides */}
-      <Section title="Guides">
+      <Section title={t('docs.guides.title')}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredGuides.map((g) => (
             <SolidCard key={g.id} className="p-6 hover:shadow-sm transition">
@@ -159,20 +158,20 @@ export default function DocsPage() {
             </SolidCard>
           ))}
           {filteredGuides.length === 0 && (
-            <div className="text-sm text-gray-600">該当するガイドが見つかりませんでした。</div>
+            <div className="text-sm text-gray-600">{t('docs.empty')}</div>
           )}
         </div>
       </Section>
 
       {/* Shortcuts */}
-      <Section title="Shortcuts">
+      <Section title={t('docs.shortcuts.title')}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <SolidCard className="p-6 hover:shadow-sm transition">
             <a href="/support" className="flex items-center gap-3">
               <SearchIcon className="h-5 w-5 text-indigo-600" />
               <div>
-                <div className="font-medium">サポート</div>
-                <div className="text-sm text-gray-600">ヘルプセンターへ</div>
+                <div className="font-medium">{t('docs.shortcuts.support')}</div>
+                <div className="text-sm text-gray-600">{t('docs.shortcuts.support.sub')}</div>
               </div>
             </a>
           </SolidCard>
@@ -180,8 +179,8 @@ export default function DocsPage() {
             <a href="/faq" className="flex items-center gap-3">
               <SearchIcon className="h-5 w-5 text-indigo-600" />
               <div>
-                <div className="font-medium">FAQ</div>
-                <div className="text-sm text-gray-600">よくある質問</div>
+                <div className="font-medium">{t('docs.shortcuts.faq')}</div>
+                <div className="text-sm text-gray-600">{t('docs.shortcuts.faq.sub')}</div>
               </div>
             </a>
           </SolidCard>
@@ -189,8 +188,8 @@ export default function DocsPage() {
             <a href="/releases" className="flex items-center gap-3">
               <CalendarIcon className="h-5 w-5 text-indigo-600" />
               <div>
-                <div className="font-medium">リリースノート</div>
-                <div className="text-sm text-gray-600">バージョン履歴</div>
+                <div className="font-medium">{t('docs.shortcuts.releases')}</div>
+                <div className="text-sm text-gray-600">{t('docs.shortcuts.releases.sub')}</div>
               </div>
             </a>
           </SolidCard>
@@ -200,20 +199,20 @@ export default function DocsPage() {
       {/* CTA */}
       <section className="text-center">
         <div className="bg-emerald-600 p-12 text-white">
-          <h2 className="text-3xl font-bold mb-4">ガイドで見つからない場合</h2>
-          <p className="text-xl mb-8 opacity-90">サポートまたはFAQをご確認ください。必要ならお問い合わせください。</p>
+          <h2 className="text-3xl font-bold mb-4">{t('docs.cta.title')}</h2>
+          <p className="text-xl mb-8 opacity-90">{t('docs.cta.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="/support"
               className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 transition-colors border border-emerald-200"
             >
-              サポートへ
+              {t('docs.cta.support')}
             </a>
             <a
               href="/faq"
               className="px-8 py-3 bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors"
             >
-              FAQを見る
+              {t('docs.cta.faq')}
             </a>
           </div>
         </div>

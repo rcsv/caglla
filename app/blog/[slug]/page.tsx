@@ -13,6 +13,7 @@ type PageProps = {
 }
 
 export default function BlogPostPage({ params }: PageProps) {
+  const { t } = require('@/lib/i18n')
   const post = getBlogPostBySlug(params.slug)
 
   if (!post) {
@@ -20,8 +21,8 @@ export default function BlogPostPage({ params }: PageProps) {
       <StaticPageLayout>
         <section className="text-center">
           <div className="bg-white border border-gray-200 p-12">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">記事が見つかりませんでした</h1>
-            <p className="text-gray-600">URLをご確認いただくか、<a href="/blog" className="underline">ブログ一覧</a>に戻ってください。</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('blog.post.notfound.title')}</h1>
+            <p className="text-gray-600">{t('blog.post.notfound.desc')}</p>
           </div>
         </section>
       </StaticPageLayout>
@@ -54,7 +55,7 @@ export default function BlogPostPage({ params }: PageProps) {
             ))}
           </div>
           <div className="mt-8">
-            <a href="/blog" className="text-indigo-600 underline decoration-dotted">← ブログ一覧に戻る</a>
+            <a href="/blog" className="text-indigo-600 underline decoration-dotted">{t('blog.post.back')}</a>
           </div>
         </SolidCard>
       </Section>

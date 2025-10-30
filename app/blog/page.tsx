@@ -9,6 +9,7 @@ import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { UserIcon } from '@/components/common/icons/UserIcon'
 
 export default function BlogPage() {
+  const { t } = require('@/lib/i18n')
   const [query, setQuery] = React.useState('')
 
   const posts: Array<{
@@ -54,22 +55,20 @@ export default function BlogPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-9">
             <h1 className="leading-[0.8] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold uppercase text-[clamp(3.5rem,10vw,9rem)]">
-              <span className="block">Blog</span>
-              <span className="block">News & Updates</span>
+              <span className="block">{t('blog.title1')}</span>
+              <span className="block">{t('blog.title2')}</span>
             </h1>
           </div>
           <div className="lg:col-span-3 flex items-end">
             <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 border border-gray-200">
-              <p className="text-lg md:text-xl text-gray-800 leading-relaxed">
-                プロダクトの最新情報や開発の裏側、使い方のヒントをお届けします。
-              </p>
+              <p className="text-lg md:text-xl text-gray-800 leading-relaxed">{t('blog.intro')}</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Search */}
-      <Section title="Search">
+      <Section title={t('blog.search.title')}>
         <SolidCard className="p-6 md:p-8">
           <div className="relative">
             <span className="absolute left-3 top-2.5 text-gray-400">
@@ -78,7 +77,7 @@ export default function BlogPage() {
             <input
               type="text"
               className="w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="記事を検索（例：Support、Roadmap、Updates）"
+              placeholder={t('blog.search.placeholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -87,7 +86,7 @@ export default function BlogPage() {
       </Section>
 
       {/* Posts */}
-      <Section title="Latest Posts">
+      <Section title={t('blog.latest')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {filtered.map((p) => (
             <SolidCard key={p.slug} className="p-6 hover:shadow-sm transition">
@@ -107,7 +106,7 @@ export default function BlogPage() {
             </SolidCard>
           ))}
           {filtered.length === 0 && (
-            <div className="text-sm text-gray-600">該当する記事が見つかりませんでした。</div>
+            <div className="text-sm text-gray-600">{t('blog.empty')}</div>
           )}
         </div>
       </Section>
@@ -115,20 +114,20 @@ export default function BlogPage() {
       {/* CTA */}
       <section className="text-center">
         <div className="bg-emerald-600 p-12 text-white">
-          <h2 className="text-3xl font-bold mb-4">最新情報を見逃さないで</h2>
-          <p className="text-xl mb-8 opacity-90">Support/Docs/FAQもあわせてご活用ください。</p>
+          <h2 className="text-3xl font-bold mb-4">{t('blog.cta.title')}</h2>
+          <p className="text-xl mb-8 opacity-90">{t('blog.cta.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="/support"
               className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 transition-colors border border-emerald-200"
             >
-              サポートへ
+              {t('blog.cta.support')}
             </a>
             <a
               href="/docs"
               className="px-8 py-3 bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors"
             >
-              ドキュメントを見る
+              {t('blog.cta.docs')}
             </a>
           </div>
         </div>

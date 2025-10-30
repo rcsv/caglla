@@ -88,6 +88,103 @@ export type TranslationKey =
   | 'contact.info.urgent'
   | 'contact.info.responseTime'
   | 'contact.info.faq'
+  // About page
+  | 'about.hero.line1'
+  | 'about.hero.line2'
+  | 'about.hero.line3'
+  | 'about.intro'
+  | 'about.story.title'
+  | 'about.story.p1'
+  | 'about.story.p2'
+  | 'about.story.p3'
+  | 'about.mission.title'
+  | 'about.mission.simplicity.title'
+  | 'about.mission.simplicity.text'
+  | 'about.mission.collab.title'
+  | 'about.mission.collab.text'
+  | 'about.mission.security.title'
+  | 'about.mission.security.text'
+  | 'about.building.title'
+  | 'about.building.item1.title'
+  | 'about.building.item1.text'
+  | 'about.building.item2.title'
+  | 'about.building.item2.text'
+  | 'about.building.item3.title'
+  | 'about.building.item3.text'
+  | 'about.stats.year'
+  | 'about.stats.possibility'
+  | 'about.stats.passion'
+  | 'about.cta.title'
+  | 'about.cta.subtitle'
+  | 'about.cta.contact'
+  | 'about.cta.getStarted'
+  // Terms page
+  | 'terms.title'
+  | 'terms.updated'
+  | 'terms.s1.title'
+  | 'terms.s1.p1'
+  | 'terms.s2.title'
+  | 'terms.s2.intro'
+  | 'terms.s2.li1'
+  | 'terms.s2.li2'
+  | 'terms.s2.li3'
+  | 'terms.s2.li4'
+  | 'terms.s2.li5'
+  | 'terms.s3.title'
+  | 'terms.s3.intro'
+  | 'terms.s3.li1'
+  | 'terms.s3.li2'
+  | 'terms.s3.li3'
+  | 'terms.s3.li4'
+  | 'terms.s4.title'
+  | 'terms.s4.intro'
+  | 'terms.s4.li1'
+  | 'terms.s4.li2'
+  | 'terms.s4.li3'
+  | 'terms.s4.li4'
+  | 'terms.s4.li5'
+  | 'terms.s5.title'
+  | 'terms.s5.p1'
+  | 'terms.s6.title'
+  | 'terms.s6.p1'
+  | 'terms.s7.title'
+  | 'terms.s7.p1'
+  | 'terms.s7.contact'
+  // Docs page
+  | 'docs.title1'
+  | 'docs.title2'
+  | 'docs.intro'
+  | 'docs.search.title'
+  | 'docs.search.placeholder'
+  | 'docs.guides.title'
+  | 'docs.shortcuts.title'
+  | 'docs.shortcuts.support'
+  | 'docs.shortcuts.support.sub'
+  | 'docs.shortcuts.faq'
+  | 'docs.shortcuts.faq.sub'
+  | 'docs.shortcuts.releases'
+  | 'docs.shortcuts.releases.sub'
+  | 'docs.cta.title'
+  | 'docs.cta.subtitle'
+  | 'docs.cta.support'
+  | 'docs.cta.faq'
+  | 'docs.empty'
+  // Blog list page
+  | 'blog.title1'
+  | 'blog.title2'
+  | 'blog.intro'
+  | 'blog.search.title'
+  | 'blog.search.placeholder'
+  | 'blog.latest'
+  | 'blog.empty'
+  | 'blog.cta.title'
+  | 'blog.cta.subtitle'
+  | 'blog.cta.support'
+  | 'blog.cta.docs'
+  // Blog post page
+  | 'blog.post.notfound.title'
+  | 'blog.post.notfound.desc'
+  | 'blog.post.back'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -178,6 +275,103 @@ const en: Dictionary = {
   'contact.info.urgent': 'We will prioritize critical security issues.',
   'contact.info.responseTime': 'We usually respond within 2-3 business days. Complex issues may take longer.',
   'contact.info.faq': 'For common questions, please see the FAQ page.',
+  // About page
+  'about.hero.line1': 'Travel',
+  'about.hero.line2': 'Planning',
+  'about.hero.line3': 'Simplified',
+  'about.intro': 'Caglla makes travel planning beautiful and simple. We turn complex itinerary management into intuitive tools anyone can use.',
+  'about.story.title': 'Our Story',
+  'about.story.p1': 'In 2024, we were overwhelmed by the complexity of travel planning — too many apps, scattered notes, paper maps.',
+  'about.story.p2': '“If only we had a tool that makes trip planning simpler and more beautiful.”',
+  'about.story.p3': 'That idea gave birth to Caglla. Seamless with Google Maps, manage daily itineraries, stays, restaurants, and sights — all in one place, shared in real time.',
+  'about.mission.title': 'Our Mission & Values',
+  'about.mission.simplicity.title': 'Simplicity First',
+  'about.mission.simplicity.text': 'We prioritize intuitive design over complexity. Trip planning should be fun.',
+  'about.mission.collab.title': 'Collaboration',
+  'about.mission.collab.text': 'Travel is rarely solo. We make team planning effortless.',
+  'about.mission.security.title': 'Privacy & Security',
+  'about.mission.security.text': 'Your travel data matters. We protect it with top-tier security.',
+  'about.building.title': "What We're Building",
+  'about.building.item1.title': 'Detailed itinerary management',
+  'about.building.item1.text': 'Manage schedules by day and hour, stays, restaurants, and sights, all in one place.',
+  'about.building.item2.title': 'Google Maps integration',
+  'about.building.item2.text': 'Plan optimal routes visually on the map with auto distances and times.',
+  'about.building.item3.title': 'Real-time sharing',
+  'about.building.item3.text': 'Share and co-edit with family and friends to craft the best trip together.',
+  'about.stats.year': 'Founded',
+  'about.stats.possibility': 'Possibilities',
+  'about.stats.passion': 'Built with passion',
+  'about.cta.title': 'Join Us on This Journey',
+  'about.cta.subtitle': 'Let’s create the future of trip planning together.',
+  'about.cta.contact': 'Contact',
+  'about.cta.getStarted': 'Get Started',
+  // Terms page
+  'terms.title': 'Terms of Service',
+  'terms.updated': 'Last updated',
+  'terms.s1.title': '1. Introduction',
+  'terms.s1.p1': 'These Terms govern your use of Caglla Travel Manager. Please read and agree before using the service.',
+  'terms.s2.title': '2. Service Description',
+  'terms.s2.intro': 'The service provides the following features:',
+  'terms.s2.li1': 'Create and manage travel plans',
+  'terms.s2.li2': 'Manage itineraries',
+  'terms.s2.li3': 'Search and register places and stays',
+  'terms.s2.li4': 'Map display and route optimization',
+  'terms.s2.li5': 'Manage reservations',
+  'terms.s3.title': '3. Conditions of Use',
+  'terms.s3.intro': 'Users must meet the following conditions:',
+  'terms.s3.li1': 'Google account authentication',
+  'terms.s3.li2': 'Agreement to these Terms',
+  'terms.s3.li3': 'Use for proper purposes',
+  'terms.s3.li4': 'Comply with laws and public order',
+  'terms.s4.title': '4. Prohibited Actions',
+  'terms.s4.intro': 'The following are prohibited:',
+  'terms.s4.li1': 'Posting illegal or harmful content',
+  'terms.s4.li2': 'Infringing other users’ rights',
+  'terms.s4.li3': 'Disrupting normal operation',
+  'terms.s4.li4': 'Unauthorized access or hacking',
+  'terms.s4.li5': 'Other actions deemed inappropriate',
+  'terms.s5.title': '5. Disclaimer',
+  'terms.s5.p1': 'We are not liable for damages arising from use, except in cases of intent or gross negligence. The same applies to interruptions or termination.',
+  'terms.s6.title': '6. Changes to Terms',
+  'terms.s6.p1': 'We may change these Terms as needed. Changes take effect when posted in the service.',
+  'terms.s7.title': '7. Contact',
+  'terms.s7.p1': 'For questions about these Terms, please contact us via the Contact page.',
+  'terms.s7.contact': 'Contact Page',
+  // Docs page
+  'docs.title1': 'Documentation',
+  'docs.title2': 'Guides & Specs',
+  'docs.intro': 'Find usage, specifications, and best practices for Caglla here.',
+  'docs.search.title': 'Search',
+  'docs.search.placeholder': 'Search guides (e.g., Itinerary, Maps, Environment)',
+  'docs.guides.title': 'Guides',
+  'docs.shortcuts.title': 'Shortcuts',
+  'docs.shortcuts.support': 'Support',
+  'docs.shortcuts.support.sub': 'Go to Help Center',
+  'docs.shortcuts.faq': 'FAQ',
+  'docs.shortcuts.faq.sub': 'Frequently Asked Questions',
+  'docs.shortcuts.releases': 'Release Notes',
+  'docs.shortcuts.releases.sub': 'Version history',
+  'docs.cta.title': 'Couldn’t find it in the guides?',
+  'docs.cta.subtitle': 'Check Support or FAQ, or contact us if needed.',
+  'docs.cta.support': 'Go to Support',
+  'docs.cta.faq': 'View FAQ',
+  'docs.empty': 'No matching guides were found.',
+  // Blog list page
+  'blog.title1': 'Blog',
+  'blog.title2': 'News & Updates',
+  'blog.intro': 'Product updates, behind-the-scenes, and usage tips.',
+  'blog.search.title': 'Search',
+  'blog.search.placeholder': 'Search posts (e.g., Support, Roadmap, Updates)',
+  'blog.latest': 'Latest Posts',
+  'blog.empty': 'No matching posts were found.',
+  'blog.cta.title': "Don't miss the latest",
+  'blog.cta.subtitle': 'Also check Support, Docs, and FAQ.',
+  'blog.cta.support': 'Go to Support',
+  'blog.cta.docs': 'View Documentation',
+  // Blog post page
+  'blog.post.notfound.title': 'Post not found',
+  'blog.post.notfound.desc': 'Check the URL or go back to the blog list.',
+  'blog.post.back': '← Back to blog list',
 }
 
 const ja: Dictionary = {
@@ -267,6 +461,103 @@ const ja: Dictionary = {
   'contact.info.urgent': 'セキュリティに関する重要な問題については、できるだけ早急に対応いたします。',
   'contact.info.responseTime': '通常のお問い合わせには2-3営業日以内に回答いたします。複雑な問題については、回答までにお時間をいただく場合があります。',
   'contact.info.faq': 'よくある質問については、FAQページをご確認ください。',
+  // About page
+  'about.hero.line1': 'Travel',
+  'about.hero.line2': 'Planning',
+  'about.hero.line3': 'Simplified',
+  'about.intro': 'Caglla は、旅行計画を美しく、簡単に管理できるプラットフォームです。複雑な旅程管理を直感的なツールに変えます。',
+  'about.story.title': 'Our Story',
+  'about.story.p1': '2024年、私たちは旅行計画の煩雑さに直面していました。複数のアプリ、散らばったメモ、紙の地図…。',
+  'about.story.p2': '「もっと簡単に、もっと美しく、旅行を管理できるツールがあればいいのに」',
+  'about.story.p3': 'そこからCagllaは生まれました。Google Mapsと連携し、旅程・宿泊・飲食・観光を一箇所で管理し、リアルタイムで共有します。',
+  'about.mission.title': 'Our Mission & Values',
+  'about.mission.simplicity.title': 'Simplicity First',
+  'about.mission.simplicity.text': '誰でも使える直感的なデザインを優先します。旅行計画は楽しく。',
+  'about.mission.collab.title': 'Collaboration',
+  'about.mission.collab.text': '旅行は一人で行くものではありません。共同計画を簡単に。',
+  'about.mission.security.title': 'Privacy & Security',
+  'about.mission.security.text': '旅行データは大切です。最高レベルのセキュリティで保護します。',
+  'about.building.title': 'What We\'re Building',
+  'about.building.item1.title': '詳細な旅程管理',
+  'about.building.item1.text': '日別・時間別の予定、宿泊、飲食、観光を一箇所で管理。',
+  'about.building.item2.title': 'Google Maps連携',
+  'about.building.item2.text': '地図上で視覚的に最適ルートを計画。距離や所要時間も自動計算。',
+  'about.building.item3.title': 'リアルタイム共有',
+  'about.building.item3.text': '家族や友人と共有・共同編集で、最高の旅を作り上げる。',
+  'about.stats.year': '設立年',
+  'about.stats.possibility': '旅行の可能性',
+  'about.stats.passion': '情熱を注いで開発中',
+  'about.cta.title': 'Join Us on This Journey',
+  'about.cta.subtitle': '一緒に、旅行計画の未来を作りましょう',
+  'about.cta.contact': 'お問い合わせ',
+  'about.cta.getStarted': '始めてみる',
+  // Terms page
+  'terms.title': '利用規約',
+  'terms.updated': '最終更新',
+  'terms.s1.title': '1. はじめに',
+  'terms.s1.p1': '本規約は Caglla Travel Manager の利用条件を定めるものです。ご利用前にご確認ください。',
+  'terms.s2.title': '2. サービスの内容',
+  'terms.s2.intro': '当サービスは以下の機能を提供します：',
+  'terms.s2.li1': '旅行計画の作成・管理',
+  'terms.s2.li2': '旅程のスケジュール管理',
+  'terms.s2.li3': '観光地・宿泊先の検索・登録',
+  'terms.s2.li4': '地図表示・ルート最適化',
+  'terms.s2.li5': '予約情報の管理',
+  'terms.s3.title': '3. 利用条件',
+  'terms.s3.intro': 'ユーザーは以下の条件を満たす必要があります：',
+  'terms.s3.li1': 'Googleアカウントによる認証',
+  'terms.s3.li2': '本規約への同意',
+  'terms.s3.li3': '適切な利用目的での使用',
+  'terms.s3.li4': '法令・公序良俗に反しない利用',
+  'terms.s4.title': '4. 禁止事項',
+  'terms.s4.intro': '以下の行為を禁止します：',
+  'terms.s4.li1': '違法・有害なコンテンツの投稿',
+  'terms.s4.li2': '他ユーザーの権利を侵害する行為',
+  'terms.s4.li3': 'サービスの正常な運営を妨げる行為',
+  'terms.s4.li4': '不正アクセス・ハッキング行為',
+  'terms.s4.li5': 'その他、当サービスが不適切と判断する行為',
+  'terms.s5.title': '5. 免責事項',
+  'terms.s5.p1': '故意または重過失を除き、当サービスの利用により生じた損害について一切の責任を負いません。中断・停止・終了による損害も同様です。',
+  'terms.s6.title': '6. 規約の変更',
+  'terms.s6.p1': '必要に応じて本規約を変更することがあります。変更後の規約は掲示時点で効力を生じます。',
+  'terms.s7.title': '7. お問い合わせ',
+  'terms.s7.p1': '本規約に関するご質問はお問い合わせページからご連絡ください。',
+  'terms.s7.contact': 'お問い合わせページ',
+  // Docs page
+  'docs.title1': 'ドキュメント',
+  'docs.title2': 'ガイド & 仕様',
+  'docs.intro': 'Caglla の使い方・仕様・ベストプラクティスをここから辿れます。',
+  'docs.search.title': '検索',
+  'docs.search.placeholder': 'ガイドを検索（例：Itinerary、Maps、環境変数）',
+  'docs.guides.title': 'ガイド',
+  'docs.shortcuts.title': 'ショートカット',
+  'docs.shortcuts.support': 'サポート',
+  'docs.shortcuts.support.sub': 'ヘルプセンターへ',
+  'docs.shortcuts.faq': 'FAQ',
+  'docs.shortcuts.faq.sub': 'よくある質問',
+  'docs.shortcuts.releases': 'リリースノート',
+  'docs.shortcuts.releases.sub': 'バージョン履歴',
+  'docs.cta.title': 'ガイドで見つからない場合',
+  'docs.cta.subtitle': 'サポートまたはFAQをご確認ください。必要ならお問い合わせください。',
+  'docs.cta.support': 'サポートへ',
+  'docs.cta.faq': 'FAQを見る',
+  'docs.empty': '該当するガイドが見つかりませんでした。',
+  // Blog list page
+  'blog.title1': 'ブログ',
+  'blog.title2': 'ニュース & アップデート',
+  'blog.intro': '最新情報、開発の裏側、使い方のヒントをお届けします。',
+  'blog.search.title': '検索',
+  'blog.search.placeholder': '記事を検索（例：Support、Roadmap、Updates）',
+  'blog.latest': '最新記事',
+  'blog.empty': '該当する記事が見つかりませんでした。',
+  'blog.cta.title': '最新情報を見逃さないで',
+  'blog.cta.subtitle': 'Support/Docs/FAQもあわせてご活用ください。',
+  'blog.cta.support': 'サポートへ',
+  'blog.cta.docs': 'ドキュメントを見る',
+  // Blog post page
+  'blog.post.notfound.title': '記事が見つかりませんでした',
+  'blog.post.notfound.desc': 'URLをご確認いただくか、ブログ一覧に戻ってください。',
+  'blog.post.back': '← ブログ一覧に戻る',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
