@@ -22,10 +22,10 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
       </div>
       
       <div className="relative container mx-auto px-6 py-12">
-        {/* Top Section: Brand + Navigation Links (Same Row with Wide Gap) */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-8 mb-8">
-          {/* Brand Section */}
-          <div className="md:max-w-xs">
+        {/* Top Section: Brand (6) + Navigation (4) - md以上で6:4の比率 */}
+        <div className="flex flex-col gap-8 mb-8 md:grid md:grid-cols-10 md:items-start md:gap-10">
+          {/* Brand Section (span 6) */}
+          <div className="md:col-span-6 md:max-w-2xl">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -39,8 +39,8 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
             </p>
           </div>
 
-          {/* Navigation Links */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12">
+          {/* Navigation Links (span 4) - inside, 3 equal columns */}
+          <div className="md:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-10">
             {/* Products */}
             <div>
               <h3 className="text-white font-semibold mb-4">Products</h3>
@@ -109,7 +109,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
           </div>
         </div>
 
-        {/* Social Media Links & Back to Top */}
+        {/* Social Media Links */}
         <div className="mb-8 pb-8 border-b border-gray-800">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             {/* Social Media Links (Stub) */}
@@ -136,25 +136,30 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
               </a>
             </div>
 
-            {/* Back to Top Button */}
-            <button
-              onClick={scrollToTop}
-              className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
-              Back to top
-            </button>
+            {/* spacer keeps layout in this row; button moves to bottom bar */}
+            <div />
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="pt-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
-            <p className="text-gray-400">
-              © {new Date().getFullYear()} Caglla. All rights reserved.
-            </p>
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              {/* Back to Top: move to left-bottom with green outline border */}
+              <button
+                onClick={scrollToTop}
+                className="inline-flex items-center gap-1 px-3 py-1.5 border border-emerald-400 text-emerald-300 hover:bg-emerald-500/10 transition-colors rounded"
+                aria-label="Back to top"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+                Back to top
+              </button>
+              <p className="text-gray-400">
+                © {new Date().getFullYear()} Caglla. All rights reserved.
+              </p>
+            </div>
             <div className="flex items-center gap-6 text-gray-400">
               <Link href="/privacy" className="hover:text-white transition-colors">
                 Privacy Policy
