@@ -6,7 +6,7 @@ import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
 
 export default function ReleasesPage() {
-  const updated = new Date().toLocaleDateString('ja-JP')
+  const updated = new Date().toLocaleDateString('en-US')
   return (
     <StaticPageLayout>
       <section>

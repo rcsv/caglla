@@ -6,6 +6,7 @@ import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
 
 export default function FeaturesPage() {
+  const { t } = require('@/lib/i18n')
   return (
     <StaticPageLayout>
       <section>
@@ -13,21 +14,21 @@ export default function FeaturesPage() {
           {/* Heading */}
           <div className="lg:col-span-9">
             <h1 className="leading-[0.8] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold uppercase text-[clamp(4rem,12vw,11rem)]">
-              <span className="block">Features</span>
+              <span className="block">{t('features')}</span>
             </h1>
           </div>
           {/* Intro */}
           <div className="lg:col-span-3 flex items-end">
             <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 border border-gray-200">
               <p className="text-lg md:text-xl text-gray-800 leading-relaxed">
-                Cagllaの強みを、シンプルに。
+                {t('features.intro')}
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <Section title="1. 個人・家族旅行者向けの機能">
+      <Section title={t('features.section1.title')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <SolidCard className="p-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">地図で旅程管理</h3>
@@ -47,7 +48,7 @@ export default function FeaturesPage() {
         </div>
       </Section>
 
-      <Section title="2. 友達旅行向けの機能">
+      <Section title={t('features.section2.title')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <SolidCard className="p-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">スケジュール共有</h3>
@@ -66,7 +67,7 @@ export default function FeaturesPage() {
         </div>
       </Section>
 
-      <Section title="3. ツアーコンダクター向けの機能">
+      <Section title={t('features.section3.title')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <SolidCard className="p-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">費用合計の算出</h3>

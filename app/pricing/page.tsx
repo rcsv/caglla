@@ -9,6 +9,7 @@ import { RocketIcon } from '@/components/common/icons/RocketIcon'
 import { PlannerIcon } from '@/components/common/icons/PlannerIcon'
 
 export default function PricingPage() {
+  const { t } = require('@/lib/i18n')
   return (
     <StaticPageLayout>
       {/* Hero */}
@@ -16,14 +17,14 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-9">
             <h1 className="leading-[0.8] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold uppercase text-[clamp(3.5rem,10vw,9rem)]">
-              <span className="block">Pricing</span>
+              <span className="block">{t('pricing')}</span>
               <span className="block">Plans</span>
             </h1>
           </div>
           <div className="lg:col-span-3 flex items-end">
             <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 border border-gray-200">
               <p className="text-lg md:text-xl text-gray-800 leading-relaxed">
-                シンプルな3プラン。必要な機能だけを、わかりやすく。
+                {t('pricing.intro')}
               </p>
             </div>
           </div>
@@ -31,7 +32,7 @@ export default function PricingPage() {
       </section>
 
       {/* Plans */}
-      <Section title="Choose Your Plan">
+      <Section title={t('pricing.choosePlan')}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <SolidCard className="p-8">
             <div className="flex items-center gap-2 mb-3">
@@ -80,11 +81,11 @@ export default function PricingPage() {
       {/* CTA */}
       <section className="text-center">
         <div className="bg-emerald-600 p-12 text-white">
-          <h2 className="text-3xl font-bold mb-4">今すぐはじめましょう</h2>
-          <p className="text-xl mb-8 opacity-90">無料プランからお試し可能。必要に応じていつでもアップグレード。</p>
+          <h2 className="text-3xl font-bold mb-4">{t('pricing.cta.title')}</h2>
+          <p className="text-xl mb-8 opacity-90">{t('pricing.cta.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/support" className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 transition-colors border border-emerald-200">サポートへ</a>
-            <a href="/docs" className="px-8 py-3 bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors">ドキュメントを見る</a>
+            <a href="/support" className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 transition-colors border border-emerald-200">{t('pricing.cta.support')}</a>
+            <a href="/docs" className="px-8 py-3 bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors">{t('pricing.cta.docs')}</a>
           </div>
         </div>
       </section>

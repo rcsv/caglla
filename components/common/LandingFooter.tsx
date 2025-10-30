@@ -8,6 +8,7 @@ export interface LandingFooterProps {
 }
 
 export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) => {
+  const { t } = require('@/lib/i18n')
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -35,7 +36,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
               <span className="text-xl font-bold text-white">Caglla</span>
             </div>
             <p className="text-sm">
-              あなたの旅行を美しく管理する
+              {t('footer.tagline')}
             </p>
           </div>
 
@@ -43,21 +44,21 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
           <div className="md:col-span-4 grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-10">
             {/* Products */}
             <div>
-              <h3 className="text-white font-semibold mb-4">Products</h3>
+              <h3 className="text-white font-semibold mb-4">{t('footer.products')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/features" className="hover:text-white transition-colors">
-                    Features
+                    {t('features')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/pricing" className="hover:text-white transition-colors">
-                    Pricing
+                    {t('pricing')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/releases" className="hover:text-white transition-colors">
-                    Release notes
+                    {t('footer.releaseNotes')}
                   </Link>
                 </li>
               </ul>
@@ -65,26 +66,26 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
 
             {/* Resources */}
             <div>
-              <h3 className="text-white font-semibold mb-4">Resources</h3>
+              <h3 className="text-white font-semibold mb-4">{t('footer.resources')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/docs" className="hover:text-white transition-colors">
-                    Documentation
+                    {t('footer.documentation')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/blog" className="hover:text-white transition-colors">
-                    Blog
+                    {t('footer.blog')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/faq" className="hover:text-white transition-colors">
-                    FAQ
+                    {t('footer.faq')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/support" className="hover:text-white transition-colors">
-                    Support
+                    {t('footer.support')}
                   </Link>
                 </li>
               </ul>
@@ -92,7 +93,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
 
             {/* Company */}
             <div>
-              <h3 className="text-white font-semibold mb-4">Company</h3>
+              <h3 className="text-white font-semibold mb-4">{t('footer.company')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/about" className="hover:text-white transition-colors">
@@ -101,7 +102,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
                 </li>
                 <li>
                   <Link href="/contact" className="hover:text-white transition-colors">
-                    Contact us
+                    {t('contact')}
                   </Link>
                 </li>
               </ul>
@@ -154,7 +155,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
-                Back to top
+                {t('footer.backToTop')}
               </button>
               <p className="text-gray-400">
                 © {new Date().getFullYear()} Caglla. All rights reserved.
@@ -162,15 +163,15 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
             </div>
             <div className="flex items-center gap-6 text-gray-400">
               <Link href="/privacy" className="hover:text-white transition-colors">
-                Privacy Policy
+                {t('footer.privacyPolicy')}
               </Link>
               <span className="text-gray-600">|</span>
               <Link href="/terms" className="hover:text-white transition-colors">
-                Terms of Service
+                {t('footer.termsOfService')}
               </Link>
               <span className="text-gray-600">|</span>
               <button className="hover:text-white transition-colors">
-                Cookie Settings
+                {t('footer.cookieSettings')}
               </button>
             </div>
           </div>
