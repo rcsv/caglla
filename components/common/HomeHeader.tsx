@@ -25,6 +25,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
   onChangePlan,
   userSlug,
 }) => {
+  const { t } = require('@/lib/i18n')
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
 
@@ -58,10 +59,10 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
               <span className="text-xl font-bold">{appName}</span>
             </Link>
             <nav className="hidden md:flex items-center gap-4 text-sm">
-              <Link href="/home" className="text-gray-600 hover:text-gray-900">Travel Guide</Link>
-              <Link href="/memories" className="text-gray-600 hover:text-gray-900">Memories</Link>
+              <Link href="/home" className="text-gray-600 hover:text-gray-900">{t('travelGuide')}</Link>
+              <Link href="/memories" className="text-gray-600 hover:text-gray-900">{t('memories')}</Link>
               {process.env.NODE_ENV === 'development' && (
-                <Link href="/dev-tools" className="text-gray-600 hover:text-gray-900">Dev Tools</Link>
+                <Link href="/dev-tools" className="text-gray-600 hover:text-gray-900">{t('devTools')}</Link>
               )}
             </nav>
           </div>

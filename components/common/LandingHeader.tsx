@@ -13,6 +13,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
   onLogin,
   showLoginButton = true
 }) => {
+  const { t } = require('@/lib/i18n')
   return (
     <header className="border-b border-gray-200 bg-white sticky top-0 zidx-top-menu">
       <div className="container mx-auto px-6 py-4">
@@ -31,13 +32,13 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
             {/* Navigation */}
             <nav className="hidden md:flex items-center gap-6">
               <Link href="/#features" className="text-gray-600 hover:text-gray-900 transition-colors">
-                機能
+                {t('features')}
               </Link>
               <Link href="/#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">
-                プラン
+                {t('pricing')}
               </Link>
               <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">
-                お問い合わせ
+                {t('contact')}
               </Link>
             </nav>
 
@@ -48,7 +49,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
                 onClick={onLogin}
                 className="px-6 py-2"
               >
-                ログイン
+                {t('login')}
               </Button>
             )}
           </div>
