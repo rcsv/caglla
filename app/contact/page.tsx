@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import { HomeHeader } from '@/components/common/HomeHeader'
-import { HomeFooter } from '@/components/common/HomeFooter'
+import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
+import { Section } from '@/components/common/static/Section'
+import { SolidCard } from '@/components/common/static/SolidCard'
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -34,107 +35,106 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <HomeHeader />
-      
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">お問い合わせ</h1>
-          
-          <div className="grid md:grid-cols-2 gap-8">
+    <StaticPageLayout>
+      <div className="mb-8">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900">Contact</h1>
+      </div>
+
+      <Section title="お問い合わせ">
+        <div className="grid md:grid-cols-2 gap-8">
             {/* お問い合わせフォーム */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-6">メッセージを送信</h2>
-              
-              {submitStatus === 'success' && (
-                <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                  お問い合わせありがとうございます。内容を確認の上、回答いたします。
-                </div>
-              )}
+              <SolidCard className="p-6">
+                {submitStatus === 'success' && (
+                  <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700">
+                    お問い合わせありがとうございます。内容を確認の上、回答いたします。
+                  </div>
+                )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    お名前 <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                      お名前 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                  </div>
 
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    メールアドレス <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                      メールアドレス <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                  </div>
 
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-                    件名 <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+                      件名 <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="subject"
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    >
+                      <option value="">選択してください</option>
+                      <option value="bug">バグ報告</option>
+                      <option value="feature">機能要望</option>
+                      <option value="account">アカウント関連</option>
+                      <option value="billing">課金・プラン関連</option>
+                      <option value="other">その他</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                      メッセージ <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="message"
+                      name="message"
+                      value={formData.message}
+                      onChange={handleChange}
+                      required
+                      rows={6}
+                      className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      placeholder="お問い合わせ内容を詳しくお書きください"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-emerald-600 text-white py-3 px-4 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value="">選択してください</option>
-                    <option value="bug">バグ報告</option>
-                    <option value="feature">機能要望</option>
-                    <option value="account">アカウント関連</option>
-                    <option value="billing">課金・プラン関連</option>
-                    <option value="other">その他</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                    メッセージ <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    required
-                    rows={5}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="お問い合わせ内容を詳しくお書きください"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? '送信中...' : '送信する'}
-                </button>
-              </form>
+                    {isSubmitting ? '送信中...' : '送信する'}
+                  </button>
+                </form>
+              </SolidCard>
             </div>
 
             {/* 連絡先情報 */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-6">連絡先情報</h2>
-              
-              <div className="space-y-6">
+              <SolidCard className="p-6">
+                <h2 className="text-xl font-semibold text-gray-800 mb-6">連絡先情報</h2>
+                <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-medium text-gray-700 mb-2">一般的なお問い合わせ</h3>
                   <p className="text-gray-600">
@@ -160,16 +160,14 @@ export default function ContactPage() {
                 <div>
                   <h3 className="text-lg font-medium text-gray-700 mb-2">よくある質問</h3>
                   <p className="text-gray-600">
-                    よくある質問については、<a href="/faq" className="text-blue-600 hover:text-blue-800 underline">FAQページ</a>をご確認ください。
+                      よくある質問については、<a href="/faq" className="text-emerald-600 hover:text-emerald-700 underline">FAQページ</a>をご確認ください。
                   </p>
                 </div>
-              </div>
+                </div>
+              </SolidCard>
             </div>
-          </div>
         </div>
-      </main>
-
-      <HomeFooter />
-    </div>
+      </Section>
+    </StaticPageLayout>
   )
 }
