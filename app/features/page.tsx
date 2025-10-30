@@ -31,18 +31,18 @@ export default function FeaturesPage() {
       <Section title={t('features.section1.title')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <SolidCard className="p-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">地図で旅程管理</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('features.s1.map.title')}</h3>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>日別・時間別のスケジュールを直感的に編集</li>
-              <li>地図上でルート確認、距離・所要時間の自動計算</li>
-              <li>お気に入りスポットの保存とメモ</li>
+              <li>{t('features.s1.map.li1')}</li>
+              <li>{t('features.s1.map.li2')}</li>
+              <li>{t('features.s1.map.li3')}</li>
             </ul>
           </SolidCard>
           <SolidCard className="p-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">チェックリスト</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('features.s1.checklist.title')}</h3>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>季節・滞在日数に応じた持ち物の自動提案</li>
-              <li>カテゴリ別に進捗管理（必需品/衣類/ガジェット など）</li>
+              <li>{t('features.s1.checklist.li1')}</li>
+              <li>{t('features.s1.checklist.li2')}</li>
             </ul>
           </SolidCard>
         </div>
@@ -51,17 +51,17 @@ export default function FeaturesPage() {
       <Section title={t('features.section2.title')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <SolidCard className="p-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">スケジュール共有</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('features.s2.share.title')}</h3>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>iCal（.ics）購読でGoogle/Apple/Outlookに同期</li>
-              <li>公開/非公開やリンク共有の権限コントロール</li>
+              <li>{t('features.s2.share.li1')}</li>
+              <li>{t('features.s2.share.li2')}</li>
             </ul>
           </SolidCard>
           <SolidCard className="p-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">PDFエクスポート</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('features.s2.pdf.title')}</h3>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>旅程・地図リンク・予約情報を見やすいレイアウトで出力</li>
-              <li>オフライン参照向け（A4/US Letter対応）</li>
+              <li>{t('features.s2.pdf.li1')}</li>
+              <li>{t('features.s2.pdf.li2')}</li>
             </ul>
           </SolidCard>
         </div>
@@ -70,17 +70,17 @@ export default function FeaturesPage() {
       <Section title={t('features.section3.title')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <SolidCard className="p-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">費用合計の算出</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('features.s3.cost.title')}</h3>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>カテゴリ/日別の費用を自動集計、通貨換算にも対応</li>
-              <li>旅程の変更に連動してリアルタイム更新</li>
+              <li>{t('features.s3.cost.li1')}</li>
+              <li>{t('features.s3.cost.li2')}</li>
             </ul>
           </SolidCard>
           <SolidCard className="p-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">ルート最適化</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('features.s3.optimize.title')}</h3>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>複数地点の最適訪問順序を自動計算</li>
-              <li>移動手段/回避設定（高速/有料/フェリー）を選択可能</li>
+              <li>{t('features.s3.optimize.li1')}</li>
+              <li>{t('features.s3.optimize.li2')}</li>
             </ul>
           </SolidCard>
         </div>

@@ -138,22 +138,30 @@ export default function ContactPage() {
                 <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-medium text-gray-700 mb-2">{t('contact.info.general')}</h3>
-                  <p className="text-gray-600"></p>
+                  <p className="text-gray-600">
+                    {t('contact.info.general')}
+                  </p>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-medium text-gray-700 mb-2">{t('contact.info.urgent')}</h3>
-                  <p className="text-gray-600"></p>
+                  <p className="text-gray-600">
+                    {t('contact.info.urgent')}
+                  </p>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-medium text-gray-700 mb-2">{t('contact.info.responseTime')}</h3>
-                  <p className="text-gray-600"></p>
+                  <p className="text-gray-600">
+                    {t('contact.info.responseTime')}
+                  </p>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-medium text-gray-700 mb-2">{t('contact.info.faq')}</h3>
-                  <p className="text-gray-600"></p>
+                  <p className="text-gray-600">
+                    {t('contact.info.faq')} <a href="/faq" className="text-emerald-600 hover:text-emerald-700 underline">{t('footer.faq')}</a>
+                  </p>
                 </div>
                 </div>
               </SolidCard>

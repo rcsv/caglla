@@ -40,11 +40,11 @@ export default function PricingPage() {
               <h3 className="text-lg font-semibold text-gray-900">season_traveler</h3>
             </div>
             <p className="text-3xl font-bold text-gray-900 mb-2">¥0</p>
-            <p className="text-sm text-gray-600 mb-4">基本機能</p>
+            <p className="text-sm text-gray-600 mb-4">{t('pricing.season.subtitle')}</p>
             <ul className="text-sm text-gray-700 space-y-2 list-disc pl-5">
-              <li>Trip/Day/Itinerary の管理</li>
-              <li>Google Maps 表示</li>
-              <li>共有リンク</li>
+              <li>{t('pricing.season.li1')}</li>
+              <li>{t('pricing.season.li2')}</li>
+              <li>{t('pricing.season.li3')}</li>
             </ul>
           </SolidCard>
 
@@ -54,11 +54,11 @@ export default function PricingPage() {
               <h3 className="text-lg font-semibold text-gray-900">backpacker</h3>
             </div>
             <p className="text-3xl font-bold text-gray-900 mb-2">¥480/月</p>
-            <p className="text-sm text-gray-600 mb-4">ルート最適化など</p>
+            <p className="text-sm text-gray-600 mb-4">{t('pricing.backpacker.subtitle')}</p>
             <ul className="text-sm text-gray-700 space-y-2 list-disc pl-5">
-              <li>season_traveler のすべて</li>
-              <li>ルート最適化（基本）</li>
-              <li>カスタム機能</li>
+              <li>{t('pricing.backpacker.li1')}</li>
+              <li>{t('pricing.backpacker.li2')}</li>
+              <li>{t('pricing.backpacker.li3')}</li>
             </ul>
           </SolidCard>
 
@@ -68,11 +68,11 @@ export default function PricingPage() {
               <h3 className="text-lg font-semibold text-gray-900">globetrotter</h3>
             </div>
             <p className="text-3xl font-bold text-gray-900 mb-2">¥980/月</p>
-            <p className="text-sm text-gray-600 mb-4">全機能・無制限</p>
+            <p className="text-sm text-gray-600 mb-4">{t('pricing.globetrotter.subtitle')}</p>
             <ul className="text-sm text-gray-700 space-y-2 list-disc pl-5">
-              <li>backpacker のすべて</li>
-              <li>ルート最適化（拡張）</li>
-              <li>上限緩和・優先サポート</li>
+              <li>{t('pricing.globetrotter.li1')}</li>
+              <li>{t('pricing.globetrotter.li2')}</li>
+              <li>{t('pricing.globetrotter.li3')}</li>
             </ul>
           </SolidCard>
         </div>
