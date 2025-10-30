@@ -37,18 +37,15 @@ export default function BlogPostPage({ params }: PageProps) {
             <h1 className="leading-[0.9] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold text-[clamp(2.2rem,6vw,4rem)]">
               {post.title}
             </h1>
-            <div className="mt-3 flex items-center gap-4 text-sm text-gray-700">
-              <span className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4" />{post.date}</span>
-              <span className="inline-flex items-center gap-1"><UserIcon className="h-4 w-4" />{post.author}</span>
-            </div>
           </div>
-          <div className="lg:col-span-3" />
         </div>
       </section>
 
-      <Section title="">
+      <Section title={`${post.date}`}>
         <SolidCard className="p-6 md:p-8">
           <article className="prose max-w-none prose-p:leading-relaxed">
+            {/* 右寄せで Author を表示 */}
+            <p className="text-gray-500 text-right pb-4">by {post.author}</p>
             <p className="text-gray-800">{post.content}</p>
           </article>
           <div className="mt-6 flex flex-wrap gap-2 text-xs text-gray-500">
