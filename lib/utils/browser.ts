@@ -162,7 +162,7 @@ export async function getHomeAddress(): Promise<string | undefined> {
 async function reverseGeocode(lat: number, lng: number): Promise<string | undefined> {
   try {
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=${navigator.language}`
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=en`
     )
     
     if (!response.ok) {

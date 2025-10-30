@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
             radius: radius || 50 // デフォルト50メートル
           }
         },
-        languageCode: 'ja',
+        languageCode: 'en',
         maxResultCount: 5
       })
     })

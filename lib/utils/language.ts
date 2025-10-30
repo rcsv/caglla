@@ -12,7 +12,7 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
 /**
  * デフォルト言語
  */
-export const DEFAULT_LANGUAGE: SupportedLanguage = 'ja'
+export const DEFAULT_LANGUAGE: SupportedLanguage = 'en'
 
 /**
  * 言語名の表示用マッピング
@@ -43,7 +43,7 @@ export function isSupportedLanguage(lang: string): lang is SupportedLanguage {
  * 1. ユーザープリファレンス（user.preferences.language）
  *    - 空文字列（""）の場合は「自動（ブラウザ設定）」として扱う
  * 2. ブラウザの言語設定（navigator.language）
- * 3. デフォルト言語（'ja'）
+ * 3. デフォルト言語（'en'）
  * 
  * @param user - ユーザーオブジェクト（オプション）
  * @returns サポートされる言語コード
@@ -59,7 +59,7 @@ export function getUserLanguage(user?: User | null): SupportedLanguage {
       
       // ブラウザ設定を確認
       if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-        const browserLang = (navigator.language || 'ja').split('-')[0]
+        const browserLang = (navigator.language || 'en').split('-')[0]
         if (isSupportedLanguage(browserLang)) {
           logger.debug('Language from browser (user selected auto):', browserLang)
           return browserLang
@@ -81,7 +81,7 @@ export function getUserLanguage(user?: User | null): SupportedLanguage {
   
   // 2. ユーザープリファレンスがない場合のブラウザ設定
   if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-    const browserLang = (navigator.language || 'ja').split('-')[0]
+    const browserLang = (navigator.language || 'en').split('-')[0]
     if (isSupportedLanguage(browserLang)) {
       logger.debug('Language from browser (no user preference):', browserLang)
       return browserLang
