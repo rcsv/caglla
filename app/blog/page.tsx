@@ -1,0 +1,139 @@
+'use client'
+
+import React from 'react'
+import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
+import { Section } from '@/components/common/static/Section'
+import { SolidCard } from '@/components/common/static/SolidCard'
+import { SearchIcon } from '@/components/common/icons/SearchIcon'
+import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
+import { UserIcon } from '@/components/common/icons/UserIcon'
+
+export default function BlogPage() {
+  const [query, setQuery] = React.useState('')
+
+  const posts: Array<{
+    slug: string
+    title: string
+    excerpt: string
+    date: string
+    author: string
+    tags: string[]
+  }> = [
+    {
+      slug: 'welcome-to-caglla',
+      title: 'Cagllaへようこそ — 旅行計画をシンプルに',
+      excerpt: 'Cagllaの目指す体験、開発の背景、今後のロードマップをご紹介します。',
+      date: '2025-10-21',
+      author: 'Team Caglla',
+      tags: ['Product', 'Roadmap'],
+    },
+    {
+      slug: 'support-and-faq-refresh',
+      title: 'Support/FAQ/Docsを刷新しました',
+      excerpt: '検索・カテゴリ・自己解決を重視したヘルプセンターを導入しました。',
+      date: '2025-10-30',
+      author: 'Team Caglla',
+      tags: ['Updates', 'Support'],
+    },
+  ]
+
+  const filtered = posts.filter((p) => {
+    if (!query.trim()) return true
+    const qLower = query.toLowerCase()
+    return (
+      p.title.toLowerCase().includes(qLower) ||
+      p.excerpt.toLowerCase().includes(qLower) ||
+      p.tags.some((t) => t.toLowerCase().includes(qLower))
+    )
+  })
+
+  return (
+    <StaticPageLayout>
+      {/* Hero */}
+      <section>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
+          <div className="lg:col-span-9">
+            <h1 className="leading-[0.8] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold uppercase text-[clamp(3.5rem,10vw,9rem)]">
+              <span className="block">Blog</span>
+              <span className="block">News & Updates</span>
+            </h1>
+          </div>
+          <div className="lg:col-span-3 flex items-end">
+            <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 border border-gray-200">
+              <p className="text-lg md:text-xl text-gray-800 leading-relaxed">
+                プロダクトの最新情報や開発の裏側、使い方のヒントをお届けします。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Search */}
+      <Section title="Search">
+        <SolidCard className="p-6 md:p-8">
+          <div className="relative">
+            <span className="absolute left-3 top-2.5 text-gray-400">
+              <SearchIcon className="h-5 w-5" />
+            </span>
+            <input
+              type="text"
+              className="w-full rounded-md border border-gray-300 pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="記事を検索（例：Support、Roadmap、Updates）"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+        </SolidCard>
+      </Section>
+
+      {/* Posts */}
+      <Section title="Latest Posts">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {filtered.map((p) => (
+            <SolidCard key={p.slug} className="p-6 hover:shadow-sm transition">
+              <a href={`/blog/${p.slug}`} className="block">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">{p.title}</h2>
+                <p className="text-gray-600 mb-4">{p.excerpt}</p>
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <span className="inline-flex items-center gap-1"><CalendarIcon className="h-4 w-4" />{p.date}</span>
+                  <span className="inline-flex items-center gap-1"><UserIcon className="h-4 w-4" />{p.author}</span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-500">
+                  {p.tags.map((t) => (
+                    <span key={t} className="rounded bg-gray-100 px-2 py-0.5">{t}</span>
+                  ))}
+                </div>
+              </a>
+            </SolidCard>
+          ))}
+          {filtered.length === 0 && (
+            <div className="text-sm text-gray-600">該当する記事が見つかりませんでした。</div>
+          )}
+        </div>
+      </Section>
+
+      {/* CTA */}
+      <section className="text-center">
+        <div className="bg-emerald-600 p-12 text-white">
+          <h2 className="text-3xl font-bold mb-4">最新情報を見逃さないで</h2>
+          <p className="text-xl mb-8 opacity-90">Support/Docs/FAQもあわせてご活用ください。</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="/support"
+              className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 transition-colors border border-emerald-200"
+            >
+              サポートへ
+            </a>
+            <a
+              href="/docs"
+              className="px-8 py-3 bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors"
+            >
+              ドキュメントを見る
+            </a>
+          </div>
+        </div>
+      </section>
+    </StaticPageLayout>
+  )
+}
+
