@@ -14,6 +14,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
   showLoginButton = true
 }) => {
   const { t } = require('@/lib/i18n')
+  const { LanguageSwitcher } = require('@/components/common/LanguageSwitcher')
   return (
     <header className="border-b border-gray-200 bg-white sticky top-0 zidx-top-menu">
       <div className="container mx-auto px-6 py-4">
@@ -42,6 +43,7 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
               </Link>
             </nav>
 
+            <LanguageSwitcher className="hidden md:inline-block" />
             {/* CTA Button */}
             {showLoginButton && onLogin && (
               <Button
