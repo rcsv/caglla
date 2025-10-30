@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Card } from '@/components/common/Card'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
+import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
 import { dateUtils } from '@/lib/utils/date'
 import { getCountryFlag } from '@/lib/utils/country-flags'
 import type { Trip } from '@/lib/core/types'
@@ -27,6 +28,11 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           return `/trip/${trip.id}`
         }
 
+  // access_levelの型安全性を確保
+  const accessLevel = trip.access_level === 'public' || trip.access_level === 'private' 
+    ? trip.access_level 
+    : 'private'
+
   if (variant === 'imageFull') {
     return (
       <Link href={getTripUrl()} className="block group">
@@ -41,9 +47,13 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
               style={isPastTrip ? { filter: 'sepia(0.25) contrast(1.05) brightness(0.95)' } : {}}
             />
           )}
-          {/* Top-right badge */}
-          <div className="absolute top-3 right-3">
-            <IconRenderer iconName="publicaccess" className="w-3 h-3" />
+          {/* Top-right badge with better visibility */}
+          <div className="absolute top-3 right-3 z-10">
+            <PublicAccessBadge 
+              accessLevel={accessLevel} 
+              size="sm"
+              className="drop-shadow-md"
+            />
           </div>
           {/* Bottom gradient overlay */}
           <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
@@ -119,7 +129,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
 
         <div className="flex justify-between items-start mb-3">
           <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{trip.title}</h3>
-          <IconRenderer iconName="publicaccess" className="w-3 h-3" />
+          <PublicAccessBadge accessLevel={accessLevel} size="sm" />
         </div>
 
         {trip.description && <p className="text-gray-600 text-sm mb-3 line-clamp-2">{trip.description}</p>}

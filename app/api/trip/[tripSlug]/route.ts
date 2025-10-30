@@ -484,11 +484,18 @@ export async function DELETE(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { id: tripId } = await params
+    const { tripSlug } = await params
+
+    // Resolve trip by slug or id
+    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
+    if (!resolved) {
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    }
+    
+    const { id: tripId, trip } = resolved
 
     // Verify user owns this trip
-    const trip = await adminTripOperations.getTripById(tripId)
-    if (!trip || trip.user_id !== userId) {
+    if (trip.user_id !== userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 

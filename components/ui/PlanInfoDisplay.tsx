@@ -102,7 +102,7 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
       {/* プラン変更ボタン */}
       <div className="mt-4 pt-4 border-t border-gray-100">
         <Link href="/subscription" className="block">
-          <Button variant="secondary" size="sm" fullWidth>
+          <Button variant="outline" size="sm" fullWidth>
             プラン変更
           </Button>
         </Link>
