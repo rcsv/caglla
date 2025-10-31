@@ -59,7 +59,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
           {/* Text content */}
           <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-            <h3 className="text-2xl font-semibold drop-shadow-sm line-clamp-2">{trip.title}</h3>
+            <h3 className="text-3xl md:text-4xl font-bold drop-shadow-md line-clamp-2">{trip.title}</h3>
             {trip.description && (
               <p className="mt-2 text-sm text-white/85 line-clamp-2">{trip.description}</p>
             )}
@@ -128,7 +128,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
         )}
 
         <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{trip.title}</h3>
+          <h3 className="text-xl md:text-2xl font-bold text-gray-900 line-clamp-2">{trip.title}</h3>
           <PublicAccessBadge accessLevel={accessLevel} size="sm" />
         </div>
 
