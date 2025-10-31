@@ -81,7 +81,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
               <span className="inline-flex items-center justify-center rounded-lg bg-emerald-500 text-white font-bold h-8 w-8">
                 <IconRenderer iconName="planner" className="h-5 w-5" />
               </span>
-              <span className="text-xl font-bold">{appName}</span>
+              <span className="text-xl font-bold font-rajdhani">{appName}</span>
             </Link>
             <nav className="hidden md:flex items-center gap-4 text-sm">
               <Link href="/home" className="text-gray-600 hover:text-gray-900">{t('travelGuide')}</Link>

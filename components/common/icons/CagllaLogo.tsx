@@ -45,10 +45,10 @@ export const CagllaLogo: React.FC<CagllaLogoProps> = ({
         y="20"
         textAnchor="middle"
         fontSize="16"
-        fontWeight="900"
+        fontWeight="700"
         fill="white"
-        fontFamily="'Arial Black', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif"
-        letterSpacing="-0.5"
+        fontFamily="var(--font-rajdhani), 'Rajdhani', 'Arial Black', sans-serif"
+        letterSpacing="-0.3"
         style={{ fontVariant: 'normal', fontStyle: 'normal' }}
       >
         Cg

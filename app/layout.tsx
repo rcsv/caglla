@@ -1,11 +1,16 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Rajdhani } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/lib/contexts/auth'
 import { SubscriptionProvider } from '@/lib/contexts/subscription'
 import { UserDataProvider } from '@/lib/contexts/user-data'
 
 const inter = Inter({ subsets: ['latin'] })
+const rajdhani = Rajdhani({ 
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-rajdhani',
+})
 
 export const metadata: Metadata = {
   title: 'Caglla - Travel Manager',
@@ -37,7 +42,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} ${rajdhani.variable}`}>
         <AuthProvider>
           <UserDataProvider>
             <SubscriptionProvider>

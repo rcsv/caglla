@@ -30,7 +30,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
           <div className="md:col-span-6 md:max-w-2xl">
             <div className="flex items-center gap-2 mb-4">
               <CagllaLogo className="w-8 h-8" />
-              <span className="text-xl font-bold text-white">Caglla</span>
+              <span className="text-xl font-bold text-white font-rajdhani">Caglla</span>
             </div>
             <p className="text-sm">
               {t('footer.tagline')}
