@@ -90,7 +90,7 @@ export default function HomePage() {
             <NextTripCard nextTrip={nextTrip} onTripCreated={handleTripCreated} />
 
             {/* 最近チェックした旅行 */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white border border-gray-200 p-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-6">最近チェックした旅行</h3>
               <div className="text-center py-8 text-gray-500">
                 <p>最近チェックした旅行はありません</p>

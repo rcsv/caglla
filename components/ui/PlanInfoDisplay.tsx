@@ -20,7 +20,7 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
 
   if (planLoading) {
     return (
-      <div className={`bg-white rounded-lg border p-4 ${className}`}>
+      <div className={`bg-white border border-gray-200 p-4 ${className}`}>
         <div className="animate-pulse">
           <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
           <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -31,7 +31,7 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
 
   if (planError) {
     return (
-      <div className={`bg-white rounded-lg border p-4 ${className}`}>
+      <div className={`bg-white border border-gray-200 p-4 ${className}`}>
         <div className="text-center text-red-600 text-sm">
           {planError}
         </div>
@@ -41,7 +41,7 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
 
   if (!userPlanId || !planConfig) {
     return (
-      <div className={`bg-white rounded-lg border p-4 ${className}`}>
+      <div className={`bg-white border border-gray-200 p-4 ${className}`}>
         <div className="text-center text-gray-500 text-sm">
           プラン情報が取得できませんでした
         </div>
@@ -66,7 +66,7 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
   // ストレージ制限（StorageUsageDisplayコンポーネントで動的に表示）
 
   return (
-    <div className={`bg-white rounded-lg border p-4 ${className}`}>
+    <div className={`bg-white border border-gray-200 p-4 ${className}`}>
       {/* ヘッダー（プラン名のみ表示） */}
       <div className="flex items-center justify-between mb-4">
         <h3 className={`text-xl font-semibold ${planTitleClass}`}>{plan.name}</h3>

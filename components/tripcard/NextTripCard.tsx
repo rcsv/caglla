@@ -41,7 +41,7 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
   return (
     <>
       {/* メインコンテンツエリア */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-sm border border-gray-200 p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -70,7 +70,7 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
             {nextTrip ? (
               <TripCard trip={nextTrip} variant="imageFull" />
             ) : (
-              <div className="h-full bg-gray-50 rounded-lg flex flex-col items-center justify-center p-8">
+              <div className="h-full bg-gray-50 flex flex-col items-center justify-center p-8">
                 <div className="mb-4">
                   <IconRenderer iconName="airplane" className="w-14 h-14 text-gray-400" />
                 </div>
@@ -95,7 +95,7 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
             {nextTrip ? (
               <NextTripMap trip={nextTrip} />
             ) : (
-              <div className="bg-gray-100 rounded-lg flex items-center justify-center h-full">
+              <div className="bg-gray-100 flex items-center justify-center h-full">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-4">
                     <svg className="w-10 h-10 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
