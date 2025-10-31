@@ -29,6 +29,7 @@
 | [TripCardで国旗の表示が不安定（出る/出ない）](tripcard-country-flag-inconsistency.md) | 未解決 | 2025-10-31 |
 | [Itinerary Cardの通貨推測（Venue→通貨）が弱い](itinerary-currency-inference-weak.md) | 未解決 | 2025-10-31 |
 | [ルート最適化ボタンを押しても順序が変化しない](route-optimization-no-order-change.md) | 未解決 | 2025-10-31 |
+| [POIクリック時に地図が元位置へ戻ってしまいPOIDialogと不一致](map-poi-dialog-focus-conflict.md) | 未解決 | 2025-10-31 |
 
 ### 🟢 低優先度
 
@@ -43,11 +44,11 @@
 
 ## 📊 統計
 
-- **総Issue数**: 17件
-- **未解決**: 15件
+- **総Issue数**: 18件
+- **未解決**: 16件
 - **未実装（Feature）**: 2件
 - **高優先度**: 3件
-- **中優先度**: 11件
+- **中優先度**: 12件
 - **低優先度**: 3件
 
 ---
