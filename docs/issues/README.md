@@ -34,6 +34,7 @@
 | [地図上のItineraryマーカークリック時にメインコンテンツのCardまで自動スクロール](map-marker-click-scroll-to-card.md) | 未解決 | 2025-10-31 |
 | [Feature(Backlog): POIDialogへの外部POI API統合（TripAdvisor / Foursquare）](poi-dialog-external-apis-backlog.md) | 未実装 | 2025-10-31 |
 | [Feature: プロフィールページにアクティビティタグ統計を表示](profile-activity-tag-statistics.md) | 未実装 | 2025-10-31 |
+| [Feature: 旅行費用サマリーにItinerary明細を表示](feature-trip-cost-itemized-breakdown.md) | 未実装 | 2025-10-31 |
 
 ### 🟢 低優先度
 
@@ -48,12 +49,12 @@
 
 ## 📊 統計
 
-- **総Issue数**: 26件
+- **総Issue数**: 27件
 - **未解決**: 18件
 - **解決済み**: 4件
-- **未実装（Feature）**: 4件
+- **未実装（Feature）**: 5件
 - **高優先度**: 3件
-- **中優先度**: 15件
+- **中優先度**: 16件
 - **低優先度**: 4件
 
 ---
