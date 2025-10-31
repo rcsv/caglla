@@ -7,10 +7,7 @@ export interface CagllaLogoProps {
 }
 
 /**
- * Cagllaロゴ - Cとgを使ってマップピンの形状を表現
- * - 大きな「C」がマップピンの上部（丸い部分）
- * - 小文字「g」の円形部分が中央
- * - 「g」の下に伸びる部分がマップピンの下部（尖った部分）
+ * Cagllaロゴ - 緑の矩形背景に角ばったCとgを配置
  */
 export const CagllaLogo: React.FC<CagllaLogoProps> = ({
   className = 'w-8 h-8',
@@ -32,78 +29,85 @@ export const CagllaLogo: React.FC<CagllaLogoProps> = ({
         </linearGradient>
       </defs>
       
-      {/* 緑の四角形背景（丸みを付ける） */}
+      {/* 緑の矩形背景（少し角丸） */}
       <rect
         x="2"
         y="2"
         width="28"
         height="28"
-        rx="6"
+        rx="4"
         fill="url(#caglla-gradient)"
       />
       
-      {/* 大きな「C」 - マップピンの上部（丸い部分）に見立てる */}
-      <text
-        x="16"
-        y="13"
-        textAnchor="middle"
-        fontSize="22"
-        fontWeight="700"
+      {/* 角ばった「C」- 太めのストロークで */}
+      <path
+        d="M 8 10 
+           L 8 6
+           L 18 6
+           L 18 8
+           L 10 8
+           L 10 10
+           L 12 10
+           L 12 12
+           L 16 12
+           L 16 14
+           L 18 14
+           L 18 16
+           L 12 16
+           L 12 20
+           L 18 20
+           L 18 22
+           L 10 22
+           L 10 24
+           L 18 24
+           L 18 26
+           L 8 26
+           L 8 22
+           L 10 22
+           L 10 20
+           L 14 20
+           L 14 16
+           L 10 16
+           L 10 14
+           L 12 14
+           L 12 12
+           L 10 12
+           L 10 10
+           Z"
         fill="white"
-        fontFamily="system-ui, -apple-system, 'Segoe UI', sans-serif"
-        letterSpacing="0"
-      >
-        C
-      </text>
+      />
       
-      {/* 小文字「g」の円形部分が中央（Cの中心付近）に来るように配置 */}
-      {/* gの円形部分（上部の丸）- Cの中に配置 */}
-      <circle
-        cx="16"
-        cy="16"
-        r="3.5"
-        fill="none"
-        stroke="white"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      {/* gの円形部分の左側の縦線（Cの中から下に） */}
-      <line
-        x1="12.5"
-        y1="19.5"
-        x2="12.5"
-        y2="22"
-        stroke="white"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      {/* gの下部のループ（descenderの丸い部分） */}
+      {/* 角ばった「g」- Cの横に配置 */}
       <path
-        d="M 12.5 22 
-           Q 12.5 23.5 13.5 24 
-           Q 14.5 24.5 15.5 24.5 
-           Q 16.5 24.5 17.5 24 
-           Q 18.5 23.5 18.5 22 
-           Q 18.5 20.5 17.5 20 
-           Q 16.5 19.5 15.5 19.5 
-           Q 14.5 19.5 13.5 20 
-           Q 12.5 20.5 12.5 22 Z"
-        fill="white"
-      />
-      {/* gのdescender部分を伸ばしてマップピンの下部（尖った部分）に見立てる */}
-      <path
-        d="M 15.5 24.5 
-           L 15.5 28.5 
-           Q 15.5 29.5 16 30 
-           Q 16.5 30.5 16 30.5 
-           Q 15.5 30.5 15 30 
-           Q 14.5 29.5 14.5 28.5 
-           L 14.5 24.5"
-        fill="white"
-      />
-      {/* マップピンの尖った部分 */}
-      <path
-        d="M 16 30.5 L 14 30.5 L 16 31.5 Z"
+        d="M 22 10
+           L 22 6
+           L 26 6
+           L 26 10
+           L 24 10
+           L 24 14
+           L 26 14
+           L 26 18
+           L 24 18
+           L 24 20
+           L 22 20
+           L 22 18
+           L 20 18
+           L 20 14
+           L 22 14
+           L 22 10
+           Z
+           M 22 20
+           L 22 22
+           L 26 22
+           L 26 24
+           L 24 24
+           L 24 26
+           L 22 26
+           L 22 24
+           L 20 24
+           L 20 22
+           L 22 22
+           Z"
         fill="white"
       />
     </svg>
