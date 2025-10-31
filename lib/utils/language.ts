@@ -1,7 +1,7 @@
 // 言語管理ユーティリティ
 import type { User, SupportedLanguage } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import { getLanguageOverrideClient } from '@/lib/i18n/storage'
+import { getLanguageOverrideClient, getLanguageOverrideServer } from '@/lib/i18n/storage'
 
 /**
  * サポートされる言語のリスト
@@ -51,10 +51,19 @@ export function isSupportedLanguage(lang: string): lang is SupportedLanguage {
  */
 export function getUserLanguage(user?: User | null): SupportedLanguage {
   // 0. クッキー/ローカルストレージでのオーバーライド
-  const override = typeof window !== 'undefined' ? getLanguageOverrideClient() : undefined
-  if (override && isSupportedLanguage(override)) {
-    logger.debug('Language from override (cookie/localStorage):', override)
-    return override
+  // SSR: Cookie を参照
+  if (typeof window === 'undefined') {
+    const serverOverride = getLanguageOverrideServer()
+    if (serverOverride && isSupportedLanguage(serverOverride)) {
+      logger.debug('Language from server cookie override:', serverOverride)
+      return serverOverride
+    }
+  } else {
+    const override = getLanguageOverrideClient()
+    if (override && isSupportedLanguage(override)) {
+      logger.debug('Language from override (cookie/localStorage):', override)
+      return override
+    }
   }
   // 1. ユーザープリファレンスを優先
   if (user?.preferences?.language !== undefined) {

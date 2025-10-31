@@ -1,7 +1,7 @@
 import type { SupportedLanguage } from '@/lib/core/types'
 import { isSupportedLanguage } from '@/lib/utils/language'
 
-const COOKIE_NAME = 'lang'
+export const COOKIE_NAME = 'lang'
 
 export function getLanguageOverrideClient(): SupportedLanguage | undefined {
   try {
@@ -40,6 +40,21 @@ export function setLanguageOverrideClient(lang: SupportedLanguage | ''): void {
       localStorage.setItem(COOKIE_NAME, lang)
     }
   } catch (_) {}
+}
+
+// Server-side cookie reader (Next.js App Router)
+export function getLanguageOverrideServer(): SupportedLanguage | undefined {
+  try {
+    // Only attempt in server environment
+    if (typeof window === 'undefined') {
+      // Lazy require to avoid bundling into client
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { cookies } = require('next/headers') as typeof import('next/headers')
+      const c = cookies().get(COOKIE_NAME)?.value
+      if (c && isSupportedLanguage(c)) return c
+    }
+  } catch (_) {}
+  return undefined
 }
 
 
