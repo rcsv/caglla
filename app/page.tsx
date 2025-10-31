@@ -66,10 +66,10 @@ export default function HomePage() {
         <SolidCard className="p-8 text-center">
           <div className="flex flex-col items-center gap-4">
             <Button
-              variant="secondary"
+              variant="primary"
               size="lg"
               onClick={signInWithGoogle}
-              className="px-8 py-4 text-lg font-semibold border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-50 bg-white"
+              className="px-8 py-4 text-lg font-semibold"
             >
               {t('home.cta.primary.button')}
             </Button>
@@ -102,10 +102,10 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold mb-4">{t('home.cta.bottom.title')}</h2>
           <p className="text-xl mb-8 opacity-90">{t('home.cta.bottom.subtitle')}</p>
           <Button
-            variant="secondary"
+            variant="primary"
             size="lg"
             onClick={signInWithGoogle}
-            className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 border border-emerald-200"
+            className="px-8 py-3 font-semibold"
           >
             Get Started
           </Button>
