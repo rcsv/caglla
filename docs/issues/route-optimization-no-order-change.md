@@ -140,9 +140,40 @@
 
 ## 🔍 デバッグ情報
 
+### 観察されたログ
+
+以下のデバッグログから、Google APIの`optimizedOrder`が元の順序（`[0, 1, 2, 3, ...]`）を返していることが確認された：
+
+```
+DEBUG: Google API optimizedOrder: (8) [0, 1, 2, 3, 4, 5, 6, 7]
+DEBUG: Waypoints length: 8
+DEBUG: Full optimized order: (10) [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+DEBUG: Google API optimizedOrder: (10) [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+DEBUG: Waypoints length: 10
+DEBUG: Full optimized order: (12) [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+```
+
+### 問題の分析
+
+1. **Google APIの`optimizedOrder`が元の順序を返している**
+   - `optimizeWaypoints: true`が指定されているにも関わらず、`[0, 1, 2, ...]`という順序（元の順序）が返されている
+   - これは以下の可能性が考えられる：
+     - Google Directions APIが既に最適と判断している（ただし、地理的には最適化可能なルートが存在する）
+     - `optimizeWaypoints`パラメータが正しく渡されていない
+     - Google APIの実装上の制限（waypoint数や距離による制約）
+
+2. **実装側の処理**
+   - `Full optimized order`は`origin + waypoints + destination`を含む完全な順序（12要素）
+   - しかし、waypoint部分（中間地点）の順序が変わっていない
+
+### 追加確認が必要な項目
+
 以下の情報を確認すると解決に役立ちます：
 - ブラウザのコンソールエラー
-- ネットワークタブでのAPIリクエスト/レスポンス
+- ネットワークタブでの`/api/route-optimization`へのリクエスト/レスポンス
+  - リクエストボディに`optimizeWaypoints: true`が含まれているか
+  - Google Directions APIへの実際のリクエストURLに`optimize:true`が含まれているか
 - Firestoreでの`sort_number`の実際の値
-- 最適化APIのレスポンス内容
+- Google Directions APIのレスポンスに`waypoint_order`フィールドが存在するか、その内容
 
