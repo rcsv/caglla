@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Icon } from '@iconify/react'
+import { CagllaLogo } from '@/components/common/icons/CagllaLogo'
 
 export interface LandingFooterProps {
   className?: string
@@ -29,10 +29,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
           {/* Brand Section (span 6) */}
           <div className="md:col-span-6 md:max-w-2xl">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center relative">
-                <Icon icon="tabler:plane" className="w-4 h-4 text-white absolute top-1 left-1" />
-                <Icon icon="tabler:map-pin" className="w-3 h-3 text-white absolute bottom-0.5 right-0.5" />
-              </div>
+              <CagllaLogo className="w-8 h-8" />
               <span className="text-xl font-bold text-white">Caglla</span>
             </div>
             <p className="text-sm">
