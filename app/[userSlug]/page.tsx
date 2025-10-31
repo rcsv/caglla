@@ -30,6 +30,11 @@ export default function UserProfileBySlugPage() {
   const [publicTrips, setPublicTrips] = useState<Trip[]>([])
   const [privateTrips, setPrivateTrips] = useState<Trip[]>([])
   const [profileLoading, setProfileLoading] = useState(true)
+  const [tripStats, setTripStats] = useState<{
+    totalTrips: number
+    totalCountries: number
+    countryGroups: Array<{ countryCode: string; countryName: string; countryNameJa: string; tripCount: number }>
+  } | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false)
@@ -79,14 +84,58 @@ export default function UserProfileBySlugPage() {
       if (tripsRes.ok) {
         const data = await tripsRes.json()
         const trips: Trip[] = data.trips || []
-        setPublicTrips(trips.filter(t => t.access_level === 'public'))
+        const publicTripsList = trips.filter(t => t.access_level === 'public')
+        setPublicTrips(publicTripsList)
         
         // 自分自身のプロフィールの場合、非公開の旅行も取得
         // profileUserは既に取得済みなので、ここで判定可能
         const currentUserId = user?.uid
         const viewedUserId = profileUser?.id
+        
+        // デバッグ: 旅行データを確認
+        console.log('🔍 Profile trips debug:', {
+          currentUserId,
+          viewedUserId,
+          isOwnProfile: currentUserId && viewedUserId && currentUserId === viewedUserId,
+          totalTrips: trips.length,
+          publicTrips: publicTripsList.length,
+          privateTrips: trips.filter(t => {
+            const level = t.access_level?.toLowerCase()
+            return level === 'private' || !level || level === ''
+          }).length,
+          allAccessLevels: trips.map(t => ({ 
+            id: t.id, 
+            title: t.title, 
+            access_level: t.access_level,
+            access_level_lower: t.access_level?.toLowerCase()
+          }))
+        })
+        
         if (currentUserId && viewedUserId && currentUserId === viewedUserId) {
-          setPrivateTrips(trips.filter(t => t.access_level === 'private'))
+          // access_levelが'private'、または未設定（デフォルトで非公開）の場合を含める
+          const privateTripsList = trips.filter(t => {
+            const level = t.access_level?.toLowerCase()
+            // 'private'、未設定（null/undefined）、空文字列の場合は非公開とみなす
+            return level === 'private' || !level || level === ''
+          })
+          console.log('🔒 Private trips found:', privateTripsList.length, privateTripsList.map(t => ({ id: t.id, title: t.title, access_level: t.access_level })))
+          setPrivateTrips(privateTripsList)
+        }
+
+        // 統計情報を取得（自分自身のプロフィールまたは公開旅行がある場合）
+        const isOwnProfile = currentUserId && viewedUserId && currentUserId === viewedUserId
+        const shouldShowStats = isOwnProfile || publicTripsList.length > 0
+        
+        if (shouldShowStats) {
+          const statsRes = await makeAuthenticatedRequest('/api/trips?groupByCountry=true')
+          if (statsRes.ok) {
+            const statsData = await statsRes.json()
+            setTripStats({
+              totalTrips: statsData.totalTrips || 0,
+              totalCountries: statsData.totalCountries || 0,
+              countryGroups: statsData.trips || []
+            })
+          }
         }
       }
     } finally {
@@ -459,6 +508,15 @@ export default function UserProfileBySlugPage() {
                 <div className="text-6xl mb-4">🔒</div>
                 <h4 className="text-xl font-semibold text-gray-900 mb-2">{t('profile.privateTrips.empty')}</h4>
                 <p className="text-gray-600">{t('profile.privateTrips.empty.description')}</p>
+                {/* デバッグ情報 */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs">
+                    <p>Debug: isOwnProfile={String(isOwnProfile)}</p>
+                    <p>Debug: privateTrips.length={privateTrips.length}</p>
+                    <p>Debug: user.uid={user?.uid}</p>
+                    <p>Debug: profileUser.id={profileUser?.id}</p>
+                  </div>
+                )}
               </SolidCard>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -497,6 +555,61 @@ export default function UserProfileBySlugPage() {
                 })}
               </div>
             )}
+          </Section>
+        )}
+
+        {/* Trip Statistics */}
+        {!isFirstTimeSetup && tripStats && (
+          <Section title={t('profile.stats.title')}>
+            <SolidCard className="p-8 md:p-10">
+              <div className="space-y-6">
+                {/* Summary Stats */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-emerald-50 rounded-lg p-6 text-center">
+                    <div className="text-4xl font-bold text-emerald-600 mb-2">{tripStats.totalTrips}</div>
+                    <div className="text-gray-700 font-medium">{t('profile.stats.totalTrips')}</div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-6 text-center">
+                    <div className="text-4xl font-bold text-blue-600 mb-2">{tripStats.totalCountries}</div>
+                    <div className="text-gray-700 font-medium">{t('profile.stats.totalCountries')}</div>
+                  </div>
+                </div>
+
+                {/* Country Stats */}
+                {tripStats.countryGroups.length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">{t('profile.stats.countries.title')}</h4>
+                    <div className="space-y-3">
+                      {tripStats.countryGroups.slice(0, 5).map((group, index) => (
+                        <div key={group.countryCode} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center justify-center w-8 h-8 bg-emerald-600 text-white rounded-full text-sm font-semibold">
+                              {index + 1}
+                            </div>
+                            <div className="text-2xl">
+                              {getCountryFlag(group.countryCode)}
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-800">{group.countryNameJa}</div>
+                              <div className="text-sm text-gray-500">{group.countryName}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-lg font-bold text-emerald-600">{group.tripCount}</span>
+                            <span className="text-sm text-gray-500">{t('profile.stats.times')}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {tripStats.countryGroups.length > 5 && (
+                      <p className="text-sm text-gray-500 mt-4 text-center">
+                        {t('profile.stats.countries.more').replace('{count}', String(tripStats.countryGroups.length - 5))}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </SolidCard>
           </Section>
         )}
         </div>

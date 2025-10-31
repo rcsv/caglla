@@ -259,6 +259,12 @@ export type TranslationKey =
   | 'profile.privateTrips.title'
   | 'profile.privateTrips.empty'
   | 'profile.privateTrips.empty.description'
+  | 'profile.stats.title'
+  | 'profile.stats.totalTrips'
+  | 'profile.stats.totalCountries'
+  | 'profile.stats.countries.title'
+  | 'profile.stats.times'
+  | 'profile.stats.countries.more'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -520,6 +526,12 @@ const en: Dictionary = {
   'profile.privateTrips.title': 'Private Trips',
   'profile.privateTrips.empty': 'No private trips yet',
   'profile.privateTrips.empty.description': 'Private trips are only visible to you.',
+  'profile.stats.title': 'Trip Statistics',
+  'profile.stats.totalTrips': 'Total Trips',
+  'profile.stats.totalCountries': 'Countries Visited',
+  'profile.stats.countries.title': 'Top Countries',
+  'profile.stats.times': 'times',
+  'profile.stats.countries.more': 'and {count} more countries',
 }
 
 const ja: Dictionary = {
@@ -780,6 +792,12 @@ const ja: Dictionary = {
   'profile.privateTrips.title': '非公開の旅行',
   'profile.privateTrips.empty': 'まだ非公開の旅行がありません',
   'profile.privateTrips.empty.description': '非公開の旅行はあなたのみが閲覧できます。',
+  'profile.stats.title': '旅行統計',
+  'profile.stats.totalTrips': '総旅行回数',
+  'profile.stats.totalCountries': '訪問国数',
+  'profile.stats.countries.title': '訪問国トップ5',
+  'profile.stats.times': '回',
+  'profile.stats.countries.more': 'あと{count}カ国',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
