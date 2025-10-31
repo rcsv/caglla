@@ -42,7 +42,7 @@ export const Loading: React.FC<LoadingProps> = ({
   return (
     <div className={containerClass} {...rest}>
       <div className="text-center">
-        <div className={`animate-spin rounded-full mx-auto border-b-blue-500 border-gray-200 ${sizeClass(size)}`}></div>
+        <div className={`animate-spin rounded-full mx-auto border-b-emerald-500 border-gray-200 ${sizeClass(size)}`}></div>
         {message && <p className="mt-4 text-gray-600">{message}</p>}
       </div>
     </div>
