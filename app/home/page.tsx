@@ -19,6 +19,7 @@ import NextTripCard from '@/components/tripcard/NextTripCard'
 import { useUserData } from '@/lib/contexts/user-data'
 import type { Trip } from '@/lib/core/types'
 import Loading from '@/components/common/Loading'
+import { t } from '@/lib/i18n'
 
 export default function HomePage() {
   const { user, loading, logout } = useAuth()
@@ -91,10 +92,10 @@ export default function HomePage() {
 
             {/* 最近チェックした旅行 */}
             <div className="bg-white border border-gray-200 p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">最近チェックした旅行</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">{t('home.dashboard.recentlyChecked.title')}</h3>
               <div className="text-center py-8 text-gray-500">
-                <p>最近チェックした旅行はありません</p>
-                <p className="text-sm mt-2">（実装予定）</p>
+                <p>{t('home.dashboard.recentlyChecked.empty')}</p>
+                <p className="text-sm mt-2">{t('home.dashboard.recentlyChecked.planned')}</p>
               </div>
             </div>
 

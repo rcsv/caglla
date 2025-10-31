@@ -210,6 +210,55 @@ export type TranslationKey =
   | 'home.cookie.more'
   | 'home.cookie.reject'
   | 'home.cookie.accept'
+  // Home Dashboard page (/home)
+  | 'home.dashboard.recentlyChecked.title'
+  | 'home.dashboard.recentlyChecked.empty'
+  | 'home.dashboard.recentlyChecked.planned'
+  // Profile page
+  | 'profile.back'
+  | 'profile.title'
+  | 'profile.setup'
+  | 'profile.edit'
+  | 'profile.cancel'
+  | 'profile.loading'
+  | 'profile.setupBanner.title'
+  | 'profile.setupBanner.description'
+  | 'profile.name'
+  | 'profile.bio'
+  | 'profile.bio.placeholder'
+  | 'profile.bio.empty'
+  | 'profile.residenceArea'
+  | 'profile.residenceArea.placeholder'
+  | 'profile.residenceArea.warning'
+  | 'profile.estimatedCountry'
+  | 'profile.gender'
+  | 'profile.gender.preferNotToSay'
+  | 'profile.gender.male'
+  | 'profile.gender.female'
+  | 'profile.gender.other'
+  | 'profile.language'
+  | 'profile.language.auto'
+  | 'profile.language.description'
+  | 'profile.save'
+  | 'profile.saving'
+  | 'profile.complete'
+  | 'profile.skip'
+  | 'profile.image.title'
+  | 'profile.image.change'
+  | 'profile.image.upload'
+  | 'profile.image.uploading'
+  | 'profile.image.formats'
+  | 'profile.image.alt'
+  | 'profile.image.invalid'
+  | 'profile.image.uploadFailed'
+  | 'profile.image.unknownError'
+  | 'profile.image.deleteFailed'
+  | 'profile.publicTrips.title'
+  | 'profile.publicTrips.empty'
+  | 'profile.publicTrips.empty.description'
+  | 'profile.privateTrips.title'
+  | 'profile.privateTrips.empty'
+  | 'profile.privateTrips.empty.description'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -422,6 +471,55 @@ const en: Dictionary = {
   'home.cookie.more': 'Learn more',
   'home.cookie.reject': 'Reject',
   'home.cookie.accept': 'Accept',
+  // Home Dashboard page (/home)
+  'home.dashboard.recentlyChecked.title': 'Recently Checked Trips',
+  'home.dashboard.recentlyChecked.empty': 'No recently checked trips',
+  'home.dashboard.recentlyChecked.planned': '(To be implemented)',
+  // Profile page
+  'profile.back': '← Back',
+  'profile.title': 'Profile',
+  'profile.setup': 'Profile Setup',
+  'profile.edit': 'Edit',
+  'profile.cancel': 'Cancel',
+  'profile.loading': 'Loading...',
+  'profile.setupBanner.title': 'Complete your profile!',
+  'profile.setupBanner.description': 'Tell us about yourself. It will be easier to connect with other users.',
+  'profile.name': 'Name',
+  'profile.bio': 'Self-introduction',
+  'profile.bio.placeholder': 'Tell us about yourself...',
+  'profile.bio.empty': 'Please add self-introduction',
+  'profile.residenceArea': 'Residence Area',
+  'profile.residenceArea.placeholder': 'Search residence area (e.g., Shibuya, Tokyo, San Jose, CA)',
+  'profile.residenceArea.warning': '⚠️ Please select your residence area from Google Places for accurate country information',
+  'profile.estimatedCountry': 'Estimated Country of Residence:',
+  'profile.gender': 'Gender',
+  'profile.gender.preferNotToSay': 'Prefer not to say',
+  'profile.gender.male': 'Male',
+  'profile.gender.female': 'Female',
+  'profile.gender.other': 'Other',
+  'profile.language': 'Language Settings',
+  'profile.language.auto': 'Auto (Browser Settings)',
+  'profile.language.description': 'Affects the language of location search results. If not selected, the browser language settings will be used.',
+  'profile.save': 'Save',
+  'profile.saving': 'Saving...',
+  'profile.complete': 'Complete Profile',
+  'profile.skip': 'Skip',
+  'profile.image.title': 'Profile Image',
+  'profile.image.change': 'Change Image',
+  'profile.image.upload': 'Upload Image',
+  'profile.image.uploading': 'Uploading...',
+  'profile.image.formats': 'JPEG, PNG, WebP format (5MB or less)',
+  'profile.image.alt': 'Profile image',
+  'profile.image.invalid': 'Invalid file',
+  'profile.image.uploadFailed': 'Failed to upload image',
+  'profile.image.unknownError': 'Unknown error',
+  'profile.image.deleteFailed': 'Failed to delete image',
+  'profile.publicTrips.title': 'Public Trips',
+  'profile.publicTrips.empty': 'No public trips yet',
+  'profile.publicTrips.empty.description': 'Create trips and share them with other users!',
+  'profile.privateTrips.title': 'Private Trips',
+  'profile.privateTrips.empty': 'No private trips yet',
+  'profile.privateTrips.empty.description': 'Private trips are only visible to you.',
 }
 
 const ja: Dictionary = {
@@ -633,6 +731,55 @@ const ja: Dictionary = {
   'home.cookie.more': '詳細を見る',
   'home.cookie.reject': '拒否',
   'home.cookie.accept': '同意する',
+  // Home Dashboard page (/home)
+  'home.dashboard.recentlyChecked.title': '最近チェックした旅行',
+  'home.dashboard.recentlyChecked.empty': '最近チェックした旅行はありません',
+  'home.dashboard.recentlyChecked.planned': '（実装予定）',
+  // Profile page
+  'profile.back': '← 戻る',
+  'profile.title': 'プロフィール',
+  'profile.setup': 'プロフィール設定',
+  'profile.edit': '編集',
+  'profile.cancel': 'キャンセル',
+  'profile.loading': '読み込み中...',
+  'profile.setupBanner.title': 'プロフィールを完成させましょう！',
+  'profile.setupBanner.description': 'あなたについて教えてください。他のユーザーとつながりやすくなります。',
+  'profile.name': '名前',
+  'profile.bio': '自己紹介',
+  'profile.bio.placeholder': 'あなたについて教えてください...',
+  'profile.bio.empty': '自己紹介を追加してください',
+  'profile.residenceArea': '居住地域',
+  'profile.residenceArea.placeholder': '居住地域を検索（例: 東京都渋谷区、San Jose, CA）',
+  'profile.residenceArea.warning': '⚠️ 正確な国情報のため、Google Placesから居住地域を選択してください',
+  'profile.estimatedCountry': '推定居住国:',
+  'profile.gender': '性別',
+  'profile.gender.preferNotToSay': '回答しない',
+  'profile.gender.male': '男性',
+  'profile.gender.female': '女性',
+  'profile.gender.other': 'その他',
+  'profile.language': '言語設定',
+  'profile.language.auto': '自動（ブラウザ設定）',
+  'profile.language.description': '場所検索の結果言語に影響します。未選択時はブラウザの言語設定を使用します。',
+  'profile.save': '保存',
+  'profile.saving': '保存中...',
+  'profile.complete': 'プロフィールを完成',
+  'profile.skip': 'スキップ',
+  'profile.image.title': 'プロフィール画像',
+  'profile.image.change': '画像を変更',
+  'profile.image.upload': '画像をアップロード',
+  'profile.image.uploading': 'アップロード中...',
+  'profile.image.formats': 'JPEG、PNG、WebP形式（5MB以下）',
+  'profile.image.alt': 'プロフィール画像',
+  'profile.image.invalid': '無効なファイルです',
+  'profile.image.uploadFailed': '画像のアップロードに失敗しました',
+  'profile.image.unknownError': '不明なエラー',
+  'profile.image.deleteFailed': '画像の削除に失敗しました',
+  'profile.publicTrips.title': '公開された旅行',
+  'profile.publicTrips.empty': 'まだ公開された旅行がありません',
+  'profile.publicTrips.empty.description': '旅行を作成して、他のユーザーと共有しましょう！',
+  'profile.privateTrips.title': '非公開の旅行',
+  'profile.privateTrips.empty': 'まだ非公開の旅行がありません',
+  'profile.privateTrips.empty.description': '非公開の旅行はあなたのみが閲覧できます。',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
