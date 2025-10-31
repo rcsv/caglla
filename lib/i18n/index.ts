@@ -188,6 +188,28 @@ export type TranslationKey =
   | 'blog.post.notfound.title'
   | 'blog.post.notfound.desc'
   | 'blog.post.back'
+  // Home (Top) page
+  | 'home.hero.line1'
+  | 'home.hero.line2'
+  | 'home.hero.line3'
+  | 'home.intro'
+  | 'home.cta.primary.title'
+  | 'home.cta.primary.button'
+  | 'home.cta.primary.seeFeatures'
+  | 'home.features.title'
+  | 'home.features.card1.title'
+  | 'home.features.card1.text'
+  | 'home.features.card2.title'
+  | 'home.features.card2.text'
+  | 'home.features.card3.title'
+  | 'home.features.card3.text'
+  | 'home.cta.bottom.title'
+  | 'home.cta.bottom.subtitle'
+  | 'home.cookie.title'
+  | 'home.cookie.text'
+  | 'home.cookie.more'
+  | 'home.cookie.reject'
+  | 'home.cookie.accept'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -378,6 +400,28 @@ const en: Dictionary = {
   'blog.post.notfound.title': 'Post not found',
   'blog.post.notfound.desc': 'Check the URL or go back to the blog list.',
   'blog.post.back': '← Back to blog list',
+  // Home (Top) page
+  'home.hero.line1': 'Travel',
+  'home.hero.line2': 'Planning',
+  'home.hero.line3': 'Simplified',
+  'home.intro': 'Manage detailed itineraries, stays and sights in one place. Beautiful and simple with Google Maps.',
+  'home.cta.primary.title': 'Get Started',
+  'home.cta.primary.button': 'Continue with Google',
+  'home.cta.primary.seeFeatures': 'See features',
+  'home.features.title': 'Features',
+  'home.features.card1.title': 'Detailed planning',
+  'home.features.card1.text': 'Manage daily plans, stays and spots together.',
+  'home.features.card2.title': 'Team sharing',
+  'home.features.card2.text': 'Co-edit and share with family and friends in real time.',
+  'home.features.card3.title': 'Access anywhere',
+  'home.features.card3.text': 'Looks beautiful on every device.',
+  'home.cta.bottom.title': "Let's start now",
+  'home.cta.bottom.subtitle': 'Try for free. Upgrade anytime.',
+  'home.cookie.title': 'About cookies',
+  'home.cookie.text': 'We use cookies for service delivery and analytics. By using this site, you agree to our use of cookies.',
+  'home.cookie.more': 'Learn more',
+  'home.cookie.reject': 'Reject',
+  'home.cookie.accept': 'Accept',
 }
 
 const ja: Dictionary = {
@@ -567,6 +611,28 @@ const ja: Dictionary = {
   'blog.post.notfound.title': '記事が見つかりませんでした',
   'blog.post.notfound.desc': 'URLをご確認いただくか、ブログ一覧に戻ってください。',
   'blog.post.back': '← ブログ一覧に戻る',
+  // Home (Top) page
+  'home.hero.line1': 'Travel',
+  'home.hero.line2': 'Planning',
+  'home.hero.line3': 'Simplified',
+  'home.intro': '詳細な旅程、宿泊先、観光スポットまで一括管理。Google Maps連携で美しくシンプルに。',
+  'home.cta.primary.title': 'はじめる',
+  'home.cta.primary.button': 'Googleで始める',
+  'home.cta.primary.seeFeatures': '機能を見る',
+  'home.features.title': 'Features',
+  'home.features.card1.title': '詳細な旅行計画',
+  'home.features.card1.text': '日別の旅程、宿泊、スポットを一括管理。',
+  'home.features.card2.title': 'チーム共有',
+  'home.features.card2.text': '家族や友人と共同編集、リアルタイム共有。',
+  'home.features.card3.title': 'どこでもアクセス',
+  'home.features.card3.text': '全デバイスで美しく表示。',
+  'home.cta.bottom.title': '今すぐ始めましょう',
+  'home.cta.bottom.subtitle': '無料でお試し。必要に応じていつでもアップグレード。',
+  'home.cookie.title': 'クッキーについて',
+  'home.cookie.text': 'このサイトでは、サービスの提供と分析のためにクッキーを使用しています。サイトを利用することで、クッキーの使用に同意したものとみなされます。',
+  'home.cookie.more': '詳細を見る',
+  'home.cookie.reject': '拒否',
+  'home.cookie.accept': '同意する',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
