@@ -242,7 +242,7 @@ body {
 /* ===== Tropical Joy Buttons ===== */
 /* Base */
 .btn-base {
-  @apply inline-flex items-center justify-center font-semibold rounded-xl shadow-md hover:shadow-lg transition active:scale-[0.99]
+  @apply inline-flex items-center justify-center font-semibold rounded-md shadow-md hover:shadow-lg transition active:scale-[0.99]
     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed
     [&>svg]:-ms-0.5 [&>svg]:me-1.5;
 }
