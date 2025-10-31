@@ -31,6 +31,7 @@
 | [ルート最適化ボタンを押しても順序が変化しない](route-optimization-no-order-change.md) | 未解決 | 2025-10-31 |
 | [POIクリック時に地図が元位置へ戻ってしまいPOIDialogと不一致](map-poi-dialog-focus-conflict.md) | 未解決 | 2025-10-31 |
 | [地図上のItineraryマーカークリック時にメインコンテンツのCardまで自動スクロール](map-marker-click-scroll-to-card.md) | 未解決 | 2025-10-31 |
+| [Feature(Backlog): POIDialogへの外部POI API統合（TripAdvisor / Foursquare）](poi-dialog-external-apis-backlog.md) | 未実装 | 2025-10-31 |
 
 ### 🟢 低優先度
 
@@ -45,12 +46,12 @@
 
 ## 📊 統計
 
-- **総Issue数**: 19件
+- **総Issue数**: 20件
 - **未解決**: 17件
-- **未実装（Feature）**: 2件
+- **未実装（Feature）**: 3件
 - **高優先度**: 3件
 - **中優先度**: 13件
-- **低優先度**: 3件
+- **低優先度**: 4件
 
 ---
 
