@@ -69,7 +69,7 @@ export default function HomePage() {
               variant="primary"
               size="lg"
               onClick={signInWithGoogle}
-              className="px-8 py-4 text-lg font-semibold rounded-none"
+              className="px-8 py-4 text-lg font-semibold !rounded-md"
             >
               {t('home.cta.primary.button')}
             </Button>
@@ -105,7 +105,7 @@ export default function HomePage() {
             variant="primary"
             size="lg"
             onClick={signInWithGoogle}
-            className="px-8 py-3 font-semibold rounded-none"
+            className="px-8 py-3 font-semibold !rounded-md"
           >
             Get Started
           </Button>
