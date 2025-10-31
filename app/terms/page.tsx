@@ -16,7 +16,7 @@ export default function TermsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
               {/* Heading */}
               <div className="lg:col-span-9">
-                <h1 className="leading-[0.8] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold uppercase text-[clamp(4rem,12vw,11rem)]">
+                <h1 className="leading-[0.8] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold uppercase text-[clamp(4rem,12vw,11rem)] font-rajdhani">
                   <span className="block">{t('terms.title')}</span>
                 </h1>
               </div>

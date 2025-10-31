@@ -35,7 +35,7 @@ export default function BlogPostPage({ params }: PageProps) {
       <section>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-9">
-            <h1 className="leading-[0.9] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold text-[clamp(2.2rem,6vw,4rem)]">
+            <h1 className="leading-[0.9] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold text-[clamp(2.2rem,6vw,4rem)] font-rajdhani">
               {post.title}
             </h1>
           </div>

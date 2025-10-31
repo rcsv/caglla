@@ -105,7 +105,7 @@ export default function DocsPage() {
       <section>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end">
           <div className="lg:col-span-9">
-            <h1 className="leading-[0.8] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold uppercase text-[clamp(3.5rem,10vw,9rem)]">
+            <h1 className="leading-[0.8] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold uppercase text-[clamp(3.5rem,10vw,9rem)] font-rajdhani">
               <span className="block">{t('docs.title1')}</span>
               <span className="block">{t('docs.title2')}</span>
             </h1>
