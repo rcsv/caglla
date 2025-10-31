@@ -57,16 +57,22 @@ export const CagllaLogo: React.FC<CagllaLogoProps> = ({
       </text>
       
       {/* 小文字「g」の円形部分が中央（Cの中心）に来るように配置 */}
-      <circle
-        cx="16"
-        cy="16"
-        r="3"
+      <text
+        x="16"
+        y="16"
+        textAnchor="middle"
+        fontSize="10"
+        fontWeight="400"
         fill="white"
-      />
+        fontFamily="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        letterSpacing="0"
+      >
+        g
+      </text>
       
       {/* 「g」の下の引っかかるところを伸ばしてマップピンの下部分に見立てる */}
       <path
-        d="M 13 19 L 13 20 Q 13 21 14 21.5 Q 15 22 16 22 Q 17 22 18 21.5 Q 19 21 19 20 L 19 19 L 19 25 Q 19 27 16 27.5 Q 13 27 13 25 Z"
+        d="M 13.5 19.5 Q 13.5 20.5 14 21 Q 14.5 21.5 15.5 21.5 Q 16.5 21.5 17 21 Q 17.5 20.5 17.5 19.5 L 17.5 25 Q 17.5 27 16 27.5 Q 14.5 27 14.5 25 Z"
         fill="white"
       />
     </svg>
