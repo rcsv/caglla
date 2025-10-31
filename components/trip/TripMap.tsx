@@ -562,12 +562,8 @@ export default function TripMap({
       )
     }
 
-    // スクロール連動が停止中は地図位置を自動で動かさない
-    if (!scrollSyncEnabled) {
-      return
-    }
-
     // マップのビューを調整（フォーカスモードに応じて）
+    // focusMode === 'single'の場合はスクロール連動の状態に関係なく、クリック時のVenue表示を実行
     if (focusMode === 'single' && selectedItineraryId) {
       // 個別フォーカスモード：選択されたItineraryのみにフォーカス
       const selectedItinerary = validItineraries.find(it => it.id === selectedItineraryId)
@@ -583,7 +579,16 @@ export default function TripMap({
         }
         smoothMoveToLocation(map, position.lat, position.lng, DEFAULT_ZOOM_LEVEL)
       }
-    } else if (validItineraries.length === 1) {
+      return // 個別フォーカスモードの場合はここで終了
+    }
+    
+    // スクロール連動が停止中は地図位置を自動で動かさない（全体表示モードの場合のみ）
+    if (!scrollSyncEnabled) {
+      return
+    }
+
+    // 全体表示モードの場合の処理
+    if (validItineraries.length === 1) {
       // 単一のItineraryの場合
       smoothMoveToLocation(
         map,
@@ -609,10 +614,12 @@ export default function TripMap({
     }
   }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId, initialCenter, scrollSyncEnabled, onItineraryClick, onPoiDataUpdate])
 
-  // 選択されたItineraryにフォーカスする機能
+  // 選択されたItineraryにフォーカスする機能（クリック時のVenue表示用）
   useEffect(() => {
-    // 同期停止中は自動フォーカスさせない
-    if (!map || !selectedItineraryId || !scrollSyncEnabled) return
+    // focusMode === 'single'の場合は常にフォーカス（クリック時のVenue表示のため）
+    // focusMode !== 'single'の場合はスクロール連動が有効な場合のみフォーカス
+    if (!map || !selectedItineraryId) return
+    if (focusMode !== 'single' && !scrollSyncEnabled) return
 
     const selectedItinerary = itineraries.find(itinerary => itinerary.id === selectedItineraryId)
     if (!selectedItinerary?.place_data?.geometry?.location) return
@@ -640,7 +647,7 @@ export default function TripMap({
         markerData.element.className = 'teardrop-marker'
       }
     })
-  }, [selectedItineraryId, map, markers, itineraries, directionsRenderer])
+  }, [selectedItineraryId, map, markers, itineraries, directionsRenderer, focusMode, scrollSyncEnabled])
 
   return (
     <div className={`relative ${className}`}>
@@ -702,33 +709,7 @@ export default function TripMap({
         </div>
       </div>
 
-      {/* 同期状態のオーバーレイ（右上） */}
-      <div className={`absolute top-4 right-4 ${getZIndexClass('TOP_MENU')}`}>
-        <div className="flex items-center gap-2 bg-white/90 backdrop-blur rounded-full border border-gray-200 px-3 py-1 shadow-md">
-          <div className={`w-2 h-2 rounded-full ${scrollSyncEnabled ? 'bg-green-500' : 'bg-gray-400'}`} title={scrollSyncEnabled ? '同期中' : '同期停止'} />
-          <span className="text-xs text-gray-700">{scrollSyncEnabled ? '同期中' : '同期OFF'}</span>
-          {!scrollSyncEnabled && (
-            <button
-              onClick={() => {
-                try {
-                  if (!map) {
-                    console.warn('地図が初期化されていません。連動を再開できません。')
-                    return
-                  }
-                  onRequestEnableScrollSync?.()
-                } catch (error) {
-                  console.error('連動再開エラー:', error)
-                }
-              }}
-              className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-              disabled={!map}
-              title={!map ? '地図の読み込みを待っています' : 'スクロール連動を再開'}
-            >
-              連動を再開
-            </button>
-          )}
-        </div>
-      </div>
+      {/* 同期状態のオーバーレイは削除（スクロール連動機能を無効化） */}
       
       {/* POIダイアログ */}
       <POIDialog
