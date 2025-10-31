@@ -32,10 +32,10 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
           <div className="flex items-center gap-6">
             {/* Navigation */}
             <nav className="hidden md:flex items-center gap-6">
-              <Link href="/#features" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/features" className="text-gray-600 hover:text-gray-900 transition-colors">
                 {t('features')}
               </Link>
-              <Link href="/#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/pricing" className="text-gray-600 hover:text-gray-900 transition-colors">
                 {t('pricing')}
               </Link>
               <Link href="/contact" className="text-gray-600 hover:text-gray-900 transition-colors">
