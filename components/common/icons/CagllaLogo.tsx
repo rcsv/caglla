@@ -8,6 +8,9 @@ export interface CagllaLogoProps {
 
 /**
  * Cagllaロゴ - Cとgを使ってマップピンの形状を表現
+ * - 大きな「C」がマップピンの上部（丸い部分）
+ * - 小文字「g」の円形部分が中央
+ * - 「g」の下に伸びる部分がマップピンの下部（尖った部分）
  */
 export const CagllaLogo: React.FC<CagllaLogoProps> = ({
   className = 'w-8 h-8',
@@ -29,25 +32,43 @@ export const CagllaLogo: React.FC<CagllaLogoProps> = ({
         </linearGradient>
       </defs>
       
-      {/* マップピンの形状（背景） */}
-      <path
-        d="M16 3C11.03 3 7 7.03 7 12c0 3.87 2.51 7.14 6 8.28V28l3-3 3 3v-7.72c3.49-1.14 6-4.41 6-8.28 0-4.97-4.03-9-9-9z"
+      {/* 緑の四角形背景（丸みを付ける） */}
+      <rect
+        x="2"
+        y="2"
+        width="28"
+        height="28"
+        rx="6"
         fill="url(#caglla-gradient)"
       />
       
-      {/* Cとgの文字 */}
+      {/* 大きな「C」 - マップピンの上部に見立てる */}
       <text
         x="16"
-        y="18"
+        y="13"
         textAnchor="middle"
-        fontSize="13"
+        fontSize="24"
         fontWeight="700"
         fill="white"
         fontFamily="system-ui, -apple-system, 'Segoe UI', sans-serif"
-        letterSpacing="-0.3"
+        letterSpacing="0"
       >
-        Cg
+        C
       </text>
+      
+      {/* 小文字「g」の円形部分が中央（Cの中心）に来るように配置 */}
+      <circle
+        cx="16"
+        cy="16"
+        r="3"
+        fill="white"
+      />
+      
+      {/* 「g」の下の引っかかるところを伸ばしてマップピンの下部分に見立てる */}
+      <path
+        d="M 13 19 L 13 20 Q 13 21 14 21.5 Q 15 22 16 22 Q 17 22 18 21.5 Q 19 21 19 20 L 19 19 L 19 25 Q 19 27 16 27.5 Q 13 27 13 25 Z"
+        fill="white"
+      />
     </svg>
   )
 }
