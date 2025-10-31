@@ -25,6 +25,10 @@ export interface TripEditorProps {
   trip: Trip
   onUpdate: (updatedTrip: Trip) => void
   onDelete?: () => void
+  onClose?: () => void // 編集モードが閉じられたときに呼ばれる
+  hideDestinationEdit?: boolean // 旅行先編集を非表示にする
+  initialEditing?: boolean // 初期状態で編集モードを開く
+  hideEditButton?: boolean // 編集ボタンを非表示にする
 }
 
 /**

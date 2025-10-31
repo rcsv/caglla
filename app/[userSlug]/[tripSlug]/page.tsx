@@ -21,12 +21,13 @@ import TripSummaryView from '@/components/trip/TripSummaryView'
 import TripItineraryView from '@/components/trip/TripItineraryView'
 import TripChecklistView from '@/components/trip/TripChecklistView'
 import TripRightPane from '@/components/trip/TripRightPane'
+import TripEditor from '@/components/trip/TripEditor'
 import { getCachedPlaces } from '@/lib/travel/places-cache'
 import { useUserData } from '@/lib/contexts/user-data'
 import { exportTripToPdf, canExportToPdf } from '@/lib/utils/export-helpers'
 
 export default function SlugBasedTripPage() {
-  const { user, loading } = useAuth()
+  const { user, loading, logout } = useAuth()
   const { removeTrip, userData } = useUserData()
   const router = useRouter()
   const { userSlug, tripSlug } = useParams<{ userSlug: string; tripSlug: string }>()
@@ -36,6 +37,7 @@ export default function SlugBasedTripPage() {
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
   const [showICalPublishModal, setShowICalPublishModal] = useState(false)
+  const [showEditBaseInfoModal, setShowEditBaseInfoModal] = useState(false)
   const [pdfExporting, setPdfExporting] = useState(false)
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
   const [insertAfterIndex, setInsertAfterIndex] = useState<number | undefined>(undefined)
@@ -1099,6 +1101,11 @@ export default function SlugBasedTripPage() {
     return null
   }
 
+  const handleLogout = async () => {
+    await logout()
+    router.push('/')
+  }
+
   return (
     <TripPageLayout
       trip={trip}
@@ -1108,61 +1115,41 @@ export default function SlugBasedTripPage() {
       onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
       onNavigateToSection={navigateToSection}
       onDayClick={handleDayClick}
+      onLogout={handleLogout}
       rightPaneWidth={currentView === 'checklist' ? 'zero' : 'default'}
-      titleBarActions={
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowICalPublishModal(true)}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="iCal公開設定"
-          >
-            <Icon icon="mdi:calendar-sync" className="w-5 h-5" />
-            <span className="hidden sm:inline">iCal</span>
-          </button>
-          <button
-            onClick={handlePdfPreview}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="PDFプレビュー（デザイン確認用）"
-          >
-            <Icon icon="mdi:eye" className="w-5 h-5" />
-            <span className="hidden sm:inline">Preview</span>
-          </button>
-          <button
-            onClick={handlePdfExport}
-            disabled={pdfExporting || !canExportToPdf(userData?.planId || 'season_traveler')}
-            className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
-              canExportToPdf(userData?.planId || 'season_traveler')
-                ? 'text-gray-700 hover:bg-gray-100'
-                : 'text-gray-400 cursor-not-allowed'
-            }`}
-            title={
-              canExportToPdf(userData?.planId || 'season_traveler')
-                ? 'PDF出力'
-                : 'PDF出力（Backpackerプラン以上）'
-            }
-          >
-            {pdfExporting ? (
-              <>
-                <Icon icon="mdi:loading" className="w-5 h-5 animate-spin" />
-                <span className="hidden sm:inline">処理中...</span>
-              </>
-            ) : (
-              <>
-                <Icon icon="mdi:file-pdf-box" className="w-5 h-5" />
-                <span className="hidden sm:inline">PDF</span>
-              </>
-            )}
-          </button>
-          <button
-            onClick={() => setShowExportModal(true)}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="データエクスポート"
-          >
-            <Icon icon="mdi:download" className="w-5 h-5" />
-            <span className="hidden sm:inline">Export</span>
-          </button>
-        </div>
-      }
+      menuItems={[
+        {
+          id: 'edit-base-info',
+          label: 'Edit Base Info',
+          icon: 'mdi:pencil',
+          onClick: () => setShowEditBaseInfoModal(true),
+        },
+        {
+          id: 'calendar-publish',
+          label: 'Calendar 配信',
+          icon: 'mdi:calendar-sync',
+          onClick: () => setShowICalPublishModal(true),
+        },
+        {
+          id: 'travel-book-preview',
+          label: 'Travel Book Preview',
+          icon: 'mdi:eye',
+          onClick: handlePdfPreview,
+        },
+        {
+          id: 'download-travel-book',
+          label: 'Download Travel Book',
+          icon: 'mdi:file-pdf-box',
+          onClick: handlePdfExport,
+          disabled: pdfExporting || !canExportToPdf(userData?.planId || 'season_traveler'),
+        },
+        {
+          id: 'export-json',
+          label: 'Export JSON',
+          icon: 'mdi:download',
+          onClick: () => setShowExportModal(true),
+        },
+      ]}
       rightPane={
         <TripRightPane
           trip={trip}
@@ -1274,6 +1261,21 @@ export default function SlugBasedTripPage() {
           onClose={() => setShowICalPublishModal(false)}
           trip={trip}
           onUpdate={setTrip}
+        />
+      )}
+
+      {/* Edit Base Info Modal */}
+      {showEditBaseInfoModal && trip && (
+        <TripEditor
+          trip={trip}
+          onUpdate={(updatedTrip) => {
+            setTrip(updatedTrip)
+            setShowEditBaseInfoModal(false)
+          }}
+          onClose={() => setShowEditBaseInfoModal(false)}
+          hideDestinationEdit={true}
+          initialEditing={true}
+          hideEditButton={true}
         />
       )}
     </TripPageLayout>

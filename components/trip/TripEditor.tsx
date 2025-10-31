@@ -25,8 +25,8 @@ import { getZIndexClass } from '@/lib/core/z-index'
  * @param onDelete - Optional callback invoked after a successful deletion of the trip.
  * @returns The JSX element for the trip editor or an edit button when not editing.
  */
-export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps) {
-  const [isEditing, setIsEditing] = useState(false)
+export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDestinationEdit = false, initialEditing = false, hideEditButton = false }: TripEditorProps) {
+  const [isEditing, setIsEditing] = useState(initialEditing)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const formatDateForInput = (date: any): string => {
@@ -159,6 +159,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
         
         // 編集モードを終了
         setIsEditing(false)
+        onClose?.()
       } else {
         logger.error('Failed to update trip')
       }
@@ -192,6 +193,7 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
       imageUrl: trip.image_url || ''
     })
     setIsEditing(false)
+    onClose?.()
   }
 
   const handleDelete = async () => {
@@ -270,7 +272,10 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
           <div className="bg-white rounded-lg shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">旅行情報を編集</h2>
-              <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <button onClick={() => {
+                setIsEditing(false)
+                onClose?.()
+              }} className="text-gray-400 hover:text-gray-600 transition-colors">
                 <IconRenderer iconName="close" className="w-6 h-6" />
               </button>
             </div>
@@ -305,27 +310,29 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
             />
           </div>
 
-          <div>
-            <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
-              目的地
-            </label>
-            <PlaceSearchInput
-              currentPlace={formData.destinationPlace}
-              onPlaceSelect={(place) => setFormData(prev => ({ 
-                ...prev, 
-                destinationPlace: place || undefined,
-                destination: place?.name || '' // 後方互換性のため
-              }))}
-              placeholder="目的地を検索（例: 東京、パリ、ニューヨーク）"
-              initialText={formData.destination}
-              disabled={saving}
-            />
-            {!formData.destinationPlace && formData.destination && (
-              <p className="mt-2 text-sm text-yellow-700">
-                <span className="text-red-600 mr-1">*</span>正確な国情報のため、Google Placesから目的地を再選択してください
-              </p>
-            )}
-          </div>
+          {!hideDestinationEdit && (
+            <div>
+              <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
+                目的地
+              </label>
+              <PlaceSearchInput
+                currentPlace={formData.destinationPlace}
+                onPlaceSelect={(place) => setFormData(prev => ({ 
+                  ...prev, 
+                  destinationPlace: place || undefined,
+                  destination: place?.name || '' // 後方互換性のため
+                }))}
+                placeholder="目的地を検索（例: 東京、パリ、ニューヨーク）"
+                initialText={formData.destination}
+                disabled={saving}
+              />
+              {!formData.destinationPlace && formData.destination && (
+                <p className="mt-2 text-sm text-yellow-700">
+                  <span className="text-red-600 mr-1">*</span>正確な国情報のため、Google Placesから目的地を再選択してください
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -461,6 +468,10 @@ export default function TripEditor({ trip, onUpdate, onDelete }: TripEditorProps
         )}
       </>
     )
+  }
+
+  if (hideEditButton) {
+    return null
   }
 
   return (

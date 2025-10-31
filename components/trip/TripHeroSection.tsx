@@ -53,6 +53,7 @@ export default function TripHeroSection({
             trip={trip} 
             onUpdate={onUpdateTrip} 
             onDelete={onDeleteTrip}
+            hideEditButton={true}
           />
         </div>
         

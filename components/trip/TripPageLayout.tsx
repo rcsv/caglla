@@ -17,6 +17,14 @@ interface TripPageLayoutProps {
   onNavigateToSection: (sectionId: string) => void
   onDayClick: (dayId: string) => void
   titleBarActions?: ReactNode // タイトルバーに追加のアクション（エクスポートボタンなど）
+  menuItems?: Array<{
+    id: string
+    label: string
+    icon?: string
+    onClick: () => void
+    disabled?: boolean
+  }>
+  onLogout?: () => void
 }
 
 export default function TripPageLayout({
@@ -31,6 +39,8 @@ export default function TripPageLayout({
   onNavigateToSection,
   onDayClick,
   titleBarActions,
+  menuItems,
+  onLogout,
 }: TripPageLayoutProps) {
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -42,6 +52,7 @@ export default function TripPageLayout({
           onDayClick={onDayClick}
           isCollapsed={!leftNavExpanded}
           onToggleCollapse={onToggleLeftNav}
+          onLogout={onLogout}
         />
       </div>
 
@@ -70,6 +81,7 @@ export default function TripPageLayout({
             }}
             isCollapsed={false}
             onToggleCollapse={onToggleMobileMenu}
+            onLogout={onLogout}
           />
         </div>
       </nav>
@@ -82,6 +94,7 @@ export default function TripPageLayout({
           title={trip.title} 
           accessLevel={trip.access_level === 'private' ? 'private' : 'public'} 
           actions={titleBarActions}
+          menuItems={menuItems}
           className="zidx-top-menu" 
         />
         {children}
