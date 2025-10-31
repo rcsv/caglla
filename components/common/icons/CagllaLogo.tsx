@@ -39,77 +39,20 @@ export const CagllaLogo: React.FC<CagllaLogoProps> = ({
         fill="url(#caglla-gradient)"
       />
       
-      {/* 角ばった「C」- 太めのストロークで */}
-      <path
-        d="M 8 10 
-           L 8 6
-           L 18 6
-           L 18 8
-           L 10 8
-           L 10 10
-           L 12 10
-           L 12 12
-           L 16 12
-           L 16 14
-           L 18 14
-           L 18 16
-           L 12 16
-           L 12 20
-           L 18 20
-           L 18 22
-           L 10 22
-           L 10 24
-           L 18 24
-           L 18 26
-           L 8 26
-           L 8 22
-           L 10 22
-           L 10 20
-           L 14 20
-           L 14 16
-           L 10 16
-           L 10 14
-           L 12 14
-           L 12 12
-           L 10 12
-           L 10 10
-           Z"
+      {/* 角ばった「Cg」のテキスト */}
+      <text
+        x="16"
+        y="20"
+        textAnchor="middle"
+        fontSize="16"
+        fontWeight="900"
         fill="white"
-      />
-      
-      {/* 角ばった「g」- Cの横に配置 */}
-      <path
-        d="M 22 10
-           L 22 6
-           L 26 6
-           L 26 10
-           L 24 10
-           L 24 14
-           L 26 14
-           L 26 18
-           L 24 18
-           L 24 20
-           L 22 20
-           L 22 18
-           L 20 18
-           L 20 14
-           L 22 14
-           L 22 10
-           Z
-           M 22 20
-           L 22 22
-           L 26 22
-           L 26 24
-           L 24 24
-           L 24 26
-           L 22 26
-           L 22 24
-           L 20 24
-           L 20 22
-           L 22 22
-           Z"
-        fill="white"
-      />
+        fontFamily="'Arial Black', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif"
+        letterSpacing="-0.5"
+        style={{ fontVariant: 'normal', fontStyle: 'normal' }}
+      >
+        Cg
+      </text>
     </svg>
   )
 }
