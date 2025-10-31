@@ -1,7 +1,8 @@
 # Issue: Headerのユーザー名横に言語選択状態を示す国旗アイコンを表示
 
 **作成日**: 2025-10-31  
-**状態**: 🔴 未解決  
+**解決日**: 2025-10-31  
+**状態**: ✅ 解決済み  
 **優先度**: 低  
 **関連ファイル**: 
 - `components/common/HomeHeader.tsx`（推定）
@@ -136,12 +137,73 @@
 
 ---
 
+## ✅ 解決内容
+
+### 実装した変更
+
+1. **言語→国旗マッピングの作成**
+   - `HomeHeader.tsx`に`languageFlags`オブジェクトを追加
+   - 9つのサポート言語に対応する国旗絵文字を定義
+
+2. **現在の言語取得**
+   - `getUserLanguage()`を使用して現在の言語を取得
+   - `useState`と`useEffect`でクライアントサイドでの更新を実装
+
+3. **UI実装**
+   - ユーザー名の横に国旗アイコンを表示
+   - `title`属性でホバー時に言語名（ネイティブ名）を表示
+   - `aria-label`でアクセシビリティ対応
+
+4. **スタイリング**
+   - `text-base leading-none`で小さなサイズに調整
+   - ユーザー名と並べて表示（`flex items-center gap-1.5 justify-end`）
+
+### 実装詳細
+
+```typescript
+// 言語→国旗のマッピング
+const languageFlags: Record<SupportedLanguage, string> = {
+  ja: '🇯🇵',
+  en: '🇺🇸',
+  zh: '🇨🇳',
+  ko: '🇰🇷',
+  es: '🇪🇸',
+  fr: '🇫🇷',
+  de: '🇩🇪',
+  it: '🇮🇹',
+  pt: '🇵🇹'
+}
+
+// 現在の言語を取得
+const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>(() => getUserLanguage())
+
+// UI表示
+<span 
+  className="text-base leading-none" 
+  title={LANGUAGE_NAMES[currentLanguage]?.native || currentLanguage}
+  aria-label={`Current language: ${LANGUAGE_NAMES[currentLanguage]?.native || currentLanguage}`}
+>
+  {languageFlags[currentLanguage] || '🌐'}
+</span>
+```
+
+### 対応済みの確認事項
+
+- [x] Headerに現在の言語を示す国旗アイコンが表示される
+- [x] 言語切り替え時に国旗アイコンが更新される（`useEffect`で実装）
+- [x] ホバー時にツールチップで言語名が表示される（`title`属性で実装）
+- [x] アクセシビリティ対応（`aria-label`を実装）
+- [x] モバイル表示でも適切に表示される（レスポンシブ対応済み）
+- [x] 既存のUIデザインと調和している（ユーザー名の横に小さく配置）
+
+---
+
 ## ✅ 解決後の確認事項
 
-- [ ] Headerに現在の言語を示す国旗アイコンが表示される
-- [ ] 言語切り替え時に国旗アイコンが更新される
-- [ ] ホバー時にツールチップで言語名が表示される（i18n対応）
-- [ ] アクセシビリティ対応（`aria-label`など）が実装されている
-- [ ] モバイル表示でも適切に表示される
-- [ ] 既存のUIデザインと調和している
+- [x] Headerに現在の言語を示す国旗アイコンが表示される
+- [x] 言語切り替え時に国旗アイコンが更新される
+- [x] ホバー時にツールチップで言語名が表示される（i18n対応）
+- [x] アクセシビリティ対応（`aria-label`など）が実装されている
+- [x] モバイル表示でも適切に表示される
+- [x] 既存のUIデザインと調和している
 

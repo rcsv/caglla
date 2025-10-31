@@ -5,6 +5,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { useClickOutside } from '@/hooks/useClickOutside'
+import { getUserLanguage, LANGUAGE_NAMES } from '@/lib/utils/language'
+import type { SupportedLanguage } from '@/lib/core/types'
 
 export interface HomeHeaderProps {
   appName?: string
@@ -46,6 +48,29 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
     return `${base} text-gray-500`
   })()
 
+  // 言語→国旗のマッピング
+  const languageFlags: Record<SupportedLanguage, string> = {
+    ja: '🇯🇵',
+    en: '🇺🇸',
+    zh: '🇨🇳',
+    ko: '🇰🇷',
+    es: '🇪🇸',
+    fr: '🇫🇷',
+    de: '🇩🇪',
+    it: '🇮🇹',
+    pt: '🇵🇹'
+  }
+
+  // 現在の言語を取得
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>(() => getUserLanguage())
+  
+  // 言語が変更された時に更新（クライアントサイドでのみ）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentLanguage(getUserLanguage())
+    }
+  }, [])
+
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4 py-4">
@@ -77,7 +102,16 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
           <div className="relative" ref={menuRef}>
             <button onClick={() => setOpen(v => !v)} className="flex items-center gap-3">
               <div className="text-right leading-tight">
-                <div className="text-sm font-medium text-gray-900 truncate max-w-[160px]">{userName}</div>
+                <div className="flex items-center gap-1.5 justify-end">
+                  <div className="text-sm font-medium text-gray-900 truncate max-w-[160px]">{userName}</div>
+                  <span 
+                    className="text-base leading-none" 
+                    title={LANGUAGE_NAMES[currentLanguage]?.native || currentLanguage}
+                    aria-label={`Current language: ${LANGUAGE_NAMES[currentLanguage]?.native || currentLanguage}`}
+                  >
+                    {languageFlags[currentLanguage] || '🌐'}
+                  </span>
+                </div>
                 <div className={planNameClass}>{planName}</div>
               </div>
               <span className={`inline-flex p-[2px] rounded-full ${avatarBorderClass}`}>
