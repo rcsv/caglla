@@ -4,6 +4,7 @@ import logger from '@/lib/core/logger'
 import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { imageUploadHelpers } from '@/lib/storage/image-upload'
+import { t } from '@/lib/i18n'
 
 interface AvatarUploadProps {
   currentImageUrl?: string
@@ -24,7 +25,7 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
     // Validate file
     const validation = imageUploadHelpers.validateImageFile(file)
     if (!validation.valid) {
-      setError(validation.error || '無効なファイルです')
+      setError(validation.error || t('profile.image.invalid'))
       return
     }
 
@@ -45,7 +46,7 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
       onImageChange(imageUrl.downloadURL)
     } catch (error) {
       logger.error('Detailed upload error:', error)
-      setError(`画像のアップロードに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`)
+      setError(`${t('profile.image.uploadFailed')}: ${error instanceof Error ? error.message : t('profile.image.unknownError')}`)
     } finally {
       setUploading(false)
     }
@@ -58,7 +59,7 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
         onImageChange(null)
       } catch (error) {
         logger.error('Error deleting image:', error)
-        setError('画像の削除に失敗しました')
+        setError(t('profile.image.deleteFailed'))
       }
     }
   }
@@ -73,7 +74,7 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          プロフィール画像
+          {t('profile.image.title')}
         </label>
         
         <div className="flex items-center space-x-4">
@@ -83,7 +84,7 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
               <div className="relative">
                 <Image
                   src={currentImageUrl}
-                  alt="プロフィール画像"
+                  alt={t('profile.image.alt')}
                   width={80}
                   height={80}
                   className="w-20 h-20 object-cover rounded-full border-2 border-gray-300"
@@ -118,10 +119,10 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
               disabled={uploading || disabled}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition duration-200 disabled:cursor-not-allowed"
             >
-              {uploading ? 'アップロード中...' : currentImageUrl ? '画像を変更' : '画像をアップロード'}
+              {uploading ? t('profile.image.uploading') : currentImageUrl ? t('profile.image.change') : t('profile.image.upload')}
             </button>
             <p className="text-gray-500 text-xs mt-1">
-              JPEG、PNG、WebP形式（5MB以下）
+              {t('profile.image.formats')}
             </p>
           </div>
         </div>
