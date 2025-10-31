@@ -40,7 +40,6 @@
 
 | Issue | 状態 | 作成日 |
 |-------|------|--------|
-| [プロフィールページにFooterがない](profile-footer-missing.md) | 未解決 | 2025-10-31 |
 | [Feature: マイ・チェックリスト共有機能](feature-checklist-sharing.md) | 未実装 | 2025-10-31 |
 | [[userSlug]/[tripSlug]/page.tsxのボタンテイストが一致していない](trip-slug-page-button-styling-inconsistent.md) | 未解決 | 2025-10-31 |
 | [Headerのユーザー名横に言語選択状態を示す国旗アイコンを表示](header-language-flag-indicator.md) | 未解決 | 2025-10-31 |
@@ -51,12 +50,12 @@
 ## 📊 統計
 
 - **総Issue数**: 25件
-- **未解決**: 20件
-- **解決済み**: 1件
+- **未解決**: 19件
+- **解決済み**: 2件
 - **未実装（Feature）**: 4件
 - **高優先度**: 3件
 - **中優先度**: 16件
-- **低優先度**: 5件
+- **低優先度**: 4件
 
 ---
 
