@@ -193,10 +193,6 @@ export default function FAQPage() {
             </a>
           </SolidCard>
         </div>
-        <div className="mt-6 text-xs text-gray-500">
-          参考: モダンなサポート/FAQの考え方（検索・カテゴリ・自己解決）—
-          <a className="underline ml-1" href="https://www.layerise.com/resources/blog/post/10-examples-of-modern-support-pages" target="_blank" rel="noopener noreferrer">Layeriseの記事</a>
-        </div>
       </Section>
 
       {/* CTA */}
