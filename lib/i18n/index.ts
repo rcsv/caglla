@@ -12,6 +12,7 @@ export type TranslationKey =
   // Footer
   | 'footer.tagline'
   | 'footer.products'
+  | 'footer.products.summary'
   | 'footer.resources'
   | 'footer.company'
   | 'footer.releaseNotes'
@@ -279,6 +280,7 @@ const en: Dictionary = {
   // Footer
   'footer.tagline': 'Make your trips beautifully organized',
   'footer.products': 'Products',
+  'footer.products.summary': 'Summary',
   'footer.resources': 'Resources',
   'footer.company': 'Company',
   'footer.releaseNotes': 'Release notes',
@@ -545,6 +547,7 @@ const ja: Dictionary = {
   // Footer
   'footer.tagline': 'あなたの旅行を美しく管理する',
   'footer.products': '製品',
+  'footer.products.summary': '概要',
   'footer.resources': 'リソース',
   'footer.company': '会社情報',
   'footer.releaseNotes': 'リリースノート',
