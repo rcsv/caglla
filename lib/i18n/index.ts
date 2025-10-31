@@ -66,6 +66,9 @@ export type TranslationKey =
   | 'pricing.globetrotter.li1'
   | 'pricing.globetrotter.li2'
   | 'pricing.globetrotter.li3'
+  | 'pricing.price.season'
+  | 'pricing.price.backpacker'
+  | 'pricing.price.globetrotter'
   // Contact page
   | 'contact.title'
   | 'contact.sectionTitle'
@@ -253,6 +256,9 @@ const en: Dictionary = {
   'pricing.globetrotter.li1': 'Everything in backpacker',
   'pricing.globetrotter.li2': 'Route optimization (advanced)',
   'pricing.globetrotter.li3': 'Higher limits and priority support',
+  'pricing.price.season': '¥0',
+  'pricing.price.backpacker': '¥480/mo',
+  'pricing.price.globetrotter': '¥980/mo',
   // Contact page
   'contact.title': 'Contact',
   'contact.sectionTitle': 'Contact Us',
@@ -439,6 +445,9 @@ const ja: Dictionary = {
   'pricing.globetrotter.li1': 'backpacker のすべて',
   'pricing.globetrotter.li2': 'ルート最適化（拡張）',
   'pricing.globetrotter.li3': '上限緩和・優先サポート',
+  'pricing.price.season': '¥0',
+  'pricing.price.backpacker': '¥480/月',
+  'pricing.price.globetrotter': '¥980/月',
   // Contact page
   'contact.title': 'お問い合わせ',
   'contact.sectionTitle': 'お問い合わせ',
