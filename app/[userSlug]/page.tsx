@@ -20,6 +20,7 @@ import { t } from '@/lib/i18n'
 import Loading from '@/components/common/Loading'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
+import { LandingFooter } from '@/components/common/LandingFooter'
 
 export default function UserProfileBySlugPage() {
   const { user, loading } = useAuth()
@@ -614,6 +615,7 @@ export default function UserProfileBySlugPage() {
         )}
         </div>
       </main>
+      <LandingFooter />
     </div>
   )
 }
