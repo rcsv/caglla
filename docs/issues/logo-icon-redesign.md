@@ -20,9 +20,39 @@
 ## 🐛 現状の問題
 
 ### 現在のロゴ
-- 緑色の背景に白い人のシルエット
-- キャリーケースを引いている人のイメージ
-- **問題**: 非常口のマークとの類似性が高い
+
+#### 実装の詳細
+```tsx:components/common/LandingHeader.tsx
+// 24-27行目: 現在のロゴ実装
+<div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
+  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+  </svg>
+</div>
+```
+
+#### 原因究明（詳細調査完了）
+
+**現在のSVGパスの解析**:
+- SVGパスを解析すると、これは「家（ホーム）」アイコンを表している
+- `M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6`
+- これは家の形（三角の屋根、四角い壁、窓やドア）を描画している
+- **キャリーケースを引いている人のイメージではない**
+
+**問題点**:
+1. 現在のアイコンは「家」を表しており、旅行アプリのロゴとして不適切
+2. 緑色の背景に白い人のシルエット（実際には家のアイコン）が非常口マークに見える
+3. アイコンが`w-8 h-8`の正方形コンテナ内に`w-5 h-5`で収まっており、潰れている可能性がある
+
+**確認箇所**:
+- `components/common/LandingHeader.tsx` - 24-27行目（ランディングページ）
+- `components/common/LandingFooter.tsx` - 31-34行目（フッター）
+- `components/common/HomeHeader.tsx` - 56-58行目（ホームページ、`planner`アイコンを使用）
+- `components/planner/NavigationMenu.tsx` - 260-262行目（ナビゲーションメニュー、`PlannerIcon`を使用）
+
+**各箇所でのアイコン使用**:
+- ランディングページ/フッター: 現在の「家」SVGアイコン
+- ホームページ/ナビゲーション: `IconRenderer`で`planner`アイコン（`tabler:clipboard-text`）を使用
 
 ### 課題
 - ブランディングの一貫性
@@ -140,18 +170,56 @@
 
 ---
 
-## 💡 推奨案
+## 💡 推奨案（詳細検討後）
 
-**案1: 飛行機 + 地図ピン（最も推奨）**
-- 旅行アプリとして直感的
-- 飛行機は旅行の代表的なイメージ
-- 地図ピンは目的地・旅程計画を表現
-- Iconify: `tabler:plane` + `tabler:map-pin`
+### 案1: 飛行機 + 地図ピン（最も推奨）⭐️
 
-**案2: コンパス + 世界地図**
-- 探検・冒険のイメージ
+**理由**:
+- 旅行アプリとして最も直感的で分かりやすい
+- 飛行機は旅行の代表的なイメージ（移動手段）
+- 地図ピンは目的地・旅程計画を表現（アプリの核心機能）
+- Iconifyで実装可能（`tabler:plane` + `tabler:map-pin`）
+
+**実装案**:
+```tsx
+<div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
+  <div className="relative w-5 h-5">
+    <UnifiedIcon icon="tabler:plane" className="w-4 h-4 text-white absolute top-0 left-0" />
+    <UnifiedIcon icon="tabler:map-pin" className="w-3 h-3 text-white absolute bottom-0 right-0" />
+  </div>
+</div>
+```
+
+**アスペクト比の検討**:
+- 2つのアイコンを組み合わせるため、横長のコンテナ（`w-10 h-8`）を検討
+- または、アイコンを重ねて配置（飛行機の下に地図ピン）
+
+### 案2: コンパス + 世界地図
+
+**理由**:
+- 探検・冒険のイメージが強い
 - グローバルな視点を表現
 - Iconify: `tabler:compass` + `tabler:world`
+
+**課題**:
+- コンパスと世界地図の組み合わせは、少し複雑になる可能性
+- 小さいサイズ（favicon等）では認識しにくい可能性
+
+### 案3: 単一アイコン（実装が簡単）
+
+**Iconify候補**:
+- `tabler:plane-takeoff` - 出発を表現
+- `tabler:map-pin-filled` - 目的地を強調
+- `tabler:luggage` - 旅行の準備を表現
+
+**メリット**:
+- 実装が簡単
+- 小さいサイズでも認識しやすい
+- 現在の`w-8 h-8`コンテナで十分
+
+**デメリット**:
+- 表現力が限られる
+- 複合的な意味を表現しにくい
 
 ---
 

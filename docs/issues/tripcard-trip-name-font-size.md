@@ -37,6 +37,36 @@ TripCardコンポーネントに表示される旅行名（`trip.title`）のフ
 - 特に`standard`バリアントでは`text-lg`と比較的小さい
 - `font-semibold`（600）では十分に大胆ではない可能性がある
 
+### 原因究明（詳細調査完了）
+
+#### 現状の実装詳細
+```typescript:components/tripcard/TripCard.tsx
+// 62行目: imageFullバリアント
+<h3 className="text-2xl font-semibold drop-shadow-sm line-clamp-2">{trip.title}</h3>
+// → text-2xl = 1.5rem (24px), font-semibold = 600
+
+// 131行目: standardバリアント
+<h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{trip.title}</h3>
+// → text-lg = 1.125rem (18px), font-semibold = 600
+```
+
+#### 比較: 他の主要テキスト要素
+- **説明文**: `text-sm` (0.875rem / 14px) - 旅行名の約58%（standard）
+- **タグ**: `text-xs` (0.75rem / 12px) - 旅行名の約67%（standard）
+- **目的地**: `text-sm` (0.875rem / 14px)
+
+**問題点**:
+1. `standard`バリアントでは旅行名が説明文とそれほど大きくない（18px vs 14px）
+2. カード全体で見たときに、旅行名が最も重要な要素であるにもかかわらず視覚的階層が弱い
+3. `drop-shadow-sm`は`imageFull`のみで、`standard`にはない（コントラスト不足の可能性）
+
+#### 既存のデザインパターン
+- ホームページのヒーロー: `text-[clamp(3.5rem,10vw,9rem)]`（非常に大きい）
+- プロフィールページの名前: `text-3xl font-bold`（30px、700）
+- セクション見出し: `text-xl font-semibold`（20px、600）または`text-2xl font-bold`（24px、700）
+
+**推論**: TripCardの旅行名は、セクション見出しレベル（`text-xl`以上）またはプロフィール名レベル（`text-2xl`以上）にすべき
+
 ---
 
 ## 💡 期待される動作

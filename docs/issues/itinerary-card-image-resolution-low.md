@@ -30,26 +30,76 @@ Itinerary Cardに表示されている写真の解像度が、places_cacheに保
 
 ---
 
-## 🔍 技術的調査が必要な項目
+## 🔍 原因究明（詳細調査完了）
 
-### 1. 画像取得の優先順位
-- 現在の実装で、places_cacheから画像を取得しているか
-- 画像取得のロジック（キャッシュ優先か、API直接取得か）
+### 根本原因
 
-### 2. Google Places APIの画像サイズパラメータ
-- Google Places APIの`PhotoService`で使用している`maxWidth`や`maxHeight`パラメータ
-- 現在の設定値（例: `maxWidth: 400`など）
-- 最大可能な解像度（例: `maxWidth: 1600`）
+#### 1. **固定解像度での画像取得**
+```typescript:components/trip/ScheduleCard.tsx
+// 133行目: maxWidth: 800 を固定で使用
+const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photoReference, 800)
 
-### 3. places_cacheの画像保存形式
-- places_cacheに保存されている画像URLの形式
-- 画像の解像度情報が保存されているか
-- 複数の解像度が保存されているか（thumbnail, medium, largeなど）
+// 136-140行目: width: 800, height: 600 で固定キャッシュ
+const cachedImageResult = await getCachedPlaceImage(photoReference, googlePhotoUrl, {
+  width: 800,
+  height: 600,
+  quality: 85
+})
+```
 
-### 4. 画像表示の最適化
-- Next.js Imageコンポーネントの使用状況
-- `width`、`height`、`sizes`属性の設定
-- 画像の遅延読み込み（lazy loading）の影響
+**問題点**:
+- `places_cache`には`photos`配列に`width`と`height`情報が保存されている（`lib/core/types/place.ts` 95-99行目）
+- しかし、現在の実装ではこの解像度情報を活用せず、常に800pxで取得している
+- キャッシュも800pxで固定されているため、元画像が高解像度でも低解像度で保存される
+
+#### 2. **places_cacheの解像度情報が未活用**
+```typescript:lib/core/types/place.ts
+photos?: Array<{
+  photo_reference: string
+  height: number  // ← この情報が保存されているが未使用
+  width: number    // ← この情報が保存されているが未使用
+}>
+```
+
+**確認済み**:
+- `PlacesCache`インターフェースには`photos`配列が含まれており、各写真の`width`と`height`が保存されている
+- `lib/travel/places-cache.ts`の113行目で`placeData.photos`をそのままキャッシュに保存している
+- しかし、`ScheduleCard.tsx`では`photos[0]`の`photo_reference`のみを使用し、`width`/`height`は無視している
+
+#### 3. **画像取得APIのデフォルト値**
+```typescript:app/api/places/photo/route.ts
+// 22行目: デフォルトmaxWidthは800px
+const maxWidth = searchParams.get('maxwidth') || '800'
+```
+
+**確認済み**:
+- APIエンドポイントのデフォルトは800px
+- `lib/api/google/places.ts`の166行目でもデフォルト`maxWidth: 800`を使用
+
+#### 4. **キャッシュキーに解像度が含まれるが、単一解像度のみキャッシュ**
+```typescript:lib/storage/image-cache.ts
+// 37-40行目: キャッシュキーにwidth/heightを含む
+private generateCacheKey(photoReference: string, options: ImageCacheOptions = {}): string {
+  const { width = 300, height = 300, quality = 80 } = options
+  return `places-photos/${photoReference}_${width}x${height}_q${quality}.jpg`
+}
+```
+
+**問題点**:
+- キャッシュキーは解像度別に生成されるが、現在は800x600のみキャッシュ
+- 複数解像度をキャッシュする仕組みはあるが、使用されていない
+
+### 解決可能なポイント
+
+1. **places_cacheの解像度情報を活用**
+   - `itinerary.place_data.photos[0].width`から最高解像度を取得
+   - 複数の写真がある場合、最高解像度のものを選択
+   - ただし、Google Places APIの最大解像度は1600px程度
+
+2. **段階的な解像度選択**
+   - 高解像度（1600px）→ 中解像度（800px）→ 低解像度（400px）の順で試行
+   - キャッシュがあればそれを優先使用
+   - キャッシュがない場合のみAPIから取得
 
 ---
 
@@ -92,19 +142,67 @@ Itinerary Cardに表示されている写真の解像度が、places_cacheに保
 
 ## 📝 技術的実装詳細
 
-### 画像URL取得の実装例
+### 画像URL取得の実装例（修正版）
+
+#### 現在の実装（問題あり）
+```typescript:components/trip/ScheduleCard.tsx
+// 133行目: 固定800px
+const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photoReference, 800)
+const cachedImageResult = await getCachedPlaceImage(photoReference, googlePhotoUrl, {
+  width: 800,
+  height: 600,
+  quality: 85
+})
+```
+
+#### 修正後の実装案
 ```typescript
 // places_cacheから最高解像度の画像を取得
-const getImageUrl = (placeData: PlaceData): string | null => {
-  if (!placeData.photos || placeData.photos.length === 0) return null
-  
-  // 複数の解像度がある場合、最高解像度を選択
-  const photo = placeData.photos.find(p => p.width >= 1600) 
-    || placeData.photos.find(p => p.width >= 800)
-    || placeData.photos[0]
-  
-  return photo.getUrl({ maxWidth: 1600, maxHeight: 1600 })
+const loadImage = async () => {
+  if (itinerary.place_data?.photos && itinerary.place_data.photos.length > 0) {
+    const photos = itinerary.place_data.photos
+    
+    // 1. places_cacheの解像度情報から最高解像度を選択
+    // 最大1600px、最小800px（バランス考慮）
+    const targetWidth = Math.min(
+      Math.max(...photos.map(p => p.width)),
+      1600
+    )
+    const selectedPhoto = photos.find(p => p.width >= targetWidth) || photos[0]
+    
+    // 2. 選択された写真の解像度に基づいて画像URLを生成
+    const maxWidth = Math.min(selectedPhoto.width, 1600) // API上限考慮
+    const googlePhotoUrl = placesApiHelpers.getPhotoUrl(selectedPhoto.photo_reference, maxWidth)
+    
+    // 3. キャッシュから取得（解像度を指定）
+    const cachedImageResult = await getCachedPlaceImage(selectedPhoto.photo_reference, googlePhotoUrl, {
+      width: maxWidth,
+      height: Math.round(maxWidth * 0.75), // アスペクト比維持（16:9想定）
+      quality: 85
+    })
+    
+    setPhotoUrl(cachedImageResult.url)
+  }
 }
+```
+
+#### 代替案: 複数解像度の段階的取得
+```typescript
+// 高解像度から順に試行（キャッシュ優先）
+const resolutionOptions = [1600, 1200, 800, 400]
+
+for (const width of resolutionOptions) {
+  const cacheKey = generateCacheKey(photoReference, { width, height: width * 0.75 })
+  const cached = await getCachedImageUrl(photoReference, { width, height: width * 0.75 })
+  
+  if (cached) {
+    // キャッシュがあれば使用
+    return cached
+  }
+}
+
+// キャッシュがない場合は最高解像度で取得
+return await getPhotoUrl(photoReference, Math.max(...resolutionOptions))
 ```
 
 ### Google Places APIの画像取得
