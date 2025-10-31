@@ -41,21 +41,26 @@
 | Issue | 状態 | 作成日 |
 |-------|------|--------|
 | [Feature: マイ・チェックリスト共有機能](feature-checklist-sharing.md) | 未実装 | 2025-10-31 |
-| [[userSlug]/[tripSlug]/page.tsxのボタンテイストが一致していない](trip-slug-page-button-styling-inconsistent.md) | 未解決 | 2025-10-31 |
 | [Headerのユーザー名横に言語選択状態を示す国旗アイコンを表示](header-language-flag-indicator.md) | 未解決 | 2025-10-31 |
 | [Cagllaロゴアイコンの再デザイン](logo-icon-redesign.md) | 未解決 | 2025-10-31 |
+
+### ✅ 解決済み
+
+| Issue | 解決日 |
+|-------|--------|
+| [[userSlug]/[tripSlug]/page.tsxのボタンテイストが一致していない](trip-slug-page-button-styling-inconsistent.md) | 2025-10-31 |
 
 ---
 
 ## 📊 統計
 
 - **総Issue数**: 27件
-- **未解決**: 18件
-- **解決済み**: 4件
+- **未解決**: 17件
+- **解決済み**: 5件
 - **未実装（Feature）**: 5件
 - **高優先度**: 3件
 - **中優先度**: 16件
-- **低優先度**: 4件
+- **低優先度**: 3件
 
 ---
 

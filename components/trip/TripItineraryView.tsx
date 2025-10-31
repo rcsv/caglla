@@ -173,14 +173,14 @@ export default function TripItineraryView({
                 <div className="flex gap-2">
                   <button
                     onClick={expandAllDays}
-                    className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    className="p-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
                     title="全て展開"
                   >
                     <Icon icon="mdi:unfold-more-horizontal" className="w-5 h-5" />
                   </button>
                   <button
                     onClick={collapseAllDays}
-                    className="p-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                    className="p-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
                     title="全て折りたたみ"
                   >
                     <Icon icon="mdi:unfold-less-horizontal" className="w-5 h-5" />
@@ -317,7 +317,7 @@ export default function TripItineraryView({
                         <div className="flex justify-end items-center mb-4">
                           <button
                             onClick={() => onAddSchedule(day.id)}
-                            className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                            className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors"
                             title="Venueを追加"
                             aria-label="Venueを追加"
                           >
@@ -394,7 +394,7 @@ export default function TripItineraryView({
                                     {/* 挿入ボタン */}
                                     <button
                                       onClick={() => onInsertSchedule(day.id, sortedItineraries.length)}
-                                      className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
+                                      className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center hover:bg-emerald-600 transition-colors shadow-sm"
                                       title="最後にVenueを追加"
                                     >
                                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -418,7 +418,7 @@ export default function TripItineraryView({
                       <div className="text-center py-8 text-gray-500">
                         <button
                           onClick={() => onAddSchedule(day.id)}
-                          className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors mx-auto"
+                          className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors mx-auto"
                           title="Venueを追加"
                           aria-label="Venueを追加"
                         >
@@ -447,7 +447,7 @@ export default function TripItineraryView({
         <div className="mt-6 text-center">
           <button
             onClick={onAddDay}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 mx-auto"
+            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2 mx-auto"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

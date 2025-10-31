@@ -120,26 +120,26 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setShowLibraryModal(true)}
-              className="px-3 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
             >
               プリセットを適用
             </button>
             <button
               onClick={() => setShowMyPresetsModal(true)}
-              className="px-3 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
             >
               マイプリセット
             </button>
             <button
               onClick={() => setShowPresetModal(true)}
-              className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
             >
               プリセットとして保存
             </button>
             <button
               onClick={regenerate}
               disabled={saving || !tripId}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
               {saving ? '生成中...' : 'チェックリストを再生成'}
             </button>

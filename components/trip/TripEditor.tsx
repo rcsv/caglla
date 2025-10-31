@@ -429,7 +429,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
             type="button"
             onClick={handleSave}
             disabled={saving || !formData.title || dateError.length > 0}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+            className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
           >
             {saving ? '保存中...' : '保存'}
           </button>

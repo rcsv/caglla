@@ -19,8 +19,8 @@ export default function VenueInsertButton({ onInsert, dayId }: VenueInsertButton
         onMouseLeave={() => setIsHovered(false)}
         className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 ${
           isHovered 
-            ? 'bg-blue-500 text-white shadow-lg scale-110' 
-            : 'bg-blue-500 text-white hover:bg-blue-600'
+            ? 'bg-emerald-500 text-white shadow-lg scale-110' 
+            : 'bg-emerald-500 text-white hover:bg-emerald-600'
         }`}
         title="間にVenueを追加"
       >

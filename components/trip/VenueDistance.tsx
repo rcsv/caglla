@@ -153,7 +153,7 @@ export default function VenueDistance({
         {showInsertButton && onInsertVenue && (
           <button
             onClick={onInsertVenue}
-            className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors shadow-sm"
+            className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center hover:bg-emerald-600 transition-colors shadow-sm"
             title="間にVenueを追加"
           >
             <IconRenderer 
