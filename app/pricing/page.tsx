@@ -37,7 +37,7 @@ export default function PricingPage() {
           <SolidCard className="p-8">
             <div className="flex items-center gap-2 mb-3">
               <RocketIcon className="h-5 w-5 text-emerald-600" />
-              <h3 className="text-lg font-semibold text-gray-900">season_traveler</h3>
+              <h3 className="text-lg font-semibold text-gray-900">season traveler</h3>
             </div>
             <p className="text-3xl font-bold text-gray-900 mb-2">¥0</p>
             <p className="text-sm text-gray-600 mb-4">{t('pricing.season.subtitle')}</p>
@@ -53,7 +53,7 @@ export default function PricingPage() {
               <PlannerIcon className="h-5 w-5 text-emerald-600" />
               <h3 className="text-lg font-semibold text-gray-900">backpacker</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900 mb-2">¥480/月</p>
+            <p className="text-3xl font-bold text-gray-900 mb-2">¥480/mo</p>
             <p className="text-sm text-gray-600 mb-4">{t('pricing.backpacker.subtitle')}</p>
             <ul className="text-sm text-gray-700 space-y-2 list-disc pl-5">
               <li>{t('pricing.backpacker.li1')}</li>
@@ -67,7 +67,7 @@ export default function PricingPage() {
               <PieChartIcon className="h-5 w-5 text-emerald-600" />
               <h3 className="text-lg font-semibold text-gray-900">globetrotter</h3>
             </div>
-            <p className="text-3xl font-bold text-gray-900 mb-2">¥980/月</p>
+            <p className="text-3xl font-bold text-gray-900 mb-2">¥980/mo</p>
             <p className="text-sm text-gray-600 mb-4">{t('pricing.globetrotter.subtitle')}</p>
             <ul className="text-sm text-gray-700 space-y-2 list-disc pl-5">
               <li>{t('pricing.globetrotter.li1')}</li>
