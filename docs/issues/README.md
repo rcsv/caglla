@@ -35,6 +35,7 @@
 | [Feature(Backlog): POIDialogへの外部POI API統合（TripAdvisor / Foursquare）](poi-dialog-external-apis-backlog.md) | 未実装 | 2025-10-31 |
 | [Feature: プロフィールページにアクティビティタグ統計を表示](profile-activity-tag-statistics.md) | 未実装 | 2025-10-31 |
 | [Feature: 旅行費用サマリーにItinerary明細を表示](feature-trip-cost-itemized-breakdown.md) | 未実装 | 2025-10-31 |
+| [チェックリスト関連コンポーネントのi18n化](checklist-i18n-missing.md) | 未解決 | 2025-10-31 |
 
 ### 🟢 低優先度
 
@@ -54,12 +55,12 @@
 
 ## 📊 統計
 
-- **総Issue数**: 27件
-- **未解決**: 17件
+- **総Issue数**: 28件
+- **未解決**: 18件
 - **解決済み**: 5件
 - **未実装（Feature）**: 5件
 - **高優先度**: 3件
-- **中優先度**: 16件
+- **中優先度**: 17件
 - **低優先度**: 3件
 
 ---
