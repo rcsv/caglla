@@ -12,6 +12,7 @@ import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
 import { ClockIcon } from '@/components/common/icons/ClockIcon'
 import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
 import { LocationIcon } from '@/components/common/icons/LocationIcon'
+import { CagllaLogo } from '@/components/common/icons/CagllaLogo'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
 import { toDate } from '@/lib/firebase/timestamp-utils'
@@ -257,11 +258,9 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       <div className={`border-b border-gray-200 ${isCollapsed ? 'p-2' : 'p-3'}`}>
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-start gap-2'}`}>
           <Link href="/home" className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'} text-gray-900`} title="Home">
-            <span className="inline-flex items-center justify-center rounded-lg bg-emerald-500 text-white font-bold h-7 w-7">
-              <PlannerIcon className="h-4 w-4" />
-            </span>
+            <CagllaLogo className={isCollapsed ? 'w-7 h-7' : 'w-7 h-7'} />
             {!isCollapsed && (
-              <span className="text-base font-semibold tracking-tight">Caglla</span>
+              <span className="text-base font-semibold tracking-tight font-rajdhani">Caglla</span>
             )}
           </Link>
         </div>

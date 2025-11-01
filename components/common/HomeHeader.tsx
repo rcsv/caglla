@@ -7,6 +7,7 @@ import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { getUserLanguage, LANGUAGE_NAMES } from '@/lib/utils/language'
 import type { SupportedLanguage } from '@/lib/core/types'
+import { CagllaLogo } from '@/components/common/icons/CagllaLogo'
 
 export interface HomeHeaderProps {
   appName?: string
@@ -78,9 +79,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
           {/* Left: Logo and Nav */}
           <div className="flex items-center gap-6">
             <Link href="/home" className="flex items-center gap-2 text-gray-900">
-              <span className="inline-flex items-center justify-center rounded-lg bg-emerald-500 text-white font-bold h-8 w-8">
-                <IconRenderer iconName="planner" className="h-5 w-5" />
-              </span>
+              <CagllaLogo className="w-8 h-8" />
               <span className="text-xl font-bold font-rajdhani">{appName}</span>
             </Link>
             <nav className="hidden md:flex items-center gap-4 text-sm">
