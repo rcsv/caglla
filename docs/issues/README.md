@@ -20,6 +20,7 @@
 |-------|------|--------|
 | [プロフィールページでPrivate Tripsが表示されない](profile-private-trips-not-displaying.md) | 未解決 | 2025-10-31 |
 | [/home/page.tsxで使用しているコンポーネントがi18n化されていない](home-page-components-i18n.md) | 未解決 | 2025-10-31 |
+| [プロフィールページで編集画面にならないと表示言語の選択ができない](profile-language-selector-visibility.md) | 未解決 | 2025-10-31 |
 | [Checklistの再生成ボタンが動作しない](trip-slug-checklist-regenerate-not-working.md) | 未解決 | 2025-10-31 |
 | [Feature: マイ・チェックリスト機能](feature-my-checklist.md) | 未実装 | 2025-10-31 |
 | [i18n辞書の分割運用（ドメイン別＋型安全＋遅延ロード）](i18n-namespace-splitting-and-typed-loader.md) | 未解決 | 2025-10-31 |
@@ -55,12 +56,12 @@
 
 ## 📊 統計
 
-- **総Issue数**: 28件
-- **未解決**: 16件
+- **総Issue数**: 29件
+- **未解決**: 17件
 - **解決済み**: 7件
 - **未実装（Feature）**: 5件
 - **高優先度**: 3件
-- **中優先度**: 17件
+- **中優先度**: 18件
 - **低優先度**: 1件
 
 ---
