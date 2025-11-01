@@ -7,6 +7,7 @@ import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import Button from '@/components/common/Button'
 import { Icon } from '@iconify/react'
 import { useSubscription } from '@/lib/contexts/subscription'
+import { t } from '@/lib/i18n'
 
 interface ICalPublishModalProps {
   isOpen: boolean
@@ -51,14 +52,14 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
         try {
           const data = await res.json()
           if (data?.required_plan) {
-            setError('iCal公開機能はBackpacker以上のプランで利用できます')
+            setError(t('ical.planRequired'))
           } else if (data?.error) {
             setError(data.error)
           } else {
-            setError('iCal公開の有効化に失敗しました')
+            setError(t('ical.enableError'))
           }
         } catch {
-          setError('iCal公開の有効化に失敗しました')
+          setError(t('ical.enableError'))
         }
         setIsLoading(false)
         return
@@ -84,13 +85,13 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
       setIsLoading(false)
     } catch (error) {
       console.error('Enable iCal error:', error)
-      setError('iCal公開の有効化に失敗しました')
+      setError(t('ical.enableError'))
       setIsLoading(false)
     }
   }
 
   const handleDisable = async () => {
-    if (!confirm('iCal公開を無効にしますか？外部カレンダーアプリからアクセスできなくなります。')) {
+    if (!confirm(t('ical.disableConfirm'))) {
       return
     }
 
@@ -105,9 +106,9 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
       if (!res.ok) {
         try {
           const data = await res.json()
-          setError(data?.error || 'iCal公開の無効化に失敗しました')
+          setError(data?.error || t('ical.disableError'))
         } catch {
-          setError('iCal公開の無効化に失敗しました')
+          setError(t('ical.disableError'))
         }
         setIsLoading(false)
         return
@@ -126,7 +127,7 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
       setIsLoading(false)
     } catch (error) {
       console.error('Disable iCal error:', error)
-      setError('iCal公開の無効化に失敗しました')
+      setError(t('ical.disableError'))
       setIsLoading(false)
     }
   }
@@ -153,12 +154,12 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
             <Icon icon="mdi:calendar-sync" className="w-6 h-6 text-blue-600" />
-            iCal公開設定
+            {t('ical.title')}
           </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="閉じる"
+            aria-label={t('ical.close')}
           >
             <Icon icon="mdi:close" className="w-6 h-6" />
           </button>
@@ -172,9 +173,9 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
               <div className="flex items-start gap-2">
                 <Icon icon="mdi:lock" className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-900">プレミアム機能</p>
+                  <p className="text-sm font-medium text-yellow-900">{t('ical.premiumFeature')}</p>
                   <p className="text-sm text-yellow-800 mt-1">
-                    iCal公開機能はBackpacker以上のプランで利用できます。
+                    {t('ical.premiumFeatureDescription')}
                   </p>
                 </div>
               </div>
@@ -186,12 +187,12 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
             <div className="flex items-start gap-2">
               <Icon icon="mdi:information" className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-blue-900">
-                <p className="font-medium mb-2">iCal公開機能について</p>
+                <p className="font-medium mb-2">{t('ical.about.title')}</p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>Google Calendar、Apple Calendar等のカレンダーアプリに取り込めます</li>
-                  <li>カレンダーアプリが定期的に自動更新します</li>
-                  <li>URLを知っている人なら誰でもアクセスできます</li>
-                  <li>いつでも無効化できます</li>
+                  <li>{t('ical.about.li1')}</li>
+                  <li>{t('ical.about.li2')}</li>
+                  <li>{t('ical.about.li3')}</li>
+                  <li>{t('ical.about.li4')}</li>
                 </ul>
               </div>
             </div>
@@ -213,7 +214,7 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
               <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Icon icon="mdi:check-circle" className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-medium text-green-900">iCal公開中</span>
+                  <span className="text-sm font-medium text-green-900">{t('ical.enabled')}</span>
                 </div>
                 <Button
                   onClick={handleDisable}
@@ -221,14 +222,14 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
                   disabled={isLoading}
                   className="text-sm"
                 >
-                  無効化
+                  {t('ical.disable')}
                 </Button>
               </div>
 
               {/* iCal URL */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  旅程全体のiCal URL
+                  {t('ical.tripUrl')}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -246,12 +247,12 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
                     {copiedUrl === 'trip' ? (
                       <>
                         <Icon icon="mdi:check" className="w-5 h-5" />
-                        コピー済み
+                        {t('ical.copied')}
                       </>
                     ) : (
                       <>
                         <Icon icon="mdi:content-copy" className="w-5 h-5" />
-                        コピー
+                        {t('ical.copy')}
                       </>
                     )}
                   </Button>
@@ -260,7 +261,7 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  予約情報のみのiCal URL
+                  {t('ical.reservationsUrl')}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -278,12 +279,12 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
                     {copiedUrl === 'reservations' ? (
                       <>
                         <Icon icon="mdi:check" className="w-5 h-5" />
-                        コピー済み
+                        {t('ical.copied')}
                       </>
                     ) : (
                       <>
                         <Icon icon="mdi:content-copy" className="w-5 h-5" />
-                        コピー
+                        {t('ical.copy')}
                       </>
                     )}
                   </Button>
@@ -292,18 +293,18 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
 
               {/* 使い方 */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-900 mb-2">カレンダーアプリへの追加方法</p>
+                <p className="text-sm font-medium text-gray-900 mb-2">{t('ical.addToCalendar.title')}</p>
                 <ul className="text-sm text-gray-700 space-y-1">
-                  <li><strong>Google Calendar:</strong> 「他のカレンダー」→「URLで追加」→ URLを貼り付け</li>
-                  <li><strong>Apple Calendar:</strong> 「ファイル」→「新規カレンダー照会」→ URLを貼り付け</li>
-                  <li><strong>Outlook:</strong> 「カレンダー追加」→「インターネットから」→ URLを貼り付け</li>
+                  <li><strong>Google Calendar:</strong> {t('ical.addToCalendar.google')}</li>
+                  <li><strong>Apple Calendar:</strong> {t('ical.addToCalendar.apple')}</li>
+                  <li><strong>Outlook:</strong> {t('ical.addToCalendar.outlook')}</li>
                 </ul>
               </div>
             </div>
           ) : (
             <div className="text-center py-8">
               <Icon icon="mdi:calendar-remove" className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">iCal公開が無効です</p>
+              <p className="text-gray-600 mb-4">{t('ical.disabled')}</p>
               <Button
                 onClick={handleEnable}
                 variant="primary"
@@ -313,12 +314,12 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
                 {isLoading ? (
                   <>
                     <Icon icon="mdi:loading" className="w-5 h-5 animate-spin" />
-                    有効化中...
+                    {t('ical.enabling')}
                   </>
                 ) : (
                   <>
                     <Icon icon="mdi:calendar-sync" className="w-5 h-5" />
-                    iCal公開を有効化
+                    {t('ical.enable')}
                   </>
                 )}
               </Button>
@@ -332,7 +333,7 @@ export default function ICalPublishModal({ isOpen, onClose, trip, onUpdate }: IC
             onClick={onClose}
             variant="secondary"
           >
-            閉じる
+            {t('ical.closeButton')}
           </Button>
         </div>
       </div>

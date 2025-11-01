@@ -322,6 +322,34 @@ export type TranslationKey =
   | 'profile.stats.countries.title'
   | 'profile.stats.times'
   | 'profile.stats.countries.more'
+  // iCal Publish Modal
+  | 'ical.title'
+  | 'ical.close'
+  | 'ical.closeButton'
+  | 'ical.premiumFeature'
+  | 'ical.premiumFeatureDescription'
+  | 'ical.about.title'
+  | 'ical.about.li1'
+  | 'ical.about.li2'
+  | 'ical.about.li3'
+  | 'ical.about.li4'
+  | 'ical.enabled'
+  | 'ical.disable'
+  | 'ical.tripUrl'
+  | 'ical.reservationsUrl'
+  | 'ical.copy'
+  | 'ical.copied'
+  | 'ical.addToCalendar.title'
+  | 'ical.addToCalendar.google'
+  | 'ical.addToCalendar.apple'
+  | 'ical.addToCalendar.outlook'
+  | 'ical.disabled'
+  | 'ical.enabling'
+  | 'ical.enable'
+  | 'ical.enableError'
+  | 'ical.disableConfirm'
+  | 'ical.disableError'
+  | 'ical.planRequired'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -646,6 +674,34 @@ const en: Dictionary = {
   'profile.stats.countries.title': 'Top Countries',
   'profile.stats.times': 'times',
   'profile.stats.countries.more': 'and {count} more countries',
+  // iCal Publish Modal
+  'ical.title': 'iCal Publishing Settings',
+  'ical.close': 'Close',
+  'ical.closeButton': 'Close',
+  'ical.premiumFeature': 'Premium Feature',
+  'ical.premiumFeatureDescription': 'iCal publishing is available with Backpacker plan or higher.',
+  'ical.about.title': 'About iCal Publishing',
+  'ical.about.li1': 'Can be imported into calendar apps like Google Calendar, Apple Calendar, etc.',
+  'ical.about.li2': 'Calendar apps will automatically update periodically',
+  'ical.about.li3': 'Anyone with the URL can access it',
+  'ical.about.li4': 'Can be disabled at any time',
+  'ical.enabled': 'iCal Publishing Enabled',
+  'ical.disable': 'Disable',
+  'ical.tripUrl': 'Full Trip iCal URL',
+  'ical.reservationsUrl': 'Reservations Only iCal URL',
+  'ical.copy': 'Copy',
+  'ical.copied': 'Copied',
+  'ical.addToCalendar.title': 'How to Add to Calendar Apps',
+  'ical.addToCalendar.google': 'Google Calendar: "Other calendars" → "Add by URL" → Paste URL',
+  'ical.addToCalendar.apple': 'Apple Calendar: "File" → "New Calendar Subscription" → Paste URL',
+  'ical.addToCalendar.outlook': 'Outlook: "Add calendar" → "Subscribe from web" → Paste URL',
+  'ical.disabled': 'iCal publishing is disabled',
+  'ical.enabling': 'Enabling...',
+  'ical.enable': 'Enable iCal Publishing',
+  'ical.enableError': 'Failed to enable iCal publishing',
+  'ical.disableConfirm': 'Disable iCal publishing? External calendar apps will no longer be able to access it.',
+  'ical.disableError': 'Failed to disable iCal publishing',
+  'ical.planRequired': 'iCal publishing is available with Backpacker plan or higher',
 }
 
 const ja: Dictionary = {
@@ -969,6 +1025,34 @@ const ja: Dictionary = {
   'profile.stats.countries.title': '訪問国トップ5',
   'profile.stats.times': '回',
   'profile.stats.countries.more': 'あと{count}カ国',
+  // iCal Publish Modal
+  'ical.title': 'iCal公開設定',
+  'ical.close': '閉じる',
+  'ical.closeButton': '閉じる',
+  'ical.premiumFeature': 'プレミアム機能',
+  'ical.premiumFeatureDescription': 'iCal公開機能はBackpacker以上のプランで利用できます。',
+  'ical.about.title': 'iCal公開機能について',
+  'ical.about.li1': 'Google Calendar、Apple Calendar等のカレンダーアプリに取り込めます',
+  'ical.about.li2': 'カレンダーアプリが定期的に自動更新します',
+  'ical.about.li3': 'URLを知っている人なら誰でもアクセスできます',
+  'ical.about.li4': 'いつでも無効化できます',
+  'ical.enabled': 'iCal公開中',
+  'ical.disable': '無効化',
+  'ical.tripUrl': '旅程全体のiCal URL',
+  'ical.reservationsUrl': '予約情報のみのiCal URL',
+  'ical.copy': 'コピー',
+  'ical.copied': 'コピー済み',
+  'ical.addToCalendar.title': 'カレンダーアプリへの追加方法',
+  'ical.addToCalendar.google': 'Google Calendar: 「他のカレンダー」→「URLで追加」→ URLを貼り付け',
+  'ical.addToCalendar.apple': 'Apple Calendar: 「ファイル」→「新規カレンダー照会」→ URLを貼り付け',
+  'ical.addToCalendar.outlook': 'Outlook: 「カレンダー追加」→「インターネットから」→ URLを貼り付け',
+  'ical.disabled': 'iCal公開が無効です',
+  'ical.enabling': '有効化中...',
+  'ical.enable': 'iCal公開を有効化',
+  'ical.enableError': 'iCal公開の有効化に失敗しました',
+  'ical.disableConfirm': 'iCal公開を無効にしますか？外部カレンダーアプリからアクセスできなくなります。',
+  'ical.disableError': 'iCal公開の無効化に失敗しました',
+  'ical.planRequired': 'iCal公開機能はBackpacker以上のプランで利用できます',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
