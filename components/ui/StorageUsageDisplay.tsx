@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/contexts/auth'
 import { StorageUsage, StorageQuota } from '@/lib/core/types'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
+import { t } from '@/lib/i18n'
 
 interface StorageUsageDisplayProps {
   className?: string
@@ -54,11 +55,11 @@ export default function StorageUsageDisplay({
       if (result.success) {
         setStorageData(result.data)
       } else {
-        setError(result.error || 'ストレージ使用量の取得に失敗しました')
+        setError(result.error || t('home.dashboard.storage.fetchError'))
       }
     } catch (error) {
       logger.error('Error fetching storage usage:', error)
-      setError('ストレージ使用量の取得に失敗しました')
+      setError(t('home.dashboard.storage.fetchError'))
     } finally {
       setLoading(false)
     }
@@ -93,7 +94,7 @@ export default function StorageUsageDisplay({
       })
 
       if (!response.ok) {
-        throw new Error('ファイルの削除に失敗しました')
+        throw new Error(t('home.dashboard.storage.deleteError'))
       }
 
       const result = await response.json()
@@ -101,11 +102,11 @@ export default function StorageUsageDisplay({
         // 使用量を再取得
         await fetchStorageUsage()
       } else {
-        throw new Error(result.error || 'ファイルの削除に失敗しました')
+        throw new Error(result.error || t('home.dashboard.storage.deleteError'))
       }
     } catch (error: any) {
       logger.error('Error deleting file:', error)
-      setError(error.message || 'ファイルの削除に失敗しました')
+      setError(error.message || t('home.dashboard.storage.deleteError'))
     } finally {
       setDeleting(null)
     }
@@ -132,7 +133,7 @@ export default function StorageUsageDisplay({
           onClick={fetchStorageUsage}
           className="ml-2 px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
         >
-          再試行
+          {t('home.dashboard.storage.retry')}
         </button>
       </div>
     )
@@ -161,7 +162,7 @@ export default function StorageUsageDisplay({
       {/* ストレージ使用量の概要 */}
       <div className="flex items-center justify-between">
         <span className="text-sm text-gray-600">
-          ストレージ使用量
+          {t('home.dashboard.storage.title')}
         </span>
         <span className="text-sm font-medium">
           {formattedUsage.totalBytes} / {formattedUsage.maxBytes}
@@ -185,10 +186,10 @@ export default function StorageUsageDisplay({
       {/* 使用率とファイル数 */}
       <div className="flex items-center justify-between text-xs text-gray-500">
         <span>
-          {usagePercentage.toFixed(1)}% 使用中
+          {t('home.dashboard.storage.inUse').replace('{percentage}', usagePercentage.toFixed(1))}
         </span>
         <span>
-          {usage.fileCount} / {quota.maxFiles} ファイル
+          {usage.fileCount} / {quota.maxFiles} {t('home.dashboard.storage.files')}
         </span>
       </div>
 
@@ -196,7 +197,7 @@ export default function StorageUsageDisplay({
       {showDetails && (
         <div className="mt-3 p-3 bg-gray-50 rounded-lg">
           <h4 className="text-sm font-medium text-gray-700 mb-2">
-            プラン詳細
+            {t('home.dashboard.storage.details.title')}
           </h4>
           <p className="text-xs text-gray-600 mb-2">
             {quota.description}
@@ -205,31 +206,31 @@ export default function StorageUsageDisplay({
           {usagePercentage >= 80 && (
             <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800 flex items-center gap-1">
               <IconRenderer iconName="warning" className="w-3 h-3" color="#d97706" />
-              ストレージ使用量が{usagePercentage >= 90 ? '90%' : '80%'}を超えています。
-              {usagePercentage >= 90 && ' プランのアップグレードを検討してください。'}
+              {t('home.dashboard.storage.details.warning').replace('{percentage}', usagePercentage >= 90 ? '90' : '80')}
+              {usagePercentage >= 90 && t('home.dashboard.storage.details.upgradeSuggestion')}
             </div>
           )}
 
           {usagePercentage >= 100 && (
             <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded text-xs text-red-800 flex items-center gap-1">
               <IconRenderer iconName="prohibition" className="w-3 h-3" color="#dc2626" />
-              ストレージ制限に達しています。ファイルを削除するか、プランをアップグレードしてください。
+              {t('home.dashboard.storage.details.limitReached')}
             </div>
           )}
 
           {/* アップロード履歴 */}
           {usage.files && usage.files.length > 0 && (
             <div className="mt-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">アップロード履歴</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">{t('home.dashboard.storage.details.history')}</h4>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left p-1">ファイル名</th>
-                      <th className="text-left p-1">サイズ</th>
-                      <th className="text-left p-1">種類</th>
-                      <th className="text-left p-1">日時</th>
-                      {showDeleteButtons && <th className="text-left p-1">操作</th>}
+                      <th className="text-left p-1">{t('home.dashboard.storage.details.fileName')}</th>
+                      <th className="text-left p-1">{t('home.dashboard.storage.details.size')}</th>
+                      <th className="text-left p-1">{t('home.dashboard.storage.details.type')}</th>
+                      <th className="text-left p-1">{t('home.dashboard.storage.details.dateTime')}</th>
+                      {showDeleteButtons && <th className="text-left p-1">{t('home.dashboard.storage.details.action')}</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -245,7 +246,7 @@ export default function StorageUsageDisplay({
                               ? 'bg-blue-100 text-blue-800' 
                               : 'bg-green-100 text-green-800'
                           }`}>
-                            {file.isAvatar ? 'アバター' : '旅行画像'}
+                            {file.isAvatar ? t('home.dashboard.storage.details.avatar') : t('home.dashboard.storage.details.tripImage')}
                           </span>
                         </td>
                         <td className="p-1 text-xs">{formatDate(file.uploadedAt)}</td>
@@ -260,7 +261,7 @@ export default function StorageUsageDisplay({
                                   : 'bg-red-100 text-red-800 hover:bg-red-200'
                               }`}
                             >
-                              {deleting === file.id ? '削除中...' : '削除'}
+                              {deleting === file.id ? t('home.dashboard.storage.details.deleting') : t('home.dashboard.storage.details.delete')}
                             </button>
                           </td>
                         )}
@@ -278,7 +279,7 @@ export default function StorageUsageDisplay({
               onClick={fetchStorageUsage}
               className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
             >
-              データを更新
+              {t('home.dashboard.storage.details.refresh')}
             </button>
           </div>
         </div>

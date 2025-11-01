@@ -241,6 +241,27 @@ export type TranslationKey =
   | 'home.dashboard.nextTrip.empty.description'
   | 'home.dashboard.nextTrip.empty.mapPlaceholder'
   | 'home.dashboard.nextTrip.empty.mapDescription'
+  | 'home.dashboard.storage.title'
+  | 'home.dashboard.storage.inUse'
+  | 'home.dashboard.storage.files'
+  | 'home.dashboard.storage.fetchError'
+  | 'home.dashboard.storage.deleteError'
+  | 'home.dashboard.storage.retry'
+  | 'home.dashboard.storage.details.title'
+  | 'home.dashboard.storage.details.warning'
+  | 'home.dashboard.storage.details.upgradeSuggestion'
+  | 'home.dashboard.storage.details.limitReached'
+  | 'home.dashboard.storage.details.history'
+  | 'home.dashboard.storage.details.fileName'
+  | 'home.dashboard.storage.details.size'
+  | 'home.dashboard.storage.details.type'
+  | 'home.dashboard.storage.details.dateTime'
+  | 'home.dashboard.storage.details.action'
+  | 'home.dashboard.storage.details.avatar'
+  | 'home.dashboard.storage.details.tripImage'
+  | 'home.dashboard.storage.details.deleting'
+  | 'home.dashboard.storage.details.delete'
+  | 'home.dashboard.storage.details.refresh'
   // Profile page
   | 'profile.back'
   | 'profile.title'
@@ -535,6 +556,27 @@ const en: Dictionary = {
   'home.dashboard.nextTrip.empty.description': 'Create your first trip and start your amazing adventure!',
   'home.dashboard.nextTrip.empty.mapPlaceholder': 'Trip Map',
   'home.dashboard.nextTrip.empty.mapDescription': 'The map will be displayed when you create a trip',
+  'home.dashboard.storage.title': 'Storage Usage',
+  'home.dashboard.storage.inUse': '{percentage}% in use',
+  'home.dashboard.storage.files': 'files',
+  'home.dashboard.storage.fetchError': 'Failed to fetch storage usage',
+  'home.dashboard.storage.deleteError': 'Failed to delete file',
+  'home.dashboard.storage.retry': 'Retry',
+  'home.dashboard.storage.details.title': 'Plan Details',
+  'home.dashboard.storage.details.warning': 'Storage usage exceeds {percentage}%',
+  'home.dashboard.storage.details.upgradeSuggestion': ' Consider upgrading your plan.',
+  'home.dashboard.storage.details.limitReached': 'Storage limit reached. Delete files or upgrade your plan.',
+  'home.dashboard.storage.details.history': 'Upload History',
+  'home.dashboard.storage.details.fileName': 'File Name',
+  'home.dashboard.storage.details.size': 'Size',
+  'home.dashboard.storage.details.type': 'Type',
+  'home.dashboard.storage.details.dateTime': 'Date/Time',
+  'home.dashboard.storage.details.action': 'Action',
+  'home.dashboard.storage.details.avatar': 'Avatar',
+  'home.dashboard.storage.details.tripImage': 'Trip Image',
+  'home.dashboard.storage.details.deleting': 'Deleting...',
+  'home.dashboard.storage.details.delete': 'Delete',
+  'home.dashboard.storage.details.refresh': 'Refresh Data',
   // Profile page
   'profile.back': '← Back',
   'profile.title': 'Profile',
@@ -828,6 +870,27 @@ const ja: Dictionary = {
   'home.dashboard.nextTrip.empty.description': '最初の旅行を作成して、素晴らしい冒険を始めましょう！',
   'home.dashboard.nextTrip.empty.mapPlaceholder': '旅行マップ',
   'home.dashboard.nextTrip.empty.mapDescription': '旅行を作成すると地図が表示されます',
+  'home.dashboard.storage.title': 'ストレージ使用量',
+  'home.dashboard.storage.inUse': '{percentage}% 使用中',
+  'home.dashboard.storage.files': 'ファイル',
+  'home.dashboard.storage.fetchError': 'ストレージ使用量の取得に失敗しました',
+  'home.dashboard.storage.deleteError': 'ファイルの削除に失敗しました',
+  'home.dashboard.storage.retry': '再試行',
+  'home.dashboard.storage.details.title': 'プラン詳細',
+  'home.dashboard.storage.details.warning': 'ストレージ使用量が{percentage}%を超えています。',
+  'home.dashboard.storage.details.upgradeSuggestion': ' プランのアップグレードを検討してください。',
+  'home.dashboard.storage.details.limitReached': 'ストレージ制限に達しています。ファイルを削除するか、プランをアップグレードしてください。',
+  'home.dashboard.storage.details.history': 'アップロード履歴',
+  'home.dashboard.storage.details.fileName': 'ファイル名',
+  'home.dashboard.storage.details.size': 'サイズ',
+  'home.dashboard.storage.details.type': '種類',
+  'home.dashboard.storage.details.dateTime': '日時',
+  'home.dashboard.storage.details.action': '操作',
+  'home.dashboard.storage.details.avatar': 'アバター',
+  'home.dashboard.storage.details.tripImage': '旅行画像',
+  'home.dashboard.storage.details.deleting': '削除中...',
+  'home.dashboard.storage.details.delete': '削除',
+  'home.dashboard.storage.details.refresh': 'データを更新',
   // Profile page
   'profile.back': '← 戻る',
   'profile.title': 'プロフィール',
