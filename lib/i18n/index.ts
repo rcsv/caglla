@@ -379,10 +379,15 @@ export type TranslationKey =
   | 'trip.itineraryView.empty.title'
   | 'trip.itineraryView.empty.description'
   // Navigation Menu
+  | 'nav.weatherForecast'
   | 'nav.reservation'
+  | 'nav.reservationTitle'
   | 'nav.travelCost'
+  | 'nav.budgetTitle'
   | 'nav.activityStats'
+  | 'nav.activityStatisticsTitle'
   | 'nav.totalDistance'
+  | 'nav.distancesTitle'
   | 'nav.schedule'
   // POI Dialog
   | 'poi.website'
@@ -771,10 +776,15 @@ const en: Dictionary = {
   'trip.itineraryView.empty.title': 'No days added yet',
   'trip.itineraryView.empty.description': 'Add days to plan your trip',
   // Navigation Menu
+  'nav.weatherForecast': 'Weather Forecast',
   'nav.reservation': 'Reservation',
+  'nav.reservationTitle': 'Reservation',
   'nav.travelCost': 'Travel Cost',
+  'nav.budgetTitle': 'Budget',
   'nav.activityStats': 'Activity Statistics',
+  'nav.activityStatisticsTitle': 'Activity Statistics',
   'nav.totalDistance': 'Total Distance',
+  'nav.distancesTitle': 'Distances',
   'nav.schedule': 'Schedule',
   // POI Dialog
   'poi.website': 'Website',
@@ -1162,10 +1172,15 @@ const ja: Dictionary = {
   'trip.itineraryView.empty.title': 'まだ日程が追加されていません',
   'trip.itineraryView.empty.description': '日程を追加して旅行を計画しましょう',
   // Navigation Menu
+  'nav.weatherForecast': '天気予報',
   'nav.reservation': '予約情報',
+  'nav.reservationTitle': 'Reservation',
   'nav.travelCost': '旅行費用',
+  'nav.budgetTitle': 'Budget',
   'nav.activityStats': 'アクティビティ統計',
+  'nav.activityStatisticsTitle': 'Activity Statistics',
   'nav.totalDistance': '総移動距離',
+  'nav.distancesTitle': 'Distances',
   'nav.schedule': '日程',
   // POI Dialog
   'poi.website': 'ウェブサイト',

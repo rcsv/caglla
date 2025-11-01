@@ -71,35 +71,35 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       children: [
         {
           id: 'weather-forecast',
-          title: 'Weather Forecast',
-          subtitle: '天気予報',
+          title: t('nav.weatherForecast'),
+          subtitle: t('nav.weatherForecast'),
           icon: <CloudIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('weather-forecast')
         },
         {
           id: 'reservation',
-          title: 'Reservation',
+          title: t('nav.reservationTitle'),
           subtitle: t('nav.reservation'),
           icon: <BookmarkIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('reservation')
         },
         {
           id: 'budget',
-          title: 'Budget',
+          title: t('nav.budgetTitle'),
           subtitle: t('nav.travelCost'),
           icon: <MoneyIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('budget')
         },
         {
           id: 'activity-statistics',
-          title: 'Activity Statistics',
+          title: t('nav.activityStatisticsTitle'),
           subtitle: t('nav.activityStats'),
           icon: <PieChartIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('activity-statistics')
         },
         {
           id: 'distance-summary',
-          title: 'Distances',
+          title: t('nav.distancesTitle'),
           subtitle: t('nav.totalDistance'),
           icon: <LocationIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('distance-summary')
@@ -382,7 +382,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                               }`}>
                                 {item.title}
                               </div>
-                              {item.subtitle && (
+                              {item.subtitle && item.subtitle !== item.title && (
                                 <div className="text-xs text-gray-500 truncate">
                                   {item.subtitle}
                                 </div>
