@@ -8,6 +8,10 @@ export type TranslationKey =
   | 'login'
   | 'travelGuide'
   | 'memories'
+  | 'memories.page.title'
+  | 'memories.page.description'
+  | 'memories.page.empty'
+  | 'memories.page.year'
   | 'devTools'
   // Footer
   | 'footer.tagline'
@@ -323,6 +327,10 @@ const en: Dictionary = {
   login: 'Log in',
   travelGuide: 'Travel Guide',
   memories: 'Memories',
+  'memories.page.title': 'Memories',
+  'memories.page.description': 'Look back on your past trips',
+  'memories.page.empty': 'No memories yet',
+  'memories.page.year': '',
   devTools: 'Dev Tools',
   // Footer
   'footer.tagline': 'Make your trips beautifully organized',
@@ -637,6 +645,10 @@ const ja: Dictionary = {
   login: 'ログイン',
   travelGuide: 'トラベルガイド',
   memories: '思い出',
+  'memories.page.title': '思い出',
+  'memories.page.description': '過去の旅行を振り返りましょう',
+  'memories.page.empty': '思い出がまだありません',
+  'memories.page.year': '年',
   devTools: '開発ツール',
   // Footer
   'footer.tagline': 'あなたの旅行を美しく管理する',

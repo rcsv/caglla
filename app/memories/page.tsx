@@ -10,6 +10,7 @@ import TripCard from '@/components/tripcard/TripCard'
 import Card from '@/components/common/Card'
 import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
+import { t } from '@/lib/i18n'
 // 設定モーダルはプロフィールページへ移行
 import type { Trip } from '@/lib/core/types'
 
@@ -63,20 +64,20 @@ export default function MemoriesListPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">思い出</h1>
-          <p className="text-gray-600 mt-2">過去の旅行を振り返りましょう</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('memories.page.title')}</h1>
+          <p className="text-gray-600 mt-2">{t('memories.page.description')}</p>
         </div>
 
         {pastTrips.length === 0 ? (
           <Card padding="lg">
-            <div className="text-center text-gray-500 py-12">思い出がまだありません</div>
+            <div className="text-center text-gray-500 py-12">{t('memories.page.empty')}</div>
           </Card>
         ) : (
           <div className="space-y-8">
             {sortedYears.map(year => (
               <Card
                 key={year}
-                title={<div className="text-xl font-semibold text-gray-900">{year}年</div>}
+                title={<div className="text-xl font-semibold text-gray-900">{year}{t('memories.page.year')}</div>}
                 padding="lg"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
