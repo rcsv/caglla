@@ -12,6 +12,8 @@ export type TranslationKey =
   | 'memories.page.description'
   | 'memories.page.empty'
   | 'memories.page.year'
+  | 'plan.page.title'
+  | 'plan.page.empty'
   | 'devTools'
   // Footer
   | 'footer.tagline'
@@ -331,6 +333,8 @@ const en: Dictionary = {
   'memories.page.description': 'Look back on your past trips',
   'memories.page.empty': 'No memories yet',
   'memories.page.year': '',
+  'plan.page.title': 'Upcoming Trip Plans',
+  'plan.page.empty': 'No upcoming trip plans',
   devTools: 'Dev Tools',
   // Footer
   'footer.tagline': 'Make your trips beautifully organized',
@@ -649,6 +653,8 @@ const ja: Dictionary = {
   'memories.page.description': '過去の旅行を振り返りましょう',
   'memories.page.empty': '思い出がまだありません',
   'memories.page.year': '年',
+  'plan.page.title': '今後の旅行プラン',
+  'plan.page.empty': '今後の旅行プランはありません',
   devTools: '開発ツール',
   // Footer
   'footer.tagline': 'あなたの旅行を美しく管理する',

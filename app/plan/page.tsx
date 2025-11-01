@@ -10,6 +10,7 @@ import TripCard from '@/components/tripcard/TripCard'
 import Card from '@/components/common/Card'
 import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
+import { t } from '@/lib/i18n'
 // 設定モーダルはプロフィールページへ移行
 
 export default function PlanListPage() {
@@ -49,11 +50,11 @@ export default function PlanListPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Card
-          title={<div className="flex items-center justify-between"><span className="text-lg font-medium text-gray-900">今後の旅行プラン</span></div>}
+          title={<div className="flex items-center justify-between"><span className="text-lg font-medium text-gray-900">{t('plan.page.title')}</span></div>}
           padding="lg"
         >
           {futureTrips.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">今後の旅行プランはありません</div>
+            <div className="text-center text-gray-500 py-12">{t('plan.page.empty')}</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {futureTrips.map(trip => (
