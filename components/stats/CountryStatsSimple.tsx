@@ -7,6 +7,8 @@ import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { PinIcon } from '@/components/common/icons/PinIcon'
 import { getCountryFlag } from '@/lib/utils/country-flags'
 import { t } from '@/lib/i18n'
+import { getUserLanguage } from '@/lib/utils/language'
+import type { SupportedLanguage } from '@/lib/core/types'
 
 interface CountryStatsSimpleProps {
   userId: string
@@ -19,9 +21,14 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
   const [error, setError] = useState<string | null>(null)
   const [totalTrips, setTotalTrips] = useState(0)
   const [totalCountries, setTotalCountries] = useState(0)
+  const [currentLanguage, setCurrentLanguage] = useState<SupportedLanguage>(() => getUserLanguage())
 
   useEffect(() => {
     fetchCountryStats()
+    // 言語が変更された時に更新（クライアントサイドでのみ）
+    if (typeof window !== 'undefined') {
+      setCurrentLanguage(getUserLanguage())
+    }
   }, [userId])
 
   const fetchCountryStats = async () => {
@@ -119,8 +126,14 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
                 {getCountryFlag(group.countryCode)}
               </div>
               <div>
-                <div className="font-medium text-gray-800">{group.countryNameJa}</div>
-                <div className="text-sm text-gray-500">{group.countryName}</div>
+                {currentLanguage === 'en' ? (
+                  <div className="font-medium text-gray-800">{group.countryName}</div>
+                ) : (
+                  <>
+                    <div className="font-medium text-gray-800">{group.countryNameJa}</div>
+                    <div className="text-sm text-gray-500">{group.countryName}</div>
+                  </>
+                )}
               </div>
             </div>
             <div className="flex items-center space-x-2">
