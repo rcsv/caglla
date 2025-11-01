@@ -16,6 +16,8 @@ import { CagllaLogo } from '@/components/common/icons/CagllaLogo'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
 import { toDate } from '@/lib/firebase/timestamp-utils'
+import { t } from '@/lib/i18n'
+import PremiumButton from '@/components/ui/PremiumButton'
 
 interface NavigationMenuProps {
   trip: Trip
@@ -77,28 +79,28 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
         {
           id: 'reservation',
           title: 'Reservation',
-          subtitle: '予約情報',
+          subtitle: t('nav.reservation'),
           icon: <BookmarkIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('reservation')
         },
         {
           id: 'budget',
           title: 'Budget',
-          subtitle: '旅行費用',
+          subtitle: t('nav.travelCost'),
           icon: <MoneyIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('budget')
         },
         {
           id: 'activity-statistics',
           title: 'Activity Statistics',
-          subtitle: 'アクティビティ統計',
+          subtitle: t('nav.activityStats'),
           icon: <PieChartIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('activity-statistics')
         },
         {
           id: 'distance-summary',
           title: 'Distances',
-          subtitle: '総移動距離',
+          subtitle: t('nav.totalDistance'),
           icon: <LocationIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('distance-summary')
         }

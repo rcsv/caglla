@@ -1,6 +1,7 @@
 import { IconRenderer } from '../common/icons/IconRenderer'
 import { formatTimeForDisplay } from '@/lib/utils/time-validation'
 import { currencyUtils } from '@/lib/utils/currency'
+import { t } from '@/lib/i18n'
 
 interface ScheduleInfoDisplayProps {
   startTime: string
@@ -38,7 +39,7 @@ export function ScheduleInfoDisplay({
             className="text-sm text-gray-500 cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
             onClick={onTimeEdit}
           >
-            時間
+            {t('trip.schedule.time')}
           </span>
         )}
       </div>
@@ -58,7 +59,7 @@ export function ScheduleInfoDisplay({
             className="text-sm text-gray-500 cursor-pointer hover:text-green-600 hover:bg-green-50 px-2 py-1 rounded transition-colors"
             onClick={onCostEdit}
           >
-            費用
+            {t('trip.schedule.cost')}
           </span>
         )}
       </div>
@@ -73,7 +74,7 @@ export function ScheduleInfoDisplay({
             onReservationEdit()
           }}
         >
-          予約
+          {t('trip.schedule.reservation')}
         </span>
       </div>
     </div>

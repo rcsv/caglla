@@ -11,6 +11,7 @@ import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useEffect, useRef } from 'react'
 import { toDate } from '@/lib/firebase/timestamp-utils'
+import { t } from '@/lib/i18n'
 
 interface TripItineraryViewProps {
   trip: Trip
@@ -167,21 +168,21 @@ export default function TripItineraryView({
       {/* Days */}
       <div className="space-y-8">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">日程</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('trip.itineraryView.title')}</h2>
           <div className="flex items-center gap-2">
               {trip.days && trip.days.length > 0 && (
                 <div className="flex gap-2">
                   <button
                     onClick={expandAllDays}
                     className="p-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
-                    title="全て展開"
+                    title={t('trip.itineraryView.expandAll')}
                   >
                     <Icon icon="mdi:unfold-more-horizontal" className="w-5 h-5" />
                   </button>
                   <button
                     onClick={collapseAllDays}
                     className="p-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
-                    title="全て折りたたみ"
+                    title={t('trip.itineraryView.collapseAll')}
                   >
                     <Icon icon="mdi:unfold-less-horizontal" className="w-5 h-5" />
                   </button>
@@ -439,7 +440,7 @@ export default function TripItineraryView({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <p className="text-gray-600 mb-4">日程を追加して旅行を計画しましょう</p>
+            <p className="text-gray-600 mb-4">{t('trip.itineraryView.empty.description')}</p>
           </div>
         )}
         
@@ -452,7 +453,7 @@ export default function TripItineraryView({
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            日程を追加
+            {t('trip.itineraryView.addDay')}
           </button>
         </div>
       </div>

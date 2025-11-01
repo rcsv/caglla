@@ -25,6 +25,7 @@ import TripEditor from '@/components/trip/TripEditor'
 import { getCachedPlaces } from '@/lib/travel/places-cache'
 import { useUserData } from '@/lib/contexts/user-data'
 import { exportTripToPdf, canExportToPdf } from '@/lib/utils/export-helpers'
+import { t } from '@/lib/i18n'
 
 export default function SlugBasedTripPage() {
   const { user, loading, logout } = useAuth()
@@ -1126,7 +1127,7 @@ export default function SlugBasedTripPage() {
         },
         {
           id: 'calendar-publish',
-          label: 'Calendar 配信',
+          label: t('trip.calendarPublish'),
           icon: 'mdi:calendar-sync',
           onClick: () => setShowICalPublishModal(true),
         },

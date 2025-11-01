@@ -12,6 +12,7 @@ import type { PlaceData } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
 import ImageGalleryModal from './ImageGalleryModal'
+import { t } from '@/lib/i18n'
 
 interface POIDialogProps {
   poiData: {
@@ -481,7 +482,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
           {loading && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-              <span className="ml-2 text-sm text-gray-600">POI情報を読み込み中...</span>
+              <span className="ml-2 text-sm text-gray-600">{t('poi.loadingInfo')}</span>
             </div>
           )}
 
@@ -751,8 +752,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                         </svg>
                       )}
                       onClick={() => window.open(placeDetails.website, '_blank', 'noopener,noreferrer')}
-                    >
-                      ウェブサイト
+                      >
+                      {t('poi.website')}
                     </Button>
                   )}
                   {placeDetails.url && (
@@ -784,7 +785,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                     {cachedImages[currentPhotoIndex] ? (
                       <Image
                         src={cachedImages[currentPhotoIndex].url}
-                        alt={`${poiData.name}の写真`}
+                        alt={t('poi.photoOf').replace('{name}', poiData.name)}
                         width={128}
                         height={128}
                         className="w-full h-full object-cover"
@@ -797,11 +798,11 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         {imageLoading ? (
-                          <div className="text-gray-500 text-xs">読み込み中...</div>
+                          <div className="text-gray-500 text-xs">{t('poi.loading')}</div>
                         ) : (
                           <Image
                             src={placesApiHelpers.getPhotoUrl(placeDetails.photos[currentPhotoIndex].photo_reference, 300)}
-                            alt={`${poiData.name}の写真`}
+                            alt={t('poi.photoOf').replace('{name}', poiData.name)}
                             width={128}
                             height={128}
                             className="w-full h-full object-cover"
@@ -817,7 +818,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                     {/* キャッシュ状態インジケーター */}
                     {cachedImages[currentPhotoIndex]?.cached && (
                       <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                        キャッシュ
+                        {t('poi.cached')}
                       </div>
                     )}
                     {/* クリック可能インジケーター */}

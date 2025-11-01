@@ -350,6 +350,46 @@ export type TranslationKey =
   | 'ical.disableConfirm'
   | 'ical.disableError'
   | 'ical.planRequired'
+  // Trip Itinerary Page
+  | 'trip.calendarPublish'
+  | 'trip.itinerary'
+  | 'trip.schedule.time'
+  | 'trip.schedule.cost'
+  | 'trip.schedule.reservation'
+  | 'trip.schedule.activity'
+  | 'trip.schedule.categorySelect'
+  | 'trip.schedule.categoryDetail'
+  | 'trip.schedule.clear'
+  | 'trip.schedule.selected'
+  | 'trip.routeOptimization.title'
+  | 'trip.routeOptimization.button'
+  | 'trip.routeOptimization.optimizing'
+  | 'trip.routeOptimization.needTwoOrMore'
+  | 'trip.routeOptimization.failed'
+  | 'trip.routeOptimization.error'
+  | 'trip.routeOptimization.calculatePlaces'
+  | 'trip.routeOptimization.optimizedOrder'
+  | 'trip.routeOptimization.apply'
+  | 'trip.routeOptimization.cancel'
+  | 'trip.routeOptimization.applyFailed'
+  | 'trip.itineraryView.title'
+  | 'trip.itineraryView.addDay'
+  | 'trip.itineraryView.expandAll'
+  | 'trip.itineraryView.collapseAll'
+  | 'trip.itineraryView.empty.title'
+  | 'trip.itineraryView.empty.description'
+  // Navigation Menu
+  | 'nav.reservation'
+  | 'nav.travelCost'
+  | 'nav.activityStats'
+  | 'nav.totalDistance'
+  | 'nav.schedule'
+  // POI Dialog
+  | 'poi.website'
+  | 'poi.cached'
+  | 'poi.loading'
+  | 'poi.loadingInfo'
+  | 'poi.photoOf'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -702,6 +742,46 @@ const en: Dictionary = {
   'ical.disableConfirm': 'Disable iCal publishing? External calendar apps will no longer be able to access it.',
   'ical.disableError': 'Failed to disable iCal publishing',
   'ical.planRequired': 'iCal publishing is available with Backpacker plan or higher',
+  // Trip Itinerary Page
+  'trip.calendarPublish': 'Calendar Publish',
+  'trip.itinerary': 'Itinerary',
+  'trip.schedule.time': 'Time',
+  'trip.schedule.cost': 'Cost',
+  'trip.schedule.reservation': 'Reservation',
+  'trip.schedule.activity': 'Activity',
+  'trip.schedule.categorySelect': 'Select Category',
+  'trip.schedule.categoryDetail': 'Select Detail',
+  'trip.schedule.clear': 'Clear',
+  'trip.schedule.selected': 'Selected',
+  'trip.routeOptimization.title': 'Route Optimization',
+  'trip.routeOptimization.button': 'Route Optimization',
+  'trip.routeOptimization.optimizing': 'Optimizing...',
+  'trip.routeOptimization.needTwoOrMore': 'Route optimization requires 2 or more locations',
+  'trip.routeOptimization.failed': 'Route optimization failed',
+  'trip.routeOptimization.error': 'An error occurred during route optimization',
+  'trip.routeOptimization.calculatePlaces': 'Calculate optimal route for {count} places',
+  'trip.routeOptimization.optimizedOrder': 'Optimized Visit Order',
+  'trip.routeOptimization.apply': 'Apply this order',
+  'trip.routeOptimization.cancel': 'Cancel',
+  'trip.routeOptimization.applyFailed': 'Failed to apply optimization',
+  'trip.itineraryView.title': 'Itinerary',
+  'trip.itineraryView.addDay': 'Add Day',
+  'trip.itineraryView.expandAll': 'Expand All',
+  'trip.itineraryView.collapseAll': 'Collapse All',
+  'trip.itineraryView.empty.title': 'No days added yet',
+  'trip.itineraryView.empty.description': 'Add days to plan your trip',
+  // Navigation Menu
+  'nav.reservation': 'Reservation',
+  'nav.travelCost': 'Travel Cost',
+  'nav.activityStats': 'Activity Statistics',
+  'nav.totalDistance': 'Total Distance',
+  'nav.schedule': 'Schedule',
+  // POI Dialog
+  'poi.website': 'Website',
+  'poi.cached': 'Cached',
+  'poi.loading': 'Loading...',
+  'poi.loadingInfo': 'Loading POI information...',
+  'poi.photoOf': 'Photo of {name}',
 }
 
 const ja: Dictionary = {
@@ -1053,6 +1133,46 @@ const ja: Dictionary = {
   'ical.disableConfirm': 'iCal公開を無効にしますか？外部カレンダーアプリからアクセスできなくなります。',
   'ical.disableError': 'iCal公開の無効化に失敗しました',
   'ical.planRequired': 'iCal公開機能はBackpacker以上のプランで利用できます',
+  // Trip Itinerary Page
+  'trip.calendarPublish': 'Calendar 配信',
+  'trip.itinerary': '日程',
+  'trip.schedule.time': '時間',
+  'trip.schedule.cost': '費用',
+  'trip.schedule.reservation': '予約',
+  'trip.schedule.activity': 'アクティビティ',
+  'trip.schedule.categorySelect': 'カテゴリー選択',
+  'trip.schedule.categoryDetail': '詳細選択',
+  'trip.schedule.clear': 'クリア',
+  'trip.schedule.selected': '選択中',
+  'trip.routeOptimization.title': 'ルート最適化',
+  'trip.routeOptimization.button': 'ルート最適化',
+  'trip.routeOptimization.optimizing': '最適化中...',
+  'trip.routeOptimization.needTwoOrMore': 'ルート最適化には2つ以上の場所が必要です',
+  'trip.routeOptimization.failed': 'ルート最適化に失敗しました',
+  'trip.routeOptimization.error': 'ルート最適化中にエラーが発生しました',
+  'trip.routeOptimization.calculatePlaces': '{count}箇所の最適ルートを計算',
+  'trip.routeOptimization.optimizedOrder': '最適化された訪問順序',
+  'trip.routeOptimization.apply': 'この順序を適用',
+  'trip.routeOptimization.cancel': 'キャンセル',
+  'trip.routeOptimization.applyFailed': '最適化の適用に失敗しました',
+  'trip.itineraryView.title': '日程',
+  'trip.itineraryView.addDay': '日程を追加',
+  'trip.itineraryView.expandAll': '全て展開',
+  'trip.itineraryView.collapseAll': '全て折りたたみ',
+  'trip.itineraryView.empty.title': 'まだ日程が追加されていません',
+  'trip.itineraryView.empty.description': '日程を追加して旅行を計画しましょう',
+  // Navigation Menu
+  'nav.reservation': '予約情報',
+  'nav.travelCost': '旅行費用',
+  'nav.activityStats': 'アクティビティ統計',
+  'nav.totalDistance': '総移動距離',
+  'nav.schedule': '日程',
+  // POI Dialog
+  'poi.website': 'ウェブサイト',
+  'poi.cached': 'キャッシュ',
+  'poi.loading': '読み込み中...',
+  'poi.loadingInfo': 'POI情報を読み込み中...',
+  'poi.photoOf': '{name}の写真',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {

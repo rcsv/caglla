@@ -7,6 +7,7 @@ import { optimizeWaypoints, estimateRouteCost } from '@/lib/travel/route-optimiz
 import { applyOptimizedOrder } from '@/lib/travel/itinerary-reorder'
 import RouteOptimizationDisplay from './RouteOptimizationDisplay'
 import PremiumButton from '@/components/ui/PremiumButton'
+import { t } from '@/lib/i18n'
 
 interface DailyRouteOptimizerProps {
   dayId: string
@@ -33,7 +34,7 @@ export default function DailyRouteOptimizer({
 
   const handleOptimize = async () => {
     if (validItineraries.length < 2) {
-      setError('ルート最適化には2つ以上の場所が必要です')
+      setError(t('trip.routeOptimization.needTwoOrMore'))
       return
     }
 
@@ -65,11 +66,11 @@ export default function DailyRouteOptimizer({
         setOptimizationResult(result)
         setShowOptimization(true)
       } else {
-        setError('ルート最適化に失敗しました')
+        setError(t('trip.routeOptimization.failed'))
       }
     } catch (err) {
       logger.error('Route optimization error:', err)
-      setError('ルート最適化中にエラーが発生しました')
+      setError(t('trip.routeOptimization.error'))
     } finally {
       setIsOptimizing(false)
     }
@@ -130,7 +131,7 @@ export default function DailyRouteOptimizer({
         setShowOptimization(false)
         setOptimizationResult(null)
       } else {
-        setError(`最適化の適用に失敗しました: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        setError(`${t('trip.routeOptimization.applyFailed')}: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
   }
@@ -144,7 +145,7 @@ export default function DailyRouteOptimizer({
   if (validItineraries.length < 2) {
     return (
       <div className={`text-sm text-gray-500 ${className}`}>
-        ルート最適化には2つ以上の場所が必要です
+        {t('trip.routeOptimization.needTwoOrMore')}
       </div>
     )
   }
@@ -154,15 +155,15 @@ export default function DailyRouteOptimizer({
       {/* 最適化ボタン */}
       <div className="flex items-center gap-3">
         <PremiumButton
-          featureName="ルート最適化"
+          featureName={t('trip.routeOptimization.title')}
           onClick={handleOptimize}
           className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {isOptimizing ? '最適化中...' : 'ルート最適化'}
+          {isOptimizing ? t('trip.routeOptimization.optimizing') : t('trip.routeOptimization.button')}
         </PremiumButton>
         
         <div className="text-sm text-gray-600">
-          {validItineraries.length}箇所の最適ルートを計算
+          {t('trip.routeOptimization.calculatePlaces').replace('{count}', String(validItineraries.length))}
         </div>
       </div>
 
@@ -196,7 +197,7 @@ export default function DailyRouteOptimizer({
           {/* 最適化された順序の表示 */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <h3 className="text-sm font-semibold text-yellow-800 mb-2">
-              最適化された訪問順序
+              {t('trip.routeOptimization.optimizedOrder')}
             </h3>
             <div className="text-sm text-yellow-700">
               {optimizationResult.optimizedOrder.map((index: number, orderIndex: number) => {
@@ -222,13 +223,13 @@ export default function DailyRouteOptimizer({
               onClick={handleApplyOptimization}
               className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
             >
-              この順序を適用
+              {t('trip.routeOptimization.apply')}
             </button>
             <button
               onClick={handleCancelOptimization}
               className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
             >
-              キャンセル
+              {t('trip.routeOptimization.cancel')}
             </button>
           </div>
         </div>
