@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/common/Button'
 import StorageUsageDisplay from '@/components/ui/StorageUsageDisplay'
 import Link from 'next/link'
+import { t } from '@/lib/i18n'
 
 interface PlanInfoDisplayProps {
   className?: string
@@ -43,7 +44,7 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
     return (
       <div className={`bg-white border border-gray-200 p-4 ${className}`}>
         <div className="text-center text-gray-500 text-sm">
-          プラン情報が取得できませんでした
+          {t('home.dashboard.planInfo.error')}
         </div>
       </div>
     )
@@ -78,9 +79,11 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
         {maxTrips !== -1 && (
           <div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600">旅行設定数</span>
+              <span className="text-sm text-gray-600">{t('home.dashboard.planInfo.tripLimit')}</span>
               <span className="text-sm text-gray-900">
-                {tripCount} / {maxTrips}件
+                {t('home.dashboard.planInfo.tripLimitCount')
+                  .replace('{count}', String(tripCount))
+                  .replace('{max}', String(maxTrips))}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -103,7 +106,7 @@ export default function PlanInfoDisplay({ className = '' }: PlanInfoDisplayProps
       <div className="mt-4 pt-4 border-t border-gray-100">
         <Link href="/subscription" className="block">
           <Button variant="outline" size="sm" fullWidth>
-            プラン変更
+            {t('home.dashboard.planInfo.changePlan')}
           </Button>
         </Link>
       </div>

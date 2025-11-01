@@ -215,6 +215,32 @@ export type TranslationKey =
   | 'home.dashboard.recentlyChecked.title'
   | 'home.dashboard.recentlyChecked.empty'
   | 'home.dashboard.recentlyChecked.planned'
+  | 'home.dashboard.memories.title'
+  | 'home.dashboard.memories.count'
+  | 'home.dashboard.memories.viewAll'
+  | 'home.dashboard.upcomingTrips.title'
+  | 'home.dashboard.upcomingTrips.count'
+  | 'home.dashboard.upcomingTrips.viewAll'
+  | 'home.dashboard.countryStats.title'
+  | 'home.dashboard.countryStats.summary'
+  | 'home.dashboard.countryStats.times'
+  | 'home.dashboard.countryStats.empty'
+  | 'home.dashboard.countryStats.error'
+  | 'home.dashboard.countryStats.retry'
+  | 'home.dashboard.countryStats.viewDetails'
+  | 'home.dashboard.planInfo.error'
+  | 'home.dashboard.planInfo.tripLimit'
+  | 'home.dashboard.planInfo.tripLimitCount'
+  | 'home.dashboard.planInfo.changePlan'
+  | 'home.dashboard.nextTrip.title'
+  | 'home.dashboard.nextTrip.createNew'
+  | 'home.dashboard.nextTrip.create'
+  | 'home.dashboard.nextTrip.description'
+  | 'home.dashboard.nextTrip.createDescription'
+  | 'home.dashboard.nextTrip.empty.title'
+  | 'home.dashboard.nextTrip.empty.description'
+  | 'home.dashboard.nextTrip.empty.mapPlaceholder'
+  | 'home.dashboard.nextTrip.empty.mapDescription'
   // Profile page
   | 'profile.back'
   | 'profile.title'
@@ -483,6 +509,32 @@ const en: Dictionary = {
   'home.dashboard.recentlyChecked.title': 'Recently Checked Trips',
   'home.dashboard.recentlyChecked.empty': 'No recently checked trips',
   'home.dashboard.recentlyChecked.planned': '(To be implemented)',
+  'home.dashboard.memories.title': 'Memories',
+  'home.dashboard.memories.count': '{count} trips',
+  'home.dashboard.memories.viewAll': 'View All Memories',
+  'home.dashboard.upcomingTrips.title': 'Upcoming Trips',
+  'home.dashboard.upcomingTrips.count': '{count} trips',
+  'home.dashboard.upcomingTrips.viewAll': 'View All Trip Plans',
+  'home.dashboard.countryStats.title': 'Country Statistics',
+  'home.dashboard.countryStats.summary': '{totalTrips} trips • {totalCountries} countries',
+  'home.dashboard.countryStats.times': 'times',
+  'home.dashboard.countryStats.empty': 'No trips yet',
+  'home.dashboard.countryStats.error': 'An error occurred',
+  'home.dashboard.countryStats.retry': 'Retry',
+  'home.dashboard.countryStats.viewDetails': 'View Details →',
+  'home.dashboard.planInfo.error': 'Failed to retrieve plan information',
+  'home.dashboard.planInfo.tripLimit': 'Trip Limit',
+  'home.dashboard.planInfo.tripLimitCount': '{count} / {max} trips',
+  'home.dashboard.planInfo.changePlan': 'Change Plan',
+  'home.dashboard.nextTrip.title': 'Next Trip Plan',
+  'home.dashboard.nextTrip.createNew': 'Create New Trip',
+  'home.dashboard.nextTrip.create': 'Create Trip',
+  'home.dashboard.nextTrip.description': 'Check out your next adventure',
+  'home.dashboard.nextTrip.createDescription': 'Start planning your amazing adventure',
+  'home.dashboard.nextTrip.empty.title': 'No trips yet',
+  'home.dashboard.nextTrip.empty.description': 'Create your first trip and start your amazing adventure!',
+  'home.dashboard.nextTrip.empty.mapPlaceholder': 'Trip Map',
+  'home.dashboard.nextTrip.empty.mapDescription': 'The map will be displayed when you create a trip',
   // Profile page
   'profile.back': '← Back',
   'profile.title': 'Profile',
@@ -750,6 +802,32 @@ const ja: Dictionary = {
   'home.dashboard.recentlyChecked.title': '最近チェックした旅行',
   'home.dashboard.recentlyChecked.empty': '最近チェックした旅行はありません',
   'home.dashboard.recentlyChecked.planned': '（実装予定）',
+  'home.dashboard.memories.title': '思い出',
+  'home.dashboard.memories.count': '{count}件',
+  'home.dashboard.memories.viewAll': 'すべての思い出',
+  'home.dashboard.upcomingTrips.title': '計画中の旅行',
+  'home.dashboard.upcomingTrips.count': '{count}件',
+  'home.dashboard.upcomingTrips.viewAll': 'すべての旅行プラン',
+  'home.dashboard.countryStats.title': '国別統計',
+  'home.dashboard.countryStats.summary': '{totalTrips}回の旅行 • {totalCountries}カ国',
+  'home.dashboard.countryStats.times': '回',
+  'home.dashboard.countryStats.empty': 'まだ旅行がありません',
+  'home.dashboard.countryStats.error': 'エラーが発生しました',
+  'home.dashboard.countryStats.retry': '再試行',
+  'home.dashboard.countryStats.viewDetails': '詳細を見る →',
+  'home.dashboard.planInfo.error': 'プラン情報が取得できませんでした',
+  'home.dashboard.planInfo.tripLimit': '旅行設定数',
+  'home.dashboard.planInfo.tripLimitCount': '{count} / {max}件',
+  'home.dashboard.planInfo.changePlan': 'プラン変更',
+  'home.dashboard.nextTrip.title': '次の旅行プラン',
+  'home.dashboard.nextTrip.createNew': '新しい旅行を作成',
+  'home.dashboard.nextTrip.create': '旅行を作成',
+  'home.dashboard.nextTrip.description': 'あなたの次の冒険を確認しましょう',
+  'home.dashboard.nextTrip.createDescription': '素晴らしい冒険の計画を始めましょう',
+  'home.dashboard.nextTrip.empty.title': 'まだ旅行がありません',
+  'home.dashboard.nextTrip.empty.description': '最初の旅行を作成して、素晴らしい冒険を始めましょう！',
+  'home.dashboard.nextTrip.empty.mapPlaceholder': '旅行マップ',
+  'home.dashboard.nextTrip.empty.mapDescription': '旅行を作成すると地図が表示されます',
   // Profile page
   'profile.back': '← 戻る',
   'profile.title': 'プロフィール',

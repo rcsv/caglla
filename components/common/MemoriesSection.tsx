@@ -6,6 +6,7 @@ import Card from '@/components/common/Card'
 import Button from '@/components/common/Button'
 import TripCard from '@/components/tripcard/TripCard'
 import type { Trip } from '@/lib/core/types'
+import { t } from '@/lib/i18n'
 
 export interface MemoriesSectionProps {
   trips: Trip[]
@@ -22,14 +23,14 @@ export const MemoriesSection: React.FC<MemoriesSectionProps> = ({ trips }) => {
         title={
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">思い出</h2>
-              <span className="px-4 text-gray-500 text-sm">{trips.length}件</span>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('home.dashboard.memories.title')}</h2>
+              <span className="px-4 text-gray-500 text-sm">{t('home.dashboard.memories.count').replace('{count}', String(trips.length))}</span>
             </div>
             <Button
               variant="outline"
               size="lg"
               onClick={() => router.push('/memories')}
-            >すべての思い出</Button>
+            >{t('home.dashboard.memories.viewAll')}</Button>
           </div>
         }
         padding="lg"

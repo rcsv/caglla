@@ -7,6 +7,7 @@ import Card from '@/components/common/Card'
 import TripCard from '@/components/tripcard/TripCard'
 import type { Trip } from '@/lib/core/types'
 import Button from './Button'
+import { t } from '@/lib/i18n'
 
 export interface UpcomingTripsSectionProps {
   trips: Trip[]
@@ -23,13 +24,13 @@ export const UpcomingTripsSection: React.FC<UpcomingTripsSectionProps> = ({ trip
         title={
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">計画中の旅行</h2>
-              <span className="px-4 text-gray-500 text-sm">{trips.length}件</span>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('home.dashboard.upcomingTrips.title')}</h2>
+              <span className="px-4 text-gray-500 text-sm">{t('home.dashboard.upcomingTrips.count').replace('{count}', String(trips.length))}</span>
             </div>
             <Button
               variant="outline"
               size="lg"
-              onClick={() => router.push('/plan')}>すべての旅行プラン</Button>
+              onClick={() => router.push('/plan')}>{t('home.dashboard.upcomingTrips.viewAll')}</Button>
 
             {/* <Link href="/plan" className="text-sm text-blue-600 hover:underline">すべて見る</Link> */}
           </div>

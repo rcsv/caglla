@@ -10,6 +10,7 @@ import { useUserData } from '@/lib/contexts/user-data'
 import { RestrictionProvider, RestrictionType } from '@/lib/subscription/restriction'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import type { Trip } from '@/lib/core/types'
+import { t } from '@/lib/i18n'
 
 interface NextTripCardProps {
   nextTrip?: Trip
@@ -45,12 +46,12 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
         <div className="flex justify-between items-center mb-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {nextTrip ? '次の旅行プラン' : '新しい旅行を作成'}
+              {nextTrip ? t('home.dashboard.nextTrip.title') : t('home.dashboard.nextTrip.createNew')}
             </h2>
             <p className="text-gray-600">
               {nextTrip 
-                ? 'あなたの次の冒険を確認しましょう' 
-                : '素晴らしい冒険の計画を始めましょう'
+                ? t('home.dashboard.nextTrip.description')
+                : t('home.dashboard.nextTrip.createDescription')
               }
             </p>
           </div>
@@ -59,7 +60,7 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
             onClick={handleCreateTripClick}
             disabled={!canCreateTrip}
           >
-            {nextTrip ? '新しい旅行を作成' : '旅行を作成'}
+            {nextTrip ? t('home.dashboard.nextTrip.createNew') : t('home.dashboard.nextTrip.create')}
           </Button>
         </div>
 
@@ -74,17 +75,16 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
                 <div className="mb-4">
                   <IconRenderer iconName="airplane" className="w-14 h-14 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">まだ旅行がありません</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('home.dashboard.nextTrip.empty.title')}</h3>
                 <p className="text-gray-600 text-center mb-6">
-                  最初の旅行を作成して、<br />
-                  素晴らしい冒険を始めましょう！
+                  {t('home.dashboard.nextTrip.empty.description')}
                 </p>
                 <Button
                   variant="primary"
                   onClick={handleCreateTripClick}
                   disabled={!canCreateTrip}
                 >
-                  旅行を作成
+                  {t('home.dashboard.nextTrip.create')}
                 </Button>
               </div>
             )}
@@ -104,8 +104,8 @@ export default function NextTripCard({ nextTrip, onTripCreated }: NextTripCardPr
                       <path d="M14.1 6.5v12.9" />
                     </svg>
                   </div>
-                  <p className="text-gray-500 font-medium">旅行マップ</p>
-                  <p className="text-sm text-gray-400 mt-2">旅行を作成すると地図が表示されます</p>
+                  <p className="text-gray-500 font-medium">{t('home.dashboard.nextTrip.empty.mapPlaceholder')}</p>
+                  <p className="text-sm text-gray-400 mt-2">{t('home.dashboard.nextTrip.empty.mapDescription')}</p>
                 </div>
               </div>
             )}

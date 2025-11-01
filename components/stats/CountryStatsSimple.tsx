@@ -6,6 +6,7 @@ import { CountryGroup } from '@/lib/travel/country/utils'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { PinIcon } from '@/components/common/icons/PinIcon'
 import { getCountryFlag } from '@/lib/utils/country-flags'
+import { t } from '@/lib/i18n'
 
 interface CountryStatsSimpleProps {
   userId: string
@@ -68,13 +69,13 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
     return (
       <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
         <div className="text-red-600 text-center">
-          <p>エラーが発生しました</p>
+          <p>{t('home.dashboard.countryStats.error')}</p>
           <p className="text-sm mt-1">{error}</p>
           <button
             onClick={fetchCountryStats}
             className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            再試行
+            {t('home.dashboard.countryStats.retry')}
           </button>
         </div>
       </div>
@@ -86,9 +87,9 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
       <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <PinIcon className="w-5 h-5" color="#374151" />
-          国別統計
+          {t('home.dashboard.countryStats.title')}
         </h3>
-        <p className="text-gray-500 text-center">まだ旅行がありません</p>
+        <p className="text-gray-500 text-center">{t('home.dashboard.countryStats.empty')}</p>
       </div>
     )
   }
@@ -98,10 +99,12 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
           <PinIcon className="w-5 h-5" color="#374151" />
-          国別統計
+          {t('home.dashboard.countryStats.title')}
         </h3>
         <div className="text-sm text-gray-500">
-          {totalTrips}回の旅行 • {totalCountries}カ国
+          {t('home.dashboard.countryStats.summary')
+            .replace('{totalTrips}', String(totalTrips))
+            .replace('{totalCountries}', String(totalCountries))}
         </div>
       </div>
 
@@ -122,7 +125,7 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-lg font-bold text-emerald-600">{group.tripCount}</span>
-              <span className="text-sm text-gray-500">回</span>
+              <span className="text-sm text-gray-500">{t('home.dashboard.countryStats.times')}</span>
             </div>
           </div>
         ))}
@@ -137,7 +140,7 @@ export default function CountryStatsSimple({ userId, className = '' }: CountrySt
             }}
             className="w-full text-center text-emerald-600 hover:text-emerald-700 text-sm font-medium"
           >
-            詳細を見る →
+            {t('home.dashboard.countryStats.viewDetails')}
           </button>
         </div>
       )}
