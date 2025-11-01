@@ -2,20 +2,22 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { t } from '@/lib/i18n'
 
 export interface HomeFooterProps {
   children?: React.ReactNode
+  className?: string
 }
 
-export const HomeFooter: React.FC<HomeFooterProps> = ({ children }) => {
+export const HomeFooter: React.FC<HomeFooterProps> = ({ children, className = '' }) => {
   const footerLinks = [
-    { href: '/privacy', label: 'プライバシーポリシー' },
-    { href: '/terms', label: '利用規約' },
-    { href: '/contact', label: 'お問い合わせ' },
+    { href: '/privacy', label: t('footer.privacyPolicy') },
+    { href: '/terms', label: t('footer.termsOfService') },
+    { href: '/contact', label: t('contact') },
   ]
 
   return (
-    <footer className="border-t bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <footer className={`border-t bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/60 ${className}`}>
       <div className="container mx-auto px-4 py-6">
         {/* デスクトップ表示 */}
         <div className="hidden md:flex items-center justify-between text-sm text-gray-500">
