@@ -14,6 +14,9 @@ export type TranslationKey =
   | 'memories.page.year'
   | 'plan.page.title'
   | 'plan.page.empty'
+  | 'header.profile'
+  | 'header.changePlan'
+  | 'header.logout'
   | 'devTools'
   // Footer
   | 'footer.tagline'
@@ -335,6 +338,9 @@ const en: Dictionary = {
   'memories.page.year': '',
   'plan.page.title': 'Upcoming Trip Plans',
   'plan.page.empty': 'No upcoming trip plans',
+  'header.profile': 'Profile',
+  'header.changePlan': 'Change Plan',
+  'header.logout': 'Logout',
   devTools: 'Dev Tools',
   // Footer
   'footer.tagline': 'Make your trips beautifully organized',
@@ -655,6 +661,9 @@ const ja: Dictionary = {
   'memories.page.year': '年',
   'plan.page.title': '今後の旅行プラン',
   'plan.page.empty': '今後の旅行プランはありません',
+  'header.profile': 'プロフィール',
+  'header.changePlan': 'プランを変更',
+  'header.logout': 'ログアウト',
   devTools: '開発ツール',
   // Footer
   'footer.tagline': 'あなたの旅行を美しく管理する',
