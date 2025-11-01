@@ -16,6 +16,7 @@ import { getZIndexClass } from '@/lib/core/z-index'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import { extractCountryFromAddress } from '@/lib/travel/country/utils'
 import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from '@/lib/utils/language'
+import type { SupportedLanguage } from '@/lib/core/types'
 import { t } from '@/lib/i18n'
 import Loading from '@/components/common/Loading'
 import { Section } from '@/components/common/static/Section'
@@ -39,6 +40,19 @@ export default function UserProfileBySlugPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false)
+
+  // 言語→国旗のマッピング
+  const languageFlags: Record<SupportedLanguage, string> = {
+    ja: '🇯🇵',
+    en: '🇺🇸',
+    zh: '🇨🇳',
+    ko: '🇰🇷',
+    es: '🇪🇸',
+    fr: '🇫🇷',
+    de: '🇩🇪',
+    it: '🇮🇹',
+    pt: '🇵🇹'
+  }
   const [editForm, setEditForm] = useState({
     name: '',
     bio: '',
@@ -446,6 +460,20 @@ export default function UserProfileBySlugPage() {
                             {profileUser.gender === 'male' ? t('profile.gender.male') : profileUser.gender === 'female' ? t('profile.gender.female') : t('profile.gender.other')}
                           </p>
                         )}
+                        
+                        {/* 言語設定の表示 */}
+                        <p className="flex items-center gap-2">
+                          <span className="text-base">
+                            {profileUser.preferences?.language 
+                              ? languageFlags[profileUser.preferences.language as SupportedLanguage] || '🌐'
+                              : '🌐'}
+                          </span>
+                          <span className="text-gray-600">
+                            {profileUser.preferences?.language
+                              ? LANGUAGE_NAMES[profileUser.preferences.language as SupportedLanguage]?.native || profileUser.preferences.language
+                              : t('profile.language.auto')}
+                          </span>
+                        </p>
                       </div>
                     </div>
                   )}
