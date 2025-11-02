@@ -11,7 +11,7 @@
 | Issue | 状態 | 作成日 |
 |-------|------|--------|
 | [ビルドの動作確認が必要](build-verification-needed.md) | ✅ 確認済み | 2025-11-01 |
-| [言語切り替えのフォールバック処理による問題](language-switching-fallback-issue.md) | 未解決 | 2025-10-31 |
+| [言語切り替えのフォールバック処理による問題](language-switching-fallback-issue.md) | 解決済み | 2025-11-01 |
 | [旅行日程文字列のi18n化とライブラリ統一](trip-date-string-i18n-unification.md) | 未解決 | 2025-10-31 |
 
 ### 🟡 中優先度
@@ -71,6 +71,7 @@
 | [ビルドの動作確認](build-verification-needed.md) | 2025-11-01 |
 | [Weather Forecast API過去日付エラー](weather-api-past-date-error.md) | 2025-11-01 |
 | [言語設定保存時のAutoに戻る問題](language-settings-save-reverts-to-auto.md) | 2025-11-01 |
+| [言語切り替えのフォールバック処理による問題](language-switching-fallback-issue.md) | 2025-11-01 |
 
 ### 🟡 部分的解決
 
@@ -83,10 +84,10 @@
 ## 📊 統計
 
 - **総Issue数**: 39件
-- **未解決**: 18件
+- **未解決**: 17件
 - **確認済み**: 1件
 - **部分的解決**: 2件
-- **解決済み**: 11件
+- **解決済み**: 12件
 - **未実装（Feature）**: 4件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
 - **中優先度**: 27件
