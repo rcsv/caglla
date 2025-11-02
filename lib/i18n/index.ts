@@ -401,6 +401,13 @@ export type TranslationKey =
   | 'reservation.empty.description'
   | 'reservation.count'
   | 'reservation.timeRange'
+  // Activity Analysis Display
+  | 'activity.analysis.empty'
+  | 'activity.analysis.empty.description'
+  | 'activity.analysis.total'
+  | 'activity.analysis.categoryDistribution'
+  | 'activity.analysis.detailsTop5'
+  | 'activity.analysis.times'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -804,6 +811,13 @@ const en: Dictionary = {
   'reservation.empty.description': 'Add reservation information to your Itinerary',
   'reservation.count': ' items',
   'reservation.timeRange': '-',
+  // Activity Analysis Display
+  'activity.analysis.empty': 'No activity tags have been set.',
+  'activity.analysis.empty.description': 'Add activity tags to your itinerary to see statistics here.',
+  'activity.analysis.total': 'Total Activities',
+  'activity.analysis.categoryDistribution': 'Distribution by Category',
+  'activity.analysis.detailsTop5': 'Detailed Activities Top 5',
+  'activity.analysis.times': ' times',
 }
 
 const ja: Dictionary = {
@@ -1206,6 +1220,13 @@ const ja: Dictionary = {
   'reservation.empty.description': 'Itineraryに予約情報を追加してください',
   'reservation.count': '件',
   'reservation.timeRange': '〜',
+  // Activity Analysis Display
+  'activity.analysis.empty': 'アクティビティタグが設定されていません。',
+  'activity.analysis.empty.description': '旅程にアクティビティタグを追加すると、ここに統計が表示されます。',
+  'activity.analysis.total': 'アクティビティ総数',
+  'activity.analysis.categoryDistribution': 'カテゴリー別分布',
+  'activity.analysis.detailsTop5': '詳細アクティビティ Top 5',
+  'activity.analysis.times': '回',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
