@@ -408,6 +408,22 @@ export type TranslationKey =
   | 'activity.analysis.categoryDistribution'
   | 'activity.analysis.detailsTop5'
   | 'activity.analysis.times'
+  // Distance Display
+  | 'distance.title'
+  | 'distance.loading'
+  | 'distance.error.calculationFailed'
+  | 'distance.error.totalCalculationFailed'
+  | 'distance.empty.noPlaces'
+  | 'distance.empty.needTwoOrMore'
+  | 'distance.empty.description'
+  | 'distance.visitedPlaces'
+  | 'distance.total'
+  | 'distance.totalTime'
+  | 'distance.average'
+  | 'distance.averageTime'
+  | 'distance.perSegment'
+  | 'distance.perTimeSegment'
+  | 'distance.hint.details'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -818,6 +834,22 @@ const en: Dictionary = {
   'activity.analysis.categoryDistribution': 'Distribution by Category',
   'activity.analysis.detailsTop5': 'Detailed Activities Top 5',
   'activity.analysis.times': ' times',
+  // Distance Display
+  'distance.title': 'Total Distance',
+  'distance.loading': 'Calculating total distance...',
+  'distance.error.calculationFailed': 'Distance calculation failed',
+  'distance.error.totalCalculationFailed': 'Total distance calculation failed',
+  'distance.empty.noPlaces': 'No schedules with location information',
+  'distance.empty.needTwoOrMore': 'At least 2 schedules with location information are required to calculate distance',
+  'distance.empty.description': 'Add locations to your schedules to display total distance',
+  'distance.visitedPlaces': 'Visited Places',
+  'distance.total': 'Total Distance',
+  'distance.totalTime': 'Total Time',
+  'distance.average': 'Average Distance',
+  'distance.averageTime': 'Average Time',
+  'distance.perSegment': '/segment',
+  'distance.perTimeSegment': ' min/segment',
+  'distance.hint.details': 'You can check detailed distance and time between venues in the schedule',
 }
 
 const ja: Dictionary = {
@@ -1227,6 +1259,22 @@ const ja: Dictionary = {
   'activity.analysis.categoryDistribution': 'カテゴリー別分布',
   'activity.analysis.detailsTop5': '詳細アクティビティ Top 5',
   'activity.analysis.times': '回',
+  // Distance Display
+  'distance.title': '総移動距離',
+  'distance.loading': '総移動距離を計算中...',
+  'distance.error.calculationFailed': '距離計算に失敗しました',
+  'distance.error.totalCalculationFailed': '総移動距離の計算に失敗しました',
+  'distance.empty.noPlaces': '場所情報が設定されたスケジュールがありません',
+  'distance.empty.needTwoOrMore': '移動距離を計算するには、場所情報が設定されたスケジュールが2つ以上必要です',
+  'distance.empty.description': '各スケジュールに場所を設定すると、総移動距離が表示されます',
+  'distance.visitedPlaces': '訪問地',
+  'distance.total': '総距離',
+  'distance.totalTime': '総時間',
+  'distance.average': '平均距離',
+  'distance.averageTime': '平均時間',
+  'distance.perSegment': '/区間',
+  'distance.perTimeSegment': '分/区間',
+  'distance.hint.details': '各Venue間の詳細な距離・時間はスケジュール内で確認できます',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
