@@ -55,9 +55,17 @@ export const adminUserOperations = {
       
       // preferencesは常に更新
       if (userData.preferences) {
+        // マージ時にundefinedの値を除外する
+        const cleanedPreferences = Object.entries(userData.preferences).reduce((acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = value
+          }
+          return acc
+        }, {} as any)
+        
         updateData.preferences = {
           ...existingUser.preferences,
-          ...userData.preferences
+          ...cleanedPreferences
         }
       }
       

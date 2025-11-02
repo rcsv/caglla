@@ -19,6 +19,7 @@ import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from '@/lib/utils/language'
 import type { SupportedLanguage } from '@/lib/core/types'
 import { t } from '@/lib/i18n'
 import Loading from '@/components/common/Loading'
+import { setLanguageOverrideClient } from '@/lib/i18n/storage'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
 import HomeFooter from '@/components/common/HomeFooter'
@@ -184,6 +185,15 @@ export default function UserProfileBySlugPage() {
         setProfileUser(data.user)
         setIsEditing(false)
         setIsFirstTimeSetup(false) // セットアップ完了
+        
+        // 言語設定をクッキー/ローカルストレージに同期
+        const savedLanguage = data.user.preferences?.language
+        if (savedLanguage) {
+          setLanguageOverrideClient(savedLanguage as any)
+        } else {
+          // 空文字列の場合はクッキーをクリア
+          setLanguageOverrideClient('')
+        }
       }
     } catch (error) {
       console.error('Failed to save profile:', error)
