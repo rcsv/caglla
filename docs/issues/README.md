@@ -38,9 +38,9 @@
 | [天気予報の解析結果を英語に修正する](weather-forecast-i18n.md) | 未解決 | 2025-11-01 |
 | [気温表記方法・距離単位の設定項目機能](temperature-distance-unit-settings.md) | 未解決 | 2025-11-01 |
 | [予約情報表示が日本語ハードコード](reservation-display-i18n.md) | 解決済み | 2025-11-01 |
-| [旅行費用表示が日本語ハードコード](travel-cost-display-i18n.md) | 未解決 | 2025-11-01 |
-| [Activity Analysis表示が日本語ハードコード](activity-analysis-display-i18n.md) | 未解決 | 2025-11-01 |
-| [総移動距離表示が日本語ハードコード](distance-display-i18n.md) | 未解決 | 2025-11-01 |
+| [旅行費用表示が日本語ハードコード](travel-cost-display-i18n.md) | 部分的解決 | 2025-11-01 |
+| [Activity Analysis表示が日本語ハードコード](activity-analysis-display-i18n.md) | 解決済み | 2025-11-01 |
+| [総移動距離表示が日本語ハードコード](distance-display-i18n.md) | 解決済み | 2025-11-01 |
 | [アクティビティカテゴリーのラベルが日本語ハードコード](activity-categories-i18n.md) | 未解決 | 2025-11-01 |
 | [予約カテゴリー（ReservationType/ReservationSite）のラベルが日本語ハードコード](reservation-categories-i18n.md) | 未解決 | 2025-11-01 |
 | [Checklist関連の日本語ハードコード](checklist-i18n.md) | 未解決 | 2025-11-01 |
@@ -65,18 +65,45 @@
 | [Cagllaロゴアイコンの再デザイン](logo-icon-redesign.md) | 2025-10-31 |
 | [左メニューのSummaryセクションでtitleとsubtitleが重複表示される](navigation-menu-duplicate-subtitle.md) | 2025-11-01 |
 | [予約情報表示が日本語ハードコード](reservation-display-i18n.md) | 2025-11-01 |
+| [Activity Analysis表示が日本語ハードコード](activity-analysis-display-i18n.md) | 2025-11-01 |
+| [総移動距離表示が日本語ハードコード](distance-display-i18n.md) | 2025-11-01 |
+| [旅行費用表示が日本語ハードコード（メッセージ・ラベル）](travel-cost-display-i18n.md) | 2025-11-01 |
+
+### 🟡 部分的解決
+
+| Issue | 状態 |
+|-------|------|
+| [旅行費用表示が日本語ハードコード（通貨名は未対応）](travel-cost-display-i18n.md) | 通貨名のi18n化は未対応 |
 
 ---
 
 ## 📊 統計
 
 - **総Issue数**: 39件
-- **未解決**: 25件
-- **解決済み**: 5件
+- **未解決**: 20件
+- **部分的解決**: 2件
+- **解決済み**: 9件
 - **未実装（Feature）**: 4件
 - **高優先度**: 3件
 - **中優先度**: 27件
 - **Feature要望**: 4件
+
+## ✅ 進捗サマリー（2025-11-01）
+
+本日の対応完了:
+- ✅ Activity Analysis表示のi18n化
+- ✅ 総移動距離表示のi18n化
+- ✅ 旅行費用表示のメッセージ・ラベルをi18n化（通貨名は未対応）
+- ✅ 予約情報表示のi18n化
+- ✅ 左メニューのSummaryセクション重複表示解消
+- ✅ 最新のIssue一覧反映
+
+残りの主要Issue:
+- 🔴 天気予報のi18n化（約50のi18nキー追加が必要）
+- 🔴 アクティビティカテゴリーのi18n化（約160のi18nキー追加が必要）
+- 🔴 予約カテゴリーのi18n化
+- 🔴 チェックリストのi18n化（約50-60のi18nキー追加が必要）
+- 🔴 通貨名のi18n化
 
 ---
 
