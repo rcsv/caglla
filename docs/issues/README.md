@@ -20,7 +20,7 @@
 |-------|------|--------|
 | [プロフィールページでPrivate Tripsが表示されない](profile-private-trips-not-displaying.md) | 未解決 | 2025-10-31 |
 | [/home/page.tsxで使用しているコンポーネントがi18n化されていない](home-page-components-i18n.md) | 解決済み | 2025-10-31 |
-| [プロフィールページで編集画面にならないと表示言語の選択ができない](profile-language-selector-visibility.md) | 未解決 | 2025-10-31 |
+| [プロフィールページで編集画面にならないと表示言語の選択ができない](profile-language-selector-visibility.md) | 解決済み | 2025-11-01 |
 | [Checklistの再生成ボタンが動作しない](trip-slug-checklist-regenerate-not-working.md) | 未解決 | 2025-10-31 |
 | [i18n辞書の分割運用（ドメイン別＋型安全＋遅延ロード）](i18n-namespace-splitting-and-typed-loader.md) | 未解決 | 2025-10-31 |
 | [/memories ページでの警告・エラーの多発](memories-page-warnings.md) | 未解決 | 2025-10-31 |
@@ -73,6 +73,7 @@
 | [言語設定保存時のAutoに戻る問題](language-settings-save-reverts-to-auto.md) | 2025-11-01 |
 | [言語切り替えのフォールバック処理による問題](language-switching-fallback-issue.md) | 2025-11-01 |
 | [/home/page.tsxのコンポーネントi18n化](home-page-components-i18n.md) | 2025-10-31 |
+| [プロフィールページの言語選択表示](profile-language-selector-visibility.md) | 2025-11-01 |
 
 ### 🟡 部分的解決
 
@@ -85,10 +86,10 @@
 ## 📊 統計
 
 - **総Issue数**: 39件
-- **未解決**: 16件
+- **未解決**: 15件
 - **確認済み**: 1件
 - **部分的解決**: 2件
-- **解決済み**: 13件
+- **解決済み**: 14件
 - **未実装（Feature）**: 4件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
 - **中優先度**: 27件
