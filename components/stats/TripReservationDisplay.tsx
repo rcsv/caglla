@@ -10,6 +10,7 @@ import { placesApiHelpers } from '@/lib/api/google/places'
 import Card from '@/components/common/Card'
 import { toDate, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import type { FirestoreDate } from '@/lib/core/types'
+import { t } from '@/lib/i18n'
 
 interface TripReservationDisplayProps {
   itineraries: Itinerary[]
@@ -34,15 +35,15 @@ export default function TripReservationDisplay({
         title={
           <div className="text-lg font-medium text-gray-800 flex items-center">
             <IconRenderer iconName="reservation" className="w-5 h-5 mr-2" color="#8B5CF6" />
-            予約情報
+            {t('reservation.title')}
           </div>
         } 
         className={className}
       >
         <div className="text-center py-4 text-gray-500">
           <IconRenderer iconName="reservation" className="w-8 h-8 mx-auto mb-2" color="#9CA3AF" />
-          <p>予約情報がありません</p>
-          <p className="text-sm">Itineraryに予約情報を追加してください</p>
+          <p>{t('reservation.empty')}</p>
+          <p className="text-sm">{t('reservation.empty.description')}</p>
         </div>
       </Card>
     )
@@ -149,7 +150,7 @@ export default function TripReservationDisplay({
       title={
         <div className="text-lg font-medium text-gray-800 flex items-center">
           <IconRenderer iconName="reservation" className="w-5 h-5 mr-2" color="#8B5CF6" />
-          予約情報 ({reservations.length}件)
+          {t('reservation.title')} ({reservations.length}{t('reservation.count')})
         </div>
       } 
       className={className}
@@ -284,7 +285,7 @@ export default function TripReservationDisplay({
                           </div>
                           {timeInfo.end && (
                             <div className="text-sm text-gray-600">
-                              〜 {timeInfo.end}
+                              {t('reservation.timeRange')} {timeInfo.end}
                             </div>
                           )}
                         </div>

@@ -395,6 +395,12 @@ export type TranslationKey =
   | 'poi.loading'
   | 'poi.loadingInfo'
   | 'poi.photoOf'
+  // Reservation Display
+  | 'reservation.title'
+  | 'reservation.empty'
+  | 'reservation.empty.description'
+  | 'reservation.count'
+  | 'reservation.timeRange'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -792,6 +798,12 @@ const en: Dictionary = {
   'poi.loading': 'Loading...',
   'poi.loadingInfo': 'Loading POI information...',
   'poi.photoOf': 'Photo of {name}',
+  // Reservation Display
+  'reservation.title': 'Reservations',
+  'reservation.empty': 'No reservations',
+  'reservation.empty.description': 'Add reservation information to your Itinerary',
+  'reservation.count': ' items',
+  'reservation.timeRange': '-',
 }
 
 const ja: Dictionary = {
@@ -1188,6 +1200,12 @@ const ja: Dictionary = {
   'poi.loading': '読み込み中...',
   'poi.loadingInfo': 'POI情報を読み込み中...',
   'poi.photoOf': '{name}の写真',
+  // Reservation Display
+  'reservation.title': '予約情報',
+  'reservation.empty': '予約情報がありません',
+  'reservation.empty.description': 'Itineraryに予約情報を追加してください',
+  'reservation.count': '件',
+  'reservation.timeRange': '〜',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
