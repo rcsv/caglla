@@ -424,6 +424,13 @@ export type TranslationKey =
   | 'distance.perSegment'
   | 'distance.perTimeSegment'
   | 'distance.hint.details'
+  // Travel Cost Display
+  | 'cost.title'
+  | 'cost.empty'
+  | 'cost.empty.description'
+  | 'cost.items'
+  | 'cost.total'
+  | 'cost.hint.edit'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -850,6 +857,13 @@ const en: Dictionary = {
   'distance.perSegment': '/segment',
   'distance.perTimeSegment': ' min/segment',
   'distance.hint.details': 'You can check detailed distance and time between venues in the schedule',
+  // Travel Cost Display
+  'cost.title': 'Travel Cost',
+  'cost.empty': 'No schedules with cost information',
+  'cost.empty.description': 'Add costs to your schedules to display total cost',
+  'cost.items': ' items',
+  'cost.total': 'Total',
+  'cost.hint.edit': 'Click on any schedule\'s cost to edit',
 }
 
 const ja: Dictionary = {
@@ -1275,6 +1289,13 @@ const ja: Dictionary = {
   'distance.perSegment': '/区間',
   'distance.perTimeSegment': '分/区間',
   'distance.hint.details': '各Venue間の詳細な距離・時間はスケジュール内で確認できます',
+  // Travel Cost Display
+  'cost.title': '旅行費用',
+  'cost.empty': '費用情報が設定されたスケジュールがありません',
+  'cost.empty.description': '各スケジュールに費用を設定すると、総費用が表示されます',
+  'cost.items': '件',
+  'cost.total': '合計',
+  'cost.hint.edit': '各スケジュールの費用をクリックして編集できます',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
