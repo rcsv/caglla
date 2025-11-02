@@ -45,7 +45,7 @@
 | [予約カテゴリー（ReservationType/ReservationSite）のラベルが日本語ハードコード](reservation-categories-i18n.md) | 未解決 | 2025-11-01 |
 | [Checklist関連の日本語ハードコード](checklist-i18n.md) | 未解決 | 2025-11-01 |
 | [PDF Preview機能の通常機能化](pdf-preview-promote-to-normal-feature.md) | 未解決 | 2025-11-01 |
-| [言語設定保存後にAutoに戻る問題](language-settings-save-reverts-to-auto.md) | 未解決 | 2025-11-01 |
+| [言語設定保存後にAutoに戻る問題](language-settings-save-reverts-to-auto.md) | 解決済み | 2025-11-01 |
 
 ### Feature要望
 
@@ -70,6 +70,7 @@
 | [旅行費用表示が日本語ハードコード（メッセージ・ラベル）](travel-cost-display-i18n.md) | 2025-11-01 |
 | [ビルドの動作確認](build-verification-needed.md) | 2025-11-01 |
 | [Weather Forecast API過去日付エラー](weather-api-past-date-error.md) | 2025-11-01 |
+| [言語設定保存時のAutoに戻る問題](language-settings-save-reverts-to-auto.md) | 2025-11-01 |
 
 ### 🟡 部分的解決
 
@@ -82,10 +83,10 @@
 ## 📊 統計
 
 - **総Issue数**: 39件
-- **未解決**: 19件
+- **未解決**: 18件
 - **確認済み**: 1件
 - **部分的解決**: 2件
-- **解決済み**: 10件
+- **解決済み**: 11件
 - **未実装（Feature）**: 4件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
 - **中優先度**: 27件
@@ -94,6 +95,7 @@
 ## ✅ 進捗サマリー（2025-11-01）
 
 本日の対応完了:
+- ✅ 言語設定保存時のAutoに戻る問題修正（高優先度）
 - ✅ Weather Forecast API過去日付エラー修正
 - ✅ ビルド確認完了（ビルド成功、型エラー36件残存）
 - ✅ Activity Analysis表示のi18n化
