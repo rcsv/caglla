@@ -69,8 +69,14 @@ export class WeatherApiHelpers {
 
     // Limit date range to 16 days from today (Open-Meteo limitation)
     const today = new Date()
+    today.setHours(0, 0, 0, 0) // Normalize to midnight for date comparison
     const maxDate = new Date(today)
     maxDate.setDate(today.getDate() + 16)
+    
+    // Check if endDate is in the past (no weather forecast for past dates)
+    if (endDateObj < today) {
+      throw new Error('Weather forecast is not available for past dates')
+    }
     
     // Adjust dates if they exceed the allowed range
     const adjustedStartDate = startDateObj > today ? startDateObj : today
