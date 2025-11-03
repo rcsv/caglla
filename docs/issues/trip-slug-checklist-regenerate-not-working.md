@@ -1,9 +1,10 @@
 # Issue: Checklistの再生成ボタンが動作しない
 
 **作成日**: 2025-10-31  
-**状態**: 🔴 未解決  
+**解決日**: 2025-11-01  
+**状態**: ✅ 解決済み  
 **優先度**: 中  
-**関連ファイル**: `app/[userSlug]/[tripSlug]/page.tsx`
+**関連ファイル**: `app/[userSlug]/[tripSlug]/page.tsx`, `app/api/trips/[tripSlug]/checklist/route.ts`, `app/api/trips/[tripSlug]/checklist/generate/route.ts`
 
 ---
 
@@ -52,9 +53,32 @@
 
 ---
 
+## ✅ 解決内容
+
+### 原因
+`/api/trips/[tripSlug]/checklist/route.ts`と`/api/trips/[tripSlug]/checklist/generate/route.ts`で、ディレクトリ名は`[tripSlug]`であるにも関わらず、パラメータを`{ id: tripId }`として取得しようとしていた。正しくは`{ tripSlug }`として取得する必要があった。
+
+### 解決方法
+両方のファイルで、パラメータの取得方法を修正：
+- `const { id: tripId } = await params` → `const { tripSlug } = await params`
+- `const tripId = tripSlug` を追加
+
+### 変更内容
+- `app/api/trips/[tripSlug]/checklist/route.ts`: GET/PUTエンドポイントを修正
+- `app/api/trips/[tripSlug]/checklist/generate/route.ts`: POSTエンドポイントを修正
+
+### 確認事項
+- ✅ Checklist再生成ボタンが正常に動作する
+- ✅ エラーハンドリングが適切
+- ✅ ローディング状態が表示される
+
+## 📝 参考
+- コミット: `fix: Checklist APIのパラメータ取得を修正` (37d2eee)
+
 ## 🔗 関連ファイル
 
 - `app/[userSlug]/[tripSlug]/page.tsx` - 旅行詳細ページ
-- Checklistコンポーネント（要確認）
-- Checklist再生成API（要確認）
+- `app/api/trips/[tripSlug]/checklist/route.ts` - Checklist取得/更新API
+- `app/api/trips/[tripSlug]/checklist/generate/route.ts` - Checklist再生成API
+- `components/trip/TripChecklistView.tsx` - Checklist表示コンポーネント
 

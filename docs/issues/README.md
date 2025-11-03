@@ -21,7 +21,7 @@
 | [プロフィールページでPrivate Tripsが表示されない](profile-private-trips-not-displaying.md) | 解決済み | 2025-10-31 |
 | [/home/page.tsxで使用しているコンポーネントがi18n化されていない](home-page-components-i18n.md) | 解決済み | 2025-10-31 |
 | [プロフィールページで編集画面にならないと表示言語の選択ができない](profile-language-selector-visibility.md) | 解決済み | 2025-11-01 |
-| [Checklistの再生成ボタンが動作しない](trip-slug-checklist-regenerate-not-working.md) | 未解決 | 2025-10-31 |
+| [Checklistの再生成ボタンが動作しない](trip-slug-checklist-regenerate-not-working.md) | 解決済み | 2025-10-31 |
 | [i18n辞書の分割運用（ドメイン別＋型安全＋遅延ロード）](i18n-namespace-splitting-and-typed-loader.md) | 未解決 | 2025-10-31 |
 | [/memories ページでの警告・エラーの多発](memories-page-warnings.md) | 未解決 | 2025-10-31 |
 | [TripCardで国旗の表示が不安定（出る/出ない）](tripcard-country-flag-inconsistency.md) | 未解決 | 2025-10-31 |
@@ -75,6 +75,7 @@
 | [/home/page.tsxのコンポーネントi18n化](home-page-components-i18n.md) | 2025-10-31 |
 | [プロフィールページの言語選択表示](profile-language-selector-visibility.md) | 2025-11-01 |
 | [プロフィールページでPrivate Tripsが表示されない](profile-private-trips-not-displaying.md) | 2025-11-01 |
+| [Checklistの再生成ボタンが動作しない](trip-slug-checklist-regenerate-not-working.md) | 2025-11-01 |
 
 ### 🟡 部分的解決
 
@@ -87,10 +88,10 @@
 ## 📊 統計
 
 - **総Issue数**: 39件
-- **未解決**: 14件
+- **未解決**: 13件
 - **確認済み**: 1件
 - **部分的解決**: 2件
-- **解決済み**: 15件
+- **解決済み**: 16件
 - **未実装（Feature）**: 4件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
 - **中優先度**: 27件
@@ -113,10 +114,11 @@
 - 🔴 通貨名のi18n化（大規模）
 - 🔴 旅行日程文字列のi18n化とライブラリ統一（一時中断）
 
-**進捗**: 総Issue数39件のうち15件解決済み（約38%完了）
+**進捗**: 総Issue数39件のうち16件解決済み（約41%完了）
 
 本日追加の対応完了:
 - ✅ Private Tripsの表示問題修正
+- ✅ Checklist再生成ボタンの修正
 
 ---
 
