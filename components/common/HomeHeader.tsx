@@ -80,7 +80,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
           <div className="flex items-center gap-6">
             <Link href="/home" className="flex items-center gap-2 text-gray-900">
               <CagllaLogo className="w-8 h-8" />
-              <span className="text-xl font-bold font-rajdhani whitespace-nowrap leading-none">{appName}</span>
+              <span className="text-xl font-bold font-rajdhani whitespace-nowrap leading-none hidden sm:inline">{appName}</span>
             </Link>
             <nav className="hidden md:flex items-center gap-4 text-sm">
               <Link href="/home" className="text-gray-600 hover:text-gray-900">{t('travelGuide')}</Link>
@@ -111,7 +111,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                     {languageFlags[currentLanguage] || '🌐'}
                   </span>
                 </div>
-                <div className={planNameClass}>{planName}</div>
+                <div className={`${planNameClass} hidden sm:block`}>{planName}</div>
               </div>
               <span className={`inline-flex p-[2px] rounded-full ${avatarBorderClass}`}>
                 <Image
