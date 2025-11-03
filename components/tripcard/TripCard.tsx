@@ -134,12 +134,29 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
 
         {trip.description && <p className="text-gray-600 text-sm mb-3 line-clamp-2">{trip.description}</p>}
 
-        {trip.destination && (
-          <p className="text-gray-500 text-sm mb-3 flex items-center gap-1">
-            <IconRenderer iconName="pin" className="w-4 h-4" color="#6b7280" />
-            {trip.destination}
-          </p>
-        )}
+        <div className="mb-3 flex items-center gap-2 flex-wrap">
+          {trip.destination && (
+            <p className="text-gray-500 text-sm flex items-center gap-1">
+              <IconRenderer iconName="pin" className="w-4 h-4" color="#6b7280" />
+              {trip.destination}
+            </p>
+          )}
+          {/* 国旗表示: destination_place.address_components から国コードを取得 */}
+          {trip.destination_place?.address_components && (() => {
+            const countryComponent = trip.destination_place.address_components.find(
+              (component: any) => component.types.includes('country')
+            )
+            const countryCode = countryComponent?.short_name
+            if (countryCode && countryCode !== 'unknown') {
+              return (
+                <span className="text-sm">
+                  {getCountryFlag(countryCode)}
+                </span>
+              )
+            }
+            return null
+          })()}
+        </div>
 
         {trip.start_date && trip.end_date && (
           <p className="text-gray-500 text-sm flex items-center gap-1">
