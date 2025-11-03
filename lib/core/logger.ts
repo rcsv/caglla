@@ -17,6 +17,9 @@ interface LoggerConfig {
 
 class Logger {
   private config: LoggerConfig
+  private lastDebugKey?: string
+  private lastDebugAt?: number
+  private dedupeWindowMs = 500
 
   constructor() {
     // 環境に応じたデフォルト設定
@@ -155,6 +158,16 @@ class Logger {
   // DEBUGレベルログ（開発環境のみ）
   debug(message: string, ...args: any[]) {
     if (this.config.level <= LogLevel.DEBUG) {
+      // 簡易重複抑止（同一メッセージ+先頭引数が短時間に連続した場合はスキップ）
+      const firstArg = args.length > 0 ? JSON.stringify(this.sanitizeData(args[0])) : ''
+      const key = `${message}::${firstArg}`
+      const now = Date.now()
+      if (this.lastDebugKey === key && this.lastDebugAt && now - this.lastDebugAt < this.dedupeWindowMs) {
+        return
+      }
+      this.lastDebugKey = key
+      this.lastDebugAt = now
+
       const sanitizedArgs = args.map(arg => this.sanitizeData(arg))
       console.debug(this.formatMessage('DEBUG', message), ...sanitizedArgs)
     }
