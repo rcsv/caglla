@@ -133,7 +133,7 @@ export default function ImageGalleryModal({
         {/* ヘッダー */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-white text-lg font-semibold">
-            {placeName} の写真
+            {require('@/lib/i18n').t('gallery.photosOf').replace('{name}', placeName)}
           </h2>
           <button
             onClick={(e) => {
@@ -141,7 +141,7 @@ export default function ImageGalleryModal({
               onClose()
             }}
             className="text-white hover:text-gray-300 transition-colors p-2"
-            aria-label="閉じる"
+            aria-label={require('@/lib/i18n').t('common.close')}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -161,7 +161,7 @@ export default function ImageGalleryModal({
                     goToPrevious()
                   }}
                   className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-3 rounded-full transition-all z-10"
-                  aria-label="前の画像"
+                  aria-label={require('@/lib/i18n').t('gallery.previousImage')}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -209,7 +209,7 @@ export default function ImageGalleryModal({
                     goToNext()
                   }}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-3 rounded-full transition-all z-10"
-                  aria-label="次の画像"
+                  aria-label={require('@/lib/i18n').t('gallery.nextImage')}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -265,7 +265,7 @@ export default function ImageGalleryModal({
         {/* キャッシュ状態インジケーター */}
         {cachedImage?.cached && (
           <div className="absolute top-16 left-4 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-            キャッシュ済み
+            {require('@/lib/i18n').t('gallery.cached')}
           </div>
         )}
       </div>

@@ -1098,6 +1098,13 @@ const en: Dictionary = {
   'nav.plan': 'Plan',
   'nav.logout': 'Logout',
   'nav.dayPrefix': 'Day',
+  // Common
+  'common.close': 'Close',
+  // Image Gallery
+  'gallery.previousImage': 'Previous image',
+  'gallery.nextImage': 'Next image',
+  'gallery.cached': 'Cached',
+  'gallery.photosOf': '{name} photos',
   // Activity Categories (minimal set; fallback supported)
   'activity.primary.transportation': 'Transportation',
   'activity.primaryShort.transportation': 'Transport',
@@ -1762,6 +1769,13 @@ const ja: Dictionary = {
   'nav.plan': 'プラン',
   'nav.logout': 'ログアウト',
   'nav.dayPrefix': 'Day',
+  // Common
+  'common.close': '閉じる',
+  // Image Gallery
+  'gallery.previousImage': '前の画像',
+  'gallery.nextImage': '次の画像',
+  'gallery.cached': 'キャッシュ済み',
+  'gallery.photosOf': '{name} の写真',
   // Activity Categories (minimal set; fallback supported)
   'activity.primary.transportation': '乗り物',
   'activity.primaryShort.transportation': '乗り物',
