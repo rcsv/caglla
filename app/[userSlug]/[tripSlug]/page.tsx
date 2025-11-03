@@ -1095,7 +1095,7 @@ export default function SlugBasedTripPage() {
   }
 
   if (loading || tripLoading) {
-    return <Loading fullScreen size="lg" message="読み込み中..." />
+    return <Loading fullScreen size="lg" message={t('loading.message')} />
   }
 
   if (!user || !trip) {
