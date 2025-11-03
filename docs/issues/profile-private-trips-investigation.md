@@ -1,7 +1,8 @@
 # Issue: プロフィールページでPrivate Tripsが表示されない（調査中）
 
 **作成日**: 2025-11-01  
-**状態**: 🔴 調査中  
+**解決日**: 2025-11-01  
+**状態**: ✅ 解決済み  
 **優先度**: 高  
 **関連ファイル**: 
 - `app/[userSlug]/page.tsx` - プロフィールページ
@@ -94,11 +95,62 @@ Networkタブで`/api/trips`のレスポンスを確認：
 
 ---
 
-## 📝 修正案
+## ✅ 解決内容
 
-### 修正1: デバッグログの追加（即座に実装）
+### 問題の原因
 
-### 修正2: ID判定の改善（必要に応じて）
+デバッグログから以下の問題が判明：
 
-### 修正3: フィルタリングロジックの改善（必要に応じて）
+1. **ID判定の誤り**
+   - `user?.uid`（Firebase Auth UID）: `'7VAeRiml3gYvKEs4fpOyUCXkdLK2'`
+   - `fetchedUser?.id`（FirestoreドキュメントID）: `'faRoL34yjICfd6v21VMr'`
+   - これらは異なるため、`isOwnProfile`が常に`false`になっていた
+
+2. **正しい比較方法**
+   - `user?.uid`（Firebase Auth UID）と`fetchedUser?.google_id`（Firestoreの`google_id`フィールド）を比較すべき
+   - Firestoreのusersコレクションでは、ドキュメントIDはFirebase Auth UIDとは異なる場合がある
+
+3. **process is not definedエラー**
+   - クライアントサイドで`process.env.NODE_ENV`を直接使用していた
+   - `typeof window !== 'undefined'`チェックを追加して修正
+
+### 修正内容
+
+**ファイル**: `app/[userSlug]/page.tsx`
+
+1. **ID判定の修正**
+   ```typescript
+   // 修正前
+   const viewedUserId = fetchedUser?.id
+   const isOwnProfileCheck = currentUserId && viewedUserId && currentUserId === viewedUserId
+   
+   // 修正後
+   const viewedUserGoogleId = fetchedUser?.google_id
+   const isOwnProfileCheck = currentUserId && viewedUserGoogleId && currentUserId === viewedUserGoogleId
+   ```
+
+2. **`isOwnProfile`の修正**
+   ```typescript
+   // 修正前
+   const isOwnProfile = user.uid === profileUser.id
+   
+   // 修正後
+   const isOwnProfile = user.uid === profileUser.google_id
+   ```
+
+3. **process.env.NODE_ENVの安全な使用**
+   ```typescript
+   // 修正前
+   if (process.env.NODE_ENV === 'development') {
+   
+   // 修正後
+   const isDev = typeof window !== 'undefined' && process.env.NODE_ENV === 'development'
+   if (isDev) {
+   ```
+
+### 効果
+
+- ✅ Private Tripsが正しく表示されるようになった
+- ✅ `process is not defined`エラーが解消された
+- ✅ 自分自身のプロフィール判定が正しく機能するようになった
 
