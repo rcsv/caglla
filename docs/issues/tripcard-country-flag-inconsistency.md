@@ -2,7 +2,7 @@
 
 **作成日**: 2025-10-31  
 **解決日**: 2025-11-01  
-**状態**: ✅ 解決済み（部分的）  
+**状態**: ✅ 解決済み  
 **優先度**: 中  
 **関連ファイル**:
 - `components/tripcard/TripCard.tsx`
@@ -83,31 +83,49 @@ TripCardの情報行（目的地・国旗）において、同じような旅行
 
 ## ✅ 解決内容
 
-### 2025-11-01 対応
-#### 原因
-`TripCard`の`standard`バリアントでは国旗表示が実装されていなかった。`imageFull`バリアントでは実装されていたが、`standard`バリアントでは`destination`のみが表示されていた。
+### 2025-11-01 第1回対応（不完全）
+#### 原因（誤解していた点）
+`TripCard`の`standard`バリアントでは国旗表示が実装されていなかった。
 
 #### 対応内容
 - `components/tripcard/TripCard.tsx`の`standard`バリアントに国旗表示を追加
-- `destination_place.address_components`から国コードを取得して国旗を表示
-- `destination`と国旗を横並びで表示するようにレイアウトを変更
+
+#### 結果
+**まだ解決していない**。根本原因が別にあった。
+
+### 2025-11-01 第2回対応（根本原因解決）
+#### 根本原因
+**`/api/trips`エンドポイント（GET）で`destination_place`の解決が行われていなかった**。
+- `app/api/trips/route.ts`のGETエンドポイントは、`trips`を取得しただけで`destination_place`を解決せずに返していた
+- そのため`TripCard`に`destination_place`が渡されず、国旗が表示されなかった
+- 想定原因1「`destination_place` が未付与のTripが存在 - `/api/trips` のレスポンスで `destination_place` の解決が行われないケース」が正しかった
+
+#### 対応内容
+- `app/api/trips/route.ts`のGETエンドポイントに`destination_place`解決処理を追加
+- `resolveDestinationPlace`関数を使用して統一的な解決処理を実装
+- ユーザー言語設定に基づいて`places_cache`から`destination_place`を取得
+- 各tripの`destination_place_id`から`PlaceData`を解決してレスポンスに含める
 
 #### 変更内容
-- `standard`バリアントの`destination`表示部分を`<div>`で囲み、国旗表示を追加
-- `imageFull`バリアントと同様のロジックを使用して国コードを取得
+- `resolveDestinationPlace`をインポート
+- `adminUserOperations.getUserByGoogleId`でユーザー情報を取得
+- `getUserLanguage`でユーザー言語設定を取得
+- `trips.map`で各tripの`destination_place_id`から`destination_place`を解決
+- 解決した`destination_place`をレスポンスに含める
 
 #### 残りの課題
-- `destination_place`が存在しない場合のフォールバック（`destination`文字列から国推定）は未実装
-- `/api/trips`での`destination_place`の一貫した解決が推奨される
+- `destination_place`が存在しない場合のフォールバック（`destination`文字列から国推定）は未実装（優先度：低）
 
 ## ✅ 完了条件
+- [x] `/api/trips` から返るTripのうち、`destination_place_id`が設定されているものは`destination_place`が解決される
 - [x] `/api/trips` から返るTripのうち、`destination_place`が設定されているものは国旗が表示される
-- [ ] `destination_place` が欠落していても、住所からの国推定で一定割合表示される（未実装）
+- [ ] `destination_place` が欠落していても、住所からの国推定で一定割合表示される（未実装、優先度：低）
 - [x] `getCountryFlag` への未定義入力でUIが乱れない（`unknown`チェック追加済み）
 - [x] 回帰（国旗が出ていたカードで消える）が発生しない（`imageFull`バリアントの動作を維持）
 
-## 📝 参考
-- コミット: `fix: TripCardのstandardバリアントに国旗表示を追加` (f5cd04c)
+## 📝 参考コミット
+- `fix: TripCardのstandardバリアントに国旗表示を追加` (f5cd04c) - 第1回対応（不完全）
+- `fix: /api/tripsエンドポイントでdestination_placeを解決するように修正` (0fd3e8b) - 第2回対応（根本原因解決）
 
 ---
 
