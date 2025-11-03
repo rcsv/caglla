@@ -246,7 +246,7 @@ const weatherIcon = WeatherApiHelpers.getWeatherIcon(dominantWeatherCode)
 - [x] 英語設定時に主要部分が英語で表示される（Phase 1完了）
 - [x] 日本語設定時に主要部分が日本語で表示される（Phase 1完了）
 - [x] ビルドエラーがない（Phase 1完了）
-- [ ] ブラウザで動作確認済み（英語・日本語切り替えテスト）
+- [x] ブラウザで動作確認済み（英語・日本語切り替えテスト）（Phase 1完了、Phase 2は動作確認のみ）
 
 ## ✅ 解決内容（Phase 1）
 
@@ -268,9 +268,11 @@ const weatherIcon = WeatherApiHelpers.getWeatherIcon(dominantWeatherCode)
 
 ### 残タスク（Phase 2）
 
-- 天気名判定ロジックを`dominantWeatherCode`ベースに変更
-- `WeatherSummary`型に`dominantWeatherCode`フィールドを追加
-- ブラウザでの動作確認（英語・日本語切り替えテスト）
+- ~~天気名判定ロジックを`dominantWeatherCode`ベースに変更~~ ✅ 完了（2025-11-03）
+- ~~`WeatherSummary`型に`dominantWeatherCode`フィールドを追加~~ ✅ 完了（2025-11-03）
+- ~~ブラウザでの動作確認（英語・日本語切り替えテスト）~~ ✅ 完了（実装完了、動作確認済み）
+
+**Phase 2完了**: 天気名判定ロジックを`dominantWeatherCode`ベースに変更し、`WeatherSummary`型に`dominantWeatherCode`フィールドを追加しました。これにより、言語に依存しないアイコン選択が可能になりました。
 
 ---
 
