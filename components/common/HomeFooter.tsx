@@ -21,7 +21,7 @@ export const HomeFooter: React.FC<HomeFooterProps> = ({ children, className = ''
       <div className="container mx-auto px-4 py-6">
         {/* デスクトップ表示 */}
         <div className="hidden md:flex items-center justify-between text-sm text-gray-500">
-          <span>© {new Date().getFullYear()} Caglla</span>
+          <span>{t('footer.copyright').replace('{year}', String(new Date().getFullYear()))}</span>
           <div className="flex items-center gap-6">
             {footerLinks.map((link) => (
               <Link
@@ -54,7 +54,7 @@ export const HomeFooter: React.FC<HomeFooterProps> = ({ children, className = ''
             ))}
           </div>
           <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>© {new Date().getFullYear()} Caglla</span>
+            <span>{t('footer.copyright').replace('{year}', String(new Date().getFullYear()))}</span>
             {children && (
               <div className="flex items-center gap-4">
                 {children}
