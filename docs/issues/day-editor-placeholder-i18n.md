@@ -307,23 +307,6 @@ export default function TripItineraryView({ ... }: TripItineraryViewProps) {
 
 **見積もり**: 15分
 
-**見積もり**: 30分〜1時間
-
-### Phase 2: `generateItinerarySummary`の改善（優先度: 中）
-
-1. `dayEditor.itinerarySeparator`キーを追加
-2. `generateItinerarySummary`関数に言語パラメータを追加
-3. テスト実施
-
-**見積もり**: 30分
-
-### Phase 3: 空文字列の扱いの改善（優先度: 低）
-
-- `generateItinerarySummary`の返り値の扱いを改善
-- 必要に応じて関数の返り値を変更
-
-**見積もり**: 15分
-
 ---
 
 ## 🔗 関連ファイル
