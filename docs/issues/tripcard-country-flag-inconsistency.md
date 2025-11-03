@@ -1,7 +1,8 @@
 # Issue: TripCardで国旗が表示される場合と表示されない場合がある
 
 **作成日**: 2025-10-31  
-**状態**: 🔴 未解決  
+**解決日**: 2025-11-01  
+**状態**: ✅ 解決済み（部分的）  
 **優先度**: 中  
 **関連ファイル**:
 - `components/tripcard/TripCard.tsx`
@@ -80,11 +81,33 @@ TripCardの情報行（目的地・国旗）において、同じような旅行
 
 ---
 
+## ✅ 解決内容
+
+### 2025-11-01 対応
+#### 原因
+`TripCard`の`standard`バリアントでは国旗表示が実装されていなかった。`imageFull`バリアントでは実装されていたが、`standard`バリアントでは`destination`のみが表示されていた。
+
+#### 対応内容
+- `components/tripcard/TripCard.tsx`の`standard`バリアントに国旗表示を追加
+- `destination_place.address_components`から国コードを取得して国旗を表示
+- `destination`と国旗を横並びで表示するようにレイアウトを変更
+
+#### 変更内容
+- `standard`バリアントの`destination`表示部分を`<div>`で囲み、国旗表示を追加
+- `imageFull`バリアントと同様のロジックを使用して国コードを取得
+
+#### 残りの課題
+- `destination_place`が存在しない場合のフォールバック（`destination`文字列から国推定）は未実装
+- `/api/trips`での`destination_place`の一貫した解決が推奨される
+
 ## ✅ 完了条件
-- [ ] `/api/trips` から返るTripのうち、`destination` が設定されているものは可能な限り国旗が表示される
-- [ ] `destination_place` が欠落していても、住所からの国推定で一定割合表示される
-- [ ] `getCountryFlag` への未定義入力でUIが乱れない
-- [ ] 回帰（国旗が出ていたカードで消える）が発生しない
+- [x] `/api/trips` から返るTripのうち、`destination_place`が設定されているものは国旗が表示される
+- [ ] `destination_place` が欠落していても、住所からの国推定で一定割合表示される（未実装）
+- [x] `getCountryFlag` への未定義入力でUIが乱れない（`unknown`チェック追加済み）
+- [x] 回帰（国旗が出ていたカードで消える）が発生しない（`imageFull`バリアントの動作を維持）
+
+## 📝 参考
+- コミット: `fix: TripCardのstandardバリアントに国旗表示を追加` (f5cd04c)
 
 ---
 

@@ -24,7 +24,7 @@
 | [Checklistの再生成ボタンが動作しない](trip-slug-checklist-regenerate-not-working.md) | 解決済み | 2025-10-31 |
 | [i18n辞書の分割運用（ドメイン別＋型安全＋遅延ロード）](i18n-namespace-splitting-and-typed-loader.md) | 未解決 | 2025-10-31 |
 | [/memories ページでの警告・エラーの多発](memories-page-warnings.md) | 未解決 | 2025-10-31 |
-| [TripCardで国旗の表示が不安定（出る/出ない）](tripcard-country-flag-inconsistency.md) | 未解決 | 2025-10-31 |
+| [TripCardで国旗の表示が不安定（出る/出ない）](tripcard-country-flag-inconsistency.md) | 部分的解決 | 2025-10-31 |
 | [Itinerary Cardの通貨推測（Venue→通貨）が弱い](itinerary-currency-inference-weak.md) | 未解決 | 2025-10-31 |
 | [Itinerary Cardの予約ボタン/表示に視覚的フィードバックがない](itinerary-card-reservation-visual-feedback.md) | 未解決 | 2025-10-31 |
 | [Itinerary Cardの画像解像度がplaces_cacheの画像より低い](itinerary-card-image-resolution-low.md) | 未解決 | 2025-10-31 |
@@ -87,9 +87,9 @@
 ## 📊 統計
 
 - **総Issue数**: 39件
-- **未解決**: 14件
+- **未解決**: 13件
 - **確認済み**: 1件
-- **部分的解決**: 2件
+- **部分的解決**: 3件
 - **解決済み**: 15件
 - **未実装（Feature）**: 4件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
@@ -117,6 +117,7 @@
 
 本日の対応完了:
 - ✅ Checklist再生成ボタンの修正
+- ✅ TripCardの国旗表示問題修正（standardバリアントに対応）
 
 本日の対応失敗:
 - ❌ Private Tripsの表示問題（難易度をアップして継続調査が必要）
