@@ -44,6 +44,7 @@
 | [アクティビティカテゴリーのラベルが日本語ハードコード](activity-categories-i18n.md) | 未解決 | 2025-11-01 |
 | [予約カテゴリー（ReservationType/ReservationSite）のラベルが日本語ハードコード](reservation-categories-i18n.md) | 未解決 | 2025-11-01 |
 | [Checklist関連の日本語ハードコード](checklist-i18n.md) | 未解決 | 2025-11-01 |
+| [CreateTripDialogの日本語ハードコード](create-trip-dialog-i18n.md) | 未解決 | 2025-11-01 |
 | [PDF Preview機能の通常機能化](pdf-preview-promote-to-normal-feature.md) | 未解決 | 2025-11-01 |
 | [言語設定保存後にAutoに戻る問題](language-settings-save-reverts-to-auto.md) | 解決済み | 2025-11-01 |
 
@@ -87,8 +88,8 @@
 
 ## 📊 統計
 
-- **総Issue数**: 39件
-- **未解決**: 13件
+- **総Issue数**: 40件
+- **未解決**: 14件
 - **確認済み**: 1件
 - **部分的解決**: 2件
 - **解決済み**: 16件
