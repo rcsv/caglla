@@ -621,6 +621,8 @@ export type TranslationKey =
   | 'reservation.site.other'
   | 'reservation.selectSite'
   | 'reservation.notSet'
+  | 'user.defaultName'
+  | 'plan.seasonTraveler'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -1247,6 +1249,8 @@ const en: Dictionary = {
   'reservation.site.other': 'Other',
   'reservation.selectSite': 'Please select',
   'reservation.notSet': 'Not set',
+  'user.defaultName': 'User',
+  'plan.seasonTraveler': 'Season Traveler',
 }
 
 const ja: Dictionary = {
@@ -1872,6 +1876,8 @@ const ja: Dictionary = {
   'reservation.site.other': 'その他',
   'reservation.selectSite': '選択してください',
   'reservation.notSet': '未設定',
+  'user.defaultName': 'ユーザー',
+  'plan.seasonTraveler': 'Season Traveler',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {

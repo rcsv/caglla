@@ -39,8 +39,8 @@ export default function PlanListPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <HomeHeader
-        userName={userData?.name || user?.email || 'User'}
-        planName={planConfig?.name || 'Season Traveler'}
+        userName={userData?.name || user?.email || t('user.defaultName')}
+        planName={planConfig?.name || t('plan.seasonTraveler')}
         avatarUrl={userData?.profile_image_url || user?.photoURL}
         onLogout={handleLogout}
         onChangePlan={handleChangePlan}
