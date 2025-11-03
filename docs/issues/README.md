@@ -23,7 +23,7 @@
 | [プロフィールページで編集画面にならないと表示言語の選択ができない](profile-language-selector-visibility.md) | 解決済み | 2025-11-01 |
 | [Checklistの再生成ボタンが動作しない](trip-slug-checklist-regenerate-not-working.md) | 解決済み | 2025-10-31 |
 | [i18n辞書の分割運用（ドメイン別＋型安全＋遅延ロード）](i18n-namespace-splitting-and-typed-loader.md) | 未解決 | 2025-10-31 |
-| [/memories ページでの警告・エラーの多発](memories-page-warnings.md) | 未解決 | 2025-10-31 |
+| [/memories ページでの警告・エラーの多発](memories-page-warnings.md) | 部分的解決 | 2025-11-01 |
 | [TripCardで国旗の表示が不安定（出る/出ない）](tripcard-country-flag-inconsistency.md) | 解決済み | 2025-10-31 |
 | [Itinerary Cardの通貨推測（Venue→通貨）が弱い](itinerary-currency-inference-weak.md) | 未解決 | 2025-10-31 |
 | [Itinerary Cardの予約ボタン/表示に視覚的フィードバックがない](itinerary-card-reservation-visual-feedback.md) | 解決済み | 2025-10-31 |
@@ -97,9 +97,9 @@
 ## 📊 統計
 
 - **総Issue数**: 43件
-- **未解決**: 10件
+- **未解決**: 9件
 - **確認済み**: 1件
-- **部分的解決**: 3件
+- **部分的解決**: 4件
 - **解決済み**: 21件
 - **未実装（Feature）**: 5件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）

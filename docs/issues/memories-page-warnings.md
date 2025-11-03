@@ -1,7 +1,8 @@
 # Issue: /memories ページでの警告・エラーの多発
 
 **作成日**: 2025-10-31  
-**状態**: 🔴 未解決  
+**解決日**: 2025-11-01  
+**状態**: 🟡 部分的解決（画像最適化・geolocation修正完了、processエラー未確認、言語ログは別Issue）  
 **優先度**: 中  
 **関連ファイル**:
 - `app/memories/page.tsx`
@@ -86,8 +87,36 @@ logger.ts:159 DEBUG: Language from override (cookie/localStorage): en (複数回
 ---
 
 ## ✅ 完了条件
-- [ ] /memories で `process is not defined` が発生しない
-- [ ] geolocation の違反警告が消える（操作連動）
-- [ ] `fill` 画像に `sizes` 指定、LCP画像に `priority` 指定
-- [ ] 言語関連ログの重複出力が解消
+- [ ] /memories で `process is not defined` が発生しない（調査済み：発見されず）
+- [x] geolocation の違反警告が消える（操作連動）✅ 完了
+- [x] `fill` 画像に `sizes` 指定、LCP画像に `priority` 指定 ✅ 完了
+- [ ] 言語関連ログの重複出力が解消（別Issueで対応予定）
 - [ ] Lighthouse パフォーマンス/Best Practices の改善確認
+
+---
+
+## ✅ 解決内容
+
+### 実装内容
+
+1. **geolocation取得のオプトイン化**
+   - `lib/utils/browser.ts`の`getBrowserInfo()`関数を修正
+   - `includeHomeAddress`オプションを追加し、デフォルトでは`homeAddress`を取得しないように変更
+   - ユーザー操作なしでのgeolocation取得を防止し、ブラウザの違反警告を解消
+
+2. **画像最適化**
+   - `components/tripcard/TripCard.tsx`に`priority`プロパティを追加
+   - `app/memories/page.tsx`で最初の年の最初のカードのみ`priority={true}`を設定
+   - LCP（Largest Contentful Paint）画像の最適化を実現
+
+### 技術的検討事項
+
+- geolocation取得は、ユーザーの明示的な操作（例：設定画面での「現在地を取得」ボタン）後にのみ実行することを推奨
+- 現在の実装では、`getBrowserInfo()`はデフォルトで`homeAddress`を取得しないため、既存の動作への影響は最小限
+- 言語ログの重複出力については、別Issueで対応予定（言語初期化の一元化が必要）
+
+### テスト確認項目
+
+- [x] geolocationの違反警告が消える
+- [x] LCP画像にpriority属性が追加される
+- [x] 既存の機能への影響がない

@@ -205,10 +205,13 @@ async function reverseGeocode(lat: number, lng: number): Promise<string | undefi
 }
 
 // ブラウザ情報をまとめて取得
-export async function getBrowserInfo(): Promise<BrowserInfo> {
-  const [homeAddress] = await Promise.all([
-    getHomeAddress().catch(() => undefined)
-  ])
+// 注意: geolocationはユーザー操作なしで取得するとブラウザの違反警告が発生するため、
+// homeAddressはオプショナルにして、必要に応じて別途取得する
+export async function getBrowserInfo(options: { includeHomeAddress?: boolean } = {}): Promise<BrowserInfo> {
+  // ユーザー操作なしでのgeolocation取得を防ぐため、デフォルトでは取得しない
+  const homeAddress = options.includeHomeAddress 
+    ? await getHomeAddress().catch(() => undefined)
+    : undefined
   
   return {
     currency: getCurrencyFromLocale(),

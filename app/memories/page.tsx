@@ -81,8 +81,14 @@ export default function MemoriesListPage() {
                 padding="lg"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {tripsByYear[year].map((trip: Trip) => (
-                    <TripCard key={trip.id} trip={trip} isPastTrip={true} variant="imageFull" />
+                  {tripsByYear[year].map((trip: Trip, index: number) => (
+                    <TripCard 
+                      key={trip.id} 
+                      trip={trip} 
+                      isPastTrip={true} 
+                      variant="imageFull" 
+                      priority={year === sortedYears[0] && index === 0} // 最初の年の最初のカードのみpriority
+                    />
                   ))}
                 </div>
               </Card>

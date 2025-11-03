@@ -16,9 +16,10 @@ export interface TripCardProps {
   trip: Trip
   isPastTrip?: boolean
   variant?: TripCardVariant
+  priority?: boolean // LCP画像用のpriority属性
 }
 
-export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, variant = 'standard' }) => {
+export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, variant = 'standard', priority = false }) => {
         // スラッグベースのURLを生成
         const getTripUrl = () => {
           if (trip.creator?.slug && trip.slug) {
@@ -44,6 +45,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
               alt={trip.title}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={priority}
               className={`object-cover ${isPastTrip ? 'sepia' : ''}`}
               style={isPastTrip ? { filter: 'sepia(0.25) contrast(1.05) brightness(0.95)' } : {}}
             />
