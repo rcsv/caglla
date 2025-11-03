@@ -18,6 +18,8 @@ import { Toggle } from '@/components/common/Toggle'
 import { Button } from '@/components/common/Button'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { t } from '@/lib/i18n'
+import { getUserLanguage } from '@/lib/utils/language'
+import { useAuth } from '@/lib/contexts/auth'
 
 
 interface CreateTripDialogProps {
@@ -39,6 +41,10 @@ interface CreateTripDialogProps {
 export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateTripDialogProps) {
   const router = useRouter()
   const { userPlanId, tripCount, privateTripCount } = useUserData()
+  const { user } = useAuth()
+  
+  // 現在のユーザー言語を取得（date inputのlang属性用）
+  const currentLanguage = getUserLanguage(user)
   
   const [formData, setFormData] = useState({
     title: '',
@@ -309,6 +315,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                   hint={t('trip.create.startDate.hint')}
                   required
                   error={dateError ? t('trip.create.dateError') : undefined}
+                  lang={currentLanguage}
                 />
 
                 <Input
@@ -323,6 +330,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                   required
                   error={dateError ? t('trip.create.dateError') : undefined}
                   min={formData.startDate || undefined}
+                  lang={currentLanguage}
                 />
               </div>
 
