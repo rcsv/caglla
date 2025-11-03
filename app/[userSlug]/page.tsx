@@ -109,15 +109,55 @@ export default function UserProfileBySlugPage() {
         // fetchedUserを使用して同期的に判定
         const currentUserId = user?.uid
         const viewedUserId = fetchedUser?.id
+        const isOwnProfileCheck = currentUserId && viewedUserId && currentUserId === viewedUserId
         
-        if (currentUserId && viewedUserId && currentUserId === viewedUserId) {
+        // デバッグログ（開発環境のみ）
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 Profile trips debug:', {
+            currentUserId,
+            viewedUserId,
+            isOwnProfile: isOwnProfileCheck,
+            totalTrips: trips.length,
+            publicTrips: publicTripsList.length,
+            allTrips: trips.map(t => ({ 
+              id: t.id, 
+              title: t.title, 
+              access_level: t.access_level,
+              access_level_type: typeof t.access_level,
+              access_level_lower: t.access_level?.toLowerCase()
+            }))
+          })
+        }
+        
+        if (isOwnProfileCheck) {
           // access_levelが'private'、または未設定（デフォルトで非公開）の場合を含める
           const privateTripsList = trips.filter(t => {
             const level = t.access_level?.toLowerCase()
             // 'private'、未設定（null/undefined）、空文字列の場合は非公開とみなす
-            return level === 'private' || !level || level === ''
+            const isPrivate = level === 'private' || !level || level === ''
+            
+            // デバッグログ（開発環境のみ）
+            if (process.env.NODE_ENV === 'development' && isPrivate) {
+              console.log('🔒 Private trip found:', { 
+                id: t.id, 
+                title: t.title, 
+                access_level: t.access_level,
+                access_level_lower: level,
+                isPrivate
+              })
+            }
+            
+            return isPrivate
           })
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🔒 Private trips filtered:', privateTripsList.length, privateTripsList.map(t => ({ id: t.id, title: t.title, access_level: t.access_level })))
+          }
+          
           setPrivateTrips(privateTripsList)
+        } else {
+          // 自分自身のプロフィールでない場合、空配列を設定
+          setPrivateTrips([])
         }
 
         // 統計情報を取得（自分自身のプロフィールまたは公開旅行がある場合）
