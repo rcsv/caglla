@@ -631,6 +631,28 @@ export type TranslationKey =
   | 'reservation.modal.template'
   | 'reservation.validation.airportCode'
   | 'reservation.validation.flightNumber'
+  | 'reservation.field.type'
+  | 'reservation.field.flightNumber'
+  | 'reservation.field.airline'
+  | 'reservation.field.departureAirport'
+  | 'reservation.field.arrivalAirport'
+  | 'reservation.field.departureDateTime'
+  | 'reservation.field.arrivalDateTime'
+  | 'reservation.field.startDateTime'
+  | 'reservation.field.endDateTime'
+  | 'reservation.field.confirmationNumber'
+  | 'reservation.field.reservationSite'
+  | 'reservation.field.reservationUrl'
+  | 'reservation.field.notes'
+  | 'reservation.placeholder.flightNumber'
+  | 'reservation.placeholder.airline'
+  | 'reservation.placeholder.departureAirport'
+  | 'reservation.placeholder.arrivalAirport'
+  | 'reservation.placeholder.confirmationNumber'
+  | 'reservation.placeholder.notes'
+  | 'reservation.button.cancel'
+  | 'reservation.button.save'
+  | 'reservation.button.saving'
   | 'user.defaultName'
   | 'plan.seasonTraveler'
 
@@ -1269,6 +1291,28 @@ const en: Dictionary = {
   'reservation.modal.template': 'Template',
   'reservation.validation.airportCode': 'Airport code must be 3 uppercase letters (e.g., NRT, HND)',
   'reservation.validation.flightNumber': 'Flight number must be airline code + numbers (e.g., ANA123, JAL456)',
+  'reservation.field.type': 'Reservation Type',
+  'reservation.field.flightNumber': 'Flight Number',
+  'reservation.field.airline': 'Airline',
+  'reservation.field.departureAirport': 'Departure Airport',
+  'reservation.field.arrivalAirport': 'Arrival Airport',
+  'reservation.field.departureDateTime': 'Departure Date & Time',
+  'reservation.field.arrivalDateTime': 'Arrival Date & Time',
+  'reservation.field.startDateTime': 'Start Date & Time',
+  'reservation.field.endDateTime': 'End Date & Time',
+  'reservation.field.confirmationNumber': 'Confirmation Number',
+  'reservation.field.reservationSite': 'Reservation Site',
+  'reservation.field.reservationUrl': 'Reservation Site URL',
+  'reservation.field.notes': 'Notes',
+  'reservation.placeholder.flightNumber': 'e.g., ANA123, JAL456',
+  'reservation.placeholder.airline': 'e.g., ANA, JAL',
+  'reservation.placeholder.departureAirport': 'e.g., NRT, HND',
+  'reservation.placeholder.arrivalAirport': 'e.g., ITM, KIX',
+  'reservation.placeholder.confirmationNumber': 'Confirmation Number',
+  'reservation.placeholder.notes': 'Additional notes or information',
+  'reservation.button.cancel': 'Cancel',
+  'reservation.button.save': 'Save',
+  'reservation.button.saving': 'Saving...',
   'user.defaultName': 'User',
   'plan.seasonTraveler': 'Season Traveler',
 }
@@ -1906,6 +1950,28 @@ const ja: Dictionary = {
   'reservation.modal.template': 'テンプレート',
   'reservation.validation.airportCode': '空港コードは3文字の英大文字で入力してください（例: NRT, HND）',
   'reservation.validation.flightNumber': '便名は航空会社コード+数字の形式で入力してください（例: ANA123, JAL456）',
+  'reservation.field.type': '予約タイプ',
+  'reservation.field.flightNumber': '便名',
+  'reservation.field.airline': '航空会社',
+  'reservation.field.departureAirport': '出発空港',
+  'reservation.field.arrivalAirport': '到着空港',
+  'reservation.field.departureDateTime': '出発日時',
+  'reservation.field.arrivalDateTime': '到着日時',
+  'reservation.field.startDateTime': '開始日時',
+  'reservation.field.endDateTime': '終了日時',
+  'reservation.field.confirmationNumber': '予約確認番号',
+  'reservation.field.reservationSite': '予約サイト',
+  'reservation.field.reservationUrl': '予約サイトURL',
+  'reservation.field.notes': 'メモ',
+  'reservation.placeholder.flightNumber': '例: ANA123, JAL456',
+  'reservation.placeholder.airline': '例: ANA, JAL',
+  'reservation.placeholder.departureAirport': '例: NRT, HND',
+  'reservation.placeholder.arrivalAirport': '例: ITM, KIX',
+  'reservation.placeholder.confirmationNumber': '予約確認番号',
+  'reservation.placeholder.notes': '追加のメモや情報',
+  'reservation.button.cancel': 'キャンセル',
+  'reservation.button.save': '保存',
+  'reservation.button.saving': '保存中...',
   'user.defaultName': 'ユーザー',
   'plan.seasonTraveler': 'Season Traveler',
 }
