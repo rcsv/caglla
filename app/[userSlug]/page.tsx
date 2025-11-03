@@ -77,8 +77,10 @@ export default function UserProfileBySlugPage() {
       setProfileLoading(true)
       // 自分自身のプロフィール情報を取得
       const res = await makeAuthenticatedRequest('/api/users')
+      let fetchedUser: User | null = null
       if (res.ok) {
         const data = await res.json()
+        fetchedUser = data.user
         setProfileUser(data.user)
         setEditForm({
           name: data.user.name || '',
@@ -104,28 +106,9 @@ export default function UserProfileBySlugPage() {
         setPublicTrips(publicTripsList)
         
         // 自分自身のプロフィールの場合、非公開の旅行も取得
-        // profileUserは既に取得済みなので、ここで判定可能
+        // fetchedUserを使用して同期的に判定
         const currentUserId = user?.uid
-        const viewedUserId = profileUser?.id
-        
-        // デバッグ: 旅行データを確認
-        console.log('🔍 Profile trips debug:', {
-          currentUserId,
-          viewedUserId,
-          isOwnProfile: currentUserId && viewedUserId && currentUserId === viewedUserId,
-          totalTrips: trips.length,
-          publicTrips: publicTripsList.length,
-          privateTrips: trips.filter(t => {
-            const level = t.access_level?.toLowerCase()
-            return level === 'private' || !level || level === ''
-          }).length,
-          allAccessLevels: trips.map(t => ({ 
-            id: t.id, 
-            title: t.title, 
-            access_level: t.access_level,
-            access_level_lower: t.access_level?.toLowerCase()
-          }))
-        })
+        const viewedUserId = fetchedUser?.id
         
         if (currentUserId && viewedUserId && currentUserId === viewedUserId) {
           // access_levelが'private'、または未設定（デフォルトで非公開）の場合を含める
@@ -134,7 +117,6 @@ export default function UserProfileBySlugPage() {
             // 'private'、未設定（null/undefined）、空文字列の場合は非公開とみなす
             return level === 'private' || !level || level === ''
           })
-          console.log('🔒 Private trips found:', privateTripsList.length, privateTripsList.map(t => ({ id: t.id, title: t.title, access_level: t.access_level })))
           setPrivateTrips(privateTripsList)
         }
 
