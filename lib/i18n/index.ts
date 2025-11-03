@@ -521,6 +521,30 @@ export type TranslationKey =
   | 'checklist.library.applyFailed'
   | 'checklist.nav.preparing.subtitle'
   | 'checklist.nav.packing.subtitle'
+  // Reservation Categories
+  | 'reservation.type.flight'
+  | 'reservation.type.rentalCar'
+  | 'reservation.type.hotel'
+  | 'reservation.type.dining'
+  | 'reservation.type.other'
+  | 'reservation.site.expedia'
+  | 'reservation.site.bookingCom'
+  | 'reservation.site.agoda'
+  | 'reservation.site.trivago'
+  | 'reservation.site.airbnb'
+  | 'reservation.site.kayak'
+  | 'reservation.site.skyscanner'
+  | 'reservation.site.tripadvisor'
+  | 'reservation.site.opentable'
+  | 'reservation.site.tabelog'
+  | 'reservation.site.hotPepper'
+  | 'reservation.site.ana'
+  | 'reservation.site.jal'
+  | 'reservation.site.rakutenTravel'
+  | 'reservation.site.jalan'
+  | 'reservation.site.other'
+  | 'reservation.selectSite'
+  | 'reservation.notSet'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -1044,6 +1068,30 @@ const en: Dictionary = {
   'checklist.library.applyFailed': 'Failed to apply preset',
   'checklist.nav.preparing.subtitle': 'Preparing for activities',
   'checklist.nav.packing.subtitle': 'Items to pack',
+  // Reservation Categories
+  'reservation.type.flight': 'Flight',
+  'reservation.type.rentalCar': 'Rental Car',
+  'reservation.type.hotel': 'Hotel',
+  'reservation.type.dining': 'Dining',
+  'reservation.type.other': 'Other',
+  'reservation.site.expedia': 'Expedia',
+  'reservation.site.bookingCom': 'Booking.com',
+  'reservation.site.agoda': 'Agoda',
+  'reservation.site.trivago': 'Trivago',
+  'reservation.site.airbnb': 'Airbnb',
+  'reservation.site.kayak': 'Kayak',
+  'reservation.site.skyscanner': 'Skyscanner',
+  'reservation.site.tripadvisor': 'TripAdvisor',
+  'reservation.site.opentable': 'OpenTable',
+  'reservation.site.tabelog': 'Tabelog',
+  'reservation.site.hotPepper': 'Hot Pepper',
+  'reservation.site.ana': 'ANA',
+  'reservation.site.jal': 'JAL',
+  'reservation.site.rakutenTravel': 'Rakuten Travel',
+  'reservation.site.jalan': 'Jalan',
+  'reservation.site.other': 'Other',
+  'reservation.selectSite': 'Please select',
+  'reservation.notSet': 'Not set',
 }
 
 const ja: Dictionary = {
@@ -1566,6 +1614,30 @@ const ja: Dictionary = {
   'checklist.library.applyFailed': 'プリセットの適用に失敗しました',
   'checklist.nav.preparing.subtitle': '行動系のこと',
   'checklist.nav.packing.subtitle': '持っていくものの準備系',
+  // Reservation Categories
+  'reservation.type.flight': '飛行機',
+  'reservation.type.rentalCar': 'レンタカー',
+  'reservation.type.hotel': 'ホテル',
+  'reservation.type.dining': '食事',
+  'reservation.type.other': 'その他',
+  'reservation.site.expedia': 'Expedia',
+  'reservation.site.bookingCom': 'Booking.com',
+  'reservation.site.agoda': 'Agoda',
+  'reservation.site.trivago': 'Trivago',
+  'reservation.site.airbnb': 'Airbnb',
+  'reservation.site.kayak': 'Kayak',
+  'reservation.site.skyscanner': 'Skyscanner',
+  'reservation.site.tripadvisor': 'TripAdvisor',
+  'reservation.site.opentable': 'OpenTable',
+  'reservation.site.tabelog': '食べログ',
+  'reservation.site.hotPepper': 'ホットペッパー',
+  'reservation.site.ana': 'ANA',
+  'reservation.site.jal': 'JAL',
+  'reservation.site.rakutenTravel': '楽天トラベル',
+  'reservation.site.jalan': 'じゃらん',
+  'reservation.site.other': 'その他',
+  'reservation.selectSite': '選択してください',
+  'reservation.notSet': '未設定',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {

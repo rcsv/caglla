@@ -42,7 +42,7 @@
 | [Activity Analysis表示が日本語ハードコード](activity-analysis-display-i18n.md) | 解決済み | 2025-11-01 |
 | [総移動距離表示が日本語ハードコード](distance-display-i18n.md) | 解決済み | 2025-11-01 |
 | [アクティビティカテゴリーのラベルが日本語ハードコード](activity-categories-i18n.md) | 未解決 | 2025-11-01 |
-| [予約カテゴリー（ReservationType/ReservationSite）のラベルが日本語ハードコード](reservation-categories-i18n.md) | 未解決 | 2025-11-01 |
+| [予約カテゴリー（ReservationType/ReservationSite）のラベルが日本語ハードコード](reservation-categories-i18n.md) | 解決済み | 2025-11-01 |
 | [Checklist関連の日本語ハードコード](checklist-i18n.md) | 解決済み | 2025-11-01 |
 | [CreateTripDialogの日本語ハードコード](create-trip-dialog-i18n.md) | 解決済み | 2025-11-01 |
 | [PDF Preview機能の通常機能化](pdf-preview-promote-to-normal-feature.md) | 未解決 | 2025-11-01 |
@@ -89,10 +89,10 @@
 ## 📊 統計
 
 - **総Issue数**: 40件
-- **未解決**: 12件
+- **未解決**: 11件
 - **確認済み**: 1件
 - **部分的解決**: 2件
-- **解決済み**: 18件
+- **解決済み**: 19件
 - **未実装（Feature）**: 4件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
 - **中優先度**: 27件

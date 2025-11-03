@@ -2,14 +2,15 @@
 
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import type { ReservationTemplate, ReservationTemplateInput, ReservationType } from '@/lib/core/types'
+import type { ReservationTemplate, ReservationTemplateInput, ReservationType, ReservationSite } from '@/lib/core/types'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import Button from '@/components/common/Button'
 import Input from '@/components/common/Input'
 import Textarea from '@/components/common/Textarea'
 import Select from '@/components/common/Select'
 import { Icon } from '@iconify/react'
-import { getReservationTypeLabel, getReservationSiteLabel } from '@/lib/utils/reservation-utils'
+import { getReservationTypeLabel, getReservationSiteLabel, getReservationTypeIcon } from '@/lib/utils/reservation-utils'
+import { t } from '@/lib/i18n'
 
 interface ReservationTemplateModalProps {
   isOpen: boolean
@@ -18,25 +19,27 @@ interface ReservationTemplateModalProps {
   reservationType?: ReservationType // フィルタ用
 }
 
-const RESERVATION_TYPES = [
-  { value: 'flight', label: '✈️ 飛行機' },
-  { value: 'rental_car', label: '🚗 レンタカー' },
-  { value: 'hotel', label: '🏨 ホテル' },
-  { value: 'dining', label: '🍽️ 食事' },
-  { value: 'other', label: '📋 その他' }
+// 予約タイプの配列を取得（i18n対応）
+const getReservationTypes = (): { value: ReservationType; label: string; icon: string }[] => [
+  { value: 'flight', label: t('reservation.type.flight'), icon: '✈️' },
+  { value: 'rental_car', label: t('reservation.type.rentalCar'), icon: '🚗' },
+  { value: 'hotel', label: t('reservation.type.hotel'), icon: '🏨' },
+  { value: 'dining', label: t('reservation.type.dining'), icon: '🍽️' },
+  { value: 'other', label: t('reservation.type.other'), icon: '📋' }
 ]
 
-const RESERVATION_SITES = [
-  { value: 'expedia', label: 'Expedia' },
-  { value: 'booking_com', label: 'Booking.com' },
-  { value: 'agoda', label: 'Agoda' },
-  { value: 'airbnb', label: 'Airbnb' },
-  { value: 'skyscanner', label: 'Skyscanner' },
-  { value: 'ana', label: 'ANA' },
-  { value: 'jal', label: 'JAL' },
-  { value: 'rakuten_travel', label: '楽天トラベル' },
-  { value: 'jalan', label: 'じゃらん' },
-  { value: 'other', label: 'その他' }
+// 予約サイトの配列を取得（i18n対応）
+const getReservationSites = (): { value: ReservationSite; label: string }[] => [
+  { value: 'expedia', label: t('reservation.site.expedia') },
+  { value: 'booking_com', label: t('reservation.site.bookingCom') },
+  { value: 'agoda', label: t('reservation.site.agoda') },
+  { value: 'airbnb', label: t('reservation.site.airbnb') },
+  { value: 'skyscanner', label: t('reservation.site.skyscanner') },
+  { value: 'ana', label: t('reservation.site.ana') },
+  { value: 'jal', label: t('reservation.site.jal') },
+  { value: 'rakuten_travel', label: t('reservation.site.rakutenTravel') },
+  { value: 'jalan', label: t('reservation.site.jalan') },
+  { value: 'other', label: t('reservation.site.other') }
 ]
 
 export default function ReservationTemplateModal({
@@ -252,7 +255,7 @@ export default function ReservationTemplateModal({
                 label="予約タイプ"
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as ReservationType })}
-                options={RESERVATION_TYPES}
+                options={getReservationTypes().map(type => ({ value: type.value, label: `${type.icon} ${type.label}` }))}
                 required
               />
 
@@ -260,7 +263,7 @@ export default function ReservationTemplateModal({
                 label="予約サイト"
                 value={formData.reservation_site || ''}
                 onChange={(e) => setFormData({ ...formData, reservation_site: e.target.value as any })}
-                options={[{ value: '', label: '未設定' }, ...RESERVATION_SITES]}
+                options={[{ value: '', label: t('reservation.notSet') }, ...getReservationSites().map(site => ({ value: site.value, label: site.label }))]}
               />
 
               {formData.type === 'flight' && (

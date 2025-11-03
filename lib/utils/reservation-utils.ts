@@ -1,5 +1,6 @@
 import { ReservationInfo, ReservationType, ReservationSite } from '@/lib/core/types'
 import { toDate, toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { t } from '@/lib/i18n'
 
 /**
  * 予約情報のバリデーション
@@ -117,42 +118,42 @@ export function isAllowedReservationUrl(url: string): boolean {
 }
 
 /**
- * 予約タイプの日本語表示名を取得
+ * 予約タイプの表示名を取得（i18n対応）
  */
 export function getReservationTypeLabel(type: ReservationType): string {
-  const labels: Record<ReservationType, string> = {
-    flight: '飛行機',
-    rental_car: 'レンタカー',
-    hotel: 'ホテル',
-    dining: '食事',
-    other: 'その他'
+  const labelMap: Record<ReservationType, string> = {
+    flight: t('reservation.type.flight'),
+    rental_car: t('reservation.type.rentalCar'),
+    hotel: t('reservation.type.hotel'),
+    dining: t('reservation.type.dining'),
+    other: t('reservation.type.other')
   }
-  return labels[type] || type
+  return labelMap[type] || type
 }
 
 /**
- * 予約サイトの日本語表示名を取得
+ * 予約サイトの表示名を取得（i18n対応）
  */
 export function getReservationSiteLabel(site: ReservationSite): string {
-  const labels: Record<ReservationSite, string> = {
-    expedia: 'Expedia',
-    booking_com: 'Booking.com',
-    agoda: 'Agoda',
-    trivago: 'Trivago',
-    airbnb: 'Airbnb',
-    kayak: 'Kayak',
-    skyscanner: 'Skyscanner',
-    tripadvisor: 'TripAdvisor',
-    opentable: 'OpenTable',
-    tabelog: '食べログ',
-    hot_pepper: 'ホットペッパー',
-    ana: 'ANA',
-    jal: 'JAL',
-    rakuten_travel: '楽天トラベル',
-    jalan: 'じゃらん',
-    other: 'その他'
+  const labelMap: Record<ReservationSite, string> = {
+    expedia: t('reservation.site.expedia'),
+    booking_com: t('reservation.site.bookingCom'),
+    agoda: t('reservation.site.agoda'),
+    trivago: t('reservation.site.trivago'),
+    airbnb: t('reservation.site.airbnb'),
+    kayak: t('reservation.site.kayak'),
+    skyscanner: t('reservation.site.skyscanner'),
+    tripadvisor: t('reservation.site.tripadvisor'),
+    opentable: t('reservation.site.opentable'),
+    tabelog: t('reservation.site.tabelog'),
+    hot_pepper: t('reservation.site.hotPepper'),
+    ana: t('reservation.site.ana'),
+    jal: t('reservation.site.jal'),
+    rakuten_travel: t('reservation.site.rakutenTravel'),
+    jalan: t('reservation.site.jalan'),
+    other: t('reservation.site.other')
   }
-  return labels[site] || site
+  return labelMap[site] || site
 }
 
 /**

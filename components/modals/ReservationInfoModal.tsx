@@ -20,6 +20,7 @@ import ReservationTemplateModal from '@/components/modals/ReservationTemplateMod
 import { toDate, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import type { FirestoreDate } from '@/lib/core/types'
 import { Icon } from '@iconify/react'
+import { t } from '@/lib/i18n'
 
 interface ReservationInfoModalProps {
   isOpen: boolean
@@ -31,31 +32,33 @@ interface ReservationInfoModalProps {
   day?: Day | null
 }
 
-const RESERVATION_TYPES: { value: ReservationType; label: string; icon: string }[] = [
-  { value: 'flight', label: '飛行機', icon: '✈️' },
-  { value: 'rental_car', label: 'レンタカー', icon: '🚗' },
-  { value: 'hotel', label: 'ホテル', icon: '🏨' },
-  { value: 'dining', label: '食事', icon: '🍽️' },
-  { value: 'other', label: 'その他', icon: '📋' }
+// 予約タイプの配列を取得（i18n対応）
+const getReservationTypes = (): { value: ReservationType; label: string; icon: string }[] => [
+  { value: 'flight', label: t('reservation.type.flight'), icon: '✈️' },
+  { value: 'rental_car', label: t('reservation.type.rentalCar'), icon: '🚗' },
+  { value: 'hotel', label: t('reservation.type.hotel'), icon: '🏨' },
+  { value: 'dining', label: t('reservation.type.dining'), icon: '🍽️' },
+  { value: 'other', label: t('reservation.type.other'), icon: '📋' }
 ]
 
-const RESERVATION_SITES: { value: ReservationSite; label: string }[] = [
-  { value: 'expedia', label: 'Expedia' },
-  { value: 'booking_com', label: 'Booking.com' },
-  { value: 'agoda', label: 'Agoda' },
-  { value: 'trivago', label: 'Trivago' },
-  { value: 'airbnb', label: 'Airbnb' },
-  { value: 'kayak', label: 'Kayak' },
-  { value: 'skyscanner', label: 'Skyscanner' },
-  { value: 'tripadvisor', label: 'TripAdvisor' },
-  { value: 'opentable', label: 'OpenTable' },
-  { value: 'tabelog', label: '食べログ' },
-  { value: 'hot_pepper', label: 'ホットペッパー' },
-  { value: 'ana', label: 'ANA' },
-  { value: 'jal', label: 'JAL' },
-  { value: 'rakuten_travel', label: '楽天トラベル' },
-  { value: 'jalan', label: 'じゃらん' },
-  { value: 'other', label: 'その他' }
+// 予約サイトの配列を取得（i18n対応）
+const getReservationSites = (): { value: ReservationSite; label: string }[] => [
+  { value: 'expedia', label: t('reservation.site.expedia') },
+  { value: 'booking_com', label: t('reservation.site.bookingCom') },
+  { value: 'agoda', label: t('reservation.site.agoda') },
+  { value: 'trivago', label: t('reservation.site.trivago') },
+  { value: 'airbnb', label: t('reservation.site.airbnb') },
+  { value: 'kayak', label: t('reservation.site.kayak') },
+  { value: 'skyscanner', label: t('reservation.site.skyscanner') },
+  { value: 'tripadvisor', label: t('reservation.site.tripadvisor') },
+  { value: 'opentable', label: t('reservation.site.opentable') },
+  { value: 'tabelog', label: t('reservation.site.tabelog') },
+  { value: 'hot_pepper', label: t('reservation.site.hotPepper') },
+  { value: 'ana', label: t('reservation.site.ana') },
+  { value: 'jal', label: t('reservation.site.jal') },
+  { value: 'rakuten_travel', label: t('reservation.site.rakutenTravel') },
+  { value: 'jalan', label: t('reservation.site.jalan') },
+  { value: 'other', label: t('reservation.site.other') }
 ]
 
 // アクティビティタグから予約タイプへのマッピング
@@ -309,7 +312,7 @@ export default function ReservationInfoModal({
               予約タイプ *
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {RESERVATION_TYPES.map((type) => (
+              {getReservationTypes().map((type) => (
                 <button
                   key={type.value}
                   onClick={() => handleTypeChange(type.value)}
@@ -444,8 +447,8 @@ export default function ReservationInfoModal({
               value={reservation.reservation_site || ''}
               onChange={(e) => setReservation((prev: any) => ({ ...prev, reservation_site: e.target.value as ReservationSite }))}
               options={[
-                { value: '', label: '選択してください' },
-                ...RESERVATION_SITES.map(site => ({ value: site.value, label: site.label }))
+                { value: '', label: t('reservation.selectSite') },
+                ...getReservationSites().map(site => ({ value: site.value, label: site.label }))
               ]}
             />
           </div>

@@ -1,8 +1,9 @@
 # Issue: 予約カテゴリー（ReservationType/ReservationSite）のラベルが日本語ハードコード
 
 **作成日**: 2025-11-01  
-**状態**: 🔴 未解決  
+**状態**: ✅ 解決済み  
 **優先度**: 中  
+**解決日**: 2025-11-01  
 **種類**: i18n化  
 **関連ファイル**: 
 - `lib/utils/reservation-utils.ts`（予約タイプ・サイトのラベル関数）
@@ -260,6 +261,42 @@ const RESERVATION_TYPES = useMemo(() => [
 'reservation.site.jalan': 'じゃらん',
 'reservation.site.other': 'その他',
 ```
+
+---
+
+## 🎉 解決内容
+
+### 実装内容
+
+1. **i18nキーの追加** (`lib/i18n/index.ts`)
+   - `reservation.type.*` ネームスペースで5個のキーを追加（flight, rentalCar, hotel, dining, other）
+   - `reservation.site.*` ネームスペースで17個のキーを追加（expedia, bookingCom, agoda, trivago, airbnb, kayak, skyscanner, tripadvisor, opentable, tabelog, hotPepper, ana, jal, rakutenTravel, jalan, other）
+   - `reservation.selectSite`, `reservation.notSet` を追加
+   - 英語・日本語両方の翻訳を追加
+
+2. **予約ユーティリティ関数の修正** (`lib/utils/reservation-utils.ts`)
+   - `getReservationTypeLabel()` 関数をi18n対応に修正
+   - `getReservationSiteLabel()` 関数をi18n対応に修正
+   - `t()`関数をインポートして使用
+
+3. **コンポーネントの修正**
+   - `components/modals/ReservationInfoModal.tsx`: `RESERVATION_TYPES`と`RESERVATION_SITES`を関数化し、i18nキーを使用
+   - `components/modals/ReservationTemplateModal.tsx`: 同様に関数化してi18n化
+   - 「選択してください」「未設定」プレースホルダーもi18n化
+
+### 置き換えた箇所
+
+- **ReservationType**: 飛行機、レンタカー、ホテル、食事、その他
+- **ReservationSite**: Expedia, Booking.com, Agoda, Trivago, Airbnb, Kayak, Skyscanner, TripAdvisor, OpenTable, 食べログ, ホットペッパー, ANA, JAL, 楽天トラベル, じゃらん, その他
+- **プレースホルダー**: 選択してください、未設定
+
+### テスト
+
+- [x] 英語表示で正常に動作することを確認
+- [x] 日本語表示で正常に動作することを確認
+- [x] ReservationInfoModalで予約タイプ・サイトが適切に表示されることを確認
+- [x] ReservationTemplateModalで適切に表示されることを確認
+- [x] TripReservationDisplayで`getReservationTypeLabel()`が適切に動作することを確認
 
 ---
 
