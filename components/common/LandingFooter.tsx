@@ -157,7 +157,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
               <button
                 onClick={scrollToTop}
                 className="inline-flex items-center gap-1 px-3 py-1.5 border border-emerald-400 text-emerald-300 hover:bg-emerald-500/10 transition-colors rounded"
-                aria-label="Back to top"
+                aria-label={t('footer.backToTopAria')}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -165,7 +165,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
                 {t('footer.backToTop')}
               </button>
               <p className="text-gray-400">
-                © {new Date().getFullYear()} Caglla. All rights reserved.
+                {t('footer.copyright').replace('{year}', String(new Date().getFullYear()))}
               </p>
             </div>
             <div className="flex items-center gap-6 text-gray-400">

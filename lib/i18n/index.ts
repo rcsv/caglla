@@ -35,6 +35,8 @@ export type TranslationKey =
   | 'footer.termsOfService'
   | 'footer.cookieSettings'
   | 'footer.about'
+  | 'footer.backToTopAria'
+  | 'footer.copyright'
   // Features page
   | 'features.intro'
   | 'features.section1.title'
@@ -655,6 +657,8 @@ const en: Dictionary = {
   'footer.about': 'About',
   'footer.releaseNotes': 'Release notes',
   'footer.backToTop': 'Back to top',
+  'footer.backToTopAria': 'Back to top',
+  'footer.copyright': '© {year} Caglla. All rights reserved.',
   'footer.documentation': 'Documentation',
   'footer.blog': 'Blog',
   'footer.faq': 'FAQ',
@@ -1284,6 +1288,8 @@ const ja: Dictionary = {
   'footer.about': 'このサイトについて',
   'footer.releaseNotes': 'リリースノート',
   'footer.backToTop': 'トップへ戻る',
+  'footer.backToTopAria': 'ページ上部へ戻る',
+  'footer.copyright': '© {year} Caglla. All rights reserved.',
   'footer.documentation': 'ドキュメント',
   'footer.blog': 'ブログ',
   'footer.faq': 'FAQ',
