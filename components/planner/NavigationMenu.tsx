@@ -190,7 +190,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     try {
       date = toDate(day.date)
     } catch {
-      return `Day ${day.day_number}`
+      return `${t('nav.dayPrefix')} ${day.day_number ?? ''}`
     }
     const month = date.getMonth() + 1
     const dayNum = date.getDate()

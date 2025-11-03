@@ -401,6 +401,7 @@ export type TranslationKey =
   | 'nav.checklist'
   | 'nav.plan'
   | 'nav.logout'
+  | 'nav.dayPrefix'
   // POI Dialog
   | 'poi.website'
   | 'poi.cached'
@@ -1062,6 +1063,7 @@ const en: Dictionary = {
   'nav.checklist': 'Checklist',
   'nav.plan': 'Plan',
   'nav.logout': 'Logout',
+  'nav.dayPrefix': 'Day',
   // Travel Cost Display
   'cost.title': 'Travel Cost',
   'cost.empty': 'No schedules with cost information',
@@ -1689,6 +1691,7 @@ const ja: Dictionary = {
   'nav.checklist': 'チェックリスト',
   'nav.plan': 'プラン',
   'nav.logout': 'ログアウト',
+  'nav.dayPrefix': 'Day',
   // Travel Cost Display
   'cost.title': '旅行費用',
   'cost.empty': '費用情報が設定されたスケジュールがありません',
