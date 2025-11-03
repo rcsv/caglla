@@ -1,7 +1,8 @@
 # Issue: 左メニューのChecklist（Preparing / Packing）にアイコンがなく、折りたたみ時に不自然な空白が発生する
 
 **作成日**: 2025-11-03  
-**状態**: 🔴 未解決  
+**状態**: ✅ 解決済み  
+**解決日**: 2025-11-03  
 **優先度**: 低（UI/使い勝手の改善）  
 **関連ファイル**:
 - `components/planner/NavigationMenu.tsx`
