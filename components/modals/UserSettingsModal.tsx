@@ -10,6 +10,7 @@ import { getZIndexClass } from '@/lib/core/z-index'
 import type { User, UserPreferences, UserSettingsModalProps } from '@/lib/core/types'
 import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from '@/lib/utils/language'
 import { CloseIcon } from '@/components/common/icons/CloseIcon'
+import { t } from '@/lib/i18n'
 
 export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
   const { user } = useAuth()
@@ -59,7 +60,7 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
 
     // 3文字以下の場合はエラー
     if (name.trim().length <= 3) {
-      setNameError('名前は4文字以上で入力してください')
+      setNameError(t('userSettings.validation.nameMinLength'))
       setNameSuccess(null)
       return
     }
@@ -81,16 +82,16 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
       if (response.ok) {
         const data = await response.json()
         if (data.isAvailable) {
-          setNameSuccess('この名前は使用可能です')
+          setNameSuccess(t('userSettings.validation.nameAvailable'))
         } else {
           setNameError(data.message)
         }
       } else {
-        setNameError('スラッグの確認に失敗しました')
+        setNameError(t('userSettings.validation.slugCheckFailed'))
       }
     } catch (error) {
       logger.error('Failed to check slug availability:', error)
-      setNameError('スラッグの確認に失敗しました')
+      setNameError(t('userSettings.validation.slugCheckFailed'))
     } finally {
       setIsCheckingSlug(false)
     }
@@ -121,7 +122,7 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
   const handleSave = async () => {
     // エラーがある場合は保存を阻止
     if (nameError) {
-      alert('名前の重複エラーを解決してから保存してください')
+      alert(t('userSettings.validation.nameDuplicate'))
       return
     }
 
@@ -154,16 +155,17 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
         const data = await response.json()
         logger.debug('Save successful:', data)
         setUserData(data.user)
-        alert('設定を保存しました')
+        alert(t('userSettings.success.saved'))
         onClose() // ダイアログを閉じる
       } else {
         const errorData = await response.json().catch(() => ({}))
         logger.error('Save failed:', response.status, errorData)
-        alert(`設定の保存に失敗しました: ${errorData.error || '不明なエラー'}`)
+        const errorMsg = errorData.error || t('userSettings.error.unknown')
+        alert(t('userSettings.error.saveFailed').replace('{error}', errorMsg))
       }
     } catch (error) {
       logger.error('Failed to save preferences:', error)
-      alert('設定の保存に失敗しました: ネットワークエラー')
+      alert(t('userSettings.error.saveFailedNetwork'))
     } finally {
       setSaving(false)
     }
@@ -184,8 +186,8 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
         <div className="relative bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b">
-            <h2 className="text-2xl font-bold text-gray-900">ユーザー設定</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <h2 className="text-2xl font-bold text-gray-900">{t('userSettings.title')}</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors" aria-label={t('common.close')}>
               <CloseIcon className="w-6 h-6" />
             </button>
           </div>
@@ -194,10 +196,10 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
           <div className="p-6 space-y-6">
             {/* Basic Info */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">基本情報</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('userSettings.basicInfo')}</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">名前</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('userSettings.label.name')}</label>
                   <input
                     type="text"
                     value={userData?.name || ''}
@@ -210,11 +212,11 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                         ? 'border-green-300 bg-green-50 focus:ring-green-500' 
                         : 'border-gray-300 focus:ring-blue-500'
                     }`}
-                    placeholder="名前を入力してください"
+                    placeholder={t('userSettings.placeholder.name')}
                     disabled={saving || isCheckingSlug}
                   />
                   {isCheckingSlug && (
-                    <p className="mt-1 text-xs text-blue-600">スラッグの確認中...</p>
+                    <p className="mt-1 text-xs text-blue-600">{t('userSettings.description.checkingSlug')}</p>
                   )}
                   {nameError && (
                     <p className="mt-1 text-xs text-red-600">{nameError}</p>
@@ -224,8 +226,8 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">メールアドレス</label>
-                  <p className="mt-1 text-sm text-gray-900">{userData?.email || require('@/lib/i18n').t('loading.message')}</p>
+                  <label className="block text-sm font-medium text-gray-700">{t('userSettings.label.email')}</label>
+                  <p className="mt-1 text-sm text-gray-900">{userData?.email || t('loading.message')}</p>
                 </div>
                 {userData && (
                   <div>
@@ -242,21 +244,21 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
 
             {/* Preferences */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">設定</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('userSettings.settings')}</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">通貨</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('userSettings.label.currency')}</label>
                   <input
                     type="text"
                     value={preferences.currency || ''}
                     onChange={(e) => setPreferences(prev => ({ ...prev, currency: e.target.value }))}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="例: JPY, USD, EUR"
+                    placeholder={t('userSettings.placeholder.currency')}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">ホームエリア（居住地）</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('userSettings.label.homeArea')}</label>
                   <PlaceSearchInput
                     currentPlace={preferences.home_place_id && preferences.home_address ? ({
                       place_id: preferences.home_place_id,
@@ -306,84 +308,84 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                         }))
                       }
                     }}
-                    placeholder="自宅周辺の市区町村などを検索..."
+                    placeholder={t('userSettings.placeholder.homeArea')}
                     disabled={saving}
                   />
-                  <p className="mt-1 text-xs text-gray-500">選択した場所の国コードが自動的に判定されます</p>
+                  <p className="mt-1 text-xs text-gray-500">{t('userSettings.description.homeAreaCountryCode')}</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">居住国</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('userSettings.label.homeCountry')}</label>
                   <select
                     value={preferences.home_country_code || ''}
                     onChange={(e) => setPreferences(prev => ({ ...prev, home_country_code: e.target.value }))}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="">選択してください</option>
-                    <option value="JP">日本</option>
-                    <option value="US">アメリカ合衆国</option>
-                    <option value="CA">カナダ</option>
-                    <option value="AU">オーストラリア</option>
-                    <option value="NZ">ニュージーランド</option>
-                    <option value="GB">イギリス</option>
-                    <option value="DE">ドイツ</option>
-                    <option value="FR">フランス</option>
-                    <option value="IT">イタリア</option>
-                    <option value="ES">スペイン</option>
-                    <option value="KR">韓国</option>
-                    <option value="CN">中国</option>
-                    <option value="TW">台湾</option>
-                    <option value="HK">香港</option>
-                    <option value="SG">シンガポール</option>
-                    <option value="TH">タイ</option>
-                    <option value="MY">マレーシア</option>
-                    <option value="ID">インドネシア</option>
-                    <option value="PH">フィリピン</option>
-                    <option value="VN">ベトナム</option>
-                    <option value="IN">インド</option>
+                    <option value="">{t('userSettings.placeholder.select')}</option>
+                    <option value="JP">{t('country.JP')}</option>
+                    <option value="US">{t('country.US')}</option>
+                    <option value="CA">{t('country.CA')}</option>
+                    <option value="AU">{t('country.AU')}</option>
+                    <option value="NZ">{t('country.NZ')}</option>
+                    <option value="GB">{t('country.GB')}</option>
+                    <option value="DE">{t('country.DE')}</option>
+                    <option value="FR">{t('country.FR')}</option>
+                    <option value="IT">{t('country.IT')}</option>
+                    <option value="ES">{t('country.ES')}</option>
+                    <option value="KR">{t('country.KR')}</option>
+                    <option value="CN">{t('country.CN')}</option>
+                    <option value="TW">{t('country.TW')}</option>
+                    <option value="HK">{t('country.HK')}</option>
+                    <option value="SG">{t('country.SG')}</option>
+                    <option value="TH">{t('country.TH')}</option>
+                    <option value="MY">{t('country.MY')}</option>
+                    <option value="ID">{t('country.ID')}</option>
+                    <option value="PH">{t('country.PH')}</option>
+                    <option value="VN">{t('country.VN')}</option>
+                    <option value="IN">{t('country.IN')}</option>
                   </select>
                   <p className="mt-1 text-xs text-gray-500">
-                    チェックリスト生成時に国際旅行かどうかを判定するために使用されます
+                    {t('userSettings.description.homeCountry')}
                   </p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">タイムゾーン</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('userSettings.label.timezone')}</label>
                   <input
                     type="text"
                     value={preferences.timezone || ''}
                     onChange={(e) => setPreferences(prev => ({ ...prev, timezone: e.target.value }))}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="例: Asia/Tokyo"
+                    placeholder={t('userSettings.placeholder.timezone')}
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">言語</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('userSettings.label.language')}</label>
                   <select
                     value={preferences.language || ''}
                     onChange={(e) => setPreferences(prev => ({ ...prev, language: e.target.value }))}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="">自動（ブラウザ設定）</option>
+                    <option value="">{t('userSettings.placeholder.languageAuto')}</option>
                     {SUPPORTED_LANGUAGES.map((lang) => (
                       <option key={lang} value={lang}>
                         {LANGUAGE_NAMES[lang].native} / {LANGUAGE_NAMES[lang].en} ({lang})
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1 text-xs text-gray-500">未選択の場合はブラウザの言語設定を使用します</p>
+                  <p className="mt-1 text-xs text-gray-500">{t('userSettings.description.language')}</p>
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">テーマ</label>
+                  <label className="block text-sm font-medium text-gray-700">{t('userSettings.label.theme')}</label>
                   <select
                     value={preferences.theme || 'light'}
                     onChange={(e) => setPreferences(prev => ({ ...prev, theme: e.target.value as 'light' | 'dark' }))}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="light">ライト</option>
-                    <option value="dark">ダーク</option>
+                    <option value="light">{t('userSettings.theme.light')}</option>
+                    <option value="dark">{t('userSettings.theme.dark')}</option>
                   </select>
                 </div>
                 
@@ -396,7 +398,7 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="notifications" className="ml-2 block text-sm text-gray-700">
-                    通知を受け取る
+                    {t('userSettings.label.notifications')}
                   </label>
                 </div>
               </div>
@@ -409,14 +411,14 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              キャンセル
+              {t('userSettings.button.cancel')}
             </button>
             <button
               onClick={handleSave}
               disabled={saving || isCheckingSlug || !!nameError}
               className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving ? '保存中...' : '設定を保存'}
+              {saving ? t('userSettings.button.saving') : t('userSettings.button.save')}
             </button>
           </div>
         </div>

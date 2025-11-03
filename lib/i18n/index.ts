@@ -655,6 +655,64 @@ export type TranslationKey =
   | 'reservation.button.saving'
   | 'user.defaultName'
   | 'plan.seasonTraveler'
+  // User Settings Modal
+  | 'userSettings.title'
+  | 'userSettings.basicInfo'
+  | 'userSettings.settings'
+  | 'userSettings.label.name'
+  | 'userSettings.label.email'
+  | 'userSettings.label.currency'
+  | 'userSettings.label.homeArea'
+  | 'userSettings.label.homeCountry'
+  | 'userSettings.label.timezone'
+  | 'userSettings.label.language'
+  | 'userSettings.label.theme'
+  | 'userSettings.label.notifications'
+  | 'userSettings.placeholder.name'
+  | 'userSettings.placeholder.currency'
+  | 'userSettings.placeholder.homeArea'
+  | 'userSettings.placeholder.timezone'
+  | 'userSettings.placeholder.select'
+  | 'userSettings.placeholder.languageAuto'
+  | 'userSettings.description.checkingSlug'
+  | 'userSettings.description.homeAreaCountryCode'
+  | 'userSettings.description.homeCountry'
+  | 'userSettings.description.language'
+  | 'userSettings.validation.nameMinLength'
+  | 'userSettings.validation.nameAvailable'
+  | 'userSettings.validation.slugCheckFailed'
+  | 'userSettings.validation.nameDuplicate'
+  | 'userSettings.success.saved'
+  | 'userSettings.error.saveFailed'
+  | 'userSettings.error.saveFailedNetwork'
+  | 'userSettings.error.unknown'
+  | 'userSettings.button.cancel'
+  | 'userSettings.button.save'
+  | 'userSettings.button.saving'
+  | 'userSettings.theme.light'
+  | 'userSettings.theme.dark'
+  // Country names
+  | 'country.JP'
+  | 'country.US'
+  | 'country.CA'
+  | 'country.AU'
+  | 'country.NZ'
+  | 'country.GB'
+  | 'country.DE'
+  | 'country.FR'
+  | 'country.IT'
+  | 'country.ES'
+  | 'country.KR'
+  | 'country.CN'
+  | 'country.TW'
+  | 'country.HK'
+  | 'country.SG'
+  | 'country.TH'
+  | 'country.MY'
+  | 'country.ID'
+  | 'country.PH'
+  | 'country.VN'
+  | 'country.IN'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -1327,6 +1385,64 @@ const en: Dictionary = {
   'reservation.button.saving': 'Saving...',
   'user.defaultName': 'User',
   'plan.seasonTraveler': 'Season Traveler',
+  // User Settings Modal
+  'userSettings.title': 'User Settings',
+  'userSettings.basicInfo': 'Basic Information',
+  'userSettings.settings': 'Settings',
+  'userSettings.label.name': 'Name',
+  'userSettings.label.email': 'Email Address',
+  'userSettings.label.currency': 'Currency',
+  'userSettings.label.homeArea': 'Home Area (Residence)',
+  'userSettings.label.homeCountry': 'Home Country',
+  'userSettings.label.timezone': 'Timezone',
+  'userSettings.label.language': 'Language',
+  'userSettings.label.theme': 'Theme',
+  'userSettings.label.notifications': 'Receive notifications',
+  'userSettings.placeholder.name': 'Enter your name',
+  'userSettings.placeholder.currency': 'e.g., JPY, USD, EUR',
+  'userSettings.placeholder.homeArea': 'Search for your city or area...',
+  'userSettings.placeholder.timezone': 'e.g., Asia/Tokyo',
+  'userSettings.placeholder.select': 'Please select',
+  'userSettings.placeholder.languageAuto': 'Auto (Browser setting)',
+  'userSettings.description.checkingSlug': 'Checking slug availability...',
+  'userSettings.description.homeAreaCountryCode': 'The country code of the selected location will be automatically determined',
+  'userSettings.description.homeCountry': 'Used to determine if a trip is international when generating checklists',
+  'userSettings.description.language': 'If not selected, the browser language setting will be used',
+  'userSettings.validation.nameMinLength': 'Name must be at least 4 characters',
+  'userSettings.validation.nameAvailable': 'This name is available',
+  'userSettings.validation.slugCheckFailed': 'Failed to check slug availability',
+  'userSettings.validation.nameDuplicate': 'Please resolve the name duplicate error before saving',
+  'userSettings.success.saved': 'Settings saved successfully',
+  'userSettings.error.saveFailed': 'Failed to save settings: {error}',
+  'userSettings.error.saveFailedNetwork': 'Failed to save settings: Network error',
+  'userSettings.error.unknown': 'Unknown error',
+  'userSettings.button.cancel': 'Cancel',
+  'userSettings.button.save': 'Save Settings',
+  'userSettings.button.saving': 'Saving...',
+  'userSettings.theme.light': 'Light',
+  'userSettings.theme.dark': 'Dark',
+  // Country names (common countries)
+  'country.JP': 'Japan',
+  'country.US': 'United States',
+  'country.CA': 'Canada',
+  'country.AU': 'Australia',
+  'country.NZ': 'New Zealand',
+  'country.GB': 'United Kingdom',
+  'country.DE': 'Germany',
+  'country.FR': 'France',
+  'country.IT': 'Italy',
+  'country.ES': 'Spain',
+  'country.KR': 'South Korea',
+  'country.CN': 'China',
+  'country.TW': 'Taiwan',
+  'country.HK': 'Hong Kong',
+  'country.SG': 'Singapore',
+  'country.TH': 'Thailand',
+  'country.MY': 'Malaysia',
+  'country.ID': 'Indonesia',
+  'country.PH': 'Philippines',
+  'country.VN': 'Vietnam',
+  'country.IN': 'India',
 }
 
 const ja: Dictionary = {
@@ -1998,6 +2114,64 @@ const ja: Dictionary = {
   'reservation.button.saving': '保存中...',
   'user.defaultName': 'ユーザー',
   'plan.seasonTraveler': 'Season Traveler',
+  // User Settings Modal
+  'userSettings.title': 'ユーザー設定',
+  'userSettings.basicInfo': '基本情報',
+  'userSettings.settings': '設定',
+  'userSettings.label.name': '名前',
+  'userSettings.label.email': 'メールアドレス',
+  'userSettings.label.currency': '通貨',
+  'userSettings.label.homeArea': 'ホームエリア（居住地）',
+  'userSettings.label.homeCountry': '居住国',
+  'userSettings.label.timezone': 'タイムゾーン',
+  'userSettings.label.language': '言語',
+  'userSettings.label.theme': 'テーマ',
+  'userSettings.label.notifications': '通知を受け取る',
+  'userSettings.placeholder.name': '名前を入力してください',
+  'userSettings.placeholder.currency': '例: JPY, USD, EUR',
+  'userSettings.placeholder.homeArea': '自宅周辺の市区町村などを検索...',
+  'userSettings.placeholder.timezone': '例: Asia/Tokyo',
+  'userSettings.placeholder.select': '選択してください',
+  'userSettings.placeholder.languageAuto': '自動（ブラウザ設定）',
+  'userSettings.description.checkingSlug': 'スラッグの確認中...',
+  'userSettings.description.homeAreaCountryCode': '選択した場所の国コードが自動的に判定されます',
+  'userSettings.description.homeCountry': 'チェックリスト生成時に国際旅行かどうかを判定するために使用されます',
+  'userSettings.description.language': '未選択の場合はブラウザの言語設定を使用します',
+  'userSettings.validation.nameMinLength': '名前は4文字以上で入力してください',
+  'userSettings.validation.nameAvailable': 'この名前は使用可能です',
+  'userSettings.validation.slugCheckFailed': 'スラッグの確認に失敗しました',
+  'userSettings.validation.nameDuplicate': '名前の重複エラーを解決してから保存してください',
+  'userSettings.success.saved': '設定を保存しました',
+  'userSettings.error.saveFailed': '設定の保存に失敗しました: {error}',
+  'userSettings.error.saveFailedNetwork': '設定の保存に失敗しました: ネットワークエラー',
+  'userSettings.error.unknown': '不明なエラー',
+  'userSettings.button.cancel': 'キャンセル',
+  'userSettings.button.save': '設定を保存',
+  'userSettings.button.saving': '保存中...',
+  'userSettings.theme.light': 'ライト',
+  'userSettings.theme.dark': 'ダーク',
+  // Country names (common countries)
+  'country.JP': '日本',
+  'country.US': 'アメリカ合衆国',
+  'country.CA': 'カナダ',
+  'country.AU': 'オーストラリア',
+  'country.NZ': 'ニュージーランド',
+  'country.GB': 'イギリス',
+  'country.DE': 'ドイツ',
+  'country.FR': 'フランス',
+  'country.IT': 'イタリア',
+  'country.ES': 'スペイン',
+  'country.KR': '韓国',
+  'country.CN': '中国',
+  'country.TW': '台湾',
+  'country.HK': '香港',
+  'country.SG': 'シンガポール',
+  'country.TH': 'タイ',
+  'country.MY': 'マレーシア',
+  'country.ID': 'インドネシア',
+  'country.PH': 'フィリピン',
+  'country.VN': 'ベトナム',
+  'country.IN': 'インド',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
