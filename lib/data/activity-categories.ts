@@ -7,6 +7,8 @@
  */
 
 import { PrimaryCategoryType } from '@/lib/core/types'
+import { t } from '@/lib/i18n'
+import { getUserLanguage } from '@/lib/utils/language'
 
 export interface SecondaryCategoryItem {
   id: string
@@ -222,7 +224,10 @@ export function getAllPrimaryCategories(): PrimaryCategoryType[] {
  */
 export function getPrimaryCategoryLabel(primaryCategory: PrimaryCategoryType): string {
   const master = getActivityCategoryMaster(primaryCategory)
-  return master ? `${master.icon} ${master.label}` : primaryCategory
+  if (!master) return primaryCategory
+  const lang = getUserLanguage()
+  const translated = t((`activity.primary.${primaryCategory}` as unknown) as any, lang)
+  return `${master.icon} ${translated || master.label}`
 }
 
 /**
@@ -230,7 +235,10 @@ export function getPrimaryCategoryLabel(primaryCategory: PrimaryCategoryType): s
  */
 export function getPrimaryCategoryShortLabel(primaryCategory: PrimaryCategoryType): string {
   const master = getActivityCategoryMaster(primaryCategory)
-  return master ? `${master.icon} ${master.shortLabel}` : primaryCategory
+  if (!master) return primaryCategory
+  const lang = getUserLanguage()
+  const translated = t((`activity.primaryShort.${primaryCategory}` as unknown) as any, lang)
+  return `${master.icon} ${translated || master.shortLabel}`
 }
 
 /**
@@ -241,6 +249,9 @@ export function getSecondaryCategoryLabel(
   secondaryCategoryId: string
 ): string {
   const info = getSecondaryCategoryInfo(primaryCategory, secondaryCategoryId)
-  return info ? `${info.icon || ''} ${info.label}`.trim() : secondaryCategoryId
+  if (!info) return secondaryCategoryId
+  const lang = getUserLanguage()
+  const translated = t((`activity.secondary.${primaryCategory}.${secondaryCategoryId}` as unknown) as any, lang)
+  return `${info.icon || ''} ${(translated || info.label)}`.trim()
 }
 

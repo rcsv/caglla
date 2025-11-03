@@ -1098,6 +1098,11 @@ const en: Dictionary = {
   'nav.plan': 'Plan',
   'nav.logout': 'Logout',
   'nav.dayPrefix': 'Day',
+  // Activity Categories (minimal set; fallback supported)
+  'activity.primary.transportation': 'Transportation',
+  'activity.primaryShort.transportation': 'Transport',
+  'activity.secondary.transportation.flight': 'Flight',
+  'activity.secondary.transportation.train': 'Train',
   // Travel Cost Display
   'cost.title': 'Travel Cost',
   'cost.empty': 'No schedules with cost information',
@@ -1757,6 +1762,11 @@ const ja: Dictionary = {
   'nav.plan': 'プラン',
   'nav.logout': 'ログアウト',
   'nav.dayPrefix': 'Day',
+  // Activity Categories (minimal set; fallback supported)
+  'activity.primary.transportation': '乗り物',
+  'activity.primaryShort.transportation': '乗り物',
+  'activity.secondary.transportation.flight': '飛行機',
+  'activity.secondary.transportation.train': '電車',
   // Travel Cost Display
   'cost.title': '旅行費用',
   'cost.empty': '費用情報が設定されたスケジュールがありません',
