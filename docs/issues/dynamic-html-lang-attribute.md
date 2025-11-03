@@ -1,7 +1,8 @@
 # Issue: `<html lang="ja">` のハードコードによる影響と動的設定への変更提案
 
 **作成日**: 2025-11-01  
-**状態**: 🔴 未解決  
+**解決日**: 2025-11-01  
+**状態**: 🟡 部分的解決（Phase 1完了、Phase 2未実装）  
 **優先度**: 低  
 **種類**: i18n化、SEO、アクセシビリティ改善  
 **関連ファイル**: 
@@ -308,6 +309,46 @@ export async function generateMetadata(): Promise<Metadata> {
 - ✅ アクセシビリティの一部改善
 
 **リスク**: なし
+
+---
+
+## ✅ 解決内容（Phase 1完了）
+
+Phase 1の簡易修正が完了しました。
+
+### 実装内容
+
+1. **`app/layout.tsx`** (26行目)
+   - `lang="ja"` → `lang="en"`
+   - メインアプリケーションのルートレイアウト
+
+2. **`lib/utils/trip-template.ts`** (338行目)
+   - `lang="ja"` → `lang="en"`
+   - 旅程PDF生成用HTML
+
+3. **`lib/utils/magazine-pdf-template.ts`** (953行目)
+   - `lang="ja"` → `lang="en"`
+   - マガジンPDF生成用HTML
+
+### 効果
+
+- ✅ デフォルト言語の一貫性向上
+- ✅ SEOの一部改善
+- ✅ アクセシビリティの一部改善
+- ✅ デフォルト言語（`DEFAULT_LANGUAGE = 'en'`）との整合性
+
+### 技術的検討事項
+
+- Phase 1で基本的な不整合を修正
+- Phase 2の完全な動的実装は将来的に検討
+
+### テスト確認項目
+
+- [x] `lang="en"`に変更
+- [x] Lintエラーなし
+- [x] 既存のi18nシステムに影響なし
+
+---
 
 ### Phase 2: 完全な動的実装（将来）
 

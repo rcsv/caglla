@@ -48,7 +48,7 @@
 | [Create New Tripダイアログの日付フィールドのi18n化](create-trip-dialog-date-format-i18n.md) | 解決済み | 2025-11-01 |
 | [PDF Preview機能の通常機能化](pdf-preview-promote-to-normal-feature.md) | 未解決 | 2025-11-01 |
 | [言語設定保存後にAutoに戻る問題](language-settings-save-reverts-to-auto.md) | 解決済み | 2025-11-01 |
-| [`<html lang="ja">` のハードコードによる影響と動的設定への変更提案](dynamic-html-lang-attribute.md) | 未解決 | 2025-11-01 |
+| [`<html lang="ja">` のハードコードによる影響と動的設定への変更提案](dynamic-html-lang-attribute.md) | 部分的解決 | 2025-11-01 |
 | [ローディングコンポーネントの使用状況の統一性調査](loading-component-usage-inconsistency.md) | 未解決 | 2025-11-01 |
 
 ### Feature要望
@@ -98,9 +98,9 @@
 ## 📊 統計
 
 - **総Issue数**: 44件
-- **未解決**: 12件
+- **未解決**: 11件
 - **確認済み**: 1件
-- **部分的解決**: 2件
+- **部分的解決**: 3件
 - **解決済み**: 21件
 - **未実装（Feature）**: 5件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
