@@ -8,6 +8,7 @@ import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { PlaceData, SupportedLanguage, Trip, PlacesCacheInput } from '@/lib/core/types'
 import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
+import { resolveDestinationPlace } from '@/lib/api/places-cache'
 
 // API応答用の拡張型（destination_placeを含む）
 interface TripWithDestination extends Trip {
@@ -43,18 +44,43 @@ export async function GET(request: NextRequest) {
 
     const trips = await adminTripOperations.getTripsByUserId(userId)
 
+    // Get user info to determine language preference
+    const user = await adminUserOperations.getUserByGoogleId(userId)
+    const userLanguage = user ? getUserLanguage(user) : 'en'
+
+    // Enrich trips: resolve destination_place from places_cache when available
+    const tripsWithDetails = await Promise.all(
+      trips.map(async (trip): Promise<TripWithDestination> => {
+        let destinationPlace: PlaceData | undefined = undefined
+
+        // destination_place 解決
+        try {
+          if (trip.destination_place_id) {
+            destinationPlace = await resolveDestinationPlace(trip.destination_place_id, userLanguage) || undefined
+          }
+        } catch (error) {
+          logger.error('Error resolving destination_place for trip', error, { tripId: trip.id })
+        }
+
+        return {
+          ...trip,
+          ...(destinationPlace ? { destination_place: destinationPlace } : {})
+        }
+      })
+    )
+
     if (groupByCountry) {
       // Group trips by country
-      const countryGroups = await groupTripsByCountry(trips)
+      const countryGroups = await groupTripsByCountry(tripsWithDetails)
       return NextResponse.json({ 
         trips: countryGroups,
         grouped: true,
-        totalTrips: trips.length,
+        totalTrips: tripsWithDetails.length,
         totalCountries: countryGroups.length
       })
     }
 
-    return NextResponse.json({ trips })
+    return NextResponse.json({ trips: tripsWithDetails })
   } catch (error) {
     logger.error('Error fetching trips', error)
     return NextResponse.json(
