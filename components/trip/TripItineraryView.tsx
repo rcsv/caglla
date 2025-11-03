@@ -210,7 +210,7 @@ export default function TripItineraryView({
               >
                 {/* ヘッダー部分 - 常に表示 */}
                 <div 
-                  className={`flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors zidx-day-card-button relative ${selectedDayId === day.id ? 'bg-red-50 border-red-200' : ''}`}
+                  className={`flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors zidx-day-card-button relative ${selectedDayId === day.id ? 'ring-2 ring-emerald-500 ring-opacity-50 rounded-lg' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation()
                     onDayClick(day.id)
