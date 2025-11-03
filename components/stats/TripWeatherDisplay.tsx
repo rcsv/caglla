@@ -167,7 +167,7 @@ export default function TripWeatherDisplay({
               {rainyDays}{t('weather.days')}
               {totalPrecipitation > 0 && (
                 <span className="text-xs text-gray-500 ml-1">
-                  ({totalPrecipitation}mm)
+                  ({totalPrecipitation}{t('unit.mm')})
                 </span>
               )}
             </div>
@@ -175,7 +175,7 @@ export default function TripWeatherDisplay({
           <div className="bg-gray-50 rounded-md p-3">
             <div className="text-gray-600 mb-1">{t('weather.averageWindSpeed')}</div>
             <div className="font-medium">
-              {averageWindSpeed}km/h
+              {averageWindSpeed}{t('unit.kmh')}
             </div>
           </div>
         </div>

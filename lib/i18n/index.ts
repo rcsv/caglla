@@ -472,6 +472,8 @@ export type TranslationKey =
   | 'weather.only'
   | 'weather.unknown'
   | 'weather.forecastedBy'
+  | 'unit.mm'
+  | 'unit.kmh'
   | 'weather.code.0'
   | 'weather.code.1'
   | 'weather.code.2'
@@ -1093,6 +1095,9 @@ const en: Dictionary = {
   'weather.only': 'only',
   'weather.unknown': 'Unknown',
   'weather.forecastedBy': 'Forecasted by Open-Meteo',
+  // Units
+  'unit.mm': 'mm',
+  'unit.kmh': 'km/h',
   // Weather Codes (WMO Weather Interpretation Codes)
   'weather.code.0': 'Clear sky',
   'weather.code.1': 'Mainly clear',
@@ -1715,6 +1720,9 @@ const ja: Dictionary = {
   'weather.only': 'のみ',
   'weather.unknown': '不明',
   'weather.forecastedBy': 'Open-Meteo による予報',
+  // Units
+  'unit.mm': 'mm',
+  'unit.kmh': 'km/h',
   // Weather Codes (WMO Weather Interpretation Codes)
   'weather.code.0': '晴れ',
   'weather.code.1': '主に晴れ',
