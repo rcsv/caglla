@@ -34,7 +34,7 @@
 | [地図上のItineraryマーカークリック時にメインコンテンツのCardまで自動スクロール](map-marker-click-scroll-to-card.md) | 未解決 | 2025-10-31 |
 | [Feature(Backlog): POIDialogへの外部POI API統合（TripAdvisor / Foursquare）](poi-dialog-external-apis-backlog.md) | 未実装 | 2025-10-31 |
 | [左メニューのSummaryセクションでtitleとsubtitleが重複表示される](navigation-menu-duplicate-subtitle.md) | 解決済み | 2025-11-01 |
-| [天気予報の解析結果を英語に修正する](weather-forecast-i18n.md) | 部分的解決 | 2025-11-01 |
+| [天気予報の解析結果を英語に修正する](weather-forecast-i18n.md) | 解決済み | 2025-11-01 |
 | [気温表記方法・距離単位の設定項目機能](temperature-distance-unit-settings.md) | 未解決 | 2025-11-01 |
 | [予約情報表示が日本語ハードコード](reservation-display-i18n.md) | 解決済み | 2025-11-01 |
 | [旅行費用表示が日本語ハードコード](travel-cost-display-i18n.md) | 部分的解決 | 2025-11-01 |
@@ -69,6 +69,7 @@
 | Issue | 解決日 |
 |-------|--------|
 | [左メニューのChecklist（Preparing/Packing）にアイコンがなく、折りたたみ時に不自然な空白が発生する](navigation-menu-checklist-icons-missing.md) | 2025-11-03 |
+| [天気予報の解析結果を英語に修正する](weather-forecast-i18n.md) | 2025-11-03 |
 | [[userSlug]/[tripSlug]/page.tsxのボタンテイストが一致していない](trip-slug-page-button-styling-inconsistent.md) | 2025-10-31 |
 | [Headerのユーザー名横に言語選択状態を示す国旗アイコンを表示](header-language-flag-indicator.md) | 2025-10-31 |
 | [Cagllaロゴアイコンの再デザイン](logo-icon-redesign.md) | 2025-10-31 |
@@ -102,10 +103,10 @@
 ## 📊 統計
 
 - **総Issue数**: 48件
-- **未解決**: 9件
+- **未解決**: 8件
 - **確認済み**: 1件
-- **部分的解決**: 6件
-- **解決済み**: 25件
+- **部分的解決**: 5件
+- **解決済み**: 26件
 - **未実装（Feature）**: 5件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
 - **中優先度**: 27件
