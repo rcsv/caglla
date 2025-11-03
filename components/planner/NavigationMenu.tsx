@@ -19,6 +19,7 @@ import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
 import { toDate } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
+import { getUserLanguage } from '@/lib/utils/language'
 import PremiumButton from '@/components/ui/PremiumButton'
 
 interface NavigationMenuProps {
@@ -193,8 +194,9 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     }
     const month = date.getMonth() + 1
     const dayNum = date.getDate()
-    const dayNames = ['Sun.', 'Mon.', 'Tue.', 'Wed.', 'Thu.', 'Fri.', 'Sat.']
-    const dayName = dayNames[date.getDay()]
+    const lang = getUserLanguage()
+    const locale = lang === 'ja' ? 'ja-JP' : 'en-US'
+    const dayName = date.toLocaleDateString(locale, { weekday: 'short' })
     
     return `${month}/${dayNum} ${dayName}`
   }
