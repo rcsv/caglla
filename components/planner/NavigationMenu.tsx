@@ -8,6 +8,8 @@ import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { SummaryIcon } from '@/components/common/icons/SummaryIcon'
 import { CloudIcon } from '@/components/common/icons/CloudIcon'
 import { BookmarkIcon } from '@/components/common/icons/BookmarkIcon'
+import { ClipboardIcon } from '@/components/common/icons/ClipboardIcon'
+import { BackpackIcon } from '@/components/common/icons/BackpackIcon'
 import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
 import { ClockIcon } from '@/components/common/icons/ClockIcon'
 import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
@@ -141,6 +143,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
           id: 'checklist-preparing',
           title: 'Preparing',
           subtitle: t('checklist.nav.preparing.subtitle'),
+          icon: <ClipboardIcon className="w-4 h-4" />,
           onClick: () => {
             updateQuery({ view: 'checklist', day: null, section: 'preparing' })
             onNavigateToSection('checklist-preparing')
@@ -150,6 +153,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
           id: 'checklist-packing',
           title: 'Packing',
           subtitle: t('checklist.nav.packing.subtitle'),
+          icon: <BackpackIcon className="w-4 h-4" />,
           onClick: () => {
             updateQuery({ view: 'checklist', day: null, section: 'packing' })
             onNavigateToSection('checklist-packing')
