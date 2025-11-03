@@ -45,7 +45,7 @@
 | [予約カテゴリー（ReservationType/ReservationSite）のラベルが日本語ハードコード](reservation-categories-i18n.md) | 解決済み | 2025-11-01 |
 | [Checklist関連の日本語ハードコード](checklist-i18n.md) | 解決済み | 2025-11-01 |
 | [CreateTripDialogの日本語ハードコード](create-trip-dialog-i18n.md) | 解決済み | 2025-11-01 |
-| [Create New Tripダイアログの日付フィールドのi18n化](create-trip-dialog-date-format-i18n.md) | 未解決 | 2025-11-01 |
+| [Create New Tripダイアログの日付フィールドのi18n化](create-trip-dialog-date-format-i18n.md) | 解決済み | 2025-11-01 |
 | [PDF Preview機能の通常機能化](pdf-preview-promote-to-normal-feature.md) | 未解決 | 2025-11-01 |
 | [言語設定保存後にAutoに戻る問題](language-settings-save-reverts-to-auto.md) | 解決済み | 2025-11-01 |
 
@@ -57,6 +57,7 @@
 | [Feature: プロフィールページにアクティビティタグ統計を表示](profile-activity-tag-statistics.md) | 未実装 | 2025-10-31 |
 | [Feature: 旅行費用サマリーにItinerary明細を表示](feature-trip-cost-itemized-breakdown.md) | 未実装 | 2025-10-31 |
 | [Feature: マイ・チェックリスト共有機能](feature-checklist-sharing.md) | 未実装 | 2025-10-31 |
+| [Feature: Create New Tripダイアログの日付フィールド順番の言語適応（Phase 2）](create-trip-dialog-date-order-phase2.md) | 未実装 | 2025-11-01 |
 
 ### ✅ 解決済み
 
@@ -76,6 +77,11 @@
 | [言語切り替えのフォールバック処理による問題](language-switching-fallback-issue.md) | 2025-11-01 |
 | [/home/page.tsxのコンポーネントi18n化](home-page-components-i18n.md) | 2025-10-31 |
 | [プロフィールページの言語選択表示](profile-language-selector-visibility.md) | 2025-11-01 |
+| [Checklist関連の日本語ハードコード](checklist-i18n.md) | 2025-11-01 |
+| [CreateTripDialogの日本語ハードコード](create-trip-dialog-i18n.md) | 2025-11-01 |
+| [予約カテゴリー（ReservationType/ReservationSite）のラベルが日本語ハードコード](reservation-categories-i18n.md) | 2025-11-01 |
+| [Itinerary Cardの予約ボタン/表示に視覚的フィードバック追加](itinerary-card-reservation-visual-feedback.md) | 2025-11-01 |
+| [Create New Tripダイアログの日付フィールドのi18n化](create-trip-dialog-date-format-i18n.md) | 2025-11-01 |
 | [Checklistの再生成ボタンが動作しない](trip-slug-checklist-regenerate-not-working.md) | 2025-11-01 |
 | [TripCardで国旗の表示が不安定（出る/出ない）](tripcard-country-flag-inconsistency.md) | 2025-11-01 |
 
@@ -89,15 +95,15 @@
 
 ## 📊 統計
 
-- **総Issue数**: 41件
-- **未解決**: 11件
+- **総Issue数**: 42件
+- **未解決**: 10件
 - **確認済み**: 1件
 - **部分的解決**: 2件
-- **解決済み**: 20件
-- **未実装（Feature）**: 4件
+- **解決済み**: 21件
+- **未実装（Feature）**: 5件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
 - **中優先度**: 27件
-- **Feature要望**: 4件
+- **Feature要望**: 5件
 
 ## ✅ 進捗サマリー（2025-11-01）
 

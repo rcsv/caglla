@@ -305,6 +305,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                   name="startDate"
                   value={formData.startDate}
                   onChange={handleInputChange}
+                  placeholder={t('trip.create.startDate.placeholder')}
+                  hint={t('trip.create.startDate.hint')}
                   required
                   error={dateError ? t('trip.create.dateError') : undefined}
                 />
@@ -316,6 +318,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                   name="endDate"
                   value={formData.endDate}
                   onChange={handleInputChange}
+                  placeholder={t('trip.create.endDate.placeholder')}
+                  hint={t('trip.create.endDate.hint')}
                   required
                   error={dateError ? t('trip.create.dateError') : undefined}
                   min={formData.startDate || undefined}

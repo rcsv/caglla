@@ -1,7 +1,8 @@
 # Issue: Create New Tripダイアログの日付フィールドのi18n化
 
 **作成日**: 2025-11-01  
-**状態**: 🔴 未解決  
+**解決日**: 2025-11-01  
+**状態**: ✅ 解決済み  
 **優先度**: 中  
 **種類**: i18n化、UX改善  
 **関連ファイル**: 
@@ -285,4 +286,43 @@ Start Date *
 
 1. **Phase 1を優先的に実装**: Placeholderとヘルプテキストのi18n化
 2. **Phase 2は段階的に検討**: ユーザーフィードバックを収集してから実装方法を決定
+
+---
+
+## ✅ 解決内容
+
+Phase 1の実装が完了しました。
+
+### 実装内容
+
+1. **i18nキーの追加** (`lib/i18n/index.ts`)
+   - `trip.create.startDate.placeholder`: 日付プレースホルダー
+   - `trip.create.startDate.hint`: 日付ヒントテキスト
+   - `trip.create.endDate.placeholder`: 日付プレースホルダー
+   - `trip.create.endDate.hint`: 日付ヒントテキスト
+   - 日本語: 「YYYY年MM月DD日」「例: 2024年12月25日」
+   - 英語: 「YYYY-MM-DD」「Example: 2024-12-25」
+
+2. **CreateTripDialog.tsxの修正** (`components/common/CreateTripDialog.tsx`)
+   - Start Date、End Dateフィールドに`placeholder`と`hint`プロップを追加
+   - 既存のInputコンポーネントが`hint`プロップをサポートしているため、追加変更不要
+
+3. **Phase 2の分離**
+   - 日付フィールドの順番の言語適応は別Issueとして記録
+   - `docs/issues/create-trip-dialog-date-order-phase2.md`として作成
+   - 優先度: 低（ユーザーフィードバックを収集してから判断）
+
+### 技術的検討事項
+
+- HTML5 `<input type="date">`の制限により、placeholderは一部のブラウザで無視される可能性がある
+- しかし、`hint`プロップにより、フィールド下にグレーテキストで例示を表示するため、ガイダンスは十分に提供される
+- Phase 1で基本的なガイダンスが提供されるため、Phase 2は低優先度に設定
+
+### テスト確認項目
+
+- [x] 日本語環境でplaceholderとhintが適切に表示される
+- [x] 英語環境でplaceholderとhintが適切に表示される
+- [x] 既存の日付入力機能が正常に動作する
+- [x] エラー表示が正常に動作する
+- [x] バリデーション（開始日<終了日）が正常に動作する
 

@@ -468,6 +468,10 @@ export type TranslationKey =
   | 'trip.create.validation.destinationRequired'
   | 'trip.create.validation.startDateRequired'
   | 'trip.create.validation.endDateRequired'
+  | 'trip.create.startDate.placeholder'
+  | 'trip.create.startDate.hint'
+  | 'trip.create.endDate.placeholder'
+  | 'trip.create.endDate.hint'
   // Checklist
   | 'checklist.title'
   | 'checklist.applyPreset'
@@ -1015,6 +1019,10 @@ const en: Dictionary = {
   'trip.create.validation.destinationRequired': 'Please select a destination. Search and select a location from Google Places.',
   'trip.create.validation.startDateRequired': 'Please select a start date.',
   'trip.create.validation.endDateRequired': 'Please select an end date.',
+  'trip.create.startDate.placeholder': 'YYYY-MM-DD',
+  'trip.create.startDate.hint': 'Example: 2024-12-25',
+  'trip.create.endDate.placeholder': 'YYYY-MM-DD',
+  'trip.create.endDate.hint': 'Example: 2024-12-31',
   // Checklist
   'checklist.title': 'Travel Checklist',
   'checklist.applyPreset': 'Apply Preset',
@@ -1561,6 +1569,10 @@ const ja: Dictionary = {
   'trip.create.validation.destinationRequired': '目的地を選択してください。Google Placesから場所を検索して選択してください。',
   'trip.create.validation.startDateRequired': '出発日を選択してください。',
   'trip.create.validation.endDateRequired': '帰宅日を選択してください。',
+  'trip.create.startDate.placeholder': 'YYYY年MM月DD日',
+  'trip.create.startDate.hint': '例: 2024年12月25日',
+  'trip.create.endDate.placeholder': 'YYYY年MM月DD日',
+  'trip.create.endDate.hint': '例: 2024年12月31日',
   // Checklist
   'checklist.title': 'Travel Checklist',
   'checklist.applyPreset': 'プリセットを適用',
