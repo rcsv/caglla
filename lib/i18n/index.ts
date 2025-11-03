@@ -442,6 +442,32 @@ export type TranslationKey =
   | 'date.year'
   | 'date.month'
   | 'date.day'
+  // Create Trip Dialog
+  | 'trip.create.title'
+  | 'trip.create.destination.label'
+  | 'trip.create.destination.placeholder'
+  | 'trip.create.destination.hint'
+  | 'trip.create.startDate.label'
+  | 'trip.create.endDate.label'
+  | 'trip.create.dateError'
+  | 'trip.create.dateValidation.startBeforeEnd'
+  | 'trip.create.advancedSettings'
+  | 'trip.create.title.label'
+  | 'trip.create.title.placeholder'
+  | 'trip.create.description.label'
+  | 'trip.create.description.placeholder'
+  | 'trip.create.imageLoading'
+  | 'trip.create.imageLoaded'
+  | 'trip.create.accessLevel.label'
+  | 'trip.create.accessLevel.private.label'
+  | 'trip.create.accessLevel.private.description'
+  | 'trip.create.accessLevel.public.description'
+  | 'trip.create.cancel'
+  | 'trip.create.submitting'
+  | 'trip.create.submit'
+  | 'trip.create.validation.destinationRequired'
+  | 'trip.create.validation.startDateRequired'
+  | 'trip.create.validation.endDateRequired'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -886,6 +912,32 @@ const en: Dictionary = {
   'date.year': '',
   'date.month': '',
   'date.day': '',
+  // Create Trip Dialog
+  'trip.create.title': 'Create New Trip',
+  'trip.create.destination.label': 'Destination *',
+  'trip.create.destination.placeholder': 'Search for a destination (e.g., Tokyo, Paris, New York)',
+  'trip.create.destination.hint': 'Please select a destination from Google Places',
+  'trip.create.startDate.label': 'Start Date *',
+  'trip.create.endDate.label': 'End Date *',
+  'trip.create.dateError': 'Date Error',
+  'trip.create.dateValidation.startBeforeEnd': 'Start date must be before end date',
+  'trip.create.advancedSettings': 'Advanced Settings',
+  'trip.create.title.label': 'Trip Title (destination will be used if left blank)',
+  'trip.create.title.placeholder': 'e.g., Okinawa Trip (destination will be used if left blank)',
+  'trip.create.description.label': 'Description',
+  'trip.create.description.placeholder': 'Enter trip details and purpose',
+  'trip.create.imageLoading': 'Auto-fetching destination-related image...',
+  'trip.create.imageLoaded': 'Destination-related image auto-fetched',
+  'trip.create.accessLevel.label': 'Access Settings',
+  'trip.create.accessLevel.private.label': 'Private (only you and shared users)',
+  'trip.create.accessLevel.private.description': 'This trip can only be viewed by you and shared users',
+  'trip.create.accessLevel.public.description': 'This trip can be viewed by anyone',
+  'trip.create.cancel': 'Cancel',
+  'trip.create.submitting': 'Creating...',
+  'trip.create.submit': 'Create Trip',
+  'trip.create.validation.destinationRequired': 'Please select a destination. Search and select a location from Google Places.',
+  'trip.create.validation.startDateRequired': 'Please select a start date.',
+  'trip.create.validation.endDateRequired': 'Please select an end date.',
 }
 
 const ja: Dictionary = {
@@ -1329,6 +1381,32 @@ const ja: Dictionary = {
   'date.year': '年',
   'date.month': '月',
   'date.day': '日',
+  // Create Trip Dialog
+  'trip.create.title': '新しい旅行を作成',
+  'trip.create.destination.label': '目的地 *',
+  'trip.create.destination.placeholder': '目的地を検索（例: 東京、パリ、ニューヨーク）',
+  'trip.create.destination.hint': '目的地はGoogle Placesから選択してください',
+  'trip.create.startDate.label': '出発日 *',
+  'trip.create.endDate.label': '帰宅日 *',
+  'trip.create.dateError': '日付エラー',
+  'trip.create.dateValidation.startBeforeEnd': '出発日は帰宅日より前の日付を選択してください',
+  'trip.create.advancedSettings': '詳細設定',
+  'trip.create.title.label': '旅行のタイトル（未入力時は目的地が使用されます）',
+  'trip.create.title.placeholder': '例: 沖縄旅行（空欄の場合は目的地が使用されます）',
+  'trip.create.description.label': '説明',
+  'trip.create.description.placeholder': '旅行の詳細や目的を記入してください',
+  'trip.create.imageLoading': '目的地に関連する画像を自動取得中...',
+  'trip.create.imageLoaded': '目的地に関連する画像を自動取得しました',
+  'trip.create.accessLevel.label': '公開設定',
+  'trip.create.accessLevel.private.label': '非公開（自分と共有ユーザーのみ）',
+  'trip.create.accessLevel.private.description': 'この旅行は自分と共有ユーザーのみが閲覧できます',
+  'trip.create.accessLevel.public.description': 'この旅行は誰でも閲覧できます',
+  'trip.create.cancel': 'キャンセル',
+  'trip.create.submitting': '作成中...',
+  'trip.create.submit': '旅行を作成',
+  'trip.create.validation.destinationRequired': '目的地を選択してください。Google Placesから場所を検索して選択してください。',
+  'trip.create.validation.startDateRequired': '出発日を選択してください。',
+  'trip.create.validation.endDateRequired': '帰宅日を選択してください。',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {

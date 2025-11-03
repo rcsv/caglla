@@ -17,6 +17,7 @@ import { Select } from '@/components/common/Select'
 import { Toggle } from '@/components/common/Toggle'
 import { Button } from '@/components/common/Button'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
+import { t } from '@/lib/i18n'
 
 
 interface CreateTripDialogProps {
@@ -116,7 +117,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     const end = new Date(endDate)
     
     if (start > end) {
-      return '出発日は帰宅日より前の日付を選択してください'
+      return t('trip.create.dateValidation.startBeforeEnd')
     }
     
     return ''
@@ -127,17 +128,17 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
 
     // 必須項目のバリデーション
     if (!formData.destinationPlace) {
-      alert('目的地を選択してください。Google Placesから場所を検索して選択してください。')
+      alert(t('trip.create.validation.destinationRequired'))
       return
     }
 
     if (!formData.startDate) {
-      alert('出発日を選択してください。')
+      alert(t('trip.create.validation.startDateRequired'))
       return
     }
 
     if (!formData.endDate) {
-      alert('帰宅日を選択してください。')
+      alert(t('trip.create.validation.endDateRequired'))
       return
     }
 
@@ -265,7 +266,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
         <div className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${getZIndexClass('FLOAT_MODAL')}`}>
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">新しい旅行を作成</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{t('trip.create.title')}</h2>
             <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600">
               <IconRenderer iconName="close" className="w-6 h-6" />
             </button>
@@ -277,7 +278,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
               {/* 必須項目 */}
               <div>
                 <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
-                  目的地 *
+                  {t('trip.create.destination.label')}
                 </label>
                 <PlaceSearchInput
                   currentPlace={formData.destinationPlace}
@@ -286,37 +287,37 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                     destinationPlace: place || undefined,
                     destination: place?.name || '' // 後方互換性のため
                   }))}
-                  placeholder="目的地を検索（例: 東京、パリ、ニューヨーク）"
+                  placeholder={t('trip.create.destination.placeholder')}
                   disabled={submitting}
                 />
                 {!formData.destinationPlace && (
                   <p className="mt-2 text-sm text-gray-500">
-                    <span className="text-red-600 mr-1">*</span>目的地はGoogle Placesから選択してください
+                    <span className="text-red-600 mr-1">*</span>{t('trip.create.destination.hint')}
                   </p>
                 )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
-                  label="出発日 *"
+                  label={t('trip.create.startDate.label')}
                   type="date"
                   id="startDate"
                   name="startDate"
                   value={formData.startDate}
                   onChange={handleInputChange}
                   required
-                  error={dateError ? '日付エラー' : undefined}
+                  error={dateError ? t('trip.create.dateError') : undefined}
                 />
 
                 <Input
-                  label="帰宅日 *"
+                  label={t('trip.create.endDate.label')}
                   type="date"
                   id="endDate"
                   name="endDate"
                   value={formData.endDate}
                   onChange={handleInputChange}
                   required
-                  error={dateError ? '日付エラー' : undefined}
+                  error={dateError ? t('trip.create.dateError') : undefined}
                   min={formData.startDate || undefined}
                 />
               </div>
@@ -344,7 +345,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                   onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
                   className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md p-2 -m-2"
                 >
-                  <span>詳細設定</span>
+                  <span>{t('trip.create.advancedSettings')}</span>
                   <svg
                     className={`w-5 h-5 transform transition-transform ${showAdvancedSettings ? 'rotate-180' : ''}`}
                     fill="none"
@@ -358,23 +359,23 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 {showAdvancedSettings && (
                   <div className="mt-4 space-y-6">
                     <Input
-                      label="旅行のタイトル（未入力時は目的地が使用されます）"
+                      label={t('trip.create.title.label')}
                       type="text"
                       id="title"
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      placeholder="例: 沖縄旅行（空欄の場合は目的地が使用されます）"
+                      placeholder={t('trip.create.title.placeholder')}
                     />
 
                     <Textarea
-                      label="説明"
+                      label={t('trip.create.description.label')}
                       id="description"
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
                       rows={3}
-                      placeholder="旅行の詳細や目的を記入してください"
+                      placeholder={t('trip.create.description.placeholder')}
                     />
 
                     <ImageUpload
@@ -395,7 +396,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                           </div>
                           <div className="ml-3">
                             <p className="text-sm text-blue-800">
-                              目的地に関連する画像を自動取得中...
+                              {t('trip.create.imageLoading')}
                             </p>
                           </div>
                         </div>
@@ -413,7 +414,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                           </div>
                           <div className="ml-3">
                             <p className="text-sm text-green-800">
-                              目的地に関連する画像を自動取得しました
+                              {t('trip.create.imageLoaded')}
                             </p>
                           </div>
                         </div>
@@ -422,10 +423,10 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        公開設定
+                        {t('trip.create.accessLevel.label')}
                       </label>
                       <Toggle
-                        label="非公開（自分と共有ユーザーのみ）"
+                        label={t('trip.create.accessLevel.private.label')}
                         checked={formData.accessLevel === 'private'}
                         onChange={(e) => {
                           setFormData(prev => ({
@@ -436,8 +437,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                       />
                       <p className="mt-1 text-xs text-gray-500">
                         {formData.accessLevel === 'private' 
-                          ? 'この旅行は自分と共有ユーザーのみが閲覧できます' 
-                          : 'この旅行は誰でも閲覧できます'
+                          ? t('trip.create.accessLevel.private.description')
+                          : t('trip.create.accessLevel.public.description')
                         }
                       </p>
                     </div>
@@ -451,14 +452,14 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                   variant="outline"
                   onClick={handleCancel}
                 >
-                  キャンセル
+                  {t('trip.create.cancel')}
                 </Button>
                 <Button
                   type="submit"
                   variant="primary"
                   disabled={submitting || !formData.destinationPlace || !formData.startDate || !formData.endDate || !!dateError}
                 >
-                  {submitting ? '作成中...' : '旅行を作成'}
+                  {submitting ? t('trip.create.submitting') : t('trip.create.submit')}
                 </Button>
               </div>
             </form>
