@@ -107,15 +107,18 @@ export default function UserProfileBySlugPage() {
         
         // 自分自身のプロフィールの場合、非公開の旅行も取得
         // fetchedUserを使用して同期的に判定
-        const currentUserId = user?.uid
-        const viewedUserId = fetchedUser?.id
-        const isOwnProfileCheck = currentUserId && viewedUserId && currentUserId === viewedUserId
+        // 注意: user.uidはFirebase Auth UID、fetchedUser.google_idと比較する必要がある
+        const currentUserId = user?.uid // Firebase Auth UID
+        const viewedUserGoogleId = fetchedUser?.google_id // Firestoreのgoogle_idフィールド
+        const isOwnProfileCheck = currentUserId && viewedUserGoogleId && currentUserId === viewedUserGoogleId
         
         // デバッグログ（開発環境のみ）
-        if (process.env.NODE_ENV === 'development') {
+        const isDev = typeof window !== 'undefined' && process.env.NODE_ENV === 'development'
+        if (isDev) {
           console.log('🔍 Profile trips debug:', {
             currentUserId,
-            viewedUserId,
+            viewedUserId: fetchedUser?.id,
+            viewedUserGoogleId,
             isOwnProfile: isOwnProfileCheck,
             totalTrips: trips.length,
             publicTrips: publicTripsList.length,
@@ -137,7 +140,7 @@ export default function UserProfileBySlugPage() {
             const isPrivate = level === 'private' || !level || level === ''
             
             // デバッグログ（開発環境のみ）
-            if (process.env.NODE_ENV === 'development' && isPrivate) {
+            if (isDev && isPrivate) {
               console.log('🔒 Private trip found:', { 
                 id: t.id, 
                 title: t.title, 
@@ -150,7 +153,7 @@ export default function UserProfileBySlugPage() {
             return isPrivate
           })
           
-          if (process.env.NODE_ENV === 'development') {
+          if (isDev) {
             console.log('🔒 Private trips filtered:', privateTripsList.length, privateTripsList.map(t => ({ id: t.id, title: t.title, access_level: t.access_level })))
           }
           
@@ -161,8 +164,7 @@ export default function UserProfileBySlugPage() {
         }
 
         // 統計情報を取得（自分自身のプロフィールまたは公開旅行がある場合）
-        const isOwnProfile = currentUserId && viewedUserId && currentUserId === viewedUserId
-        const shouldShowStats = isOwnProfile || publicTripsList.length > 0
+        const shouldShowStats = isOwnProfileCheck || publicTripsList.length > 0
         
         if (shouldShowStats) {
           const statsRes = await makeAuthenticatedRequest('/api/trips?groupByCountry=true')
@@ -273,7 +275,8 @@ export default function UserProfileBySlugPage() {
   if (!user || !profileUser) return null
 
   // 自分自身のプロフィールかどうか
-  const isOwnProfile = user.uid === profileUser.id
+  // 注意: user.uidはFirebase Auth UID、profileUser.google_idと比較する必要がある
+  const isOwnProfile = user.uid === profileUser.google_id
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -570,12 +573,13 @@ export default function UserProfileBySlugPage() {
                 <h4 className="text-xl font-semibold text-gray-900 mb-2">{t('profile.privateTrips.empty')}</h4>
                 <p className="text-gray-600">{t('profile.privateTrips.empty.description')}</p>
                 {/* デバッグ情報 */}
-                {process.env.NODE_ENV === 'development' && (
+                {typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && (
                   <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs">
                     <p>Debug: isOwnProfile={String(isOwnProfile)}</p>
                     <p>Debug: privateTrips.length={privateTrips.length}</p>
                     <p>Debug: user.uid={user?.uid}</p>
                     <p>Debug: profileUser.id={profileUser?.id}</p>
+                    <p>Debug: profileUser.google_id={profileUser?.google_id}</p>
                   </div>
                 )}
               </SolidCard>
