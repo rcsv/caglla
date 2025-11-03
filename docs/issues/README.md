@@ -33,7 +33,6 @@
 | [POIクリック時に地図が元位置へ戻ってしまいPOIDialogと不一致](map-poi-dialog-focus-conflict.md) | 未解決 | 2025-10-31 |
 | [地図上のItineraryマーカークリック時にメインコンテンツのCardまで自動スクロール](map-marker-click-scroll-to-card.md) | 未解決 | 2025-10-31 |
 | [Feature(Backlog): POIDialogへの外部POI API統合（TripAdvisor / Foursquare）](poi-dialog-external-apis-backlog.md) | 未実装 | 2025-10-31 |
-| [チェックリスト関連コンポーネントのi18n化](checklist-i18n-missing.md) | 未解決 | 2025-10-31 |
 | [左メニューのSummaryセクションでtitleとsubtitleが重複表示される](navigation-menu-duplicate-subtitle.md) | 解決済み | 2025-11-01 |
 | [天気予報の解析結果を英語に修正する](weather-forecast-i18n.md) | 未解決 | 2025-11-01 |
 | [気温表記方法・距離単位の設定項目機能](temperature-distance-unit-settings.md) | 未解決 | 2025-11-01 |
@@ -97,8 +96,8 @@
 
 ## 📊 統計
 
-- **総Issue数**: 44件
-- **未解決**: 11件
+- **総Issue数**: 43件
+- **未解決**: 10件
 - **確認済み**: 1件
 - **部分的解決**: 3件
 - **解決済み**: 21件
