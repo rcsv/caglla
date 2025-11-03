@@ -50,6 +50,7 @@
 | [`<html lang="ja">` のハードコードによる影響と動的設定への変更提案](dynamic-html-lang-attribute.md) | 部分的解決 | 2025-11-01 |
 | [ローディングコンポーネントの使用状況の統一性調査](loading-component-usage-inconsistency.md) | 未解決 | 2025-11-01 |
 | [Loadingコンポーネントのデフォルトメッセージ「読み込み中」のi18n化](loading-message-i18n.md) | 未解決 | 2025-11-01 |
+| [Create New Tripダイアログの日付バリデーション動作の改善検討](create-trip-dialog-date-auto-adjust.md) | 未解決 | 2025-11-01 |
 
 ### Feature要望
 
@@ -97,8 +98,8 @@
 
 ## 📊 統計
 
-- **総Issue数**: 44件
-- **未解決**: 10件
+- **総Issue数**: 45件
+- **未解決**: 11件
 - **確認済み**: 1件
 - **部分的解決**: 4件
 - **解決済み**: 21件
