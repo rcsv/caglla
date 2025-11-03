@@ -395,6 +395,10 @@ export type TranslationKey =
   | 'nav.totalDistance'
   | 'nav.distancesTitle'
   | 'nav.schedule'
+  | 'nav.summary'
+  | 'nav.itinerary'
+  | 'nav.checklist'
+  | 'nav.logout'
   // POI Dialog
   | 'poi.website'
   | 'poi.cached'
@@ -1042,6 +1046,11 @@ const en: Dictionary = {
   'distance.perSegment': '/segment',
   'distance.perTimeSegment': ' min/segment',
   'distance.hint.details': 'You can check detailed distance and time between venues in the schedule',
+  // Navigation
+  'nav.summary': 'Summary',
+  'nav.itinerary': 'Itinerary',
+  'nav.checklist': 'Checklist',
+  'nav.logout': 'Logout',
   // Travel Cost Display
   'cost.title': 'Travel Cost',
   'cost.empty': 'No schedules with cost information',
@@ -1654,6 +1663,11 @@ const ja: Dictionary = {
   'distance.perSegment': '/区間',
   'distance.perTimeSegment': '分/区間',
   'distance.hint.details': '各Venue間の詳細な距離・時間はスケジュール内で確認できます',
+  // Navigation
+  'nav.summary': '概要',
+  'nav.itinerary': '日程',
+  'nav.checklist': 'チェックリスト',
+  'nav.logout': 'ログアウト',
   // Travel Cost Display
   'cost.title': '旅行費用',
   'cost.empty': '費用情報が設定されたスケジュールがありません',

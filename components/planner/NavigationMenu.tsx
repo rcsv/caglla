@@ -66,7 +66,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
   const menuSections: MenuSection[] = [
     {
       id: 'summary',
-      title: 'Summary',
+      title: t('nav.summary'),
       icon: <SummaryIcon className="w-5 h-5" />,
       isExpandable: true,
       isExpanded: expandedSections.has('summary'),
@@ -110,7 +110,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     },
     {
       id: 'itinerary',
-      title: 'Itinerary',
+      title: t('nav.itinerary'),
       icon: (
         <CalendarIcon className="w-5 h-5" />
       ),
@@ -130,7 +130,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     },
     {
       id: 'checklist',
-      title: 'Checklist',
+      title: t('nav.checklist'),
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -167,7 +167,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
   const bottomMenuItems = [
     {
       id: 'logout',
-      title: 'Logout',
+      title: t('nav.logout'),
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
