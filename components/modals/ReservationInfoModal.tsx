@@ -252,7 +252,7 @@ export default function ReservationInfoModal({
   // 空港コードのバリデーション
   const validateAirportCodeField = (code: string) => {
     if (code && !validateAirportCode(code)) {
-      return '空港コードは3文字の英大文字で入力してください（例: NRT, HND）'
+      return t('reservation.validation.airportCode')
     }
     return null
   }
@@ -260,7 +260,7 @@ export default function ReservationInfoModal({
   // 便名のバリデーション
   const validateFlightNumberField = (flightNumber: string) => {
     if (flightNumber && !validateFlightNumber(flightNumber)) {
-      return '便名は航空会社コード+数字の形式で入力してください（例: ANA123, JAL456）'
+      return t('reservation.validation.flightNumber')
     }
     return null
   }
@@ -273,16 +273,16 @@ export default function ReservationInfoModal({
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-bold">
-              {initialReservation ? '予約情報を編集' : '予約情報を追加'}
+              {initialReservation ? t('reservation.modal.editTitle') : t('reservation.modal.addTitle')}
             </h2>
             {!initialReservation && (
               <button
                 onClick={() => setShowTemplateModal(true)}
                 className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
-                title="テンプレートから読み込む"
+                title={t('reservation.modal.loadTemplate')}
               >
                 <Icon icon="mdi:bookmark-multiple" className="w-4 h-4" />
-                <span className="hidden sm:inline">テンプレート</span>
+                <span className="hidden sm:inline">{t('reservation.modal.template')}</span>
               </button>
             )}
           </div>

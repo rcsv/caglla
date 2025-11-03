@@ -625,6 +625,12 @@ export type TranslationKey =
   | 'reservation.site.other'
   | 'reservation.selectSite'
   | 'reservation.notSet'
+  | 'reservation.modal.editTitle'
+  | 'reservation.modal.addTitle'
+  | 'reservation.modal.loadTemplate'
+  | 'reservation.modal.template'
+  | 'reservation.validation.airportCode'
+  | 'reservation.validation.flightNumber'
   | 'user.defaultName'
   | 'plan.seasonTraveler'
 
@@ -1257,6 +1263,12 @@ const en: Dictionary = {
   'reservation.site.other': 'Other',
   'reservation.selectSite': 'Please select',
   'reservation.notSet': 'Not set',
+  'reservation.modal.editTitle': 'Edit Reservation',
+  'reservation.modal.addTitle': 'Add Reservation',
+  'reservation.modal.loadTemplate': 'Load from template',
+  'reservation.modal.template': 'Template',
+  'reservation.validation.airportCode': 'Airport code must be 3 uppercase letters (e.g., NRT, HND)',
+  'reservation.validation.flightNumber': 'Flight number must be airline code + numbers (e.g., ANA123, JAL456)',
   'user.defaultName': 'User',
   'plan.seasonTraveler': 'Season Traveler',
 }
@@ -1888,6 +1900,12 @@ const ja: Dictionary = {
   'reservation.site.other': 'その他',
   'reservation.selectSite': '選択してください',
   'reservation.notSet': '未設定',
+  'reservation.modal.editTitle': '予約情報を編集',
+  'reservation.modal.addTitle': '予約情報を追加',
+  'reservation.modal.loadTemplate': 'テンプレートから読み込む',
+  'reservation.modal.template': 'テンプレート',
+  'reservation.validation.airportCode': '空港コードは3文字の英大文字で入力してください（例: NRT, HND）',
+  'reservation.validation.flightNumber': '便名は航空会社コード+数字の形式で入力してください（例: ANA123, JAL456）',
   'user.defaultName': 'ユーザー',
   'plan.seasonTraveler': 'Season Traveler',
 }
