@@ -196,16 +196,29 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
   }
 
   // 日付のサブタイトルを生成（daysのdescriptionを優先）
+  // 表示優先順位: place name > formatted address > itinerary title > lat,lng
   function getDaySubtitle(day: Day): string {
     if (day.description && day.description.trim()) {
       return day.description.trim()
     }
-    const locations = day.itineraries?.slice(0, 2).map(itinerary => {
-      return itinerary.location || itinerary.place_data?.name || ''
-    }).filter(Boolean) || []
-    if (locations.length === 0) return ''
-    if (locations.length === 1) return locations[0]
-    return `${locations[0]} → ${locations[1]}${locations.length > 2 ? ' ...' : ''}`
+    const pickDisplay = (itinerary: Itinerary): string => {
+      const name = itinerary.place_data?.name?.trim()
+      if (name) return name
+      const address = itinerary.place_data?.formatted_address?.trim()
+      if (address) return address
+      const title = itinerary.title?.trim()
+      if (title) return title
+      const loc = itinerary.location?.trim()
+      return loc || ''
+    }
+    const items = (day.itineraries || [])
+      .map(pickDisplay)
+      .filter(Boolean)
+      .slice(0, 2)
+
+    if (items.length === 0) return ''
+    if (items.length === 1) return items[0]
+    return `${items[0]} → ${items[1]}${(day.itineraries?.length || 0) > 2 ? ' ...' : ''}`
   }
 
   function getDayColor(day: Day): string {
