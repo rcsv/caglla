@@ -431,6 +431,17 @@ export type TranslationKey =
   | 'cost.items'
   | 'cost.total'
   | 'cost.hint.edit'
+  // Date formatting
+  | 'date.notSet'
+  | 'date.daysLater'
+  | 'date.days'
+  | 'date.dayTrip'
+  | 'date.yearsAgo'
+  | 'date.monthsAgo'
+  | 'date.thisMonth'
+  | 'date.year'
+  | 'date.month'
+  | 'date.day'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -864,6 +875,17 @@ const en: Dictionary = {
   'cost.items': ' items',
   'cost.total': 'Total',
   'cost.hint.edit': 'Click on any schedule\'s cost to edit',
+  // Date formatting
+  'date.notSet': 'Date not set',
+  'date.daysLater': 'days later',
+  'date.days': 'days',
+  'date.dayTrip': 'day trip',
+  'date.yearsAgo': 'years ago',
+  'date.monthsAgo': 'months ago',
+  'date.thisMonth': 'This month',
+  'date.year': '',
+  'date.month': '',
+  'date.day': '',
 }
 
 const ja: Dictionary = {
@@ -1296,6 +1318,17 @@ const ja: Dictionary = {
   'cost.items': '件',
   'cost.total': '合計',
   'cost.hint.edit': '各スケジュールの費用をクリックして編集できます',
+  // Date formatting
+  'date.notSet': '日付が設定されていません',
+  'date.daysLater': '日後',
+  'date.days': '日間',
+  'date.dayTrip': '日帰り',
+  'date.yearsAgo': '年前',
+  'date.monthsAgo': 'ヶ月前',
+  'date.thisMonth': '今月',
+  'date.year': '年',
+  'date.month': '月',
+  'date.day': '日',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
