@@ -104,7 +104,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
               <ul className="space-y-2 text-sm">
                 <li>
                   <Link href="/about" className="hover:text-white transition-colors">
-                    About
+                    {t('footer.about')}
                   </Link>
                 </li>
                 <li>

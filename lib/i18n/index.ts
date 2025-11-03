@@ -34,6 +34,7 @@ export type TranslationKey =
   | 'footer.privacyPolicy'
   | 'footer.termsOfService'
   | 'footer.cookieSettings'
+  | 'footer.about'
   // Features page
   | 'features.intro'
   | 'features.section1.title'
@@ -651,6 +652,7 @@ const en: Dictionary = {
   'footer.products.summary': 'Summary',
   'footer.resources': 'Resources',
   'footer.company': 'Company',
+  'footer.about': 'About',
   'footer.releaseNotes': 'Release notes',
   'footer.backToTop': 'Back to top',
   'footer.documentation': 'Documentation',
@@ -1279,6 +1281,7 @@ const ja: Dictionary = {
   'footer.products.summary': '概要',
   'footer.resources': 'リソース',
   'footer.company': '会社情報',
+  'footer.about': 'このサイトについて',
   'footer.releaseNotes': 'リリースノート',
   'footer.backToTop': 'トップへ戻る',
   'footer.documentation': 'ドキュメント',
