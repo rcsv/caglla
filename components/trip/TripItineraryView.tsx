@@ -175,15 +175,17 @@ export default function TripItineraryView({
                 <div className="flex gap-2">
                   <button
                     onClick={expandAllDays}
-                    className="p-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
                     title={t('trip.itineraryView.expandAll')}
+                    aria-label={t('trip.itineraryView.expandAll')}
                   >
                     <Icon icon="mdi:unfold-more-horizontal" className="w-5 h-5" />
                   </button>
                   <button
                     onClick={collapseAllDays}
-                    className="p-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
                     title={t('trip.itineraryView.collapseAll')}
+                    aria-label={t('trip.itineraryView.collapseAll')}
                   >
                     <Icon icon="mdi:unfold-less-horizontal" className="w-5 h-5" />
                   </button>
