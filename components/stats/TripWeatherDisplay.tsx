@@ -206,7 +206,7 @@ export default function TripWeatherDisplay({
               <path d="M10 22h4" />
               <path d="M2 11a10 10 0 0 1 20 0c0 3.38-1.88 6.31-4.67 7.86-.23.13-.33.39-.33.64V20H7v-.5c0-.25-.1-.51-.33-.64C3.88 17.31 2 14.38 2 11z" />
             </svg>
-            <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Forecasted by Open-Meteo</a>
+            <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">{t('weather.forecastedBy')}</a>
           </p>
         </div>
       </div>
