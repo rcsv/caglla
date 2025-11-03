@@ -7,6 +7,7 @@ import MyPresetsModal from '@/components/modals/MyPresetsModal'
 import PresetLibraryModal from '@/components/modals/PresetLibraryModal'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { t } from '@/lib/i18n'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 
 interface TripChecklistViewProps {
   tripId?: string
@@ -43,10 +44,12 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
     if (!tripId) return
     try {
       setSaving(true)
-      const res = await fetch(`/api/trips/${tripId}/checklist/generate`, { method: 'POST' })
+      const res = await makeAuthenticatedRequest(`/api/trips/${tripId}/checklist/generate`, { method: 'POST' })
       if (res.ok) {
         const data = await res.json()
         setItems(data.items || [])
+      } else {
+        console.error('Failed to regenerate checklist', await res.text())
       }
     } finally {
       setSaving(false)
