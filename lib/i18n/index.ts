@@ -582,6 +582,8 @@ export type TranslationKey =
   | 'checklist.library.applyFailed'
   | 'checklist.nav.preparing.subtitle'
   | 'checklist.nav.packing.subtitle'
+  | 'checklist.nav.preparing.title'
+  | 'checklist.nav.packing.title'
   // Loading messages
   | 'loading.message'
   | 'loading.mapLoading'
@@ -1198,7 +1200,9 @@ const en: Dictionary = {
   'checklist.library.apply': 'Apply',
   'checklist.library.close': 'Close',
   'checklist.library.applyFailed': 'Failed to apply preset',
+  'checklist.nav.preparing.title': 'Preparing',
   'checklist.nav.preparing.subtitle': 'Preparing for activities',
+  'checklist.nav.packing.title': 'Packing',
   'checklist.nav.packing.subtitle': 'Items to pack',
   // Loading messages
   'loading.message': 'Loading...',
@@ -1815,7 +1819,9 @@ const ja: Dictionary = {
   'checklist.library.apply': '適用',
   'checklist.library.close': '閉じる',
   'checklist.library.applyFailed': 'プリセットの適用に失敗しました',
+  'checklist.nav.preparing.title': '準備（行動）',
   'checklist.nav.preparing.subtitle': '行動系のこと',
+  'checklist.nav.packing.title': 'パッキング',
   'checklist.nav.packing.subtitle': '持っていくものの準備系',
   // Loading messages
   'loading.message': '読み込み中...',

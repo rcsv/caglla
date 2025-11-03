@@ -141,7 +141,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       children: [
         {
           id: 'checklist-preparing',
-          title: 'Preparing',
+          title: t('checklist.nav.preparing.title'),
           subtitle: t('checklist.nav.preparing.subtitle'),
           icon: <ClipboardIcon className="w-4 h-4" />,
           onClick: () => {
@@ -151,7 +151,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
         },
         {
           id: 'checklist-packing',
-          title: 'Packing',
+          title: t('checklist.nav.packing.title'),
           subtitle: t('checklist.nav.packing.subtitle'),
           icon: <BackpackIcon className="w-4 h-4" />,
           onClick: () => {
