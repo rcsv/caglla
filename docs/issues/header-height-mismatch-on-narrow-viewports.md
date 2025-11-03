@@ -1,7 +1,7 @@
 # Issue: 狭いビューポート時にヘッダーのタイトルエリアとロゴエリアの縦幅が不一致
 
 - 作成日: 2025-11-03
-- 状態: 未着手
+- 状態: ✅ 解決済み（実装反映済み）
 - 種別: UI/レイアウト
 - 優先度: 低〜中（視覚的一貫性）
 
@@ -86,3 +86,19 @@
 ## 実装見積
 - 実装: 30–45分
 - 動作確認（モバイルシミュレーター含む）: 15–30分
+
+---
+
+## 解決内容（2025-11-03）
+- `components/common/LandingHeader.tsx`
+  - 行コンテナに`min-h-14`を追加
+  - ブランド名に`whitespace-nowrap leading-none`を付与し、超狭幅では`hidden sm:inline`で簡略化
+- `components/common/HomeHeader.tsx`
+  - 行コンテナに`min-h-14`を追加
+  - ブランド名に`whitespace-nowrap leading-none hidden sm:inline`
+  - プラン名を`hidden sm:block`にして行数増を抑制
+  - ユーザー名の最大幅を`max-w-[120px] sm:max-w-[160px]`へ調整
+
+### 期待効果
+- 360px級でも左右の縦高さが揃いやすく、折り返し起因の高さブレを軽減
+- 主要ブレークポイントにおける視覚的安定性の向上
