@@ -5,6 +5,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { distanceApiHelpers, DistanceMatrixResult } from '@/lib/api/google/distance'
 import { PlaceData } from '@/lib/core/types'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
+import Loading from '@/components/common/Loading'
+import { t } from '@/lib/i18n'
 
 interface VenueDistanceProps {
   fromPlace?: PlaceData | null
@@ -97,10 +99,7 @@ export default function VenueDistance({
   if (isLoading) {
     return (
       <div className={`flex items-center justify-center py-2 ${className}`}>
-        <div className="flex items-center space-x-2 text-sm text-gray-500">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-          <span>計算中...</span>
-        </div>
+        <Loading inline size="sm" color="blue" message={t('loading.calculating')} />
       </div>
     )
   }

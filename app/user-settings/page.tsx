@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/contexts/auth'
 import { useRouter } from 'next/navigation'
 import AvatarUpload from '@/components/ui/AvatarUpload'
+import Loading from '@/components/common/Loading'
 import type { User, UserPreferences } from '@/lib/core/types'
 
 export default function UserSettingsPage() {
@@ -75,14 +76,7 @@ export default function UserSettingsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">読み込み中...</p>
-        </div>
-      </div>
-    )
+    return <Loading fullScreen size="lg" color="blue" />
   }
 
   if (!user || !userData) {

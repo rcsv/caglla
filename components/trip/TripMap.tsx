@@ -13,6 +13,8 @@ import POIDialog from '@/components/modals/POIDialog'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { dateUtils } from '@/lib/utils/date'
 import MapSearchOverlay from './MapSearchOverlay'
+import Loading from '@/components/common/Loading'
+import { t } from '@/lib/i18n'
 
 // マップのズームレベル定数
 const DEFAULT_ZOOM_LEVEL = 14
@@ -652,11 +654,8 @@ export default function TripMap({
   return (
     <div className={`relative ${className}`}>
       {loading && (
-        <div className={`absolute inset-0 bg-gray-100 flex items-center justify-center ${getZIndexClass('MAIN_CONTENT')}`}>
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-            <p className="text-sm text-gray-600">地図を読み込み中...</p>
-          </div>
+        <div className={`absolute inset-0 bg-gray-100 ${getZIndexClass('MAIN_CONTENT')}`}>
+          <Loading center size="sm" color="blue" message={t('loading.mapLoading')} />
         </div>
       )}
       

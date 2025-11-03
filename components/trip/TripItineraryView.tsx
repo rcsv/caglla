@@ -12,6 +12,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useEffect, useRef } from 'react'
 import { toDate } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
+import Loading from '@/components/common/Loading'
 
 interface TripItineraryViewProps {
   trip: Trip
@@ -308,8 +309,7 @@ export default function TripItineraryView({
                     {/* ローディング状態の表示 */}
                     {loadingDayIds.has(day.id) && (
                       <div className="mt-6 flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-2"></div>
-                        <span className="text-sm text-blue-700">スケジュールを追加中...</span>
+                        <Loading inline size="sm" color="blue" message={t('loading.addingSchedule')} />
                       </div>
                     )}
 

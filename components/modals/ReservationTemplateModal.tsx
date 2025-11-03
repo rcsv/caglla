@@ -11,6 +11,7 @@ import Select from '@/components/common/Select'
 import { Icon } from '@iconify/react'
 import { getReservationTypeLabel, getReservationSiteLabel, getReservationTypeIcon } from '@/lib/utils/reservation-utils'
 import { t } from '@/lib/i18n'
+import Loading from '@/components/common/Loading'
 
 interface ReservationTemplateModalProps {
   isOpen: boolean
@@ -324,7 +325,7 @@ export default function ReservationTemplateModal({
           {/* テンプレート一覧 */}
           {isLoading ? (
             <div className="text-center py-8">
-              <Icon icon="mdi:loading" className="w-8 h-8 animate-spin text-gray-400 mx-auto" />
+              <Loading size="md" color="gray" />
             </div>
           ) : filteredTemplates.length === 0 ? (
             <div className="text-center py-8">

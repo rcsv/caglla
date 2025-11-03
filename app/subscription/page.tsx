@@ -8,6 +8,7 @@ import { paymentHelpers } from '@/lib/subscription/payment-service'
 import { useUserData } from '@/lib/contexts/user-data'
 import UnifiedIcon from '@/components/common/icons/UnifiedIcon'
 import HomeFooter from '@/components/common/HomeFooter'
+import Loading from '@/components/common/Loading'
 
 // 動的レンダリングを強制（プリレンダリングを無効化）
 export const dynamic = 'force-dynamic'
@@ -452,14 +453,7 @@ function SubscriptionContentInner() {
 
 function SubscriptionContent() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<Loading fullScreen size="md" color="blue" />}>
       <SubscriptionContentInner />
     </Suspense>
   )

@@ -527,6 +527,12 @@ export type TranslationKey =
   | 'checklist.nav.packing.subtitle'
   // Loading messages
   | 'loading.message'
+  | 'loading.mapLoading'
+  | 'loading.saving'
+  | 'loading.calculating'
+  | 'loading.addingSchedule'
+  | 'loading.updating'
+  | 'loading.updatingDescription'
   // Reservation Categories
   | 'reservation.type.flight'
   | 'reservation.type.rentalCar'
@@ -1080,6 +1086,12 @@ const en: Dictionary = {
   'checklist.nav.packing.subtitle': 'Items to pack',
   // Loading messages
   'loading.message': 'Loading...',
+  'loading.mapLoading': 'Loading map...',
+  'loading.saving': 'Saving...',
+  'loading.calculating': 'Calculating...',
+  'loading.addingSchedule': 'Adding schedule...',
+  'loading.updating': 'Saving...',
+  'loading.updatingDescription': 'Updating itinerary',
   // Reservation Categories
   'reservation.type.flight': 'Flight',
   'reservation.type.rentalCar': 'Rental Car',
@@ -1632,6 +1644,12 @@ const ja: Dictionary = {
   'checklist.nav.packing.subtitle': '持っていくものの準備系',
   // Loading messages
   'loading.message': '読み込み中...',
+  'loading.mapLoading': '地図を読み込み中...',
+  'loading.saving': '保存中...',
+  'loading.calculating': '計算中...',
+  'loading.addingSchedule': 'スケジュールを追加中...',
+  'loading.updating': '保存中...',
+  'loading.updatingDescription': '日程を更新しています',
   // Reservation Categories
   'reservation.type.flight': '飛行機',
   'reservation.type.rentalCar': 'レンタカー',

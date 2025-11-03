@@ -11,6 +11,8 @@ import { imageUploadHelpers } from '@/lib/storage/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import type { Trip, Day, Itinerary, TripEditorProps } from '@/lib/core/types'
 import { getZIndexClass } from '@/lib/core/z-index'
+import Loading from '@/components/common/Loading'
+import { t } from '@/lib/i18n'
 
 /**
  * Renders an editor UI for a Trip and manages editing, saving, cancelling, and deletion.
@@ -252,15 +254,8 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
         {showLoadingOverlay && createPortal(
           <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass('FLOAT_MODAL')}`}>
             <div className="bg-white rounded-lg p-8 flex flex-col items-center space-y-4 shadow-xl">
-              {/* 回転プログレスバー */}
-              <div className="relative">
-                <div className="w-16 h-16 border-4 border-gray-200 rounded-full"></div>
-                <div className="absolute top-0 left-0 w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-              <div className="text-center">
-                <p className="text-gray-900 font-medium text-lg">保存中...</p>
-                <p className="text-gray-600 text-sm">日程を更新しています</p>
-              </div>
+              <Loading size="lg" color="blue" message={t('loading.updating')} />
+              <p className="text-gray-600 text-sm">{t('loading.updatingDescription')}</p>
             </div>
           </div>,
           document.body

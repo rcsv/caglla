@@ -11,6 +11,8 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/auth'
 import logger from '@/lib/core/logger'
+import Loading from '@/components/common/Loading'
+import { t } from '@/lib/i18n'
 
 export default function PdfPreviewPage() {
   const { tripSlug } = useParams()
@@ -94,9 +96,9 @@ export default function PdfPreviewPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            プレビューを読み込み中...
+          <Loading size="md" color="blue" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 mt-4">
+            {t('loading.message')}
           </h1>
           <p className="text-gray-600">
             トリップ: {tripSlug}
