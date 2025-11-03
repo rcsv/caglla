@@ -398,6 +398,7 @@ export type TranslationKey =
   | 'nav.summary'
   | 'nav.itinerary'
   | 'nav.checklist'
+  | 'nav.plan'
   | 'nav.logout'
   // POI Dialog
   | 'poi.website'
@@ -1052,6 +1053,7 @@ const en: Dictionary = {
   'nav.summary': 'Summary',
   'nav.itinerary': 'Itinerary',
   'nav.checklist': 'Checklist',
+  'nav.plan': 'Plan',
   'nav.logout': 'Logout',
   // Travel Cost Display
   'cost.title': 'Travel Cost',
@@ -1671,6 +1673,7 @@ const ja: Dictionary = {
   'nav.summary': '概要',
   'nav.itinerary': '日程',
   'nav.checklist': 'チェックリスト',
+  'nav.plan': 'プラン',
   'nav.logout': 'ログアウト',
   // Travel Cost Display
   'cost.title': '旅行費用',
