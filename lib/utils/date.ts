@@ -239,40 +239,63 @@ export const dateUtils = {
   },
 
   // Format trip date range in compact format
-  formatTripDateRange: (startDate: FirestoreDate, endDate: FirestoreDate): string => {
+  // language: Optional language parameter ('ja' or 'en'), defaults to 'ja' for backward compatibility
+  formatTripDateRange: (startDate: FirestoreDate, endDate: FirestoreDate, language: 'ja' | 'en' = 'ja'): string => {
     if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
-      return '日付が設定されていません'
+      return '' // Return empty string to indicate error, component will handle i18n
     }
     
     const start = toDateOrNull(startDate)
     const end = toDateOrNull(endDate)
     
     if (!start || !end) {
-      return '日付が設定されていません'
+      return '' // Return empty string to indicate error, component will handle i18n
     }
+    
+    const locale = language === 'ja' ? 'ja-JP' : 'en-US'
     
     const startYear = start.getFullYear()
     const startMonth = start.getMonth() + 1
     const startDay = start.getDate()
-    const startWeekday = start.toLocaleDateString('ja-JP', { weekday: 'short' })
+    const startWeekday = start.toLocaleDateString(locale, { weekday: 'short' })
     
     const endYear = end.getFullYear()
     const endMonth = end.getMonth() + 1
     const endDay = end.getDate()
-    const endWeekday = end.toLocaleDateString('ja-JP', { weekday: 'short' })
+    const endWeekday = end.toLocaleDateString(locale, { weekday: 'short' })
     
     // Same year
     if (startYear === endYear) {
       // Same month
       if (startMonth === endMonth) {
-        return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endDay} (${endWeekday})`
+        if (language === 'ja') {
+          return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endDay} (${endWeekday})`
+        } else {
+          // English format: "Nov 8 (Sat) - 9 (Sun)"
+          const startDateStr = start.toLocaleDateString(locale, { month: 'short', day: 'numeric' })
+          return `${startDateStr} (${startWeekday}) - ${endDay} (${endWeekday})`
+        }
       } else {
         // Different months
-        return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endMonth}月${endDay}日(${endWeekday})`
+        if (language === 'ja') {
+          return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endMonth}月${endDay}日(${endWeekday})`
+        } else {
+          // English format: "Nov 8 (Sat) - Dec 9 (Sun)"
+          const startDateStr = start.toLocaleDateString(locale, { month: 'short', day: 'numeric' })
+          const endDateStr = end.toLocaleDateString(locale, { month: 'short', day: 'numeric' })
+          return `${startDateStr} (${startWeekday}) - ${endDateStr} (${endWeekday})`
+        }
       }
     } else {
       // Different years
-      return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endYear}年${endMonth}月${endDay}日 (${endWeekday})`
+      if (language === 'ja') {
+        return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endYear}年${endMonth}月${endDay}日 (${endWeekday})`
+      } else {
+        // English format: "Nov 8, 2025 (Sat) - Jan 9, 2026 (Sun)"
+        const startDateStr = start.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })
+        const endDateStr = end.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })
+        return `${startDateStr} (${startWeekday}) - ${endDateStr} (${endWeekday})`
+      }
     }
   },
 

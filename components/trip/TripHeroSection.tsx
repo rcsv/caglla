@@ -5,6 +5,9 @@ import TripEditor from '@/components/trip/TripEditor'
 import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { PinIcon } from '@/components/common/icons/PinIcon'
 import { dateUtils } from '@/lib/utils/date'
+import { t } from '@/lib/i18n'
+import { getUserLanguage } from '@/lib/utils/language'
+import { useAuth } from '@/lib/contexts/auth'
 
 interface TripHeroSectionProps {
   trip: Trip
@@ -19,6 +22,14 @@ export default function TripHeroSection({
   onDeleteTrip,
   onToggleMobileMenu,
 }: TripHeroSectionProps) {
+  const { user } = useAuth()
+  const currentLanguage = getUserLanguage(user)
+  
+  // Format date range with i18n support
+  const formattedDateRange = trip.start_date && trip.end_date
+    ? dateUtils.formatTripDateRange(trip.start_date, trip.end_date, currentLanguage)
+    : null
+  
   return (
     <header className="relative overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
       {/* Background Image */}
@@ -73,10 +84,7 @@ export default function TripHeroSection({
                 <div className="flex items-center text-white">
                   <CalendarIcon className="w-5 h-5 mr-2" color="white" />
                   <span className="text-lg font-medium">
-                    {trip.start_date && trip.end_date 
-                      ? dateUtils.formatTripDateRange(trip.start_date, trip.end_date)
-                      : '日付が設定されていません'
-                    }
+                    {formattedDateRange || t('date.notSet')}
                   </span>
                 </div>
                 

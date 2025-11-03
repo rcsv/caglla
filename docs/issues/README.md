@@ -51,7 +51,7 @@
 | [ローディングコンポーネントの使用状況の統一性調査](loading-component-usage-inconsistency.md) | 部分的解決 | 2025-11-01 |
 | [Loadingコンポーネントのデフォルトメッセージ「読み込み中」のi18n化](loading-message-i18n.md) | 解決済み | 2025-11-01 |
 | [Create New Tripダイアログの日付バリデーション動作の改善検討](create-trip-dialog-date-auto-adjust.md) | 未解決 | 2025-11-01 |
-| [TripHeroSectionの日付表示が日本語固定（i18n化未対応）](trip-hero-section-date-i18n.md) | 未解決 | 2025-11-01 |
+| [TripHeroSectionの日付表示が日本語固定（i18n化未対応）](trip-hero-section-date-i18n.md) | 解決済み | 2025-11-01 |
 | [DayEditorの「この日は何をする日？」placeholderのi18n化](day-editor-placeholder-i18n.md) | 解決済み | 2025-11-01 |
 
 ### Feature要望
@@ -101,10 +101,10 @@
 ## 📊 統計
 
 - **総Issue数**: 47件
-- **未解決**: 11件
+- **未解決**: 10件
 - **確認済み**: 1件
 - **部分的解決**: 5件
-- **解決済み**: 23件
+- **解決済み**: 24件
 - **未実装（Feature）**: 5件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
 - **中優先度**: 27件
