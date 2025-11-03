@@ -525,6 +525,8 @@ export type TranslationKey =
   | 'checklist.library.applyFailed'
   | 'checklist.nav.preparing.subtitle'
   | 'checklist.nav.packing.subtitle'
+  // Loading messages
+  | 'loading.message'
   // Reservation Categories
   | 'reservation.type.flight'
   | 'reservation.type.rentalCar'
@@ -1076,6 +1078,8 @@ const en: Dictionary = {
   'checklist.library.applyFailed': 'Failed to apply preset',
   'checklist.nav.preparing.subtitle': 'Preparing for activities',
   'checklist.nav.packing.subtitle': 'Items to pack',
+  // Loading messages
+  'loading.message': 'Loading...',
   // Reservation Categories
   'reservation.type.flight': 'Flight',
   'reservation.type.rentalCar': 'Rental Car',
@@ -1626,6 +1630,8 @@ const ja: Dictionary = {
   'checklist.library.applyFailed': 'プリセットの適用に失敗しました',
   'checklist.nav.preparing.subtitle': '行動系のこと',
   'checklist.nav.packing.subtitle': '持っていくものの準備系',
+  // Loading messages
+  'loading.message': '読み込み中...',
   // Reservation Categories
   'reservation.type.flight': '飛行機',
   'reservation.type.rentalCar': 'レンタカー',
