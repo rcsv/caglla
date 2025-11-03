@@ -11,7 +11,8 @@ export async function POST(
   { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const { id: tripId } = await params
+    const { tripSlug } = await params
+    const tripId = tripSlug
 
     // 認証チェック
     const authHeader = request.headers.get('authorization')

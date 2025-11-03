@@ -8,7 +8,8 @@ export async function GET(
   { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const { id: tripId } = await params
+    const { tripSlug } = await params
+    const tripId = tripSlug
     const ref = adminDb.collection('trip_checklists').doc(tripId)
     const doc = await ref.get()
     if (!doc.exists) {
@@ -27,7 +28,8 @@ export async function PUT(
   { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const { id: tripId } = await params
+    const { tripSlug } = await params
+    const tripId = tripSlug
     const body = await request.json()
     const { items } = body
     if (!Array.isArray(items)) {
