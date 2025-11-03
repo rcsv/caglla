@@ -187,7 +187,7 @@ export default function ImageGalleryModal({
                 ) : (
                   <div className="max-w-full max-h-full flex items-center justify-center">
                     {imageLoading ? (
-                      <div className="text-white text-lg">読み込み中...</div>
+                      <div className="text-white text-lg">{require('@/lib/i18n').t('loading.message')}</div>
                     ) : (
                       <img
                         ref={imageRef}

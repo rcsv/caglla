@@ -158,7 +158,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
         <div className={`absolute inset-0 bg-gray-100 flex items-center justify-center ${getZIndexClass('MAIN_CONTENT')}`}>
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-            <p className="text-sm text-gray-600">地図を読み込み中...</p>
+            <p className="text-sm text-gray-600">{require('@/lib/i18n').t('loading.mapLoading')}</p>
           </div>
         </div>
       )}

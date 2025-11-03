@@ -56,8 +56,8 @@ export const RecommendedTrips: React.FC<RecommendedTripsProps> = ({ limit = 6, c
     fetchRecommendations()
   }, [limit, user, authLoading])
 
-  if (authLoading) return <Loading className="py-8" message="認証中..." />
-  if (loading) return <Loading className="py-8" message="おすすめ旅行を読み込み中..." />
+  if (authLoading) return <Loading className="py-8" />
+  if (loading) return <Loading className="py-8" />
   if (trips.length === 0) return null
 
   return (

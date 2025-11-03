@@ -225,7 +225,7 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">メールアドレス</label>
-                  <p className="mt-1 text-sm text-gray-900">{userData?.email || '読み込み中...'}</p>
+                  <p className="mt-1 text-sm text-gray-900">{userData?.email || require('@/lib/i18n').t('loading.message')}</p>
                 </div>
                 {userData && (
                   <div>

@@ -154,7 +154,7 @@ export default function ScheduleInsertionTest() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">読み込み中...</div>
+        {require('@/components/common/Loading').default({ size: 'md' })}
       </div>
     )
   }
