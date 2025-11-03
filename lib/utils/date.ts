@@ -1,6 +1,9 @@
 // Date utility functions
 import { isValidDate as isValidTimestamp, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import type { FirestoreDate } from '@/lib/core/types'
+import { t } from '@/lib/i18n'
+import { getUserLanguage } from '@/lib/utils/language'
+import type { SupportedLanguage } from '@/lib/core/types'
 
 export const dateUtils = {
   // Check if a date is valid (delegated to timestamp-utils)
@@ -140,16 +143,16 @@ export const dateUtils = {
   },
 
   // Format future trip date range with unified rules
-  formatFutureTripDate: (startDate: FirestoreDate, endDate: FirestoreDate): string => {
+  formatFutureTripDate: (startDate: FirestoreDate, endDate: FirestoreDate, language?: SupportedLanguage): string => {
     if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
-      return '日付が設定されていません'
+      return t('date.notSet', language)
     }
     
     const start = toDateOrNull(startDate)
     const end = toDateOrNull(endDate)
     
     if (!start || !end) {
-      return '日付が設定されていません'
+      return t('date.notSet', language)
     }
     
     const today = dateUtils.getToday()
@@ -161,11 +164,13 @@ export const dateUtils = {
     const tripDuration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
     
     // Apply unified date range formatting rules
-    return dateUtils.formatUnifiedDateRange(start, end, daysUntil, tripDuration)
+    const lang = language || getUserLanguage()
+    return dateUtils.formatUnifiedDateRange(start, end, daysUntil, tripDuration, lang)
   },
 
   // Unified date range formatting with consistent rules
-  formatUnifiedDateRange: (start: Date, end: Date, daysUntil: number, tripDuration: number): string => {
+  formatUnifiedDateRange: (start: Date, end: Date, daysUntil: number, tripDuration: number, language?: SupportedLanguage): string => {
+    const lang = language || getUserLanguage()
     const startYear = start.getFullYear()
     const startMonth = start.getMonth() + 1
     const startDay = start.getDate()
@@ -176,22 +181,22 @@ export const dateUtils = {
     
     // Rule 1: Single day - don't show end date
     if (startYear === endYear && startMonth === endMonth && startDay === endDay) {
-      const durationText = tripDuration === 1 ? '日帰り' : `${tripDuration}日間`
-      return `${startMonth}/${startDay} (${daysUntil}日後、${durationText})`
+      const durationText = tripDuration === 1 ? t('date.dayTrip', lang) : `${tripDuration}${t('date.days', lang)}`
+      return `${startMonth}/${startDay} (${daysUntil}${t('date.daysLater', lang)}、${durationText})`
     }
     
     // Rule 2: Same month - omit end month
     if (startYear === endYear && startMonth === endMonth) {
-      return `${startMonth}/${startDay} - ${endDay} (${daysUntil}日後、${tripDuration}日間)`
+      return `${startMonth}/${startDay} - ${endDay} (${daysUntil}${t('date.daysLater', lang)}、${tripDuration}${t('date.days', lang)})`
     }
     
     // Rule 3: Same year - omit end year
     if (startYear === endYear) {
-      return `${startMonth}/${startDay} - ${endMonth}/${endDay} (${daysUntil}日後、${tripDuration}日間)`
+      return `${startMonth}/${startDay} - ${endMonth}/${endDay} (${daysUntil}${t('date.daysLater', lang)}、${tripDuration}${t('date.days', lang)})`
     }
     
     // Rule 4: Different years - show both years
-    return `${startYear}/${startMonth}/${startDay} - ${endYear}/${endMonth}/${endDay} (${daysUntil}日後、${tripDuration}日間)`
+    return `${startYear}/${startMonth}/${startDay} - ${endYear}/${endMonth}/${endDay} (${daysUntil}${t('date.daysLater', lang)}、${tripDuration}${t('date.days', lang)})`
   },
 
   // Format past trip date range with relative time

@@ -8,6 +8,7 @@ import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
 import { dateUtils } from '@/lib/utils/date'
 import { getCountryFlag } from '@/lib/utils/country-flags'
+import { getUserLanguage } from '@/lib/utils/language'
 import type { Trip } from '@/lib/core/types'
 
 type TripCardVariant = 'standard' | 'imageFull'
@@ -87,9 +88,10 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
               {trip.start_date && trip.end_date && (
                 <span className="px-2 py-1 bg-white/10 rounded-full">
                   {(() => {
+                    const language = getUserLanguage()
                     const { futureTrips, pastTrips } = dateUtils.sortTripsByDate([trip])
                     if (futureTrips.length > 0) {
-                      return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date)
+                      return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date, language)
                     } else if (pastTrips.length > 0) {
                       return dateUtils.formatPastTripDate(trip.start_date, trip.end_date)
                     } else {
@@ -165,9 +167,10 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           <p className="text-gray-500 text-sm flex items-center gap-1">
             <IconRenderer iconName="calendar" className="w-4 h-4" color="#6b7280" />
             {(() => {
+              const language = getUserLanguage()
               const { futureTrips, pastTrips } = dateUtils.sortTripsByDate([trip])
               if (futureTrips.length > 0) {
-                return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date)
+                return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date, language)
               } else if (pastTrips.length > 0) {
                 return dateUtils.formatPastTripDate(trip.start_date, trip.end_date)
               } else {

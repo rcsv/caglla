@@ -206,9 +206,10 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
               <div className="text-xs text-gray-500 flex items-center gap-1">
                 <CalendarIcon className="w-3 h-3 text-blue-500" />
                 {(() => {
+                  const language = getUserLanguage()
                   const { futureTrips, pastTrips } = dateUtils.sortTripsByDate([trip])
                   if (futureTrips.length > 0) {
-                    return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date)
+                    return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date, language)
                   } else if (pastTrips.length > 0) {
                     return dateUtils.formatPastTripDate(trip.start_date, trip.end_date)
                   } else {
