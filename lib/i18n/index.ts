@@ -447,6 +447,53 @@ export type TranslationKey =
   | 'date.thisMonth'
   | 'date.year'
   | 'date.month'
+  // Weather Forecast
+  | 'weather.title'
+  | 'weather.loading'
+  | 'weather.error.fetchFailed'
+  | 'weather.error.notAvailable'
+  | 'weather.empty.noData'
+  | 'weather.empty.noDestination'
+  | 'weather.hint.forecastLimit'
+  | 'weather.partialForecast'
+  | 'weather.constraint.title'
+  | 'weather.constraint.message'
+  | 'weather.constraint.remainingDays'
+  | 'weather.rainyDays'
+  | 'weather.averageWindSpeed'
+  | 'weather.average'
+  | 'weather.range'
+  | 'weather.days'
+  | 'weather.only'
+  | 'weather.unknown'
+  | 'weather.code.0'
+  | 'weather.code.1'
+  | 'weather.code.2'
+  | 'weather.code.3'
+  | 'weather.code.45'
+  | 'weather.code.48'
+  | 'weather.code.51'
+  | 'weather.code.53'
+  | 'weather.code.55'
+  | 'weather.code.56'
+  | 'weather.code.57'
+  | 'weather.code.61'
+  | 'weather.code.63'
+  | 'weather.code.65'
+  | 'weather.code.66'
+  | 'weather.code.67'
+  | 'weather.code.71'
+  | 'weather.code.73'
+  | 'weather.code.75'
+  | 'weather.code.77'
+  | 'weather.code.80'
+  | 'weather.code.81'
+  | 'weather.code.82'
+  | 'weather.code.85'
+  | 'weather.code.86'
+  | 'weather.code.95'
+  | 'weather.code.96'
+  | 'weather.code.99'
   | 'date.day'
   // Create Trip Dialog
   | 'trip.create.title'
@@ -1012,6 +1059,54 @@ const en: Dictionary = {
   'date.thisMonth': 'This month',
   'date.year': '',
   'date.month': '',
+  // Weather Forecast
+  'weather.title': 'Weather Forecast',
+  'weather.loading': 'Fetching weather information...',
+  'weather.error.fetchFailed': 'Failed to fetch weather information',
+  'weather.error.notAvailable': 'Weather information could not be retrieved',
+  'weather.empty.noData': 'Weather information could not be retrieved',
+  'weather.empty.noDestination': 'Weather forecast will be displayed when you set the trip dates and destination',
+  'weather.hint.forecastLimit': '💡 Weather forecast is only available for dates within 16 days',
+  'weather.partialForecast': 'Partial forecast',
+  'weather.constraint.title': 'Forecast period limitation',
+  'weather.constraint.message': 'Weather forecast is only available for {forecastDays} days.',
+  'weather.constraint.remainingDays': 'The remaining {remainingDays} days of your trip are not displayed.',
+  'weather.rainyDays': 'Rainy days',
+  'weather.averageWindSpeed': 'Average wind speed',
+  'weather.average': 'Average',
+  'weather.range': '-',
+  'weather.days': 'days',
+  'weather.only': 'only',
+  'weather.unknown': 'Unknown',
+  // Weather Codes (WMO Weather Interpretation Codes)
+  'weather.code.0': 'Clear sky',
+  'weather.code.1': 'Mainly clear',
+  'weather.code.2': 'Partly cloudy',
+  'weather.code.3': 'Overcast',
+  'weather.code.45': 'Fog',
+  'weather.code.48': 'Depositing rime fog',
+  'weather.code.51': 'Light drizzle',
+  'weather.code.53': 'Moderate drizzle',
+  'weather.code.55': 'Dense drizzle',
+  'weather.code.56': 'Light freezing drizzle',
+  'weather.code.57': 'Dense freezing drizzle',
+  'weather.code.61': 'Slight rain',
+  'weather.code.63': 'Moderate rain',
+  'weather.code.65': 'Heavy rain',
+  'weather.code.66': 'Light freezing rain',
+  'weather.code.67': 'Heavy freezing rain',
+  'weather.code.71': 'Slight snow fall',
+  'weather.code.73': 'Moderate snow fall',
+  'weather.code.75': 'Heavy snow fall',
+  'weather.code.77': 'Snow grains',
+  'weather.code.80': 'Slight rain showers',
+  'weather.code.81': 'Moderate rain showers',
+  'weather.code.82': 'Violent rain showers',
+  'weather.code.85': 'Slight snow showers',
+  'weather.code.86': 'Heavy snow showers',
+  'weather.code.95': 'Thunderstorm',
+  'weather.code.96': 'Thunderstorm with slight hail',
+  'weather.code.99': 'Thunderstorm with heavy hail',
   'date.day': '',
   // Create Trip Dialog
   'trip.create.title': 'Create New Trip',
@@ -1577,6 +1672,54 @@ const ja: Dictionary = {
   'date.year': '年',
   'date.month': '月',
   'date.day': '日',
+  // Weather Forecast
+  'weather.title': '天気予報',
+  'weather.loading': '天気情報を取得中...',
+  'weather.error.fetchFailed': '天気情報の取得に失敗しました',
+  'weather.error.notAvailable': '天気情報を取得できませんでした',
+  'weather.empty.noData': '天気情報を取得できませんでした',
+  'weather.empty.noDestination': '旅行の日程と目的地を設定すると天気予報が表示されます',
+  'weather.hint.forecastLimit': '💡 天気予報は16日以内の日程のみ対応',
+  'weather.partialForecast': '部分的な予報',
+  'weather.constraint.title': '予報期間の制約',
+  'weather.constraint.message': '天気予報は{forecastDays}日分のみ取得可能です。',
+  'weather.constraint.remainingDays': '旅行期間の残り{remainingDays}日分は表示されていません。',
+  'weather.rainyDays': '雨の日',
+  'weather.averageWindSpeed': '平均風速',
+  'weather.average': '平均',
+  'weather.range': '〜',
+  'weather.days': '日',
+  'weather.only': 'のみ',
+  'weather.unknown': '不明',
+  // Weather Codes (WMO Weather Interpretation Codes)
+  'weather.code.0': '晴れ',
+  'weather.code.1': '主に晴れ',
+  'weather.code.2': '部分的に曇り',
+  'weather.code.3': '曇り',
+  'weather.code.45': '霧',
+  'weather.code.48': '霧氷',
+  'weather.code.51': '軽い霧雨',
+  'weather.code.53': '霧雨',
+  'weather.code.55': '濃い霧雨',
+  'weather.code.56': '軽い凍る霧雨',
+  'weather.code.57': '凍る霧雨',
+  'weather.code.61': '軽い雨',
+  'weather.code.63': '雨',
+  'weather.code.65': '大雨',
+  'weather.code.66': '軽い凍る雨',
+  'weather.code.67': '凍る雨',
+  'weather.code.71': '軽い雪',
+  'weather.code.73': '雪',
+  'weather.code.75': '大雪',
+  'weather.code.77': '雪の粒',
+  'weather.code.80': '軽いにわか雨',
+  'weather.code.81': 'にわか雨',
+  'weather.code.82': '激しいにわか雨',
+  'weather.code.85': '軽いにわか雪',
+  'weather.code.86': 'にわか雪',
+  'weather.code.95': '雷雨',
+  'weather.code.96': '雹を伴う雷雨',
+  'weather.code.99': '激しい雹を伴う雷雨',
   // Create Trip Dialog
   'trip.create.title': '新しい旅行を作成',
   'trip.create.destination.label': '目的地 *',

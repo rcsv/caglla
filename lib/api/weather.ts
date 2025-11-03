@@ -11,40 +11,17 @@
 
 import type { WeatherData, WeatherForecast, WeatherSummary } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 // Re-export types for backward compatibility
 export type { WeatherData, WeatherForecast, WeatherSummary }
 
-// Weather code to description mapping
-const WEATHER_CODES: Record<number, string> = {
-  0: '晴れ',
-  1: '主に晴れ',
-  2: '部分的に曇り',
-  3: '曇り',
-  45: '霧',
-  48: '霧氷',
-  51: '軽い霧雨',
-  53: '霧雨',
-  55: '濃い霧雨',
-  56: '軽い凍る霧雨',
-  57: '凍る霧雨',
-  61: '軽い雨',
-  63: '雨',
-  65: '大雨',
-  66: '軽い凍る雨',
-  67: '凍る雨',
-  71: '軽い雪',
-  73: '雪',
-  75: '大雪',
-  77: '雪の粒',
-  80: '軽いにわか雨',
-  81: 'にわか雨',
-  82: '激しいにわか雨',
-  85: '軽いにわか雪',
-  86: 'にわか雪',
-  95: '雷雨',
-  96: '雹を伴う雷雨',
-  99: '激しい雹を伴う雷雨'
+/**
+ * Get weather description by code (i18n対応)
+ */
+function getWeatherDescription(code: number): string {
+  const key = `weather.code.${code}` as const
+  return t(key) || t('weather.unknown')
 }
 
 export class WeatherApiHelpers {
@@ -195,7 +172,7 @@ export class WeatherApiHelpers {
       rainyDays: 0,
       totalPrecipitation: 0,
       averageWindSpeed: 0,
-      dominantWeather: 'データなし',
+      dominantWeather: t('weather.empty.noData'),
       forecastDays: 0,
       availableDays: 0,
       isPartialForecast: true
@@ -315,7 +292,7 @@ export class WeatherApiHelpers {
       weatherCounts[parseInt(a)] > weatherCounts[parseInt(b)] ? a : b
     )
     
-    const dominantWeather = WEATHER_CODES[parseInt(dominantWeatherCode)] || '不明'
+    const dominantWeather = getWeatherDescription(parseInt(dominantWeatherCode))
 
     return {
       averageTemp: Math.round(averageTemp * 10) / 10,
@@ -332,19 +309,19 @@ export class WeatherApiHelpers {
   }
 
   /**
-   * Format weather summary for display
+   * Format weather summary for display (i18n対応)
    */
   static formatWeatherSummary(summary: WeatherSummary): string {
     const { averageTemp, minTemp, maxTemp, rainyDays, dominantWeather, isPartialForecast } = summary
     
-    let result = `${dominantWeather} | 平均${averageTemp}°C (${minTemp}°C〜${maxTemp}°C)`
+    let result = `${dominantWeather} | ${t('weather.average')}${averageTemp}°C (${minTemp}°C${t('weather.range')}${maxTemp}°C)`
     
     if (rainyDays > 0) {
-      result += ` | 雨の日${rainyDays}日`
+      result += ` | ${t('weather.rainyDays')}${rainyDays}${t('weather.days')}`
     }
     
     if (isPartialForecast) {
-      result += ` | ※${summary.forecastDays}日分のみ`
+      result += ` | ※${summary.forecastDays}${t('weather.days')}${t('weather.only')}`
     }
     
     return result

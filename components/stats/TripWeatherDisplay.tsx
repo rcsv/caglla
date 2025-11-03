@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { WeatherApiHelpers, WeatherSummary } from '@/lib/api/weather'
 import Card from '@/components/common/Card'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
+import { t } from '@/lib/i18n'
 
 interface TripWeatherDisplayProps {
   destination?: string
@@ -38,7 +39,7 @@ export default function TripWeatherDisplay({
         setWeatherData(weather)
       } catch (err) {
         logger.error('Error fetching weather:', err)
-        setError('天気情報の取得に失敗しました')
+        setError(t('weather.error.fetchFailed'))
       } finally {
         setIsLoading(false)
       }
@@ -49,11 +50,11 @@ export default function TripWeatherDisplay({
 
   if (isLoading) {
     return (
-      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><IconRenderer iconName="cloud" className="w-5 h-5 mr-2" color="#ca8a04" />天気予報</div>} className={className}>
+      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><IconRenderer iconName="cloud" className="w-5 h-5 mr-2" color="#ca8a04" />{t('weather.title')}</div>} className={className}>
         <div className="flex items-center justify-center py-4">
           <div className="flex items-center space-x-2 text-gray-500">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-500"></div>
-            <span>天気情報を取得中...</span>
+            <span>{t('weather.loading')}</span>
           </div>
         </div>
       </Card>
@@ -62,7 +63,7 @@ export default function TripWeatherDisplay({
 
   if (error) {
     return (
-      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><IconRenderer iconName="cloud" className="w-5 h-5 mr-2" color="#ca8a04" />天気予報</div>} className={`${className} relative min-h-[200px]`}>
+      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><IconRenderer iconName="cloud" className="w-5 h-5 mr-2" color="#ca8a04" />{t('weather.title')}</div>} className={`${className} relative min-h-[200px]`}>
         
         {/* エラーオーバーレイ */}
         <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
@@ -71,10 +72,10 @@ export default function TripWeatherDisplay({
               {error}
             </div>
             <p className="text-gray-500 text-xs">
-              天気情報の取得に失敗しました
+              {t('weather.error.fetchFailed')}
             </p>
             <div className="mt-3 text-xs text-gray-400">
-              <p>💡 天気予報は16日以内の日程のみ対応</p>
+              <p>{t('weather.hint.forecastLimit')}</p>
             </div>
           </div>
         </div>
@@ -82,9 +83,9 @@ export default function TripWeatherDisplay({
     )
   }
 
-  if (!weatherData || weatherData.dominantWeather === 'データなし') {
+  if (!weatherData || weatherData.dominantWeather === t('weather.empty.noData')) {
     return (
-      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><IconRenderer iconName="cloud" className="w-5 h-5 mr-2" color="#ca8a04" />天気予報</div>} className={`${className} relative min-h-[200px]`}>
+      <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><IconRenderer iconName="cloud" className="w-5 h-5 mr-2" color="#ca8a04" />{t('weather.title')}</div>} className={`${className} relative min-h-[200px]`}>
         
         {/* データなしオーバーレイ */}
         <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-lg flex items-center justify-center z-10">
@@ -96,12 +97,12 @@ export default function TripWeatherDisplay({
             </div>
             <p className="text-gray-600 text-sm mb-2">
               {!destination || !startDate || !endDate 
-                ? '旅行の日程と目的地を設定すると天気予報が表示されます'
-                : '天気情報を取得できませんでした'
+                ? t('weather.empty.noDestination')
+                : t('weather.empty.noData')
               }
             </p>
             <div className="text-xs text-gray-400">
-              <p>💡 天気予報は16日以内の日程のみ対応</p>
+              <p>{t('weather.hint.forecastLimit')}</p>
             </div>
           </div>
         </div>
@@ -122,18 +123,20 @@ export default function TripWeatherDisplay({
     forecastDays
   } = weatherData
 
+  // TODO: 天気名判定ロジックはdominantWeatherCodeを使用するように修正が必要
+  // 現状はi18n化された文字列で判定しているため、言語に依存しない判定が必要
   const weatherIcon = WeatherApiHelpers.getWeatherIcon(
-    dominantWeather === '晴れ' ? 0 : 
-    dominantWeather === '主に晴れ' ? 1 :
-    dominantWeather === '部分的に曇り' ? 2 :
-    dominantWeather === '曇り' ? 3 : 0
+    dominantWeather === t('weather.code.0') ? 0 : 
+    dominantWeather === t('weather.code.1') ? 1 :
+    dominantWeather === t('weather.code.2') ? 2 :
+    dominantWeather === t('weather.code.3') ? 3 : 0
   )
 
   return (
-    <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><IconRenderer iconName="cloud" className="w-5 h-5 mr-2" color="#ca8a04" />天気予報</div>} className={`min-h-[200px] ${className}`}>
+    <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><IconRenderer iconName="cloud" className="w-5 h-5 mr-2" color="#ca8a04" />{t('weather.title')}</div>} className={`min-h-[200px] ${className}`}>
       {isPartialForecast && (
         <div className="mb-2 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded inline-block">
-          部分的な予報
+          {t('weather.partialForecast')}
         </div>
       )}
       
@@ -164,9 +167,9 @@ export default function TripWeatherDisplay({
         {/* 詳細情報 */}
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="bg-gray-50 rounded-md p-3">
-            <div className="text-gray-600 mb-1">雨の日</div>
+            <div className="text-gray-600 mb-1">{t('weather.rainyDays')}</div>
             <div className="font-medium">
-              {rainyDays}日
+              {rainyDays}{t('weather.days')}
               {totalPrecipitation > 0 && (
                 <span className="text-xs text-gray-500 ml-1">
                   ({totalPrecipitation}mm)
@@ -175,7 +178,7 @@ export default function TripWeatherDisplay({
             </div>
           </div>
           <div className="bg-gray-50 rounded-md p-3">
-            <div className="text-gray-600 mb-1">平均風速</div>
+            <div className="text-gray-600 mb-1">{t('weather.averageWindSpeed')}</div>
             <div className="font-medium">
               {averageWindSpeed}km/h
             </div>
@@ -190,10 +193,10 @@ export default function TripWeatherDisplay({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
               <div className="text-xs text-orange-600">
-                <p className="font-medium">予報期間の制約</p>
+                <p className="font-medium">{t('weather.constraint.title')}</p>
                 <p>
-                  天気予報は{forecastDays}日分のみ取得可能です。
-                  旅行期間の残り{availableDays - forecastDays}日分は表示されていません。
+                  {t('weather.constraint.message').replace('{forecastDays}', String(forecastDays))}
+                  {t('weather.constraint.remainingDays').replace('{remainingDays}', String(availableDays - forecastDays))}
                 </p>
               </div>
             </div>
