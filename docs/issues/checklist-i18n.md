@@ -1,8 +1,9 @@
 # Issue: チェックリスト関連の日本語ハードコード
 
 **作成日**: 2025-11-01  
-**状態**: 🔴 未解決  
+**状態**: ✅ 解決済み  
 **優先度**: 中  
+**解決日**: 2025-11-01  
 **種類**: i18n化  
 **関連ファイル**: 
 - `components/trip/TripChecklistView.tsx`（チェックリストメイン表示）
@@ -228,6 +229,39 @@ checklist.{component}.{element}
 #### 3.2: 日本語翻訳の追加
 
 既存の日本語文字列を`ja`辞書に追加（現状と同じ値を維持）
+
+---
+
+## 🎉 解決内容
+
+### 実装内容
+
+1. **i18nキーの追加** (`lib/i18n/index.ts`)
+   - `checklist.*` ネームスペースで52個のキーを追加
+   - TripChecklistView、ChecklistPresetModal、MyPresetsModal、PresetLibraryModal、NavigationMenuの全テキストに対応
+   - 英語・日本語両方の翻訳を追加
+
+2. **コンポーネントの修正**
+   - `components/trip/TripChecklistView.tsx`: ボタンラベル、セクションタイトル、メッセージ、プレースホルダーをi18n化
+   - `components/modals/ChecklistPresetModal.tsx`: モーダルタイトル、フォームラベル、プレースホルダー、ボタン、エラーメッセージをi18n化
+   - `components/modals/MyPresetsModal.tsx`: タイトル、メッセージ、ボタン、confirm/alertメッセージをi18n化
+   - `components/modals/PresetLibraryModal.tsx`: タイトル、プレースホルダー、ソートオプション、ボタン、エラーメッセージをi18n化
+   - `components/planner/NavigationMenu.tsx`: チェックリストサブタイトルをi18n化
+
+### 置き換えた箇所
+
+- **TripChecklistView**: タイトル、ボタンラベル（プリセットを適用、マイプリセット、プリセットとして保存、生成中/チェックリストを再生成）、読み込み中、セクションタイトル（行動系準備、パッキング系）、該当項目なし、削除ボタン、プレースホルダー、追加ボタン、alertメッセージ
+- **ChecklistPresetModal**: モーダルタイトル、フォームラベル、プレースホルダー、チェックボックスラベル、ボタン、エラーメッセージ
+- **MyPresetsModal**: タイトル、読み込み中、空状態、公開/非公開、使用回数、項目数、削除ボタン、閉じるボタン、confirm/alertメッセージ
+- **PresetLibraryModal**: タイトル、検索プレースホルダー、ソートオプション、読み込み中、空状態、適用ボタン、閉じるボタン、エラーメッセージ
+- **NavigationMenu**: チェックリストのサブタイトル（行動系のこと、持っていくものの準備系）
+
+### テスト
+
+- [x] 英語表示で正常に動作することを確認
+- [x] 日本語表示で正常に動作することを確認
+- [x] すべてのモーダルが適切に表示されることを確認
+- [x] alert/confirmメッセージが適切に表示されることを確認
 
 ---
 

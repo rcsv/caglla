@@ -6,6 +6,7 @@ import ChecklistPresetModal from '@/components/modals/ChecklistPresetModal'
 import MyPresetsModal from '@/components/modals/MyPresetsModal'
 import PresetLibraryModal from '@/components/modals/PresetLibraryModal'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
+import { t } from '@/lib/i18n'
 
 interface TripChecklistViewProps {
   tripId?: string
@@ -116,45 +117,45 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
     <div className="px-4 py-4">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-4 flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-lg font-semibold text-gray-900">Travel Checklist</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('checklist.title')}</h2>
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setShowLibraryModal(true)}
               className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
             >
-              プリセットを適用
+              {t('checklist.applyPreset')}
             </button>
             <button
               onClick={() => setShowMyPresetsModal(true)}
               className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
             >
-              マイプリセット
+              {t('checklist.myPresets')}
             </button>
             <button
               onClick={() => setShowPresetModal(true)}
               className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
             >
-              プリセットとして保存
+              {t('checklist.saveAsPreset')}
             </button>
             <button
               onClick={regenerate}
               disabled={saving || !tripId}
               className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              {saving ? '生成中...' : 'チェックリストを再生成'}
+              {saving ? t('checklist.regenerating') : t('checklist.regenerate')}
             </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="p-4 text-gray-500">読み込み中...</div>
+          <div className="p-4 text-gray-500">{t('checklist.loading')}</div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
             {/* 行動系準備 */}
             <div id="checklist-preparing" className="border border-gray-200 rounded-lg">
               <div className="px-3 py-2 border-b text-sm font-medium text-gray-700 flex items-center gap-2">
                 <IconRenderer iconName="airplane" className="w-4 h-4" color="#3b82f6" />
-                行動系準備（Preparing）
+                {t('checklist.preparing.title')}
               </div>
               <ul className="p-3 space-y-2">
                 {prepItems.map(item => (
@@ -173,13 +174,13 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
                         onClick={() => removeItem(item.id)} 
                         className="text-xs text-gray-500 hover:text-red-600"
                       >
-                        削除
+                        {t('checklist.delete')}
                       </button>
                     )}
                   </li>
                 ))}
                 {prepItems.length === 0 && (
-                  <li className="text-sm text-gray-500">該当項目はありません</li>
+                  <li className="text-sm text-gray-500">{t('checklist.noItems')}</li>
                 )}
               </ul>
             </div>
@@ -188,7 +189,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
             <div id="checklist-packing" className="border border-gray-200 rounded-lg">
               <div className="px-3 py-2 border-b text-sm font-medium text-gray-700 flex items-center gap-2">
                 <IconRenderer iconName="backpack" className="w-4 h-4" color="#ef4444" />
-                パッキング系（Packing）
+                {t('checklist.packing.title')}
               </div>
               <ul className="p-3 space-y-2">
                 {packItems.map(item => (
@@ -207,7 +208,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
                         onClick={() => removeItem(item.id)} 
                         className="text-xs text-gray-500 hover:text-red-600"
                       >
-                        削除
+                        {t('checklist.delete')}
                       </button>
                     )}
                   </li>
@@ -233,14 +234,14 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addCustom()}
-                placeholder="カスタム項目を追加"
+                placeholder={t('checklist.addCustom.placeholder')}
                 className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button 
                 onClick={addCustom} 
                 className="px-4 py-2 text-sm bg-gray-800 text-white rounded-md hover:bg-gray-900"
               >
-                追加
+                {t('checklist.addCustom.add')}
               </button>
             </div>
           </div>
@@ -254,7 +255,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
         currentItems={items}
         onSuccess={() => {
           // プリセット保存成功時
-          alert('プリセットを保存しました')
+          alert(t('checklist.preset.saveSuccess'))
         }}
       />
       <MyPresetsModal
@@ -280,7 +281,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
             }
           }
           fetchChecklist()
-          alert('プリセットを適用しました')
+          alert(t('checklist.preset.applySuccess'))
         }}
       />
     </div>

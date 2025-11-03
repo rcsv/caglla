@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ChecklistItem } from '@/lib/core/types'
+import { t } from '@/lib/i18n'
 
 interface ChecklistPresetModalProps {
   isOpen: boolean
@@ -26,7 +27,7 @@ export default function ChecklistPresetModal({
 
   const handleSave = async () => {
     if (!title.trim()) {
-      alert('タイトルを入力してください')
+      alert(t('checklist.preset.saveModal.titleRequired'))
       return
     }
 
@@ -61,7 +62,7 @@ export default function ChecklistPresetModal({
         setTags('')
         setIsPublic(false)
       } else {
-        alert('プリセットの保存に失敗しました')
+        alert(t('checklist.preset.saveModal.saveFailed'))
       }
     } finally {
       setSaving(false)
@@ -72,31 +73,31 @@ export default function ChecklistPresetModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center zidx-float-modal">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 zidx-float-modal-content">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          チェックリストをプリセットとして保存
+          {t('checklist.preset.saveModal.title')}
         </h2>
 
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              タイトル
+              {t('checklist.preset.saveModal.titleLabel')}
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="例: 冬の北海道旅行"
+              placeholder={t('checklist.preset.saveModal.titlePlaceholder')}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              説明
+              {t('checklist.preset.saveModal.descriptionLabel')}
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="例: スキー・温泉旅行向けのチェックリスト"
+              placeholder={t('checklist.preset.saveModal.descriptionPlaceholder')}
               rows={3}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -104,13 +105,13 @@ export default function ChecklistPresetModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              タグ（カンマ区切り）
+              {t('checklist.preset.saveModal.tagsLabel')}
             </label>
             <input
               type="text"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
-              placeholder="例: winter, hokkaido, skiing"
+              placeholder={t('checklist.preset.saveModal.tagsPlaceholder')}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -124,7 +125,7 @@ export default function ChecklistPresetModal({
               className="w-4 h-4"
             />
             <label htmlFor="is_public" className="text-sm text-gray-700">
-              公開する（他のユーザーが利用可能）
+              {t('checklist.preset.saveModal.isPublic')}
             </label>
           </div>
         </div>
@@ -134,14 +135,14 @@ export default function ChecklistPresetModal({
             onClick={onClose}
             className="flex-1 px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
           >
-            キャンセル
+            {t('checklist.preset.saveModal.cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
             className="flex-1 px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-300"
           >
-            {saving ? '保存中...' : '保存'}
+            {saving ? t('checklist.preset.saveModal.saving') : t('checklist.preset.saveModal.save')}
           </button>
         </div>
       </div>

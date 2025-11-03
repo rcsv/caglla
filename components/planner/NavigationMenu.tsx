@@ -140,7 +140,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
         {
           id: 'checklist-preparing',
           title: 'Preparing',
-          subtitle: '行動系のこと',
+          subtitle: t('checklist.nav.preparing.subtitle'),
           onClick: () => {
             updateQuery({ view: 'checklist', day: null, section: 'preparing' })
             onNavigateToSection('checklist-preparing')
@@ -149,7 +149,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
         {
           id: 'checklist-packing',
           title: 'Packing',
-          subtitle: '持っていくものの準備系',
+          subtitle: t('checklist.nav.packing.subtitle'),
           onClick: () => {
             updateQuery({ view: 'checklist', day: null, section: 'packing' })
             onNavigateToSection('checklist-packing')

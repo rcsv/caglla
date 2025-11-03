@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { ChecklistPreset } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
+import { t } from '@/lib/i18n'
 
 interface MyPresetsModalProps {
   isOpen: boolean
@@ -39,7 +40,7 @@ export default function MyPresetsModal({ isOpen, onClose }: MyPresetsModalProps)
   }
 
   const deletePreset = async (presetId: string) => {
-    if (!confirm('このプリセットを削除しますか？')) return
+    if (!confirm(t('checklist.myPresets.deleteConfirm'))) return
 
     try {
       const token = await getIdToken()
@@ -53,7 +54,7 @@ export default function MyPresetsModal({ isOpen, onClose }: MyPresetsModalProps)
         setPresets(prev => prev.filter(p => p.id !== presetId))
       }
     } catch (error) {
-      alert('削除に失敗しました')
+      alert(t('checklist.myPresets.deleteFailed'))
     }
   }
 
@@ -63,13 +64,13 @@ export default function MyPresetsModal({ isOpen, onClose }: MyPresetsModalProps)
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center zidx-float-modal">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto p-6 zidx-float-modal-content">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
-          マイプリセット
+          {t('checklist.myPresets.title')}
         </h2>
 
         {loading ? (
-          <div className="text-gray-500">読み込み中...</div>
+          <div className="text-gray-500">{t('checklist.myPresets.loading')}</div>
         ) : presets.length === 0 ? (
-          <div className="text-gray-500">プリセットがありません</div>
+          <div className="text-gray-500">{t('checklist.myPresets.empty')}</div>
         ) : (
           <div className="space-y-3">
             {presets.map(preset => (
@@ -90,16 +91,16 @@ export default function MyPresetsModal({ isOpen, onClose }: MyPresetsModalProps)
                       </div>
                     )}
                     <div className="text-xs text-gray-500 mt-2">
-                      {preset.is_public ? '公開' : '非公開'} • 
-                      使用回数: {preset.usage_count || 0}回 • 
-                      {preset.items?.length || 0}項目
+                      {preset.is_public ? t('checklist.myPresets.public') : t('checklist.myPresets.private')} • 
+                      {t('checklist.myPresets.usageCount')}: {preset.usage_count || 0}{t('checklist.myPresets.itemsCount')} • 
+                      {preset.items?.length || 0}{t('checklist.myPresets.itemsCount')}
                     </div>
                   </div>
                   <button
                     onClick={() => deletePreset(preset.id)}
                     className="ml-4 text-xs text-red-600 hover:text-red-800"
                   >
-                    削除
+                    {t('checklist.myPresets.delete')}
                   </button>
                 </div>
               </div>
@@ -112,7 +113,7 @@ export default function MyPresetsModal({ isOpen, onClose }: MyPresetsModalProps)
             onClick={onClose}
             className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
           >
-            閉じる
+            {t('checklist.myPresets.close')}
           </button>
         </div>
       </div>

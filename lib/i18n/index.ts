@@ -468,6 +468,59 @@ export type TranslationKey =
   | 'trip.create.validation.destinationRequired'
   | 'trip.create.validation.startDateRequired'
   | 'trip.create.validation.endDateRequired'
+  // Checklist
+  | 'checklist.title'
+  | 'checklist.applyPreset'
+  | 'checklist.myPresets'
+  | 'checklist.saveAsPreset'
+  | 'checklist.regenerating'
+  | 'checklist.regenerate'
+  | 'checklist.loading'
+  | 'checklist.preparing.title'
+  | 'checklist.preparing.subtitle'
+  | 'checklist.packing.title'
+  | 'checklist.packing.subtitle'
+  | 'checklist.noItems'
+  | 'checklist.delete'
+  | 'checklist.addCustom.placeholder'
+  | 'checklist.addCustom.add'
+  | 'checklist.preset.saveSuccess'
+  | 'checklist.preset.applySuccess'
+  | 'checklist.preset.saveModal.title'
+  | 'checklist.preset.saveModal.titleLabel'
+  | 'checklist.preset.saveModal.titlePlaceholder'
+  | 'checklist.preset.saveModal.descriptionLabel'
+  | 'checklist.preset.saveModal.descriptionPlaceholder'
+  | 'checklist.preset.saveModal.tagsLabel'
+  | 'checklist.preset.saveModal.tagsPlaceholder'
+  | 'checklist.preset.saveModal.isPublic'
+  | 'checklist.preset.saveModal.cancel'
+  | 'checklist.preset.saveModal.saving'
+  | 'checklist.preset.saveModal.save'
+  | 'checklist.preset.saveModal.titleRequired'
+  | 'checklist.preset.saveModal.saveFailed'
+  | 'checklist.myPresets.title'
+  | 'checklist.myPresets.loading'
+  | 'checklist.myPresets.empty'
+  | 'checklist.myPresets.public'
+  | 'checklist.myPresets.private'
+  | 'checklist.myPresets.usageCount'
+  | 'checklist.myPresets.itemsCount'
+  | 'checklist.myPresets.delete'
+  | 'checklist.myPresets.close'
+  | 'checklist.myPresets.deleteConfirm'
+  | 'checklist.myPresets.deleteFailed'
+  | 'checklist.library.title'
+  | 'checklist.library.searchPlaceholder'
+  | 'checklist.library.sortPopular'
+  | 'checklist.library.sortRecent'
+  | 'checklist.library.loading'
+  | 'checklist.library.empty'
+  | 'checklist.library.apply'
+  | 'checklist.library.close'
+  | 'checklist.library.applyFailed'
+  | 'checklist.nav.preparing.subtitle'
+  | 'checklist.nav.packing.subtitle'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -938,6 +991,59 @@ const en: Dictionary = {
   'trip.create.validation.destinationRequired': 'Please select a destination. Search and select a location from Google Places.',
   'trip.create.validation.startDateRequired': 'Please select a start date.',
   'trip.create.validation.endDateRequired': 'Please select an end date.',
+  // Checklist
+  'checklist.title': 'Travel Checklist',
+  'checklist.applyPreset': 'Apply Preset',
+  'checklist.myPresets': 'My Presets',
+  'checklist.saveAsPreset': 'Save as Preset',
+  'checklist.regenerating': 'Regenerating...',
+  'checklist.regenerate': 'Regenerate Checklist',
+  'checklist.loading': 'Loading...',
+  'checklist.preparing.title': 'Preparing',
+  'checklist.preparing.subtitle': 'Preparing for activities',
+  'checklist.packing.title': 'Packing',
+  'checklist.packing.subtitle': 'Items to pack',
+  'checklist.noItems': 'No items',
+  'checklist.delete': 'Delete',
+  'checklist.addCustom.placeholder': 'Add custom item',
+  'checklist.addCustom.add': 'Add',
+  'checklist.preset.saveSuccess': 'Preset saved successfully',
+  'checklist.preset.applySuccess': 'Preset applied successfully',
+  'checklist.preset.saveModal.title': 'Save Checklist as Preset',
+  'checklist.preset.saveModal.titleLabel': 'Title',
+  'checklist.preset.saveModal.titlePlaceholder': 'e.g., Winter Hokkaido Trip',
+  'checklist.preset.saveModal.descriptionLabel': 'Description',
+  'checklist.preset.saveModal.descriptionPlaceholder': 'e.g., Checklist for ski and hot spring trip',
+  'checklist.preset.saveModal.tagsLabel': 'Tags (comma-separated)',
+  'checklist.preset.saveModal.tagsPlaceholder': 'e.g., winter, hokkaido, skiing',
+  'checklist.preset.saveModal.isPublic': 'Make public (available to other users)',
+  'checklist.preset.saveModal.cancel': 'Cancel',
+  'checklist.preset.saveModal.saving': 'Saving...',
+  'checklist.preset.saveModal.save': 'Save',
+  'checklist.preset.saveModal.titleRequired': 'Please enter a title',
+  'checklist.preset.saveModal.saveFailed': 'Failed to save preset',
+  'checklist.myPresets.title': 'My Presets',
+  'checklist.myPresets.loading': 'Loading...',
+  'checklist.myPresets.empty': 'No presets',
+  'checklist.myPresets.public': 'Public',
+  'checklist.myPresets.private': 'Private',
+  'checklist.myPresets.usageCount': 'Usage count',
+  'checklist.myPresets.itemsCount': ' items',
+  'checklist.myPresets.delete': 'Delete',
+  'checklist.myPresets.close': 'Close',
+  'checklist.myPresets.deleteConfirm': 'Are you sure you want to delete this preset?',
+  'checklist.myPresets.deleteFailed': 'Failed to delete',
+  'checklist.library.title': 'Select Checklist Preset',
+  'checklist.library.searchPlaceholder': 'Search by keyword, tag...',
+  'checklist.library.sortPopular': 'Popular',
+  'checklist.library.sortRecent': 'Recent',
+  'checklist.library.loading': 'Loading...',
+  'checklist.library.empty': 'No presets found',
+  'checklist.library.apply': 'Apply',
+  'checklist.library.close': 'Close',
+  'checklist.library.applyFailed': 'Failed to apply preset',
+  'checklist.nav.preparing.subtitle': 'Preparing for activities',
+  'checklist.nav.packing.subtitle': 'Items to pack',
 }
 
 const ja: Dictionary = {
@@ -1407,6 +1513,59 @@ const ja: Dictionary = {
   'trip.create.validation.destinationRequired': '目的地を選択してください。Google Placesから場所を検索して選択してください。',
   'trip.create.validation.startDateRequired': '出発日を選択してください。',
   'trip.create.validation.endDateRequired': '帰宅日を選択してください。',
+  // Checklist
+  'checklist.title': 'Travel Checklist',
+  'checklist.applyPreset': 'プリセットを適用',
+  'checklist.myPresets': 'マイプリセット',
+  'checklist.saveAsPreset': 'プリセットとして保存',
+  'checklist.regenerating': '生成中...',
+  'checklist.regenerate': 'チェックリストを再生成',
+  'checklist.loading': '読み込み中...',
+  'checklist.preparing.title': '行動系準備（Preparing）',
+  'checklist.preparing.subtitle': '行動系のこと',
+  'checklist.packing.title': 'パッキング系（Packing）',
+  'checklist.packing.subtitle': '持っていくものの準備系',
+  'checklist.noItems': '該当項目はありません',
+  'checklist.delete': '削除',
+  'checklist.addCustom.placeholder': 'カスタム項目を追加',
+  'checklist.addCustom.add': '追加',
+  'checklist.preset.saveSuccess': 'プリセットを保存しました',
+  'checklist.preset.applySuccess': 'プリセットを適用しました',
+  'checklist.preset.saveModal.title': 'チェックリストをプリセットとして保存',
+  'checklist.preset.saveModal.titleLabel': 'タイトル',
+  'checklist.preset.saveModal.titlePlaceholder': '例: 冬の北海道旅行',
+  'checklist.preset.saveModal.descriptionLabel': '説明',
+  'checklist.preset.saveModal.descriptionPlaceholder': '例: スキー・温泉旅行向けのチェックリスト',
+  'checklist.preset.saveModal.tagsLabel': 'タグ（カンマ区切り）',
+  'checklist.preset.saveModal.tagsPlaceholder': '例: winter, hokkaido, skiing',
+  'checklist.preset.saveModal.isPublic': '公開する（他のユーザーが利用可能）',
+  'checklist.preset.saveModal.cancel': 'キャンセル',
+  'checklist.preset.saveModal.saving': '保存中...',
+  'checklist.preset.saveModal.save': '保存',
+  'checklist.preset.saveModal.titleRequired': 'タイトルを入力してください',
+  'checklist.preset.saveModal.saveFailed': 'プリセットの保存に失敗しました',
+  'checklist.myPresets.title': 'マイプリセット',
+  'checklist.myPresets.loading': '読み込み中...',
+  'checklist.myPresets.empty': 'プリセットがありません',
+  'checklist.myPresets.public': '公開',
+  'checklist.myPresets.private': '非公開',
+  'checklist.myPresets.usageCount': '使用回数',
+  'checklist.myPresets.itemsCount': '項目',
+  'checklist.myPresets.delete': '削除',
+  'checklist.myPresets.close': '閉じる',
+  'checklist.myPresets.deleteConfirm': 'このプリセットを削除しますか？',
+  'checklist.myPresets.deleteFailed': '削除に失敗しました',
+  'checklist.library.title': 'チェックリストプリセットを選択',
+  'checklist.library.searchPlaceholder': 'キーワード、タグで検索...',
+  'checklist.library.sortPopular': '人気順',
+  'checklist.library.sortRecent': '新着順',
+  'checklist.library.loading': '読み込み中...',
+  'checklist.library.empty': 'プリセットが見つかりません',
+  'checklist.library.apply': '適用',
+  'checklist.library.close': '閉じる',
+  'checklist.library.applyFailed': 'プリセットの適用に失敗しました',
+  'checklist.nav.preparing.subtitle': '行動系のこと',
+  'checklist.nav.packing.subtitle': '持っていくものの準備系',
 }
 
 const dictionaries: Record<SupportedLanguage, Dictionary> = {
