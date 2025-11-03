@@ -27,10 +27,12 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
       if (!tripId) return
       try {
         setLoading(true)
-        const res = await fetch(`/api/trips/${tripId}/checklist`, { cache: 'no-store' })
+        const res = await makeAuthenticatedRequest(`/api/trips/${tripId}/checklist`, { cache: 'no-store' })
         if (res.ok) {
           const data = await res.json()
           setItems(data.items || [])
+        } else {
+          console.error('Failed to fetch checklist', await res.text())
         }
       } finally {
         setLoading(false)
@@ -61,7 +63,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
     if (!tripId) return
     try {
       setSaving(true)
-      const res = await fetch(`/api/trips/${tripId}/checklist`, {
+      const res = await makeAuthenticatedRequest(`/api/trips/${tripId}/checklist`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ items: next })
@@ -70,6 +72,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
         const data = await res.json()
         setItems(data.items || next)
       } else {
+        console.error('Failed to save checklist', await res.text())
         setItems(next)
       }
     } finally {
