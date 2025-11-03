@@ -19,11 +19,11 @@ export const LandingHeader: React.FC<LandingHeaderProps> = ({
   return (
     <header className="border-b border-gray-200 bg-white sticky top-0 zidx-top-menu">
       <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between min-h-14">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <CagllaLogo className="w-8 h-8" />
-            <span className="text-xl font-bold text-gray-900 font-rajdhani">Caglla</span>
+            <span className="text-xl font-bold text-gray-900 font-rajdhani whitespace-nowrap leading-none">Caglla</span>
           </Link>
 
           <div className="flex items-center gap-6">
