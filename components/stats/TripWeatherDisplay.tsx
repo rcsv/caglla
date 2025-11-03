@@ -125,12 +125,7 @@ export default function TripWeatherDisplay({
 
   // TODO: 天気名判定ロジックはdominantWeatherCodeを使用するように修正が必要
   // 現状はi18n化された文字列で判定しているため、言語に依存しない判定が必要
-  const weatherIcon = WeatherApiHelpers.getWeatherIcon(
-    dominantWeather === t('weather.code.0') ? 0 : 
-    dominantWeather === t('weather.code.1') ? 1 :
-    dominantWeather === t('weather.code.2') ? 2 :
-    dominantWeather === t('weather.code.3') ? 3 : 0
-  )
+  const weatherIcon = WeatherApiHelpers.getWeatherIcon(weatherData.dominantWeatherCode ?? 0)
 
   return (
     <Card title={<div className="text-lg font-medium text-gray-800 flex items-center"><IconRenderer iconName="cloud" className="w-5 h-5 mr-2" color="#ca8a04" />{t('weather.title')}</div>} className={`min-h-[200px] ${className}`}>

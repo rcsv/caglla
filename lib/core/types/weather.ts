@@ -54,6 +54,7 @@ export interface WeatherSummary {
   rainyDays: number
   totalPrecipitation: number
   averageWindSpeed: number
+  dominantWeatherCode?: number
   dominantWeather: string
   forecastDays: number
   availableDays: number

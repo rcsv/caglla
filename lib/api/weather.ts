@@ -292,7 +292,8 @@ export class WeatherApiHelpers {
       weatherCounts[parseInt(a)] > weatherCounts[parseInt(b)] ? a : b
     )
     
-    const dominantWeather = getWeatherDescription(parseInt(dominantWeatherCode))
+    const dominantWeatherCodeNum = parseInt(dominantWeatherCode)
+    const dominantWeather = getWeatherDescription(dominantWeatherCodeNum)
 
     return {
       averageTemp: Math.round(averageTemp * 10) / 10,
@@ -301,6 +302,7 @@ export class WeatherApiHelpers {
       rainyDays,
       totalPrecipitation: Math.round(totalPrecipitation * 10) / 10,
       averageWindSpeed: Math.round(averageWindSpeed * 10) / 10,
+      dominantWeatherCode: dominantWeatherCodeNum,
       dominantWeather,
       forecastDays: days,
       availableDays: Math.min(days, tripDuration),
