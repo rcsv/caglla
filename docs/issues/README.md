@@ -26,7 +26,7 @@
 | [/memories ページでの警告・エラーの多発](memories-page-warnings.md) | 未解決 | 2025-10-31 |
 | [TripCardで国旗の表示が不安定（出る/出ない）](tripcard-country-flag-inconsistency.md) | 解決済み | 2025-10-31 |
 | [Itinerary Cardの通貨推測（Venue→通貨）が弱い](itinerary-currency-inference-weak.md) | 未解決 | 2025-10-31 |
-| [Itinerary Cardの予約ボタン/表示に視覚的フィードバックがない](itinerary-card-reservation-visual-feedback.md) | 未解決 | 2025-10-31 |
+| [Itinerary Cardの予約ボタン/表示に視覚的フィードバックがない](itinerary-card-reservation-visual-feedback.md) | 解決済み | 2025-10-31 |
 | [Itinerary Cardの画像解像度がplaces_cacheの画像より低い](itinerary-card-image-resolution-low.md) | 未解決 | 2025-10-31 |
 | [Weather Forecast APIが過去の日付でエラーを返す](weather-api-past-date-error.md) | 解決済み | 2025-11-01 |
 | [ルート最適化ボタンを押しても順序が変化しない](route-optimization-no-order-change.md) | 未解決 | 2025-10-31 |
@@ -89,10 +89,10 @@
 ## 📊 統計
 
 - **総Issue数**: 40件
-- **未解決**: 11件
+- **未解決**: 10件
 - **確認済み**: 1件
 - **部分的解決**: 2件
-- **解決済み**: 19件
+- **解決済み**: 20件
 - **未実装（Feature）**: 4件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）
 - **中優先度**: 27件

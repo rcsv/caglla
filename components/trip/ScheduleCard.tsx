@@ -404,6 +404,7 @@ export default function ScheduleCard({
                     endTime={endTime}
                     costAmount={itinerary.cost_amount ?? undefined}
                     costCurrency={itinerary.cost_currency ?? undefined}
+                    reservation={itinerary.reservation}
                     onTimeEdit={handleTimeEditStart}
                     onCostEdit={handleCostEditStart}
                     onReservationEdit={() => setShowReservationModal(true)}
