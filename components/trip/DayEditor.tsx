@@ -4,6 +4,7 @@ import logger from '@/lib/core/logger'
 import { useState } from 'react'
 import { Day, Itinerary } from '@/lib/core/types'
 import { updateDay } from '@/lib/firebase/firestore'
+import { t } from '@/lib/i18n'
 import DailyRouteOptimizer from './DailyRouteOptimizer'
 
 interface DayEditorProps {
@@ -35,7 +36,7 @@ export default function DayEditor({
       setIsEditing(false)
     } catch (error) {
       logger.error('日程の更新に失敗しました:', error)
-      alert('日程の更新に失敗しました')
+      alert(t('dayEditor.updateError'))
     } finally {
       setIsLoading(false)
     }
@@ -66,16 +67,16 @@ export default function DayEditor({
           onChange={(e) => setDescription(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          placeholder={itinerarySummary || "この日は何をする日？"}
+          placeholder={itinerarySummary || t('dayEditor.placeholder')}
           className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           rows={3}
           autoFocus
         />
         {isLoading && (
-          <p className="text-sm text-gray-500">保存中...</p>
+          <p className="text-sm text-gray-500">{t('dayEditor.saving')}</p>
         )}
         <p className="text-xs text-gray-400">
-          Enterで改行、Escapeでキャンセル、他の場所をクリックで保存
+          {t('dayEditor.editHint')}
         </p>
       </div>
     )
@@ -92,7 +93,7 @@ export default function DayEditor({
           >
             <p className="text-gray-600 whitespace-pre-wrap">{day.description}</p>
             <p className="mt-1 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-              クリックして編集
+              {t('dayEditor.clickToEdit')}
             </p>
           </div>
         ) : (
@@ -100,7 +101,7 @@ export default function DayEditor({
             className="cursor-pointer hover:bg-gray-50 p-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors"
             onClick={() => setIsEditing(true)}
           >
-            <p className="text-gray-400 italic">{itinerarySummary || "この日は何をする日？"}</p>
+            <p className="text-gray-400 italic">{itinerarySummary || t('dayEditor.placeholder')}</p>
           </div>
         )}
       </div>

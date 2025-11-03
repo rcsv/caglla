@@ -1,8 +1,9 @@
 # Issue: DayEditorの「この日は何をする日？」placeholderのi18n化
 
 **作成日**: 2025-11-01  
-**状態**: 🔴 未解決  
+**状態**: ✅ 解決済み（Phase 1完了）  
 **優先度**: 中  
+**解決日**: 2025-11-01  
 **種類**: i18n化  
 **関連ファイル**: 
 - `components/trip/DayEditor.tsx` - DayEditorコンポーネント
@@ -264,13 +265,47 @@ export default function TripItineraryView({ ... }: TripItineraryViewProps) {
 
 ---
 
-## 📝 実装計画
+## ✅ 解決内容（Phase 1完了）
 
-### Phase 1: DayEditorのi18n化（優先度: 高）
+### Phase 1: DayEditorのi18n化 ✅ 完了（2025-11-01）
 
-1. ✅ i18nキーを追加（`dayEditor.placeholder`, `dayEditor.saving`, `dayEditor.editHint`, `dayEditor.clickToEdit`）
-2. ✅ `DayEditor.tsx`を修正（すべてのハードコード文字列を`t()`に置き換え）
-3. ✅ テスト実施（英語・日本語）
+1. **i18nキーの追加** ✅
+   - `dayEditor.placeholder`: 「この日は何をする日？」 / "What are you doing today?"
+   - `dayEditor.saving`: 「保存中...」 / "Saving..."
+   - `dayEditor.editHint`: 「Enterで改行、Escapeでキャンセル、他の場所をクリックで保存」 / "Enter for new line, Escape to cancel, click elsewhere to save"
+   - `dayEditor.clickToEdit`: 「クリックして編集」 / "Click to edit"
+   - `dayEditor.updateError`: 「日程の更新に失敗しました」 / "Failed to update day description"
+
+2. **DayEditor.tsxの修正** ✅
+   - `t`関数のインポートを追加
+   - すべてのハードコード文字列を`t()`に置き換え:
+     - placeholder（69行目、103行目）
+     - 保存中メッセージ（75行目）
+     - 編集説明文（77-79行目）
+     - クリックして編集（94-96行目）
+     - エラーメッセージ（38行目のalert）
+
+3. **実装結果**
+   - 英語設定時: すべてのメッセージが英語で表示される
+   - 日本語設定時: すべてのメッセージが日本語で表示される
+   - 既存の機能に影響なし（`itinerarySummary`が設定されている場合は引き続き優先表示）
+
+## 📝 実装計画（Phase 2以降）
+
+### Phase 2: `generateItinerarySummary`の改善（優先度: 中、未実装）
+
+1. `dayEditor.itinerarySeparator`キーを追加
+2. `generateItinerarySummary`関数に言語パラメータを追加
+3. テスト実施
+
+**見積もり**: 30分
+
+### Phase 3: 空文字列の扱いの改善（優先度: 低、未実装）
+
+- `generateItinerarySummary`の返り値の扱いを改善
+- 必要に応じて関数の返り値を変更
+
+**見積もり**: 15分
 
 **見積もり**: 30分〜1時間
 

@@ -378,6 +378,12 @@ export type TranslationKey =
   | 'trip.itineraryView.collapseAll'
   | 'trip.itineraryView.empty.title'
   | 'trip.itineraryView.empty.description'
+  // Day Editor
+  | 'dayEditor.placeholder'
+  | 'dayEditor.saving'
+  | 'dayEditor.editHint'
+  | 'dayEditor.clickToEdit'
+  | 'dayEditor.updateError'
   // Navigation Menu
   | 'nav.weatherForecast'
   | 'nav.reservation'
@@ -937,6 +943,12 @@ const en: Dictionary = {
   'trip.itineraryView.collapseAll': 'Collapse All',
   'trip.itineraryView.empty.title': 'No days added yet',
   'trip.itineraryView.empty.description': 'Add days to plan your trip',
+  // Day Editor
+  'dayEditor.placeholder': 'What are you doing today?',
+  'dayEditor.saving': 'Saving...',
+  'dayEditor.editHint': 'Enter for new line, Escape to cancel, click elsewhere to save',
+  'dayEditor.clickToEdit': 'Click to edit',
+  'dayEditor.updateError': 'Failed to update day description',
   // Navigation Menu
   'nav.weatherForecast': 'Weather Forecast',
   'nav.reservation': 'Reservation',
@@ -1495,6 +1507,12 @@ const ja: Dictionary = {
   'trip.itineraryView.collapseAll': '全て折りたたみ',
   'trip.itineraryView.empty.title': 'まだ日程が追加されていません',
   'trip.itineraryView.empty.description': '日程を追加して旅行を計画しましょう',
+  // Day Editor
+  'dayEditor.placeholder': 'この日は何をする日？',
+  'dayEditor.saving': '保存中...',
+  'dayEditor.editHint': 'Enterで改行、Escapeでキャンセル、他の場所をクリックで保存',
+  'dayEditor.clickToEdit': 'クリックして編集',
+  'dayEditor.updateError': '日程の更新に失敗しました',
   // Navigation Menu
   'nav.weatherForecast': '天気予報',
   'nav.reservation': '予約情報',
