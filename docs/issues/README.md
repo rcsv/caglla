@@ -48,7 +48,7 @@
 | [PDF Preview機能の通常機能化](pdf-preview-promote-to-normal-feature.md) | 未解決 | 2025-11-01 |
 | [言語設定保存後にAutoに戻る問題](language-settings-save-reverts-to-auto.md) | 解決済み | 2025-11-01 |
 | [`<html lang="ja">` のハードコードによる影響と動的設定への変更提案](dynamic-html-lang-attribute.md) | 部分的解決 | 2025-11-01 |
-| [ローディングコンポーネントの使用状況の統一性調査](loading-component-usage-inconsistency.md) | 未解決 | 2025-11-01 |
+| [ローディングコンポーネントの使用状況の統一性調査](loading-component-usage-inconsistency.md) | 部分的解決 | 2025-11-01 |
 | [Loadingコンポーネントのデフォルトメッセージ「読み込み中」のi18n化](loading-message-i18n.md) | 解決済み | 2025-11-01 |
 | [Create New Tripダイアログの日付バリデーション動作の改善検討](create-trip-dialog-date-auto-adjust.md) | 未解決 | 2025-11-01 |
 | [TripHeroSectionの日付表示が日本語固定（i18n化未対応）](trip-hero-section-date-i18n.md) | 未解決 | 2025-11-01 |
@@ -102,7 +102,7 @@
 - **総Issue数**: 46件
 - **未解決**: 11件
 - **確認済み**: 1件
-- **部分的解決**: 4件
+- **部分的解決**: 5件
 - **解決済み**: 22件
 - **未実装（Feature）**: 5件
 - **高優先度**: 1件（残り2件は確認済み/部分的解決）

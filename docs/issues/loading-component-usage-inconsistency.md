@@ -1,7 +1,8 @@
 # Issue: ローディングコンポーネントの使用状況の統一性調査
 
 **作成日**: 2025-11-01  
-**状態**: 🔴 未解決  
+**解決日**: 2025-11-01  
+**状態**: ✅ 部分的解決（Phase 1-2完了）  
 **優先度**: 中  
 **種類**: UI/UX改善、コード品質  
 **関連ファイル**: 
@@ -429,4 +430,86 @@ export interface LoadingProps extends React.HTMLAttributes<HTMLDivElement> {
 ---
 
 **このIssueは、アプリケーション全体のUI/UX品質を向上させるための改善項目です。機能的な問題ではありませんが、統一性を取ることで、長期的なメンテナンス性とユーザー体験の向上が期待されます。**
+
+---
+
+## ✅ 解決内容（Phase 1-2完了）
+
+### Phase 1: Loadingコンポーネントの拡張 ✅ 完了
+
+1. **`inline`プロパティの追加**
+   - インライン表示用のプロパティを追加
+   - テキストの横に小さなスピナーを表示
+   - `inline=true`の場合、`center`と`fullScreen`を無視
+
+2. **`color`プロパティの追加**
+   - `emerald`（デフォルト）、`blue`、`gray`の3色に対応
+   - インライン表示の場合は自動的に`blue`を使用
+
+3. **インライン表示時のサイズ調整**
+   - インライン表示時は自動的に小さめのサイズ（sm/md/lg → h-4/h-5/h-6）に調整
+
+### Phase 2: カスタムスピナーの置き換え ✅ 完了
+
+以下のファイルでカスタムスピナーをLoadingコンポーネントに置き換え：
+
+1. **app/user-settings/page.tsx**
+   - フルスクリーンローディングを`<Loading fullScreen size="lg" color="blue" />`に統一
+
+2. **app/subscription/page.tsx**
+   - Suspense fallbackを`<Loading fullScreen size="md" color="blue" />`に統一
+
+3. **app/dev-tools/pdf-preview/[tripSlug]/page.tsx**
+   - ローディング表示を`<Loading size="md" color="blue" />`に統一
+
+4. **components/trip/TripMap.tsx**
+   - 地図ローディングを`<Loading center size="sm" color="blue" message={t('loading.mapLoading')} />`に統一
+
+5. **components/trip/VenueDistance.tsx**
+   - 距離計算ローディングを`<Loading inline size="sm" color="blue" message={t('loading.calculating')} />`に統一
+
+6. **components/trip/TripItineraryView.tsx**
+   - スケジュール追加ローディングを`<Loading inline size="sm" color="blue" message={t('loading.addingSchedule')} />`に統一
+
+7. **components/trip/TripEditor.tsx**
+   - 保存中オーバーレイを`<Loading size="lg" color="blue" message={t('loading.updating')} />`に統一
+
+8. **components/common/CreateTripDialog.tsx**
+   - Unsplash画像ローディングを`<Loading inline size="sm" color="blue" message={t('trip.create.imageLoading')} />`に統一
+
+9. **app/trip/new/page.tsx**
+   - Unsplash画像ローディングを`<Loading inline size="sm" color="blue" message={t('trip.create.imageLoading')} />`に統一
+
+10. **components/modals/ReservationTemplateModal.tsx**
+    - テンプレート読み込みを`<Loading size="md" color="gray" />`に統一
+
+### i18n対応 ✅ 完了
+
+以下のローディングメッセージのi18nキーを追加：
+
+- `loading.mapLoading`: 「地図を読み込み中...」 / "Loading map..."
+- `loading.calculating`: 「計算中...」 / "Calculating..."
+- `loading.addingSchedule`: 「スケジュールを追加中...」 / "Adding schedule..."
+- `loading.updating`: 「保存中...」 / "Saving..."
+- `loading.updatingDescription`: 「日程を更新しています」 / "Updating itinerary"
+
+### 効果
+
+- ✅ UIの統一感向上：全体的に統一されたローディングデザイン
+- ✅ コードの再利用性向上：カスタムスピナーのコード削減
+- ✅ i18n対応の完全性：すべてのローディングメッセージがi18n化
+- ✅ メンテナンス容易性の向上：一元管理されたローディングコンポーネント
+
+### 残りの作業（Phase 3）
+
+一部のコンポーネントでカスタムスピナーやSkeletonローディングが残っている可能性があります。これらは将来的に段階的に置き換えを進めます：
+
+- `animate-pulse`を使用したSkeletonローディング（5ファイル）
+- その他の小さなインラインスピナー
+
+### 実装統計
+
+- **置き換えたファイル数**: 10ファイル
+- **追加したi18nキー**: 5キー
+- **削減したカスタムスピナーコード**: 約75行
 
