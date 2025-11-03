@@ -1,9 +1,9 @@
 # Issue: 天気予報の解析結果を英語に修正する
 
 **作成日**: 2025-11-01  
-**状態**: 🟡 部分的解決（Phase 1完了）  
+**状態**: ✅ 解決済み  
 **優先度**: 中  
-**解決日**: 2025-11-03  
+**解決日**: 2025-11-03（Phase 1完了）、2025-11-03（Phase 2完了）  
 **種類**: i18n不備  
 **関連ファイル**: 
 - `lib/api/weather.ts`（天気予報API、天気コード辞書）
@@ -241,12 +241,12 @@ const weatherIcon = WeatherApiHelpers.getWeatherIcon(dominantWeatherCode)
 - [x] `WEATHER_CODES`辞書がi18n化される（Phase 1完了）
 - [x] `formatWeatherSummary`がi18n化される（Phase 1完了）
 - [x] `TripWeatherDisplay`の主要な日本語文字列がi18n化される（Phase 1完了）
-- [ ] 天気名の判定ロジックが天気コードベースに修正される（Phase 2）
-- [ ] `WeatherSummary`型に`dominantWeatherCode`フィールドが追加される（Phase 2）
+- [x] 天気名の判定ロジックが天気コードベースに修正される（Phase 2完了）
+- [x] `WeatherSummary`型に`dominantWeatherCode`フィールドが追加される（Phase 2完了）
 - [x] 英語設定時に主要部分が英語で表示される（Phase 1完了）
 - [x] 日本語設定時に主要部分が日本語で表示される（Phase 1完了）
 - [x] ビルドエラーがない（Phase 1完了）
-- [x] ブラウザで動作確認済み（英語・日本語切り替えテスト）（Phase 1完了、Phase 2は動作確認のみ）
+- [x] ブラウザで動作確認済み（英語・日本語切り替えテスト）（完了）
 
 ## ✅ 解決内容（Phase 1）
 
