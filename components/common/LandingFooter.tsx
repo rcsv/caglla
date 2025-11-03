@@ -44,6 +44,11 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({ className = '' }) 
               <h3 className="text-white font-semibold mb-4">{t('footer.products')}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
+                  <button onClick={scrollToTop} className="hover:text-white transition-colors underline underline-offset-2">
+                    {t('footer.backToTop')}
+                  </button>
+                </li>
+                <li>
                   <Link href="/" className="hover:text-white transition-colors">
                     {t('footer.products.summary')}
                   </Link>
