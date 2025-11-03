@@ -102,7 +102,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             <button onClick={() => setOpen(v => !v)} className="flex items-center gap-3">
               <div className="text-right leading-tight">
                 <div className="flex items-center gap-1.5 justify-end">
-                  <div className="text-sm font-medium text-gray-900 truncate max-w-[160px]">{userName}</div>
+                  <div className="text-sm font-medium text-gray-900 truncate max-w-[120px] sm:max-w-[160px]">{userName}</div>
                   <span 
                     className="text-base leading-none" 
                     title={LANGUAGE_NAMES[currentLanguage]?.native || currentLanguage}
