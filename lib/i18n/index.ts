@@ -18,6 +18,7 @@ export type TranslationKey =
   | 'header.changePlan'
   | 'header.logout'
   | 'devTools'
+  | 'debug.badge'
   // Footer
   | 'footer.tagline'
   | 'footer.products'
@@ -640,6 +641,7 @@ const en: Dictionary = {
   'header.changePlan': 'Change Plan',
   'header.logout': 'Logout',
   devTools: 'Dev Tools',
+  'debug.badge': 'DEBUG',
   // Footer
   'footer.tagline': 'Make your trips beautifully organized',
   'footer.products': 'Products',
@@ -1264,6 +1266,7 @@ const ja: Dictionary = {
   'header.changePlan': 'プランを変更',
   'header.logout': 'ログアウト',
   devTools: '開発ツール',
+  'debug.badge': 'デバッグ',
   // Footer
   'footer.tagline': 'あなたの旅行を美しく管理する',
   'footer.products': '製品',

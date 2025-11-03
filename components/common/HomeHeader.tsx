@@ -90,7 +90,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                 <Link href="/dev-tools" className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900">
                   {t('devTools')}
                   <span className="px-1.5 py-0.5 text-xs font-semibold bg-emerald-500 text-white rounded">
-                    DEBUG
+                    {t('debug.badge')}
                   </span>
                 </Link>
               )}
