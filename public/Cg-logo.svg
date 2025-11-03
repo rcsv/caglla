@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <title>Caglla Monogram (Cg)</title>
+  <desc>Monoline C + solid g monogram. Transparent background. Uses currentColor for theming.</desc>
+  <g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <!-- C: open circular arc -->
+    <path d="M 324 156 A 120 120 0 1 0 324 356" stroke-width="56"/>
+  </g>
+
+  <!-- g: solid circle + stem -->
+  <g fill="currentColor">
+    <!-- head of g -->
+    <circle cx="350" cy="236" r="70"/>
+    <!-- stem of g -->
+    <rect x="326" y="286" width="48" height="120" rx="24"/>
+  </g>
+
+  <!-- Safe area guide (hidden) -->
+  <rect x="32" y="32" width="448" height="448" rx="96" ry="96" fill="none" stroke="none"/>
+</svg>
+
+
