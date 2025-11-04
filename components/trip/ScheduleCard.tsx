@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
@@ -188,7 +189,7 @@ export default function ScheduleCard({
       setIsEditingTime(false)
     } else if (result.error !== 'aborted') {
       logger.error('Failed to update time')
-      alert('時間の更新に失敗しました')
+      alert(t('schedule.time.updateFailed'))
     }
   }
 
@@ -214,7 +215,7 @@ export default function ScheduleCard({
       setIsEditingCost(false)
     } else if (result.error !== 'aborted') {
       logger.error('Failed to update cost')
-      alert('費用の更新に失敗しました')
+      alert(t('schedule.cost.updateFailed'))
     }
   }
 

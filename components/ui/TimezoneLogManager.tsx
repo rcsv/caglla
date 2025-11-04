@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
 import { timezoneUtils } from '@/lib/utils/timezone'
@@ -27,21 +28,23 @@ export default function TimezoneLogManager() {
       setUpdates(result.updates)
       
       if (result.processedCount > 0) {
-        alert(`${result.processedCount}件のログを処理し、${result.updates.length}件のマッピングを更新しました。`)
+        alert(t('admin.logs.mapping.updated')
+          .replace('{processedCount}', result.processedCount.toString())
+          .replace('{updateCount}', result.updates.length.toString()))
         loadLogs() // ログを再読み込み
       } else {
-        alert('処理対象のログが不足しています（50件未満）。')
+        alert(t('admin.logs.insufficientLogs'))
       }
     } catch (error) {
       logger.error('Batch processing failed:', error)
-      alert('バッチ処理に失敗しました。')
+      alert(t('admin.logs.batchFailed'))
     } finally {
       setIsProcessing(false)
     }
   }
 
   const handleClearLogs = () => {
-    if (confirm('すべてのログを削除しますか？')) {
+    if (confirm(t('admin.logs.deleteAllConfirm'))) {
       timezoneUtils.clearFailureLogs()
       setLogs([])
       setUpdates([])

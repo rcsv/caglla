@@ -411,6 +411,18 @@ export type TranslationKey =
   | 'common.close'
   | 'common.deleteFailed'
   | 'common.deleteError'
+  // Admin / Dev Tools
+  | 'admin.logs.timezone.deleteConfirm'
+  | 'admin.logs.currency.deleteConfirm'
+  | 'admin.logs.deleteAllConfirm'
+  | 'admin.logs.timezone.processed'
+  | 'admin.logs.currency.processed'
+  | 'admin.logs.mapping.updated'
+  | 'admin.logs.insufficientLogs'
+  | 'admin.logs.batchFailed'
+  // Schedule
+  | 'schedule.time.updateFailed'
+  | 'schedule.cost.updateFailed'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1174,6 +1186,18 @@ const en: Dictionary = {
   'common.close': 'Close',
   'common.deleteFailed': 'Failed to delete',
   'common.deleteError': 'An error occurred while deleting',
+  // Admin / Dev Tools
+  'admin.logs.timezone.deleteConfirm': 'Delete all timezone failure logs?',
+  'admin.logs.currency.deleteConfirm': 'Delete all currency failure logs?',
+  'admin.logs.deleteAllConfirm': 'Delete all logs?',
+  'admin.logs.timezone.processed': 'Processed {count} timezone logs.',
+  'admin.logs.currency.processed': 'Processed {count} currency logs.',
+  'admin.logs.mapping.updated': 'Processed {processedCount} logs and updated {updateCount} mappings.',
+  'admin.logs.insufficientLogs': 'Insufficient logs to process (less than 50).',
+  'admin.logs.batchFailed': 'Batch processing failed.',
+  // Schedule
+  'schedule.time.updateFailed': 'Failed to update time',
+  'schedule.cost.updateFailed': 'Failed to update cost',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -1908,6 +1932,18 @@ const ja: Dictionary = {
   'common.close': '閉じる',
   'common.deleteFailed': '削除に失敗しました',
   'common.deleteError': '削除中にエラーが発生しました',
+  // Admin / Dev Tools
+  'admin.logs.timezone.deleteConfirm': 'タイムゾーン失敗ログをすべて削除しますか？',
+  'admin.logs.currency.deleteConfirm': '通貨失敗ログをすべて削除しますか？',
+  'admin.logs.deleteAllConfirm': 'すべてのログを削除しますか？',
+  'admin.logs.timezone.processed': '{count}件のタイムゾーンログを処理しました。',
+  'admin.logs.currency.processed': '{count}件の通貨ログを処理しました。',
+  'admin.logs.mapping.updated': '{processedCount}件のログを処理し、{updateCount}件のマッピングを更新しました。',
+  'admin.logs.insufficientLogs': '処理対象のログが不足しています（50件未満）。',
+  'admin.logs.batchFailed': 'バッチ処理に失敗しました。',
+  // Schedule
+  'schedule.time.updateFailed': '時間の更新に失敗しました',
+  'schedule.cost.updateFailed': '費用の更新に失敗しました',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',

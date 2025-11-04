@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { timezoneUtils } from '@/lib/utils/timezone'
 import { currencyUtils } from '@/lib/utils/currency'
 import type { TimezoneFailureLog, CurrencyFailureLog } from '@/lib/core/types'
+import { t } from '@/lib/i18n'
 
 export default function FailureLogsPage() {
   const [timezoneLogs, setTimezoneLogs] = useState<TimezoneFailureLog[]>([])
@@ -22,14 +23,14 @@ export default function FailureLogsPage() {
   }
 
   const handleClearTimezoneLogs = () => {
-    if (confirm('タイムゾーン失敗ログをすべて削除しますか？')) {
+    if (confirm(t('admin.logs.timezone.deleteConfirm'))) {
       timezoneUtils.clearFailureLogs()
       loadLogs()
     }
   }
 
   const handleClearCurrencyLogs = () => {
-    if (confirm('通貨失敗ログをすべて削除しますか？')) {
+    if (confirm(t('admin.logs.currency.deleteConfirm'))) {
       currencyUtils.clearCurrencyFailureLogs()
       loadLogs()
     }
@@ -40,13 +41,13 @@ export default function FailureLogsPage() {
     try {
       const result = timezoneUtils.processBatchUpdate()
       if (result.processedCount > 0) {
-        alert(`${result.processedCount}件のタイムゾーンログを処理しました。`)
+        alert(t('admin.logs.timezone.processed').replace('{count}', result.processedCount.toString()))
         loadLogs()
       } else {
-        alert('処理対象のログが不足しています（50件未満）。')
+        alert(t('admin.logs.insufficientLogs'))
       }
     } catch (error) {
-      alert('バッチ処理に失敗しました。')
+      alert(t('admin.logs.batchFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -57,13 +58,13 @@ export default function FailureLogsPage() {
     try {
       const result = currencyUtils.processCurrencyBatchUpdate()
       if (result.processedCount > 0) {
-        alert(`${result.processedCount}件の通貨ログを処理しました。`)
+        alert(t('admin.logs.currency.processed').replace('{count}', result.processedCount.toString()))
         loadLogs()
       } else {
-        alert('処理対象のログが不足しています（50件未満）。')
+        alert(t('admin.logs.insufficientLogs'))
       }
     } catch (error) {
-      alert('バッチ処理に失敗しました。')
+      alert(t('admin.logs.batchFailed'))
     } finally {
       setIsLoading(false)
     }
