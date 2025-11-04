@@ -5,6 +5,7 @@ import { getZIndexClass } from '@/lib/core/z-index'
 import { getReservationTypeIcon } from '@/lib/utils/reservation-utils'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 interface ScheduleCardMenuProps {
   isFirst: boolean
@@ -79,7 +80,7 @@ export function ScheduleCardMenu({
         break
       case 'delete':
         setShowMenu(false)
-        if (confirm('このVenueを削除しますか？')) {
+        if (confirm(t('schedule.venue.deleteConfirm'))) {
           onDelete()
         }
         break

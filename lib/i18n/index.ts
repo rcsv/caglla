@@ -653,6 +653,8 @@ export type TranslationKey =
   | 'reservation.modal.loadTemplate'
   | 'reservation.modal.template'
   | 'reservation.template.deleteFailed'
+  | 'reservation.template.deleteConfirm'
+  | 'schedule.venue.deleteConfirm'
   | 'reservation.validation.airportCode'
   | 'reservation.validation.flightNumber'
   | 'reservation.field.type'
@@ -1424,6 +1426,8 @@ const en: Dictionary = {
   'reservation.button.save': 'Save',
   'reservation.button.saving': 'Saving...',
   'reservation.template.deleteFailed': 'Failed to delete template',
+  'reservation.template.deleteConfirm': 'Delete this template?',
+  'schedule.venue.deleteConfirm': 'Delete this venue?',
   'user.defaultName': 'User',
   'plan.seasonTraveler': 'Season Traveler',
   // User Settings Modal
@@ -2170,6 +2174,8 @@ const ja: Dictionary = {
   'reservation.button.save': '保存',
   'reservation.button.saving': '保存中...',
   'reservation.template.deleteFailed': 'テンプレートの削除に失敗しました',
+  'reservation.template.deleteConfirm': 'このテンプレートを削除しますか？',
+  'schedule.venue.deleteConfirm': 'このVenueを削除しますか？',
   'user.defaultName': 'ユーザー',
   'plan.seasonTraveler': 'Season Traveler',
   // User Settings Modal

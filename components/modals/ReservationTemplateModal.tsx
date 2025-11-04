@@ -126,7 +126,7 @@ export default function ReservationTemplateModal({
   }
 
   const handleDeleteTemplate = async (templateId: string) => {
-    if (!confirm('このテンプレートを削除しますか？')) return
+    if (!confirm(t('reservation.template.deleteConfirm'))) return
 
     try {
       await makeAuthenticatedRequest(
