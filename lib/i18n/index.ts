@@ -405,6 +405,15 @@ export type TranslationKey =
   | 'nav.plan'
   | 'nav.logout'
   | 'nav.dayPrefix'
+  // Common
+  | 'common.close'
+  | 'common.deleteFailed'
+  | 'common.deleteError'
+  // Image Gallery
+  | 'gallery.previousImage'
+  | 'gallery.nextImage'
+  | 'gallery.cached'
+  | 'gallery.photosOf'
   // POI Dialog
   | 'poi.website'
   | 'poi.cached'
@@ -629,6 +638,7 @@ export type TranslationKey =
   | 'reservation.modal.addTitle'
   | 'reservation.modal.loadTemplate'
   | 'reservation.modal.template'
+  | 'reservation.template.deleteFailed'
   | 'reservation.validation.airportCode'
   | 'reservation.validation.flightNumber'
   | 'reservation.field.type'
@@ -1158,6 +1168,8 @@ const en: Dictionary = {
   'nav.dayPrefix': 'Day',
   // Common
   'common.close': 'Close',
+  'common.deleteFailed': 'Failed to delete',
+  'common.deleteError': 'An error occurred while deleting',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -1383,6 +1395,7 @@ const en: Dictionary = {
   'reservation.button.cancel': 'Cancel',
   'reservation.button.save': 'Save',
   'reservation.button.saving': 'Saving...',
+  'reservation.template.deleteFailed': 'Failed to delete template',
   'user.defaultName': 'User',
   'plan.seasonTraveler': 'Season Traveler',
   // User Settings Modal
@@ -1887,6 +1900,8 @@ const ja: Dictionary = {
   'nav.dayPrefix': 'Day',
   // Common
   'common.close': '閉じる',
+  'common.deleteFailed': '削除に失敗しました',
+  'common.deleteError': '削除中にエラーが発生しました',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',
@@ -2112,6 +2127,7 @@ const ja: Dictionary = {
   'reservation.button.cancel': 'キャンセル',
   'reservation.button.save': '保存',
   'reservation.button.saving': '保存中...',
+  'reservation.template.deleteFailed': 'テンプレートの削除に失敗しました',
   'user.defaultName': 'ユーザー',
   'plan.seasonTraveler': 'Season Traveler',
   // User Settings Modal

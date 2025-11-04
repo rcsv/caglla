@@ -211,11 +211,11 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
         onDelete()
       } else {
         logger.error('Failed to delete trip')
-        alert('旅行の削除に失敗しました')
+        alert(require('@/lib/i18n').t('common.deleteFailed'))
       }
     } catch (error) {
       logger.error('Error deleting trip:', error)
-      alert('旅行の削除中にエラーが発生しました')
+      alert(require('@/lib/i18n').t('common.deleteError'))
     } finally {
       setDeleting(false)
       setShowDeleteConfirm(false)

@@ -711,11 +711,11 @@ export default function SlugBasedTripPage() {
         })
       } else {
         logger.error('Failed to delete itinerary')
-        alert('削除に失敗しました')
+        alert(t('common.deleteFailed'))
       }
     } catch (error) {
       logger.error('Error deleting itinerary:', error)
-      alert('削除に失敗しました')
+      alert(t('common.deleteFailed'))
     }
   }
 

@@ -137,7 +137,7 @@ export default function ReservationTemplateModal({
       await loadTemplates()
     } catch (error) {
       console.error('Delete template error:', error)
-      alert('テンプレートの削除に失敗しました')
+      alert(t('reservation.template.deleteFailed'))
     }
   }
 
