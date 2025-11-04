@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import React, { useState } from 'react'
 import { SubscriptionPlan, updateSubscriptionStatus } from '@/lib/contexts/subscription'
@@ -41,7 +42,7 @@ export default function SubscriptionModal({
       onClose()
     } catch (error) {
       logger.error('Subscription error:', error)
-      alert('サブスクリプションの処理中にエラーが発生しました')
+      alert(t('subscription.error'))
     } finally {
       setIsSubscribing(false)
     }

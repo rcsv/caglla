@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
 import { placesApiHelpers, PlaceSearchResult } from '@/lib/api/google/places'
@@ -141,11 +142,11 @@ export default function AddScheduleModal({
         handleClose()
       } else {
         logger.error('Failed to save schedule')
-        alert('スケジュールの保存に失敗しました')
+        alert(t('trip.schedule.saveFailed'))
       }
     } catch (error) {
       logger.error('Error saving schedule:', error)
-      alert('スケジュールの保存に失敗しました')
+      alert(t('trip.schedule.saveFailed'))
     } finally {
       setIsSaving(false)
     }

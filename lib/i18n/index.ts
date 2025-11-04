@@ -365,6 +365,8 @@ export type TranslationKey =
   | 'trip.schedule.categoryDetail'
   | 'trip.schedule.clear'
   | 'trip.schedule.selected'
+  | 'trip.schedule.saveFailed'
+  | 'subscription.error'
   | 'trip.routeOptimization.title'
   | 'trip.routeOptimization.button'
   | 'trip.routeOptimization.optimizing'
@@ -1090,6 +1092,8 @@ const en: Dictionary = {
   'trip.schedule.categoryDetail': 'Select Detail',
   'trip.schedule.clear': 'Clear',
   'trip.schedule.selected': 'Selected',
+  'trip.schedule.saveFailed': 'Failed to save schedule',
+  'subscription.error': 'An error occurred while processing subscription',
   'trip.routeOptimization.title': 'Route Optimization',
   'trip.routeOptimization.button': 'Route Optimization',
   'trip.routeOptimization.optimizing': 'Optimizing...',
@@ -1822,6 +1826,8 @@ const ja: Dictionary = {
   'trip.schedule.categoryDetail': '詳細選択',
   'trip.schedule.clear': 'クリア',
   'trip.schedule.selected': '選択中',
+  'trip.schedule.saveFailed': 'スケジュールの保存に失敗しました',
+  'subscription.error': 'サブスクリプションの処理中にエラーが発生しました',
   'trip.routeOptimization.title': 'ルート最適化',
   'trip.routeOptimization.button': 'ルート最適化',
   'trip.routeOptimization.optimizing': '最適化中...',
