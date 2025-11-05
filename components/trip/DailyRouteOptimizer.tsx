@@ -208,7 +208,7 @@ export default function DailyRouteOptimizer({
                       <span className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs font-semibold">
                         {orderIndex + 1}
                       </span>
-                      <span>{validItineraries[index].place_data?.name || '不明な場所'}</span>
+                      <span>{validItineraries[index].place_data?.name || t('routeOptimizer.unknownPlace')}</span>
                     </div>
                   )
                 }

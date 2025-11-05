@@ -488,6 +488,10 @@ export type TranslationKey =
   | 'venueDistance.calculationFailed'
   // Country Map
   | 'countryMap.loadFailed'
+  // Daily Route Optimizer
+  | 'routeOptimizer.unknownPlace'
+  // Trip Map
+  | 'tripMap.loadFailed'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1352,6 +1356,10 @@ const en: Dictionary = {
   'venueDistance.calculationFailed': 'Failed to calculate distance',
   // Country Map
   'countryMap.loadFailed': 'Failed to load map',
+  // Daily Route Optimizer
+  'routeOptimizer.unknownPlace': 'Unknown place',
+  // Trip Map
+  'tripMap.loadFailed': 'Failed to load Google Maps API',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2180,6 +2188,10 @@ const ja: Dictionary = {
   'venueDistance.calculationFailed': '距離の計算に失敗しました',
   // Country Map
   'countryMap.loadFailed': '地図の読み込みに失敗しました',
+  // Daily Route Optimizer
+  'routeOptimizer.unknownPlace': '不明な場所',
+  // Trip Map
+  'tripMap.loadFailed': 'Google Maps APIの読み込みに失敗しました',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',

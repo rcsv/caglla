@@ -246,7 +246,7 @@ export default function TripMap({
         await loadGoogleMapsAPI(getUserLanguage(user))
         
         if (!mapRef.current || !window.google) {
-          throw new Error('Google Maps APIの読み込みに失敗しました')
+          throw new Error(t('tripMap.loadFailed'))
         }
 
         // AdvancedMarkerElement用のmapIdを設定
@@ -381,7 +381,7 @@ export default function TripMap({
         setLoading(false)
       } catch (error) {
         logger.error('Google Maps APIの読み込みに失敗しました:', error)
-        setError(error instanceof Error ? error.message : '地図の読み込みに失敗しました')
+        setError(error instanceof Error ? error.message : t('countryMap.loadFailed'))
         setLoading(false)
       }
     }
@@ -682,7 +682,7 @@ export default function TripMap({
         getMapViewport={getMapViewport}
         onSearchResultsUpdated={handleSearchResultsUpdated}
         hideSuggestions
-        placeholder="場所を検索..."
+        placeholder={t('placeSearch.placeholder')}
         position="top-center"
       />
       
