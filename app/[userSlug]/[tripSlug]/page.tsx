@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import { useAuth } from '@/lib/contexts/auth'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
@@ -126,7 +127,7 @@ export default function SlugBasedTripPage() {
     const userPlan = userData?.planId || 'season_traveler'
     
     if (!canExportToPdf(userPlan)) {
-      alert('PDF出力にはBackpackerプラン以上が必要です。')
+      alert(t('tripSlugPage.pdfRequiresBackpacker'))
       return
     }
 
@@ -143,7 +144,7 @@ export default function SlugBasedTripPage() {
       logger.info('PDF export completed successfully')
     } catch (error: any) {
       logger.error('PDF export failed:', error)
-      alert(error.message || 'PDF出力に失敗しました。')
+      alert(error.message || t('tripSlugPage.pdfExportFailed'))
     } finally {
       setPdfExporting(false)
     }
@@ -323,7 +324,7 @@ export default function SlugBasedTripPage() {
           }
         }
       } catch (error) {
-        logger.error('旅行データの取得に失敗しました:', error)
+        logger.error(t('tripSlugPage.fetchTripFailed'), error)
         notFound()
       } finally {
         setTripLoading(false)
@@ -422,7 +423,7 @@ export default function SlugBasedTripPage() {
         }
       } else {
         logger.error('Failed to add day')
-        alert('日程の追加に失敗しました')
+        alert(t('tripSlugPage.addDayFailed'))
       }
     } catch (error) {
       logger.error('Error adding day:', error)
@@ -632,11 +633,11 @@ export default function SlugBasedTripPage() {
       } else {
         const error = await response.json()
         logger.error('POI の追加に失敗しました:', error)
-        alert('POIの追加に失敗しました')
+        alert(t('tripSlugPage.addPOIFailed'))
       }
     } catch (error) {
       logger.error('POI の追加でエラーが発生しました:', error)
-      alert('POIの追加に失敗しました')
+      alert(t('tripSlugPage.addPOIFailed'))
     } finally {
       // ローディング状態を解除
       setLoadingDayIds(prev => {

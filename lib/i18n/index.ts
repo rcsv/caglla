@@ -501,6 +501,12 @@ export type TranslationKey =
   // Premium Feature
   | 'premium.unlimitedTrips'
   | 'premium.allPremiumFeatures'
+  // Trip Slug Page
+  | 'tripSlugPage.pdfRequiresBackpacker'
+  | 'tripSlugPage.pdfExportFailed'
+  | 'tripSlugPage.fetchTripFailed'
+  | 'tripSlugPage.addDayFailed'
+  | 'tripSlugPage.addPOIFailed'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1378,6 +1384,12 @@ const en: Dictionary = {
   // Premium Feature
   'premium.unlimitedTrips': 'Unlimited trip plans',
   'premium.allPremiumFeatures': 'All premium features',
+  // Trip Slug Page
+  'tripSlugPage.pdfRequiresBackpacker': 'PDF export requires Backpacker plan or higher',
+  'tripSlugPage.pdfExportFailed': 'PDF export failed',
+  'tripSlugPage.fetchTripFailed': 'Failed to fetch trip data',
+  'tripSlugPage.addDayFailed': 'Failed to add day',
+  'tripSlugPage.addPOIFailed': 'Failed to add POI',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2219,6 +2231,12 @@ const ja: Dictionary = {
   // Premium Feature
   'premium.unlimitedTrips': '無制限の旅行計画',
   'premium.allPremiumFeatures': 'プレミアム機能すべて',
+  // Trip Slug Page
+  'tripSlugPage.pdfRequiresBackpacker': 'PDF出力にはBackpackerプラン以上が必要です。',
+  'tripSlugPage.pdfExportFailed': 'PDF出力に失敗しました。',
+  'tripSlugPage.fetchTripFailed': '旅行データの取得に失敗しました',
+  'tripSlugPage.addDayFailed': '日程の追加に失敗しました',
+  'tripSlugPage.addPOIFailed': 'POIの追加に失敗しました',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',
