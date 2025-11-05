@@ -467,6 +467,9 @@ export type TranslationKey =
   // Trip Editor
   | 'tripEditor.dateValidation'
   | 'tripEditor.destinationPlaceholder'
+  | 'tripEditor.title'
+  | 'tripEditor.destinationReSelectHint'
+  | 'tripEditor.accessLevel.private'
   // Image Upload
   | 'imageUpload.invalidFile'
   | 'imageUpload.loginRequired'
@@ -511,6 +514,8 @@ export type TranslationKey =
   // Country Stats
   | 'countryStats.noTrips'
   | 'countryStats.recommendedTrips'
+  // Recommended Trips
+  | 'recommendedTrips.title'
   // Premium Feature
   | 'premium.unlimitedTrips'
   | 'premium.allPremiumFeatures'
@@ -1378,6 +1383,9 @@ const en: Dictionary = {
   // Trip Editor
   'tripEditor.dateValidation': 'Start date must be before end date',
   'tripEditor.destinationPlaceholder': 'Search for destination (e.g., Tokyo, Paris, New York)',
+  'tripEditor.title': 'Edit trip information',
+  'tripEditor.destinationReSelectHint': 'Please re-select the destination from Google Places for accurate country information',
+  'tripEditor.accessLevel.private': 'Private (only you and shared users)',
   // Image Upload
   'imageUpload.invalidFile': 'Invalid file',
   'imageUpload.loginRequired': 'Login required',
@@ -1422,6 +1430,8 @@ const en: Dictionary = {
   // Country Stats
   'countryStats.noTrips': 'No trips yet',
   'countryStats.recommendedTrips': 'Recommended trip plans',
+  // Recommended Trips
+  'recommendedTrips.title': 'Recommended trip plans',
   // Premium Feature
   'premium.unlimitedTrips': 'Unlimited trip plans',
   'premium.allPremiumFeatures': 'All premium features',
@@ -2253,6 +2263,9 @@ const ja: Dictionary = {
   // Trip Editor
   'tripEditor.dateValidation': '出発日は帰宅日より前の日付を選択してください',
   'tripEditor.destinationPlaceholder': '目的地を検索（例: 東京、パリ、ニューヨーク）',
+  'tripEditor.title': '旅行情報を編集',
+  'tripEditor.destinationReSelectHint': '正確な国情報のため、Google Placesから目的地を再選択してください',
+  'tripEditor.accessLevel.private': '非公開（自分と共有ユーザーのみ）',
   // Image Upload
   'imageUpload.invalidFile': '無効なファイルです',
   'imageUpload.loginRequired': 'ログインが必要です',
@@ -2297,6 +2310,8 @@ const ja: Dictionary = {
   // Country Stats
   'countryStats.noTrips': 'まだ旅行がありません',
   'countryStats.recommendedTrips': 'おすすめ旅行計画',
+  // Recommended Trips
+  'recommendedTrips.title': 'おすすめ旅行計画',
   // Premium Feature
   'premium.unlimitedTrips': '無制限の旅行計画',
   'premium.allPremiumFeatures': 'プレミアム機能すべて',

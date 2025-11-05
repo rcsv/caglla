@@ -266,7 +266,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
         <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass('FLOAT_MODAL')}`}>
           <div className="bg-white rounded-lg shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">旅行情報を編集</h2>
+              <h2 className="text-xl font-semibold text-gray-900">{t('tripEditor.title')}</h2>
               <button onClick={() => {
                 setIsEditing(false)
                 onClose?.()
@@ -323,7 +323,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
               />
               {!formData.destinationPlace && formData.destination && (
                 <p className="mt-2 text-sm text-yellow-700">
-                  <span className="text-red-600 mr-1">*</span>正確な国情報のため、Google Placesから目的地を再選択してください
+                  <span className="text-red-600 mr-1">*</span>{t('tripEditor.destinationReSelectHint')}
                 </p>
               )}
             </div>
@@ -391,7 +391,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="private">非公開（自分と共有ユーザーのみ）</option>
+              <option value="private">{t('tripEditor.accessLevel.private')}</option>
               <option value="public">公開（誰でも閲覧可能）</option>
             </select>
           </div>
