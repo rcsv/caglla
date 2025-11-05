@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import React, { useEffect, useState } from 'react'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'

@@ -470,6 +470,7 @@ export type TranslationKey =
   | 'tripEditor.title'
   | 'tripEditor.destinationReSelectHint'
   | 'tripEditor.accessLevel.private'
+  | 'tripEditor.accessLevel.public'
   // Image Upload
   | 'imageUpload.invalidFile'
   | 'imageUpload.loginRequired'
@@ -1386,6 +1387,7 @@ const en: Dictionary = {
   'tripEditor.title': 'Edit trip information',
   'tripEditor.destinationReSelectHint': 'Please re-select the destination from Google Places for accurate country information',
   'tripEditor.accessLevel.private': 'Private (only you and shared users)',
+  'tripEditor.accessLevel.public': 'Public (anyone can view)',
   // Image Upload
   'imageUpload.invalidFile': 'Invalid file',
   'imageUpload.loginRequired': 'Login required',
@@ -2266,6 +2268,7 @@ const ja: Dictionary = {
   'tripEditor.title': '旅行情報を編集',
   'tripEditor.destinationReSelectHint': '正確な国情報のため、Google Placesから目的地を再選択してください',
   'tripEditor.accessLevel.private': '非公開（自分と共有ユーザーのみ）',
+  'tripEditor.accessLevel.public': '公開（誰でも閲覧可能）',
   // Image Upload
   'imageUpload.invalidFile': '無効なファイルです',
   'imageUpload.loginRequired': 'ログインが必要です',
