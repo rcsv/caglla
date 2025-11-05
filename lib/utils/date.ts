@@ -28,13 +28,21 @@ export const dateUtils = {
     const lang = language || getUserLanguage()
     const locale = lang === 'ja' ? 'ja-JP' : 'en-US'
     
-    return d.toLocaleDateString(locale, {
+    // デフォルトオプション（yearを含む）
+    const defaultOptions: Intl.DateTimeFormatOptions = {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      weekday: 'long',
-      ...options
-    })
+      weekday: 'long'
+    }
+    
+    // オプションでyearがundefinedの場合、除外する
+    const finalOptions = { ...defaultOptions, ...options }
+    if ('year' in options && options.year === undefined) {
+      delete finalOptions.year
+    }
+    
+    return d.toLocaleDateString(locale, finalOptions)
   },
 
   // Format date range safely with unified rules
