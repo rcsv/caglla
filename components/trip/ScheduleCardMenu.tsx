@@ -107,7 +107,7 @@ export function ScheduleCardMenu({
       }
     } catch (error) {
       logger.error('Error moving itinerary:', error)
-      alert('日程の移動に失敗しました')
+      alert(t('scheduleCardMenu.moveFailed'))
     }
   }, [itineraryId, currentDayId, onMoveToDay])
 
@@ -129,7 +129,7 @@ export function ScheduleCardMenu({
       }
     } catch (error) {
       logger.error('Error duplicating itinerary:', error)
-      alert('日程の複製に失敗しました')
+      alert(t('scheduleCardMenu.duplicateFailed'))
     }
   }, [itineraryId, onDuplicateToDay])
 
