@@ -212,9 +212,9 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
                   if (futureTrips.length > 0) {
                     return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date, language)
                   } else if (pastTrips.length > 0) {
-                    return dateUtils.formatPastTripDate(trip.start_date, trip.end_date)
+                    return dateUtils.formatPastTripDate(trip.start_date, trip.end_date, language)
                   } else {
-                    return dateUtils.formatDateRange(trip.start_date, trip.end_date)
+                    return dateUtils.formatDateRange(trip.start_date, trip.end_date, language)
                   }
                 })()}
               </div>

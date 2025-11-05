@@ -12,7 +12,7 @@
 |-------|------|--------|
 | [ビルドの動作確認が必要](build-verification-needed.md) | ✅ 確認済み | 2025-11-01 |
 | [言語切り替えのフォールバック処理による問題](language-switching-fallback-issue.md) | 解決済み | 2025-11-01 |
-| [旅行日程文字列のi18n化とライブラリ統一](trip-date-string-i18n-unification.md) | 未解決 | 2025-10-31 |
+| [旅行日程文字列のi18n化とライブラリ統一](trip-date-string-i18n-unification.md) | 部分的解決 | 2025-10-31 |
 
 ### 🟡 中優先度
 
@@ -37,20 +37,20 @@
 | [天気予報の解析結果を英語に修正する](weather-forecast-i18n.md) | 解決済み | 2025-11-01 |
 | [気温表記方法・距離単位の設定項目機能](temperature-distance-unit-settings.md) | 未解決 | 2025-11-01 |
 | [予約情報表示が日本語ハードコード](reservation-display-i18n.md) | 解決済み | 2025-11-01 |
-| [旅行費用表示が日本語ハードコード](travel-cost-display-i18n.md) | 部分的解決 | 2025-11-01 |
+| [旅行費用表示が日本語ハードコード](travel-cost-display-i18n.md) | 解決済み | 2025-11-01 |
 | [Activity Analysis表示が日本語ハードコード](activity-analysis-display-i18n.md) | 解決済み | 2025-11-01 |
 | [総移動距離表示が日本語ハードコード](distance-display-i18n.md) | 解決済み | 2025-11-01 |
-| [アクティビティカテゴリーのラベルが日本語ハードコード](activity-categories-i18n.md) | 未解決 | 2025-11-01 |
+| [アクティビティカテゴリーのラベルが日本語ハードコード](activity-categories-i18n.md) | 解決済み | 2025-11-01 |
 | [予約カテゴリー（ReservationType/ReservationSite）のラベルが日本語ハードコード](reservation-categories-i18n.md) | 解決済み | 2025-11-01 |
 | [Checklist関連の日本語ハードコード](checklist-i18n.md) | 解決済み | 2025-11-01 |
 | [CreateTripDialogの日本語ハードコード](create-trip-dialog-i18n.md) | 解決済み | 2025-11-01 |
 | [Create New Tripダイアログの日付フィールドのi18n化](create-trip-dialog-date-format-i18n.md) | 解決済み | 2025-11-01 |
 | [PDF Preview機能の通常機能化](pdf-preview-promote-to-normal-feature.md) | 未解決 | 2025-11-01 |
 | [言語設定保存後にAutoに戻る問題](language-settings-save-reverts-to-auto.md) | 解決済み | 2025-11-01 |
-| [`<html lang="ja">` のハードコードによる影響と動的設定への変更提案](dynamic-html-lang-attribute.md) | 部分的解決 | 2025-11-01 |
+| [`<html lang="ja">` のハードコードによる影響と動的設定への変更提案](dynamic-html-lang-attribute.md) | 解決済み | 2025-11-01 |
 | [ローディングコンポーネントの使用状況の統一性調査](loading-component-usage-inconsistency.md) | 部分的解決 | 2025-11-01 |
 | [Loadingコンポーネントのデフォルトメッセージ「読み込み中」のi18n化](loading-message-i18n.md) | 解決済み | 2025-11-01 |
-| [Create New Tripダイアログの日付バリデーション動作の改善検討](create-trip-dialog-date-auto-adjust.md) | 未解決 | 2025-11-01 |
+| [Create New Tripダイアログの日付バリデーション動作の改善検討](create-trip-dialog-date-auto-adjust.md) | 解決済み | 2025-11-01 |
 | [TripHeroSectionの日付表示が日本語固定（i18n化未対応）](trip-hero-section-date-i18n.md) | 解決済み | 2025-11-01 |
 | [DayEditorの「この日は何をする日？」placeholderのi18n化](day-editor-placeholder-i18n.md) | 解決済み | 2025-11-01 |
 
@@ -96,7 +96,7 @@
 
 | Issue | 状態 |
 |-------|------|
-| [旅行費用表示が日本語ハードコード（通貨名は未対応）](travel-cost-display-i18n.md) | 通貨名のi18n化は未対応 |
+| [旅行日程文字列のi18n化とライブラリ統一](trip-date-string-i18n-unification.md) | Phase 1完了、Phase 2-3未実装 |
 
 ---
 
