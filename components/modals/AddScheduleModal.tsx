@@ -227,7 +227,7 @@ export default function AddScheduleModal({
           {/* 検索結果がない場合 */}
           {query && searchResults.length === 0 && !isSearching && (
             <div className="text-center py-4 text-gray-500">
-              <p>検索結果が見つかりませんでした</p>
+              <p>{t('placeSearch.noResults')}</p>
               <p className="text-sm mt-1">{t('addScheduleModal.tryDifferentKeyword')}</p>
             </div>
           )}
