@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useSubscription } from '@/lib/contexts/subscription'
 import SubscriptionModal from '@/components/modals/SubscriptionModal'
+import { t } from '@/lib/i18n'
 
 interface PremiumFeatureProps {
   featureName: string
@@ -75,7 +76,7 @@ export default function PremiumFeature({
             price: 980,
             currency: 'JPY',
             features: [
-              '無制限の旅行計画',
+              t('premium.unlimitedTrips'),
               'ルート最適化機能',
               'リアルタイム交通情報',
               '優先サポート'
@@ -89,7 +90,7 @@ export default function PremiumFeature({
             price: 1980,
             currency: 'JPY',
             features: [
-              'プレミアム機能すべて',
+              t('premium.allPremiumFeatures'),
               'チーム機能',
               'API アクセス',
               'カスタムブランディング'

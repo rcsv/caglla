@@ -498,6 +498,9 @@ export type TranslationKey =
   // Country Stats
   | 'countryStats.noTrips'
   | 'countryStats.recommendedTrips'
+  // Premium Feature
+  | 'premium.unlimitedTrips'
+  | 'premium.allPremiumFeatures'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1372,6 +1375,9 @@ const en: Dictionary = {
   // Country Stats
   'countryStats.noTrips': 'No trips yet',
   'countryStats.recommendedTrips': 'Recommended trip plans',
+  // Premium Feature
+  'premium.unlimitedTrips': 'Unlimited trip plans',
+  'premium.allPremiumFeatures': 'All premium features',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2210,6 +2216,9 @@ const ja: Dictionary = {
   // Country Stats
   'countryStats.noTrips': 'まだ旅行がありません',
   'countryStats.recommendedTrips': 'おすすめ旅行計画',
+  // Premium Feature
+  'premium.unlimitedTrips': '無制限の旅行計画',
+  'premium.allPremiumFeatures': 'プレミアム機能すべて',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',
