@@ -449,8 +449,16 @@ export type TranslationKey =
   // Route Optimization
   | 'routeOptimization.failed'
   | 'routeOptimization.optimizedRoute'
+  | 'routeOptimization.loading'
+  | 'routeOptimization.noResult'
+  | 'routeOptimization.totalDistance'
+  | 'routeOptimization.totalDuration'
+  | 'routeOptimization.optimizedOrder'
+  | 'routeOptimization.apiCost'
   | 'routeCost.failed'
   | 'routeCost.suggestion'
+  | 'routeCost.label'
+  | 'routeCost.waypoints'
   // Trip Itinerary View
   | 'tripItinerary.invalidDate'
   | 'tripItinerary.dateNotSet'
@@ -1383,8 +1391,16 @@ const en: Dictionary = {
   // Route Optimization
   'routeOptimization.failed': 'Route optimization failed',
   'routeOptimization.optimizedRoute': 'Optimized route',
+  'routeOptimization.loading': 'Optimizing route...',
+  'routeOptimization.noResult': 'No optimization result',
+  'routeOptimization.totalDistance': 'Total distance',
+  'routeOptimization.totalDuration': 'Total duration',
+  'routeOptimization.optimizedOrder': 'Optimized order',
+  'routeOptimization.apiCost': 'API cost',
   'routeCost.failed': 'Failed to fetch cost estimate',
   'routeCost.suggestion': 'Cost reduction suggestions:',
+  'routeCost.label': 'Route optimization cost:',
+  'routeCost.waypoints': '{waypointCount} waypoints → {requestsNeeded} API calls',
   // Trip Itinerary View
   'tripItinerary.invalidDate': 'Invalid date',
   'tripItinerary.dateNotSet': 'Date not set',
@@ -2281,8 +2297,16 @@ const ja: Dictionary = {
   // Route Optimization
   'routeOptimization.failed': 'ルート最適化に失敗しました',
   'routeOptimization.optimizedRoute': '最適化されたルート',
+  'routeOptimization.loading': 'ルート最適化を実行中...',
+  'routeOptimization.noResult': 'ルート最適化の結果がありません',
+  'routeOptimization.totalDistance': '総距離',
+  'routeOptimization.totalDuration': '総時間',
+  'routeOptimization.optimizedOrder': '最適化された順序',
+  'routeOptimization.apiCost': 'APIコスト',
   'routeCost.failed': 'コスト見積もりの取得に失敗しました',
   'routeCost.suggestion': 'コスト削減の提案:',
+  'routeCost.label': 'ルート最適化コスト:',
+  'routeCost.waypoints': '{waypointCount}地点 → {requestsNeeded}回のAPI呼び出し',
   // Trip Itinerary View
   'tripItinerary.invalidDate': '日付が無効です',
   'tripItinerary.dateNotSet': '日付が設定されていません',

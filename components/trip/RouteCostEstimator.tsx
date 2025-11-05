@@ -75,14 +75,14 @@ export default function RouteCostEstimator({
   return (
     <div className={`text-sm text-gray-600 ${className}`}>
       <div className="flex items-center gap-2 mb-2">
-        <span className="font-medium">ルート最適化コスト:</span>
+        <span className="font-medium">{t('routeCost.label')}</span>
         <span className="text-blue-600 font-semibold">
           ${costEstimate.estimatedCost.toFixed(3)} {costEstimate.currency}
         </span>
       </div>
       
       <div className="text-xs text-gray-500 mb-2">
-        {costEstimate.waypointCount}地点 → {costEstimate.requestsNeeded}回のAPI呼び出し
+        {t('routeCost.waypoints').replace('{waypointCount}', costEstimate.waypointCount.toString()).replace('{requestsNeeded}', costEstimate.requestsNeeded.toString())}
       </div>
 
       {showSuggestions && costEstimate.suggestions.length > 0 && (

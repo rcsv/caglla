@@ -94,7 +94,7 @@ export default function RouteOptimizationDisplay({
   if (isLoading) {
     return (
       <div className={`text-sm text-gray-500 ${className}`}>
-        ルート最適化を実行中...
+        {t('routeOptimization.loading')}
       </div>
     )
   }
@@ -110,7 +110,7 @@ export default function RouteOptimizationDisplay({
   if (!optimizationResult) {
     return (
       <div className={`text-sm text-gray-500 ${className}`}>
-        ルート最適化の結果がありません
+        {t('routeOptimization.noResult')}
       </div>
     )
   }
@@ -123,13 +123,13 @@ export default function RouteOptimizationDisplay({
         
         <div className="grid grid-cols-2 gap-4 mb-3">
           <div>
-            <div className="text-xs text-gray-600">総距離</div>
+            <div className="text-xs text-gray-600">{t('routeOptimization.totalDistance')}</div>
             <div className="text-sm font-semibold text-blue-700">
               {optimizationResult.totalDistance.text}
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-600">総時間</div>
+            <div className="text-xs text-gray-600">{t('routeOptimization.totalDuration')}</div>
             <div className="text-sm font-semibold text-blue-700">
               {optimizationResult.totalDuration.text}
             </div>
@@ -137,11 +137,11 @@ export default function RouteOptimizationDisplay({
         </div>
 
         <div className="text-xs text-gray-600 mb-2">
-          最適化された順序: {optimizationResult.optimizedOrder.join(' → ')}
+          {t('routeOptimization.optimizedOrder')}: {optimizationResult.optimizedOrder.join(' → ')}
         </div>
 
         <div className="text-xs text-gray-500">
-          APIコスト: ${optimizationResult.costEstimate.estimatedCost.toFixed(3)} {optimizationResult.costEstimate.currency}
+          {t('routeOptimization.apiCost')}: ${optimizationResult.costEstimate.estimatedCost.toFixed(3)} {optimizationResult.costEstimate.currency}
         </div>
       </div>
 
