@@ -122,7 +122,7 @@ export default function FailureLogsPage() {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">{timezoneStats.processed}</div>
-                <div className="text-sm text-gray-600">処理済み</div>
+                <div className="text-sm text-gray-600">{t('adminFailureLogs.processed')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-600">{timezoneStats.ignored}</div>
@@ -186,7 +186,7 @@ export default function FailureLogsPage() {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">{currencyStats.processed}</div>
-                <div className="text-sm text-gray-600">処理済み</div>
+                <div className="text-sm text-gray-600">{t('adminFailureLogs.processed')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-600">{currencyStats.ignored}</div>
@@ -220,7 +220,7 @@ export default function FailureLogsPage() {
         </div>
 
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-blue-900 mb-2">このページについて</h3>
+          <h3 className="font-semibold text-blue-900 mb-2">{t('adminFailureLogs.aboutThisPage')}</h3>
           <p className="text-blue-800 text-sm">
             このページでは、タイムゾーンと通貨の推定に失敗した場所のログを管理できます。
             ログが50件蓄積されると警告が表示されます。バッチ処理を実行することで、

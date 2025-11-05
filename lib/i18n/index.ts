@@ -505,6 +505,9 @@ export type TranslationKey =
   | 'userSettingsPage.saveFailed'
   | 'userSettingsPage.saveButton'
   | 'userSettingsPage.saving'
+  // Admin Failure Logs Page
+  | 'adminFailureLogs.processed'
+  | 'adminFailureLogs.aboutThisPage'
   // Country Stats
   | 'countryStats.noTrips'
   | 'countryStats.recommendedTrips'
@@ -1410,6 +1413,9 @@ const en: Dictionary = {
   'userSettingsPage.saveFailed': 'Failed to save settings',
   'userSettingsPage.saveButton': 'Save settings',
   'userSettingsPage.saving': 'Saving...',
+  // Admin Failure Logs Page
+  'adminFailureLogs.processed': 'Processed',
+  'adminFailureLogs.aboutThisPage': 'About this page',
   // Country Stats
   'countryStats.noTrips': 'No trips yet',
   'countryStats.recommendedTrips': 'Recommended trip plans',
@@ -2279,6 +2285,9 @@ const ja: Dictionary = {
   'userSettingsPage.saveFailed': '設定の保存に失敗しました',
   'userSettingsPage.saveButton': '設定を保存',
   'userSettingsPage.saving': '保存中...',
+  // Admin Failure Logs Page
+  'adminFailureLogs.processed': '処理済み',
+  'adminFailureLogs.aboutThisPage': 'このページについて',
   // Country Stats
   'countryStats.noTrips': 'まだ旅行がありません',
   'countryStats.recommendedTrips': 'おすすめ旅行計画',
