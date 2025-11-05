@@ -35,13 +35,25 @@ for issue_file in "$ISSUES_DIR"/*.md; do
   fi
 
   # 解決済みのIssueをスキップ
-  if grep -q "状態.*解決済み\|状態.*✅" "$issue_file" 2>/dev/null; then
+  if grep -q "状態.*解決済み\|状態.*✅\|状態.*✅ 解決済み" "$issue_file" 2>/dev/null; then
     echo "⏭️  スキップ: $(basename "$issue_file") (解決済み)"
     continue
   fi
 
-  # タイトルを抽出
-  TITLE=$(head -n 1 "$issue_file" | sed 's/^# //')
+  # 本文が空またはタイトルが取得できない場合はスキップ
+  if [ -z "$TITLE" ] || [ "$TITLE" == "" ]; then
+    echo "⚠️  スキップ: $(basename "$issue_file") (タイトルが取得できません)"
+    continue
+  fi
+
+  # タイトルを抽出（最初の行の# を削除）
+  TITLE=$(head -n 1 "$issue_file" | sed 's/^# //' | sed 's/^Issue: //' | sed 's/^#Issue: //')
+  
+  # タイトルが空の場合はスキップ
+  if [ -z "$TITLE" ] || [ "$TITLE" == "" ]; then
+    echo "⚠️  スキップ: $(basename "$issue_file") (タイトルが取得できません)"
+    continue
+  fi
   
   # 本文を取得
   BODY=$(cat "$issue_file")
