@@ -65,11 +65,11 @@ export default function UserSettingsPage() {
       if (response.ok) {
         const data = await response.json()
         setUserData(data.user)
-        alert('設定を保存しました')
+        alert(t('userSettingsPage.saveSuccess'))
       }
     } catch (error) {
       logger.error('Failed to save preferences:', error)
-      alert('設定の保存に失敗しました')
+      alert(t('userSettingsPage.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -189,7 +189,7 @@ export default function UserSettingsPage() {
               disabled={saving}
               className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
             >
-              {saving ? '保存中...' : '設定を保存'}
+              {saving ? t('userSettingsPage.saving') : t('userSettingsPage.saveButton')}
             </button>
           </div>
         </div>

@@ -500,6 +500,11 @@ export type TranslationKey =
   | 'inlineTimeEditor.saveHint'
   // Add Schedule Modal
   | 'addScheduleModal.tryDifferentKeyword'
+  // User Settings Page
+  | 'userSettingsPage.saveSuccess'
+  | 'userSettingsPage.saveFailed'
+  | 'userSettingsPage.saveButton'
+  | 'userSettingsPage.saving'
   // Country Stats
   | 'countryStats.noTrips'
   | 'countryStats.recommendedTrips'
@@ -1400,6 +1405,11 @@ const en: Dictionary = {
   'inlineTimeEditor.saveHint': 'Press Enter to save, Escape to cancel',
   // Add Schedule Modal
   'addScheduleModal.tryDifferentKeyword': 'Try searching with different keywords',
+  // User Settings Page
+  'userSettingsPage.saveSuccess': 'Settings saved',
+  'userSettingsPage.saveFailed': 'Failed to save settings',
+  'userSettingsPage.saveButton': 'Save settings',
+  'userSettingsPage.saving': 'Saving...',
   // Country Stats
   'countryStats.noTrips': 'No trips yet',
   'countryStats.recommendedTrips': 'Recommended trip plans',
@@ -2264,6 +2274,11 @@ const ja: Dictionary = {
   'inlineTimeEditor.saveHint': 'Enterで保存、Escapeでキャンセル',
   // Add Schedule Modal
   'addScheduleModal.tryDifferentKeyword': '別のキーワードで検索してみてください',
+  // User Settings Page
+  'userSettingsPage.saveSuccess': '設定を保存しました',
+  'userSettingsPage.saveFailed': '設定の保存に失敗しました',
+  'userSettingsPage.saveButton': '設定を保存',
+  'userSettingsPage.saving': '保存中...',
   // Country Stats
   'countryStats.noTrips': 'まだ旅行がありません',
   'countryStats.recommendedTrips': 'おすすめ旅行計画',
