@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { t } from '@/lib/i18n'
 
 interface ChecklistItem {
   id: string
@@ -42,7 +43,7 @@ export default function Checklist({ title = 'Checklist' }: ChecklistProps) {
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder="項目を追加"
+          placeholder={t('checklist.addItem')}
           className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button onClick={addItem} className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">追加</button>

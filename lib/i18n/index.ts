@@ -443,6 +443,13 @@ export type TranslationKey =
   | 'common.dragHandle'
   | 'common.openMenu'
   | 'schedule.addVenueBetween'
+  // Checklist
+  | 'checklist.addItem'
+  // Route Optimization
+  | 'routeOptimization.failed'
+  | 'routeOptimization.optimizedRoute'
+  | 'routeCost.failed'
+  | 'routeCost.suggestion'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1262,6 +1269,13 @@ const en: Dictionary = {
   'common.dragHandle': 'Drag to reorder',
   'common.openMenu': 'Open menu',
   'schedule.addVenueBetween': 'Add venue between',
+  // Checklist
+  'checklist.addItem': 'Add item',
+  // Route Optimization
+  'routeOptimization.failed': 'Route optimization failed',
+  'routeOptimization.optimizedRoute': 'Optimized route',
+  'routeCost.failed': 'Failed to fetch cost estimate',
+  'routeCost.suggestion': 'Cost reduction suggestions:',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2045,6 +2059,13 @@ const ja: Dictionary = {
   'common.dragHandle': 'ドラッグして順序を変更',
   'common.openMenu': 'メニューを開く',
   'schedule.addVenueBetween': '間にVenueを追加',
+  // Checklist
+  'checklist.addItem': '項目を追加',
+  // Route Optimization
+  'routeOptimization.failed': 'ルート最適化に失敗しました',
+  'routeOptimization.optimizedRoute': '最適化されたルート',
+  'routeCost.failed': 'コスト見積もりの取得に失敗しました',
+  'routeCost.suggestion': 'コスト削減の提案:',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',

@@ -1,4 +1,5 @@
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 import React, { useState, useEffect } from 'react'
 import { optimizeWaypoints, compareRouteOptions, RouteOptimizationRequest } from '@/lib/travel/route-optimization'
 
@@ -73,7 +74,7 @@ export default function RouteOptimizationDisplay({
         }
       } catch (err) {
         logger.error('Route optimization error:', err)
-        setError('ルート最適化に失敗しました')
+        setError(t('routeOptimization.failed'))
       } finally {
         setIsLoading(false)
       }
@@ -118,7 +119,7 @@ export default function RouteOptimizationDisplay({
     <div className={`space-y-4 ${className}`}>
       {/* 最適化結果 */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-blue-800 mb-3">最適化されたルート</h3>
+        <h3 className="text-sm font-semibold text-blue-800 mb-3">{t('routeOptimization.optimizedRoute')}</h3>
         
         <div className="grid grid-cols-2 gap-4 mb-3">
           <div>

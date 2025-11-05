@@ -1,4 +1,5 @@
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 import React, { useState, useEffect } from 'react'
 import { estimateRouteCost, getCostOptimizationSuggestions } from '@/lib/travel/route-optimization'
 
@@ -38,7 +39,7 @@ export default function RouteCostEstimator({
         setCostEstimate(estimate)
       } catch (err) {
         logger.error('Error fetching cost estimate:', err)
-        setError('コスト見積もりの取得に失敗しました')
+        setError(t('routeCost.failed'))
       } finally {
         setIsLoading(false)
       }
@@ -86,7 +87,7 @@ export default function RouteCostEstimator({
 
       {showSuggestions && costEstimate.suggestions.length > 0 && (
         <div className="mt-2">
-          <div className="text-xs font-medium text-gray-700 mb-1">コスト削減の提案:</div>
+          <div className="text-xs font-medium text-gray-700 mb-1">{t('routeCost.suggestion')}</div>
           <ul className="text-xs text-gray-600 space-y-1">
             {costEstimate.suggestions.map((suggestion, index) => (
               <li key={index} className="flex items-start gap-1">
