@@ -551,6 +551,81 @@ export type TranslationKey =
   | 'tripSlugPage.addDayFailed'
   | 'tripSlugPage.addPOIFailed'
   | 'tripSlugPage.orderUpdateFailed'
+  // Currency Names (37 currencies × 2 keys)
+  | 'currency.JPY.name'
+  | 'currency.JPY.country'
+  | 'currency.USD.name'
+  | 'currency.USD.country'
+  | 'currency.EUR.name'
+  | 'currency.EUR.country'
+  | 'currency.GBP.name'
+  | 'currency.GBP.country'
+  | 'currency.KRW.name'
+  | 'currency.KRW.country'
+  | 'currency.CNY.name'
+  | 'currency.CNY.country'
+  | 'currency.HKD.name'
+  | 'currency.HKD.country'
+  | 'currency.SGD.name'
+  | 'currency.SGD.country'
+  | 'currency.THB.name'
+  | 'currency.THB.country'
+  | 'currency.TWD.name'
+  | 'currency.TWD.country'
+  | 'currency.AUD.name'
+  | 'currency.AUD.country'
+  | 'currency.CAD.name'
+  | 'currency.CAD.country'
+  | 'currency.CHF.name'
+  | 'currency.CHF.country'
+  | 'currency.INR.name'
+  | 'currency.INR.country'
+  | 'currency.MYR.name'
+  | 'currency.MYR.country'
+  | 'currency.IDR.name'
+  | 'currency.IDR.country'
+  | 'currency.PHP.name'
+  | 'currency.PHP.country'
+  | 'currency.VND.name'
+  | 'currency.VND.country'
+  | 'currency.MXN.name'
+  | 'currency.MXN.country'
+  | 'currency.SEK.name'
+  | 'currency.SEK.country'
+  | 'currency.NOK.name'
+  | 'currency.NOK.country'
+  | 'currency.DKK.name'
+  | 'currency.DKK.country'
+  | 'currency.PLN.name'
+  | 'currency.PLN.country'
+  | 'currency.CZK.name'
+  | 'currency.CZK.country'
+  | 'currency.HUF.name'
+  | 'currency.HUF.country'
+  | 'currency.RUB.name'
+  | 'currency.RUB.country'
+  | 'currency.AED.name'
+  | 'currency.AED.country'
+  | 'currency.SAR.name'
+  | 'currency.SAR.country'
+  | 'currency.ILS.name'
+  | 'currency.ILS.country'
+  | 'currency.TRY.name'
+  | 'currency.TRY.country'
+  | 'currency.ZAR.name'
+  | 'currency.ZAR.country'
+  | 'currency.BRL.name'
+  | 'currency.BRL.country'
+  | 'currency.ARS.name'
+  | 'currency.ARS.country'
+  | 'currency.CLP.name'
+  | 'currency.CLP.country'
+  | 'currency.COP.name'
+  | 'currency.COP.country'
+  | 'currency.PEN.name'
+  | 'currency.PEN.country'
+  | 'currency.NZD.name'
+  | 'currency.NZD.country'
   // Trip New Page
   | 'tripNew.dateValidation'
   | 'tripNew.destinationRequired'
@@ -1521,6 +1596,81 @@ const en: Dictionary = {
   'activity.primaryShort.transportation': 'Transport',
   'activity.secondary.transportation.flight': 'Flight',
   'activity.secondary.transportation.train': 'Train',
+  // Currency Names
+  'currency.JPY.name': 'Japanese Yen',
+  'currency.JPY.country': 'Japan',
+  'currency.USD.name': 'US Dollar',
+  'currency.USD.country': 'United States',
+  'currency.EUR.name': 'Euro',
+  'currency.EUR.country': 'Europe',
+  'currency.GBP.name': 'British Pound',
+  'currency.GBP.country': 'United Kingdom',
+  'currency.KRW.name': 'South Korean Won',
+  'currency.KRW.country': 'South Korea',
+  'currency.CNY.name': 'Chinese Yuan',
+  'currency.CNY.country': 'China',
+  'currency.HKD.name': 'Hong Kong Dollar',
+  'currency.HKD.country': 'Hong Kong',
+  'currency.SGD.name': 'Singapore Dollar',
+  'currency.SGD.country': 'Singapore',
+  'currency.THB.name': 'Thai Baht',
+  'currency.THB.country': 'Thailand',
+  'currency.TWD.name': 'New Taiwan Dollar',
+  'currency.TWD.country': 'Taiwan',
+  'currency.AUD.name': 'Australian Dollar',
+  'currency.AUD.country': 'Australia',
+  'currency.CAD.name': 'Canadian Dollar',
+  'currency.CAD.country': 'Canada',
+  'currency.CHF.name': 'Swiss Franc',
+  'currency.CHF.country': 'Switzerland',
+  'currency.INR.name': 'Indian Rupee',
+  'currency.INR.country': 'India',
+  'currency.MYR.name': 'Malaysian Ringgit',
+  'currency.MYR.country': 'Malaysia',
+  'currency.IDR.name': 'Indonesian Rupiah',
+  'currency.IDR.country': 'Indonesia',
+  'currency.PHP.name': 'Philippine Peso',
+  'currency.PHP.country': 'Philippines',
+  'currency.VND.name': 'Vietnamese Dong',
+  'currency.VND.country': 'Vietnam',
+  'currency.MXN.name': 'Mexican Peso',
+  'currency.MXN.country': 'Mexico',
+  'currency.SEK.name': 'Swedish Krona',
+  'currency.SEK.country': 'Sweden',
+  'currency.NOK.name': 'Norwegian Krone',
+  'currency.NOK.country': 'Norway',
+  'currency.DKK.name': 'Danish Krone',
+  'currency.DKK.country': 'Denmark',
+  'currency.PLN.name': 'Polish Zloty',
+  'currency.PLN.country': 'Poland',
+  'currency.CZK.name': 'Czech Koruna',
+  'currency.CZK.country': 'Czech Republic',
+  'currency.HUF.name': 'Hungarian Forint',
+  'currency.HUF.country': 'Hungary',
+  'currency.RUB.name': 'Russian Ruble',
+  'currency.RUB.country': 'Russia',
+  'currency.AED.name': 'UAE Dirham',
+  'currency.AED.country': 'United Arab Emirates',
+  'currency.SAR.name': 'Saudi Riyal',
+  'currency.SAR.country': 'Saudi Arabia',
+  'currency.ILS.name': 'Israeli Shekel',
+  'currency.ILS.country': 'Israel',
+  'currency.TRY.name': 'Turkish Lira',
+  'currency.TRY.country': 'Turkey',
+  'currency.ZAR.name': 'South African Rand',
+  'currency.ZAR.country': 'South Africa',
+  'currency.BRL.name': 'Brazilian Real',
+  'currency.BRL.country': 'Brazil',
+  'currency.ARS.name': 'Argentine Peso',
+  'currency.ARS.country': 'Argentina',
+  'currency.CLP.name': 'Chilean Peso',
+  'currency.CLP.country': 'Chile',
+  'currency.COP.name': 'Colombian Peso',
+  'currency.COP.country': 'Colombia',
+  'currency.PEN.name': 'Peruvian Sol',
+  'currency.PEN.country': 'Peru',
+  'currency.NZD.name': 'New Zealand Dollar',
+  'currency.NZD.country': 'New Zealand',
   // Travel Cost Display
   'cost.title': 'Travel Cost',
   'cost.empty': 'No schedules with cost information',
@@ -2429,6 +2579,81 @@ const ja: Dictionary = {
   'activity.primaryShort.transportation': '乗り物',
   'activity.secondary.transportation.flight': '飛行機',
   'activity.secondary.transportation.train': '電車',
+  // Currency Names
+  'currency.JPY.name': '日本円',
+  'currency.JPY.country': '日本',
+  'currency.USD.name': '米ドル',
+  'currency.USD.country': 'アメリカ',
+  'currency.EUR.name': 'ユーロ',
+  'currency.EUR.country': 'ヨーロッパ',
+  'currency.GBP.name': '英ポンド',
+  'currency.GBP.country': 'イギリス',
+  'currency.KRW.name': '韓国ウォン',
+  'currency.KRW.country': '韓国',
+  'currency.CNY.name': '中国元',
+  'currency.CNY.country': '中国',
+  'currency.HKD.name': '香港ドル',
+  'currency.HKD.country': '香港',
+  'currency.SGD.name': 'シンガポールドル',
+  'currency.SGD.country': 'シンガポール',
+  'currency.THB.name': 'タイバーツ',
+  'currency.THB.country': 'タイ',
+  'currency.TWD.name': '台湾ドル',
+  'currency.TWD.country': '台湾',
+  'currency.AUD.name': '豪ドル',
+  'currency.AUD.country': 'オーストラリア',
+  'currency.CAD.name': 'カナダドル',
+  'currency.CAD.country': 'カナダ',
+  'currency.CHF.name': 'スイスフラン',
+  'currency.CHF.country': 'スイス',
+  'currency.INR.name': 'インドルピー',
+  'currency.INR.country': 'インド',
+  'currency.MYR.name': 'マレーシアリンギット',
+  'currency.MYR.country': 'マレーシア',
+  'currency.IDR.name': 'インドネシアルピア',
+  'currency.IDR.country': 'インドネシア',
+  'currency.PHP.name': 'フィリピンペソ',
+  'currency.PHP.country': 'フィリピン',
+  'currency.VND.name': 'ベトナムドン',
+  'currency.VND.country': 'ベトナム',
+  'currency.MXN.name': 'メキシコペソ',
+  'currency.MXN.country': 'メキシコ',
+  'currency.SEK.name': 'スウェーデンクローナ',
+  'currency.SEK.country': 'スウェーデン',
+  'currency.NOK.name': 'ノルウェークローネ',
+  'currency.NOK.country': 'ノルウェー',
+  'currency.DKK.name': 'デンマーククローネ',
+  'currency.DKK.country': 'デンマーク',
+  'currency.PLN.name': 'ポーランドズロチ',
+  'currency.PLN.country': 'ポーランド',
+  'currency.CZK.name': 'チェココルナ',
+  'currency.CZK.country': 'チェコ',
+  'currency.HUF.name': 'ハンガリーフォリント',
+  'currency.HUF.country': 'ハンガリー',
+  'currency.RUB.name': 'ロシアルーブル',
+  'currency.RUB.country': 'ロシア',
+  'currency.AED.name': 'アラブ首長国連邦ディルハム',
+  'currency.AED.country': 'UAE',
+  'currency.SAR.name': 'サウジアラビアリヤル',
+  'currency.SAR.country': 'サウジアラビア',
+  'currency.ILS.name': 'イスラエルシェケル',
+  'currency.ILS.country': 'イスラエル',
+  'currency.TRY.name': 'トルコリラ',
+  'currency.TRY.country': 'トルコ',
+  'currency.ZAR.name': '南アフリカランド',
+  'currency.ZAR.country': '南アフリカ',
+  'currency.BRL.name': 'ブラジルレアル',
+  'currency.BRL.country': 'ブラジル',
+  'currency.ARS.name': 'アルゼンチンペソ',
+  'currency.ARS.country': 'アルゼンチン',
+  'currency.CLP.name': 'チリペソ',
+  'currency.CLP.country': 'チリ',
+  'currency.COP.name': 'コロンビアペソ',
+  'currency.COP.country': 'コロンビア',
+  'currency.PEN.name': 'ペルーソル',
+  'currency.PEN.country': 'ペルー',
+  'currency.NZD.name': 'ニュージーランドドル',
+  'currency.NZD.country': 'ニュージーランド',
   // Travel Cost Display
   'cost.title': '旅行費用',
   'cost.empty': '費用情報が設定されたスケジュールがありません',

@@ -10,45 +10,48 @@ const currencyFailureLogger = new FailureLogger<CurrencyFailureLog>('currency_fa
 
 // 通貨の詳細情報
 import type { CurrencyInfo } from '@/lib/core/types'
+import { t } from '@/lib/i18n'
+import type { TranslationKey } from '@/lib/i18n'
 
-const CURRENCY_INFO: Record<string, CurrencyInfo> = {
-  'JPY': { code: 'JPY', name: '日本円', symbol: '¥', country: '日本' },
-  'USD': { code: 'USD', name: '米ドル', symbol: '$', country: 'アメリカ' },
-  'EUR': { code: 'EUR', name: 'ユーロ', symbol: '€', country: 'ヨーロッパ' },
-  'GBP': { code: 'GBP', name: '英ポンド', symbol: '£', country: 'イギリス' },
-  'KRW': { code: 'KRW', name: '韓国ウォン', symbol: '₩', country: '韓国' },
-  'CNY': { code: 'CNY', name: '中国元', symbol: '¥', country: '中国' },
-  'HKD': { code: 'HKD', name: '香港ドル', symbol: 'HK$', country: '香港' },
-  'SGD': { code: 'SGD', name: 'シンガポールドル', symbol: 'S$', country: 'シンガポール' },
-  'THB': { code: 'THB', name: 'タイバーツ', symbol: '฿', country: 'タイ' },
-  'TWD': { code: 'TWD', name: '台湾ドル', symbol: 'NT$', country: '台湾' },
-  'AUD': { code: 'AUD', name: '豪ドル', symbol: 'A$', country: 'オーストラリア' },
-  'CAD': { code: 'CAD', name: 'カナダドル', symbol: 'C$', country: 'カナダ' },
-  'CHF': { code: 'CHF', name: 'スイスフラン', symbol: 'CHF', country: 'スイス' },
-  'INR': { code: 'INR', name: 'インドルピー', symbol: '₹', country: 'インド' },
-  'MYR': { code: 'MYR', name: 'マレーシアリンギット', symbol: 'RM', country: 'マレーシア' },
-  'IDR': { code: 'IDR', name: 'インドネシアルピア', symbol: 'Rp', country: 'インドネシア' },
-  'PHP': { code: 'PHP', name: 'フィリピンペソ', symbol: '₱', country: 'フィリピン' },
-  'VND': { code: 'VND', name: 'ベトナムドン', symbol: '₫', country: 'ベトナム' },
-  'MXN': { code: 'MXN', name: 'メキシコペソ', symbol: 'MX$', country: 'メキシコ' },
-  'SEK': { code: 'SEK', name: 'スウェーデンクローナ', symbol: 'kr', country: 'スウェーデン' },
-  'NOK': { code: 'NOK', name: 'ノルウェークローネ', symbol: 'kr', country: 'ノルウェー' },
-  'DKK': { code: 'DKK', name: 'デンマーククローネ', symbol: 'kr', country: 'デンマーク' },
-  'PLN': { code: 'PLN', name: 'ポーランドズロチ', symbol: 'zł', country: 'ポーランド' },
-  'CZK': { code: 'CZK', name: 'チェココルナ', symbol: 'Kč', country: 'チェコ' },
-  'HUF': { code: 'HUF', name: 'ハンガリーフォリント', symbol: 'Ft', country: 'ハンガリー' },
-  'RUB': { code: 'RUB', name: 'ロシアルーブル', symbol: '₽', country: 'ロシア' },
-  'AED': { code: 'AED', name: 'アラブ首長国連邦ディルハム', symbol: 'د.إ', country: 'UAE' },
-  'SAR': { code: 'SAR', name: 'サウジアラビアリヤル', symbol: '﷼', country: 'サウジアラビア' },
-  'ILS': { code: 'ILS', name: 'イスラエルシェケル', symbol: '₪', country: 'イスラエル' },
-  'TRY': { code: 'TRY', name: 'トルコリラ', symbol: '₺', country: 'トルコ' },
-  'ZAR': { code: 'ZAR', name: '南アフリカランド', symbol: 'R', country: '南アフリカ' },
-  'BRL': { code: 'BRL', name: 'ブラジルレアル', symbol: 'R$', country: 'ブラジル' },
-  'ARS': { code: 'ARS', name: 'アルゼンチンペソ', symbol: '$', country: 'アルゼンチン' },
-  'CLP': { code: 'CLP', name: 'チリペソ', symbol: '$', country: 'チリ' },
-  'COP': { code: 'COP', name: 'コロンビアペソ', symbol: '$', country: 'コロンビア' },
-  'PEN': { code: 'PEN', name: 'ペルーソル', symbol: 'S/', country: 'ペルー' },
-  'NZD': { code: 'NZD', name: 'ニュージーランドドル', symbol: 'NZ$', country: 'ニュージーランド' },
+// 通貨の基本情報（シンボルのみ保持、nameとcountryはi18n化）
+const CURRENCY_BASE_INFO: Record<string, { code: string; symbol: string }> = {
+  'JPY': { code: 'JPY', symbol: '¥' },
+  'USD': { code: 'USD', symbol: '$' },
+  'EUR': { code: 'EUR', symbol: '€' },
+  'GBP': { code: 'GBP', symbol: '£' },
+  'KRW': { code: 'KRW', symbol: '₩' },
+  'CNY': { code: 'CNY', symbol: '¥' },
+  'HKD': { code: 'HKD', symbol: 'HK$' },
+  'SGD': { code: 'SGD', symbol: 'S$' },
+  'THB': { code: 'THB', symbol: '฿' },
+  'TWD': { code: 'TWD', symbol: 'NT$' },
+  'AUD': { code: 'AUD', symbol: 'A$' },
+  'CAD': { code: 'CAD', symbol: 'C$' },
+  'CHF': { code: 'CHF', symbol: 'CHF' },
+  'INR': { code: 'INR', symbol: '₹' },
+  'MYR': { code: 'MYR', symbol: 'RM' },
+  'IDR': { code: 'IDR', symbol: 'Rp' },
+  'PHP': { code: 'PHP', symbol: '₱' },
+  'VND': { code: 'VND', symbol: '₫' },
+  'MXN': { code: 'MXN', symbol: 'MX$' },
+  'SEK': { code: 'SEK', symbol: 'kr' },
+  'NOK': { code: 'NOK', symbol: 'kr' },
+  'DKK': { code: 'DKK', symbol: 'kr' },
+  'PLN': { code: 'PLN', symbol: 'zł' },
+  'CZK': { code: 'CZK', symbol: 'Kč' },
+  'HUF': { code: 'HUF', symbol: 'Ft' },
+  'RUB': { code: 'RUB', symbol: '₽' },
+  'AED': { code: 'AED', symbol: 'د.إ' },
+  'SAR': { code: 'SAR', symbol: '﷼' },
+  'ILS': { code: 'ILS', symbol: '₪' },
+  'TRY': { code: 'TRY', symbol: '₺' },
+  'ZAR': { code: 'ZAR', symbol: 'R' },
+  'BRL': { code: 'BRL', symbol: 'R$' },
+  'ARS': { code: 'ARS', symbol: '$' },
+  'CLP': { code: 'CLP', symbol: '$' },
+  'COP': { code: 'COP', symbol: '$' },
+  'PEN': { code: 'PEN', symbol: 'S/' },
+  'NZD': { code: 'NZD', symbol: 'NZ$' },
 }
 
 export const currencyUtils = {
@@ -112,24 +115,41 @@ export const currencyUtils = {
     return 'JPY'
   },
 
-  // 通貨コードから詳細情報を取得
+  // 通貨コードから詳細情報を取得（i18n対応）
   getCurrencyInfo: (currencyCode: string): CurrencyInfo => {
-    return CURRENCY_INFO[currencyCode] || {
-      code: currencyCode,
-      name: currencyCode,
-      symbol: currencyCode,
-      country: 'Unknown'
+    const baseInfo = CURRENCY_BASE_INFO[currencyCode]
+    if (!baseInfo) {
+      // フォールバック: 未定義の通貨コード
+      return {
+        code: currencyCode,
+        name: currencyCode,
+        symbol: currencyCode,
+        country: 'Unknown'
+      }
+    }
+    
+    // i18nキーから通貨名・国名を取得
+    const nameKey = `currency.${currencyCode}.name` as TranslationKey
+    const countryKey = `currency.${currencyCode}.country` as TranslationKey
+    
+    return {
+      code: baseInfo.code,
+      name: t(nameKey) || currencyCode, // フォールバック: キーが存在しない場合は通貨コード
+      symbol: baseInfo.symbol,
+      country: t(countryKey) || 'Unknown' // フォールバック: キーが存在しない場合は'Unknown'
     }
   },
 
-  // 利用可能な通貨リストを取得
+  // 利用可能な通貨リストを取得（i18n対応）
   getAvailableCurrencies: (): CurrencyInfo[] => {
-    return Object.values(CURRENCY_INFO)
+    return Object.keys(CURRENCY_BASE_INFO).map(code => 
+      currencyUtils.getCurrencyInfo(code)
+    )
   },
 
   // 通貨コードが有効かチェック
   isValidCurrency: (currencyCode: string): boolean => {
-    return currencyCode in CURRENCY_INFO
+    return currencyCode in CURRENCY_BASE_INFO
   },
 
   // 金額をフォーマット
