@@ -149,7 +149,7 @@ const formattedDate = date.toLocaleDateString(locale, {
 
 ## ステータス
 
-🟡 **未着手**
+✅ **解決済み**（2025-11-05）
 
 ## 備考
 
