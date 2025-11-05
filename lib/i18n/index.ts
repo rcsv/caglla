@@ -492,6 +492,12 @@ export type TranslationKey =
   | 'routeOptimizer.unknownPlace'
   // Trip Map
   | 'tripMap.loadFailed'
+  // Inline Cost Editor
+  | 'inlineCostEditor.invalidAmount'
+  | 'inlineCostEditor.saveHint'
+  // Country Stats
+  | 'countryStats.noTrips'
+  | 'countryStats.recommendedTrips'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1360,6 +1366,12 @@ const en: Dictionary = {
   'routeOptimizer.unknownPlace': 'Unknown place',
   // Trip Map
   'tripMap.loadFailed': 'Failed to load Google Maps API',
+  // Inline Cost Editor
+  'inlineCostEditor.invalidAmount': 'Please enter a valid amount',
+  'inlineCostEditor.saveHint': 'Press Enter to save, Escape to cancel',
+  // Country Stats
+  'countryStats.noTrips': 'No trips yet',
+  'countryStats.recommendedTrips': 'Recommended trip plans',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2192,6 +2204,12 @@ const ja: Dictionary = {
   'routeOptimizer.unknownPlace': '不明な場所',
   // Trip Map
   'tripMap.loadFailed': 'Google Maps APIの読み込みに失敗しました',
+  // Inline Cost Editor
+  'inlineCostEditor.invalidAmount': '正しい金額を入力してください',
+  'inlineCostEditor.saveHint': 'Enterで保存、Escapeでキャンセル',
+  // Country Stats
+  'countryStats.noTrips': 'まだ旅行がありません',
+  'countryStats.recommendedTrips': 'おすすめ旅行計画',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',

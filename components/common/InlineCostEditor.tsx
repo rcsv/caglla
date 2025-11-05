@@ -1,5 +1,6 @@
 import { currencyUtils } from '@/lib/utils/currency'
 import { isValidAmount } from '@/lib/utils/amount-validation'
+import { t } from '@/lib/i18n'
 
 interface InlineCostEditorProps {
   amount: string
@@ -73,9 +74,9 @@ export function InlineCostEditor({
         </button>
       </div>
       {!isValid && (
-        <p className="text-xs text-red-500">正しい金額を入力してください</p>
+        <p className="text-xs text-red-500">{t('inlineCostEditor.invalidAmount')}</p>
       )}
-      <p className="text-xs text-gray-400">Enterで保存、Escapeでキャンセル</p>
+      <p className="text-xs text-gray-400">{t('inlineCostEditor.saveHint')}</p>
     </div>
   )
 }

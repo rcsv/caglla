@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
 import { CountryGroup } from '@/lib/travel/country/utils'
@@ -181,14 +182,14 @@ export default function CountryStats({ userId, className = '' }: CountryStatsPro
         ) : (
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">国別統計</h3>
-            <p className="text-gray-500 text-center">まだ旅行がありません</p>
+            <p className="text-gray-500 text-center">{t('countryStats.noTrips')}</p>
           </div>
         )}
 
         {/* おすすめ旅行計画 */}
         {recommendedTrips.length > 0 && (
           <section>
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">おすすめ旅行計画</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">{t('countryStats.recommendedTrips')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {recommendedTrips.map(trip => (
                 <TripCard key={trip.id} trip={trip} variant="imageFull" />
