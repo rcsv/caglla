@@ -495,6 +495,9 @@ export type TranslationKey =
   // Inline Cost Editor
   | 'inlineCostEditor.invalidAmount'
   | 'inlineCostEditor.saveHint'
+  // Inline Time Editor
+  | 'inlineTimeEditor.invalidFormat'
+  | 'inlineTimeEditor.saveHint'
   // Country Stats
   | 'countryStats.noTrips'
   | 'countryStats.recommendedTrips'
@@ -1390,6 +1393,9 @@ const en: Dictionary = {
   // Inline Cost Editor
   'inlineCostEditor.invalidAmount': 'Please enter a valid amount',
   'inlineCostEditor.saveHint': 'Press Enter to save, Escape to cancel',
+  // Inline Time Editor
+  'inlineTimeEditor.invalidFormat': 'Please enter a valid time format (e.g., 16:00)',
+  'inlineTimeEditor.saveHint': 'Press Enter to save, Escape to cancel',
   // Country Stats
   'countryStats.noTrips': 'No trips yet',
   'countryStats.recommendedTrips': 'Recommended trip plans',
@@ -2249,6 +2255,9 @@ const ja: Dictionary = {
   // Inline Cost Editor
   'inlineCostEditor.invalidAmount': '正しい金額を入力してください',
   'inlineCostEditor.saveHint': 'Enterで保存、Escapeでキャンセル',
+  // Inline Time Editor
+  'inlineTimeEditor.invalidFormat': '正しい時間形式で入力してください (例: 16:00)',
+  'inlineTimeEditor.saveHint': 'Enterで保存、Escapeでキャンセル',
   // Country Stats
   'countryStats.noTrips': 'まだ旅行がありません',
   'countryStats.recommendedTrips': 'おすすめ旅行計画',

@@ -1,5 +1,6 @@
 import { TIMEZONE_OPTIONS } from '@/lib/data/timezone-options'
 import { isValidTimeFormat } from '@/lib/utils/time-validation'
+import { t } from '@/lib/i18n'
 
 interface InlineTimeEditorProps {
   startTime: string
@@ -88,9 +89,9 @@ export function InlineTimeEditor({
         </button>
       </div>
       {!isValid && (
-        <p className="text-xs text-red-500">正しい時間形式で入力してください (例: 16:00)</p>
+        <p className="text-xs text-red-500">{t('inlineTimeEditor.invalidFormat')}</p>
       )}
-      <p className="text-xs text-gray-400">Enterで保存、Escapeでキャンセル</p>
+      <p className="text-xs text-gray-400">{t('inlineTimeEditor.saveHint')}</p>
     </div>
   )
 }
