@@ -12,17 +12,23 @@ export const dateUtils = {
   },
 
   // Format date safely
-  formatDate: (date: FirestoreDate, options?: Intl.DateTimeFormatOptions): string => {
+  // language: Optional language parameter ('ja' or 'en'), defaults to 'ja' for backward compatibility
+  formatDate: (date: FirestoreDate, options?: Intl.DateTimeFormatOptions, language?: SupportedLanguage): string => {
     if (!dateUtils.isValidDate(date)) {
-      return '日付が設定されていません'
+      const lang = language || getUserLanguage()
+      return t('date.notSet', lang)
     }
     
     const d = toDateOrNull(date)
     if (!d) {
-      return '日付が設定されていません'
+      const lang = language || getUserLanguage()
+      return t('date.notSet', lang)
     }
     
-    return d.toLocaleDateString('ja-JP', {
+    const lang = language || getUserLanguage()
+    const locale = lang === 'ja' ? 'ja-JP' : 'en-US'
+    
+    return d.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

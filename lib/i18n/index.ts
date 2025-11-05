@@ -570,6 +570,7 @@ export type TranslationKey =
   | 'poi.addToItinerary'
   | 'poi.showPartial'
   | 'poi.showAll'
+  | 'poi.daySelector.title'
   // Reservation Display
   | 'reservation.title'
   | 'reservation.empty'
@@ -1299,6 +1300,7 @@ const en: Dictionary = {
   'poi.addToItinerary': 'Add to itinerary',
   'poi.showPartial': 'Show partial',
   'poi.showAll': 'Show all ({count})',
+  'poi.daySelector.title': 'Select day to add',
   // Reservation Display
   'reservation.title': 'Reservations',
   'reservation.empty': 'No reservations',
@@ -2191,6 +2193,7 @@ const ja: Dictionary = {
   'poi.addToItinerary': '旅程に追加',
   'poi.showPartial': '一部を表示',
   'poi.showAll': 'すべて表示 ({count})',
+  'poi.daySelector.title': '追加する日を選択',
   // Reservation Display
   'reservation.title': '予約情報',
   'reservation.empty': '予約情報がありません',

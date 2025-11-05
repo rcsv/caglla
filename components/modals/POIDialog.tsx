@@ -444,7 +444,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                   >
                     <div className="p-2">
                       <div className="text-xs font-medium text-gray-500 px-2 py-1 sticky top-0 bg-white border-b border-gray-100">
-                        追加する日を選択
+                        {t('poi.daySelector.title')}
                       </div>
                       <div className="max-h-[240px] overflow-y-auto scrollbar-hide">
                         {availableDays.map((day) => (
