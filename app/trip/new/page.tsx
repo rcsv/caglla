@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import { useAuth } from '@/lib/contexts/auth'
 import { useRouter } from 'next/navigation'
@@ -146,7 +147,7 @@ export default function NewTripPage() {
     const end = new Date(endDate)
     
     if (start > end) {
-      return '出発日は帰宅日より前の日付を選択してください'
+      return t('tripNew.dateValidation')
     }
     
     return ''
@@ -158,17 +159,17 @@ export default function NewTripPage() {
 
     // 必須項目のバリデーション
     if (!formData.destination.trim()) {
-      alert('目的地を入力してください。')
+      alert(t('tripNew.destinationRequired'))
       return
     }
 
     if (!formData.startDate) {
-      alert('出発日を選択してください。')
+      alert(t('tripNew.startDateRequired'))
       return
     }
 
     if (!formData.endDate) {
-      alert('帰宅日を選択してください。')
+      alert(t('tripNew.endDateRequired'))
       return
     }
 
@@ -301,7 +302,7 @@ export default function NewTripPage() {
               >
                 ← 戻る
               </button>
-              <h1 className="text-2xl font-bold text-gray-900">新しい旅行を作成</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{t('tripNew.title')}</h1>
             </div>
           </div>
         </div>
@@ -324,7 +325,7 @@ export default function NewTripPage() {
                     destinationPlace: place || undefined,
                     destination: place?.name || '' // 後方互換性のため
                   }))}
-                  placeholder="目的地を検索..."
+                  placeholder={t('tripNew.destinationPlaceholder')}
                   disabled={submitting}
                 />
                 {/* 従来のテキスト入力も残す（フォールバック用） */}
@@ -429,7 +430,7 @@ export default function NewTripPage() {
                         value={formData.title}
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="例: 沖縄旅行（空欄の場合は目的地が使用されます）"
+                        placeholder={t('tripNew.titlePlaceholder')}
                       />
                     </div>
 
@@ -444,7 +445,7 @@ export default function NewTripPage() {
                         onChange={handleInputChange}
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="旅行の詳細や目的を記入してください"
+                        placeholder={t('tripNew.descriptionPlaceholder')}
                       />
                     </div>
 
@@ -490,7 +491,7 @@ export default function NewTripPage() {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="private">非公開（自分と共有ユーザーのみ）</option>
+                        <option value="private">{t('tripNew.accessLevel.private')}</option>
                         <option value="public">公開（誰でも閲覧可能）</option>
                       </select>
                     </div>

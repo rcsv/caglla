@@ -507,6 +507,16 @@ export type TranslationKey =
   | 'tripSlugPage.fetchTripFailed'
   | 'tripSlugPage.addDayFailed'
   | 'tripSlugPage.addPOIFailed'
+  // Trip New Page
+  | 'tripNew.dateValidation'
+  | 'tripNew.destinationRequired'
+  | 'tripNew.startDateRequired'
+  | 'tripNew.endDateRequired'
+  | 'tripNew.title'
+  | 'tripNew.destinationPlaceholder'
+  | 'tripNew.titlePlaceholder'
+  | 'tripNew.descriptionPlaceholder'
+  | 'tripNew.accessLevel.private'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1390,6 +1400,16 @@ const en: Dictionary = {
   'tripSlugPage.fetchTripFailed': 'Failed to fetch trip data',
   'tripSlugPage.addDayFailed': 'Failed to add day',
   'tripSlugPage.addPOIFailed': 'Failed to add POI',
+  // Trip New Page
+  'tripNew.dateValidation': 'Start date must be before end date',
+  'tripNew.destinationRequired': 'Please enter destination',
+  'tripNew.startDateRequired': 'Please select start date',
+  'tripNew.endDateRequired': 'Please select end date',
+  'tripNew.title': 'Create new trip',
+  'tripNew.destinationPlaceholder': 'Search for destination...',
+  'tripNew.titlePlaceholder': 'e.g., Okinawa trip (destination will be used if blank)',
+  'tripNew.descriptionPlaceholder': 'Enter trip details and purpose',
+  'tripNew.accessLevel.private': 'Private (only you and shared users)',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2237,6 +2257,16 @@ const ja: Dictionary = {
   'tripSlugPage.fetchTripFailed': '旅行データの取得に失敗しました',
   'tripSlugPage.addDayFailed': '日程の追加に失敗しました',
   'tripSlugPage.addPOIFailed': 'POIの追加に失敗しました',
+  // Trip New Page
+  'tripNew.dateValidation': '出発日は帰宅日より前の日付を選択してください',
+  'tripNew.destinationRequired': '目的地を入力してください。',
+  'tripNew.startDateRequired': '出発日を選択してください。',
+  'tripNew.endDateRequired': '帰宅日を選択してください。',
+  'tripNew.title': '新しい旅行を作成',
+  'tripNew.destinationPlaceholder': '目的地を検索...',
+  'tripNew.titlePlaceholder': '例: 沖縄旅行（空欄の場合は目的地が使用されます）',
+  'tripNew.descriptionPlaceholder': '旅行の詳細や目的を記入してください',
+  'tripNew.accessLevel.private': '非公開（自分と共有ユーザーのみ）',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',
