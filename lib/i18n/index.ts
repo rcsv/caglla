@@ -457,6 +457,12 @@ export type TranslationKey =
   | 'tripItinerary.collapse'
   | 'tripItinerary.addVenue'
   | 'tripItinerary.addVenueAtEnd'
+  // Schedule Card
+  | 'scheduleCard.reservationSaveFailed'
+  | 'scheduleCard.collapse'
+  | 'scheduleCard.readMore'
+  | 'scheduleCard.memo.hasDescription'
+  | 'scheduleCard.memo.addMemo'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1290,6 +1296,12 @@ const en: Dictionary = {
   'tripItinerary.collapse': 'Collapse',
   'tripItinerary.addVenue': 'Add venue',
   'tripItinerary.addVenueAtEnd': 'Add venue at end',
+  // Schedule Card
+  'scheduleCard.reservationSaveFailed': 'Failed to save reservation information',
+  'scheduleCard.collapse': 'Collapse',
+  'scheduleCard.readMore': 'Read more',
+  'scheduleCard.memo.hasDescription': 'Memo: Place description is displayed. Click to edit.',
+  'scheduleCard.memo.addMemo': 'Memo: Add a memo',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2087,6 +2099,12 @@ const ja: Dictionary = {
   'tripItinerary.collapse': '折りたたみ',
   'tripItinerary.addVenue': 'Venueを追加',
   'tripItinerary.addVenueAtEnd': '最後にVenueを追加',
+  // Schedule Card
+  'scheduleCard.reservationSaveFailed': '予約情報の保存に失敗しました',
+  'scheduleCard.collapse': '折りたたむ',
+  'scheduleCard.readMore': '続きを読む',
+  'scheduleCard.memo.hasDescription': 'Memo: 場所の説明が表示されています。クリックして編集できます。',
+  'scheduleCard.memo.addMemo': 'Memo: メモを追加してください',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',

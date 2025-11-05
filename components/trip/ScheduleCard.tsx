@@ -162,8 +162,8 @@ export default function ScheduleCard({
     if (result.success) {
       logger.info('予約情報を保存しました:', reservation)
     } else if (result.error !== 'aborted') {
-      logger.error('予約情報の保存に失敗しました')
-      throw new Error('予約情報の保存に失敗しました')
+      logger.error(t('scheduleCard.reservationSaveFailed'))
+      throw new Error(t('scheduleCard.reservationSaveFailed'))
     }
   }
 
@@ -356,15 +356,15 @@ export default function ScheduleCard({
                             }}
                             className="text-blue-600 hover:text-blue-800 underline text-xs mt-1"
                           >
-                            {isExpanded ? '折りたたむ' : '続きを読む'}
+                            {isExpanded ? t('scheduleCard.collapse') : t('scheduleCard.readMore')}
                           </button>
                         )}
                       </div>
                     ) : (
                       <span className="text-gray-400 italic">
                         {itinerary.place_data?.editorial_summary?.overview 
-                          ? 'Memo: 場所の説明が表示されています。クリックして編集できます。' 
-                          : 'Memo: メモを追加してください'
+                          ? t('scheduleCard.memo.hasDescription')
+                          : t('scheduleCard.memo.addMemo')
                         }
                       </span>
                     )}
