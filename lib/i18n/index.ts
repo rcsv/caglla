@@ -497,6 +497,10 @@ export type TranslationKey =
   // Trip Map
   | 'tripMap.loadFailed'
   | 'tripMap.loadFailedWarning'
+  | 'tripMap.overlay.title'
+  | 'tripMap.overlay.filtering'
+  | 'tripMap.overlay.displayingLocations'
+  | 'tripMap.overlay.filteredByDay'
   // Next Trip Map
   | 'nextTripMap.loadFailed'
   // Plan Limits Display
@@ -1427,6 +1431,11 @@ const en: Dictionary = {
   // Trip Map
   'tripMap.loadFailed': 'Failed to load Google Maps API',
   'tripMap.loadFailedWarning': '⚠️ Failed to load map',
+  // Trip Map Overlay
+  'tripMap.overlay.title': 'Itinerary Map',
+  'tripMap.overlay.filtering': 'Filtering',
+  'tripMap.overlay.displayingLocations': '{count} locations displayed',
+  'tripMap.overlay.filteredByDay': 'Only selected dates are displayed',
   // Next Trip Map
   'nextTripMap.loadFailed': 'Failed to load Google Maps API',
   // Plan Limits Display
@@ -2320,6 +2329,11 @@ const ja: Dictionary = {
   // Trip Map
   'tripMap.loadFailed': 'Google Maps APIの読み込みに失敗しました',
   'tripMap.loadFailedWarning': '⚠️ 地図の読み込みに失敗しました',
+  // Trip Map Overlay
+  'tripMap.overlay.title': '旅程マップ',
+  'tripMap.overlay.filtering': 'フィルタ中',
+  'tripMap.overlay.displayingLocations': '{count} 箇所の地点を表示',
+  'tripMap.overlay.filteredByDay': '選択された日程のみ表示中',
   // Next Trip Map
   'nextTripMap.loadFailed': 'Google Maps APIの読み込みに失敗しました',
   // Plan Limits Display

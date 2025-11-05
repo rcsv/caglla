@@ -690,18 +690,20 @@ export default function TripMap({
       <div className={`absolute top-4 left-4 bg-white rounded-lg shadow-xl border border-gray-200 p-3 max-w-xs ${getZIndexClass('MAIN_CONTENT')}`}>
         <div className="text-sm text-gray-600">
           <div className="font-medium text-gray-900 mb-1">
-            旅程マップ
+            {t('tripMap.overlay.title')}
             {selectedDayId && (
               <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                フィルタ中
+                {t('tripMap.overlay.filtering')}
               </span>
             )}
           </div>
           <div>
-            {itineraries.filter(i => i.place_data?.geometry?.location).length} 箇所の地点を表示
+            {t('tripMap.overlay.displayingLocations').replace('{count}', 
+              itineraries.filter(i => i.place_data?.geometry?.location).length.toString()
+            )}
             {selectedDayId && (
               <div className="text-xs text-red-600 mt-1">
-                選択された日程のみ表示中
+                {t('tripMap.overlay.filteredByDay')}
               </div>
             )}
           </div>
