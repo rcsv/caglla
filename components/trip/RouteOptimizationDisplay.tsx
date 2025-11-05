@@ -86,7 +86,7 @@ export default function RouteOptimizationDisplay({
   if (waypoints.length < 2) {
     return (
       <div className={`text-sm text-gray-500 ${className}`}>
-        ルート最適化には2つ以上の地点が必要です
+        {t('routeOptimization.insufficientWaypoints')}
       </div>
     )
   }

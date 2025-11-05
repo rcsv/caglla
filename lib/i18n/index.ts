@@ -455,6 +455,7 @@ export type TranslationKey =
   | 'routeOptimization.totalDuration'
   | 'routeOptimization.optimizedOrder'
   | 'routeOptimization.apiCost'
+  | 'routeOptimization.insufficientWaypoints'
   | 'routeCost.failed'
   | 'routeCost.suggestion'
   | 'routeCost.label'
@@ -1397,6 +1398,7 @@ const en: Dictionary = {
   'routeOptimization.totalDuration': 'Total duration',
   'routeOptimization.optimizedOrder': 'Optimized order',
   'routeOptimization.apiCost': 'API cost',
+  'routeOptimization.insufficientWaypoints': 'Route optimization requires at least 2 waypoints',
   'routeCost.failed': 'Failed to fetch cost estimate',
   'routeCost.suggestion': 'Cost reduction suggestions:',
   'routeCost.label': 'Route optimization cost:',
@@ -2303,6 +2305,7 @@ const ja: Dictionary = {
   'routeOptimization.totalDuration': '総時間',
   'routeOptimization.optimizedOrder': '最適化された順序',
   'routeOptimization.apiCost': 'APIコスト',
+  'routeOptimization.insufficientWaypoints': 'ルート最適化には2つ以上の地点が必要です',
   'routeCost.failed': 'コスト見積もりの取得に失敗しました',
   'routeCost.suggestion': 'コスト削減の提案:',
   'routeCost.label': 'ルート最適化コスト:',
