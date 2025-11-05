@@ -80,59 +80,111 @@ export default function DailyRouteOptimizer({
     if (!optimizationResult) return
 
     try {
+      // optimizeWaypointsから返されるfullOptimizedOrderの構造を理解:
+      // - origin = waypoints[0] → fullOptimizedOrder[0] = 0
+      // - middleWaypoints = waypoints.slice(1, -1) → fullOptimizedOrder[1..n-1] = waypoint_indices (1-based)
+      // - destination = waypoints[waypoints.length - 1] → fullOptimizedOrder[n] = waypoints.length + 1
+      
+      // DailyRouteOptimizerでは:
+      // - origin = validItineraries[0]
+      // - middleWaypoints = validItineraries.slice(1, -1)
+      // - destination = validItineraries[validItineraries.length - 1]
+      
+      const fullOptimizedOrder = optimizationResult.optimizedOrder
+      
       logger.debug('Applying optimization:', {
         dayId,
-        itineraries: itineraries.map(it => ({ id: it.id, name: it.place_data?.name })),
-        optimizedOrder: optimizationResult.optimizedOrder
+        validItinerariesCount: validItineraries.length,
+        fullOptimizedOrder,
+        validItineraries: validItineraries.map((it, idx) => ({ 
+          index: idx, 
+          id: it.id, 
+          name: it.place_data?.name 
+        }))
       })
 
-      // サーバーに最適化された順序を適用
-      await applyOptimizedOrder(dayId, itineraries, optimizationResult.optimizedOrder)
+      // fullOptimizedOrderからmiddleWaypoints部分を抽出
+      // fullOptimizedOrder = [0, ...middleWaypoint_indices, waypoints.length + 1]
+      // middleWaypoint_indicesは1-based（origin=0, destination=waypoints.length+1を除く）
+      const middleWaypointIndices = fullOptimizedOrder.filter(
+        (index: number) => index > 0 && index <= validItineraries.length - 1
+      )
+      
+      // middleWaypointIndicesをvalidItinerariesのインデックスに変換
+      // fullOptimizedOrderのインデックスは1-basedなので、0-basedに変換
+      const reorderedValidIndices = [
+        0, // originは常に最初
+        ...middleWaypointIndices.map((idx: number) => idx - 1), // 1-based → 0-based
+        validItineraries.length - 1 // destinationは常に最後
+      ]
+      
+      logger.debug('Reordered valid indices:', {
+        middleWaypointIndices,
+        reorderedValidIndices,
+        reorderedValidItineraries: reorderedValidIndices.map(idx => ({
+          index: idx,
+          id: validItineraries[idx]?.id,
+          name: validItineraries[idx]?.place_data?.name
+        }))
+      })
+      
+      // validItinerariesを最適化された順序で並び替え
+      const reorderedValidItineraries = reorderedValidIndices.map(
+        (idx: number) => validItineraries[idx]
+      )
+      
+      // itineraryのIDの順序を取得
+      const reorderedItineraryIds = reorderedValidItineraries.map(it => it.id)
+      
+      // サーバーに並び替えを送信
+      const response = await fetch('/api/itineraries/reorder', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dayId,
+          itineraryIds: reorderedItineraryIds
+        }),
+        signal: AbortSignal.timeout(10000)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Reorder API error: ${response.status}`)
+      }
+
+      const result = await response.json()
+      logger.debug('Reorder result:', result)
       
       // ローカルの状態も更新
-      const reorderedItineraries = [...itineraries]
-      const validIndices = validItineraries.map((_: Itinerary, index: number) => 
-        itineraries.findIndex(it => it.id === validItineraries[index].id)
-      )
-
-      const newValidOrder = optimizationResult.optimizedOrder.map((index: number) => validItineraries[index])
+      // reorderedValidItinerariesの順序に基づいて、itineraries全体を並び替え
+      // validItineraries以外の要素は元の位置を保持
+      const finalReorderedItineraries: Itinerary[] = []
+      const validItineraryIds = new Set(reorderedValidItineraries.map(it => it.id))
       
-      newValidOrder.forEach((itinerary: Itinerary, newIndex: number) => {
-        const originalIndex = validIndices[optimizationResult.optimizedOrder[newIndex]]
-        if (originalIndex !== -1) {
-          reorderedItineraries[originalIndex] = itinerary
+      // validItineraries以外の要素を元の順序で追加
+      const nonValidItineraries = itineraries.filter(it => !validItineraryIds.has(it.id))
+      
+      // reorderedValidItinerariesの各要素を、元のvalidItinerariesの位置に配置
+      let validIndex = 0
+      for (let i = 0; i < itineraries.length; i++) {
+        if (validItineraryIds.has(itineraries[i].id)) {
+          // validItineraryの場合は、最適化された順序から取得
+          finalReorderedItineraries.push(reorderedValidItineraries[validIndex])
+          validIndex++
+        } else {
+          // validItinerary以外の場合は、元の位置を保持
+          finalReorderedItineraries.push(itineraries[i])
         }
-      })
+      }
 
-      onReorderItineraries(dayId, reorderedItineraries)
+      onReorderItineraries(dayId, finalReorderedItineraries)
       setShowOptimization(false)
       setOptimizationResult(null)
     } catch (error) {
       logger.error('Error applying optimization:', error)
-      // デモ環境では、サーバーエラーでもクライアントサイドの更新は実行
-      if (error instanceof Error && (error.message.includes('server update skipped') || error.message.includes('Client-side reordering completed'))) {
-        logger.debug('Server update skipped, applying client-side changes')
-        // ローカルの状態を更新
-        const reorderedItineraries = [...itineraries]
-        const validIndices = validItineraries.map((_: Itinerary, index: number) => 
-          itineraries.findIndex(it => it.id === validItineraries[index].id)
-        )
-
-        const newValidOrder = optimizationResult.optimizedOrder.map((index: number) => validItineraries[index])
-        
-        newValidOrder.forEach((itinerary: Itinerary, newIndex: number) => {
-          const originalIndex = validIndices[optimizationResult.optimizedOrder[newIndex]]
-          if (originalIndex !== -1) {
-            reorderedItineraries[originalIndex] = itinerary
-          }
-        })
-
-        onReorderItineraries(dayId, reorderedItineraries)
-        setShowOptimization(false)
-        setOptimizationResult(null)
-      } else {
-        setError(`${t('trip.routeOptimization.applyFailed')}: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      }
+      setError(`${t('trip.routeOptimization.applyFailed')}: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
