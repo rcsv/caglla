@@ -46,16 +46,18 @@ export const dateUtils = {
   },
 
   // Format date range safely with unified rules
-  formatDateRange: (startDate: FirestoreDate, endDate: FirestoreDate): string => {
+  formatDateRange: (startDate: FirestoreDate, endDate: FirestoreDate, language?: SupportedLanguage): string => {
     if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
-      return '日付が設定されていません'
+      const lang = language || getUserLanguage()
+      return t('date.notSet', lang)
     }
     
     const start = toDateOrNull(startDate)
     const end = toDateOrNull(endDate)
     
     if (!start || !end) {
-      return '日付が設定されていません'
+      const lang = language || getUserLanguage()
+      return t('date.notSet', lang)
     }
     
     // Calculate trip duration (more accurate calculation)
@@ -214,16 +216,20 @@ export const dateUtils = {
   },
 
   // Format past trip date range with relative time
-  formatPastTripDate: (startDate: FirestoreDate, endDate: FirestoreDate): string => {
+  formatPastTripDate: (startDate: FirestoreDate, endDate: FirestoreDate, language?: SupportedLanguage): string => {
     if (!dateUtils.isValidDate(startDate) || !dateUtils.isValidDate(endDate)) {
-      return '日付が設定されていません'
+      const lang = language || getUserLanguage()
+      return t('date.notSet', lang)
     }
     
     const start = toDateOrNull(startDate)
     if (!start) {
-      return '日付が設定されていません'
+      const lang = language || getUserLanguage()
+      return t('date.notSet', lang)
     }
     
+    const lang = language || getUserLanguage()
+    const locale = lang === 'ja' ? 'ja-JP' : 'en-US'
     const today = dateUtils.getToday()
     
     // Calculate years and months difference
@@ -240,20 +246,16 @@ export const dateUtils = {
     if (totalMonths < 12) {
       // Less than 1 year
       if (totalMonths === 0) {
-        timeAgo = '今月'
+        timeAgo = t('date.thisMonth', lang)
       } else {
-        timeAgo = `${totalMonths}ヶ月前`
+        timeAgo = `${totalMonths}${t('date.monthsAgo', lang)}`
       }
-      const monthName = start.toLocaleDateString('ja-JP', { month: 'long' })
+      const monthName = start.toLocaleDateString(locale, { month: 'long' })
       return `${timeAgo} (${monthName})`
-    } else if (yearDiff < 5) {
-      // 1-4 years ago
-      const yearName = start.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })
-      return `${yearDiff}年前 (${yearName})`
     } else {
-      // 5+ years ago
-      const yearName = start.toLocaleDateString('ja-JP', { year: 'numeric' })
-      return `${yearDiff}年前 (${yearName})`
+      // 1+ years ago
+      const yearName = start.toLocaleDateString(locale, { year: 'numeric', month: 'long' })
+      return `${yearDiff}${t('date.yearsAgo', lang)} (${yearName})`
     }
   },
 
