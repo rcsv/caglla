@@ -1273,6 +1273,11 @@ export default function SlugBasedTripPage() {
             setTrip(updatedTrip)
             setShowEditBaseInfoModal(false)
           }}
+          onDelete={() => {
+            // コンテキストから旅行を削除してから遷移
+            removeTrip(trip.id)
+            router.push('/home')
+          }}
           onClose={() => setShowEditBaseInfoModal(false)}
           hideDestinationEdit={true}
           initialEditing={true}

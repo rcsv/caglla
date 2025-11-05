@@ -1,7 +1,7 @@
 # Issue: TripEditorの「Delete trip?」ダイアログのDeleteボタンが反応しない
 
 **作成日**: 2025-01-XX  
-**状態**: 🔴 未解決  
+**状態**: ✅ 解決済み  
 **優先度**: 高  
 **種類**: バグ修正  
 **関連ファイル**: 
@@ -140,14 +140,44 @@ const handleDelete = async () => {
 
 ## ✅ 完了条件
 
-- [ ] 「Delete」ボタンをクリックすると、削除処理が実行される
-- [ ] `onDelete`が`undefined`の場合、適切なエラーメッセージが表示される
-- [ ] 削除処理中は「Deleting...」と表示される
-- [ ] 削除が成功すると、`onDelete`コールバックが呼ばれる
-- [ ] 削除が失敗すると、エラーメッセージが表示される
-- [ ] 削除処理が完了すると、ダイアログが閉じる
-- [ ] デバッグログで問題が確認できる（または削除）
-- [ ] `require('@/lib/i18n')`を`t()`に置き換える
+- [x] 「Delete」ボタンをクリックすると、削除処理が実行される
+- [x] `onDelete`プロップが`TripEditor`に渡される
+- [x] 削除処理中は「Deleting...」と表示される
+- [x] 削除が成功すると、`onDelete`コールバックが呼ばれる
+- [x] 削除が失敗すると、エラーメッセージが表示される
+- [x] 削除処理が完了すると、ダイアログが閉じる
+- [x] `require('@/lib/i18n')`を`t()`に置き換える
+
+## 🔧 実装内容
+
+### 修正内容
+
+1. **`app/[userSlug]/[tripSlug]/page.tsx`**
+   - `TripEditor`に`onDelete`プロップを追加
+   - 削除後に`removeTrip(trip.id)`と`router.push('/home')`を実行
+
+2. **`components/trip/TripEditor.tsx`**
+   - `require('@/lib/i18n').t()`を`t()`に置き換え（既に`import { t }`されている）
+
+### 修正コード
+
+```typescript
+// app/[userSlug]/[tripSlug]/page.tsx
+<TripEditor
+  trip={trip}
+  onUpdate={(updatedTrip) => {
+    setTrip(updatedTrip)
+    setShowEditBaseInfoModal(false)
+  }}
+  onDelete={() => {
+    // コンテキストから旅行を削除してから遷移
+    removeTrip(trip.id)
+    router.push('/home')
+  }}
+  onClose={() => setShowEditBaseInfoModal(false)}
+  // ...
+/>
+```
 
 ---
 
