@@ -434,6 +434,13 @@ export type TranslationKey =
   | 'poi.loading'
   | 'poi.loadingInfo'
   | 'poi.photoOf'
+  | 'poi.fetchDetailsError'
+  | 'poi.fetchError'
+  | 'poi.imageCacheError'
+  | 'poi.errorMessage'
+  | 'poi.addToItinerary'
+  | 'poi.showPartial'
+  | 'poi.showAll'
   // Reservation Display
   | 'reservation.title'
   | 'reservation.empty'
@@ -1148,6 +1155,13 @@ const en: Dictionary = {
   'poi.loading': 'Loading...',
   'poi.loadingInfo': 'Loading POI information...',
   'poi.photoOf': 'Photo of {name}',
+  'poi.fetchDetailsError': 'Failed to fetch POI details',
+  'poi.fetchError': 'Failed to fetch POI information',
+  'poi.imageCacheError': 'Failed to cache image',
+  'poi.errorMessage': 'An error occurred while fetching POI information',
+  'poi.addToItinerary': 'Add to itinerary',
+  'poi.showPartial': 'Show partial',
+  'poi.showAll': 'Show all ({count})',
   // Reservation Display
   'reservation.title': 'Reservations',
   'reservation.empty': 'No reservations',
@@ -1896,6 +1910,13 @@ const ja: Dictionary = {
   'poi.loading': '読み込み中...',
   'poi.loadingInfo': 'POI情報を読み込み中...',
   'poi.photoOf': '{name}の写真',
+  'poi.fetchDetailsError': 'POI詳細情報の取得に失敗しました',
+  'poi.fetchError': 'POI情報の取得に失敗しました',
+  'poi.imageCacheError': 'POIDialog: 画像キャッシュに失敗しました',
+  'poi.errorMessage': 'POI情報を取得中にエラーが発生しました',
+  'poi.addToItinerary': '旅程に追加',
+  'poi.showPartial': '一部を表示',
+  'poi.showAll': 'すべて表示 ({count})',
   // Reservation Display
   'reservation.title': '予約情報',
   'reservation.empty': '予約情報がありません',
