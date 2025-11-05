@@ -73,7 +73,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
     const end = new Date(endDate)
     
     if (start > end) {
-      return '出発日は帰宅日より前の日付を選択してください'
+      return t('tripEditor.dateValidation')
     }
     
     return ''
@@ -317,7 +317,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
                   destinationPlace: place || undefined,
                   destination: place?.name || '' // 後方互換性のため
                 }))}
-                placeholder="目的地を検索（例: 東京、パリ、ニューヨーク）"
+                placeholder={t('tripEditor.destinationPlaceholder')}
                 initialText={formData.destination}
                 disabled={saving}
               />

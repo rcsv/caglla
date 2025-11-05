@@ -463,6 +463,9 @@ export type TranslationKey =
   | 'scheduleCard.readMore'
   | 'scheduleCard.memo.hasDescription'
   | 'scheduleCard.memo.addMemo'
+  // Trip Editor
+  | 'tripEditor.dateValidation'
+  | 'tripEditor.destinationPlaceholder'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1302,6 +1305,9 @@ const en: Dictionary = {
   'scheduleCard.readMore': 'Read more',
   'scheduleCard.memo.hasDescription': 'Memo: Place description is displayed. Click to edit.',
   'scheduleCard.memo.addMemo': 'Memo: Add a memo',
+  // Trip Editor
+  'tripEditor.dateValidation': 'Start date must be before end date',
+  'tripEditor.destinationPlaceholder': 'Search for destination (e.g., Tokyo, Paris, New York)',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2105,6 +2111,9 @@ const ja: Dictionary = {
   'scheduleCard.readMore': '続きを読む',
   'scheduleCard.memo.hasDescription': 'Memo: 場所の説明が表示されています。クリックして編集できます。',
   'scheduleCard.memo.addMemo': 'Memo: メモを追加してください',
+  // Trip Editor
+  'tripEditor.dateValidation': '出発日は帰宅日より前の日付を選択してください',
+  'tripEditor.destinationPlaceholder': '目的地を検索（例: 東京、パリ、ニューヨーク）',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',
