@@ -228,7 +228,7 @@ export default function AddScheduleModal({
           {query && searchResults.length === 0 && !isSearching && (
             <div className="text-center py-4 text-gray-500">
               <p>検索結果が見つかりませんでした</p>
-              <p className="text-sm mt-1">別のキーワードで検索してみてください</p>
+              <p className="text-sm mt-1">{t('addScheduleModal.tryDifferentKeyword')}</p>
             </div>
           )}
         </div>
