@@ -505,6 +505,8 @@ export type TranslationKey =
   | 'timezoneLog.processed'
   | 'timezoneLog.latestBatchResults'
   | 'timezoneLog.aboutBatchProcessing'
+  // Country Map
+  | 'countryMap.tripCount'
   // Inline Cost Editor
   | 'inlineCostEditor.invalidAmount'
   | 'inlineCostEditor.saveHint'
@@ -1431,6 +1433,8 @@ const en: Dictionary = {
   'timezoneLog.processed': 'Processed',
   'timezoneLog.latestBatchResults': 'Latest batch update results',
   'timezoneLog.aboutBatchProcessing': 'About batch processing',
+  // Country Map
+  'countryMap.tripCount': '{count} trips',
   // Inline Cost Editor
   'inlineCostEditor.invalidAmount': 'Please enter a valid amount',
   'inlineCostEditor.saveHint': 'Press Enter to save, Escape to cancel',
@@ -2321,6 +2325,8 @@ const ja: Dictionary = {
   'timezoneLog.processed': '処理済み',
   'timezoneLog.latestBatchResults': '最新のバッチ更新結果',
   'timezoneLog.aboutBatchProcessing': 'バッチ処理について',
+  // Country Map
+  'countryMap.tripCount': '{count}回の旅行',
   // Inline Cost Editor
   'inlineCostEditor.invalidAmount': '正しい金額を入力してください',
   'inlineCostEditor.saveHint': 'Enterで保存、Escapeでキャンセル',

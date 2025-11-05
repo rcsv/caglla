@@ -97,7 +97,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
                 <div class="p-2">
                   <h3 class="font-semibold text-gray-800">${group.countryNameJa}</h3>
                   <p class="text-sm text-gray-600">${group.countryName}</p>
-                  <p class="text-lg font-bold text-blue-600">${group.tripCount}回の旅行</p>
+                  <p class="text-lg font-bold text-blue-600">${t('countryMap.tripCount').replace('{count}', group.tripCount.toString())}</p>
                 </div>
               `
             })
