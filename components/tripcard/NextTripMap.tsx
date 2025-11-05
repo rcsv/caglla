@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
@@ -52,7 +53,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
         await loadGoogleMapsAPI(getUserLanguage(user))
         
         if (!mapRef.current || !window.google) {
-          throw new Error('Google Maps APIの読み込みに失敗しました')
+          throw new Error(t('nextTripMap.loadFailed'))
         }
 
         logger.debug('NextTripMap: Google Maps API読み込み完了')
@@ -77,7 +78,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
         setLoading(false)
       } catch (error) {
         logger.error('NextTripMap: Google Maps APIの読み込みに失敗しました:', error)
-        setError(error instanceof Error ? error.message : '地図の読み込みに失敗しました')
+        setError(error instanceof Error ? error.message : t('countryMap.loadFailed'))
         setLoading(false)
       }
     }
@@ -166,7 +167,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
       {error && (
         <div className={`absolute inset-0 bg-red-50 flex items-center justify-center ${getZIndexClass('MAIN_CONTENT')}`}>
           <div className="text-center p-4">
-            <div className="text-red-500 text-lg mb-2">⚠️ 地図の読み込みに失敗しました</div>
+            <div className="text-red-500 text-lg mb-2">{t('tripMap.loadFailedWarning')}</div>
             <p className="text-sm text-red-600 mb-4">{error}</p>
             <button 
               onClick={() => window.location.reload()} 

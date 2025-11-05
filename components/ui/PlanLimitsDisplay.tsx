@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { t } from '@/lib/i18n'
 import { SubscriptionPlan } from '@/lib/subscription/payment-service'
 import { UsageStats } from '@/lib/subscription/plan-limits'
 import { PlanLimitChecker, LimitCheckResult, planLimitHelpers } from '@/lib/subscription/plan-limits'
@@ -124,7 +125,7 @@ export default function PlanLimitsDisplay({
 
       <div className="mt-4 pt-4 border-t border-gray-200">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">現在のプラン</span>
+          <span className="text-sm text-gray-600">{t('planLimits.currentPlan')}</span>
           <span className="text-sm font-semibold text-gray-900">
             {plan.name}
           </span>

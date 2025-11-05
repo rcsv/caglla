@@ -496,6 +496,15 @@ export type TranslationKey =
   | 'routeOptimizer.unknownPlace'
   // Trip Map
   | 'tripMap.loadFailed'
+  | 'tripMap.loadFailedWarning'
+  // Next Trip Map
+  | 'nextTripMap.loadFailed'
+  // Plan Limits Display
+  | 'planLimits.currentPlan'
+  // Timezone Log Manager
+  | 'timezoneLog.processed'
+  | 'timezoneLog.latestBatchResults'
+  | 'timezoneLog.aboutBatchProcessing'
   // Inline Cost Editor
   | 'inlineCostEditor.invalidAmount'
   | 'inlineCostEditor.saveHint'
@@ -1413,6 +1422,15 @@ const en: Dictionary = {
   'routeOptimizer.unknownPlace': 'Unknown place',
   // Trip Map
   'tripMap.loadFailed': 'Failed to load Google Maps API',
+  'tripMap.loadFailedWarning': '⚠️ Failed to load map',
+  // Next Trip Map
+  'nextTripMap.loadFailed': 'Failed to load Google Maps API',
+  // Plan Limits Display
+  'planLimits.currentPlan': 'Current plan',
+  // Timezone Log Manager
+  'timezoneLog.processed': 'Processed',
+  'timezoneLog.latestBatchResults': 'Latest batch update results',
+  'timezoneLog.aboutBatchProcessing': 'About batch processing',
   // Inline Cost Editor
   'inlineCostEditor.invalidAmount': 'Please enter a valid amount',
   'inlineCostEditor.saveHint': 'Press Enter to save, Escape to cancel',
@@ -2294,6 +2312,15 @@ const ja: Dictionary = {
   'routeOptimizer.unknownPlace': '不明な場所',
   // Trip Map
   'tripMap.loadFailed': 'Google Maps APIの読み込みに失敗しました',
+  'tripMap.loadFailedWarning': '⚠️ 地図の読み込みに失敗しました',
+  // Next Trip Map
+  'nextTripMap.loadFailed': 'Google Maps APIの読み込みに失敗しました',
+  // Plan Limits Display
+  'planLimits.currentPlan': '現在のプラン',
+  // Timezone Log Manager
+  'timezoneLog.processed': '処理済み',
+  'timezoneLog.latestBatchResults': '最新のバッチ更新結果',
+  'timezoneLog.aboutBatchProcessing': 'バッチ処理について',
   // Inline Cost Editor
   'inlineCostEditor.invalidAmount': '正しい金額を入力してください',
   'inlineCostEditor.saveHint': 'Enterで保存、Escapeでキャンセル',

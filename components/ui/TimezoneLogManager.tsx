@@ -69,7 +69,7 @@ export default function TimezoneLogManager() {
           <p className="text-2xl font-bold text-yellow-600">{pendingLogs.length}</p>
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
-          <h3 className="font-semibold text-green-800">処理済み</h3>
+          <h3 className="font-semibold text-green-800">{t('timezoneLog.processed')}</h3>
           <p className="text-2xl font-bold text-green-600">{processedLogs.length}</p>
         </div>
         <div className="bg-purple-50 p-4 rounded-lg">
@@ -110,7 +110,7 @@ export default function TimezoneLogManager() {
       {/* バッチ更新結果 */}
       {updates.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">最新のバッチ更新結果</h2>
+          <h2 className="text-xl font-semibold mb-4">{t('timezoneLog.latestBatchResults')}</h2>
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {updates.map((update, index) => (
@@ -172,7 +172,7 @@ export default function TimezoneLogManager() {
 
       {/* バッチ処理の説明 */}
       <div className="mt-8 bg-blue-50 p-4 rounded-lg">
-        <h3 className="font-semibold text-blue-800 mb-2">バッチ処理について</h3>
+        <h3 className="font-semibold text-blue-800 mb-2">{t('timezoneLog.aboutBatchProcessing')}</h3>
         <ul className="text-sm text-blue-700 space-y-1">
           <li>• 未処理ログが50件以上の場合に実行可能</li>
           <li>• 同じ都市名が3回以上出現した場合、新しいマッピングを追加</li>

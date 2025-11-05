@@ -662,7 +662,7 @@ export default function TripMap({
       {error && (
         <div className={`absolute inset-0 bg-red-50 flex items-center justify-center ${getZIndexClass('MAIN_CONTENT')}`}>
           <div className="text-center p-4">
-            <div className="text-red-500 text-lg mb-2">⚠️ 地図の読み込みに失敗しました</div>
+            <div className="text-red-500 text-lg mb-2">{t('tripMap.loadFailedWarning')}</div>
             <p className="text-sm text-red-600 mb-4">{error}</p>
             <button 
               onClick={() => window.location.reload()} 
