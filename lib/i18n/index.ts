@@ -478,6 +478,16 @@ export type TranslationKey =
   | 'imageUpload.selectAnother'
   | 'imageUpload.dropHere'
   | 'imageUpload.clickOrDrag'
+  // Timezone Log Manager
+  | 'timezoneLog.showDetails'
+  | 'timezoneLog.hideDetails'
+  // Schedule Card Menu
+  | 'scheduleCardMenu.moveFailed'
+  | 'scheduleCardMenu.duplicateFailed'
+  // Venue Distance
+  | 'venueDistance.calculationFailed'
+  // Country Map
+  | 'countryMap.loadFailed'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1332,6 +1342,16 @@ const en: Dictionary = {
   'imageUpload.selectAnother': 'Select another image',
   'imageUpload.dropHere': 'Drop image here',
   'imageUpload.clickOrDrag': 'Click or drag & drop to upload',
+  // Timezone Log Manager
+  'timezoneLog.showDetails': 'Show details',
+  'timezoneLog.hideDetails': 'Hide details',
+  // Schedule Card Menu
+  'scheduleCardMenu.moveFailed': 'Failed to move schedule',
+  'scheduleCardMenu.duplicateFailed': 'Failed to duplicate schedule',
+  // Venue Distance
+  'venueDistance.calculationFailed': 'Failed to calculate distance',
+  // Country Map
+  'countryMap.loadFailed': 'Failed to load map',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2150,6 +2170,16 @@ const ja: Dictionary = {
   'imageUpload.selectAnother': '別の画像を選択',
   'imageUpload.dropHere': 'ここに画像をドロップ',
   'imageUpload.clickOrDrag': '画像をクリックまたはドラッグ&ドロップしてアップロード',
+  // Timezone Log Manager
+  'timezoneLog.showDetails': '詳細を表示',
+  'timezoneLog.hideDetails': '詳細を隠す',
+  // Schedule Card Menu
+  'scheduleCardMenu.moveFailed': '日程の移動に失敗しました',
+  'scheduleCardMenu.duplicateFailed': '日程の複製に失敗しました',
+  // Venue Distance
+  'venueDistance.calculationFailed': '距離の計算に失敗しました',
+  // Country Map
+  'countryMap.loadFailed': '地図の読み込みに失敗しました',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',

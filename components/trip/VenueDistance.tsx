@@ -83,7 +83,7 @@ export default function VenueDistance({
         setDistanceInfo(result)
       } catch (err) {
         logger.error('❌ Error calculating distance:', err)
-        setError('距離の計算に失敗しました')
+        setError(t('venueDistance.calculationFailed'))
       } finally {
         setIsLoading(false)
       }
@@ -153,7 +153,7 @@ export default function VenueDistance({
           <button
             onClick={onInsertVenue}
             className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center hover:bg-emerald-600 transition-colors shadow-sm"
-            title="間にVenueを追加"
+            title={t('schedule.addVenueBetween')}
           >
             <IconRenderer 
               iconName="plus" 

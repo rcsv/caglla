@@ -103,7 +103,7 @@ export function ScheduleCardMenu({
         onMoveToDay(targetDayId)
       } else {
         logger.error('Failed to move itinerary')
-        alert('日程の移動に失敗しました')
+        alert(t('scheduleCardMenu.moveFailed'))
       }
     } catch (error) {
       logger.error('Error moving itinerary:', error)
@@ -125,7 +125,7 @@ export function ScheduleCardMenu({
         onDuplicateToDay(targetDayId)
       } else {
         logger.error('Failed to duplicate itinerary')
-        alert('日程の複製に失敗しました')
+        alert(t('scheduleCardMenu.duplicateFailed'))
       }
     } catch (error) {
       logger.error('Error duplicating itinerary:', error)
@@ -139,7 +139,7 @@ export function ScheduleCardMenu({
         <button
           onClick={() => setShowMenu(!showMenu)}
           className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-          aria-label="メニューを開く"
+          aria-label={t('common.openMenu')}
           aria-expanded={showMenu}
           aria-haspopup="menu"
         >

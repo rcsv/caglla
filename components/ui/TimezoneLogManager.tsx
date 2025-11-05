@@ -103,7 +103,7 @@ export default function TimezoneLogManager() {
           onClick={() => setShowDetails(!showDetails)}
           className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
         >
-          {showDetails ? '詳細を隠す' : '詳細を表示'}
+          {showDetails ? t('timezoneLog.hideDetails') : t('timezoneLog.showDetails')}
         </button>
       </div>
 

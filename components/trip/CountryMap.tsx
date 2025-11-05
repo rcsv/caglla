@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import { useEffect, useRef, useState } from 'react'
 import { CountryGroup } from '@/lib/travel/country/utils'
@@ -133,7 +134,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
 
       } catch (err) {
         logger.error('Error initializing map:', err)
-        setError('地図の読み込みに失敗しました')
+        setError(t('countryMap.loadFailed'))
       } finally {
         setLoading(false)
       }
