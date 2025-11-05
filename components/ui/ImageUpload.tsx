@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import { useState, useRef } from 'react'
 import Image from 'next/image'
@@ -33,12 +34,12 @@ export default function ImageUpload({
     // Validate file
     const validation = imageUploadHelpers.validateImageFile(file)
     if (!validation.valid) {
-      setError(validation.error || '無効なファイルです')
+      setError(validation.error || t('imageUpload.invalidFile'))
       return
     }
 
     if (!user) {
-      setError('ログインが必要です')
+      setError(t('imageUpload.loginRequired'))
       return
     }
 
@@ -48,7 +49,7 @@ export default function ImageUpload({
     logger.debug('User UID:', user.uid)
     
     if (!user.id && !user.uid) {
-      setError('ユーザーIDが取得できません。ログインし直してください。')
+      setError(t('imageUpload.userIdNotFound'))
       return
     }
 
@@ -83,7 +84,8 @@ export default function ImageUpload({
       }
     } catch (error) {
       logger.error('Detailed upload error:', error)
-      setError(`画像のアップロードに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`)
+      const errorMsg = error instanceof Error ? error.message : t('imageUpload.unknownError')
+      setError(t('imageUpload.uploadFailed').replace('{error}', errorMsg))
     } finally {
       setUploading(false)
     }
@@ -109,7 +111,7 @@ export default function ImageUpload({
 
       const userId = user?.id || user?.uid
       if (!userId) {
-        setError('ユーザー情報が取得できません。ログインし直してください。')
+        setError(t('imageUpload.userInfoNotFound'))
         return
       }
 
@@ -127,8 +129,8 @@ export default function ImageUpload({
       setError(null) // Clear any previous errors
     } catch (error) {
       logger.error('Error deleting image:', error)
-      const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました'
-      setError(`画像の削除に失敗しました: ${errorMessage}`)
+      const errorMessage = error instanceof Error ? error.message : t('imageUpload.unknownError')
+      setError(`${t('common.deleteFailed')}: ${errorMessage}`)
     }
   }
 
@@ -204,7 +206,7 @@ export default function ImageUpload({
                 disabled={uploading}
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50"
               >
-                {uploading ? 'アップロード中...' : '別の画像を選択'}
+                {uploading ? t('imageUpload.uploading') : t('imageUpload.selectAnother')}
               </button>
             )}
           </div>
@@ -226,7 +228,7 @@ export default function ImageUpload({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <p className="text-gray-500 text-sm">
-              {uploading ? 'アップロード中...' : isDragOver ? 'ここに画像をドロップ' : '画像をクリックまたはドラッグ&ドロップしてアップロード'}
+              {uploading ? t('imageUpload.uploading') : isDragOver ? t('imageUpload.dropHere') : t('imageUpload.clickOrDrag')}
             </p>
             <p className="text-gray-400 text-xs mt-1">
               JPEG、PNG、WebP形式（5MB以下）

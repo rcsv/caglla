@@ -467,6 +467,17 @@ export type TranslationKey =
   // Trip Editor
   | 'tripEditor.dateValidation'
   | 'tripEditor.destinationPlaceholder'
+  // Image Upload
+  | 'imageUpload.invalidFile'
+  | 'imageUpload.loginRequired'
+  | 'imageUpload.userIdNotFound'
+  | 'imageUpload.userInfoNotFound'
+  | 'imageUpload.uploadFailed'
+  | 'imageUpload.unknownError'
+  | 'imageUpload.uploading'
+  | 'imageUpload.selectAnother'
+  | 'imageUpload.dropHere'
+  | 'imageUpload.clickOrDrag'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1310,6 +1321,17 @@ const en: Dictionary = {
   // Trip Editor
   'tripEditor.dateValidation': 'Start date must be before end date',
   'tripEditor.destinationPlaceholder': 'Search for destination (e.g., Tokyo, Paris, New York)',
+  // Image Upload
+  'imageUpload.invalidFile': 'Invalid file',
+  'imageUpload.loginRequired': 'Login required',
+  'imageUpload.userIdNotFound': 'User ID not found. Please log in again.',
+  'imageUpload.userInfoNotFound': 'User information not found. Please log in again.',
+  'imageUpload.uploadFailed': 'Failed to upload image: {error}',
+  'imageUpload.unknownError': 'An unknown error occurred',
+  'imageUpload.uploading': 'Uploading...',
+  'imageUpload.selectAnother': 'Select another image',
+  'imageUpload.dropHere': 'Drop image here',
+  'imageUpload.clickOrDrag': 'Click or drag & drop to upload',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2117,6 +2139,17 @@ const ja: Dictionary = {
   // Trip Editor
   'tripEditor.dateValidation': '出発日は帰宅日より前の日付を選択してください',
   'tripEditor.destinationPlaceholder': '目的地を検索（例: 東京、パリ、ニューヨーク）',
+  // Image Upload
+  'imageUpload.invalidFile': '無効なファイルです',
+  'imageUpload.loginRequired': 'ログインが必要です',
+  'imageUpload.userIdNotFound': 'ユーザーIDが取得できません。ログインし直してください。',
+  'imageUpload.userInfoNotFound': 'ユーザー情報が取得できません。ログインし直してください。',
+  'imageUpload.uploadFailed': '画像のアップロードに失敗しました: {error}',
+  'imageUpload.unknownError': '不明なエラーが発生しました',
+  'imageUpload.uploading': 'アップロード中...',
+  'imageUpload.selectAnother': '別の画像を選択',
+  'imageUpload.dropHere': 'ここに画像をドロップ',
+  'imageUpload.clickOrDrag': '画像をクリックまたはドラッグ&ドロップしてアップロード',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',
