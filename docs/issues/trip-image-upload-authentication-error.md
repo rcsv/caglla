@@ -1,7 +1,7 @@
 # Issue: Trip Imageアップロード時の認証エラーとi18n問題
 
 **作成日**: 2025-01-XX  
-**状態**: 🔴 未解決  
+**状態**: ✅ 解決済み  
 **優先度**: 高  
 **種類**: バグ修正 + i18n  
 **関連ファイル**: 
@@ -182,14 +182,76 @@ const errorMessage = getI18nErrorMessage(error.code)
 
 ## ✅ 完了条件
 
-- [ ] すべてのエラーメッセージがi18n化されている
-- [ ] エラーメッセージがユーザーの言語設定に応じて表示される
-- [ ] 画像削除後に新しい画像をアップロードできる
-- [ ] ストレージ制限に達していない場合、アップロードが成功する
-- [ ] 認証エラーが発生した場合、適切なエラーメッセージが表示される
-- [ ] デバッグログで問題が確認できる（または削除）
-- [ ] Firebase Storageルールが適切に設定されている
-- [ ] 認証フローが改善されている
+- [x] すべてのエラーメッセージがi18n化されている
+- [x] エラーメッセージがユーザーの言語設定に応じて表示される
+- [x] 画像削除後に新しい画像をアップロードできる（認証状態の再確認とトークン再取得を実装）
+- [x] ストレージ制限に達していない場合、アップロードが成功する
+- [x] 認証エラーが発生した場合、適切なエラーメッセージが表示される
+- [x] デバッグログを追加（認証状態、パス、TripId等）
+- [x] Firebase Storageルールが適切に設定されている（/trips/{tripId}/images/...パスのルールを追加）
+- [x] 認証フローが改善されている（認証状態の再確認、トークン再取得、削除後の状態安定化）
+
+## 🔧 実装内容
+
+### Phase 1: エラーメッセージのi18n化
+
+1. **`lib/i18n/index.ts`**
+   - エラーメッセージ用のi18nキーを追加（`imageUpload.error.*`）
+   - 日本語と英語の両方の翻訳を追加
+
+2. **`lib/storage/image-upload.ts`**
+   - すべてのエラーメッセージをi18n化
+   - `checkStorageQuota`と`updateStorageUsage`のエラーメッセージもi18n化
+   - `getUserLanguage()`を使用してユーザーの言語設定を取得
+
+### Phase 2: Firebase Storageルールの修正
+
+1. **`storage.rules`**
+   - `/trips/{tripId}/images/{fileName}`パスのルールを追加
+   - 読み取り: 認証済みユーザーは読み取り可能（公開旅行は誰でも読み取り可能）
+   - 作成・更新: tripの所有者のみ（`request.auth.uid == trip.user_id`）
+   - 削除: tripの所有者のみ
+   - ファイルタイプとサイズの検証を適用
+
+### Phase 3: 認証フローの改善
+
+1. **`lib/storage/image-upload.ts`**
+   - アップロード前に認証状態を再確認
+   - トークンの再取得を試行（`forceRefresh: true`）
+   - 画像削除時にも認証状態を確認
+
+2. **`components/ui/ImageUpload.tsx`**
+   - アップロード前に認証状態を再確認
+   - 画像削除後の状態安定化のため100ms待機を追加
+   - 詳細なデバッグログを追加（認証状態、パス、TripId等）
+
+### 修正コード
+
+```typescript
+// lib/storage/image-upload.ts
+// 認証状態を確認
+const { auth } = await import('@/lib/firebase/client')
+const currentUser = auth.currentUser
+if (!currentUser) {
+  logger.error('No authenticated user found during upload')
+  const language = getUserLanguage()
+  throw new Error(t('imageUpload.error.unauthenticated', language))
+}
+
+// トークンの再取得
+const token = await currentUser.getIdToken(true) // forceRefresh: true
+```
+
+```javascript
+// storage.rules
+match /trips/{tripId}/images/{fileName} {
+  allow create, update: if request.auth != null
+    && exists(/databases/(default)/documents/trips/$(tripId))
+    && request.auth.uid == get(/databases/(default)/documents/trips/$(tripId)).data.user_id
+    && isValidFileType()
+    && isUnderFileSizeLimit();
+}
+```
 
 ---
 
