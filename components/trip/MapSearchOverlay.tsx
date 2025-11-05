@@ -5,6 +5,7 @@ import { getUserLanguage } from '@/lib/utils/language'
 import { useAuth } from '@/lib/contexts/auth'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 import type { PlaceData, PlaceSearchResult } from '@/lib/core/types'
 
 interface MapSearchOverlayProps {
@@ -36,7 +37,7 @@ export default function MapSearchOverlay({
   getMapViewport,
   onSearchResultsUpdated,
   hideSuggestions = false,
-  placeholder = "場所を検索...",
+  placeholder = t('placeSearch.placeholder'),
   width = "min(640px,92vw)",
   position = "top-center"
 }: MapSearchOverlayProps) {
@@ -127,7 +128,7 @@ export default function MapSearchOverlay({
       onSearchResultsUpdated?.(results)
     } catch (error) {
       logger.error('Search error:', error)
-      const errorMessage = error instanceof Error ? error.message : '場所の検索に失敗しました'
+      const errorMessage = error instanceof Error ? error.message : t('placeSearch.searchFailed')
       
       if (errorMessage.includes('ZERO_RESULTS')) {
         setError(null)
@@ -160,7 +161,7 @@ export default function MapSearchOverlay({
       onPlaceChosen?.(placeData)
     } catch (error) {
       logger.error('Error selecting place:', error)
-      const errorMessage = error instanceof Error ? error.message : '場所の選択に失敗しました'
+      const errorMessage = error instanceof Error ? error.message : t('placeSearch.selectFailed')
       setError(`選択エラー: ${errorMessage}`)
     }
   }
@@ -285,7 +286,7 @@ export default function MapSearchOverlay({
         {!hideSuggestions && showResults && searchResults.length === 0 && !isSearching && query.length >= 2 && (
           <div className="absolute zidx-popup-menu w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
             <div className="px-4 py-3 text-center text-gray-500 text-sm">
-              <div className="mb-2">該当する場所が見つかりませんでした</div>
+              <div className="mb-2">{t('placeSearch.noResults')}</div>
               <div className="text-xs text-gray-400">
                 英語での検索や、より具体的な地名を試してみてください
               </div>

@@ -439,6 +439,7 @@ export type TranslationKey =
   | 'placeSearch.searchFailed'
   | 'placeSearch.detailsFailed'
   | 'placeSearch.noResults'
+  | 'placeSearch.selectFailed'
   // Common UI
   | 'common.dragHandle'
   | 'common.openMenu'
@@ -1280,6 +1281,7 @@ const en: Dictionary = {
   'placeSearch.placeholder': 'Search for a place...',
   'placeSearch.searchFailed': 'Failed to search for places',
   'placeSearch.detailsFailed': 'Failed to fetch place details',
+  'placeSearch.selectFailed': 'Failed to select place',
   'placeSearch.noResults': 'No places found',
   // Common UI
   'common.dragHandle': 'Drag to reorder',
@@ -2086,6 +2088,7 @@ const ja: Dictionary = {
   'placeSearch.placeholder': '場所を検索...',
   'placeSearch.searchFailed': '場所の検索に失敗しました',
   'placeSearch.detailsFailed': '場所の詳細情報の取得に失敗しました',
+  'placeSearch.selectFailed': '場所の選択に失敗しました',
   'placeSearch.noResults': '該当する場所が見つかりませんでした',
   // Common UI
   'common.dragHandle': 'ドラッグして順序を変更',
