@@ -380,15 +380,15 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
   // 営業時間の解析（言語設定を渡す）
   const openingHoursInfo = parseOpeningHours(placeDetails?.opening_hours?.weekday_text, language)
   
-  // 曜日ラベル（i18n対応）
+  // 曜日ラベル（i18n対応、等幅フォント用の短縮形）
   const dayLabels = [
-    t('poi.weekday.sunday', language),
-    t('poi.weekday.monday', language),
-    t('poi.weekday.tuesday', language),
-    t('poi.weekday.wednesday', language),
-    t('poi.weekday.thursday', language),
-    t('poi.weekday.friday', language),
-    t('poi.weekday.saturday', language)
+    t('poi.weekday.sundayShort', language),
+    t('poi.weekday.mondayShort', language),
+    t('poi.weekday.tuesdayShort', language),
+    t('poi.weekday.wednesdayShort', language),
+    t('poi.weekday.thursdayShort', language),
+    t('poi.weekday.fridayShort', language),
+    t('poi.weekday.saturdayShort', language)
   ]
   
   // ティアドロップマーカー（地図と同じスタイル）
@@ -630,7 +630,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                         <span className="text-gray-600">{openingHoursInfo.currentHours}</span>
                       )}
                       <span className="text-gray-400">|</span>
-                      <div className="flex space-x-1">
+                      <div className="flex space-x-1 font-mono text-xs">
                         {dayLabels.map((day, index) => {
                           // Google APIは月曜始まりなので、インデックスを調整
                           const apiIndex = index === 0 ? 6 : index - 1

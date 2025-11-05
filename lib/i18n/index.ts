@@ -673,6 +673,13 @@ export type TranslationKey =
   | 'poi.weekday.thursday'
   | 'poi.weekday.friday'
   | 'poi.weekday.saturday'
+  | 'poi.weekday.sundayShort'
+  | 'poi.weekday.mondayShort'
+  | 'poi.weekday.tuesdayShort'
+  | 'poi.weekday.wednesdayShort'
+  | 'poi.weekday.thursdayShort'
+  | 'poi.weekday.fridayShort'
+  | 'poi.weekday.saturdayShort'
   // Reservation Display
   | 'reservation.title'
   | 'reservation.empty'
@@ -1417,6 +1424,13 @@ const en: Dictionary = {
   'poi.weekday.thursday': 'Thu',
   'poi.weekday.friday': 'Fri',
   'poi.weekday.saturday': 'Sat',
+  'poi.weekday.sundayShort': 'Su',
+  'poi.weekday.mondayShort': 'Mo',
+  'poi.weekday.tuesdayShort': 'Tu',
+  'poi.weekday.wednesdayShort': 'We',
+  'poi.weekday.thursdayShort': 'Th',
+  'poi.weekday.fridayShort': 'Fr',
+  'poi.weekday.saturdayShort': 'Sa',
   // Reservation Display
   'reservation.title': 'Reservations',
   'reservation.empty': 'No reservations',
@@ -2414,6 +2428,13 @@ const ja: Dictionary = {
   'poi.weekday.thursday': '木',
   'poi.weekday.friday': '金',
   'poi.weekday.saturday': '土',
+  'poi.weekday.sundayShort': '日',
+  'poi.weekday.mondayShort': '月',
+  'poi.weekday.tuesdayShort': '火',
+  'poi.weekday.wednesdayShort': '水',
+  'poi.weekday.thursdayShort': '木',
+  'poi.weekday.fridayShort': '金',
+  'poi.weekday.saturdayShort': '土',
   // Reservation Display
   'reservation.title': '予約情報',
   'reservation.empty': '予約情報がありません',
