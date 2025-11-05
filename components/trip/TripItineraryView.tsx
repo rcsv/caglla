@@ -244,7 +244,7 @@ export default function TripItineraryView({
                                 try {
                                   dayDate = toDate(day.date)
                                 } catch {
-                                  return '日付が無効です'
+                                  return t('tripItinerary.invalidDate')
                                 }
                                 const month = dayDate.getMonth() + 1
                                 const dayNum = dayDate.getDate()
@@ -252,7 +252,7 @@ export default function TripItineraryView({
                                 const dayName = dayNames[dayDate.getDay()]
                                 return `${month}/${dayNum} ${dayName}`
                               })()
-                            : '日付が設定されていません'
+                            : t('tripItinerary.dateNotSet')
                           }
                         </div>
                       </div>
@@ -263,7 +263,7 @@ export default function TripItineraryView({
                           e.stopPropagation()
                           onToggleDayCollapse(day.id)
                         }}
-                        aria-label={isCollapsed ? '展開' : '折りたたみ'}
+                        aria-label={isCollapsed ? t('tripItinerary.expand') : t('tripItinerary.collapse')}
                       >
                         <svg 
                           className={`w-5 h-5 text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
@@ -321,8 +321,8 @@ export default function TripItineraryView({
                           <button
                             onClick={() => onAddSchedule(day.id)}
                             className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors"
-                            title="Venueを追加"
-                            aria-label="Venueを追加"
+                            title={t('tripItinerary.addVenue')}
+                            aria-label={t('tripItinerary.addVenue')}
                           >
                             <IconRenderer iconName="plus" />
                           </button>
@@ -398,7 +398,7 @@ export default function TripItineraryView({
                                     <button
                                       onClick={() => onInsertSchedule(day.id, sortedItineraries.length)}
                                       className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center hover:bg-emerald-600 transition-colors shadow-sm"
-                                      title="最後にVenueを追加"
+                                      title={t('tripItinerary.addVenueAtEnd')}
                                     >
                                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                         <path d="M12 2C13.1 2 14 2.9 14 4V10H20C21.1 10 22 10.9 22 12S21.1 14 20 14H14V20C14 21.1 13.1 22 12 22S10 21.1 10 20V14H4C2.9 14 2 13.1 2 12S2.9 10 4 10H10V4C10 2.9 10.9 2 12 2Z" />
@@ -422,8 +422,8 @@ export default function TripItineraryView({
                         <button
                           onClick={() => onAddSchedule(day.id)}
                           className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors mx-auto"
-                          title="Venueを追加"
-                          aria-label="Venueを追加"
+                          title={t('tripItinerary.addVenue')}
+                          aria-label={t('tripItinerary.addVenue')}
                         >
                           <IconRenderer iconName="plus" className="w-5 h-5" />
                         </button>

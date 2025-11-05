@@ -450,6 +450,13 @@ export type TranslationKey =
   | 'routeOptimization.optimizedRoute'
   | 'routeCost.failed'
   | 'routeCost.suggestion'
+  // Trip Itinerary View
+  | 'tripItinerary.invalidDate'
+  | 'tripItinerary.dateNotSet'
+  | 'tripItinerary.expand'
+  | 'tripItinerary.collapse'
+  | 'tripItinerary.addVenue'
+  | 'tripItinerary.addVenueAtEnd'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1276,6 +1283,13 @@ const en: Dictionary = {
   'routeOptimization.optimizedRoute': 'Optimized route',
   'routeCost.failed': 'Failed to fetch cost estimate',
   'routeCost.suggestion': 'Cost reduction suggestions:',
+  // Trip Itinerary View
+  'tripItinerary.invalidDate': 'Invalid date',
+  'tripItinerary.dateNotSet': 'Date not set',
+  'tripItinerary.expand': 'Expand',
+  'tripItinerary.collapse': 'Collapse',
+  'tripItinerary.addVenue': 'Add venue',
+  'tripItinerary.addVenueAtEnd': 'Add venue at end',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2066,6 +2080,13 @@ const ja: Dictionary = {
   'routeOptimization.optimizedRoute': '最適化されたルート',
   'routeCost.failed': 'コスト見積もりの取得に失敗しました',
   'routeCost.suggestion': 'コスト削減の提案:',
+  // Trip Itinerary View
+  'tripItinerary.invalidDate': '日付が無効です',
+  'tripItinerary.dateNotSet': '日付が設定されていません',
+  'tripItinerary.expand': '展開',
+  'tripItinerary.collapse': '折りたたみ',
+  'tripItinerary.addVenue': 'Venueを追加',
+  'tripItinerary.addVenueAtEnd': '最後にVenueを追加',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',
