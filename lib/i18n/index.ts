@@ -517,6 +517,8 @@ export type TranslationKey =
   | 'tripNew.titlePlaceholder'
   | 'tripNew.descriptionPlaceholder'
   | 'tripNew.accessLevel.private'
+  // Not Found Page
+  | 'notFound.title'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1410,6 +1412,8 @@ const en: Dictionary = {
   'tripNew.titlePlaceholder': 'e.g., Okinawa trip (destination will be used if blank)',
   'tripNew.descriptionPlaceholder': 'Enter trip details and purpose',
   'tripNew.accessLevel.private': 'Private (only you and shared users)',
+  // Not Found Page
+  'notFound.title': 'Page not found',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2267,6 +2271,8 @@ const ja: Dictionary = {
   'tripNew.titlePlaceholder': '例: 沖縄旅行（空欄の場合は目的地が使用されます）',
   'tripNew.descriptionPlaceholder': '旅行の詳細や目的を記入してください',
   'tripNew.accessLevel.private': '非公開（自分と共有ユーザーのみ）',
+  // Not Found Page
+  'notFound.title': 'ページが見つかりません',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',
