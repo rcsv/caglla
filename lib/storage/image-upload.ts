@@ -71,6 +71,28 @@ export const imageUploadHelpers = {
       logger.debug('File:', file.name, 'Size:', file.size, 'Type:', file.type)
       logger.debug('Path:', path)
       logger.debug('UserId:', userId)
+      logger.debug('TripId:', tripId || 'none')
+      logger.debug('IsAvatar:', isAvatar || false)
+      
+      // 認証状態を確認
+      const { auth } = await import('@/lib/firebase/client')
+      const currentUser = auth.currentUser
+      if (!currentUser) {
+        logger.error('No authenticated user found during upload')
+        const language = getUserLanguage()
+        throw new Error(t('imageUpload.error.unauthenticated', language))
+      }
+      logger.debug('Authenticated user:', currentUser.uid)
+      
+      // トークンの有効性を確認（必要に応じて再取得）
+      try {
+        const token = await currentUser.getIdToken(true) // forceRefresh: true
+        logger.debug('Auth token obtained (length):', token.length)
+      } catch (tokenError) {
+        logger.error('Failed to get auth token:', tokenError)
+        const language = getUserLanguage()
+        throw new Error(t('imageUpload.error.unauthenticated', language))
+      }
       
       // ストレージ制限をチェック
       const quotaCheck = await checkStorageQuota(userId, file.size)

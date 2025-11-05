@@ -59,6 +59,14 @@ export default function ImageUpload({
     try {
       logger.debug('Starting image upload for file:', file.name, 'Size:', file.size)
       
+      // 認証状態を再確認
+      if (!user || (!user.id && !user.uid)) {
+        logger.error('User authentication lost before upload')
+        setError(t('imageUpload.userInfoNotFound'))
+        setUploading(false)
+        return
+      }
+      
       // Generate path for the image
       const userId = user.id || user.uid
       const path = tripId 
@@ -66,6 +74,7 @@ export default function ImageUpload({
         : imageUploadHelpers.generateAvatarImagePath(userId, file.name)
 
       logger.debug('Upload path:', path)
+      logger.debug('TripId:', tripId || 'none (avatar)')
 
       // Upload image with storage tracking
       const result = await imageUploadHelpers.uploadImage(
@@ -122,6 +131,10 @@ export default function ImageUpload({
       )
       
       logger.debug('Image deletion successful, updating UI...')
+      
+      // 削除完了後に少し待機してから状態を更新（認証状態の安定化のため）
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       onImageChange(null)
       if (onFileIdChange) {
         onFileIdChange(null)
