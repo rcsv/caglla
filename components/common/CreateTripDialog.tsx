@@ -59,6 +59,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   })
   const [submitting, setSubmitting] = useState(false)
   const [dateError, setDateError] = useState('')
+  const [dateAutoAdjusted, setDateAutoAdjusted] = useState(false)
   const [isLoadingUnsplashImage, setIsLoadingUnsplashImage] = useState(false)
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
 
@@ -218,10 +219,33 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     const { name, value } = e.target
     setFormData(prev => {
       const newFormData = { ...prev, [name]: value }
+      let autoAdjusted = false
       
       // 出発日が変更された場合、帰宅日を自動的に出発日と同じ日にする
       if (name === 'startDate' && value && !prev.endDate) {
         newFormData.endDate = value
+      }
+      
+      // 出発日が帰宅日より未来の場合、帰宅日を出発日と同じ日に自動調整
+      if (name === 'startDate' && value && prev.endDate) {
+        const start = new Date(value)
+        const end = new Date(prev.endDate)
+        if (start > end) {
+          newFormData.endDate = value
+          autoAdjusted = true
+        }
+      }
+      
+      // 自動調整のフィードバックを表示
+      if (autoAdjusted) {
+        setDateAutoAdjusted(true)
+        setDateError('') // エラーをクリア
+        // 3秒後に自動的に非表示
+        setTimeout(() => {
+          setDateAutoAdjusted(false)
+        }, 3000)
+      } else {
+        setDateAutoAdjusted(false)
       }
       
       return newFormData
@@ -234,8 +258,11 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       if (name === 'startDate' && value && !formData.endDate) {
         newFormData.endDate = value
       }
-      const dateValidationError = validateDates(newFormData.startDate, newFormData.endDate)
-      setDateError(dateValidationError)
+      // 自動調整が行われた場合はエラーチェックをスキップ
+      if (!dateAutoAdjusted) {
+        const dateValidationError = validateDates(newFormData.startDate, newFormData.endDate)
+        setDateError(dateValidationError)
+      }
     }
   }
 
@@ -335,8 +362,32 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 />
               </div>
 
-              {/* 日付エラーメッセージ */}
-              {dateError && (
+              {/* 日付自動調整の情報メッセージ */}
+              {dateAutoAdjusted && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <p className="text-sm text-blue-800">{t('trip.create.dateAutoAdjusted')}</p>
+                    </div>
+                    <button
+                      onClick={() => setDateAutoAdjusted(false)}
+                      className="ml-3 flex-shrink-0 text-blue-400 hover:text-blue-600"
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 日付エラーメッセージ（自動調整が行われていない場合のみ表示） */}
+              {dateError && !dateAutoAdjusted && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <div className="flex items-start">
                     <div className="flex-shrink-0">

@@ -766,6 +766,7 @@ export type TranslationKey =
   | 'trip.create.endDate.label'
   | 'trip.create.dateError'
   | 'trip.create.dateValidation.startBeforeEnd'
+  | 'trip.create.dateAutoAdjusted'
   | 'trip.create.advancedSettings'
   | 'trip.create.title.label'
   | 'trip.create.title.placeholder'
@@ -1750,6 +1751,7 @@ const en: Dictionary = {
   'trip.create.endDate.label': 'End Date *',
   'trip.create.dateError': 'Date Error',
   'trip.create.dateValidation.startBeforeEnd': 'Start date must be before end date',
+  'trip.create.dateAutoAdjusted': 'End date has been automatically adjusted to match the start date',
   'trip.create.advancedSettings': 'Advanced Settings',
   'trip.create.title.label': 'Trip Title (destination will be used if left blank)',
   'trip.create.title.placeholder': 'e.g., Okinawa Trip (destination will be used if left blank)',
@@ -2733,6 +2735,7 @@ const ja: Dictionary = {
   'trip.create.endDate.label': '帰宅日 *',
   'trip.create.dateError': '日付エラー',
   'trip.create.dateValidation.startBeforeEnd': '出発日は帰宅日より前の日付を選択してください',
+  'trip.create.dateAutoAdjusted': '帰宅日を出発日と同じ日付に自動調整しました',
   'trip.create.advancedSettings': '詳細設定',
   'trip.create.title.label': '旅行のタイトル（未入力時は目的地が使用されます）',
   'trip.create.title.placeholder': '例: 沖縄旅行（空欄の場合は目的地が使用されます）',
