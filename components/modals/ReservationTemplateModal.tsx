@@ -99,7 +99,7 @@ export default function ReservationTemplateModal({
       }
     } catch (error) {
       console.error('Create template error:', error)
-      alert('テンプレートの作成に失敗しました')
+      alert(t('reservation.template.createFailed'))
     }
   }
 
@@ -121,7 +121,7 @@ export default function ReservationTemplateModal({
       setFormData({ name: '', type: reservationType || 'flight' })
     } catch (error) {
       console.error('Update template error:', error)
-      alert('テンプレートの更新に失敗しました')
+      alert(t('reservation.template.updateFailed'))
     }
   }
 
@@ -207,7 +207,7 @@ export default function ReservationTemplateModal({
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="閉じる"
+            aria-label={t('common.close')}
           >
             <Icon icon="mdi:close" className="w-6 h-6" />
           </button>
@@ -240,7 +240,7 @@ export default function ReservationTemplateModal({
                 label="テンプレート名"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="例: いつものANA便"
+                placeholder={t('reservation.template.placeholder.name')}
                 required
               />
 
@@ -248,7 +248,7 @@ export default function ReservationTemplateModal({
                 label="説明"
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="このテンプレートの用途や特徴"
+                placeholder={t('reservation.template.placeholder.description')}
                 rows={2}
               />
 
@@ -300,7 +300,7 @@ export default function ReservationTemplateModal({
                 label="デフォルトメモ"
                 value={formData.notes || ''}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="テンプレート使用時に自動入力されるメモ"
+                placeholder={t('reservation.template.placeholder.notes')}
                 rows={3}
               />
 
@@ -330,7 +330,7 @@ export default function ReservationTemplateModal({
           ) : filteredTemplates.length === 0 ? (
             <div className="text-center py-8">
               <Icon icon="mdi:bookmark-off" className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">テンプレートがありません</p>
+              <p className="text-gray-600">{t('reservation.template.empty')}</p>
               <p className="text-sm text-gray-500 mt-2">
                 よく使う予約情報をテンプレートとして保存できます
               </p>
@@ -387,7 +387,7 @@ export default function ReservationTemplateModal({
                       <button
                         onClick={() => handleUseTemplate(template)}
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="テンプレートを使用"
+                        title={t('reservation.template.useButton')}
                       >
                         <Icon icon="mdi:check-circle" className="w-5 h-5" />
                       </button>

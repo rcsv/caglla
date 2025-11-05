@@ -242,8 +242,8 @@ export default function ReservationInfoModal({
       await onSave(reservation as ReservationInfo)
       onClose()
     } catch (error) {
-      logger.error('予約情報の保存に失敗しました:', error)
-      setErrors(['予約情報の保存に失敗しました'])
+      logger.error(t('reservation.saveFailed'), error)
+      setErrors([t('reservation.saveFailed')])
     } finally {
       setIsSaving(false)
     }

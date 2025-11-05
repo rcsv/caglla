@@ -661,6 +661,14 @@ export type TranslationKey =
   | 'reservation.modal.template'
   | 'reservation.template.deleteFailed'
   | 'reservation.template.deleteConfirm'
+  | 'reservation.template.createFailed'
+  | 'reservation.template.updateFailed'
+  | 'reservation.template.empty'
+  | 'reservation.template.placeholder.name'
+  | 'reservation.template.placeholder.description'
+  | 'reservation.template.placeholder.notes'
+  | 'reservation.template.useButton'
+  | 'reservation.saveFailed'
   | 'schedule.venue.deleteConfirm'
   | 'reservation.validation.airportCode'
   | 'reservation.validation.flightNumber'
@@ -1441,6 +1449,14 @@ const en: Dictionary = {
   'reservation.button.saving': 'Saving...',
   'reservation.template.deleteFailed': 'Failed to delete template',
   'reservation.template.deleteConfirm': 'Delete this template?',
+  'reservation.template.createFailed': 'Failed to create template',
+  'reservation.template.updateFailed': 'Failed to update template',
+  'reservation.template.empty': 'No templates',
+  'reservation.template.placeholder.name': 'e.g., My usual ANA flight',
+  'reservation.template.placeholder.description': 'Purpose and features of this template',
+  'reservation.template.placeholder.notes': 'Notes that will be auto-filled when using this template',
+  'reservation.template.useButton': 'Use template',
+  'reservation.saveFailed': 'Failed to save reservation information',
   'schedule.venue.deleteConfirm': 'Delete this venue?',
   'user.defaultName': 'User',
   'plan.seasonTraveler': 'Season Traveler',
@@ -2196,6 +2212,14 @@ const ja: Dictionary = {
   'reservation.button.saving': '保存中...',
   'reservation.template.deleteFailed': 'テンプレートの削除に失敗しました',
   'reservation.template.deleteConfirm': 'このテンプレートを削除しますか？',
+  'reservation.template.createFailed': 'テンプレートの作成に失敗しました',
+  'reservation.template.updateFailed': 'テンプレートの更新に失敗しました',
+  'reservation.template.empty': 'テンプレートがありません',
+  'reservation.template.placeholder.name': '例: いつものANA便',
+  'reservation.template.placeholder.description': 'このテンプレートの用途や特徴',
+  'reservation.template.placeholder.notes': 'テンプレート使用時に自動入力されるメモ',
+  'reservation.template.useButton': 'テンプレートを使用',
+  'reservation.saveFailed': '予約情報の保存に失敗しました',
   'schedule.venue.deleteConfirm': 'このVenueを削除しますか？',
   'user.defaultName': 'ユーザー',
   'plan.seasonTraveler': 'Season Traveler',
