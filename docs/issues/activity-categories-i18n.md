@@ -1,7 +1,7 @@
 # Issue: アクティビティカテゴリーのラベルが日本語ハードコード
 
 **作成日**: 2025-11-01  
-**状態**: 🔴 未解決  
+**状態**: ✅ 解決済み  
 **優先度**: 中  
 **種類**: i18n化  
 **関連ファイル**: 
@@ -15,6 +15,8 @@
 ## 📋 概要
 
 アクティビティカテゴリーの選択肢（PrimaryCategory、SecondaryCategory）のラベルが日本語でハードコードされており、i18n化されていない。ユーザーの表示言語に関係なく、常に日本語で表示されるため、多言語対応が不完全。
+
+**更新**: 2025-01-XX - ActivityTagSelectorの直接参照をi18n対応関数に変更。既存のヘルパー関数（`getPrimaryCategoryShortLabel`, `getSecondaryCategoryLabel`）を使用するように修正。`getSecondaryCategoryDescription`関数を追加。
 
 ---
 
