@@ -731,7 +731,7 @@ export default function TripMap({
         }}
         availableDays={trip?.days?.sort((a, b) => (a.day_number || 0) - (b.day_number || 0)).map((day) => ({
           id: day.id,
-          date: dateUtils.formatDate(day.date, { month: 'long', day: 'numeric', weekday: 'short' }, getUserLanguage(user)),
+          date: dateUtils.formatDate(day.date, { month: 'long', day: 'numeric', weekday: 'short', year: undefined }, getUserLanguage(user)),
           title: day.description
         })) || []}
       />
