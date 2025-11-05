@@ -103,14 +103,8 @@ function parseOpeningHours(weekdayText: string[] | undefined, language: 'ja' | '
       // 営業時間文字列を正規化
       const normalizedText = normalizeTimeText(todayText)
       
-      // 複数の営業時間を分割（カンマ区切り、または " – " や " - " で分割）
-      const timeRanges = normalizedText.split(',').map(range => range.trim()).flatMap(range => {
-        // "07:00 – 20:00" のような形式を分割
-        if (range.includes(' – ') || range.includes(' - ')) {
-          return [range]
-        }
-        return [range]
-      })
+      // 複数の営業時間を分割（カンマ区切り）
+      const timeRanges = normalizedText.split(',').map(range => range.trim())
       
       // 各時間範囲を解析
       const parsedRanges = timeRanges.map(range => {
