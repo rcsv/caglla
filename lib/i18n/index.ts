@@ -434,6 +434,15 @@ export type TranslationKey =
   // Subscription Modal
   | 'subscription.processing'
   | 'subscription.startNow'
+  // Place Search Input
+  | 'placeSearch.placeholder'
+  | 'placeSearch.searchFailed'
+  | 'placeSearch.detailsFailed'
+  | 'placeSearch.noResults'
+  // Common UI
+  | 'common.dragHandle'
+  | 'common.openMenu'
+  | 'schedule.addVenueBetween'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1244,6 +1253,15 @@ const en: Dictionary = {
   // Subscription Modal
   'subscription.processing': 'Processing...',
   'subscription.startNow': 'Start now',
+  // Place Search Input
+  'placeSearch.placeholder': 'Search for a place...',
+  'placeSearch.searchFailed': 'Failed to search for places',
+  'placeSearch.detailsFailed': 'Failed to fetch place details',
+  'placeSearch.noResults': 'No places found',
+  // Common UI
+  'common.dragHandle': 'Drag to reorder',
+  'common.openMenu': 'Open menu',
+  'schedule.addVenueBetween': 'Add venue between',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -2018,6 +2036,15 @@ const ja: Dictionary = {
   // Subscription Modal
   'subscription.processing': '処理中...',
   'subscription.startNow': '今すぐ始める',
+  // Place Search Input
+  'placeSearch.placeholder': '場所を検索...',
+  'placeSearch.searchFailed': '場所の検索に失敗しました',
+  'placeSearch.detailsFailed': '場所の詳細情報の取得に失敗しました',
+  'placeSearch.noResults': '該当する場所が見つかりませんでした',
+  // Common UI
+  'common.dragHandle': 'ドラッグして順序を変更',
+  'common.openMenu': 'メニューを開く',
+  'schedule.addVenueBetween': '間にVenueを追加',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',

@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react'
 import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
 import { useClickOutside } from '@/hooks/useClickOutside'
 import { Icon } from '@iconify/react'
+import { t } from '@/lib/i18n'
 
 export interface FloatingTitleBarProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string
@@ -57,7 +58,7 @@ export default function FloatingTitleBar({ title, accessLevel, actions, menuItem
                   setShowMenu(!showMenu)
                 }}
                 className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-                aria-label="メニューを開く"
+                aria-label={t('common.openMenu')}
                 aria-expanded={showMenu}
                 aria-haspopup="menu"
               >

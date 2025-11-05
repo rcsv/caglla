@@ -1,5 +1,6 @@
 'use client'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 import { useState, useEffect, useRef } from 'react'
 import { placesApiHelpers, PlaceSearchResult } from '@/lib/api/google/places'
@@ -24,7 +25,7 @@ import { useClickOutside } from '@/hooks/useClickOutside'
 export default function PlaceSearchInput({ 
   currentPlace, 
   onPlaceSelect, 
-  placeholder = "場所を検索...",
+  placeholder = t('placeSearch.placeholder'),
   disabled = false 
 }: PlaceSearchInputProps & { initialText?: string }) {
   const { user } = useAuth()
@@ -80,7 +81,7 @@ export default function PlaceSearchInput({
       setError(null) // 成功時はエラーをクリア
     } catch (error) {
       logger.error('Search error:', error)
-      const errorMessage = error instanceof Error ? error.message : '場所の検索に失敗しました'
+      const errorMessage = error instanceof Error ? error.message : t('placeSearch.searchFailed')
       
       // ZERO_RESULTSの場合はエラーではなく、結果なしとして扱う
       if (errorMessage.includes('ZERO_RESULTS')) {
@@ -112,7 +113,7 @@ export default function PlaceSearchInput({
       setError(null)
     } catch (error) {
       logger.error('Error getting place details:', error)
-      const errorMessage = error instanceof Error ? error.message : '場所の詳細情報の取得に失敗しました'
+      const errorMessage = error instanceof Error ? error.message : t('placeSearch.detailsFailed')
       setError(`詳細取得エラー: ${errorMessage}`)
     }
   }
@@ -223,7 +224,7 @@ export default function PlaceSearchInput({
       {showResults && searchResults.length === 0 && !isSearching && query.length >= 2 && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
           <div className="px-4 py-3 text-center text-gray-500 text-sm">
-            <div className="mb-2">該当する場所が見つかりませんでした</div>
+            <div className="mb-2">{t('placeSearch.noResults')}</div>
             <div className="text-xs text-gray-400">
               英語での検索や、より具体的な地名を試してみてください
             </div>

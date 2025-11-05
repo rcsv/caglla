@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
+import { t } from '@/lib/i18n'
 
 interface VenueInsertButtonProps {
   onInsert: () => void
@@ -22,7 +23,7 @@ export default function VenueInsertButton({ onInsert, dayId }: VenueInsertButton
             ? 'bg-emerald-500 text-white shadow-lg scale-110' 
             : 'bg-emerald-500 text-white hover:bg-emerald-600'
         }`}
-        title="間にVenueを追加"
+        title={t('schedule.addVenueBetween')}
       >
         <IconRenderer 
           iconName="plus" 
