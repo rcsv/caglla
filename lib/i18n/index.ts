@@ -550,6 +550,8 @@ export type TranslationKey =
   | 'tripSlugPage.fetchTripFailed'
   | 'tripSlugPage.addDayFailed'
   | 'tripSlugPage.addPOIFailed'
+  | 'tripSlugPage.addDayFailed'
+  | 'tripSlugPage.orderUpdateFailed'
   // Trip New Page
   | 'tripNew.dateValidation'
   | 'tripNew.destinationRequired'
@@ -1494,6 +1496,8 @@ const en: Dictionary = {
   'tripSlugPage.fetchTripFailed': 'Failed to fetch trip data',
   'tripSlugPage.addDayFailed': 'Failed to add day',
   'tripSlugPage.addPOIFailed': 'Failed to add POI',
+  'tripSlugPage.addDayFailed': 'Failed to add day',
+  'tripSlugPage.orderUpdateFailed': 'Failed to update order',
   // Trip New Page
   'tripNew.dateValidation': 'Start date must be before end date',
   'tripNew.destinationRequired': 'Please enter destination',
@@ -2401,6 +2405,8 @@ const ja: Dictionary = {
   'tripSlugPage.fetchTripFailed': '旅行データの取得に失敗しました',
   'tripSlugPage.addDayFailed': '日程の追加に失敗しました',
   'tripSlugPage.addPOIFailed': 'POIの追加に失敗しました',
+  'tripSlugPage.addDayFailed': '日程の追加に失敗しました',
+  'tripSlugPage.orderUpdateFailed': '順序の更新に失敗しました',
   // Trip New Page
   'tripNew.dateValidation': '出発日は帰宅日より前の日付を選択してください',
   'tripNew.destinationRequired': '目的地を入力してください。',

@@ -26,7 +26,6 @@ import TripEditor from '@/components/trip/TripEditor'
 import { getCachedPlaces } from '@/lib/travel/places-cache'
 import { useUserData } from '@/lib/contexts/user-data'
 import { exportTripToPdf, canExportToPdf } from '@/lib/utils/export-helpers'
-import { t } from '@/lib/i18n'
 
 export default function SlugBasedTripPage() {
   const { user, loading, logout } = useAuth()
@@ -427,7 +426,7 @@ export default function SlugBasedTripPage() {
       }
     } catch (error) {
       logger.error('Error adding day:', error)
-      alert('日程の追加に失敗しました')
+      alert(t('tripSlugPage.addDayFailed'))
     }
   }
 
@@ -909,7 +908,7 @@ export default function SlugBasedTripPage() {
         })
       } else {
         logger.error('Failed to reorder itineraries')
-        alert('順序の更新に失敗しました')
+        alert(t('tripSlugPage.orderUpdateFailed'))
       }
     } catch (error) {
       logger.error('Error reordering itineraries:', error)
@@ -962,7 +961,7 @@ export default function SlugBasedTripPage() {
         })
       } else {
         logger.error('Failed to reorder itineraries')
-        alert('順序の更新に失敗しました')
+        alert(t('tripSlugPage.orderUpdateFailed'))
       }
     } catch (error) {
       logger.error('Error reordering itineraries:', error)
