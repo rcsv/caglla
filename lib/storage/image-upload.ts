@@ -4,6 +4,7 @@ import { StorageFile } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 import { t } from '@/lib/i18n'
 import { getUserLanguage } from '@/lib/utils/language'
+import { StorageErrorCode, normalizeStorageError, getStorageErrorI18nKey } from './storage-error-codes'
 
 // ストレージ制限チェック用のAPI呼び出し
 async function checkStorageQuota(userId: string, fileSize: number): Promise<{ canUpload: boolean; error?: string }> {
@@ -55,12 +56,44 @@ async function updateStorageUsage(userId: string, file: StorageFile): Promise<{ 
   }
 }
 
-// Firebase IDトークンを取得
-async function getAuthToken(): Promise<string> {
-  const { auth } = await import('@/lib/firebase/client') // これ、../firebase/client になってるけど、 @/lib/firebase/clientに変更できないのか？
+/**
+ * 認証トークンを取得（リトライ付き）
+ * CodeRabbit提案: 500msバックオフ付き1回のリトライ
+ * 
+ * @param forceRefresh - トークンを強制的にリフレッシュするか
+ * @returns Firebase IDトークン
+ * @throws Error 認証に失敗した場合
+ */
+async function getAuthTokenWithRetry(forceRefresh: boolean = true): Promise<string> {
+  const { auth } = await import('@/lib/firebase/client')
   const user = auth.currentUser
-  if (!user) throw new Error('User not authenticated')
-  return await user.getIdToken()
+  
+  if (!user) {
+    throw new Error('User not authenticated')
+  }
+  
+  try {
+    // 最初の試行
+    return await user.getIdToken(forceRefresh)
+  } catch (error) {
+    logger.warn('First attempt to get auth token failed, retrying...', error)
+    
+    // 500ms待機してからリトライ
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    try {
+      // リトライ（強制リフレッシュ）
+      return await user.getIdToken(true)
+    } catch (retryError) {
+      logger.error('Failed to get auth token after retry:', retryError)
+      throw new Error('Failed to get authentication token after retry')
+    }
+  }
+}
+
+// Firebase IDトークンを取得（後方互換性のため）
+async function getAuthToken(): Promise<string> {
+  return await getAuthTokenWithRetry(true)
 }
 
 export const imageUploadHelpers = {
@@ -84,9 +117,9 @@ export const imageUploadHelpers = {
       }
       logger.debug('Authenticated user:', currentUser.uid)
       
-      // トークンの有効性を確認（必要に応じて再取得）
+      // トークンの有効性を確認（リトライ付き）
       try {
-        const token = await currentUser.getIdToken(true) // forceRefresh: true
+        const token = await getAuthTokenWithRetry(true)
         logger.debug('Auth token obtained (length):', token.length)
       } catch (tokenError) {
         logger.error('Failed to get auth token:', tokenError)
@@ -144,36 +177,26 @@ export const imageUploadHelpers = {
       
       const language = getUserLanguage()
       
-      // Provide more specific error messages
+      // 標準化されたエラーコードに変換
       if (error instanceof Error) {
-        if (error.message.includes('storage/unauthorized')) {
-          throw new Error(`${t('imageUpload.error.auth', language)}: ${t('imageUpload.error.auth.description', language)}`)
-        } else if (error.message.includes('storage/canceled')) {
-          throw new Error(t('imageUpload.error.canceled', language))
-        } else if (error.message.includes('storage/unknown')) {
-          throw new Error(t('imageUpload.error.unknown', language))
-        } else if (error.message.includes('storage/invalid-argument')) {
-          throw new Error(t('imageUpload.error.invalidArgument', language))
-        } else if (error.message.includes('storage/invalid-checksum')) {
-          throw new Error(t('imageUpload.error.invalidChecksum', language))
-        } else if (error.message.includes('storage/invalid-format')) {
-          throw new Error(t('imageUpload.error.invalidFormat', language))
-        } else if (error.message.includes('storage/invalid-name')) {
-          throw new Error(t('imageUpload.error.invalidName', language))
-        } else if (error.message.includes('storage/object-not-found')) {
-          throw new Error(t('imageUpload.error.objectNotFound', language))
-        } else if (error.message.includes('storage/project-not-found')) {
-          throw new Error(t('imageUpload.error.projectNotFound', language))
-        } else if (error.message.includes('storage/quota-exceeded')) {
-          throw new Error(t('imageUpload.error.quotaExceeded', language))
-        } else if (error.message.includes('storage/unauthenticated')) {
-          throw new Error(t('imageUpload.error.unauthenticated', language))
-        } else {
-          throw new Error(`${t('imageUpload.error.uploadFailed', language)}: ${error.message}`)
+        const errorCode = normalizeStorageError(error)
+        const i18nKey = getStorageErrorI18nKey(errorCode)
+        
+        // STORAGE_UNAUTHORIZEDの場合は追加説明を付与
+        if (errorCode === StorageErrorCode.STORAGE_UNAUTHORIZED) {
+          const authMessage = t('imageUpload.error.auth', language)
+          const authDescription = t('imageUpload.error.auth.description', language)
+          throw new Error(`${authMessage}: ${authDescription}`)
         }
+        
+        // その他のエラーは標準的なメッセージ
+        throw new Error(t(i18nKey, language))
       }
       
-      throw new Error(t('imageUpload.error.uploadFailed', language))
+      // 非Errorオブジェクトの場合
+      const errorCode = StorageErrorCode.STORAGE_UPLOAD_FAILED
+      const i18nKey = getStorageErrorI18nKey(errorCode)
+      throw new Error(t(i18nKey, language))
     }
   },
 
@@ -193,6 +216,18 @@ export const imageUploadHelpers = {
       }
 
       logger.debug('Attempting to delete image with URL:', imageUrl)
+      logger.debug('UserId:', userId || 'none')
+      logger.debug('FileId:', fileId || 'none')
+      
+      // 認証状態を確認（リトライ付き）
+      try {
+        await getAuthTokenWithRetry(true)
+        logger.debug('Auth token obtained for deletion')
+      } catch (tokenError) {
+        logger.error('Failed to get auth token for deletion:', tokenError)
+        const language = getUserLanguage()
+        throw new Error(t('imageUpload.error.unauthenticated', language))
+      }
 
       // Extract the path from the URL with better error handling
       let path: string

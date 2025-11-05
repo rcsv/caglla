@@ -93,8 +93,24 @@ export default function ImageUpload({
       }
     } catch (error) {
       logger.error('Detailed upload error:', error)
-      const errorMsg = error instanceof Error ? error.message : t('imageUpload.unknownError')
-      setError(t('imageUpload.uploadFailed').replace('{error}', errorMsg))
+      
+      if (error instanceof Error) {
+        // エラーコードを標準化されたコードに変換
+        const { StorageErrorCode, normalizeStorageError, getStorageErrorI18nKey } = await import('@/lib/storage/storage-error-codes')
+        const errorCode = normalizeStorageError(error)
+        const i18nKey = getStorageErrorI18nKey(errorCode)
+        
+        // STORAGE_UNAUTHORIZEDの場合は追加説明を付与
+        if (errorCode === StorageErrorCode.STORAGE_UNAUTHORIZED) {
+          const authMessage = t('imageUpload.error.auth')
+          const authDescription = t('imageUpload.error.auth.description')
+          setError(`${authMessage}: ${authDescription}`)
+        } else {
+          setError(t(i18nKey))
+        }
+      } else {
+        setError(t('imageUpload.error.unknown'))
+      }
     } finally {
       setUploading(false)
     }
