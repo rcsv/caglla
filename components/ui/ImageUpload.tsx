@@ -173,7 +173,7 @@ export default function ImageUpload({
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          旅行の画像
+          {tripId ? t('tripEditor.field.image') : t('imageUpload.avatar')}
         </label>
         
         {currentImageUrl ? (

@@ -411,6 +411,10 @@ export type TranslationKey =
   | 'common.close'
   | 'common.deleteFailed'
   | 'common.deleteError'
+  | 'common.cancel'
+  | 'common.save'
+  | 'common.saving'
+  | 'common.delete'
   // Admin / Dev Tools
   | 'admin.logs.timezone.deleteConfirm'
   | 'admin.logs.currency.deleteConfirm'
@@ -480,11 +484,22 @@ export type TranslationKey =
   | 'tripEditor.destinationReSelectHint'
   | 'tripEditor.accessLevel.private'
   | 'tripEditor.accessLevel.public'
+  | 'tripEditor.field.title'
+  | 'tripEditor.field.description'
+  | 'tripEditor.field.startDate'
+  | 'tripEditor.field.endDate'
+  | 'tripEditor.field.accessLevel'
+  | 'tripEditor.field.image'
+  | 'tripEditor.field.destination'
+  | 'tripEditor.deleteConfirm.title'
+  | 'tripEditor.deleteConfirm.message'
+  | 'tripEditor.deleteConfirm.deleting'
   // Image Upload
   | 'imageUpload.invalidFile'
   | 'imageUpload.loginRequired'
   | 'imageUpload.userIdNotFound'
   | 'imageUpload.userInfoNotFound'
+  | 'imageUpload.avatar'
   | 'imageUpload.uploadFailed'
   | 'imageUpload.unknownError'
   | 'imageUpload.uploading'
@@ -1499,6 +1514,10 @@ const en: Dictionary = {
   'common.close': 'Close',
   'common.deleteFailed': 'Failed to delete',
   'common.deleteError': 'An error occurred while deleting',
+  'common.cancel': 'Cancel',
+  'common.save': 'Save',
+  'common.saving': 'Saving...',
+  'common.delete': 'Delete',
   // Admin / Dev Tools
   'admin.logs.timezone.deleteConfirm': 'Delete all timezone failure logs?',
   'admin.logs.currency.deleteConfirm': 'Delete all currency failure logs?',
@@ -1568,11 +1587,22 @@ const en: Dictionary = {
   'tripEditor.destinationReSelectHint': 'Please re-select the destination from Google Places for accurate country information',
   'tripEditor.accessLevel.private': 'Private (only you and shared users)',
   'tripEditor.accessLevel.public': 'Public (anyone can view)',
+  'tripEditor.field.title': 'Trip Title *',
+  'tripEditor.field.description': 'Description',
+  'tripEditor.field.startDate': 'Departure Date',
+  'tripEditor.field.endDate': 'Return Date',
+  'tripEditor.field.accessLevel': 'Privacy Settings',
+  'tripEditor.field.image': 'Trip Image',
+  'tripEditor.field.destination': 'Destination',
+  'tripEditor.deleteConfirm.title': 'Delete trip?',
+  'tripEditor.deleteConfirm.message': 'Delete "{title}". This action cannot be undone.',
+  'tripEditor.deleteConfirm.deleting': 'Deleting...',
   // Image Upload
   'imageUpload.invalidFile': 'Invalid file',
   'imageUpload.loginRequired': 'Login required',
   'imageUpload.userIdNotFound': 'User ID not found. Please log in again.',
   'imageUpload.userInfoNotFound': 'User information not found. Please log in again.',
+  'imageUpload.avatar': 'Avatar Image',
   'imageUpload.uploadFailed': 'Failed to upload image: {error}',
   'imageUpload.unknownError': 'An unknown error occurred',
   'imageUpload.uploading': 'Uploading...',
@@ -2523,6 +2553,10 @@ const ja: Dictionary = {
   'common.close': '閉じる',
   'common.deleteFailed': '削除に失敗しました',
   'common.deleteError': '削除中にエラーが発生しました',
+  'common.cancel': 'キャンセル',
+  'common.save': '保存',
+  'common.saving': '保存中...',
+  'common.delete': '削除',
   // Admin / Dev Tools
   'admin.logs.timezone.deleteConfirm': 'タイムゾーン失敗ログをすべて削除しますか？',
   'admin.logs.currency.deleteConfirm': '通貨失敗ログをすべて削除しますか？',
@@ -2592,11 +2626,22 @@ const ja: Dictionary = {
   'tripEditor.destinationReSelectHint': '正確な国情報のため、Google Placesから目的地を再選択してください',
   'tripEditor.accessLevel.private': '非公開（自分と共有ユーザーのみ）',
   'tripEditor.accessLevel.public': '公開（誰でも閲覧可能）',
+  'tripEditor.field.title': '旅行のタイトル *',
+  'tripEditor.field.description': '説明',
+  'tripEditor.field.startDate': '出発日',
+  'tripEditor.field.endDate': '帰宅日',
+  'tripEditor.field.accessLevel': '公開設定',
+  'tripEditor.field.image': '旅行の画像',
+  'tripEditor.field.destination': '目的地',
+  'tripEditor.deleteConfirm.title': '旅行を削除しますか？',
+  'tripEditor.deleteConfirm.message': '「{title}」を削除します。この操作は取り消せません。',
+  'tripEditor.deleteConfirm.deleting': '削除中...',
   // Image Upload
   'imageUpload.invalidFile': '無効なファイルです',
   'imageUpload.loginRequired': 'ログインが必要です',
   'imageUpload.userIdNotFound': 'ユーザーIDが取得できません。ログインし直してください。',
   'imageUpload.userInfoNotFound': 'ユーザー情報が取得できません。ログインし直してください。',
+  'imageUpload.avatar': 'プロフィール画像',
   'imageUpload.uploadFailed': '画像のアップロードに失敗しました: {error}',
   'imageUpload.unknownError': '不明なエラーが発生しました',
   'imageUpload.uploading': 'アップロード中...',

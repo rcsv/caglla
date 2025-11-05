@@ -278,7 +278,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
         <div className="space-y-4">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-              旅行のタイトル *
+              {t('tripEditor.field.title')}
             </label>
             <input
               type="text"
@@ -293,7 +293,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
 
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-              説明
+              {t('tripEditor.field.description')}
             </label>
             <textarea
               id="description"
@@ -308,7 +308,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
           {!hideDestinationEdit && (
             <div>
               <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
-                目的地
+                {t('tripEditor.field.destination')}
               </label>
               <PlaceSearchInput
                 currentPlace={formData.destinationPlace}
@@ -332,7 +332,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
-                出発日
+                {t('tripEditor.field.startDate')}
               </label>
               <input
                 type="date"
@@ -348,7 +348,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
 
             <div>
               <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
-                帰宅日
+                {t('tripEditor.field.endDate')}
               </label>
               <input
                 type="date"
@@ -382,7 +382,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
 
           <div>
             <label htmlFor="accessLevel" className="block text-sm font-medium text-gray-700 mb-2">
-              公開設定
+              {t('tripEditor.field.accessLevel')}
             </label>
             <select
               id="accessLevel"
@@ -410,7 +410,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
             onClick={handleCancel}
             className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
           >
-            キャンセル
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -418,7 +418,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
             disabled={saving}
             className="px-4 py-2 text-red-600 hover:text-red-900 font-medium disabled:opacity-50"
           >
-            削除
+            {t('common.delete')}
           </button>
           <button
             type="button"
@@ -426,7 +426,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
             disabled={saving || !formData.title || dateError.length > 0}
             className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
           >
-            {saving ? '保存中...' : '保存'}
+            {saving ? t('common.saving') : t('common.save')}
           </button>
         </div>
           </div>
@@ -437,10 +437,10 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
           <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass('FLOAT_MODAL')}`}>
             <div className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                旅行を削除しますか？
+                {t('tripEditor.deleteConfirm.title')}
               </h3>
               <p className="text-gray-600 mb-6">
-                「{trip.title}」を削除します。この操作は取り消せません。
+                {t('tripEditor.deleteConfirm.message').replace('{title}', trip.title)}
               </p>
               <div className="flex justify-end space-x-3">
                 <button
@@ -448,14 +448,14 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
                   disabled={deleting}
                   className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
                 >
-                  キャンセル
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={deleting}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
                 >
-                  {deleting ? '削除中...' : '削除'}
+                  {deleting ? t('tripEditor.deleteConfirm.deleting') : t('common.delete')}
                 </button>
               </div>
             </div>
