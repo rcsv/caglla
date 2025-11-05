@@ -130,18 +130,34 @@ export default function ScheduleCard({
   useEffect(() => {
     const loadImage = async () => {
       if (itinerary.place_data?.photos && itinerary.place_data.photos.length > 0) {
-        const photoReference = itinerary.place_data.photos[0].photo_reference
-        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photoReference, 800)
+        const photos = itinerary.place_data.photos
+        
+        // places_cacheの解像度情報から最高解像度を選択（最大1600px、API上限考慮）
+        const maxAvailableWidth = Math.max(...photos.map(p => p.width || 0))
+        const targetWidth = Math.min(maxAvailableWidth, 1600)
+        
+        // 目標解像度に最も近い写真を選択（目標以上で最小のもの、なければ最大のもの）
+        const selectedPhoto = photos.find(p => p.width >= targetWidth) || 
+                             photos.reduce((prev, curr) => (curr.width || 0) > (prev.width || 0) ? curr : prev)
+        
+        const photoReference = selectedPhoto.photo_reference
+        const photoWidth = selectedPhoto.width || 800
+        const photoHeight = selectedPhoto.height || Math.round(photoWidth * 0.75)
+        
+        // 選択された写真の解像度に基づいて画像URLを生成（API上限1600px）
+        const maxWidth = Math.min(photoWidth, 1600)
+        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photoReference, maxWidth)
+        
         try {
           setImageLoading(true)
           const cachedImageResult = await getCachedPlaceImage(photoReference, googlePhotoUrl, {
-            width: 800,
-            height: 600,
+            width: maxWidth,
+            height: Math.round(maxWidth * (photoHeight / photoWidth)), // アスペクト比維持
             quality: 85
           })
           setCachedImage(cachedImageResult)
           setPhotoUrl(cachedImageResult.url)
-          logger.debug('  Cached image result:', cachedImageResult)
+          logger.debug('  Cached image result:', cachedImageResult, 'resolution:', maxWidth)
         } catch (error) {
           logger.error('  Failed to get cached image:', error)
           setPhotoUrl(googlePhotoUrl)
