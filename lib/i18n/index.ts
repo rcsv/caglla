@@ -660,6 +660,19 @@ export type TranslationKey =
   | 'poi.showPartial'
   | 'poi.showAll'
   | 'poi.daySelector.title'
+  | 'poi.openingHours.open'
+  | 'poi.openingHours.closed'
+  | 'poi.openingHours.open24h'
+  | 'poi.openingHours.closedDay'
+  | 'poi.businessStatus.temporarilyClosed'
+  | 'poi.businessStatus.permanentlyClosed'
+  | 'poi.weekday.sunday'
+  | 'poi.weekday.monday'
+  | 'poi.weekday.tuesday'
+  | 'poi.weekday.wednesday'
+  | 'poi.weekday.thursday'
+  | 'poi.weekday.friday'
+  | 'poi.weekday.saturday'
   // Reservation Display
   | 'reservation.title'
   | 'reservation.empty'
@@ -1391,6 +1404,19 @@ const en: Dictionary = {
   'poi.showPartial': 'Show partial',
   'poi.showAll': 'Show all ({count})',
   'poi.daySelector.title': 'Select day to add',
+  'poi.openingHours.open': 'Open',
+  'poi.openingHours.closed': 'Closed',
+  'poi.openingHours.open24h': 'Open 24 hours',
+  'poi.openingHours.closedDay': 'Closed',
+  'poi.businessStatus.temporarilyClosed': 'Temporarily closed',
+  'poi.businessStatus.permanentlyClosed': 'Permanently closed',
+  'poi.weekday.sunday': 'Sun',
+  'poi.weekday.monday': 'Mon',
+  'poi.weekday.tuesday': 'Tue',
+  'poi.weekday.wednesday': 'Wed',
+  'poi.weekday.thursday': 'Thu',
+  'poi.weekday.friday': 'Fri',
+  'poi.weekday.saturday': 'Sat',
   // Reservation Display
   'reservation.title': 'Reservations',
   'reservation.empty': 'No reservations',
@@ -2375,6 +2401,19 @@ const ja: Dictionary = {
   'poi.showPartial': '一部を表示',
   'poi.showAll': 'すべて表示 ({count})',
   'poi.daySelector.title': '追加する日を選択',
+  'poi.openingHours.open': '営業中',
+  'poi.openingHours.closed': '営業時間外',
+  'poi.openingHours.open24h': '24時間営業',
+  'poi.openingHours.closedDay': '定休日',
+  'poi.businessStatus.temporarilyClosed': '一時休業中',
+  'poi.businessStatus.permanentlyClosed': '閉業',
+  'poi.weekday.sunday': '日',
+  'poi.weekday.monday': '月',
+  'poi.weekday.tuesday': '火',
+  'poi.weekday.wednesday': '水',
+  'poi.weekday.thursday': '木',
+  'poi.weekday.friday': '金',
+  'poi.weekday.saturday': '土',
   // Reservation Display
   'reservation.title': '予約情報',
   'reservation.empty': '予約情報がありません',

@@ -32,7 +32,7 @@ interface POIDialogProps {
 }
 
 // 営業時間を解析する関数
-function parseOpeningHours(weekdayText: string[] | undefined) {
+function parseOpeningHours(weekdayText: string[] | undefined, language: 'ja' | 'en' = 'ja') {
   if (!weekdayText || weekdayText.length === 0) {
     return null
   }
@@ -45,9 +45,12 @@ function parseOpeningHours(weekdayText: string[] | undefined) {
   const dayIndexMap = [6, 0, 1, 2, 3, 4, 5] // [日, 月, 火, 水, 木, 金, 土]
   const todayText = weekdayText[dayIndexMap[today]]
   
-  // 営業日を判定
+  // 営業日を判定（多言語対応）
+  const closedKeywords = language === 'ja' 
+    ? ['定休日', '休業日']
+    : ['closed', 'Closed']
   const openDays = weekdayText.map(text => {
-    return !text.includes('定休日') && !text.includes('休業日') && !text.includes('closed')
+    return !closedKeywords.some(keyword => text.includes(keyword))
   })
   
   // 今日の営業時間を解析
@@ -55,27 +58,36 @@ function parseOpeningHours(weekdayText: string[] | undefined) {
   let currentHours = ''
   
   if (todayText) {
-    // 24時間営業のチェック
-    if (todayText.includes('24 時間営業') || todayText.includes('24時間営業')) {
+    // 24時間営業のチェック（多言語対応）
+    const open24hKeywords = language === 'ja'
+      ? ['24 時間営業', '24時間営業']
+      : ['24 hours', 'Open 24 hours', 'Open 24h']
+    if (open24hKeywords.some(keyword => todayText.includes(keyword))) {
       isOpen = true
-      currentHours = '24時間営業'
-    } else if (todayText.includes('定休日') || todayText.includes('休業日') || todayText.includes('closed')) {
+      currentHours = t('poi.openingHours.open24h', language)
+    } else if (closedKeywords.some(keyword => todayText.includes(keyword))) {
       isOpen = false
-      currentHours = '定休日'
+      currentHours = t('poi.openingHours.closedDay', language)
     } else {
-      // 日本語表記を数値表記に変換する関数
-      const convertJapaneseTime = (timeStr: string): string => {
-        return timeStr
-          .replace(/(\d+)時(\d+)分/g, (match, hour, minute) => {
-            return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
-          })
-          .replace(/(\d+)時/g, (match, hour) => {
-            return `${hour.padStart(2, '0')}:00`
-          })
+      // 時間表記を数値表記に変換する関数（多言語対応）
+      const convertTime = (timeStr: string): string => {
+        if (language === 'ja') {
+          // 日本語表記（例: "9時30分" → "09:30"）
+          return timeStr
+            .replace(/(\d+)時(\d+)分/g, (match, hour, minute) => {
+              return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
+            })
+            .replace(/(\d+)時/g, (match, hour) => {
+              return `${hour.padStart(2, '0')}:00`
+            })
+        } else {
+          // 英語表記は既に"HH:MM"形式なのでそのまま返す
+          return timeStr
+        }
       }
       
       // 営業時間文字列を正規化
-      const normalizedText = convertJapaneseTime(todayText)
+      const normalizedText = convertTime(todayText)
       
       // 複数の営業時間を分割（カンマ区切り）
       const timeRanges = normalizedText.split(',').map(range => range.trim())
@@ -362,11 +374,22 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
     setShowImageGallery(false)
   }
 
-  // 営業時間の解析
-  const openingHoursInfo = parseOpeningHours(placeDetails?.opening_hours?.weekday_text)
+  // ユーザーの言語設定を取得
+  const language = getUserLanguage(user)
   
-  // 曜日ラベル
-  const dayLabels = ['日', '月', '火', '水', '木', '金', '土']
+  // 営業時間の解析（言語設定を渡す）
+  const openingHoursInfo = parseOpeningHours(placeDetails?.opening_hours?.weekday_text, language)
+  
+  // 曜日ラベル（i18n対応）
+  const dayLabels = [
+    t('poi.weekday.sunday', language),
+    t('poi.weekday.monday', language),
+    t('poi.weekday.tuesday', language),
+    t('poi.weekday.wednesday', language),
+    t('poi.weekday.thursday', language),
+    t('poi.weekday.friday', language),
+    t('poi.weekday.saturday', language)
+  ]
   
   // ティアドロップマーカー（地図と同じスタイル）
   const TeardropMarker = ({ number }: { number?: number }) => (
@@ -601,7 +624,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                       onMouseLeave={() => setShowAllHours(false)}
                     >
                       <span className={openingHoursInfo.isOpen ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                        {openingHoursInfo.isOpen ? '営業中' : '営業時間外'}
+                        {openingHoursInfo.isOpen ? t('poi.openingHours.open', language) : t('poi.openingHours.closed', language)}
                       </span>
                       {openingHoursInfo.currentHours && (
                         <span className="text-gray-600">{openingHoursInfo.currentHours}</span>
@@ -644,8 +667,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                       <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                     <span className="text-yellow-800">
-                      {placeDetails.business_status === 'CLOSED_TEMPORARILY' && '一時休業中'}
-                      {placeDetails.business_status === 'CLOSED_PERMANENTLY' && '閉業'}
+                      {placeDetails.business_status === 'CLOSED_TEMPORARILY' && t('poi.businessStatus.temporarilyClosed', language)}
+                      {placeDetails.business_status === 'CLOSED_PERMANENTLY' && t('poi.businessStatus.permanentlyClosed', language)}
                     </span>
                   </div>
                 )}
