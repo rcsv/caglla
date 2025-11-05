@@ -69,11 +69,14 @@ function parseOpeningHours(weekdayText: string[] | undefined, language: 'ja' | '
       isOpen = false
       currentHours = t('poi.openingHours.closedDay', language)
     } else {
-      // 時間表記を数値表記に変換する関数（多言語対応）
-      const convertTime = (timeStr: string): string => {
+      // 営業時間文字列を正規化する関数（多言語対応）
+      const normalizeTimeText = (text: string): string => {
+        // 曜日名を除去（例: "Monday: " → ""）
+        let cleaned = text.replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday):\s*/i, '')
+        
         if (language === 'ja') {
           // 日本語表記（例: "9時30分" → "09:30"）
-          return timeStr
+          return cleaned
             .replace(/(\d+)時(\d+)分/g, (match, hour, minute) => {
               return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`
             })
@@ -81,21 +84,39 @@ function parseOpeningHours(weekdayText: string[] | undefined, language: 'ja' | '
               return `${hour.padStart(2, '0')}:00`
             })
         } else {
-          // 英語表記は既に"HH:MM"形式なのでそのまま返す
-          return timeStr
+          // 英語表記: AM/PMを24時間形式に変換
+          // 例: "7:00 AM" → "07:00", "8:00 PM" → "20:00"
+          return cleaned
+            .replace(/(\d{1,2}):(\d{2})\s*AM/gi, (match, hour, minute) => {
+              const h = parseInt(hour, 10)
+              const hour24 = h === 12 ? 0 : h // 12:00 AM = 00:00
+              return `${hour24.toString().padStart(2, '0')}:${minute}`
+            })
+            .replace(/(\d{1,2}):(\d{2})\s*PM/gi, (match, hour, minute) => {
+              const h = parseInt(hour, 10)
+              const hour24 = h === 12 ? 12 : h + 12 // 12:00 PM = 12:00, 1:00 PM = 13:00
+              return `${hour24.toString().padStart(2, '0')}:${minute}`
+            })
         }
       }
       
       // 営業時間文字列を正規化
-      const normalizedText = convertTime(todayText)
+      const normalizedText = normalizeTimeText(todayText)
       
-      // 複数の営業時間を分割（カンマ区切り）
-      const timeRanges = normalizedText.split(',').map(range => range.trim())
+      // 複数の営業時間を分割（カンマ区切り、または " – " や " - " で分割）
+      const timeRanges = normalizedText.split(',').map(range => range.trim()).flatMap(range => {
+        // "07:00 – 20:00" のような形式を分割
+        if (range.includes(' – ') || range.includes(' - ')) {
+          return [range]
+        }
+        return [range]
+      })
       
       // 各時間範囲を解析
       const parsedRanges = timeRanges.map(range => {
-        // コロン区切りの時間形式を解析
-        const timeMatch = range.match(/(\d{1,2}):(\d{2}).*?(\d{1,2}):(\d{2})/)
+        // コロン区切りの時間形式を解析（AM/PM変換後の24時間形式）
+        // 例: "07:00 – 20:00" または "07:00-20:00"
+        const timeMatch = range.match(/(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})/)
         if (timeMatch) {
           return {
             open: `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`,
