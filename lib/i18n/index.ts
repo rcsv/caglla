@@ -506,6 +506,22 @@ export type TranslationKey =
   | 'imageUpload.selectAnother'
   | 'imageUpload.dropHere'
   | 'imageUpload.clickOrDrag'
+  | 'imageUpload.error.auth'
+  | 'imageUpload.error.auth.description'
+  | 'imageUpload.error.canceled'
+  | 'imageUpload.error.unknown'
+  | 'imageUpload.error.invalidArgument'
+  | 'imageUpload.error.invalidChecksum'
+  | 'imageUpload.error.invalidFormat'
+  | 'imageUpload.error.invalidName'
+  | 'imageUpload.error.objectNotFound'
+  | 'imageUpload.error.projectNotFound'
+  | 'imageUpload.error.quotaExceeded'
+  | 'imageUpload.error.unauthenticated'
+  | 'imageUpload.error.uploadFailed'
+  | 'imageUpload.error.storageQuotaExceeded'
+  | 'imageUpload.error.quotaCheckFailed'
+  | 'imageUpload.error.storageUsageUpdateFailed'
   // Timezone Log Manager
   | 'timezoneLog.showDetails'
   | 'timezoneLog.hideDetails'
@@ -1609,6 +1625,22 @@ const en: Dictionary = {
   'imageUpload.selectAnother': 'Select another image',
   'imageUpload.dropHere': 'Drop image here',
   'imageUpload.clickOrDrag': 'Click or drag & drop to upload',
+  'imageUpload.error.auth': 'Authentication error',
+  'imageUpload.error.auth.description': 'No access permission to Firebase Storage',
+  'imageUpload.error.canceled': 'Upload was canceled',
+  'imageUpload.error.unknown': 'An unknown error occurred',
+  'imageUpload.error.invalidArgument': 'Invalid argument',
+  'imageUpload.error.invalidChecksum': 'File checksum is invalid',
+  'imageUpload.error.invalidFormat': 'File format is invalid',
+  'imageUpload.error.invalidName': 'File name is invalid',
+  'imageUpload.error.objectNotFound': 'File not found',
+  'imageUpload.error.projectNotFound': 'Firebase project not found',
+  'imageUpload.error.quotaExceeded': 'Storage quota exceeded',
+  'imageUpload.error.unauthenticated': 'Not authenticated',
+  'imageUpload.error.uploadFailed': 'Failed to upload image',
+  'imageUpload.error.storageQuotaExceeded': 'Storage quota exceeded: {error}',
+  'imageUpload.error.quotaCheckFailed': 'Failed to check storage quota',
+  'imageUpload.error.storageUsageUpdateFailed': 'Failed to update storage usage',
   // Timezone Log Manager
   'timezoneLog.showDetails': 'Show details',
   'timezoneLog.hideDetails': 'Hide details',
@@ -2648,6 +2680,22 @@ const ja: Dictionary = {
   'imageUpload.selectAnother': '別の画像を選択',
   'imageUpload.dropHere': 'ここに画像をドロップ',
   'imageUpload.clickOrDrag': '画像をクリックまたはドラッグ&ドロップしてアップロード',
+  'imageUpload.error.auth': '認証エラー',
+  'imageUpload.error.auth.description': 'Firebase Storageへのアクセス権限がありません',
+  'imageUpload.error.canceled': 'アップロードがキャンセルされました',
+  'imageUpload.error.unknown': '不明なエラーが発生しました',
+  'imageUpload.error.invalidArgument': '無効な引数です',
+  'imageUpload.error.invalidChecksum': 'ファイルのチェックサムが無効です',
+  'imageUpload.error.invalidFormat': 'ファイル形式が無効です',
+  'imageUpload.error.invalidName': 'ファイル名が無効です',
+  'imageUpload.error.objectNotFound': 'ファイルが見つかりません',
+  'imageUpload.error.projectNotFound': 'Firebase プロジェクトが見つかりません',
+  'imageUpload.error.quotaExceeded': 'ストレージの容量制限を超えました',
+  'imageUpload.error.unauthenticated': '認証されていません',
+  'imageUpload.error.uploadFailed': '画像のアップロードに失敗しました',
+  'imageUpload.error.storageQuotaExceeded': 'ストレージ制限を超えています: {error}',
+  'imageUpload.error.quotaCheckFailed': 'ストレージ制限の確認に失敗しました',
+  'imageUpload.error.storageUsageUpdateFailed': 'ストレージ使用量の更新に失敗しました',
   // Timezone Log Manager
   'timezoneLog.showDetails': '詳細を表示',
   'timezoneLog.hideDetails': '詳細を隠す',

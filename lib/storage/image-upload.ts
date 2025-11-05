@@ -2,6 +2,8 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { storage } from '@/lib/firebase/client'
 import { StorageFile } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
+import { getUserLanguage } from '@/lib/utils/language'
 
 // ストレージ制限チェック用のAPI呼び出し
 async function checkStorageQuota(userId: string, fileSize: number): Promise<{ canUpload: boolean; error?: string }> {
@@ -23,7 +25,8 @@ async function checkStorageQuota(userId: string, fileSize: number): Promise<{ ca
     }
   } catch (error) {
     logger.error('Error checking storage quota:', error)
-    return { canUpload: false, error: 'ストレージ制限の確認に失敗しました' }
+    const language = getUserLanguage()
+    return { canUpload: false, error: t('imageUpload.error.quotaCheckFailed', language) }
   }
 }
 
@@ -47,7 +50,8 @@ async function updateStorageUsage(userId: string, file: StorageFile): Promise<{ 
     }
   } catch (error) {
     logger.error('Error updating storage usage:', error)
-    return { success: false, error: 'ストレージ使用量の更新に失敗しました' }
+    const language = getUserLanguage()
+    return { success: false, error: t('imageUpload.error.storageUsageUpdateFailed', language) }
   }
 }
 
@@ -71,7 +75,11 @@ export const imageUploadHelpers = {
       // ストレージ制限をチェック
       const quotaCheck = await checkStorageQuota(userId, file.size)
       if (!quotaCheck.canUpload) {
-        throw new Error(`ストレージ制限を超えています: ${quotaCheck.error}`)
+        const language = getUserLanguage()
+        const errorMsg = quotaCheck.error 
+          ? t('imageUpload.error.storageQuotaExceeded', language).replace('{error}', quotaCheck.error)
+          : t('imageUpload.error.quotaExceeded', language)
+        throw new Error(errorMsg)
       }
       
       // Create a reference to the file
@@ -112,36 +120,38 @@ export const imageUploadHelpers = {
     } catch (error) {
       logger.error('Detailed Firebase Storage error:', error)
       
+      const language = getUserLanguage()
+      
       // Provide more specific error messages
       if (error instanceof Error) {
         if (error.message.includes('storage/unauthorized')) {
-          throw new Error('認証エラー: Firebase Storageへのアクセス権限がありません')
+          throw new Error(`${t('imageUpload.error.auth', language)}: ${t('imageUpload.error.auth.description', language)}`)
         } else if (error.message.includes('storage/canceled')) {
-          throw new Error('アップロードがキャンセルされました')
+          throw new Error(t('imageUpload.error.canceled', language))
         } else if (error.message.includes('storage/unknown')) {
-          throw new Error('不明なエラーが発生しました')
+          throw new Error(t('imageUpload.error.unknown', language))
         } else if (error.message.includes('storage/invalid-argument')) {
-          throw new Error('無効な引数です')
+          throw new Error(t('imageUpload.error.invalidArgument', language))
         } else if (error.message.includes('storage/invalid-checksum')) {
-          throw new Error('ファイルのチェックサムが無効です')
+          throw new Error(t('imageUpload.error.invalidChecksum', language))
         } else if (error.message.includes('storage/invalid-format')) {
-          throw new Error('ファイル形式が無効です')
+          throw new Error(t('imageUpload.error.invalidFormat', language))
         } else if (error.message.includes('storage/invalid-name')) {
-          throw new Error('ファイル名が無効です')
+          throw new Error(t('imageUpload.error.invalidName', language))
         } else if (error.message.includes('storage/object-not-found')) {
-          throw new Error('ファイルが見つかりません')
+          throw new Error(t('imageUpload.error.objectNotFound', language))
         } else if (error.message.includes('storage/project-not-found')) {
-          throw new Error('Firebase プロジェクトが見つかりません')
+          throw new Error(t('imageUpload.error.projectNotFound', language))
         } else if (error.message.includes('storage/quota-exceeded')) {
-          throw new Error('ストレージの容量制限を超えました')
+          throw new Error(t('imageUpload.error.quotaExceeded', language))
         } else if (error.message.includes('storage/unauthenticated')) {
-          throw new Error('認証されていません')
+          throw new Error(t('imageUpload.error.unauthenticated', language))
         } else {
-          throw new Error(`アップロードエラー: ${error.message}`)
+          throw new Error(`${t('imageUpload.error.uploadFailed', language)}: ${error.message}`)
         }
       }
       
-      throw new Error('画像のアップロードに失敗しました')
+      throw new Error(t('imageUpload.error.uploadFailed', language))
     }
   },
 

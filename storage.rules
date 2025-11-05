@@ -35,6 +35,28 @@ service firebase.storage {
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
+    // ---- 旅行画像 ----
+    match /trips/{tripId}/images/{fileName} {
+      // 読み取り: 認証済みユーザーは読み取り可能（公開旅行は誰でも読み取り可能）
+      allow read: if request.auth != null 
+        || (exists(/databases/(default)/documents/trips/$(tripId)) 
+            && get(/databases/(default)/documents/trips/$(tripId)).data.access_level == 'public');
+      
+      // 作成・更新（アップロード／上書き）: tripの所有者のみ
+      allow create, update: if request.auth != null
+        && exists(/databases/(default)/documents/trips/$(tripId))
+        && request.auth.uid == get(/databases/(default)/documents/trips/$(tripId)).data.user_id
+        && isValidFileType()
+        && isUnderFileSizeLimit()
+        // 機能フラグが false の間は isUnderUserStorageQuota は呼ばれない（短絡評価）
+        && ( !QUOTA_ENFORCED() || isUnderUserStorageQuota(get(/databases/(default)/documents/trips/$(tripId)).data.user_id) );
+      
+      // 削除: tripの所有者のみ
+      allow delete: if request.auth != null
+        && exists(/databases/(default)/documents/trips/$(tripId))
+        && request.auth.uid == get(/databases/(default)/documents/trips/$(tripId)).data.user_id;
+    }
+
     // ---- Google Places API 画像キャッシュ ----
     match /places-photos/{allPaths=**} {
       // 認証済みユーザーは読み取り・書き込み可能
