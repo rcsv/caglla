@@ -72,14 +72,12 @@ for issue_file in "$ISSUES_DIR"/*.md; do
       --repo "$REPO" \
       --title "$TITLE" \
       --body "$BODY" \
-      --label "$LABELS" \
-      --quiet || echo "⚠️  エラー: $(basename "$issue_file")"
+      --label "$LABELS" 2>/dev/null || echo "⚠️  エラー: $(basename "$issue_file")"
   else
     gh issue create \
       --repo "$REPO" \
       --title "$TITLE" \
-      --body "$BODY" \
-      --quiet || echo "⚠️  エラー: $(basename "$issue_file")"
+      --body "$BODY" 2>/dev/null || echo "⚠️  エラー: $(basename "$issue_file")"
   fi
 
   # レート制限を避けるために少し待機
