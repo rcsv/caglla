@@ -40,14 +40,8 @@ for issue_file in "$ISSUES_DIR"/*.md; do
     continue
   fi
 
-  # 本文が空またはタイトルが取得できない場合はスキップ
-  if [ -z "$TITLE" ] || [ "$TITLE" == "" ]; then
-    echo "⚠️  スキップ: $(basename "$issue_file") (タイトルが取得できません)"
-    continue
-  fi
-
-  # タイトルを抽出（最初の行の# を削除）
-  TITLE=$(head -n 1 "$issue_file" | sed 's/^# //' | sed 's/^Issue: //' | sed 's/^#Issue: //')
+  # タイトルを抽出（最初の行の# を削除、Issue: プレフィックスも削除）
+  TITLE=$(head -n 1 "$issue_file" | sed 's/^# //' | sed 's/^Issue: //' | sed 's/^#Issue: //' | xargs)
   
   # タイトルが空の場合はスキップ
   if [ -z "$TITLE" ] || [ "$TITLE" == "" ]; then
@@ -57,6 +51,12 @@ for issue_file in "$ISSUES_DIR"/*.md; do
   
   # 本文を取得
   BODY=$(cat "$issue_file")
+  
+  # 本文が空の場合はスキップ
+  if [ -z "$BODY" ] || [ "$BODY" == "" ]; then
+    echo "⚠️  スキップ: $(basename "$issue_file") (本文が空です)"
+    continue
+  fi
 
   # ラベルを決定
   LABELS=""
@@ -78,19 +78,29 @@ for issue_file in "$ISSUES_DIR"/*.md; do
 
   echo "📝 作成中: $TITLE"
   
-  # GitHub CLIでIssueを作成
+  # GitHub CLIでIssueを作成（エラー出力を一時的にファイルに保存）
+  TEMP_ERROR=$(mktemp)
   if [ -n "$LABELS" ]; then
-    gh issue create \
+    if gh issue create \
       --repo "$REPO" \
       --title "$TITLE" \
       --body "$BODY" \
-      --label "$LABELS" 2>/dev/null || echo "⚠️  エラー: $(basename "$issue_file")"
+      --label "$LABELS" 2>"$TEMP_ERROR"; then
+      echo "  ✅ 作成成功"
+    else
+      echo "  ⚠️  エラー: $(cat "$TEMP_ERROR" | head -n 1)"
+    fi
   else
-    gh issue create \
+    if gh issue create \
       --repo "$REPO" \
       --title "$TITLE" \
-      --body "$BODY" 2>/dev/null || echo "⚠️  エラー: $(basename "$issue_file")"
+      --body "$BODY" 2>"$TEMP_ERROR"; then
+      echo "  ✅ 作成成功"
+    else
+      echo "  ⚠️  エラー: $(cat "$TEMP_ERROR" | head -n 1)"
+    fi
   fi
+  rm -f "$TEMP_ERROR"
 
   # レート制限を避けるために少し待機
   sleep 1
