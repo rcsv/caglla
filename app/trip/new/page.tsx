@@ -492,7 +492,7 @@ export default function NewTripPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="private">{t('tripNew.accessLevel.private')}</option>
-                        <option value="public">公開（誰でも閲覧可能）</option>
+                        <option value="public">{t('tripNew.accessLevel.public')}</option>
                       </select>
                     </div>
                   </div>
@@ -513,7 +513,7 @@ export default function NewTripPage() {
                 disabled={submitting || !formData.destination.trim() || !formData.startDate || !formData.endDate || !!dateError}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
               >
-                {submitting ? '作成中...' : '旅行を作成'}
+                {submitting ? t('tripNew.creating') : t('tripNew.createButton')}
               </button>
             </div>
           </form>
