@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { t } from '@/lib/i18n'
 import type { Trip } from '@/lib/core/types'
 import { 
   downloadTripAsJson, 
@@ -56,7 +57,7 @@ export default function ExportDataModal({ isOpen, onClose, trip }: ExportDataMod
       }, 500)
     } catch (error) {
       console.error('Export error:', error)
-      alert('エクスポート中にエラーが発生しました')
+      alert(t('export.error'))
       setIsExporting(false)
     }
   }
@@ -70,19 +71,19 @@ export default function ExportDataModal({ isOpen, onClose, trip }: ExportDataMod
   const getExportDescription = () => {
     if (exportType === 'trip') {
       if (exportFormat === 'json') {
-        return '旅程全体のデータ（旅行情報、日程、Itinerary、予約情報）をJSON形式でエクスポートします。'
+        return t('export.description.trip.json')
       } else if (exportFormat === 'csv') {
-        return '旅程全体のItinerary一覧をCSV形式でエクスポートします。Excel等で編集可能です。'
+        return t('export.description.trip.csv')
       } else {
-        return '旅程全体のItineraryをiCalendar形式でエクスポートします。Google Calendar、Apple Calendar等に取り込めます。'
+        return t('export.description.trip.ical')
       }
     } else {
       if (exportFormat === 'json') {
-        return '予約情報のみをJSON形式でエクスポートします。'
+        return t('export.description.reservation.json')
       } else if (exportFormat === 'csv') {
-        return '予約情報のみをCSV形式でエクスポートします。Excel等で編集可能です。'
+        return t('export.description.reservation.csv')
       } else {
-        return '予約情報のみをiCalendar形式でエクスポートします。カレンダーアプリに取り込んで予定管理・通知設定ができます。'
+        return t('export.description.reservation.ical')
       }
     }
   }
@@ -102,7 +103,7 @@ export default function ExportDataModal({ isOpen, onClose, trip }: ExportDataMod
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
-            aria-label="閉じる"
+            aria-label={t('common.close')}
           >
             <Icon icon="mdi:close" className="w-6 h-6" />
           </button>

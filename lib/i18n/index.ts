@@ -423,6 +423,17 @@ export type TranslationKey =
   // Schedule
   | 'schedule.time.updateFailed'
   | 'schedule.cost.updateFailed'
+  // Export Data Modal
+  | 'export.error'
+  | 'export.description.trip.json'
+  | 'export.description.trip.csv'
+  | 'export.description.trip.ical'
+  | 'export.description.reservation.json'
+  | 'export.description.reservation.csv'
+  | 'export.description.reservation.ical'
+  // Subscription Modal
+  | 'subscription.processing'
+  | 'subscription.startNow'
   // Image Gallery
   | 'gallery.previousImage'
   | 'gallery.nextImage'
@@ -1222,6 +1233,17 @@ const en: Dictionary = {
   // Schedule
   'schedule.time.updateFailed': 'Failed to update time',
   'schedule.cost.updateFailed': 'Failed to update cost',
+  // Export Data Modal
+  'export.error': 'An error occurred while exporting',
+  'export.description.trip.json': 'Export all trip data (trip information, days, Itinerary, reservations) in JSON format.',
+  'export.description.trip.csv': 'Export all Itinerary items in CSV format. Can be edited in Excel, etc.',
+  'export.description.trip.ical': 'Export all Itinerary items in iCalendar format. Can be imported into Google Calendar, Apple Calendar, etc.',
+  'export.description.reservation.json': 'Export only reservation information in JSON format.',
+  'export.description.reservation.csv': 'Export only reservation information in CSV format. Can be edited in Excel, etc.',
+  'export.description.reservation.ical': 'Export only reservation information in iCalendar format. Can be imported into calendar apps for scheduling and notification settings.',
+  // Subscription Modal
+  'subscription.processing': 'Processing...',
+  'subscription.startNow': 'Start now',
   // Image Gallery
   'gallery.previousImage': 'Previous image',
   'gallery.nextImage': 'Next image',
@@ -1985,6 +2007,17 @@ const ja: Dictionary = {
   // Schedule
   'schedule.time.updateFailed': '時間の更新に失敗しました',
   'schedule.cost.updateFailed': '費用の更新に失敗しました',
+  // Export Data Modal
+  'export.error': 'エクスポート中にエラーが発生しました',
+  'export.description.trip.json': '旅程全体のデータ（旅行情報、日程、Itinerary、予約情報）をJSON形式でエクスポートします。',
+  'export.description.trip.csv': '旅程全体のItinerary一覧をCSV形式でエクスポートします。Excel等で編集可能です。',
+  'export.description.trip.ical': '旅程全体のItineraryをiCalendar形式でエクスポートします。Google Calendar、Apple Calendar等に取り込めます。',
+  'export.description.reservation.json': '予約情報のみをJSON形式でエクスポートします。',
+  'export.description.reservation.csv': '予約情報のみをCSV形式でエクスポートします。Excel等で編集可能です。',
+  'export.description.reservation.ical': '予約情報のみをiCalendar形式でエクスポートします。カレンダーアプリに取り込んで予定管理・通知設定ができます。',
+  // Subscription Modal
+  'subscription.processing': '処理中...',
+  'subscription.startNow': '今すぐ始める',
   // Image Gallery
   'gallery.previousImage': '前の画像',
   'gallery.nextImage': '次の画像',

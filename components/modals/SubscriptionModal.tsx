@@ -114,7 +114,7 @@ export default function SubscriptionModal({
                       : 'bg-gray-600 text-white hover:bg-gray-700'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {isSubscribing ? '処理中...' : '今すぐ始める'}
+                  {isSubscribing ? t('subscription.processing') : t('subscription.startNow')}
                 </button>
               </div>
             ))}
