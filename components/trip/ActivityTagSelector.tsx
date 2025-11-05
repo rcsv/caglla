@@ -7,7 +7,8 @@ import {
   getActivityCategoryMaster,
   getPrimaryCategoryLabel,
   getPrimaryCategoryShortLabel,
-  getSecondaryCategoryLabel 
+  getSecondaryCategoryLabel,
+  getSecondaryCategoryDescription
 } from '@/lib/data/activity-categories'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { t } from '@/lib/i18n'
@@ -103,7 +104,7 @@ export default function ActivityTagSelector({
           <option value="">{t('trip.schedule.categorySelect')}</option>
           {ACTIVITY_CATEGORIES.map((category) => (
             <option key={category.primaryCategory} value={category.primaryCategory}>
-              {category.icon} {category.shortLabel}
+              {getPrimaryCategoryShortLabel(category.primaryCategory)}
             </option>
           ))}
         </select>
@@ -119,7 +120,7 @@ export default function ActivityTagSelector({
             <option value="">{t('trip.schedule.categoryDetail')}</option>
             {secondaryOptions.map((option) => (
               <option key={option.id} value={option.id}>
-                {option.icon ? `${option.icon} ` : ''}{option.label}
+                {getSecondaryCategoryLabel(primaryCategory, option.id)}
               </option>
             ))}
           </select>
@@ -139,7 +140,7 @@ export default function ActivityTagSelector({
       {/* 説明文（2段階目が選択されている場合） */}
       {primaryCategory && secondaryCategory && (
         <p className="text-xs text-gray-500">
-          {secondaryOptions.find(opt => opt.id === secondaryCategory)?.description}
+          {getSecondaryCategoryDescription(primaryCategory, secondaryCategory)}
         </p>
       )}
     </div>

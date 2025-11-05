@@ -255,3 +255,17 @@ export function getSecondaryCategoryLabel(
   return `${info.icon || ''} ${(translated || info.label)}`.trim()
 }
 
+/**
+ * SecondaryCategoryの説明文を取得（i18n対応）
+ */
+export function getSecondaryCategoryDescription(
+  primaryCategory: PrimaryCategoryType,
+  secondaryCategoryId: string
+): string {
+  const info = getSecondaryCategoryInfo(primaryCategory, secondaryCategoryId)
+  if (!info || !info.description) return ''
+  const lang = getUserLanguage()
+  const translated = t((`activity.secondary.${primaryCategory}.${secondaryCategoryId}.description` as unknown) as any, lang)
+  return translated || info.description
+}
+
