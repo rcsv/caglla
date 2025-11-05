@@ -659,6 +659,8 @@ export type TranslationKey =
   | 'poi.addToItinerary'
   | 'poi.showPartial'
   | 'poi.showAll'
+  | 'poi.reviewsAndTips'
+  | 'poi.helpfulVotes'
   | 'poi.daySelector.title'
   | 'poi.openingHours.open'
   | 'poi.openingHours.closed'
@@ -1434,6 +1436,8 @@ const en: Dictionary = {
   'poi.addToItinerary': 'Add to itinerary',
   'poi.showPartial': 'Show partial',
   'poi.showAll': 'Show all ({count})',
+  'poi.reviewsAndTips': 'Reviews・Tips',
+  'poi.helpfulVotes': '{count} people found this helpful',
   'poi.daySelector.title': 'Select day to add',
   'poi.openingHours.open': 'Open',
   'poi.openingHours.closed': 'Closed',
@@ -2456,6 +2460,8 @@ const ja: Dictionary = {
   'poi.addToItinerary': '旅程に追加',
   'poi.showPartial': '一部を表示',
   'poi.showAll': 'すべて表示 ({count})',
+  'poi.reviewsAndTips': 'レビュー・Tips',
+  'poi.helpfulVotes': '{count} 人が参考になったと評価',
   'poi.daySelector.title': '追加する日を選択',
   'poi.openingHours.open': '営業中',
   'poi.openingHours.closed': '営業時間外',

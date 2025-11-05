@@ -692,7 +692,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                 {unifiedReviews.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-semibold text-gray-700">レビュー・Tips</h4>
+                      <h4 className="text-xs font-semibold text-gray-700">{t('poi.reviewsAndTips')}</h4>
                       {unifiedReviews.length > 3 && (
                         <button
                           onClick={() => setShowAllReviews(!showAllReviews)}
@@ -736,7 +736,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                         <p className="text-gray-700 line-clamp-2 leading-relaxed">{review.text}</p>
                         {review.helpful_votes && review.helpful_votes > 0 && (
                           <div className="mt-1 text-xs text-gray-500">
-                            👍 {review.helpful_votes} 人が参考になったと評価
+                            👍 {t('poi.helpfulVotes').replace('{count}', review.helpful_votes.toString())}
                           </div>
                         )}
                       </div>
