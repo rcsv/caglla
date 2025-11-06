@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useParams } from 'next/navigation'
 import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
@@ -8,13 +9,11 @@ import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { UserIcon } from '@/components/common/icons/UserIcon'
 import { getBlogPostBySlug } from '@/lib/content/blog'
 
-type PageProps = {
-  params: { slug: string }
-}
-
-export default function BlogPostPage({ params }: PageProps) {
+export default function BlogPostPage() {
+  const params = useParams()
+  const slug = params?.slug as string
   const { t } = require('@/lib/i18n')
-  const post = getBlogPostBySlug(params.slug)
+  const post = getBlogPostBySlug(slug)
 
   if (!post) {
     return (

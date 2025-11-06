@@ -18,8 +18,8 @@ export async function GET(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { id: presetId } = await params
-    const ref = adminDb.collection('checklist_presets').doc(presetId)
+    const { presetSlug } = await params
+    const ref = adminDb.collection('checklist_presets').doc(presetSlug)
     const doc = await ref.get()
 
     if (!doc.exists) {
@@ -56,8 +56,8 @@ export async function PUT(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { id: presetId } = await params
-    const ref = adminDb.collection('checklist_presets').doc(presetId)
+    const { presetSlug } = await params
+    const ref = adminDb.collection('checklist_presets').doc(presetSlug)
     const doc = await ref.get()
 
     if (!doc.exists) {
@@ -105,8 +105,8 @@ export async function DELETE(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { id: presetId } = await params
-    const ref = adminDb.collection('checklist_presets').doc(presetId)
+    const { presetSlug } = await params
+    const ref = adminDb.collection('checklist_presets').doc(presetSlug)
     const doc = await ref.get()
 
     if (!doc.exists) {

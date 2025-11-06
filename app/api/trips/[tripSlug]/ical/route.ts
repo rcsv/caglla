@@ -13,15 +13,16 @@ import type { Trip, Day, Itinerary } from '@/lib/core/types'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { tripSlug: string } }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
+    const { tripSlug } = await params
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
     const type = searchParams.get('type') || 'trip' // 'trip' or 'reservations'
 
     // 1. Trip取得 (tripSlug parameter contains tripId)
-    const tripDoc = await adminDb.collection('trips').doc(params.tripSlug).get()
+    const tripDoc = await adminDb.collection('trips').doc(tripSlug).get()
     
     if (!tripDoc.exists) {
       return new NextResponse('Trip not found', { status: 404 })
@@ -57,12 +58,12 @@ export async function GET(
     }
 
     // 4. Days取得（独立コレクションとして試行）
-    console.log(`[iCal Debug] Fetching days for trip: ${params.tripSlug}`)
+    console.log(`[iCal Debug] Fetching days for trip: ${tripSlug}`)
     
     // まず独立コレクションとして試行
     let daysSnapshot = await adminDb
       .collection('days')
-      .where('trip_id', '==', params.tripSlug)
+      .where('trip_id', '==', tripSlug)
       .orderBy('day_number', 'asc')
       .get()
     
@@ -73,7 +74,7 @@ export async function GET(
       console.log(`[iCal Debug] No days found in independent collection, trying subcollection`)
       daysSnapshot = await adminDb
         .collection('trips')
-        .doc(params.tripSlug)
+        .doc(tripSlug)
         .collection('days')
         .orderBy('day_number', 'asc')
         .get()
@@ -108,7 +109,7 @@ export async function GET(
         console.log(`[iCal Debug] No itineraries found in independent collection, trying subcollection`)
         itinerariesSnapshot = await adminDb
           .collection('trips')
-          .doc(params.tripSlug)
+          .doc(tripSlug)
           .collection('days')
           .doc(dayDoc.id)
           .collection('itineraries')
@@ -130,7 +131,7 @@ export async function GET(
     trip.days = days
 
     // 6. アクセスログ更新（非同期、エラーは無視）
-    adminDb.collection('trips').doc(params.tripSlug).update({
+    adminDb.collection('trips').doc(tripSlug).update({
       ical_last_accessed_at: new Date(),
     }).catch((err: any) => console.error('Failed to update ical_last_accessed_at:', err))
 

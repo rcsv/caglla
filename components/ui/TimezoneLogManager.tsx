@@ -4,6 +4,7 @@ import { t } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
 import { timezoneUtils } from '@/lib/utils/timezone'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import type { TimezoneFailureLog, TimezoneMappingUpdate } from '@/lib/core/types'
 
 export default function TimezoneLogManager() {
@@ -157,7 +158,7 @@ export default function TimezoneLogManager() {
                   <p>失敗理由: {log.failure_reason}</p>
                   {log.detected_city && <p>検出都市: {log.detected_city}</p>}
                   {log.detected_country && <p>検出国: {log.detected_country}</p>}
-                  <p>作成日時: {new Date(log.created_at).toLocaleString('ja-JP')}</p>
+                  <p>作成日時: {toDateOrNull(log.created_at)?.toLocaleString('ja-JP') || 'N/A'}</p>
                 </div>
               </div>
             ))}

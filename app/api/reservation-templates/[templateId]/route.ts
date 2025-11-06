@@ -12,9 +12,10 @@ const db = getFirestore()
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { templateId: string } }
+  { params }: { params: Promise<{ templateId: string }> }
 ) {
   try {
+    const { templateId } = await params
 
     // 認証チェック
     const user = await verifyAuthToken(request)
@@ -25,7 +26,7 @@ export async function PUT(
     // テンプレート取得
     const templateDoc = await db
       .collection('reservation_templates')
-      .doc(params.templateId)
+      .doc(templateId)
       .get()
 
     if (!templateDoc.exists) {
@@ -63,7 +64,7 @@ export async function PUT(
 
     await db
       .collection('reservation_templates')
-      .doc(params.templateId)
+      .doc(templateId)
       .update(updateData)
 
     return NextResponse.json({ 
@@ -71,7 +72,7 @@ export async function PUT(
       template: {
         ...template,
         ...updateData,
-        id: params.templateId,
+        id: templateId,
       }
     })
   } catch (error) {
@@ -87,9 +88,10 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { templateId: string } }
+  { params }: { params: Promise<{ templateId: string }> }
 ) {
   try {
+    const { templateId } = await params
 
     // 認証チェック
     const user = await verifyAuthToken(request)
@@ -100,7 +102,7 @@ export async function DELETE(
     // テンプレート取得
     const templateDoc = await db
       .collection('reservation_templates')
-      .doc(params.templateId)
+      .doc(templateId)
       .get()
 
     if (!templateDoc.exists) {
@@ -117,7 +119,7 @@ export async function DELETE(
     // テンプレート削除
     await db
       .collection('reservation_templates')
-      .doc(params.templateId)
+      .doc(templateId)
       .delete()
 
     return NextResponse.json({ 
@@ -137,9 +139,10 @@ export async function DELETE(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { templateId: string } }
+  { params }: { params: Promise<{ templateId: string }> }
 ) {
   try {
+    const { templateId } = await params
 
     // 認証チェック
     const user = await verifyAuthToken(request)
@@ -150,7 +153,7 @@ export async function POST(
     // テンプレート取得
     const templateDoc = await db
       .collection('reservation_templates')
-      .doc(params.templateId)
+      .doc(templateId)
       .get()
 
     if (!templateDoc.exists) {
@@ -167,7 +170,7 @@ export async function POST(
     // 使用回数と最終使用日時を更新
     await db
       .collection('reservation_templates')
-      .doc(params.templateId)
+      .doc(templateId)
       .update({
         use_count: FieldValue.increment(1),
         last_used_at: FieldValue.serverTimestamp(),

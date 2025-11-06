@@ -11,6 +11,7 @@ import Card from '@/components/common/Card'
 import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
 import { t } from '@/lib/i18n'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 // 設定モーダルはプロフィールページへ移行
 import type { Trip } from '@/lib/core/types'
 
@@ -29,7 +30,8 @@ export default function MemoriesListPage() {
 
   // 過去の旅行を年別にグループ化
   const tripsByYear = pastTrips.reduce((acc, trip) => {
-    const year = trip.start_date ? new Date(trip.start_date).getFullYear() : new Date().getFullYear()
+    const startDate = trip.start_date ? toDateOrNull(trip.start_date) : null
+    const year = startDate ? startDate.getFullYear() : new Date().getFullYear()
     if (!acc[year]) {
       acc[year] = []
     }

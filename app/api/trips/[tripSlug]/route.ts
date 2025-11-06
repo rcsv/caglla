@@ -172,7 +172,7 @@ export async function PUT(
   { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const { id: tripId } = await params
+    const { tripSlug: tripId } = await params
     const body = await request.json()
 
     if (!tripId) {
@@ -339,7 +339,7 @@ export async function DELETE(
   { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const { id: tripId } = await params
+    const { tripSlug: tripId } = await params
 
     if (!tripId) {
       return NextResponse.json(

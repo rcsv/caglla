@@ -28,7 +28,7 @@ function toDate(firestoreDate: FirestoreDate | undefined): Date | undefined {
  * Retrieve a trip by ID including its destination (resolved from place cache when missing), days with their itineraries (with place data resolved from place cache when missing), and the creator's public info when available.
  *
  * @param request - The incoming Next.js request (unused for retrieval logic).
- * @param params - An object containing route parameters; `params.id` is the trip ID to fetch.
+ * @param params - An object containing route parameters; `params.tripSlug` is the trip slug to fetch.
  * @returns A JSON response containing the trip fields plus:
  * - `days`: array of days each including an `itineraries` array (each itinerary may include `place_data` populated from the places cache),
  * - `creator`: public creator info `{ id, name, email, avatar_url, slug }` or `null` if not found.

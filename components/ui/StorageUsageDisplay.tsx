@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/contexts/auth'
 import { StorageUsage, StorageQuota } from '@/lib/core/types'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { t } from '@/lib/i18n'
+import { dateUtils } from '@/lib/utils/date'
 
 interface StorageUsageDisplayProps {
   className?: string
@@ -153,9 +154,6 @@ export default function StorageUsageDisplay({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
-  const formatDate = (date: string | Date) => {
-    return new Date(date).toLocaleString('ja-JP')
-  }
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -249,7 +247,7 @@ export default function StorageUsageDisplay({
                             {file.isAvatar ? t('home.dashboard.storage.details.avatar') : t('home.dashboard.storage.details.tripImage')}
                           </span>
                         </td>
-                        <td className="p-1 text-xs">{formatDate(file.uploadedAt)}</td>
+                        <td className="p-1 text-xs">{dateUtils.formatDate(file.uploadedAt)}</td>
                         {showDeleteButtons && (
                           <td className="p-1">
                             <button

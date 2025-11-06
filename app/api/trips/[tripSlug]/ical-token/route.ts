@@ -20,9 +20,10 @@ const auth = getAuth()
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { tripSlug: string } }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
+    const { tripSlug } = await params
     // 1. 認証チェック
     const user = await verifyAuthToken(request)
     if (!user) {
@@ -33,7 +34,7 @@ export async function POST(
 
     // 2. Trip取得（id/slug 両対応の解決ヘルパー）
     const { adminTripOperations } = await import('@/lib/firebase/admin-operation')
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(params.tripSlug)
+    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     const resolvedTripId = resolved?.id || null
 
     if (!resolvedTripId) {
@@ -106,9 +107,10 @@ export async function POST(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { tripSlug: string } }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
+    const { tripSlug } = await params
     // 1. 認証チェック
     const user = await verifyAuthToken(request)
     if (!user) {
@@ -120,14 +122,14 @@ export async function DELETE(
     // 2. Trip取得（tripSlugからtripIdへの解決）
     const resolvedTripId = await (async () => {
       // まずはドキュメントIDとして試す
-      const byId = await db.collection('trips').doc(params.tripSlug).get()
+      const byId = await db.collection('trips').doc(tripSlug).get()
       if (byId.exists) {
         return byId.id
       }
       // 見つからなければ slug で検索
       const bySlugSnap = await db
         .collection('trips')
-        .where('slug', '==', params.tripSlug)
+        .where('slug', '==', tripSlug)
         .limit(1)
         .get()
       if (!bySlugSnap.empty) {

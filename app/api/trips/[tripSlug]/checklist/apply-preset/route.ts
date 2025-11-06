@@ -18,7 +18,7 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { id: tripId } = await params
+    const { tripSlug: tripId } = await params
     const body = await request.json()
     const { preset_id } = body
 

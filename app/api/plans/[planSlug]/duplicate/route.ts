@@ -21,7 +21,7 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { id: sourceTripId } = await params
+    const { planSlug: sourceTripId } = await params
     const { newTitle }: { newTitle?: string } = await request.json()
     
     // プランを複製

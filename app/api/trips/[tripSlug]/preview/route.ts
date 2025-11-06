@@ -229,10 +229,10 @@ async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPreviewData> 
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { tripSlug: string } }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const { tripSlug } = params
+    const { tripSlug } = await params
     logger.debug('Preview API: request received', { tripSlug })
 
     // 1. 認証チェック

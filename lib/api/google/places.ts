@@ -8,7 +8,16 @@ import type { PlaceSearchResult, PlaceDetailsResult, SupportedLanguage, User } f
 export type { PlaceSearchResult, PlaceDetailsResult }
 
 // Google Places API configuration
-const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+// クライアント側で安全に環境変数を取得
+function getApiKey(): string | undefined {
+  if (typeof window === 'undefined') {
+    // サーバー側
+    return process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+  }
+  // クライアント側: Next.jsがビルド時に埋め込んだ値を使用
+  return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+}
+
 const GOOGLE_PLACES_API_URL = 'https://maps.googleapis.com/maps/api/place'
 
 export const placesApiHelpers = {
@@ -21,6 +30,7 @@ export const placesApiHelpers = {
       rectangle?: { low: { latitude: number; longitude: number }; high: { latitude: number; longitude: number } }
     }
   ): Promise<PlaceSearchResult[]> {
+    const GOOGLE_PLACES_API_KEY = getApiKey()
     if (!GOOGLE_PLACES_API_KEY) {
       throw new Error('Google Places API key is not configured')
     }
@@ -81,6 +91,7 @@ export const placesApiHelpers = {
     placeId: string, 
     language: SupportedLanguage = DEFAULT_LANGUAGE
   ): Promise<PlaceDetailsResult> {
+    const GOOGLE_PLACES_API_KEY = getApiKey()
     if (!GOOGLE_PLACES_API_KEY) {
       throw new Error('Google Places API key is not configured')
     }

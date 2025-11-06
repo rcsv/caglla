@@ -4,12 +4,22 @@ import logger from '@/lib/core/logger'
 import type { GeocodingResult, GeocodingResponse } from '@/lib/core/types'
 
 // Google Geocoding API configuration
-const GOOGLE_GEOCODING_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY // 同じAPIキーを使用
+// クライアント側で安全に環境変数を取得
+function getApiKey(): string | undefined {
+  if (typeof window === 'undefined') {
+    // サーバー側
+    return process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+  }
+  // クライアント側: Next.jsがビルド時に埋め込んだ値を使用
+  return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+}
+
 const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode'
 
 export const geocodingApiHelpers = {
   // 住所から地理情報を取得する
   async geocodeAddress(address: string): Promise<GeocodingResult[]> {
+    const GOOGLE_GEOCODING_API_KEY = getApiKey()
     if (!GOOGLE_GEOCODING_API_KEY) {
       throw new Error('Google Geocoding API key is not configured')
     }
@@ -41,6 +51,7 @@ export const geocodingApiHelpers = {
 
   // 座標から住所を取得する（逆ジオコーディング）
   async reverseGeocode(lat: number, lng: number): Promise<GeocodingResult[]> {
+    const GOOGLE_GEOCODING_API_KEY = getApiKey()
     if (!GOOGLE_GEOCODING_API_KEY) {
       throw new Error('Google Geocoding API key is not configured')
     }

@@ -38,7 +38,7 @@ export const dateUtils = {
     
     // オプションでyearがundefinedの場合、除外する
     const finalOptions = { ...defaultOptions, ...options }
-    if ('year' in options && options.year === undefined) {
+    if (options && 'year' in options && options.year === undefined) {
       delete finalOptions.year
     }
     

@@ -21,7 +21,7 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { id: tripId } = await params
+    const { planSlug: tripId } = await params
     const { templateName }: { templateName: string } = await request.json()
     
     if (!templateName) {
