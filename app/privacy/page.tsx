@@ -4,9 +4,15 @@ import React from 'react'
 import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
-
+import { t } from '@/lib/i18n'
+import { getUserLanguage } from '@/lib/utils/language'
+import { useAuth } from '@/lib/contexts/auth'
 
 export default function PrivacyPage() {
+  const { user } = useAuth()
+  const language = getUserLanguage(user)
+  const lastUpdatedDate = new Date('2025-11-06').toLocaleDateString(language === 'ja' ? 'ja-JP' : 'en-US')
+
   return (
     <StaticPageLayout>
       {/* Hero Section */}
@@ -16,7 +22,7 @@ export default function PrivacyPage() {
           <div className="lg:col-span-9">
             <h1 className="leading-[0.8] tracking-tight bg-text-image text-transparent bg-clip-text font-extrabold uppercase text-[clamp(4rem,12vw,11rem)] font-rajdhani">
               <span className="block">
-                Privacy Policy
+                {t('privacy.title')}
               </span>
             </h1>
           </div>
@@ -24,7 +30,7 @@ export default function PrivacyPage() {
           <div className="lg:col-span-3 flex items-end">
             <div className="relative z-10 bg-white/85 backdrop-blur-sm p-6 border border-gray-200">
               <p className="text-lg md:text-xl text-gray-800 leading-relaxed">
-                Last updated: {new Date().toLocaleDateString('ja-JP')}
+                {t('privacy.lastUpdated', language).replace('{date}', lastUpdatedDate)}
               </p>
             </div>
           </div>
@@ -32,65 +38,62 @@ export default function PrivacyPage() {
       </section>
 
       {/* Preface */}
-      <Section title="Preface">
+      <Section title={t('privacy.preface.title')}>
         <SolidCard className="p-6 md:p-8">
           <div className="space-y-4 text-gray-700 leading-relaxed">
-            <p>
-              Caglla Travel Manager（以下「当サービス」）は、ユーザーの個人情報の保護を重要な責務と考え、以下のプライバシーポリシーを定めています。
-              ユーザーは、本プライバシーポリシーに従って当サービスを利用することにより、個人情報の保護についての同意を与えることになります。
-            </p>
+            <p>{t('privacy.preface.content')}</p>
           </div>
         </SolidCard>
       </Section>
 
       {/* Collection of Information */}
-      <Section title="Collection of Information">
+      <Section title={t('privacy.collection.title')}>
         <SolidCard className="p-6 md:p-8">
           <div className="space-y-4 text-gray-700 leading-relaxed">
-            <p className="text-gray-700 leading-relaxed mb-4">当サービスでは、以下の情報を収集する場合があります：</p>
+            <p className="text-gray-700 leading-relaxed mb-4">{t('privacy.collection.intro')}</p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>Googleアカウント情報（名前、メールアドレス、プロフィール画像）</li>
-              <li>旅行計画データ（旅程、宿泊先、観光地情報）</li>
-              <li>位置情報（地図表示のため）</li>
-              <li>サービス利用状況（機能の使用頻度、エラーログ）</li>
+              <li>{t('privacy.collection.googleAccount')}</li>
+              <li>{t('privacy.collection.travelData')}</li>
+              <li>{t('privacy.collection.location')}</li>
+              <li>{t('privacy.collection.usage')}</li>
             </ul>
           </div>
         </SolidCard>
       </Section>
 
       {/* Purpose of Information Collection */}
-      <Section title="Purpose of Information Collection">
+      <Section title={t('privacy.purpose.title')}>
         <SolidCard className="p-6 md:p-8">
           <div className="space-y-4 text-gray-700 leading-relaxed">
-            <p className="text-gray-700 leading-relaxed mb-4">収集した情報は以下の目的で利用します：</p>
+            <p className="text-gray-700 leading-relaxed mb-4">{t('privacy.purpose.intro')}</p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li>サービスの提供・運営</li>
-              <li>ユーザー認証・アカウント管理</li>
-              <li>旅行計画の保存・管理</li>
-              <li>サービス改善・新機能開発</li>
-              <li>カスタマーサポート</li>
+              <li>{t('privacy.purpose.service')}</li>
+              <li>{t('privacy.purpose.authentication')}</li>
+              <li>{t('privacy.purpose.management')}</li>
+              <li>{t('privacy.purpose.improvement')}</li>
+              <li>{t('privacy.purpose.support')}</li>
             </ul>
           </div>
         </SolidCard>
       </Section>
 
       {/* Sharing of Information */}
-      <Section title="Sharing of Information">
+      <Section title={t('privacy.sharing.title')}>
         <SolidCard className="p-6 md:p-8">
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p className="text-gray-700 leading-relaxed">
-              当サービスは、ユーザーの同意がある場合、または法的義務がある場合を除き、個人情報を第三者と共有することはありません。
+              {t('privacy.sharing.content')}
             </p>
           </div>
         </SolidCard>
       </Section>
 
       {/* Protection of Data */}
-      <Section title="Protection of Data">
+      <Section title={t('privacy.protection.title')}>
         <SolidCard className="p-6 md:p-8">
           <div className="space-y-4 text-gray-700 leading-relaxed">
             <p className="text-gray-700 leading-relaxed">
-              当サービスは、Firebase（Google Cloud Platform）のセキュリティ機能を活用し、ユーザーデータを適切に保護します。
+              {t('privacy.protection.content')}
             </p>
           </div>
         </SolidCard>
@@ -98,12 +101,16 @@ export default function PrivacyPage() {
 
 
       {/* Contact */}
-      <Section title="Contact">
+      <Section title={t('privacy.contact.title')}>
         <SolidCard className="p-6 md:p-8">
           <div className="space-y-4 text-gray-700 leading-relaxed">
-            <p className="text-gray-700 leading-relaxed">
-              プライバシーポリシーに関するご質問は、<a href="/contact" className="text-emerald-600 hover:text-emerald-700 underline font-medium">お問い合わせページ</a>からご連絡ください。
-            </p>
+            <p 
+              className="text-gray-700 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: t('privacy.contact.content').replace(
+                '<a href="/contact">',
+                '<a href="/contact" class="text-emerald-600 hover:text-emerald-700 underline font-medium">'
+              ) }}
+            />
           </div>
         </SolidCard>
       </Section>
