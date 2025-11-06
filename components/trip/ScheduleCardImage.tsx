@@ -2,6 +2,7 @@ import { placesApiHelpers } from '@/lib/api/google/places'
 import { CachedImageInfo } from '@/lib/storage/image-cache'
 import logger from '@/lib/core/logger'
 import Image from 'next/image'
+import { IconRenderer } from '@/components/common/icons/IconRenderer'
 
 interface ScheduleCardImageProps {
   photoUrl: string | null
@@ -9,6 +10,7 @@ interface ScheduleCardImageProps {
   cachedImage: CachedImageInfo | null
   imageLoading: boolean
   photoReference?: string
+  activityIconName?: string
   children?: React.ReactNode
 }
 
@@ -18,6 +20,7 @@ export function ScheduleCardImage({
   cachedImage,
   imageLoading,
   photoReference,
+  activityIconName,
   children
 }: ScheduleCardImageProps) {
   return (
@@ -48,6 +51,12 @@ export function ScheduleCardImage({
           {cachedImage?.cached && (
             <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 py-0.5 rounded-full opacity-75">
               C
+            </div>
+          )}
+          {/* アクティビティアイコン（右下にフロート表示） */}
+          {activityIconName && (
+            <div className="absolute bottom-1.5 right-1.5 bg-white/90 backdrop-blur-sm rounded-full p-1.5 shadow-md pointer-events-none">
+              <IconRenderer iconName={activityIconName} className="w-4 h-4" color="#374151" />
             </div>
           )}
           {imageLoading && (

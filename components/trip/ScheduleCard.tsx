@@ -287,6 +287,7 @@ export default function ScheduleCard({
               cachedImage={cachedImage}
               imageLoading={imageLoading}
               photoReference={itinerary.place_data?.photos?.[0]?.photo_reference}
+              activityIconName={itinerary.activity_tag ? getSecondaryCategoryIconName(itinerary.activity_tag.primaryCategory, itinerary.activity_tag.secondaryCategory) : undefined}
             >
               {/* 画像左上に数字入りティアドロップ（Google Maps対応の番号と一致） */}
               <div className="absolute top-1.5 left-1.5 pointer-events-none">

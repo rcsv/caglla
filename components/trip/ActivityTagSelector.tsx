@@ -7,8 +7,7 @@ import {
   getActivityCategoryMaster,
   getPrimaryCategoryLabel,
   getPrimaryCategoryShortLabel,
-  getSecondaryCategoryLabel,
-  getSecondaryCategoryDescription
+  getSecondaryCategoryLabel
 } from '@/lib/data/activity-categories'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { t } from '@/lib/i18n'
@@ -126,23 +125,6 @@ export default function ActivityTagSelector({
           </select>
         )}
       </div>
-      
-      {/* 選択中のタグを表示 */}
-      {currentTag && (
-        <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-500">{t('trip.schedule.selected')}:</span>
-          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md">
-            {getPrimaryCategoryShortLabel(currentTag.primaryCategory)} → {getSecondaryCategoryLabel(currentTag.primaryCategory, currentTag.secondaryCategory)}
-          </span>
-        </div>
-      )}
-      
-      {/* 説明文（2段階目が選択されている場合） */}
-      {primaryCategory && secondaryCategory && (
-        <p className="text-xs text-gray-500">
-          {getSecondaryCategoryDescription(primaryCategory, secondaryCategory)}
-        </p>
-      )}
     </div>
   )
 }

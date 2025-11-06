@@ -271,3 +271,14 @@ export function getSecondaryCategoryDescription(
   return translated || info.description
 }
 
+/**
+ * SecondaryCategoryのアイコン名を取得（SVGアイコン優先）
+ */
+export function getSecondaryCategoryIconName(
+  primaryCategory: PrimaryCategoryType,
+  secondaryCategoryId: string
+): string | undefined {
+  const info = getSecondaryCategoryInfo(primaryCategory, secondaryCategoryId)
+  return info?.iconName
+}
+
