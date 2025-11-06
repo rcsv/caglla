@@ -1,7 +1,8 @@
 # Feature: 旅行費用サマリーにItinerary明細を表示
 
 **作成日**: 2025-10-31  
-**状態**: 🔴 未実装  
+**解決日**: 2025-11-05  
+**状態**: ✅ 解決済み  
 **優先度**: 中  
 **種類**: Feature（機能追加）  
 **関連ファイル**:
@@ -342,13 +343,60 @@ export default function TripCostDisplay({
 
 ## ✅ 完了条件
 
-- [ ] 通貨単位ごとの合計金額に「明細を見る」ボタンが追加されている
-- [ ] 明細を展開すると、各Itineraryの費用が表示される
-- [ ] 各明細にItinerary名、金額、日付情報が表示される
-- [ ] 明細を折りたたむことができる
-- [ ] 複数通貨がある場合も正常に動作する
-- [ ] パフォーマンスに大きな影響がない
-- [ ] UIデザインが既存のデザインと調和している
+- [x] 通貨単位ごとの合計金額に「明細を見る」ボタンが追加されている
+- [x] 明細を展開すると、各Itineraryの費用が表示される
+- [x] 各明細にItinerary名、金額、日付情報が表示される
+- [x] 明細を折りたたむことができる
+- [x] 複数通貨がある場合も正常に動作する
+- [x] パフォーマンスに大きな影響がない
+- [x] UIデザインが既存のデザインと調和している
+
+## ✅ 解決内容
+
+### 2025-11-05 実装確認完了
+
+Issue #33の機能は既に完全に実装されています。
+
+**実装済みの機能**:
+
+1. **データ構造の拡張** (`lib/travel/cost-aggregation.ts`)
+   - ✅ `CostItem`インターフェース - 明細情報の型定義
+   - ✅ `CostSummaryWithDetails`インターフェース - 拡張されたサマリー型
+   - ✅ `aggregateCostsWithDetails`関数 - 明細情報を含む集計関数
+   - ✅ 日付順ソート機能
+
+2. **UIコンポーネントの拡張** (`components/stats/TripCostDisplay.tsx`)
+   - ✅ アコーディオンUI（`expandedCurrencies`状態管理）
+   - ✅ 「明細を見る」/「折りたたむ」ボタン
+   - ✅ 各Itineraryの明細表示（title、金額、日付、場所名）
+   - ✅ アクセシビリティ対応（`aria-expanded`）
+
+3. **i18n対応**
+   - ✅ `cost.viewDetails` - 「明細を見る」（英語: "View Details"）
+   - ✅ `cost.collapse` - 「折りたたむ」（英語: "Collapse"）
+
+4. **統合**
+   - ✅ `TripSummaryView.tsx`から`days`プロップを`TripCostDisplay`に渡している
+
+5. **バグ修正**（2025-11-05）
+   - ✅ `lib/utils/date.ts`の`formatDate`関数で、`options`が`undefined`の場合のエラーを修正
+   - ✅ `if (options && 'year' in options && options.year === undefined)` に変更
+
+**実装ファイル**:
+- `lib/travel/cost-aggregation.ts` - 費用集計ロジック（明細情報対応）
+- `components/stats/TripCostDisplay.tsx` - 費用表示コンポーネント（アコーディオンUI）
+- `lib/i18n/index.ts` - i18nキー（`cost.viewDetails`, `cost.collapse`）
+- `components/trip/TripSummaryView.tsx` - Summary表示（`days`プロップを渡している）
+- `lib/utils/date.ts` - 日付フォーマット関数（`options`が`undefined`の場合のエラー修正）
+
+### 動作確認完了（2025-11-05）
+
+- ✅ 通貨単位ごとの合計金額表示
+- ✅ 「明細を見る」ボタンで展開
+- ✅ 各Itineraryの明細表示（title、金額、日付、場所名）
+- ✅ 「折りたたむ」ボタンで折りたたみ
+- ✅ 複数通貨対応
+- ✅ エラーなしで正常動作
 
 ---
 

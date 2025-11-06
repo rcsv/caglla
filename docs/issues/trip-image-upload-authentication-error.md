@@ -290,7 +290,55 @@ match /trips/{tripId}/images/{fileName} {
 
 ---
 
+## 🔍 根本原因の特定（2025-11-05追記）
+
+### 実際の原因
+
+段階的なStorage Rulesテストにより、**実際の原因が判明しました**：
+
+**問題**: Firebase Storageの`create`操作時に、Firestoreドキュメントの存在チェック（`exists()`や`get().exists`）を行うと失敗する
+
+**詳細**:
+1. Edit trip informationダイアログで画像を初めてアップロードする際、Firebase Storageは`create`操作として扱う
+2. 初回アップロード時は、Storageパス`trips/{tripId}/images/`がまだ存在しない
+3. Storage Rulesで`create`と`update`を同じルールで扱い、Firestoreドキュメントの存在チェックを含めていた
+4. この結果、`create`操作時にFirestoreドキュメントの存在チェックが実行され、403エラーが発生していた
+
+### 段階的テスト結果
+
+1. **Step 1: 認証のみ** - ✅ 成功
+   ```javascript
+   allow create, update: if request.auth != null;
+   ```
+
+2. **Step 2: 認証 + tripの存在確認** - ❌ 失敗
+   ```javascript
+   allow create, update: if request.auth != null
+     && exists(/databases/(default)/documents/trips/$(tripId));
+   ```
+
+3. **Step 2c: createとupdateを分離** - ✅ 成功
+   ```javascript
+   allow create: if request.auth != null;
+   allow update: if request.auth != null
+     && get(/databases/(default)/documents/trips/$(tripId)).exists;
+   ```
+
+### 解決方法
+
+`create`と`update`を**分離**して、それぞれ異なるルールを適用：
+
+- **`create`時**: 認証のみ（初回アップロード時はFirestoreドキュメントの存在チェックをスキップ）
+- **`update`時**: 認証 + Firestoreドキュメントの存在確認 + 所有権チェック
+
+### 関連Issue
+
+詳細は`docs/issues/trip-image-upload-create-vs-edit.md`を参照してください。
+
+---
+
 ## 🔗 関連Issue
 
+- [x] `trip-image-upload-create-vs-edit.md` - 新規作成時は成功、編集時は失敗する問題（根本原因を特定）
 - [ ] `trip-editor-delete-button-not-working.md` - TripEditorのDeleteボタンが反応しない問題（関連する可能性あり）
 

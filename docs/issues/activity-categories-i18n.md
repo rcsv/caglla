@@ -3,6 +3,7 @@
 **作成日**: 2025-11-01  
 **状態**: ✅ 解決済み  
 **優先度**: 中  
+**実装完了日**: 2025-10-31  
 **種類**: i18n化  
 **関連ファイル**: 
 - `lib/data/activity-categories.ts`（アクティビティカテゴリーマスターデータ）
@@ -214,15 +215,50 @@ export function getSecondaryCategoryDescriptionI18n(
 
 ## ✅ 完了条件
 
-- [ ] PrimaryCategory（10カテゴリー）の`label`と`shortLabel`がi18n化される
-- [ ] SecondaryCategory（約70アイテム）の`label`と`description`がi18n化される
-- [ ] `ActivityTagSelector`で選択肢が多言語表示される
-- [ ] `ActivityTagSelector`の「選択中」表示が多言語表示される
-- [ ] `ActivityStatsDisplay`で統計情報が多言語表示される
-- [ ] 既存のヘルパー関数（`getPrimaryCategoryLabel`など）がi18n対応になる、または新しいi18n対応関数が追加される
-- [ ] 英語と日本語の翻訳が追加される
-- [ ] ビルドエラーがない
-- [ ] ブラウザで動作確認済み（英語・日本語切り替えテスト）
+- [x] PrimaryCategory（10カテゴリー）の`label`と`shortLabel`がi18n化される
+- [x] SecondaryCategory（約72アイテム）の`label`と`description`がi18n化される
+- [x] `ActivityTagSelector`で選択肢が多言語表示される（既存のヘルパー関数がi18n対応済み）
+- [x] `ActivityTagSelector`の「選択中」表示が多言語表示される（既存のヘルパー関数がi18n対応済み）
+- [x] `ActivityStatsDisplay`で統計情報が多言語表示される（既存のヘルパー関数がi18n対応済み）
+- [x] 既存のヘルパー関数（`getPrimaryCategoryLabel`など）がi18n対応になる（実装済み）
+- [x] 英語と日本語の翻訳が追加される
+- [x] ビルドエラーがない
+- [ ] ブラウザで動作確認済み（英語・日本語切り替えテスト）← 動作確認待ち
+
+## 🎉 実装完了
+
+### 実装内容
+
+1. **Transportカテゴリの拡充**
+   - `gas_station`（ガソリンスタンド）を追加
+   - `toll_payment`（交通料金支払い）を追加
+
+2. **すべてのSecondaryCategoryのi18nキー追加**
+   - `TranslationKey`型に144個のキーを追加（72個のSecondaryCategory × 2（label + description））
+   - すべてのPrimaryCategoryとSecondaryCategoryのi18nキーを定義
+
+3. **英語と日本語の翻訳を追加**
+   - 英語翻訳: 144個のエントリを追加
+   - 日本語翻訳: 144個のエントリを追加
+
+### 実装済みの機能
+
+- `getPrimaryCategoryLabel()`: i18n対応済み（`activity.primary.{category}`を使用）
+- `getPrimaryCategoryShortLabel()`: i18n対応済み（`activity.primaryShort.{category}`を使用）
+- `getSecondaryCategoryLabel()`: i18n対応済み（`activity.secondary.{primary}.{secondary}`を使用）
+- `getSecondaryCategoryDescription()`: i18n対応済み（`activity.secondary.{primary}.{secondary}.description`を使用）
+
+### 追加されたアクティビティ
+
+- **Transport**:
+  - `gas_station`: ガソリンスタンド / Gas Station
+  - `toll_payment`: 交通料金支払い / Toll Payment
+
+### 統計
+
+- **PrimaryCategory**: 10カテゴリー（すべてi18n対応済み）
+- **SecondaryCategory**: 72アイテム（すべてi18n対応完了）
+- **i18nキー数**: 144個（72 × 2）
 
 ---
 

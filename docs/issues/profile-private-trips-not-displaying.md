@@ -1,7 +1,8 @@
 # Issue: プロフィールページでPrivate Tripsが表示されない
 
 **作成日**: 2025-10-31  
-**状態**: 🔴 未解決（難易度アップ）  
+**解決日**: 2025-11-05  
+**状態**: ✅ 解決済み  
 **優先度**: 高  
 **関連ファイル**: `app/[userSlug]/page.tsx`, `app/api/trips/route.ts`, `lib/firebase/admin-operation.ts`
 
@@ -148,7 +149,15 @@ if (currentUserId && viewedUserId && currentUserId === viewedUserId) {
 
 ---
 
-## 🔍 試した対応（未解決）
+## ✅ 解決内容
+
+### 2025-11-05 解決確認
+Private Tripsが正しく表示されるようになりました。
+
+### 📝 参考コミット
+- `fix: プロフィールページでPrivate Tripsが正しく表示されるように修正` (e47edec)
+
+## 🔍 試した対応（履歴）
 
 ### 2025-11-01 第1回修正
 #### 原因仮説
@@ -162,15 +171,5 @@ if (currentUserId && viewedUserId && currentUserId === viewedUserId) {
 - デバッグログを削除
 
 #### 結果
-**まだ解決していない**。別の原因が考えられる。
-
-### 📝 参考コミット
-- `fix: プロフィールページでPrivate Tripsが正しく表示されるように修正` (e47edec)
-
-## 🤔 残りの調査項目
-1. **認証の問題**: `/api/trips`エンドポイントが認証済みリクエストを正しく処理しているか
-2. **データフィルタリング**: `getTripsByUserId`が非公開旅行を返しているか
-3. **Firestoreクエリ**: クエリが`access_level`を正しく処理しているか
-4. **クライアント側フィルタ**: `trips.filter(t => t.access_level === 'public')`の前に何か問題がないか
-5. **初期状態**: `trips`配列自体が空または想定外の値になっていないか
+**解決済み**（2025-11-05確認）
 
