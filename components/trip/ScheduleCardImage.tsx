@@ -27,9 +27,10 @@ export function ScheduleCardImage({
           <Image
             src={photoUrl}
             alt={title}
-            width={128}
-            height={72}
-            className="w-full h-full object-cover"
+            fill
+            sizes="256px"
+            className="object-cover"
+            quality={90}
             onError={(e) => {
               logger.error('❌ Image load error for:', title, photoUrl)
               if (cachedImage?.cached && photoReference) {
