@@ -46,6 +46,8 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
       { id: 'ferry', label: 'フェリー', icon: '⛴️', description: '船・フェリーでの移動' },
       { id: 'bike', label: '自転車', icon: '🚲', description: 'レンタサイクル' },
       { id: 'scooter', label: 'バイク・スクーター', icon: '🛵', description: 'バイク・電動スクーター' },
+      { id: 'gas_station', label: 'ガソリンスタンド', icon: '⛽', iconName: 'gas-station', description: '給油・ガソリンスタンド' },
+      { id: 'toll_payment', label: '交通料金支払い', icon: '🛣️', iconName: 'toll-road', description: '高速道路料金・通行料金の支払い' },
     ]
   },
   {
