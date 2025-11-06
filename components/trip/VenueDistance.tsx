@@ -7,6 +7,9 @@ import { PlaceData } from '@/lib/core/types'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import Loading from '@/components/common/Loading'
 import { t } from '@/lib/i18n'
+import { useUserData } from '@/lib/contexts/user-data'
+import { getUserUnitSystem } from '@/lib/utils/unit-system'
+import { convertDistance } from '@/lib/utils/unit-conversion'
 
 interface VenueDistanceProps {
   fromPlace?: PlaceData | null
@@ -25,6 +28,8 @@ export default function VenueDistance({
   onInsertVenue,
   showInsertButton = false
 }: VenueDistanceProps) {
+  const { userData } = useUserData()
+  const unitSystem = getUserUnitSystem(userData)
   const [distanceInfo, setDistanceInfo] = useState<DistanceMatrixResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -118,6 +123,11 @@ export default function VenueDistance({
     return null
   }
 
+  // 単位系に応じて距離を変換
+  const distanceKm = distanceApiHelpers.metersToKm(distanceInfo.distance.value)
+  const distanceInfo_converted = convertDistance(distanceKm, unitSystem)
+  const durationText = distanceApiHelpers.formatDuration(distanceInfo.duration.value)
+
   return (
     <div className={`relative flex items-center justify-center py-4 ${className}`}>
       {/* Gitタイムライン風の縦線 */}
@@ -133,7 +143,7 @@ export default function VenueDistance({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             <span className="font-medium text-xs">
-              {distanceApiHelpers.formatDistanceAndDuration(distanceInfo)}
+              {distanceInfo_converted.formatted} / {durationText}
             </span>
             {mode === 'driving' && (
               <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

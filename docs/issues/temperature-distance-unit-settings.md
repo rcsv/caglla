@@ -78,9 +78,10 @@ export interface UserPreferences {
 }
 ```
 
-### Phase 2: 単位変換ユーティリティの作成
+### Phase 2: 単位変換ユーティリティの作成 ✅
 
 **新規ファイル**: `lib/utils/unit-conversion.ts`
+**新規ファイル**: `lib/utils/unit-system.ts`（単位系のデフォルト値決定）
 
 ```typescript
 /**
@@ -147,132 +148,51 @@ export function convertWindSpeed(kmh: number, to: 'metric' | 'imperial' | 'us'):
 }
 ```
 
-### Phase 3: ユーザー設定の取得
+### Phase 3: ユーザー設定の取得 ✅
 
-**新規ファイル**: `lib/utils/user-preferences.ts`
+**新規ファイル**: `lib/utils/unit-system.ts`
 
 ```typescript
-import { useAuth } from '@/lib/contexts/auth'
-import { UserPreferences, TemperatureUnit, DistanceUnit } from '@/lib/core/types'
-
 /**
- * ユーザーの単位設定を取得（デフォルト値付き）
+ * ユーザーの単位系を取得（デフォルト値付き）
+ * home_country_codeに基づいて自動決定
  */
-export function useUserUnits() {
-  const { user } = useAuth()
-  
-  // TODO: user.preferences から取得（現状はデフォルト値）
-  const temperatureUnit: TemperatureUnit = user?.preferences?.temperature_unit || 'celsius'
-  const distanceUnit: DistanceUnit = user?.preferences?.distance_unit || 'metric'
-  
-  return { temperatureUnit, distanceUnit }
+export function getUserUnitSystem(user?: User | null): UnitSystem {
+  if (user?.preferences?.unit_system) {
+    return user.preferences.unit_system
+  }
+  // home_country_codeに基づいて自動決定
+  return getDefaultUnitSystem(user?.preferences?.home_country_code)
 }
 ```
 
-### Phase 4: TripWeatherDisplayの対応
+**デフォルト値の決定ロジック**:
+- ヤードポンド法を使用する国（US, LR, MM）→ `imperial`
+- その他の国 → `metric`
+
+### Phase 4: TripWeatherDisplayの対応 ✅
 
 **ファイル**: `components/stats/TripWeatherDisplay.tsx`
 
-```typescript
-import { useUserUnits } from '@/lib/utils/user-preferences'
-import { convertTemperature } from '@/lib/utils/unit-conversion'
+- `getUserUnitSystem`を使用して単位系を取得
+- `convertTemperature`で温度を変換（APIは摂氏で返す）
+- `convertWindSpeed`で風速を変換
+- `convertPrecipitation`で降水量を変換
 
-export default function TripWeatherDisplay({ ... }) {
-  const { temperatureUnit } = useUserUnits()
-  
-  // ...
-  
-  // 温度表示の変換
-  const displayTemp = convertTemperature(averageTemp, 'celsius', temperatureUnit)
-  const displayMinTemp = convertTemperature(minTemp, 'celsius', temperatureUnit)
-  const displayMaxTemp = convertTemperature(maxTemp, 'celsius', temperatureUnit)
-  const tempSymbol = temperatureUnit === 'fahrenheit' ? '°F' : '°C'
-  
-  return (
-    // ...
-    <div className="text-2xl font-bold text-yellow-600">
-      {displayTemp.toFixed(1)}{tempSymbol}
-    </div>
-    <div className="text-xs text-gray-500">
-      {displayMinTemp.toFixed(0)}{tempSymbol}〜{displayMaxTemp.toFixed(0)}{tempSymbol}
-    </div>
-  )
-}
-```
-
-### Phase 5: TripDistanceDisplayの対応
+### Phase 5: TripDistanceDisplayの対応 ✅
 
 **ファイル**: `components/stats/TripDistanceDisplay.tsx`
 
-```typescript
-import { useUserUnits } from '@/lib/utils/user-preferences'
-import { convertDistance } from '@/lib/utils/unit-conversion'
+- `getUserUnitSystem`を使用して単位系を取得
+- `convertDistance`で距離を変換（総距離、平均距離）
 
-export default function TripDistanceDisplay({ ... }) {
-  const { distanceUnit } = useUserUnits()
-  
-  // ...
-  
-  // 距離表示の変換
-  const totalDistance = convertDistance(distanceData.totalDistance.kilometers, distanceUnit)
-  const avgDistance = convertDistance(
-    distanceData.totalDistance.kilometers / distanceData.segmentCount,
-    distanceUnit
-  )
-  
-  return (
-    // ...
-    <div className="text-2xl font-bold text-blue-600">
-      {totalDistance.formatted}
-    </div>
-    // ...
-    <div className="font-medium">
-      {avgDistance.formatted}/区間
-    </div>
-  )
-}
-```
-
-### Phase 6: ユーザー設定UIの追加
+### Phase 6: ユーザー設定UIの追加 ✅
 
 **ファイル**: `components/modals/UserSettingsModal.tsx`
 
-```typescript
-<div>
-  <label className="block text-sm font-medium text-gray-700">
-    温度単位
-  </label>
-  <select
-    value={preferences.temperature_unit || 'celsius'}
-    onChange={(e) => setPreferences(prev => ({ 
-      ...prev, 
-      temperature_unit: e.target.value as TemperatureUnit 
-    }))}
-    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-  >
-    <option value="celsius">摂氏 (°C)</option>
-    <option value="fahrenheit">華氏 (°F)</option>
-  </select>
-</div>
-
-<div>
-  <label className="block text-sm font-medium text-gray-700">
-    距離単位
-  </label>
-  <select
-    value={preferences.distance_unit || 'metric'}
-    onChange={(e) => setPreferences(prev => ({ 
-      ...prev, 
-      distance_unit: e.target.value as DistanceUnit 
-    }))}
-    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-  >
-    <option value="metric">メートル法 (km, m)</option>
-    <option value="imperial">ヤードポンド法 (mi, ft)</option>
-    <option value="us">米国単位法 (mi, ft)</option>
-  </select>
-</div>
-```
+- 単位系選択のドロップダウンを追加（`home_country_code`の下）
+- `home_country_code`が変更された場合、`unit_system`が未設定なら自動設定
+- 初期化時に`unit_system`が未設定の場合、`home_country_code`に基づいて自動設定
 
 ---
 

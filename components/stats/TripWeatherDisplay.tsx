@@ -6,6 +6,9 @@ import { WeatherApiHelpers, WeatherSummary } from '@/lib/api/weather'
 import Card from '@/components/common/Card'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { t } from '@/lib/i18n'
+import { useUserData } from '@/lib/contexts/user-data'
+import { getUserUnitSystem } from '@/lib/utils/unit-system'
+import { convertTemperature, convertWindSpeed, convertPrecipitation, getTemperatureSymbol } from '@/lib/utils/unit-conversion'
 
 interface TripWeatherDisplayProps {
   destination?: string
@@ -20,6 +23,8 @@ export default function TripWeatherDisplay({
   endDate, 
   className = '' 
 }: TripWeatherDisplayProps) {
+  const { userData } = useUserData()
+  const unitSystem = getUserUnitSystem(userData)
   const [weatherData, setWeatherData] = useState<WeatherSummary | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -123,6 +128,18 @@ export default function TripWeatherDisplay({
     forecastDays
   } = weatherData
 
+  // 単位系に応じて温度を変換（APIは摂氏で返す）
+  const displayAverageTemp = convertTemperature(averageTemp, 'metric', unitSystem)
+  const displayMinTemp = convertTemperature(minTemp, 'metric', unitSystem)
+  const displayMaxTemp = convertTemperature(maxTemp, 'metric', unitSystem)
+  const tempSymbol = getTemperatureSymbol(unitSystem)
+
+  // 風速と降水量も変換
+  const windSpeedInfo = convertWindSpeed(averageWindSpeed, unitSystem)
+  const precipitationInfo = totalPrecipitation > 0 
+    ? convertPrecipitation(totalPrecipitation, unitSystem)
+    : null
+
   // TODO: 天気名判定ロジックはdominantWeatherCodeを使用するように修正が必要
   // 現状はi18n化された文字列で判定しているため、言語に依存しない判定が必要
   const weatherIcon = WeatherApiHelpers.getWeatherIcon(weatherData.dominantWeatherCode ?? 0)
@@ -151,10 +168,10 @@ export default function TripWeatherDisplay({
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-yellow-600">
-              {averageTemp}°C
+              {displayAverageTemp.toFixed(1)}{tempSymbol}
             </div>
             <div className="text-xs text-gray-500">
-              {minTemp}°C〜{maxTemp}°C
+              {displayMinTemp.toFixed(0)}{tempSymbol}〜{displayMaxTemp.toFixed(0)}{tempSymbol}
             </div>
           </div>
         </div>
@@ -165,9 +182,9 @@ export default function TripWeatherDisplay({
             <div className="text-gray-600 mb-1">{t('weather.rainyDays')}</div>
             <div className="font-medium">
               {rainyDays}{t('weather.days')}
-              {totalPrecipitation > 0 && (
+              {precipitationInfo && (
                 <span className="text-xs text-gray-500 ml-1">
-                  ({totalPrecipitation}{t('unit.mm')})
+                  ({precipitationInfo.formatted})
                 </span>
               )}
             </div>
@@ -175,7 +192,7 @@ export default function TripWeatherDisplay({
           <div className="bg-gray-50 rounded-md p-3">
             <div className="text-gray-600 mb-1">{t('weather.averageWindSpeed')}</div>
             <div className="font-medium">
-              {averageWindSpeed}{t('unit.kmh')}
+              {windSpeedInfo.formatted}
             </div>
           </div>
         </div>

@@ -9,6 +9,13 @@ import type { FirestoreDate, Gender, Theme } from './common'
 // ============================================================================
 
 /**
+ * 単位系
+ * - metric: メートル法（摂氏、km/m）
+ * - imperial: ヤードポンド法（華氏、mi/ft）
+ */
+export type UnitSystem = 'metric' | 'imperial'
+
+/**
  * ユーザープリファレンス
  */
 export interface UserPreferences {
@@ -21,6 +28,7 @@ export interface UserPreferences {
   theme?: Theme
   notifications?: boolean
   home_country_code?: string // ユーザーの居住国（ISO 3166-1 alpha-2）
+  unit_system?: UnitSystem // 単位系（メートル法/ヤードポンド法）
 }
 
 // ============================================================================

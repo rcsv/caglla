@@ -8,6 +8,9 @@ import { Itinerary } from '@/lib/core/types'
 import Card from '@/components/common/Card'
 import { LocationIcon } from '@/components/common/icons/LocationIcon'
 import { t } from '@/lib/i18n'
+import { useUserData } from '@/lib/contexts/user-data'
+import { getUserUnitSystem } from '@/lib/utils/unit-system'
+import { convertDistance } from '@/lib/utils/unit-conversion'
 
 interface TripDistanceDisplayProps {
   itineraries: Itinerary[]
@@ -18,6 +21,8 @@ export default function TripDistanceDisplay({
   itineraries, 
   className = '' 
 }: TripDistanceDisplayProps) {
+  const { userData } = useUserData()
+  const unitSystem = getUserUnitSystem(userData)
   const [distanceData, setDistanceData] = useState<{
     totalDistance: { meters: number; kilometers: number; text: string }
     totalDuration: { seconds: number; minutes: number; hours: number; text: string }
@@ -156,7 +161,7 @@ export default function TripDistanceDisplay({
             {/* 総距離 */}
             <div className="text-center flex-1">
               <div className="text-2xl font-bold text-blue-600">
-                {distanceData.totalDistance.text}
+                {convertDistance(distanceData.totalDistance.kilometers, unitSystem).formatted}
               </div>
               <div className="text-xs text-gray-500">{t('distance.total')}</div>
             </div>
@@ -179,7 +184,10 @@ export default function TripDistanceDisplay({
           <div className="bg-gray-50 rounded-md p-3">
             <div className="text-gray-600 mb-1">{t('distance.average')}</div>
             <div className="font-medium">
-              {distanceData.segmentCount > 0 ? Math.round(distanceData.totalDistance.kilometers / distanceData.segmentCount * 10) / 10 : 0}km{t('distance.perSegment')}
+              {distanceData.segmentCount > 0 
+                ? convertDistance(distanceData.totalDistance.kilometers / distanceData.segmentCount, unitSystem).formatted
+                : convertDistance(0, unitSystem).formatted
+              }{t('distance.perSegment')}
             </div>
           </div>
           <div className="bg-gray-50 rounded-md p-3">

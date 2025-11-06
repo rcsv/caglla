@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/lib/contexts/auth'
+import { useUserData } from '@/lib/contexts/user-data'
 import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -16,8 +17,9 @@ import { getZIndexClass } from '@/lib/core/z-index'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import { extractCountryFromAddress } from '@/lib/travel/country/utils'
 import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from '@/lib/utils/language'
-import type { SupportedLanguage } from '@/lib/core/types'
+import type { SupportedLanguage, UnitSystem } from '@/lib/core/types'
 import { t } from '@/lib/i18n'
+import { getDefaultUnitSystem } from '@/lib/utils/unit-system'
 import Loading from '@/components/common/Loading'
 import { setLanguageOverrideClient } from '@/lib/i18n/storage'
 import { Section } from '@/components/common/static/Section'
@@ -26,6 +28,7 @@ import HomeFooter from '@/components/common/HomeFooter'
 
 export default function UserProfileBySlugPage() {
   const { user, loading } = useAuth()
+  const { refreshUserData } = useUserData()
   const router = useRouter()
   const { userSlug } = useParams<{ userSlug: string }>()
 
@@ -61,7 +64,8 @@ export default function UserProfileBySlugPage() {
     home_place_id: '',
     home_country_code: '',
     gender: 'prefer_not_to_say' as 'male' | 'female' | 'other' | 'prefer_not_to_say',
-    language: ''
+    language: '',
+    unit_system: 'metric' as UnitSystem
   })
 
   useEffect(() => {
@@ -82,14 +86,16 @@ export default function UserProfileBySlugPage() {
         const data = await res.json()
         fetchedUser = data.user
         setProfileUser(data.user)
+        const userPreferences = data.user.preferences || {}
         setEditForm({
           name: data.user.name || '',
           bio: data.user.bio || '',
-          home_address: data.user.preferences?.home_address || '',
-          home_place_id: data.user.preferences?.home_place_id || '',
-          home_country_code: data.user.preferences?.home_country_code || '',
+          home_address: userPreferences.home_address || '',
+          home_place_id: userPreferences.home_place_id || '',
+          home_country_code: userPreferences.home_country_code || '',
           gender: data.user.gender || 'prefer_not_to_say',
-          language: data.user.preferences?.language || ''
+          language: userPreferences.language || '',
+          unit_system: userPreferences.unit_system || getDefaultUnitSystem(userPreferences.home_country_code)
         })
         
         // 初回セットアップの判定（bio、home_country_code、genderがすべて空の場合）
@@ -199,7 +205,8 @@ export default function UserProfileBySlugPage() {
             home_address: editForm.home_address,
             home_place_id: editForm.home_place_id || undefined,
             home_country_code: editForm.home_country_code,
-            language: editForm.language || undefined
+            language: editForm.language || undefined,
+            unit_system: editForm.unit_system
           }
         })
       })
@@ -218,6 +225,9 @@ export default function UserProfileBySlugPage() {
           // 空文字列の場合はクッキーをクリア
           setLanguageOverrideClient('')
         }
+        
+        // UserDataProviderのuserDataを更新（単位系などの変更を反映）
+        await refreshUserData()
       }
     } catch (error) {
       console.error('Failed to save profile:', error)
@@ -239,11 +249,14 @@ export default function UserProfileBySlugPage() {
     } catch {
       derivedCode = ''
     }
+    const defaultUnitSystem = getDefaultUnitSystem(derivedCode || null)
     setEditForm(prev => ({
       ...prev,
       home_address: place.formatted_address || place.name || '',
       home_place_id: (place as any).place_id || '',
-      home_country_code: derivedCode
+      home_country_code: derivedCode,
+      // 国コードが変更された場合、unit_systemが未設定なら自動設定
+      unit_system: prev.unit_system || defaultUnitSystem
     }))
   }
 
@@ -434,6 +447,21 @@ export default function UserProfileBySlugPage() {
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
                       {t('profile.language.description')}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('userSettings.label.unitSystem')}</label>
+                    <select
+                      value={editForm.unit_system}
+                      onChange={(e) => setEditForm({...editForm, unit_system: e.target.value as UnitSystem})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="metric">{t('userSettings.unitSystem.metric')}</option>
+                      <option value="imperial">{t('userSettings.unitSystem.imperial')}</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {t('userSettings.description.unitSystem')}
                     </p>
                   </div>
 

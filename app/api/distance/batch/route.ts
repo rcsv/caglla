@@ -128,11 +128,11 @@ export async function POST(request: NextRequest) {
               from: fromPlace.name,
               to: toPlace.name,
               distance: {
-                text: `${fallbackDistance.toFixed(2)}km (推定)`,
+                text: `${fallbackDistance.toFixed(2)}km (estimated)`,
                 value: fallbackDistance * 1000
               },
               duration: {
-                text: `${estimatedWalkingTime}分 (推定)`,
+                text: `${estimatedWalkingTime}min (estimated)`,
                 value: estimatedWalkingTime * 60
               }
             })
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 時間をフォーマットする関数
+// 時間をフォーマットする関数（サーバー側は英語表記で統一）
 function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.round((seconds % 3600) / 60)
@@ -185,7 +185,7 @@ function formatDuration(seconds: number): string {
       return `${hours}h${minutes}m`
     }
   } else {
-    return `${minutes}分`
+    return `${minutes}min`
   }
 }
 

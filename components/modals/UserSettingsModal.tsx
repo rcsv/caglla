@@ -7,10 +7,11 @@ import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import type { PlaceData } from '@/lib/core/types'
 import AvatarUpload from '@/components/ui/AvatarUpload'
 import { getZIndexClass } from '@/lib/core/z-index'
-import type { User, UserPreferences, UserSettingsModalProps } from '@/lib/core/types'
+import type { User, UserPreferences, UserSettingsModalProps, UnitSystem } from '@/lib/core/types'
 import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from '@/lib/utils/language'
 import { CloseIcon } from '@/components/common/icons/CloseIcon'
 import { t } from '@/lib/i18n'
+import { getDefaultUnitSystem } from '@/lib/utils/unit-system'
 
 export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModalProps) {
   const { user } = useAuth()
@@ -34,7 +35,12 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
       if (response.ok) {
         const data = await response.json()
         setUserData(data.user)
-        setPreferences(data.user.preferences || {})
+        const userPreferences = data.user.preferences || {}
+        // unit_systemが未設定の場合、home_country_codeに基づいて自動設定
+        if (!userPreferences.unit_system) {
+          userPreferences.unit_system = getDefaultUnitSystem(userPreferences.home_country_code)
+        }
+        setPreferences(userPreferences)
       }
     } catch (error) {
       logger.error('Failed to fetch user data:', error)
@@ -318,7 +324,16 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                   <label className="block text-sm font-medium text-gray-700">{t('userSettings.label.homeCountry')}</label>
                   <select
                     value={preferences.home_country_code || ''}
-                    onChange={(e) => setPreferences(prev => ({ ...prev, home_country_code: e.target.value }))}
+                    onChange={(e) => {
+                      const countryCode = e.target.value
+                      const defaultUnitSystem = getDefaultUnitSystem(countryCode || null)
+                      setPreferences(prev => ({ 
+                        ...prev, 
+                        home_country_code: countryCode,
+                        // 国コードが変更された場合、unit_systemが未設定なら自動設定
+                        unit_system: prev.unit_system || defaultUnitSystem
+                      }))
+                    }}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">{t('userSettings.placeholder.select')}</option>
@@ -346,6 +361,24 @@ export default function UserSettingsModal({ isOpen, onClose }: UserSettingsModal
                   </select>
                   <p className="mt-1 text-xs text-gray-500">
                     {t('userSettings.description.homeCountry')}
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">{t('userSettings.label.unitSystem')}</label>
+                  <select
+                    value={preferences.unit_system || getDefaultUnitSystem(preferences.home_country_code)}
+                    onChange={(e) => setPreferences(prev => ({ 
+                      ...prev, 
+                      unit_system: e.target.value as UnitSystem 
+                    }))}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="metric">{t('userSettings.unitSystem.metric')}</option>
+                    <option value="imperial">{t('userSettings.unitSystem.imperial')}</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {t('userSettings.description.unitSystem')}
                   </p>
                 </div>
                 

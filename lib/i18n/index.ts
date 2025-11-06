@@ -1231,6 +1231,10 @@ export type TranslationKey =
   | 'userSettings.label.currency'
   | 'userSettings.label.homeArea'
   | 'userSettings.label.homeCountry'
+  | 'userSettings.label.unitSystem'
+  | 'userSettings.unitSystem.metric'
+  | 'userSettings.unitSystem.imperial'
+  | 'userSettings.description.unitSystem'
   | 'userSettings.label.timezone'
   | 'userSettings.label.language'
   | 'userSettings.label.theme'
@@ -2516,6 +2520,10 @@ const en: Dictionary = {
   'userSettings.label.currency': 'Currency',
   'userSettings.label.homeArea': 'Home Area (Residence)',
   'userSettings.label.homeCountry': 'Home Country',
+  'userSettings.label.unitSystem': 'Unit System',
+  'userSettings.unitSystem.metric': 'Metric (Celsius, km/m)',
+  'userSettings.unitSystem.imperial': 'Imperial (Fahrenheit, mi/ft)',
+  'userSettings.description.unitSystem': 'Temperature and distance units will be automatically set based on your selection',
   'userSettings.label.timezone': 'Timezone',
   'userSettings.label.language': 'Language',
   'userSettings.label.theme': 'Theme',
@@ -3800,6 +3808,10 @@ const ja: Dictionary = {
   'userSettings.label.currency': '通貨',
   'userSettings.label.homeArea': 'ホームエリア（居住地）',
   'userSettings.label.homeCountry': '居住国',
+  'userSettings.label.unitSystem': '単位系',
+  'userSettings.unitSystem.metric': 'メートル法（摂氏、km/m）',
+  'userSettings.unitSystem.imperial': 'ヤードポンド法（華氏、mi/ft）',
+  'userSettings.description.unitSystem': '選択した単位系に応じて、温度と距離の単位が自動的に設定されます',
   'userSettings.label.timezone': 'タイムゾーン',
   'userSettings.label.language': '言語',
   'userSettings.label.theme': 'テーマ',
