@@ -26,7 +26,7 @@ export function InlineCostEditor({
   return (
     <div className="space-y-2">
       <div className="flex items-center space-x-2">
-        <label className="text-sm font-medium text-gray-700">金額:</label>
+        <label className="text-sm font-medium text-gray-700">{t('inlineCostEditor.amount')}:</label>
         <input
           type="number"
           value={amount}
@@ -44,7 +44,7 @@ export function InlineCostEditor({
           step="0.01"
           autoFocus
         />
-        <label className="text-sm font-medium text-gray-700">通貨:</label>
+        <label className="text-sm font-medium text-gray-700">{t('inlineCostEditor.currency')}:</label>
         <select
           value={currency}
           onChange={(e) => onCurrencyChange(e.target.value)}
@@ -63,14 +63,14 @@ export function InlineCostEditor({
           disabled={isSaving || !isValid}
           className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          {isSaving ? '保存中...' : '保存'}
+          {isSaving ? t('inlineCostEditor.saving') : t('common.save')}
         </button>
         <button
           onClick={onCancel}
           disabled={isSaving}
           className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          キャンセル
+          {t('common.cancel')}
         </button>
       </div>
       {!isValid && (

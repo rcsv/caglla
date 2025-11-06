@@ -13,6 +13,9 @@ import type { Trip, Day, Itinerary, TripEditorProps } from '@/lib/core/types'
 import { getZIndexClass } from '@/lib/core/z-index'
 import Loading from '@/components/common/Loading'
 import { t } from '@/lib/i18n'
+import { currencyUtils } from '@/lib/utils/currency'
+import { getUserLanguage } from '@/lib/utils/language'
+import { useAuth } from '@/lib/contexts/auth'
 
 /**
  * Renders an editor UI for a Trip and manages editing, saving, cancelling, and deletion.
@@ -28,9 +31,11 @@ import { t } from '@/lib/i18n'
  * @returns The JSX element for the trip editor or an edit button when not editing.
  */
 export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDestinationEdit = false, initialEditing = false, hideEditButton = false }: TripEditorProps) {
+  const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(initialEditing)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const currentLanguage = getUserLanguage(user)
   const formatDateForInput = (date: any): string => {
     if (!date) return ''
     
@@ -58,7 +63,8 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
     startDate: formatDateForInput(trip.start_date),
     endDate: formatDateForInput(trip.end_date),
     accessLevel: trip.access_level,
-    imageUrl: trip.image_url || ''
+    imageUrl: trip.image_url || '',
+    defaultCurrency: trip.default_currency || 'JPY'
   })
   const [saving, setSaving] = useState(false)
   const [originalImageUrl, setOriginalImageUrl] = useState(trip.image_url || '')
@@ -90,7 +96,8 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
         startDate: formatDateForInput(trip.start_date),
         endDate: formatDateForInput(trip.end_date),
         accessLevel: trip.access_level,
-        imageUrl: trip.image_url || ''
+        imageUrl: trip.image_url || '',
+        defaultCurrency: trip.default_currency || 'JPY'
       })
       setOriginalImageUrl(trip.image_url || '')
     }
@@ -120,6 +127,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
           endDate: formData.endDate || null,
           accessLevel: formData.accessLevel,
           imageUrl: formData.imageUrl || null,
+          default_currency: formData.defaultCurrency,
         }),
       })
 
@@ -208,7 +216,8 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
       startDate: formatDateForInput(trip.start_date),
       endDate: formatDateForInput(trip.end_date),
       accessLevel: trip.access_level,
-      imageUrl: trip.image_url || ''
+      imageUrl: trip.image_url || '',
+      defaultCurrency: trip.default_currency || 'JPY'
     })
     setIsEditing(false)
     onClose?.()
@@ -356,6 +365,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleInputChange}
+                lang={currentLanguage}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   dateError ? 'border-red-300' : 'border-gray-300'
                 }`}
@@ -373,6 +383,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
                 value={formData.endDate}
                 onChange={handleInputChange}
                 min={formData.startDate || undefined}
+                lang={currentLanguage}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   dateError ? 'border-red-300' : 'border-gray-300'
                 }`}
@@ -410,6 +421,52 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
               <option value="private">{t('tripEditor.accessLevel.private')}</option>
               <option value="public">{t('tripEditor.accessLevel.public')}</option>
             </select>
+          </div>
+
+          <div>
+            <label htmlFor="defaultCurrency" className="block text-sm font-medium text-gray-700 mb-2">
+              {t('tripEditor.field.defaultCurrency')}
+            </label>
+            <select
+              id="defaultCurrency"
+              name="defaultCurrency"
+              value={formData.defaultCurrency}
+              onChange={(e) => {
+                setFormData(prev => ({
+                  ...prev,
+                  defaultCurrency: e.target.value
+                }))
+              }}
+              disabled={saving}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {/* 主要通貨を優先表示 */}
+              <optgroup label={t('tripEditor.currency.major')}>
+                <option value="USD">$ USD (US Dollar)</option>
+                <option value="EUR">€ EUR (Euro)</option>
+                <option value="JPY">¥ JPY (Japanese Yen)</option>
+                <option value="GBP">£ GBP (British Pound)</option>
+                <option value="CNY">¥ CNY (Chinese Yuan)</option>
+                <option value="KRW">₩ KRW (South Korean Won)</option>
+                <option value="AUD">A$ AUD (Australian Dollar)</option>
+                <option value="CAD">C$ CAD (Canadian Dollar)</option>
+                <option value="CHF">CHF (Swiss Franc)</option>
+                <option value="SGD">S$ SGD (Singapore Dollar)</option>
+              </optgroup>
+              <optgroup label={t('tripEditor.currency.others')}>
+                {currencyUtils.getAvailableCurrencies()
+                  .filter(c => !['USD', 'EUR', 'JPY', 'GBP', 'CNY', 'KRW', 'AUD', 'CAD', 'CHF', 'SGD'].includes(c.code))
+                  .sort((a, b) => a.code.localeCompare(b.code))
+                  .map(currency => (
+                    <option key={currency.code} value={currency.code}>
+                      {currency.symbol} {currency.code}
+                    </option>
+                  ))}
+              </optgroup>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              {t('tripEditor.field.defaultCurrency.hint')}
+            </p>
           </div>
 
           <ImageUpload

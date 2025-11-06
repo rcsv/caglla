@@ -30,7 +30,7 @@ export function InlineTimeEditor({
   return (
     <div className="space-y-2">
       <div className="flex items-center space-x-2">
-        <label className="text-sm font-medium text-gray-700">開始時間:</label>
+        <label className="text-sm font-medium text-gray-700">{t('inlineTimeEditor.startTime')}:</label>
         <input
           type="time"
           value={startTime}
@@ -45,7 +45,7 @@ export function InlineTimeEditor({
           className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           autoFocus
         />
-        <label className="text-sm font-medium text-gray-700">終了時間:</label>
+        <label className="text-sm font-medium text-gray-700">{t('inlineTimeEditor.endTime')}:</label>
         <input
           type="time"
           value={endTime}
@@ -61,14 +61,14 @@ export function InlineTimeEditor({
         />
       </div>
       <div className="flex items-center space-x-2">
-        <label className="text-sm font-medium text-gray-700">タイムゾーン:</label>
+        <label className="text-sm font-medium text-gray-700">{t('inlineTimeEditor.timezone')}:</label>
         <select
           value={timezone}
           onChange={(e) => onTimezoneChange(e.target.value)}
           className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           {TIMEZONE_OPTIONS.map((tz) => (
-            <option key={tz.value} value={tz.value}>{tz.label}</option>
+            <option key={tz.value} value={tz.value}>{t(tz.i18nKey)}</option>
           ))}
         </select>
       </div>
@@ -78,14 +78,14 @@ export function InlineTimeEditor({
           disabled={isSaving || !isValid}
           className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          {isSaving ? '保存中...' : '保存'}
+          {isSaving ? t('inlineTimeEditor.saving') : t('common.save')}
         </button>
         <button
           onClick={onCancel}
           disabled={isSaving}
           className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          キャンセル
+          {t('common.cancel')}
         </button>
       </div>
       {!isValid && (

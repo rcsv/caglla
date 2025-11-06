@@ -491,6 +491,10 @@ export type TranslationKey =
   | 'tripEditor.field.accessLevel'
   | 'tripEditor.field.image'
   | 'tripEditor.field.destination'
+  | 'tripEditor.field.defaultCurrency'
+  | 'tripEditor.field.defaultCurrency.hint'
+  | 'tripEditor.currency.major'
+  | 'tripEditor.currency.others'
   | 'tripEditor.deleteConfirm.title'
   | 'tripEditor.deleteConfirm.message'
   | 'tripEditor.deleteConfirm.deleting'
@@ -552,11 +556,35 @@ export type TranslationKey =
   // Country Map
   | 'countryMap.tripCount'
   // Inline Cost Editor
+  | 'inlineCostEditor.amount'
+  | 'inlineCostEditor.currency'
   | 'inlineCostEditor.invalidAmount'
   | 'inlineCostEditor.saveHint'
+  | 'inlineCostEditor.saving'
   // Inline Time Editor
+  | 'inlineTimeEditor.startTime'
+  | 'inlineTimeEditor.endTime'
+  | 'inlineTimeEditor.timezone'
   | 'inlineTimeEditor.invalidFormat'
   | 'inlineTimeEditor.saveHint'
+  | 'inlineTimeEditor.saving'
+  // Timezone Options
+  | 'timezone.UTC'
+  | 'timezone.japan_tokyo'
+  | 'timezone.america_new_york'
+  | 'timezone.america_los_angeles'
+  | 'timezone.europe_london'
+  | 'timezone.europe_paris'
+  | 'timezone.asia_seoul'
+  | 'timezone.asia_shanghai'
+  | 'timezone.asia_hong_kong'
+  | 'timezone.asia_singapore'
+  | 'timezone.asia_bangkok'
+  | 'timezone.asia_kolkata'
+  | 'timezone.australia_sydney'
+  | 'timezone.pacific_honolulu'
+  | 'timezone.pacific_guam'
+  | 'timezone.pacific_saipan'
   // Add Schedule Modal
   | 'addScheduleModal.title'
   | 'addScheduleModal.searchLabel'
@@ -1833,6 +1861,10 @@ const en: Dictionary = {
   'tripEditor.field.accessLevel': 'Privacy Settings',
   'tripEditor.field.image': 'Trip Image',
   'tripEditor.field.destination': 'Destination',
+  'tripEditor.field.defaultCurrency': 'Default Currency',
+  'tripEditor.field.defaultCurrency.hint': 'This currency will be used as the default for new itinerary items',
+  'tripEditor.currency.major': 'Major Currencies',
+  'tripEditor.currency.others': 'Other Currencies',
   'tripEditor.deleteConfirm.title': 'Delete trip?',
   'tripEditor.deleteConfirm.message': 'Delete "{title}". This action cannot be undone.',
   'tripEditor.deleteConfirm.deleting': 'Deleting...',
@@ -1895,11 +1927,35 @@ const en: Dictionary = {
   // Country Map
   'countryMap.tripCount': '{count} trips',
   // Inline Cost Editor
+  'inlineCostEditor.amount': 'Amount',
+  'inlineCostEditor.currency': 'Currency',
   'inlineCostEditor.invalidAmount': 'Please enter a valid amount',
   'inlineCostEditor.saveHint': 'Press Enter to save, Escape to cancel',
+  'inlineCostEditor.saving': 'Saving...',
   // Inline Time Editor
+  'inlineTimeEditor.startTime': 'Start Time',
+  'inlineTimeEditor.endTime': 'End Time',
+  'inlineTimeEditor.timezone': 'Timezone',
   'inlineTimeEditor.invalidFormat': 'Please enter a valid time format (e.g., 16:00)',
   'inlineTimeEditor.saveHint': 'Press Enter to save, Escape to cancel',
+  'inlineTimeEditor.saving': 'Saving...',
+  // Timezone Options
+  'timezone.UTC': 'UTC',
+  'timezone.japan_tokyo': 'Japan (Tokyo)',
+  'timezone.america_new_york': 'United States (New York)',
+  'timezone.america_los_angeles': 'United States (Los Angeles)',
+  'timezone.europe_london': 'United Kingdom (London)',
+  'timezone.europe_paris': 'France (Paris)',
+  'timezone.asia_seoul': 'South Korea (Seoul)',
+  'timezone.asia_shanghai': 'China (Shanghai)',
+  'timezone.asia_hong_kong': 'Hong Kong',
+  'timezone.asia_singapore': 'Singapore',
+  'timezone.asia_bangkok': 'Thailand (Bangkok)',
+  'timezone.asia_kolkata': 'India (Kolkata)',
+  'timezone.australia_sydney': 'Australia (Sydney)',
+  'timezone.pacific_honolulu': 'Hawaii (Honolulu)',
+  'timezone.pacific_guam': 'Guam',
+  'timezone.pacific_saipan': 'Saipan',
   // Add Schedule Modal
   'addScheduleModal.title': 'Add Venue / Point of Interest',
   'addScheduleModal.searchLabel': 'Search place',
@@ -3086,6 +3142,10 @@ const ja: Dictionary = {
   'tripEditor.field.accessLevel': '公開設定',
   'tripEditor.field.image': '旅行の画像',
   'tripEditor.field.destination': '目的地',
+  'tripEditor.field.defaultCurrency': 'デフォルト通貨',
+  'tripEditor.field.defaultCurrency.hint': '新しいスケジュール項目のデフォルト通貨として使用されます',
+  'tripEditor.currency.major': '主要通貨',
+  'tripEditor.currency.others': 'その他の通貨',
   'tripEditor.deleteConfirm.title': '旅行を削除しますか？',
   'tripEditor.deleteConfirm.message': '「{title}」を削除します。この操作は取り消せません。',
   'tripEditor.deleteConfirm.deleting': '削除中...',
@@ -3148,11 +3208,35 @@ const ja: Dictionary = {
   // Country Map
   'countryMap.tripCount': '{count}回の旅行',
   // Inline Cost Editor
+  'inlineCostEditor.amount': '金額',
+  'inlineCostEditor.currency': '通貨',
   'inlineCostEditor.invalidAmount': '正しい金額を入力してください',
   'inlineCostEditor.saveHint': 'Enterで保存、Escapeでキャンセル',
+  'inlineCostEditor.saving': '保存中...',
   // Inline Time Editor
+  'inlineTimeEditor.startTime': '開始時間',
+  'inlineTimeEditor.endTime': '終了時間',
+  'inlineTimeEditor.timezone': 'タイムゾーン',
   'inlineTimeEditor.invalidFormat': '正しい時間形式で入力してください (例: 16:00)',
   'inlineTimeEditor.saveHint': 'Enterで保存、Escapeでキャンセル',
+  'inlineTimeEditor.saving': '保存中...',
+  // Timezone Options
+  'timezone.UTC': 'UTC',
+  'timezone.japan_tokyo': '日本 (Tokyo)',
+  'timezone.america_new_york': 'アメリカ (New York)',
+  'timezone.america_los_angeles': 'アメリカ (Los Angeles)',
+  'timezone.europe_london': 'イギリス (London)',
+  'timezone.europe_paris': 'フランス (Paris)',
+  'timezone.asia_seoul': '韓国 (Seoul)',
+  'timezone.asia_shanghai': '中国 (Shanghai)',
+  'timezone.asia_hong_kong': '香港 (Hong Kong)',
+  'timezone.asia_singapore': 'シンガポール (Singapore)',
+  'timezone.asia_bangkok': 'タイ (Bangkok)',
+  'timezone.asia_kolkata': 'インド (Kolkata)',
+  'timezone.australia_sydney': 'オーストラリア (Sydney)',
+  'timezone.pacific_honolulu': 'ハワイ (Honolulu)',
+  'timezone.pacific_guam': 'グアム (Guam)',
+  'timezone.pacific_saipan': 'サイパン (Saipan)',
   // Add Schedule Modal
   'addScheduleModal.title': 'Venue / Point of Interest を追加',
   'addScheduleModal.searchLabel': '場所を検索',
