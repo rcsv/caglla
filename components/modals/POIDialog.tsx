@@ -144,6 +144,7 @@ function parseOpeningHours(weekdayText: string[] | undefined, language: 'ja' | '
 
 export default function POIDialog({ poiData, onClose, onAddToItinerary, availableDays, className = '' }: POIDialogProps) {
   const { user } = useAuth()
+  const language = getUserLanguage(user)
   const [placeDetails, setPlaceDetails] = useState<any>(null)
   const [aggregatedData, setAggregatedData] = useState<AggregatedVenueData | null>(null)
   const [unifiedReviews, setUnifiedReviews] = useState<UnifiedReview[]>([])
@@ -559,14 +560,14 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                         {aggregatedData.aggregatedRating.averageRating.toFixed(1)}
                       </span>
                       <span className="text-gray-500 text-xs">
-                        ({aggregatedData.aggregatedRating.totalReviews.toLocaleString()} 件)
+                        ({t('poi.reviewCount', language).replace('{count}', aggregatedData.aggregatedRating.totalReviews.toLocaleString())})
                       </span>
                       <div className="flex items-center gap-1 ml-1">
                         {aggregatedData.aggregatedRating.sources.map((source, idx) => (
                           <span
                             key={idx}
                             className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600"
-                            title={`${source.source}: ${source.rating} (${source.reviewCount}件)`}
+                            title={`${source.source}: ${source.rating} ${t('poi.reviewCount', language).replace('{count}', source.reviewCount.toString())}`}
                           >
                             {source.source === 'google' && (
                               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -850,7 +851,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                     )}
                     {placeDetails.photos.length > 1 && (
                       <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                        +{placeDetails.photos.length - 1}枚
+                        {t('gallery.photoCount', language).replace('{count}', (placeDetails.photos.length - 1).toString())}
                       </div>
                     )}
                     {/* キャッシュ状態インジケーター */}

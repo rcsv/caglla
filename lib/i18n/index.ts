@@ -683,8 +683,10 @@ export type TranslationKey =
   | 'gallery.nextImage'
   | 'gallery.cached'
   | 'gallery.photosOf'
+  | 'gallery.photoCount'
   // POI Dialog
   | 'poi.website'
+  | 'poi.reviewCount'
   | 'poi.cached'
   | 'poi.loading'
   | 'poi.loadingInfo'
@@ -1689,6 +1691,7 @@ const en: Dictionary = {
   'poi.showAll': 'Show all ({count})',
   'poi.reviewsAndTips': 'Reviews・Tips',
   'poi.helpfulVotes': '{count} people found this helpful',
+  'poi.reviewCount': '{count} reviews',
   'poi.daySelector.title': 'Select day to add',
   'poi.openingHours.open': 'Open',
   'poi.openingHours.closed': 'Closed',
@@ -1948,6 +1951,7 @@ const en: Dictionary = {
   'gallery.nextImage': 'Next image',
   'gallery.cached': 'Cached',
   'gallery.photosOf': '{name} photos',
+  'gallery.photoCount': '+{count} photos',
   // Activity Categories (minimal set; fallback supported)
   'activity.primary.transportation': 'Transportation',
   'activity.primaryShort.transportation': 'Transport',
@@ -2940,6 +2944,7 @@ const ja: Dictionary = {
   'poi.showAll': 'すべて表示 ({count})',
   'poi.reviewsAndTips': 'レビュー・Tips',
   'poi.helpfulVotes': '{count} 人が参考になったと評価',
+  'poi.reviewCount': '{count}件',
   'poi.daySelector.title': '追加する日を選択',
   'poi.openingHours.open': '営業中',
   'poi.openingHours.closed': '営業時間外',
@@ -3199,6 +3204,7 @@ const ja: Dictionary = {
   'gallery.nextImage': '次の画像',
   'gallery.cached': 'キャッシュ済み',
   'gallery.photosOf': '{name} の写真',
+  'gallery.photoCount': '+{count}枚',
   // Activity Categories (minimal set; fallback supported)
   'activity.primary.transportation': '乗り物',
   'activity.primaryShort.transportation': '乗り物',
