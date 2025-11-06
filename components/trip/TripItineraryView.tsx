@@ -348,6 +348,7 @@ export default function TripItineraryView({
                                       itinerary={itinerary}
                                       previousPlace={previousItinerary?.place_data}
                                       nextPlace={nextItinerary?.place_data}
+                                      trip={trip}
                                       onUpdate={onScheduleUpdated}
                                       onMoveUp={() => onMoveUp(itinerary.id, day.id)}
                                       onMoveDown={() => onMoveDown(itinerary.id, day.id)}

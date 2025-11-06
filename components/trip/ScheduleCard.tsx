@@ -5,9 +5,10 @@ import { t } from '@/lib/i18n'
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { placesApiHelpers } from '@/lib/api/google/places'
-import { PlaceData, Itinerary, ActivityTag, ReservationInfo, Day } from '@/lib/core/types'
+import { PlaceData, Itinerary, ActivityTag, ReservationInfo, Day, Trip } from '@/lib/core/types'
 import { timezoneUtils } from '@/lib/utils/timezone'
 import { currencyUtils } from '@/lib/utils/currency'
+import { useAuth } from '@/lib/contexts/auth'
 import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
 import ActivityTagSelector from './ActivityTagSelector'
 import ReservationInfoModal from '../modals/ReservationInfoModal'
@@ -29,6 +30,7 @@ interface ScheduleCardProps {
   displayNumber?: number
   previousPlace?: PlaceData | null
   nextPlace?: PlaceData | null
+  trip?: Trip | null
   onUpdate?: (updatedItinerary: Itinerary) => void
   onMoveUp?: () => void
   onMoveDown?: () => void
@@ -52,6 +54,7 @@ export default function ScheduleCard({
   displayNumber,
   previousPlace,
   nextPlace,
+  trip,
   onUpdate, 
   onMoveUp, 
   onMoveDown, 
@@ -66,6 +69,7 @@ export default function ScheduleCard({
   isFirst = false,
   isLast = false
 }: ScheduleCardProps) {
+  const { user } = useAuth()
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [description, setDescription] = useState(itinerary.description || '')
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -120,12 +124,18 @@ export default function ScheduleCard({
 
   useEffect(() => {
     if (itinerary.place_data && !itinerary.cost_currency) {
-      const detectedCurrency = currencyUtils.getCurrencyFromPlace(itinerary.place_data)
-      if (detectedCurrency !== 'JPY') {
-        setTempCostCurrency(detectedCurrency)
+      // 階層的なフォールバック戦略で通貨を推測（CodeRabbit提案）
+      const result = currencyUtils.getCurrencyFromPlaceEnhanced(
+        itinerary.place_data,
+        trip || null,
+        user || null
+      )
+      if (result.currency !== 'JPY') {
+        setTempCostCurrency(result.currency)
+        logger.debug(`Currency auto-detected: ${result.currency} (source: ${result.source}, confidence: ${result.confidence})`)
       }
     }
-  }, [itinerary.place_data?.place_id, itinerary.cost_currency, itinerary.place_data])
+  }, [itinerary.place_data?.place_id, itinerary.cost_currency, itinerary.place_data, trip, user])
 
   useEffect(() => {
     const loadImage = async () => {

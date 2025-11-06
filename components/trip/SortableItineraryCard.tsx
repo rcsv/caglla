@@ -4,13 +4,14 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { getZIndexClass } from '@/lib/core/z-index'
 import ScheduleCard from './ScheduleCard'
-import { Itinerary, PlaceData, Day } from '@/lib/core/types'
+import { Itinerary, PlaceData, Day, Trip } from '@/lib/core/types'
 
 interface SortableItineraryCardProps {
   itinerary: Itinerary
   displayNumber?: number
   previousPlace?: PlaceData | null
   nextPlace?: PlaceData | null
+  trip?: Trip | null
   onUpdate?: (updatedItinerary: Itinerary) => void
   onMoveUp?: () => void
   onMoveDown?: () => void
