@@ -173,6 +173,18 @@ export async function POST(request: NextRequest) {
       hasImageUrl: !!imageUrl
     })
 
+    // Handle image URL: move from avatar path to trip path if needed
+    let finalImageUrl = imageUrl
+    // Check both encoded and decoded formats
+    const isAvatarPath = imageUrl && (
+      (imageUrl.includes('/users/') && imageUrl.includes('/avatar/')) ||
+      (decodeURIComponent(imageUrl).includes('/users/') && decodeURIComponent(imageUrl).includes('/avatar/'))
+    )
+    if (isAvatarPath) {
+      logger.info('Image URL is in avatar path, will move to trip path after creation', { imageUrl, userId })
+      // Note: We'll move the image after trip creation since we need the tripId
+    }
+
     // Create trip
     const tripData: any = {
       user_id: userId,
@@ -190,9 +202,47 @@ export async function POST(request: NextRequest) {
     if (resolvedDestPlaceId) tripData.destination_place_id = resolvedDestPlaceId
     if (startDate) tripData.start_date = new Date(startDate)
     if (endDate) tripData.end_date = new Date(endDate)
-    if (imageUrl) tripData.image_url = imageUrl
+    if (finalImageUrl) tripData.image_url = finalImageUrl
 
     const trip = await adminTripOperations.createTrip(tripData)
+
+    // Move image from avatar path to trip path if needed
+    // Check both encoded and decoded formats
+    const shouldMoveImage = finalImageUrl && (
+      (finalImageUrl.includes('/users/') && finalImageUrl.includes('/avatar/')) ||
+      (decodeURIComponent(finalImageUrl).includes('/users/') && decodeURIComponent(finalImageUrl).includes('/avatar/'))
+    )
+    if (shouldMoveImage) {
+      try {
+        logger.info('Moving image from avatar path to trip path:', { 
+          oldImageUrl: finalImageUrl, 
+          tripId: trip.id 
+        })
+        const newImageUrl = await adminTripOperations.moveImageToTripPath(finalImageUrl, trip.id)
+        logger.info('Image moved successfully, updating trip:', { 
+          oldImageUrl: finalImageUrl, 
+          newImageUrl, 
+          tripId: trip.id 
+        })
+        
+        // Update trip with new image URL
+        await adminDb.collection(COLLECTIONS.TRIPS).doc(trip.id).update({
+          image_url: newImageUrl,
+          updated_at: new Date()
+        })
+        
+        trip.image_url = newImageUrl
+        finalImageUrl = newImageUrl
+      } catch (error) {
+        logger.error('Failed to move image to trip path:', { 
+          error, 
+          oldImageUrl: finalImageUrl, 
+          tripId: trip.id 
+        })
+        // Continue with trip creation even if image move fails
+        // The image will remain in the avatar path, but trip will still be created
+      }
+    }
 
     logger.info('Trip created successfully', { tripId: trip.id })
 

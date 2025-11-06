@@ -1,7 +1,8 @@
-import { adminDb } from './admin'
+import { adminDb, adminStorage } from './admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { User, Trip, Day, Itinerary, TripUser } from '@/lib/core/types'
 import { convertStandardDates, toDateOrNull } from './timestamp-utils'
+import logger from '@/lib/core/logger'
 
 // Helper functions for Firestore Admin operations
 const adminFirestoreHelpers = {
@@ -188,12 +189,215 @@ export const adminTripOperations = {
   },
 
   async deleteTrip(tripId: string): Promise<void> {
+    // Delete trip image from Storage before deleting trip document
+    try {
+      logger.info('Starting trip deletion process:', { tripId })
+      const tripDoc = await adminDb.collection(COLLECTIONS.TRIPS).doc(tripId).get()
+      if (tripDoc.exists) {
+        const tripData = tripDoc.data()
+        const imageUrl = tripData?.image_url
+        const userId = tripData?.user_id
+        logger.info('Trip document found, checking for image:', { tripId, hasImageUrl: !!imageUrl, imageUrl, userId })
+        
+        if (imageUrl) {
+          logger.info('Attempting to delete trip image:', { tripId, imageUrl })
+          await this.deleteTripImage(imageUrl, tripId)
+          
+          // Note: deleteTripImage() handles both /trips/{tripId}/images/ and /users/{userId}/avatar/ paths
+          // The imageUrl format is parsed correctly regardless of the path
+        } else {
+          logger.debug('No image URL found for trip:', { tripId })
+        }
+      } else {
+        logger.warn('Trip document does not exist:', { tripId })
+      }
+    } catch (error) {
+      logger.error('Failed to delete trip image before trip deletion:', { error, tripId })
+      // Continue with trip deletion even if image deletion fails
+    }
+    
     // Delete related days and itineraries first
     await adminDayOperations.deleteDaysByTripId(tripId)
     
     // Delete trip
     const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
     await tripRef.delete()
+    logger.info('Trip deletion completed:', { tripId })
+  },
+
+  async deleteTripImage(imageUrl: string, tripId: string): Promise<void> {
+    try {
+      // Check if imageUrl is valid
+      if (!imageUrl || typeof imageUrl !== 'string') {
+        logger.warn('Invalid imageUrl provided to deleteTripImage:', { imageUrl, tripId })
+        return
+      }
+
+      logger.debug('Attempting to delete trip image:', { imageUrl, tripId })
+
+      // Extract the path from the URL
+      let path: string
+      try {
+        const url = new URL(imageUrl)
+        logger.debug('Parsed URL pathname:', url.pathname)
+
+        // Check if this is a Firebase Storage URL
+        if (!url.pathname.includes('/o/')) {
+          logger.warn('URL does not appear to be a Firebase Storage URL:', { imageUrl, tripId })
+          return
+        }
+
+        const pathParts = url.pathname.split('/o/')
+        if (pathParts.length < 2) {
+          logger.warn('Invalid Firebase Storage URL format:', { imageUrl, tripId })
+          return
+        }
+
+        const pathWithParams = pathParts[1]
+        if (!pathWithParams) {
+          logger.warn('No path found in Firebase Storage URL:', { imageUrl, tripId })
+          return
+        }
+
+        // Remove query parameters
+        path = decodeURIComponent(pathWithParams.split('?')[0])
+        logger.debug('Extracted path:', { path, tripId })
+
+        if (!path) {
+          logger.warn('Empty path extracted from URL:', { imageUrl, tripId })
+          return
+        }
+      } catch (urlError) {
+        logger.error('Error parsing image URL:', { error: urlError, imageUrl, tripId })
+        return
+      }
+
+      // Delete the file using Firebase Admin Storage
+      if (!adminStorage) {
+        logger.error('Admin Storage not initialized', { tripId })
+        return
+      }
+
+      logger.debug('Getting storage bucket:', { tripId })
+      const bucket = adminStorage.bucket()
+      logger.debug('Storage bucket obtained:', { bucketName: bucket.name, tripId })
+      
+      const file = bucket.file(path)
+      logger.debug('File reference created:', { path, fullPath: file.name, tripId })
+      
+      // Check if file exists before attempting to delete
+      logger.debug('Checking if file exists:', { path, tripId })
+      const [exists] = await file.exists()
+      logger.debug('File exists check result:', { exists, path, tripId })
+      
+      if (!exists) {
+        logger.warn('Image file does not exist in Storage:', { path, tripId })
+        return
+      }
+
+      logger.info('Deleting file from Storage:', { path, tripId })
+      await file.delete()
+      logger.info('Successfully deleted trip image from Storage:', { path, tripId })
+    } catch (error) {
+      logger.error('Failed to delete trip image:', { error, imageUrl, tripId })
+      // Don't throw error - image deletion failure should not block trip deletion
+    }
+  },
+
+  /**
+   * Move image from avatar path to trip path
+   * @param oldImageUrl - The old image URL (from /users/{userId}/avatar/)
+   * @param tripId - The trip ID
+   * @returns The new image URL (from /trips/{tripId}/images/)
+   */
+  async moveImageToTripPath(oldImageUrl: string, tripId: string): Promise<string> {
+    try {
+      if (!oldImageUrl || typeof oldImageUrl !== 'string') {
+        throw new Error('Invalid imageUrl provided')
+      }
+
+      if (!adminStorage) {
+        throw new Error('Admin Storage not initialized')
+      }
+
+      logger.info('Starting image move operation:', { oldImageUrl, tripId })
+
+      // Extract the old path from the URL
+      let oldPath: string
+      try {
+        const url = new URL(oldImageUrl)
+        if (!url.pathname.includes('/o/')) {
+          throw new Error('URL does not appear to be a Firebase Storage URL')
+        }
+
+        const pathParts = url.pathname.split('/o/')
+        if (pathParts.length < 2) {
+          throw new Error('Invalid Firebase Storage URL format')
+        }
+
+        const pathWithParams = pathParts[1]
+        if (!pathWithParams) {
+          throw new Error('No path found in Firebase Storage URL')
+        }
+
+        oldPath = decodeURIComponent(pathWithParams.split('?')[0])
+        logger.debug('Extracted old path:', { oldPath, tripId })
+
+        if (!oldPath) {
+          throw new Error('Empty path extracted from URL')
+        }
+      } catch (urlError) {
+        logger.error('Error parsing image URL:', { error: urlError, oldImageUrl, tripId })
+        throw new Error(`Failed to parse image URL: ${urlError instanceof Error ? urlError.message : String(urlError)}`)
+      }
+
+      // Check if the old path is actually an avatar path
+      // Path format: "users/{userId}/avatar/{fileName}" (no leading slash)
+      const isAvatarPath = oldPath.includes('users/') && oldPath.includes('/avatar/')
+      if (!isAvatarPath) {
+        logger.warn('Image path is not an avatar path, skipping move:', { oldPath, tripId })
+        return oldImageUrl // Return original URL if not an avatar path
+      }
+
+      // Extract file name from old path
+      const fileName = oldPath.split('/').pop() || `image_${Date.now()}.jpg`
+      const newPath = `trips/${tripId}/images/${fileName}`
+
+      logger.debug('Moving image:', { oldPath, newPath, tripId })
+
+      const bucket = adminStorage.bucket()
+      
+      // Check if old file exists
+      const oldFile = bucket.file(oldPath)
+      const [exists] = await oldFile.exists()
+      if (!exists) {
+        logger.warn('Source image does not exist, skipping move:', { oldPath, tripId })
+        return oldImageUrl // Return original URL if source doesn't exist
+      }
+
+      // Copy to new location
+      const newFile = bucket.file(newPath)
+      await oldFile.copy(newFile)
+      logger.info('Image copied to new location:', { newPath, tripId })
+
+      // Get the new download URL
+      const [newUrl] = await newFile.getSignedUrl({
+        action: 'read',
+        expires: '03-09-2491' // Far future date (effectively permanent)
+      })
+
+      logger.info('Got new download URL:', { newUrl, tripId })
+
+      // Delete the old file
+      await oldFile.delete()
+      logger.info('Deleted old image file:', { oldPath, tripId })
+
+      logger.info('Image move operation completed successfully:', { oldPath, newPath, newUrl, tripId })
+      return newUrl
+    } catch (error) {
+      logger.error('Failed to move image to trip path:', { error, oldImageUrl, tripId })
+      throw error // Throw error so caller can handle it
+    }
   },
 
   async getPublicTrips(): Promise<Trip[]> {
