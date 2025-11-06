@@ -1,7 +1,8 @@
 # Issue: 気温表記方法・距離単位の設定項目機能
 
 **作成日**: 2025-11-01  
-**状態**: 🔴 未解決  
+**解決日**: 2025-11-06  
+**状態**: ✅ 解決済み  
 **優先度**: 低（新機能）  
 **種類**: 機能追加  
 **関連ファイル**: 
@@ -267,4 +268,95 @@ export function getUserUnitSystem(user?: User | null): UnitSystem {
 
 4. **時刻単位**
    - 12時間表記（AM/PM）と24時間表記の選択（現状は実装されていないが、将来的に必要になる可能性）
+
+---
+
+## ✅ 実装完了（2025-11-06）
+
+### 実装方針の変更
+
+当初の計画では、温度単位と距離単位を個別に設定する予定でしたが、以下の理由により**単位系（`unit_system`）を1つ選択する方式**に変更しました：
+
+1. **相関関係**: メートル法を使う国は基本的に摂氏を使い、ヤードポンド法を使う国は基本的に華氏を使うという強い相関がある
+2. **ユーザビリティ**: 細かく選ばせると混乱を招く可能性がある
+3. **シンプルさ**: 1つの選択で温度と距離の両方が自動的に設定される
+
+### 実装内容
+
+#### Phase 1: 型定義の追加 ✅
+- `lib/core/types/user.ts`に`UnitSystem`型（`'metric' | 'imperial'`）を追加
+- `UserPreferences`に`unit_system`フィールドを追加
+
+#### Phase 2: 単位変換ユーティリティの作成 ✅
+- `lib/utils/unit-conversion.ts`: 温度・距離・風速・降水量の変換関数を実装
+- `lib/utils/unit-system.ts`: 単位系のデフォルト値決定ロジックを実装
+  - ヤードポンド法を使用する国（US, LR, MM）→ `imperial`
+  - その他の国 → `metric`
+
+#### Phase 3: ユーザー設定の取得 ✅
+- `getUserUnitSystem()`関数を実装
+- `user.preferences.unit_system`が設定されている場合はそれを使用
+- 未設定の場合は`home_country_code`に基づいて自動決定
+
+#### Phase 4: TripWeatherDisplayの対応 ✅
+- `useUserData`を使用してFirestoreのユーザー情報を取得
+- 温度: 摂氏（°C）→ 華氏（°F）の変換
+- 風速: km/h → mph の変換
+- 降水量: mm → inch の変換
+
+#### Phase 5: TripDistanceDisplayの対応 ✅
+- `useUserData`を使用してFirestoreのユーザー情報を取得
+- 距離: km → mi（0.5マイル以上）または ft（0.5マイル未満）の変換
+
+#### Phase 6: VenueDistanceの対応 ✅
+- `useUserData`を使用してFirestoreのユーザー情報を取得
+- 場所間距離の単位変換
+
+#### Phase 7: ユーザー設定UIの追加 ✅
+- プロフィールページ（`app/[userSlug]/page.tsx`）に単位系選択ドロップダウンを追加
+- `home_country_code`が変更された場合、`unit_system`が未設定なら自動設定
+- 保存後に`refreshUserData()`を呼び出して`UserDataProvider`の`userData`を更新
+
+#### Phase 8: i18n対応 ✅
+- `lib/i18n/index.ts`に単位系設定関連のi18nキーを追加
+- 英語・日本語の翻訳を追加
+
+### 実装時の課題と解決
+
+1. **`useAuth`と`useUserData`の違い**
+   - 問題: `useAuth`はFirebase Authの`User`オブジェクトを返すが、Firestoreの`preferences.unit_system`を含まない
+   - 解決: `useUserData`を使用してFirestoreのユーザー情報を取得するように変更
+
+2. **プロフィールページでの設定反映**
+   - 問題: プロフィールページで単位系を変更しても、他のページで反映されない
+   - 解決: 保存後に`refreshUserData()`を呼び出して`UserDataProvider`の`userData`を更新
+
+3. **インペリアル単位系の表示ルール**
+   - 問題: 4921フィート（約0.93マイル）をフィートで表示していた
+   - 解決: 0.5マイル以上はマイル、未満はフィートで表示するように変更
+
+### 実装ファイル
+
+- `lib/core/types/user.ts` - 型定義
+- `lib/utils/unit-conversion.ts` - 単位変換関数
+- `lib/utils/unit-system.ts` - 単位系のデフォルト値決定
+- `components/stats/TripWeatherDisplay.tsx` - 天気表示
+- `components/stats/TripDistanceDisplay.tsx` - 距離表示
+- `components/trip/VenueDistance.tsx` - 場所間距離表示
+- `app/[userSlug]/page.tsx` - プロフィールページ（単位系設定UI）
+- `lib/i18n/index.ts` - i18nキー
+- `app/api/distance/batch/route.ts` - サーバー側の時間フォーマット修正
+
+### 動作確認
+
+- ✅ プロフィールページで単位系を「インペリアル」に設定
+- ✅ 天気予報が華氏・mph・inchで表示される
+- ✅ 距離がマイル・フィートで表示される
+- ✅ 0.5マイル以上はマイル、未満はフィートで表示される
+- ✅ プロフィールページで保存後、他のページで即座に反映される
+
+### コミット
+
+- コミットハッシュ: `ea0e8d2`
+- コミットメッセージ: `feat: 単位系設定機能の実装（メートル法/ヤードポンド法）`
 
