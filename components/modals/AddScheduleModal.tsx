@@ -159,7 +159,7 @@ export default function AddScheduleModal({
       <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md mx-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-900">
-            Venue / Point of Interest を追加
+            {t('addScheduleModal.title')}
           </h2>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
             <CloseIcon className="w-6 h-6" />
@@ -170,7 +170,7 @@ export default function AddScheduleModal({
           {/* 検索フィールド */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              場所を検索
+              {t('addScheduleModal.searchLabel')}
             </label>
             <div className="flex space-x-2">
               <input
@@ -178,7 +178,7 @@ export default function AddScheduleModal({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="例: 東京タワー, 浅草寺, 銀座..."
+                placeholder={t('addScheduleModal.searchPlaceholder')}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={isSaving}
               />
@@ -187,7 +187,7 @@ export default function AddScheduleModal({
                 disabled={isSearching || isSaving}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSearching ? '検索中...' : '検索'}
+                {isSearching ? t('addScheduleModal.searching') : t('addScheduleModal.searchButton')}
               </button>
             </div>
           </div>
@@ -195,7 +195,7 @@ export default function AddScheduleModal({
           {/* 検索結果 */}
           {searchResults.length > 0 && (
             <div className="max-h-60 overflow-y-auto">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">検索結果</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">{t('addScheduleModal.searchResults')}</h3>
               <div className="space-y-2">
                 {searchResults.map((place) => (
                   <div

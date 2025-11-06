@@ -558,6 +558,12 @@ export type TranslationKey =
   | 'inlineTimeEditor.invalidFormat'
   | 'inlineTimeEditor.saveHint'
   // Add Schedule Modal
+  | 'addScheduleModal.title'
+  | 'addScheduleModal.searchLabel'
+  | 'addScheduleModal.searchPlaceholder'
+  | 'addScheduleModal.searchButton'
+  | 'addScheduleModal.searching'
+  | 'addScheduleModal.searchResults'
   | 'addScheduleModal.tryDifferentKeyword'
   // User Settings Page
   | 'userSettingsPage.saveSuccess'
@@ -747,9 +753,173 @@ export type TranslationKey =
   | 'activity.primaryShort.wellness'
   | 'activity.primary.service'
   | 'activity.primaryShort.service'
-  // Activity Secondary Categories (minimal set; fallback supported)
+  // Activity Secondary Categories
+  // Transportation
   | 'activity.secondary.transportation.flight'
+  | 'activity.secondary.transportation.flight.description'
   | 'activity.secondary.transportation.train'
+  | 'activity.secondary.transportation.train.description'
+  | 'activity.secondary.transportation.bus'
+  | 'activity.secondary.transportation.bus.description'
+  | 'activity.secondary.transportation.taxi'
+  | 'activity.secondary.transportation.taxi.description'
+  | 'activity.secondary.transportation.car_rental'
+  | 'activity.secondary.transportation.car_rental.description'
+  | 'activity.secondary.transportation.ferry'
+  | 'activity.secondary.transportation.ferry.description'
+  | 'activity.secondary.transportation.bike'
+  | 'activity.secondary.transportation.bike.description'
+  | 'activity.secondary.transportation.scooter'
+  | 'activity.secondary.transportation.scooter.description'
+  | 'activity.secondary.transportation.gas_station'
+  | 'activity.secondary.transportation.gas_station.description'
+  | 'activity.secondary.transportation.toll_payment'
+  | 'activity.secondary.transportation.toll_payment.description'
+  // Shopping
+  | 'activity.secondary.shopping.souvenir'
+  | 'activity.secondary.shopping.souvenir.description'
+  | 'activity.secondary.shopping.grocery'
+  | 'activity.secondary.shopping.grocery.description'
+  | 'activity.secondary.shopping.fashion'
+  | 'activity.secondary.shopping.fashion.description'
+  | 'activity.secondary.shopping.electronics'
+  | 'activity.secondary.shopping.electronics.description'
+  | 'activity.secondary.shopping.local_market'
+  | 'activity.secondary.shopping.local_market.description'
+  | 'activity.secondary.shopping.duty_free'
+  | 'activity.secondary.shopping.duty_free.description'
+  | 'activity.secondary.shopping.bookstore'
+  | 'activity.secondary.shopping.bookstore.description'
+  // Dining
+  | 'activity.secondary.dining.breakfast'
+  | 'activity.secondary.dining.breakfast.description'
+  | 'activity.secondary.dining.lunch'
+  | 'activity.secondary.dining.lunch.description'
+  | 'activity.secondary.dining.dinner'
+  | 'activity.secondary.dining.dinner.description'
+  | 'activity.secondary.dining.cafe'
+  | 'activity.secondary.dining.cafe.description'
+  | 'activity.secondary.dining.bar'
+  | 'activity.secondary.dining.bar.description'
+  | 'activity.secondary.dining.food_tour'
+  | 'activity.secondary.dining.food_tour.description'
+  | 'activity.secondary.dining.street_food'
+  | 'activity.secondary.dining.street_food.description'
+  | 'activity.secondary.dining.fine_dining'
+  | 'activity.secondary.dining.fine_dining.description'
+  // Accommodation
+  | 'activity.secondary.accommodation.check_in'
+  | 'activity.secondary.accommodation.check_in.description'
+  | 'activity.secondary.accommodation.check_out'
+  | 'activity.secondary.accommodation.check_out.description'
+  | 'activity.secondary.accommodation.car_camping'
+  | 'activity.secondary.accommodation.car_camping.description'
+  | 'activity.secondary.accommodation.camping'
+  | 'activity.secondary.accommodation.camping.description'
+  | 'activity.secondary.accommodation.hostel_stay'
+  | 'activity.secondary.accommodation.hostel_stay.description'
+  | 'activity.secondary.accommodation.airbnb'
+  | 'activity.secondary.accommodation.airbnb.description'
+  | 'activity.secondary.accommodation.luxury_hotel'
+  | 'activity.secondary.accommodation.luxury_hotel.description'
+  // Exploration
+  | 'activity.secondary.exploration.city_walk'
+  | 'activity.secondary.exploration.city_walk.description'
+  | 'activity.secondary.exploration.nature_walk'
+  | 'activity.secondary.exploration.nature_walk.description'
+  | 'activity.secondary.exploration.photography'
+  | 'activity.secondary.exploration.photography.description'
+  | 'activity.secondary.exploration.observation'
+  | 'activity.secondary.exploration.observation.description'
+  | 'activity.secondary.exploration.architecture'
+  | 'activity.secondary.exploration.architecture.description'
+  | 'activity.secondary.exploration.park'
+  | 'activity.secondary.exploration.park.description'
+  // Adventure
+  | 'activity.secondary.adventure.hiking'
+  | 'activity.secondary.adventure.hiking.description'
+  | 'activity.secondary.adventure.trekking'
+  | 'activity.secondary.adventure.trekking.description'
+  | 'activity.secondary.adventure.diving'
+  | 'activity.secondary.adventure.diving.description'
+  | 'activity.secondary.adventure.snorkeling'
+  | 'activity.secondary.adventure.snorkeling.description'
+  | 'activity.secondary.adventure.rock_climbing'
+  | 'activity.secondary.adventure.rock_climbing.description'
+  | 'activity.secondary.adventure.caving'
+  | 'activity.secondary.adventure.caving.description'
+  | 'activity.secondary.adventure.safari'
+  | 'activity.secondary.adventure.safari.description'
+  | 'activity.secondary.adventure.jungle_trek'
+  | 'activity.secondary.adventure.jungle_trek.description'
+  // Entertainment
+  | 'activity.secondary.entertainment.theme_park'
+  | 'activity.secondary.entertainment.theme_park.description'
+  | 'activity.secondary.entertainment.beach'
+  | 'activity.secondary.entertainment.beach.description'
+  | 'activity.secondary.entertainment.water_sports'
+  | 'activity.secondary.entertainment.water_sports.description'
+  | 'activity.secondary.entertainment.casino'
+  | 'activity.secondary.entertainment.casino.description'
+  | 'activity.secondary.entertainment.nightlife'
+  | 'activity.secondary.entertainment.nightlife.description'
+  | 'activity.secondary.entertainment.game_center'
+  | 'activity.secondary.entertainment.game_center.description'
+  | 'activity.secondary.entertainment.karaoke'
+  | 'activity.secondary.entertainment.karaoke.description'
+  | 'activity.secondary.entertainment.movie'
+  | 'activity.secondary.entertainment.movie.description'
+  // Culture
+  | 'activity.secondary.culture.museum'
+  | 'activity.secondary.culture.museum.description'
+  | 'activity.secondary.culture.art_gallery'
+  | 'activity.secondary.culture.art_gallery.description'
+  | 'activity.secondary.culture.aquarium'
+  | 'activity.secondary.culture.aquarium.description'
+  | 'activity.secondary.culture.temple_shrine'
+  | 'activity.secondary.culture.temple_shrine.description'
+  | 'activity.secondary.culture.historical_site'
+  | 'activity.secondary.culture.historical_site.description'
+  | 'activity.secondary.culture.local_festival'
+  | 'activity.secondary.culture.local_festival.description'
+  | 'activity.secondary.culture.theater'
+  | 'activity.secondary.culture.theater.description'
+  | 'activity.secondary.culture.traditional_experience'
+  | 'activity.secondary.culture.traditional_experience.description'
+  | 'activity.secondary.culture.workshop'
+  | 'activity.secondary.culture.workshop.description'
+  // Wellness
+  | 'activity.secondary.wellness.spa'
+  | 'activity.secondary.wellness.spa.description'
+  | 'activity.secondary.wellness.massage'
+  | 'activity.secondary.wellness.massage.description'
+  | 'activity.secondary.wellness.yoga'
+  | 'activity.secondary.wellness.yoga.description'
+  | 'activity.secondary.wellness.gym'
+  | 'activity.secondary.wellness.gym.description'
+  | 'activity.secondary.wellness.meditation'
+  | 'activity.secondary.wellness.meditation.description'
+  | 'activity.secondary.wellness.hot_spring'
+  | 'activity.secondary.wellness.hot_spring.description'
+  | 'activity.secondary.wellness.detox'
+  | 'activity.secondary.wellness.detox.description'
+  // Service
+  | 'activity.secondary.service.laundry'
+  | 'activity.secondary.service.laundry.description'
+  | 'activity.secondary.service.currency_exchange'
+  | 'activity.secondary.service.currency_exchange.description'
+  | 'activity.secondary.service.hospital'
+  | 'activity.secondary.service.hospital.description'
+  | 'activity.secondary.service.visa_application'
+  | 'activity.secondary.service.visa_application.description'
+  | 'activity.secondary.service.sim_purchase'
+  | 'activity.secondary.service.sim_purchase.description'
+  | 'activity.secondary.service.post_office'
+  | 'activity.secondary.service.post_office.description'
+  | 'activity.secondary.service.atm'
+  | 'activity.secondary.service.atm.description'
+  | 'activity.secondary.service.baggage_storage'
+  | 'activity.secondary.service.baggage_storage.description'
   // Distance Display
   | 'distance.title'
   | 'distance.loading'
@@ -773,6 +943,8 @@ export type TranslationKey =
   | 'cost.items'
   | 'cost.total'
   | 'cost.hint.edit'
+  | 'cost.viewDetails'
+  | 'cost.collapse'
   // Date formatting
   | 'date.notSet'
   | 'date.daysLater'
@@ -928,6 +1100,30 @@ export type TranslationKey =
   | 'loading.addingSchedule'
   | 'loading.updating'
   | 'loading.updatingDescription'
+  // Privacy Policy
+  | 'privacy.title'
+  | 'privacy.lastUpdated'
+  | 'privacy.preface.title'
+  | 'privacy.preface.content'
+  | 'privacy.collection.title'
+  | 'privacy.collection.intro'
+  | 'privacy.collection.googleAccount'
+  | 'privacy.collection.travelData'
+  | 'privacy.collection.location'
+  | 'privacy.collection.usage'
+  | 'privacy.purpose.title'
+  | 'privacy.purpose.intro'
+  | 'privacy.purpose.service'
+  | 'privacy.purpose.authentication'
+  | 'privacy.purpose.management'
+  | 'privacy.purpose.improvement'
+  | 'privacy.purpose.support'
+  | 'privacy.sharing.title'
+  | 'privacy.sharing.content'
+  | 'privacy.protection.title'
+  | 'privacy.protection.content'
+  | 'privacy.contact.title'
+  | 'privacy.contact.content'
   // Reservation Categories
   | 'reservation.type.flight'
   | 'reservation.type.rentalCar'
@@ -1090,6 +1286,30 @@ const en: Dictionary = {
   'footer.privacyPolicy': 'Privacy Policy',
   'footer.termsOfService': 'Terms of Service',
   'footer.cookieSettings': 'Cookie Settings',
+  // Privacy Policy page
+  'privacy.title': 'Privacy Policy',
+  'privacy.lastUpdated': 'Last updated: {date}',
+  'privacy.preface.title': 'Preface',
+  'privacy.preface.content': 'Caglla Travel Manager (hereinafter referred to as "this service") considers the protection of users\' personal information to be an important responsibility and has established the following privacy policy. By using this service in accordance with this privacy policy, users agree to the protection of their personal information.',
+  'privacy.collection.title': 'Collection of Information',
+  'privacy.collection.intro': 'This service may collect the following information:',
+  'privacy.collection.googleAccount': 'Google account information (name, email address, profile picture)',
+  'privacy.collection.travelData': 'Travel plan data (itinerary, accommodation, tourist information)',
+  'privacy.collection.location': 'Location information (for map display)',
+  'privacy.collection.usage': 'Service usage status (frequency of feature use, error logs)',
+  'privacy.purpose.title': 'Purpose of Information Collection',
+  'privacy.purpose.intro': 'The collected information is used for the following purposes:',
+  'privacy.purpose.service': 'Service provision and operation',
+  'privacy.purpose.authentication': 'User authentication and account management',
+  'privacy.purpose.management': 'Travel plan storage and management',
+  'privacy.purpose.improvement': 'Service improvement and new feature development',
+  'privacy.purpose.support': 'Customer support',
+  'privacy.sharing.title': 'Sharing of Information',
+  'privacy.sharing.content': 'This service does not share personal information with third parties except when the user has consented or when there is a legal obligation.',
+  'privacy.protection.title': 'Protection of Data',
+  'privacy.protection.content': 'This service uses Firebase (Google Cloud Platform) security features to appropriately protect user data.',
+  'privacy.contact.title': 'Contact',
+  'privacy.contact.content': 'For questions regarding the privacy policy, please contact us through the <a href="/contact">contact page</a>.',
   // Features page
   'features.intro': 'Caglla strengths, simply explained.',
   'features.section1.title': '1. Features for personal and family trips',
@@ -1678,6 +1898,12 @@ const en: Dictionary = {
   'inlineTimeEditor.invalidFormat': 'Please enter a valid time format (e.g., 16:00)',
   'inlineTimeEditor.saveHint': 'Press Enter to save, Escape to cancel',
   // Add Schedule Modal
+  'addScheduleModal.title': 'Add Venue / Point of Interest',
+  'addScheduleModal.searchLabel': 'Search place',
+  'addScheduleModal.searchPlaceholder': 'e.g., Tokyo Tower, Senso-ji Temple, Ginza...',
+  'addScheduleModal.searchButton': 'Search',
+  'addScheduleModal.searching': 'Searching...',
+  'addScheduleModal.searchResults': 'Search Results',
   'addScheduleModal.tryDifferentKeyword': 'Try searching with different keywords',
   // User Settings Page
   'userSettingsPage.saveSuccess': 'Settings saved',
@@ -1743,8 +1969,172 @@ const en: Dictionary = {
   'activity.primaryShort.wellness': 'Health',
   'activity.primary.service': 'Service',
   'activity.primaryShort.service': 'Service',
+  // Activity Secondary Categories - Transportation
   'activity.secondary.transportation.flight': 'Flight',
+  'activity.secondary.transportation.flight.description': 'International/Domestic flights',
   'activity.secondary.transportation.train': 'Train',
+  'activity.secondary.transportation.train.description': 'Railway/Subway transportation',
+  'activity.secondary.transportation.bus': 'Bus',
+  'activity.secondary.transportation.bus.description': 'Express bus/City bus',
+  'activity.secondary.transportation.taxi': 'Taxi',
+  'activity.secondary.transportation.taxi.description': 'Taxi/Ride-sharing service',
+  'activity.secondary.transportation.car_rental': 'Rental Car',
+  'activity.secondary.transportation.car_rental.description': 'Car rental transportation',
+  'activity.secondary.transportation.ferry': 'Ferry',
+  'activity.secondary.transportation.ferry.description': 'Ship/Ferry transportation',
+  'activity.secondary.transportation.bike': 'Bicycle',
+  'activity.secondary.transportation.bike.description': 'Rental bicycle',
+  'activity.secondary.transportation.scooter': 'Motorcycle/Scooter',
+  'activity.secondary.transportation.scooter.description': 'Motorcycle/Electric scooter',
+  'activity.secondary.transportation.gas_station': 'Gas Station',
+  'activity.secondary.transportation.gas_station.description': 'Refueling/Gas station',
+  'activity.secondary.transportation.toll_payment': 'Toll Payment',
+  'activity.secondary.transportation.toll_payment.description': 'Highway toll/Road toll payment',
+  // Shopping
+  'activity.secondary.shopping.souvenir': 'Souvenir Purchase',
+  'activity.secondary.shopping.souvenir.description': 'Souvenir/Keepsake purchase',
+  'activity.secondary.shopping.grocery': 'Grocery Shopping',
+  'activity.secondary.shopping.grocery.description': 'Shopping at supermarket/Convenience store',
+  'activity.secondary.shopping.fashion': 'Fashion',
+  'activity.secondary.shopping.fashion.description': 'Clothing/Accessories purchase',
+  'activity.secondary.shopping.electronics': 'Electronics',
+  'activity.secondary.shopping.electronics.description': 'Home appliances/Gadgets purchase',
+  'activity.secondary.shopping.local_market': 'Local Market',
+  'activity.secondary.shopping.local_market.description': 'Local market/Bazaar',
+  'activity.secondary.shopping.duty_free': 'Duty-free Shop',
+  'activity.secondary.shopping.duty_free.description': 'Airport/City duty-free shop',
+  'activity.secondary.shopping.bookstore': 'Bookstore',
+  'activity.secondary.shopping.bookstore.description': 'Books/Magazines purchase',
+  // Dining
+  'activity.secondary.dining.breakfast': 'Breakfast',
+  'activity.secondary.dining.breakfast.description': 'Hotel breakfast/Cafe breakfast',
+  'activity.secondary.dining.lunch': 'Lunch',
+  'activity.secondary.dining.lunch.description': 'Lunch/Light meal',
+  'activity.secondary.dining.dinner': 'Dinner',
+  'activity.secondary.dining.dinner.description': 'Dinner/Evening restaurant',
+  'activity.secondary.dining.cafe': 'Cafe',
+  'activity.secondary.dining.cafe.description': 'Cafe/Coffee shop',
+  'activity.secondary.dining.bar': 'Bar',
+  'activity.secondary.dining.bar.description': 'Bar/Pub',
+  'activity.secondary.dining.food_tour': 'Food Tour',
+  'activity.secondary.dining.food_tour.description': 'Food walking/Gourmet tour',
+  'activity.secondary.dining.street_food': 'Street Food',
+  'activity.secondary.dining.street_food.description': 'Food stall/Food truck',
+  'activity.secondary.dining.fine_dining': 'Fine Dining',
+  'activity.secondary.dining.fine_dining.description': 'Fine dining restaurant',
+  // Accommodation
+  'activity.secondary.accommodation.check_in': 'Check-in',
+  'activity.secondary.accommodation.check_in.description': 'Hotel/Accommodation check-in',
+  'activity.secondary.accommodation.check_out': 'Check-out',
+  'activity.secondary.accommodation.check_out.description': 'Hotel/Accommodation check-out',
+  'activity.secondary.accommodation.car_camping': 'Sleeping in Car',
+  'activity.secondary.accommodation.car_camping.description': 'Sleeping in car',
+  'activity.secondary.accommodation.camping': 'Camping',
+  'activity.secondary.accommodation.camping.description': 'Tent/Campground accommodation',
+  'activity.secondary.accommodation.hostel_stay': 'Hostel Stay',
+  'activity.secondary.accommodation.hostel_stay.description': 'Hostel/Guesthouse',
+  'activity.secondary.accommodation.airbnb': 'Private Lodging',
+  'activity.secondary.accommodation.airbnb.description': 'Airbnb/Private lodging facility',
+  'activity.secondary.accommodation.luxury_hotel': 'Luxury Hotel',
+  'activity.secondary.accommodation.luxury_hotel.description': '5-star hotel/Resort',
+  // Exploration
+  'activity.secondary.exploration.city_walk': 'City Walk',
+  'activity.secondary.exploration.city_walk.description': 'City/Town strolling',
+  'activity.secondary.exploration.nature_walk': 'Nature Walk',
+  'activity.secondary.exploration.nature_walk.description': 'Park/Nature walking',
+  'activity.secondary.exploration.photography': 'Photography',
+  'activity.secondary.exploration.photography.description': 'Landscape/Building photography',
+  'activity.secondary.exploration.observation': 'Observation',
+  'activity.secondary.exploration.observation.description': 'Observatory/Viewpoint enjoyment',
+  'activity.secondary.exploration.architecture': 'Architecture',
+  'activity.secondary.exploration.architecture.description': 'Building viewing',
+  'activity.secondary.exploration.park': 'Park Visit',
+  'activity.secondary.exploration.park.description': 'Park/Garden visit',
+  // Adventure
+  'activity.secondary.adventure.hiking': 'Hiking',
+  'activity.secondary.adventure.hiking.description': 'Mountain trail/Trail hiking',
+  'activity.secondary.adventure.trekking': 'Trekking',
+  'activity.secondary.adventure.trekking.description': 'Mountain trekking',
+  'activity.secondary.adventure.diving': 'Diving',
+  'activity.secondary.adventure.diving.description': 'Scuba diving',
+  'activity.secondary.adventure.snorkeling': 'Snorkeling',
+  'activity.secondary.adventure.snorkeling.description': 'Snorkeling',
+  'activity.secondary.adventure.rock_climbing': 'Rock Climbing',
+  'activity.secondary.adventure.rock_climbing.description': 'Climbing/Bouldering',
+  'activity.secondary.adventure.caving': 'Caving',
+  'activity.secondary.adventure.caving.description': 'Cave/Caving',
+  'activity.secondary.adventure.safari': 'Safari',
+  'activity.secondary.adventure.safari.description': 'Safari tour/Wildlife observation',
+  'activity.secondary.adventure.jungle_trek': 'Jungle Trek',
+  'activity.secondary.adventure.jungle_trek.description': 'Jungle/Tropical rainforest exploration',
+  // Entertainment
+  'activity.secondary.entertainment.theme_park': 'Theme Park',
+  'activity.secondary.entertainment.theme_park.description': 'Amusement park/Theme park',
+  'activity.secondary.entertainment.beach': 'Beach',
+  'activity.secondary.entertainment.beach.description': 'Beach/Beach activities',
+  'activity.secondary.entertainment.water_sports': 'Water Sports',
+  'activity.secondary.entertainment.water_sports.description': 'Surfing/Kayaking etc.',
+  'activity.secondary.entertainment.casino': 'Casino',
+  'activity.secondary.entertainment.casino.description': 'Casino/Gambling',
+  'activity.secondary.entertainment.nightlife': 'Nightlife',
+  'activity.secondary.entertainment.nightlife.description': 'Nightclub/Bar hopping',
+  'activity.secondary.entertainment.game_center': 'Game Center',
+  'activity.secondary.entertainment.game_center.description': 'Arcade/Game center',
+  'activity.secondary.entertainment.karaoke': 'Karaoke',
+  'activity.secondary.entertainment.karaoke.description': 'Karaoke/Singing',
+  'activity.secondary.entertainment.movie': 'Movie',
+  'activity.secondary.entertainment.movie.description': 'Movie theater/Cinema',
+  // Culture
+  'activity.secondary.culture.museum': 'Museum',
+  'activity.secondary.culture.museum.description': 'Museum/Science museum',
+  'activity.secondary.culture.art_gallery': 'Art Gallery',
+  'activity.secondary.culture.art_gallery.description': 'Art museum/Gallery',
+  'activity.secondary.culture.aquarium': 'Aquarium',
+  'activity.secondary.culture.aquarium.description': 'Marine life exhibition/Education facility',
+  'activity.secondary.culture.temple_shrine': 'Temple/Shrine',
+  'activity.secondary.culture.temple_shrine.description': 'Temple/Shrine/Church',
+  'activity.secondary.culture.historical_site': 'Historical Site',
+  'activity.secondary.culture.historical_site.description': 'Castle/Ruins/Historic site',
+  'activity.secondary.culture.local_festival': 'Local Festival',
+  'activity.secondary.culture.local_festival.description': 'Festival/Event',
+  'activity.secondary.culture.theater': 'Theater/Concert',
+  'activity.secondary.culture.theater.description': 'Theater/Music concert',
+  'activity.secondary.culture.traditional_experience': 'Traditional Experience',
+  'activity.secondary.culture.traditional_experience.description': 'Tea ceremony/Calligraphy experience',
+  'activity.secondary.culture.workshop': 'Workshop',
+  'activity.secondary.culture.workshop.description': 'Craft/Art experience',
+  // Wellness
+  'activity.secondary.wellness.spa': 'Spa',
+  'activity.secondary.wellness.spa.description': 'Spa/Hot spring',
+  'activity.secondary.wellness.massage': 'Massage',
+  'activity.secondary.wellness.massage.description': 'Massage/Relaxation',
+  'activity.secondary.wellness.yoga': 'Yoga',
+  'activity.secondary.wellness.yoga.description': 'Yoga/Meditation class',
+  'activity.secondary.wellness.gym': 'Gym',
+  'activity.secondary.wellness.gym.description': 'Fitness gym',
+  'activity.secondary.wellness.meditation': 'Meditation',
+  'activity.secondary.wellness.meditation.description': 'Meditation/Mindfulness',
+  'activity.secondary.wellness.hot_spring': 'Hot Spring',
+  'activity.secondary.wellness.hot_spring.description': 'Hot spring/Public bath',
+  'activity.secondary.wellness.detox': 'Detox',
+  'activity.secondary.wellness.detox.description': 'Detox/Fasting',
+  // Service
+  'activity.secondary.service.laundry': 'Laundry',
+  'activity.secondary.service.laundry.description': 'Coin laundry/Dry cleaning',
+  'activity.secondary.service.currency_exchange': 'Currency Exchange',
+  'activity.secondary.service.currency_exchange.description': 'Exchange office/Bank',
+  'activity.secondary.service.hospital': 'Hospital',
+  'activity.secondary.service.hospital.description': 'Hospital/Clinic',
+  'activity.secondary.service.visa_application': 'Visa Application',
+  'activity.secondary.service.visa_application.description': 'Embassy/Visa center',
+  'activity.secondary.service.sim_purchase': 'SIM Purchase',
+  'activity.secondary.service.sim_purchase.description': 'SIM card/Communication service',
+  'activity.secondary.service.post_office': 'Post Office',
+  'activity.secondary.service.post_office.description': 'Post/Package shipping',
+  'activity.secondary.service.atm': 'ATM',
+  'activity.secondary.service.atm.description': 'Cash withdrawal',
+  'activity.secondary.service.baggage_storage': 'Baggage Storage',
+  'activity.secondary.service.baggage_storage.description': 'Coin locker/Baggage storage',
   // Currency Names
   'currency.JPY.name': 'Japanese Yen',
   'currency.JPY.country': 'Japan',
@@ -1827,6 +2217,8 @@ const en: Dictionary = {
   'cost.items': ' items',
   'cost.total': 'Total',
   'cost.hint.edit': 'Click on any schedule\'s cost to edit',
+  'cost.viewDetails': 'View Details',
+  'cost.collapse': 'Collapse',
   // Date formatting
   'date.notSet': 'Date not set',
   'date.daysLater': 'days later',
@@ -2145,6 +2537,30 @@ const ja: Dictionary = {
   'footer.privacyPolicy': 'プライバシーポリシー',
   'footer.termsOfService': '利用規約',
   'footer.cookieSettings': 'クッキー設定',
+  // Privacy Policy page
+  'privacy.title': 'プライバシーポリシー',
+  'privacy.lastUpdated': '最終更新日: {date}',
+  'privacy.preface.title': '前文',
+  'privacy.preface.content': 'Caglla Travel Manager（以下「当サービス」）は、ユーザーの個人情報の保護を重要な責務と考え、以下のプライバシーポリシーを定めています。ユーザーは、本プライバシーポリシーに従って当サービスを利用することにより、個人情報の保護についての同意を与えることになります。',
+  'privacy.collection.title': '情報の収集',
+  'privacy.collection.intro': '当サービスでは、以下の情報を収集する場合があります：',
+  'privacy.collection.googleAccount': 'Googleアカウント情報（名前、メールアドレス、プロフィール画像）',
+  'privacy.collection.travelData': '旅行計画データ（旅程、宿泊先、観光地情報）',
+  'privacy.collection.location': '位置情報（地図表示のため）',
+  'privacy.collection.usage': 'サービス利用状況（機能の使用頻度、エラーログ）',
+  'privacy.purpose.title': '情報収集の目的',
+  'privacy.purpose.intro': '収集した情報は以下の目的で利用します：',
+  'privacy.purpose.service': 'サービスの提供・運営',
+  'privacy.purpose.authentication': 'ユーザー認証・アカウント管理',
+  'privacy.purpose.management': '旅行計画の保存・管理',
+  'privacy.purpose.improvement': 'サービス改善・新機能開発',
+  'privacy.purpose.support': 'カスタマーサポート',
+  'privacy.sharing.title': '情報の共有',
+  'privacy.sharing.content': '当サービスは、ユーザーの同意がある場合、または法的義務がある場合を除き、個人情報を第三者と共有することはありません。',
+  'privacy.protection.title': 'データの保護',
+  'privacy.protection.content': '当サービスは、Firebase（Google Cloud Platform）のセキュリティ機能を活用し、ユーザーデータを適切に保護します。',
+  'privacy.contact.title': 'お問い合わせ',
+  'privacy.contact.content': 'プライバシーポリシーに関するご質問は、<a href="/contact">お問い合わせページ</a>からご連絡ください。',
   // Features page
   'features.intro': 'Cagllaの強みを、シンプルに。',
   'features.section1.title': '1. 個人・家族旅行者向けの機能',
@@ -2733,6 +3149,12 @@ const ja: Dictionary = {
   'inlineTimeEditor.invalidFormat': '正しい時間形式で入力してください (例: 16:00)',
   'inlineTimeEditor.saveHint': 'Enterで保存、Escapeでキャンセル',
   // Add Schedule Modal
+  'addScheduleModal.title': 'Venue / Point of Interest を追加',
+  'addScheduleModal.searchLabel': '場所を検索',
+  'addScheduleModal.searchPlaceholder': '例: 東京タワー, 浅草寺, 銀座...',
+  'addScheduleModal.searchButton': '検索',
+  'addScheduleModal.searching': '検索中...',
+  'addScheduleModal.searchResults': '検索結果',
   'addScheduleModal.tryDifferentKeyword': '別のキーワードで検索してみてください',
   // User Settings Page
   'userSettingsPage.saveSuccess': '設定を保存しました',
@@ -2798,8 +3220,172 @@ const ja: Dictionary = {
   'activity.primaryShort.wellness': '健康',
   'activity.primary.service': 'サービス提供',
   'activity.primaryShort.service': 'サービス',
+  // Activity Secondary Categories - Transportation
   'activity.secondary.transportation.flight': '飛行機',
+  'activity.secondary.transportation.flight.description': '国際線・国内線の搭乗',
   'activity.secondary.transportation.train': '電車',
+  'activity.secondary.transportation.train.description': '鉄道・地下鉄での移動',
+  'activity.secondary.transportation.bus': 'バス',
+  'activity.secondary.transportation.bus.description': '高速バス・市内バス',
+  'activity.secondary.transportation.taxi': 'タクシー',
+  'activity.secondary.transportation.taxi.description': 'タクシー・配車サービス',
+  'activity.secondary.transportation.car_rental': 'レンタカー',
+  'activity.secondary.transportation.car_rental.description': 'レンタカーでの移動',
+  'activity.secondary.transportation.ferry': 'フェリー',
+  'activity.secondary.transportation.ferry.description': '船・フェリーでの移動',
+  'activity.secondary.transportation.bike': '自転車',
+  'activity.secondary.transportation.bike.description': 'レンタサイクル',
+  'activity.secondary.transportation.scooter': 'バイク・スクーター',
+  'activity.secondary.transportation.scooter.description': 'バイク・電動スクーター',
+  'activity.secondary.transportation.gas_station': 'ガソリンスタンド',
+  'activity.secondary.transportation.gas_station.description': '給油・ガソリンスタンド',
+  'activity.secondary.transportation.toll_payment': '交通料金支払い',
+  'activity.secondary.transportation.toll_payment.description': '高速道路料金・通行料金の支払い',
+  // Shopping
+  'activity.secondary.shopping.souvenir': 'お土産購入',
+  'activity.secondary.shopping.souvenir.description': 'お土産・記念品の購入',
+  'activity.secondary.shopping.grocery': '食料品購入',
+  'activity.secondary.shopping.grocery.description': 'スーパー・コンビニでの買い物',
+  'activity.secondary.shopping.fashion': 'ファッション',
+  'activity.secondary.shopping.fashion.description': '衣類・アクセサリーの購入',
+  'activity.secondary.shopping.electronics': '電化製品',
+  'activity.secondary.shopping.electronics.description': '家電・ガジェットの購入',
+  'activity.secondary.shopping.local_market': 'ローカル市場',
+  'activity.secondary.shopping.local_market.description': '地元の市場・バザール',
+  'activity.secondary.shopping.duty_free': '免税店',
+  'activity.secondary.shopping.duty_free.description': '空港・市内の免税店',
+  'activity.secondary.shopping.bookstore': '書店',
+  'activity.secondary.shopping.bookstore.description': '書籍・雑誌の購入',
+  // Dining
+  'activity.secondary.dining.breakfast': '朝食',
+  'activity.secondary.dining.breakfast.description': 'ホテル朝食・カフェ朝食',
+  'activity.secondary.dining.lunch': '昼食',
+  'activity.secondary.dining.lunch.description': 'ランチ・軽食',
+  'activity.secondary.dining.dinner': '夕食',
+  'activity.secondary.dining.dinner.description': 'ディナー・夜のレストラン',
+  'activity.secondary.dining.cafe': 'カフェ',
+  'activity.secondary.dining.cafe.description': 'カフェ・喫茶店',
+  'activity.secondary.dining.bar': 'バー',
+  'activity.secondary.dining.bar.description': 'バー・パブ',
+  'activity.secondary.dining.food_tour': 'フードツアー',
+  'activity.secondary.dining.food_tour.description': '食べ歩き・グルメツアー',
+  'activity.secondary.dining.street_food': '屋台・ストリートフード',
+  'activity.secondary.dining.street_food.description': '屋台・フードトラック',
+  'activity.secondary.dining.fine_dining': 'ファインダイニング',
+  'activity.secondary.dining.fine_dining.description': '高級レストラン',
+  // Accommodation
+  'activity.secondary.accommodation.check_in': 'チェックイン作業',
+  'activity.secondary.accommodation.check_in.description': 'ホテル・宿泊施設のチェックイン',
+  'activity.secondary.accommodation.check_out': 'チェックアウト作業',
+  'activity.secondary.accommodation.check_out.description': 'ホテル・宿泊施設のチェックアウト',
+  'activity.secondary.accommodation.car_camping': '車中泊',
+  'activity.secondary.accommodation.car_camping.description': '車での宿泊',
+  'activity.secondary.accommodation.camping': 'キャンプ',
+  'activity.secondary.accommodation.camping.description': 'テント・キャンプ場での宿泊',
+  'activity.secondary.accommodation.hostel_stay': 'ホステル泊',
+  'activity.secondary.accommodation.hostel_stay.description': 'ホステル・ゲストハウス',
+  'activity.secondary.accommodation.airbnb': '民泊',
+  'activity.secondary.accommodation.airbnb.description': 'Airbnb・民泊施設',
+  'activity.secondary.accommodation.luxury_hotel': '高級ホテル',
+  'activity.secondary.accommodation.luxury_hotel.description': '5つ星ホテル・リゾート',
+  // Exploration
+  'activity.secondary.exploration.city_walk': '街歩き',
+  'activity.secondary.exploration.city_walk.description': '市内・町の散策',
+  'activity.secondary.exploration.nature_walk': '自然散策',
+  'activity.secondary.exploration.nature_walk.description': '公園・自然の中の散歩',
+  'activity.secondary.exploration.photography': '写真撮影',
+  'activity.secondary.exploration.photography.description': '景観・建物の撮影',
+  'activity.secondary.exploration.observation': '展望・眺望',
+  'activity.secondary.exploration.observation.description': '展望台・景色を楽しむ',
+  'activity.secondary.exploration.architecture': '建築鑑賞',
+  'activity.secondary.exploration.architecture.description': '建築物の見学',
+  'activity.secondary.exploration.park': '公園訪問',
+  'activity.secondary.exploration.park.description': '公園・庭園の訪問',
+  // Adventure
+  'activity.secondary.adventure.hiking': 'ハイキング',
+  'activity.secondary.adventure.hiking.description': '登山道・トレイルハイキング',
+  'activity.secondary.adventure.trekking': 'トレッキング',
+  'activity.secondary.adventure.trekking.description': '山岳トレッキング',
+  'activity.secondary.adventure.diving': 'ダイビング',
+  'activity.secondary.adventure.diving.description': 'スキューバダイビング',
+  'activity.secondary.adventure.snorkeling': 'シュノーケリング',
+  'activity.secondary.adventure.snorkeling.description': 'シュノーケリング',
+  'activity.secondary.adventure.rock_climbing': 'ロッククライミング',
+  'activity.secondary.adventure.rock_climbing.description': 'クライミング・ボルダリング',
+  'activity.secondary.adventure.caving': '洞窟探検',
+  'activity.secondary.adventure.caving.description': '洞窟・ケイビング',
+  'activity.secondary.adventure.safari': 'サファリ',
+  'activity.secondary.adventure.safari.description': 'サファリツアー・動物観察',
+  'activity.secondary.adventure.jungle_trek': 'ジャングルトレック',
+  'activity.secondary.adventure.jungle_trek.description': 'ジャングル・熱帯雨林の探検',
+  // Entertainment
+  'activity.secondary.entertainment.theme_park': 'テーマパーク',
+  'activity.secondary.entertainment.theme_park.description': '遊園地・テーマパーク',
+  'activity.secondary.entertainment.beach': 'ビーチ',
+  'activity.secondary.entertainment.beach.description': 'ビーチ・海水浴',
+  'activity.secondary.entertainment.water_sports': 'ウォータースポーツ',
+  'activity.secondary.entertainment.water_sports.description': 'サーフィン・カヤックなど',
+  'activity.secondary.entertainment.casino': 'カジノ',
+  'activity.secondary.entertainment.casino.description': 'カジノ・ギャンブル',
+  'activity.secondary.entertainment.nightlife': 'ナイトライフ',
+  'activity.secondary.entertainment.nightlife.description': 'ナイトクラブ・バー巡り',
+  'activity.secondary.entertainment.game_center': 'ゲームセンター',
+  'activity.secondary.entertainment.game_center.description': 'アーケード・ゲームセンター',
+  'activity.secondary.entertainment.karaoke': 'カラオケ',
+  'activity.secondary.entertainment.karaoke.description': 'カラオケ・歌',
+  'activity.secondary.entertainment.movie': '映画鑑賞',
+  'activity.secondary.entertainment.movie.description': '映画館・シネマ',
+  // Culture
+  'activity.secondary.culture.museum': '博物館',
+  'activity.secondary.culture.museum.description': '博物館・科学館',
+  'activity.secondary.culture.art_gallery': '美術館',
+  'activity.secondary.culture.art_gallery.description': '美術館・ギャラリー',
+  'activity.secondary.culture.aquarium': '水族館',
+  'activity.secondary.culture.aquarium.description': '海洋生物の展示・学習施設',
+  'activity.secondary.culture.temple_shrine': '寺社仏閣',
+  'activity.secondary.culture.temple_shrine.description': '寺院・神社・教会',
+  'activity.secondary.culture.historical_site': '歴史的建造物',
+  'activity.secondary.culture.historical_site.description': '城・遺跡・史跡',
+  'activity.secondary.culture.local_festival': '地域祭り',
+  'activity.secondary.culture.local_festival.description': '祭り・フェスティバル',
+  'activity.secondary.culture.theater': '劇場・コンサート',
+  'activity.secondary.culture.theater.description': '演劇・音楽コンサート',
+  'activity.secondary.culture.traditional_experience': '伝統文化体験',
+  'activity.secondary.culture.traditional_experience.description': '茶道・書道などの体験',
+  'activity.secondary.culture.workshop': 'ワークショップ',
+  'activity.secondary.culture.workshop.description': '工芸・アート体験',
+  // Wellness
+  'activity.secondary.wellness.spa': 'スパ',
+  'activity.secondary.wellness.spa.description': 'スパ・温泉',
+  'activity.secondary.wellness.massage': 'マッサージ',
+  'activity.secondary.wellness.massage.description': 'マッサージ・リラクゼーション',
+  'activity.secondary.wellness.yoga': 'ヨガ',
+  'activity.secondary.wellness.yoga.description': 'ヨガ・瞑想クラス',
+  'activity.secondary.wellness.gym': 'ジム',
+  'activity.secondary.wellness.gym.description': 'フィットネスジム',
+  'activity.secondary.wellness.meditation': '瞑想',
+  'activity.secondary.wellness.meditation.description': '瞑想・マインドフルネス',
+  'activity.secondary.wellness.hot_spring': '温泉',
+  'activity.secondary.wellness.hot_spring.description': '温泉・銭湯',
+  'activity.secondary.wellness.detox': 'デトックス',
+  'activity.secondary.wellness.detox.description': 'デトックス・ファスティング',
+  // Service
+  'activity.secondary.service.laundry': '洗濯',
+  'activity.secondary.service.laundry.description': 'コインランドリー・クリーニング',
+  'activity.secondary.service.currency_exchange': '両替',
+  'activity.secondary.service.currency_exchange.description': '両替所・銀行',
+  'activity.secondary.service.hospital': '病院',
+  'activity.secondary.service.hospital.description': '病院・クリニック',
+  'activity.secondary.service.visa_application': 'ビザ申請',
+  'activity.secondary.service.visa_application.description': '大使館・ビザセンター',
+  'activity.secondary.service.sim_purchase': 'SIM購入',
+  'activity.secondary.service.sim_purchase.description': 'SIMカード・通信サービス',
+  'activity.secondary.service.post_office': '郵便局',
+  'activity.secondary.service.post_office.description': '郵便・荷物発送',
+  'activity.secondary.service.atm': 'ATM',
+  'activity.secondary.service.atm.description': '現金引き出し',
+  'activity.secondary.service.baggage_storage': '荷物預け',
+  'activity.secondary.service.baggage_storage.description': 'コインロッカー・荷物預かり',
   // Currency Names
   'currency.JPY.name': '日本円',
   'currency.JPY.country': '日本',
@@ -2882,6 +3468,8 @@ const ja: Dictionary = {
   'cost.items': '件',
   'cost.total': '合計',
   'cost.hint.edit': '各スケジュールの費用をクリックして編集できます',
+  'cost.viewDetails': '明細を見る',
+  'cost.collapse': '折りたたむ',
   // Date formatting
   'date.notSet': '日付が設定されていません',
   'date.daysLater': '日後',
