@@ -1,6 +1,7 @@
 // Distance Matrix API integration utilities
 import type { DistanceMatrixResult, DistanceMatrixResponse } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
+import { t } from '@/lib/i18n'
 
 // Re-export types for backward compatibility
 export type { DistanceMatrixResult, DistanceMatrixResponse }
@@ -76,12 +77,12 @@ export const distanceApiHelpers = {
     
     if (hours >= 1) {
       if (remainingMinutes === 0) {
-        return `${hours}h`
+        return `${hours}${t('unit.hour')}`
       } else {
-        return `${hours}h${remainingMinutes}m`
+        return `${hours}${t('unit.hour')}${remainingMinutes}${t('unit.minute')}`
       }
     } else {
-      return `${minutes}分`
+      return `${minutes}${t('unit.minute')}`
     }
   },
 
