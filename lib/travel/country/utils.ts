@@ -1,8 +1,9 @@
 // 国名抽出とグループ化のユーティリティ関数
-import { PlaceData } from '@/lib/core/types'
+import { PlaceData, User } from '@/lib/core/types'
 import { geocodingApiHelpers } from '@/lib/api/google/geocoding'
 import { getCountryInfo, getCountryNameJa as getCountryNameJaFromFlags } from '@/lib/utils/country-flags'
 import logger from '@/lib/core/logger'
+import { getUserLanguage } from '@/lib/utils/language'
 
 // 国名のマッピング（英語→日本語）
 const COUNTRY_NAMES: { [key: string]: string } = {
@@ -192,19 +193,101 @@ export function extractCountryFromAddressComponents(addressComponents: Array<{
   return { countryCode: 'unknown', countryName: '不明' }
 }
 
-// 手動マッピングは不要になりました
-// Google Places API + Geocoding APIで自動的に国情報を取得します
+// 英語エイリアス辞書（必要最低限）
+// key は正規化済み（大文字・アクセント除去・トリム後）想定
+const EN_COUNTRY_ALIAS: Record<string, string> = {
+  'UNITED STATES': 'US',
+  'USA': 'US',
+  'U.S.A.': 'US',
+  'US': 'US',
+  'UNITED STATES OF AMERICA': 'US',
+  'UNITED KINGDOM': 'GB',
+  'UK': 'GB',
+  'U.K.': 'GB',
+  'GREAT BRITAIN': 'GB',
+  'ENGLAND': 'GB',
+  'SCOTLAND': 'GB',
+  'WALES': 'GB',
+  'NORTHERN IRELAND': 'GB',
+  'CZECHIA': 'CZ',
+  'CZECH REPUBLIC': 'CZ',
+  'SOUTH KOREA': 'KR',
+  'KOREA': 'KR',
+  'TURKEY': 'TR',
+  'TÜRKIYE': 'TR',
+  'COTE D\'IVOIRE': 'CI',
+  'CÔTE D\'IVOIRE': 'CI',
+  'IVORY COAST': 'CI',
+  'HONG KONG': 'HK',
+  'MACAO': 'MO',
+  'MACAU': 'MO',
+}
+
+function normalizeToken(input: string): string {
+  if (!input) return ''
+  // アクセント除去（簡易）+ 大文字化 + 句読点/余分な空白除去
+  const noDiacritics = input.normalize('NFKD').replace(/\p{Diacritic}/gu, '')
+  return noDiacritics
+    .replace(/[\u3000]/g, ' ') // 全角スペース→半角
+    .replace(/[\.,;:]+$/g, '') // 末尾句読点除去
+    .trim()
+    .toUpperCase()
+}
+
+function isEnglishFormattedAddress(address: string): boolean {
+  if (!address) return false
+  // カンマ区切りで複数トークンを想定し、ひらがな/カタカナ/漢字が含まれない
+  const hasComma = address.includes(',')
+  const hasCJK = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/.test(address)
+  return hasComma && !hasCJK
+}
+
+function extractCountryFromEnglishAddress(formattedAddress: string): { countryCode: string; countryName: string } | null {
+  if (!formattedAddress) return null
+  const parts = formattedAddress.split(',')
+  if (parts.length === 0) return null
+  const lastRaw = parts[parts.length - 1]
+  const token = normalizeToken(lastRaw)
+  if (token.length < 3) return null
+
+  // 直接エイリアス辞書を参照
+  const directCode = EN_COUNTRY_ALIAS[token]
+  if (directCode) {
+    const info = getCountryInfo(directCode)
+    return { countryCode: directCode.toLowerCase(), countryName: info?.name || token }
+  }
+
+  // COUNTRIES に英語名がある場合にマッチ（厳密一致）
+  // 国情報は country-flags 側にあるため、英語名→ISO2 の包括探索は避け、主要ケースのみ辞書で対応
+  return null
+}
 
 /**
  * Google Places APIのformatted_addressから国名を抽出する
  * Geocoding APIを使用してaddress_componentsを取得し、国情報を抽出します
  */
-export async function extractCountryFromAddress(formattedAddress: string): Promise<{ countryCode: string; countryName: string }> {
+export async function extractCountryFromAddress(formattedAddress: string, user?: User | null): Promise<{ countryCode: string; countryName: string }> {
   if (!formattedAddress) {
     return { countryCode: 'unknown', countryName: '不明' }
   }
 
   logger.debug('extractCountryFromAddress input:', formattedAddress)
+
+  // 英語ロケール時のみ、文字列パースの軽量ヒューリスティックを先行適用
+  try {
+    const lang = getUserLanguage(user || undefined)
+    if (lang === 'en' && isEnglishFormattedAddress(formattedAddress)) {
+      const parsed = extractCountryFromEnglishAddress(formattedAddress)
+      if (parsed && parsed.countryCode !== 'unknown') {
+        logger.debug('Found country via EN string parsing:', parsed)
+        return parsed
+      } else {
+        logger.debug('EN string parsing failed; falling back to Geocoding API')
+      }
+    }
+  } catch (e) {
+    logger.debug('Locale check/string parsing skipped due to error:', e)
+  }
 
   try {
     // Geocoding APIを使用してaddress_componentsを取得

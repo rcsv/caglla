@@ -8,6 +8,7 @@ import { placesApiHelpers } from '@/lib/api/google/places'
 import { PlaceData, Itinerary, ActivityTag, ReservationInfo, Day, Trip } from '@/lib/core/types'
 import { timezoneUtils } from '@/lib/utils/timezone'
 import { currencyUtils } from '@/lib/utils/currency'
+import { getUserLanguage } from '@/lib/utils/language'
 import { useAuth } from '@/lib/contexts/auth'
 import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
 import ActivityTagSelector from './ActivityTagSelector'
@@ -84,13 +85,14 @@ export default function ScheduleCard({
   const [destinationTimezone, setDestinationTimezone] = useState('UTC')
   const [isEditingCost, setIsEditingCost] = useState(false)
   const [tempCostAmount, setTempCostAmount] = useState(itinerary.cost_amount?.toString() || '')
-  const [tempCostCurrency, setTempCostCurrency] = useState(itinerary.cost_currency || 'JPY')
+  const [tempCostCurrency, setTempCostCurrency] = useState(itinerary.cost_currency || trip?.default_currency || 'JPY')
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const [cachedImage, setCachedImage] = useState<CachedImageInfo | null>(null)
   const [imageLoading, setImageLoading] = useState(false)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [showReservationModal, setShowReservationModal] = useState(false)
+  const [isFetchingPlaceData, setIsFetchingPlaceData] = useState(false)
 
   // useItineraryEditorフックを使用
   const { updateField, updateFields, isSaving } = useItineraryEditor(itinerary, onUpdate)
@@ -111,7 +113,8 @@ export default function ScheduleCard({
     } else {
       setDescription(itinerary.description || '')
     }
-  }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.description, itinerary.place_data?.editorial_summary?.overview, itinerary.timezone])
+    setTempCostCurrency(itinerary.cost_currency || trip?.default_currency || 'JPY')
+  }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.description, itinerary.place_data?.editorial_summary?.overview, itinerary.timezone, itinerary.cost_currency, trip?.default_currency])
 
   useEffect(() => {
     if (itinerary.place_data) {
@@ -123,20 +126,35 @@ export default function ScheduleCard({
     }
   }, [itinerary.place_data?.place_id, itinerary.place_data])
 
+  // place_data が未設定だが place_id がある場合は、詳細を取得して保存する
   useEffect(() => {
-    if (itinerary.place_data && !itinerary.cost_currency) {
-      // 階層的なフォールバック戦略で通貨を推測（CodeRabbit提案）
-      const result = currencyUtils.getCurrencyFromPlaceEnhanced(
-        itinerary.place_data,
-        trip || null,
-        user || null
-      )
-      if (result.currency !== 'JPY') {
-        setTempCostCurrency(result.currency)
-        logger.debug(`Currency auto-detected: ${result.currency} (source: ${result.source}, confidence: ${result.confidence})`)
+    const ensurePlaceData = async () => {
+      // 既に取得中、または place_data が存在する場合はスキップ
+      if (isFetchingPlaceData || itinerary.place_data || !(itinerary as any).place_id) {
+        return
+      }
+
+      const placeId = (itinerary as any).place_id as string
+      setIsFetchingPlaceData(true)
+      logger.debug('📦 ScheduleCard: Fetching place details for missing place_data', { placeId })
+      
+      try {
+        const language = getUserLanguage(user || undefined)
+        const result = await placesApiHelpers.getPlaceDetails(placeId, language)
+        if (result?.place_id) {
+          await updateField('place_data', result as any)
+          logger.debug('📦 ScheduleCard: place_data resolved and saved')
+        }
+      } catch (e) {
+        logger.error('📦 ScheduleCard: ensurePlaceData error', e)
+      } finally {
+        setIsFetchingPlaceData(false)
       }
     }
-  }, [itinerary.place_data?.place_id, itinerary.cost_currency, itinerary.place_data, trip, user])
+    ensurePlaceData()
+  }, [(itinerary as any).place_id, itinerary.place_data?.place_id, isFetchingPlaceData, user])
+
+  // 通貨推測ロジックは削除（Create Trip Dialogで目的地選択時に通貨を自動推定する方式に変更）
 
   useEffect(() => {
     const loadImage = async () => {

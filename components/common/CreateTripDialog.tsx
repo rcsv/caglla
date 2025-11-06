@@ -9,6 +9,9 @@ import { imageUploadHelpers } from '@/lib/storage/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
 import { PlaceData } from '@/lib/core/types'
 import { useUserData } from '@/lib/contexts/user-data'
+import { placesApiHelpers } from '@/lib/api/google/places'
+import { getCurrencyByCountryCode } from '@/lib/core/locations'
+import { currencyUtils } from '@/lib/utils/currency'
 import { RestrictionProvider, RestrictionType } from '@/lib/subscription/restriction'
 import { getZIndexClass } from '@/lib/core/z-index'
 import { Input } from '@/components/common/Input'
@@ -55,13 +58,16 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     startDate: '',
     endDate: '',
     accessLevel: 'public' as 'private' | 'public',
-    imageUrl: ''
+    imageUrl: '',
+    defaultCurrency: 'JPY' as string
   })
   const [submitting, setSubmitting] = useState(false)
   const [dateError, setDateError] = useState('')
   const [dateAutoAdjusted, setDateAutoAdjusted] = useState(false)
   const [isLoadingUnsplashImage, setIsLoadingUnsplashImage] = useState(false)
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
+  const [isInferringCurrency, setIsInferringCurrency] = useState(false)
+  const [inferredCurrency, setInferredCurrency] = useState<string | null>(null)
 
   // RestrictionProviderを使用してプラン制限をチェック
   const canCreateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRIPS, tripCount + 1)
@@ -101,6 +107,51 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       return () => clearTimeout(timeoutId)
     }
   }, [formData.destination, formData.imageUrl])
+
+  // 目的地が選択された時に通貨を自動推定
+  useEffect(() => {
+    const inferCurrencyFromDestination = async () => {
+      if (!formData.destinationPlace?.place_id || isInferringCurrency) {
+        return
+      }
+
+      setIsInferringCurrency(true)
+      try {
+        const language = getUserLanguage(user || undefined)
+        const placeDetails = await placesApiHelpers.getPlaceDetails(
+          formData.destinationPlace.place_id,
+          language
+        )
+
+        // address_componentsから国コードを取得
+        const countryCode = placeDetails.address_components?.find(
+          (component) => component.types.includes('country')
+        )?.short_name
+
+        if (countryCode) {
+          const currency = getCurrencyByCountryCode(countryCode)
+          if (currency) {
+            logger.debug('Currency inferred from destination:', { countryCode, currency })
+            setFormData(prev => ({ ...prev, defaultCurrency: currency }))
+            setInferredCurrency(currency)
+          } else {
+            logger.debug('Currency not found for country code:', countryCode)
+            setInferredCurrency(null)
+          }
+        } else {
+          logger.debug('Country code not found in address_components')
+          setInferredCurrency(null)
+        }
+      } catch (error) {
+        logger.error('Error inferring currency from destination:', error)
+        setInferredCurrency(null)
+      } finally {
+        setIsInferringCurrency(false)
+      }
+    }
+
+    inferCurrencyFromDestination()
+  }, [formData.destinationPlace?.place_id, user])
 
   // 旅行日数の計算
   const calculateTravelDays = (startDate: string, endDate: string): number => {
@@ -174,6 +225,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
           endDate: formData.endDate,
           accessLevel: formData.accessLevel,
           imageUrl: formData.imageUrl || null,
+          defaultCurrency: formData.defaultCurrency,
         }),
       })
 
@@ -286,8 +338,10 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       startDate: '',
       endDate: '',
       accessLevel: 'public',
-      imageUrl: ''
+      imageUrl: '',
+      defaultCurrency: 'JPY'
     })
+    setInferredCurrency(null)
     setDateError('')
     onClose()
   }
@@ -316,11 +370,17 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 </label>
                 <PlaceSearchInput
                   currentPlace={formData.destinationPlace}
-                  onPlaceSelect={(place: PlaceData | null) => setFormData(prev => ({ 
-                    ...prev, 
-                    destinationPlace: place || undefined,
-                    destination: place?.name || '' // 後方互換性のため
-                  }))}
+                  onPlaceSelect={(place: PlaceData | null) => {
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      destinationPlace: place || undefined,
+                      destination: place?.name || '' // 後方互換性のため
+                    }))
+                    // 目的地が変更されたら推定結果をリセット
+                    if (!place) {
+                      setInferredCurrency(null)
+                    }
+                  }}
                   placeholder={t('trip.create.destination.placeholder')}
                   disabled={submitting}
                 />
@@ -328,6 +388,21 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                   <p className="mt-2 text-sm text-gray-500">
                     <span className="text-red-600 mr-1">*</span>{t('trip.create.destination.hint')}
                   </p>
+                )}
+                {/* 通貨推定の状態表示 */}
+                {formData.destinationPlace && (
+                  <div className="mt-2">
+                    {isInferringCurrency ? (
+                      <div className="flex items-center text-sm text-blue-600">
+                        <Loading inline size="sm" color="blue" />
+                        <span className="ml-2">推測中...</span>
+                      </div>
+                    ) : inferredCurrency ? (
+                      <div className="text-sm text-green-600">
+                        <span>✓ 通貨を自動検出: {currencyUtils.getCurrencyInfo(inferredCurrency).symbol} {inferredCurrency}</span>
+                      </div>
+                    ) : null}
+                  </div>
                 )}
               </div>
 
@@ -492,6 +567,51 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                           ? t('trip.create.accessLevel.private.description')
                           : t('trip.create.accessLevel.public.description')
                         }
+                      </p>
+                    </div>
+
+                    <div>
+                      <label htmlFor="defaultCurrency" className="block text-sm font-medium text-gray-700 mb-2">
+                        Default Currency
+                      </label>
+                      <Select
+                        id="defaultCurrency"
+                        name="defaultCurrency"
+                        value={formData.defaultCurrency}
+                        onChange={(e) => {
+                          setFormData(prev => ({
+                            ...prev,
+                            defaultCurrency: e.target.value
+                          }))
+                        }}
+                        disabled={submitting}
+                      >
+                        {/* 主要通貨を優先表示 */}
+                        <optgroup label="主要通貨">
+                          <option value="USD">$ USD (US Dollar)</option>
+                          <option value="EUR">€ EUR (Euro)</option>
+                          <option value="JPY">¥ JPY (Japanese Yen)</option>
+                          <option value="GBP">£ GBP (British Pound)</option>
+                          <option value="CNY">¥ CNY (Chinese Yuan)</option>
+                          <option value="KRW">₩ KRW (South Korean Won)</option>
+                          <option value="AUD">A$ AUD (Australian Dollar)</option>
+                          <option value="CAD">C$ CAD (Canadian Dollar)</option>
+                          <option value="CHF">CHF (Swiss Franc)</option>
+                          <option value="SGD">S$ SGD (Singapore Dollar)</option>
+                        </optgroup>
+                        <optgroup label="その他の通貨">
+                          {currencyUtils.getAvailableCurrencies()
+                            .filter(c => !['USD', 'EUR', 'JPY', 'GBP', 'CNY', 'KRW', 'AUD', 'CAD', 'CHF', 'SGD'].includes(c.code))
+                            .sort((a, b) => a.code.localeCompare(b.code))
+                            .map(currency => (
+                              <option key={currency.code} value={currency.code}>
+                                {currency.symbol} {currency.code}
+                              </option>
+                            ))}
+                        </optgroup>
+                      </Select>
+                      <p className="mt-1 text-xs text-gray-500">
+                        この旅行のデフォルト通貨を設定します。旅程の費用入力時に自動的に使用されます。
                       </p>
                     </div>
                   </div>

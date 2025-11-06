@@ -198,19 +198,44 @@ export const currencyUtils = {
     user?: User | null,
     userId?: string
   ): { currency: string; source: 'venue' | 'city' | 'trip_place' | 'trip_destination' | 'user' | 'default'; confidence: 'high' | 'medium' | 'low' } => {
+    logger.debug('🔍 getCurrencyFromPlaceEnhanced called', {
+      hasPlaceData: !!placeData,
+      hasAddressComponents: !!placeData?.address_components,
+      hasTrip: !!trip,
+      hasUser: !!user,
+      placeName: placeData?.name,
+      formattedAddress: placeData?.formatted_address
+    })
+
     // 1. Venueのplace_dataから国コードを取得
     if (placeData?.address_components) {
       const countryCode = placeData.address_components.find(
         (component) => component.types.includes('country')
       )?.short_name
 
+      logger.debug('📍 Step 1: Checking venue address_components', {
+        hasAddressComponents: true,
+        countryCode: countryCode || 'not found',
+        allComponents: placeData.address_components.map(c => ({ types: c.types, short_name: c.short_name }))
+      })
+
       if (countryCode) {
         const currency = getCurrencyByCountryCode(countryCode)
+        logger.debug('💰 Step 1: getCurrencyByCountryCode result', {
+          countryCode,
+          currency: currency || 'null (not found in COUNTRIES map)'
+        })
         if (currency) {
-          logger.debug(`Currency inferred from venue country: ${countryCode} -> ${currency}`)
+          logger.debug(`✅ Currency inferred from venue country: ${countryCode} -> ${currency}`)
           return { currency, source: 'venue', confidence: 'high' }
+        } else {
+          logger.debug(`⚠️ Country code ${countryCode} found but no currency mapping exists`)
         }
+      } else {
+        logger.debug('⚠️ Step 1: No country component found in address_components')
       }
+    } else {
+      logger.debug('⚠️ Step 1: No address_components available')
     }
 
     // 2. City名から推測
@@ -266,7 +291,13 @@ export const currencyUtils = {
     }
 
     // 6. デフォルト（JPY）
-    logger.debug('Currency inference failed, using default: JPY')
+    logger.debug('❌ Currency inference failed at all steps, using default: JPY', {
+      triedVenue: !!placeData?.address_components,
+      triedCity: !!placeData,
+      triedTripPlace: !!trip?.destination_place?.address_components,
+      triedTripDestination: !!trip?.destination,
+      triedUser: !!user?.preferences?.home_country_code
+    })
     return { currency: 'JPY', source: 'default', confidence: 'low' }
   },
 

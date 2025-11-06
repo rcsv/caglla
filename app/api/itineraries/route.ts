@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     const userId = decodedToken.uid
 
-    const { day_id, place_id, place_data, title, description, location } = await request.json()
+    const { day_id, place_id, place_data, title, description, location, cost_currency } = await request.json()
 
     if (!day_id || !title || (!place_id && !place_data?.place_id)) {
       return NextResponse.json(
@@ -72,7 +72,10 @@ export async function POST(request: NextRequest) {
     const nextSortNumber = existingItineraries.empty ? 1 : (existingItineraries.docs[0].data().sort_number || 0) + 1
 
     // 保存データ: place_id のみを保持（place_dataはキャッシュ参照）
-    const itineraryData = {
+    // cost_currencyが未設定の場合、Tripのdefault_currencyを使用
+    const finalCostCurrency = cost_currency || tripData?.default_currency || undefined
+    
+    const itineraryData: any = {
       day_id,
       sort_number: nextSortNumber,
       title,
@@ -82,6 +85,10 @@ export async function POST(request: NextRequest) {
       created_at: new Date(),
       updated_at: new Date()
     }
+    
+    if (finalCostCurrency) {
+      itineraryData.cost_currency = finalCostCurrency
+    }
 
     // Firestoreに保存
     const docRef = await itinerariesRef.add(itineraryData)
@@ -89,8 +96,18 @@ export async function POST(request: NextRequest) {
     // place_cache から実体を解決（存在しなければ、リクエストのplace_dataをそのまま返す）
     let resolvedPlaceData: PlaceData | null = null
     try {
-      const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).get()
-      if (cacheDoc.exists) {
+      // v2フォーマット({place_id}_{language})優先で検索し、最後に旧フォーマット(place_id)を試す
+      const candidateKeys: string[] = [
+        `${resolvedPlaceId}_en`,
+        `${resolvedPlaceId}_ja`, // user getUserLanguage() の結果に基づいて習得しないと、結局国判別パーサうまく動かないよね。
+        resolvedPlaceId
+      ]
+      let cacheDoc: FirebaseFirestore.DocumentSnapshot | null = null
+      for (const key of candidateKeys) {
+        const snap = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(key).get()
+        if (snap.exists) { cacheDoc = snap; break }
+      }
+      if (cacheDoc && cacheDoc.exists) {
         const placesCache = cacheDoc.data() as PlacesCache
         // PlacesCacheからPlaceDataに変換（メタデータを除外）
         resolvedPlaceData = {
@@ -120,9 +137,8 @@ export async function POST(request: NextRequest) {
         
         // 新形式でのキャッシュ保存（言語対応）
         try {
-          // TODO: ユーザーの言語設定を取得する必要がある
-          // 現在は日本語として保存（後でユーザー言語設定に対応）
-          const language: SupportedLanguage = 'ja' // 暫定：日本語
+          // 現状は英語優先、将来ユーザー言語に対応
+          const language: SupportedLanguage = 'en'
           
           const cachePayload: PlacesCacheInput = {
             format_version: '2.0.0', // 新バージョン
@@ -182,15 +198,15 @@ export async function POST(request: NextRequest) {
           const resp = await fetch(`http://127.0.0.1:3000/api/places/details`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ placeId: resolvedPlaceId })
+            body: JSON.stringify({ placeId: resolvedPlaceId, language: 'en' })
           })
           if (resp.ok) {
             const data = await resp.json()
             const result = data.result
             const cachePayload: PlacesCacheInput = {
-              format_version: '1.0.0',
+              format_version: '2.0.0',
               place_id: result.place_id,
-              language: 'ja', // v1.0.0互換性のためデフォルト値
+              language: 'en',
               name: result.name,
               formatted_address: result.formatted_address,
               vicinity: result.vicinity,
@@ -210,8 +226,9 @@ export async function POST(request: NextRequest) {
             if (result.website) cachePayload.website = result.website
             if (result.editorial_summary) cachePayload.editorial_summary = result.editorial_summary
             
-            await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(resolvedPlaceId).set(cachePayload)
-            logger.debug('Successfully saved to PlacesCache from API')
+            const cacheKey = `${resolvedPlaceId}_en`
+            await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(cacheKey).set(cachePayload)
+            logger.debug('Successfully saved to PlacesCache from API (NEW FORMAT)', { cacheKey })
             
             // PlaceDataとして返す（メタデータを除外）
             resolvedPlaceData = {

@@ -135,7 +135,8 @@ export async function POST(request: NextRequest) {
       startDate,
       endDate,
       accessLevel = 'private',
-      imageUrl
+      imageUrl,
+      defaultCurrency
     } = body
 
     // タイトルが空の場合は目的地を使用
@@ -203,6 +204,7 @@ export async function POST(request: NextRequest) {
     if (startDate) tripData.start_date = new Date(startDate)
     if (endDate) tripData.end_date = new Date(endDate)
     if (finalImageUrl) tripData.image_url = finalImageUrl
+    if (defaultCurrency) tripData.default_currency = defaultCurrency
 
     const trip = await adminTripOperations.createTrip(tripData)
 
