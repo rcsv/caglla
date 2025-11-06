@@ -73,7 +73,7 @@ export default function TripSummaryView({
             {/* 3. Budget - 旅行費用の管理 */}
             <div id="budget" className="anchor-offset">
               <h3 className="text-lg font-medium text-gray-700 mb-4">Budget</h3>
-              <TripCostDisplay itineraries={getAllItineraries()} />
+              <TripCostDisplay itineraries={getAllItineraries()} days={trip.days} />
             </div>
 
             {/* 4. Activity Statistics - アクティビティタグの統計 */}
