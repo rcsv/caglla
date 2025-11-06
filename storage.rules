@@ -43,14 +43,19 @@ service firebase.storage {
             && get(/databases/(default)/documents/trips/$(tripId)).data.access_level == 'public');
       
       // 作成・更新（アップロード／上書き）: tripの所有者のみ
-      // 注意: trips.user_idはusersドキュメントIDを保存しているため、
-      // usersコレクションからgoogle_id == request.auth.uidのドキュメントを取得して比較
-      allow create, update: if request.auth != null
-        && exists(/databases/(default)/documents/trips/$(tripId))
+      // 重要: createとupdateを分ける必要がある
+      // - create時: 初回アップロード時はFirestoreドキュメントの存在チェックが不要
+      // - update時: 既存ファイルの更新時はFirestoreドキュメントの存在確認が必要
+      allow create: if request.auth != null
+        && isValidFileType()
+        && isUnderFileSizeLimit()
+        && ( !QUOTA_ENFORCED() || isUnderUserStorageQuota(request.auth.uid) );
+      
+      allow update: if request.auth != null
+        && get(/databases/(default)/documents/trips/$(tripId)).exists
         && isTripOwner(request.auth.uid, get(/databases/(default)/documents/trips/$(tripId)).data.user_id)
         && isValidFileType()
         && isUnderFileSizeLimit()
-        // 機能フラグが false の間は isUnderUserStorageQuota は呼ばれない（短絡評価）
         && ( !QUOTA_ENFORCED() || isUnderUserStorageQuota(get(/databases/(default)/documents/trips/$(tripId)).data.user_id) );
       
       // 削除: tripの所有者のみ
@@ -68,11 +73,10 @@ service firebase.storage {
     // ------------- 共通ユーティリティ -------------
 
     // Tripの所有権を確認
-    // trips.user_idはusersドキュメントIDを保存しているため、
-    // usersドキュメントのgoogle_idとrequest.auth.uidを比較
-    function isTripOwner(authUid, userIdDocId) {
-      let userDoc = get(/databases/(default)/documents/users/$(userIdDocId));
-      return userDoc.exists() && userDoc.data.google_id == authUid;
+    // trips.user_idはFirebase Auth UID（users.google_id）を保存しているため、
+    // request.auth.uidと直接比較
+    function isTripOwner(authUid, tripUserId) {
+      return authUid == tripUserId;
     }
 
     // contentType の緩チェック（最終的にはサーバー側でも検証推奨）

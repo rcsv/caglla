@@ -126,13 +126,29 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
       if (response.ok) {
         // 古い画像を削除（新しい画像がアップロードされた場合）
         if (originalImageUrl && originalImageUrl !== formData.imageUrl) {
+          logger.info('Attempting to delete old image:', {
+            originalImageUrl,
+            newImageUrl: formData.imageUrl,
+            tripId: trip.id
+          })
           try {
             await imageUploadHelpers.deleteImage(originalImageUrl)
-            logger.debug('Old image deleted:', originalImageUrl)
+            logger.info('Successfully deleted old image:', originalImageUrl)
           } catch (error) {
-            logger.error('Failed to delete old image:', error)
-            // エラーが発生しても処理は続行
+            logger.error('Failed to delete old image:', {
+              error,
+              originalImageUrl,
+              newImageUrl: formData.imageUrl,
+              tripId: trip.id
+            })
+            // エラーが発生しても処理は続行（新規画像のアップロードは成功しているため）
           }
+        } else {
+          logger.debug('No old image to delete:', {
+            originalImageUrl,
+            newImageUrl: formData.imageUrl,
+            urlsMatch: originalImageUrl === formData.imageUrl
+          })
         }
 
         // 最新のtripデータを取得

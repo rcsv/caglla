@@ -2,23 +2,27 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app'
 import logger from '@/lib/core/logger'
 import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
+import { getStorage } from 'firebase-admin/storage'
 
 // Firebase Admin SDK の初期化（厳格なエラーハンドリング）
 let firebaseAdminConfig: any
 let app: any
 let adminDb: any
 let adminAuth: any
+let adminStorage: any
 
 try {
   // 環境変数の直接取得（fallbackあり）
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
   const privateKey = process.env.FIREBASE_PRIVATE_KEY
+  const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
   
   logger.debug('🔍 Checking environment variables...')
   logger.debug(`Project ID: ${projectId ? 'Set' : 'Missing'}`)
   logger.debug(`Client Email: ${clientEmail ? 'Set' : 'Missing'}`)
   logger.debug(`Private Key: ${privateKey ? 'Set' : 'Missing'}`)
+  logger.debug(`Storage Bucket: ${storageBucket ? 'Set' : 'Missing'}`)
   
   if (!projectId || !clientEmail || !privateKey) {
     const missing = []
@@ -36,12 +40,16 @@ try {
       clientEmail: clientEmail,
       privateKey: privateKey.replace(/\\n/g, '\n'),
     }),
+    // Storage Bucketを明示的に指定
+    storageBucket: storageBucket || `${projectId}.appspot.com`,
   }
   
   // 既に初期化されている場合は既存のアプリを使用
   app = getApps().length === 0 ? initializeApp(firebaseAdminConfig) : getApps()[0]
   adminDb = getFirestore(app)
   adminAuth = getAuth(app)
+  // Storage BucketはfirebaseAdminConfigのstorageBucketで設定済み
+  adminStorage = getStorage(app)
   
   logger.debug('✅ Firebase Admin SDK initialized successfully')
 } catch (error) {
@@ -65,5 +73,5 @@ export async function verifyIdToken(token: string) {
 }
 
 // Firestore Admin インスタンス
-export { adminDb, adminAuth }
+export { adminDb, adminAuth, adminStorage }
 export default app

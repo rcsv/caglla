@@ -25,11 +25,14 @@ import TripRightPane from '@/components/trip/TripRightPane'
 import TripEditor from '@/components/trip/TripEditor'
 import { getCachedPlaces } from '@/lib/travel/places-cache'
 import { useUserData } from '@/lib/contexts/user-data'
+import { useSubscription } from '@/lib/contexts/subscription'
 import { exportTripToPdf, canExportToPdf } from '@/lib/utils/export-helpers'
 
 export default function SlugBasedTripPage() {
   const { user, loading, logout } = useAuth()
   const { removeTrip, userData } = useUserData()
+  const { subscriptionStatus } = useSubscription()
+  const userPlan = subscriptionStatus.plan?.id || 'season_traveler'
   const router = useRouter()
   const { userSlug, tripSlug } = useParams<{ userSlug: string; tripSlug: string }>()
   const searchParams = useSearchParams()
@@ -1130,6 +1133,7 @@ export default function SlugBasedTripPage() {
           label: t('trip.calendarPublish'),
           icon: 'mdi:calendar-sync',
           onClick: () => setShowICalPublishModal(true),
+          disabled: userPlan === 'season_traveler',
         },
         {
           id: 'travel-book-preview',
