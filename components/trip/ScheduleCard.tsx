@@ -24,6 +24,7 @@ import { InlineTimeEditor } from '../common/InlineTimeEditor'
 import { InlineCostEditor } from '../common/InlineCostEditor'
 import { ScheduleInfoDisplay } from './ScheduleInfoDisplay'
 import { ScheduleCardImage } from './ScheduleCardImage'
+import { getSecondaryCategoryIconName } from '@/lib/data/activity-categories'
 
 interface ScheduleCardProps {
   itinerary: Itinerary
