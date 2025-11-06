@@ -390,9 +390,6 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
     setShowImageGallery(false)
   }
 
-  // ユーザーの言語設定を取得
-  const language = getUserLanguage(user)
-  
   // 営業時間の解析（言語設定を渡す）
   const openingHoursInfo = parseOpeningHours(placeDetails?.opening_hours?.weekday_text, language)
   
@@ -610,7 +607,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                       </span>
                       {placeDetails.user_ratings_total && (
                         <span className="text-gray-500 text-xs">
-                          ({placeDetails.user_ratings_total.toLocaleString()})
+                          ({t('poi.reviewCount', language).replace('{count}', placeDetails.user_ratings_total.toLocaleString())})
                         </span>
                       )}
                     </div>
