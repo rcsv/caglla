@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { t } from '@/lib/i18n'
 
 type LoadingSize = 'sm' | 'md' | 'lg'
@@ -60,8 +60,22 @@ export const Loading: React.FC<LoadingProps> = ({
   className,
   ...rest
 }) => {
-  // messageが指定されない場合は、i18n化されたデフォルトメッセージを使用
-  const displayMessage = message || (inline ? undefined : t('loading.message'))
+  // ハイドレーションエラーを防ぐため、クライアント側でのみ言語設定を取得
+  const [mounted, setMounted] = useState(false)
+  const [displayMessage, setDisplayMessage] = useState<string | undefined>(undefined)
+
+  useEffect(() => {
+    setMounted(true)
+    // クライアント側でのみi18nメッセージを取得
+    if (!message && !inline) {
+      setDisplayMessage(t('loading.message'))
+    } else if (message) {
+      setDisplayMessage(message)
+    }
+  }, [message, inline])
+
+  // サーバー側レンダリング時はメッセージを表示しない（ハイドレーションエラーを防ぐ）
+  const finalMessage = mounted ? displayMessage : message
   
   // インライン表示の場合は、centerとfullScreenを無視
   const containerClass = inline
@@ -83,7 +97,7 @@ export const Loading: React.FC<LoadingProps> = ({
     return (
       <span className={containerClass} {...rest}>
         <div className={`animate-spin rounded-full ${borderColorClass} border-gray-200 ${inlineSizeClass(size)}`}></div>
-        {displayMessage && <span className="text-sm text-gray-600">{displayMessage}</span>}
+        {finalMessage && <span className="text-sm text-gray-600">{finalMessage}</span>}
       </span>
     )
   }
@@ -93,7 +107,7 @@ export const Loading: React.FC<LoadingProps> = ({
     <div className={containerClass} {...rest}>
       <div className="text-center">
         <div className={`animate-spin rounded-full mx-auto ${borderColorClass} border-gray-200 ${sizeClass(size)}`}></div>
-        {displayMessage && <p className="mt-4 text-gray-600">{displayMessage}</p>}
+        {finalMessage && <p className="mt-4 text-gray-600">{finalMessage}</p>}
       </div>
     </div>
   )
