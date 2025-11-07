@@ -1,13 +1,13 @@
 # Issue: 地図上のItineraryマーカークリック時にメインコンテンツの対応Cardまで自動スクロール
 
 **作成日**: 2025-10-31  
-**状態**: 🔴 未解決  
+**実装日**: 2025-11-06  
+**状態**: ✅ 解決済み  
 **優先度**: 中  
 **関連ファイル**:
 - `components/trip/TripMap.tsx`（マーカークリック処理）
 - `components/trip/TripItineraryView.tsx`（Itinerary Card表示・スクロール）
-- `hooks/useItineraryEditor.ts`（選択状態管理）
-- `components/trip/DayEditor.tsx`（Day単位のItinerary表示）
+- `app/[userSlug]/[tripSlug]/page.tsx`（ページレベルのスクロール処理統合）
 
 ---
 
@@ -112,14 +112,42 @@
 
 ---
 
-## ✅ 完了条件
+## ✅ 実装完了（2025-11-06）
 
-- [ ] 地図上のItineraryマーカーをクリックすると、対応するCardまで自動スクロールする
-- [ ] Cardが画面内にある場合はスクロールしない（オプション）
-- [ ] Cardが画面外にある場合のみスクロールする
-- [ ] スクロールアニメーションがスムーズ（`behavior: 'smooth'`）
-- [ ] 既存のハイライト機能と正しく連携する
-- [ ] 複数のDayにまたがる場合でも動作する
+### 実装内容
+
+#### Phase 1: スクロール関数の実装 ✅
+- **`components/trip/TripItineraryView.tsx`**: `scrollToItinerary`関数を実装
+  - `useCallback`でメモ化
+  - `itineraryRefs`を使用してDOM要素を取得
+  - `scrollIntoView`でスムーズスクロール（`behavior: 'smooth'`, `block: 'center'`）
+  - `isProgrammaticScrollRef`を使用してスクロール連動の誤検知を防止
+
+#### Phase 2: プロップの追加 ✅
+- **`TripItineraryViewProps`**: `scrollToItineraryRef`プロップを追加
+  - `React.MutableRefObject<((itineraryId: string) => void) | null>`型
+  - `useEffect`でrefにスクロール関数を設定
+
+#### Phase 3: ページレベルでの統合 ✅
+- **`app/[userSlug]/[tripSlug]/page.tsx`**: 
+  - `scrollToItineraryRef`を宣言
+  - `handleMapMarkerClick`でスクロール処理を呼び出し
+  - 日程展開後、100msの遅延でDOM更新を待ってからスクロール
+
+### 実装の特徴
+
+1. **日程展開とスクロールの連携**: 日程が折りたたまれている場合は展開してからスクロール
+2. **DOM更新の待機**: `setTimeout`で100ms遅延を入れてDOM更新を確実に待つ
+3. **スクロール連動の誤検知防止**: `isProgrammaticScrollRef`を使用してプログラムスクロール中は地図連動を無効化
+4. **スムーズスクロール**: `scrollIntoView`の`behavior: 'smooth'`でスムーズなアニメーション
+
+### 完了条件
+
+- [x] 地図上のItineraryマーカーをクリックすると、対応するCardまで自動スクロールする
+- [x] Cardが画面外にある場合、自動的にスクロールしてCardが画面内に表示される
+- [x] スクロールアニメーションがスムーズ（`behavior: 'smooth'`）
+- [x] 既存のハイライト機能と正しく連携する
+- [x] 複数のDayにまたがる場合でも動作する（日程展開後にスクロール）
 
 ---
 

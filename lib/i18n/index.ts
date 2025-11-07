@@ -966,6 +966,8 @@ export type TranslationKey =
   | 'distance.perSegment'
   | 'distance.perTimeSegment'
   | 'distance.hint.details'
+  | 'distance.openTransit'
+  | 'distance.openTransitUnavailable'
   // Travel Cost Display
   | 'cost.title'
   | 'cost.empty'
@@ -1777,6 +1779,8 @@ const en: Dictionary = {
   'distance.perSegment': '/segment',
   'distance.perTimeSegment': ' min/segment',
   'distance.hint.details': 'You can check detailed distance and time between venues in the schedule',
+  'distance.openTransit': 'Open in Google Transit',
+  'distance.openTransitUnavailable': 'Transit link unavailable (missing location information)',
   // Navigation
   'nav.summary': 'Summary',
   'nav.itinerary': 'Itinerary',
@@ -3065,6 +3069,8 @@ const ja: Dictionary = {
   'distance.perSegment': '/区間',
   'distance.perTimeSegment': '分/区間',
   'distance.hint.details': '各Venue間の詳細な距離・時間はスケジュール内で確認できます',
+  'distance.openTransit': 'Google Transitで開く',
+  'distance.openTransitUnavailable': '場所情報が不足しているためTransitリンクは利用できません',
   // Navigation
   'nav.summary': '概要',
   'nav.itinerary': '日程',

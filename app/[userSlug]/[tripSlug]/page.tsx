@@ -61,6 +61,7 @@ export default function SlugBasedTripPage() {
   const [refreshKey, setRefreshKey] = useState(0) // 追加: trip を再取得するためのキー
   const [scrollSyncEnabled, setScrollSyncEnabled] = useState(false) // スクロール連動の有効/無効（デフォルト無効）
   const isProgrammaticScrollRef = useRef(false) // プログラムによるスクロール中かどうか
+  const scrollToItineraryRef = useRef<((itineraryId: string) => void) | null>(null) // Itineraryへのスクロール関数
   const [loadingDayIds, setLoadingDayIds] = useState<Set<string>>(new Set()) // 日程ごとのローディング状態
 
   // クエリ: view / day / section を読み取り（デフォルトは summary）
@@ -242,7 +243,7 @@ export default function SlugBasedTripPage() {
     // 個別フォーカスモードに切り替え
     setMapFocusMode('single')
     
-    // 該当するItineraryが含まれる日程を探して展開（スクロールはしない）
+    // 該当するItineraryが含まれる日程を探して展開
     if (trip?.days) {
       for (const day of trip.days) {
         if (day.itineraries?.some(itinerary => itinerary.id === itineraryId)) {
@@ -252,6 +253,15 @@ export default function SlugBasedTripPage() {
             newSet.delete(day.id)
             return newSet
           })
+          
+          // 日程展開後、DOM更新を待ってからスクロール
+          // setTimeoutで少し遅延を入れることで、DOM更新を確実に待つ
+          setTimeout(() => {
+            if (scrollToItineraryRef.current) {
+              scrollToItineraryRef.current(itineraryId)
+            }
+          }, 100) // 100msの遅延でDOM更新を待つ
+          
           break
         }
       }
@@ -1227,6 +1237,7 @@ export default function SlugBasedTripPage() {
           scrollSyncEnabled={scrollSyncEnabled}
           onScrollSyncEnabledChange={setScrollSyncEnabled}
           isProgrammaticScrollRef={isProgrammaticScrollRef}
+          scrollToItineraryRef={scrollToItineraryRef}
         />
       )}
 

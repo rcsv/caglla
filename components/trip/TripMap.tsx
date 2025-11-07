@@ -128,6 +128,7 @@ export default function TripMap({
   } | null>(null)
   const [searchMarker, setSearchMarker] = useState<any>(null) // 検索結果のマーカー
   const [searchResultMarkers, setSearchResultMarkers] = useState<any[]>([]) // 一覧検索のピン
+  const poiMarkerRef = useRef<any>(null)
 
   // 地図の現在のビューポートを取得する関数
   const getMapViewport = () => {
@@ -616,6 +617,100 @@ export default function TripMap({
     }
   }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId, initialCenter, scrollSyncEnabled, onItineraryClick, onPoiDataUpdate])
 
+  // POIダイアログ用の一時マーカーを制御
+  useEffect(() => {
+    if (!map) return
+
+    const cleanupMarker = () => {
+      if (poiMarkerRef.current) {
+        poiMarkerRef.current.setMap(null)
+        poiMarkerRef.current = null
+      }
+    }
+
+    // 常に既存のマーカーをクリア（同時に複数表示されないようにする）
+    cleanupMarker()
+
+    const activePoi = poiData || internalPoiData
+    if (!activePoi) {
+      return () => {
+        cleanupMarker()
+      }
+    }
+
+    const selectedItinerary = selectedItineraryId
+      ? itineraries.find((itinerary) => itinerary.id === selectedItineraryId)
+      : null
+    const selectedPlaceId = selectedItinerary?.place_data?.place_id
+
+    // 選択中Itineraryと同一の場所であれば既存マーカーで十分なので表示しない
+    if (selectedPlaceId && activePoi.placeId && activePoi.placeId === selectedPlaceId) {
+      return () => {
+        cleanupMarker()
+      }
+    }
+
+    const positionSource = activePoi.placeData?.geometry?.location || activePoi.location
+    const rawLat = positionSource?.lat
+    const rawLng = positionSource?.lng
+    const lat = typeof rawLat === 'function' ? rawLat() : rawLat
+    const lng = typeof rawLng === 'function' ? rawLng() : rawLng
+
+    if (typeof lat !== 'number' || typeof lng !== 'number' || Number.isNaN(lat) || Number.isNaN(lng)) {
+      return () => {
+        cleanupMarker()
+      }
+    }
+
+    const markerContainer = document.createElement('div')
+    markerContainer.style.position = 'relative'
+    markerContainer.style.transform = 'translate(-50%, -100%)'
+
+    const markerBody = document.createElement('div')
+    markerBody.style.width = '22px'
+    markerBody.style.height = '22px'
+    markerBody.style.borderRadius = '9999px'
+    markerBody.style.backgroundColor = '#2563eb'
+    markerBody.style.border = '3px solid #ffffff'
+    markerBody.style.boxShadow = '0 6px 12px rgba(37, 99, 235, 0.35)'
+    markerBody.style.display = 'flex'
+    markerBody.style.alignItems = 'center'
+    markerBody.style.justifyContent = 'center'
+
+    const markerInner = document.createElement('div')
+    markerInner.style.width = '6px'
+    markerInner.style.height = '6px'
+    markerInner.style.borderRadius = '9999px'
+    markerInner.style.backgroundColor = '#ffffff'
+
+    markerBody.appendChild(markerInner)
+
+    const markerStem = document.createElement('div')
+    markerStem.style.position = 'absolute'
+    markerStem.style.bottom = '-10px'
+    markerStem.style.left = '50%'
+    markerStem.style.transform = 'translateX(-50%)'
+    markerStem.style.width = '2px'
+    markerStem.style.height = '12px'
+    markerStem.style.backgroundColor = '#2563eb'
+
+    markerContainer.appendChild(markerBody)
+    markerContainer.appendChild(markerStem)
+
+    const marker = new window.google.maps.marker.AdvancedMarkerElement({
+      map,
+      position: { lat, lng },
+      content: markerContainer,
+      zIndex: 600,
+    })
+
+    poiMarkerRef.current = marker
+
+    return () => {
+      cleanupMarker()
+    }
+  }, [map, poiData, internalPoiData, itineraries, selectedItineraryId])
+
   // 選択されたItineraryにフォーカスする機能（クリック時のVenue表示用）
   useEffect(() => {
     // focusMode === 'single'の場合は常にフォーカス（クリック時のVenue表示のため）
@@ -625,6 +720,25 @@ export default function TripMap({
 
     const selectedItinerary = itineraries.find(itinerary => itinerary.id === selectedItineraryId)
     if (!selectedItinerary?.place_data?.geometry?.location) return
+
+    // POIDialogが表示されている場合のチェック
+    // poiDataが設定されている かつ poiData.placeIdがselectedItineraryIdに対応するItineraryのplace_idと一致しない場合
+    // → Google POIマーカーをクリックした場合と判断し、フォーカス移動を抑制
+    if (poiData) {
+      const selectedPlaceId = selectedItinerary.place_data?.place_id
+      if (selectedPlaceId && poiData.placeId && poiData.placeId !== selectedPlaceId) {
+        // Google POIマーカーをクリックした場合: フォーカス移動を抑制
+        // ただし、マーカーのハイライトは維持する（既存の選択状態を視覚的に保持）
+        markers.forEach((markerData) => {
+          if (markerData.itineraryId === selectedItineraryId) {
+            markerData.element.className = 'teardrop-marker selected'
+          } else {
+            markerData.element.className = 'teardrop-marker'
+          }
+        })
+        return
+      }
+    }
 
     const position = {
       lat: selectedItinerary.place_data.geometry.location.lat,
@@ -649,7 +763,7 @@ export default function TripMap({
         markerData.element.className = 'teardrop-marker'
       }
     })
-  }, [selectedItineraryId, map, markers, itineraries, directionsRenderer, focusMode, scrollSyncEnabled])
+  }, [selectedItineraryId, map, markers, itineraries, directionsRenderer, focusMode, scrollSyncEnabled, poiData])
 
   return (
     <div className={`relative ${className}`}>

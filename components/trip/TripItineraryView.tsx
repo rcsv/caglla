@@ -9,7 +9,7 @@ import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { Icon } from '@iconify/react'
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { toDate } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
 import Loading from '@/components/common/Loading'
@@ -40,6 +40,7 @@ interface TripItineraryViewProps {
   scrollSyncEnabled?: boolean
   onScrollSyncEnabledChange?: (enabled: boolean) => void
   isProgrammaticScrollRef?: React.MutableRefObject<boolean>
+  scrollToItineraryRef?: React.MutableRefObject<((itineraryId: string) => void) | null>
 }
 
 export default function TripItineraryView({
@@ -68,6 +69,7 @@ export default function TripItineraryView({
   scrollSyncEnabled = true,
   onScrollSyncEnabledChange,
   isProgrammaticScrollRef,
+  scrollToItineraryRef,
 }: TripItineraryViewProps) {
   const itineraryRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const observerRef = useRef<IntersectionObserver | null>(null)
@@ -163,6 +165,43 @@ export default function TripItineraryView({
       itineraryRefs.current.delete(itineraryId)
     }
   }
+
+  // スクロール関数の実装（useCallbackでメモ化）
+  const scrollToItinerary = useCallback((itineraryId: string) => {
+    const element = itineraryRefs.current.get(itineraryId)
+    if (element) {
+      // プログラムスクロールフラグを設定（スクロール連動の誤検知を防ぐ）
+      if (isProgrammaticScrollRef) {
+        isProgrammaticScrollRef.current = true
+      }
+
+      // スムーズスクロール
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      })
+
+      // スクロール完了後、フラグをリセット
+      setTimeout(() => {
+        if (isProgrammaticScrollRef) {
+          isProgrammaticScrollRef.current = false
+        }
+      }, 1000) // スクロールアニメーションが完了するまでの時間
+    }
+  }, [isProgrammaticScrollRef])
+
+  // scrollToItineraryRefにスクロール関数を設定
+  useEffect(() => {
+    if (scrollToItineraryRef) {
+      scrollToItineraryRef.current = scrollToItinerary
+    }
+    return () => {
+      if (scrollToItineraryRef) {
+        scrollToItineraryRef.current = null
+      }
+    }
+  }, [scrollToItineraryRef, scrollToItinerary])
 
   return (
     <main className="px-4 py-8 pb-4">

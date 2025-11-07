@@ -10,6 +10,7 @@ import { t } from '@/lib/i18n'
 import { useUserData } from '@/lib/contexts/user-data'
 import { getUserUnitSystem } from '@/lib/utils/unit-system'
 import { convertDistance } from '@/lib/utils/unit-conversion'
+import { buildGoogleTransitUrl } from '@/lib/utils/maps'
 
 interface VenueDistanceProps {
   fromPlace?: PlaceData | null
@@ -127,6 +128,36 @@ export default function VenueDistance({
   const distanceKm = distanceApiHelpers.metersToKm(distanceInfo.distance.value)
   const distanceInfo_converted = convertDistance(distanceKm, unitSystem)
   const durationText = distanceApiHelpers.formatDuration(distanceInfo.duration.value)
+  const transitUrl = buildGoogleTransitUrl(fromPlace, toPlace)
+  const isLinkEnabled = Boolean(transitUrl)
+
+  const wrapperBaseClass = 'bg-white border-2 border-gray-300 rounded-full p-2 shadow-sm transition-colors'
+  const wrapperInteractiveClass = isLinkEnabled
+    ? ' hover:border-blue-400 hover:shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-400'
+    : ' opacity-60 cursor-not-allowed'
+  const wrapperClassName = `${wrapperBaseClass}${wrapperInteractiveClass ? ` ${wrapperInteractiveClass}` : ''}`
+
+  const distanceContent = (
+    <div className="flex items-center space-x-2 text-sm text-gray-600">
+      <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      <span className="font-medium text-xs">
+        {distanceInfo_converted.formatted} / {durationText}
+      </span>
+      {mode === 'driving' && (
+        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      )}
+      {mode === 'walking' && (
+        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      )}
+    </div>
+  )
 
   return (
     <div className={`relative flex items-center justify-center py-4 ${className}`}>
@@ -136,27 +167,25 @@ export default function VenueDistance({
       {/* 距離・時間表示と挿入ボタンを横並びに配置 */}
       <div className="relative z-10 flex items-center space-x-3">
         {/* 距離・時間表示 */}
-        <div className="bg-white border-2 border-gray-300 rounded-full p-2 shadow-sm">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span className="font-medium text-xs">
-              {distanceInfo_converted.formatted} / {durationText}
-            </span>
-            {mode === 'driving' && (
-              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            )}
-            {mode === 'walking' && (
-              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
-            )}
+        {isLinkEnabled ? (
+          <a
+            href={transitUrl as string}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={wrapperClassName}
+            title={t('distance.openTransit')}
+          >
+            {distanceContent}
+          </a>
+        ) : (
+          <div
+            className={wrapperClassName}
+            aria-disabled="true"
+            title={t('distance.openTransitUnavailable')}
+          >
+            {distanceContent}
           </div>
-        </div>
+        )}
         
         {/* 挿入ボタン */}
         {showInsertButton && onInsertVenue && (
