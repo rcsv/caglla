@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { placesApiHelpers } from '@/lib/api/google/places'
 import { getCachedPlaceImage } from '@/lib/storage/image-cache'
 import type { CachedImageInfo } from '@/lib/storage/image-cache'
@@ -27,7 +28,8 @@ export default function ImageGalleryModal({
   const [cachedImages, setCachedImages] = useState<CachedImageInfo[]>([])
   const [imageLoading, setImageLoading] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
-  const imageRef = useRef<HTMLImageElement>(null)
+  const [mainImageFallbacks, setMainImageFallbacks] = useState<Record<number, boolean>>({})
+  const [thumbnailFallbacks, setThumbnailFallbacks] = useState<Record<number, boolean>>({})
 
   // モーダルが開かれたときにキャッシュされた画像を取得
   useEffect(() => {
@@ -73,10 +75,11 @@ export default function ImageGalleryModal({
     setImageLoading(true)
     try {
       const imagePromises = images.map(async (photo) => {
-        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photo.photo_reference, 800)
+        const maxWidth = Math.min(photo.width ?? 1600, 1600)
+        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photo.photo_reference, maxWidth)
         return await getCachedPlaceImage(photo.photo_reference, googlePhotoUrl, {
-          width: 800,
-          height: 600,
+          width: maxWidth,
+          height: Math.round(maxWidth * ((photo.height ?? maxWidth) / (photo.width ?? maxWidth))),
           quality: 85
         })
       })
@@ -115,10 +118,21 @@ export default function ImageGalleryModal({
     e.stopPropagation()
   }
 
-  if (!isOpen) return null
+  useEffect(() => {
+    if (isOpen) {
+      setMainImageFallbacks({})
+      setThumbnailFallbacks({})
+    }
+  }, [isOpen, images])
+
+  if (!isOpen || images.length === 0) return null
 
   const currentImage = images[currentIndex]
   const cachedImage = cachedImages[currentIndex]
+  const mainImageSrc =
+    cachedImage && !mainImageFallbacks[currentIndex]
+      ? cachedImage.url
+      : placesApiHelpers.getPhotoUrl(currentImage.photo_reference, Math.min(currentImage.width ?? 1600, 1600))
 
   return (
     <div 
@@ -170,33 +184,28 @@ export default function ImageGalleryModal({
               )}
 
               {/* 画像 */}
-              <div className="max-w-full max-h-full flex items-center justify-center">
-                {cachedImage ? (
-                  <img
-                    ref={imageRef}
-                    src={cachedImage.url}
-                    alt={`${placeName}の写真 ${currentIndex + 1}`}
-                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl cursor-zoom-in"
-                    onClick={handleImageClick}
-                    onError={(e) => {
-                      // キャッシュされた画像が読み込めない場合は、元のGoogle Photo URLにフォールバック
-                      const target = e.target as HTMLImageElement
-                      target.src = placesApiHelpers.getPhotoUrl(currentImage.photo_reference, 800)
-                    }}
-                  />
+              <div className="max-w-full max-h-full flex items-center justify-center w-full h-full">
+                {imageLoading && !cachedImage ? (
+                  <div className="text-white text-lg">{require('@/lib/i18n').t('loading.message')}</div>
                 ) : (
-                  <div className="max-w-full max-h-full flex items-center justify-center">
-                    {imageLoading ? (
-                      <div className="text-white text-lg">{require('@/lib/i18n').t('loading.message')}</div>
-                    ) : (
-                      <img
-                        ref={imageRef}
-                        src={placesApiHelpers.getPhotoUrl(currentImage.photo_reference, 800)}
-                        alt={`${placeName}の写真 ${currentIndex + 1}`}
-                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl cursor-zoom-in"
-                        onClick={handleImageClick}
-                      />
-                    )}
+                  <div
+                    className="relative w-full h-full max-w-full max-h-full cursor-zoom-in"
+                    onClick={handleImageClick}
+                  >
+                    <Image
+                      src={mainImageSrc}
+                      alt={`${placeName}の写真 ${currentIndex + 1}`}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 80vw"
+                      className="object-contain rounded-lg shadow-2xl"
+                      onError={() => {
+                        setMainImageFallbacks((prev) => ({
+                          ...prev,
+                          [currentIndex]: true
+                        }))
+                      }}
+                      priority
+                    />
                   </div>
                 )}
               </div>
@@ -243,19 +252,25 @@ export default function ImageGalleryModal({
                       : 'border-transparent hover:border-gray-400'
                   }`}
                 >
-                  {cachedImages[index] ? (
-                    <img
-                      src={cachedImages[index].url}
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={
+                        cachedImages[index] && !thumbnailFallbacks[index]
+                          ? cachedImages[index].url
+                          : placesApiHelpers.getPhotoUrl(images[index].photo_reference, 200)
+                      }
                       alt={`${placeName}の写真 ${index + 1} サムネイル`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                      onError={() => {
+                        setThumbnailFallbacks((prev) => ({
+                          ...prev,
+                          [index]: true
+                        }))
+                      }}
                     />
-                  ) : (
-                    <img
-                      src={placesApiHelpers.getPhotoUrl(images[index].photo_reference, 100)}
-                      alt={`${placeName}の写真 ${index + 1} サムネイル`}
-                      className="w-full h-full object-cover"
-                    />
-                  )}
+                  </div>
                 </button>
               ))}
             </div>
