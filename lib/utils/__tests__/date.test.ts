@@ -1,4 +1,5 @@
 import { dateUtils } from '../date'
+import { t } from '@/lib/i18n'
 import type { FirestoreDate } from '@/lib/core/types'
 
 describe('dateUtils', () => {
@@ -30,7 +31,11 @@ describe('dateUtils', () => {
     })
 
     it('should return error message for invalid date', () => {
-      expect(dateUtils.formatDate(null as any)).toBe('日付が設定されていません')
+      expect(dateUtils.formatDate(null as any)).toBe(t('date.notSet', 'en'))
+    })
+
+    it('should return localized error message when language is specified', () => {
+      expect(dateUtils.formatDate(null as any, undefined, 'ja')).toBe(t('date.notSet', 'ja'))
     })
 
     it('should use custom format options', () => {
@@ -50,7 +55,11 @@ describe('dateUtils', () => {
     })
 
     it('should return error message for invalid dates', () => {
-      expect(dateUtils.formatDateRange(null as any, null as any)).toBe('日付が設定されていません')
+      expect(dateUtils.formatDateRange(null as any, null as any)).toBe(t('date.notSet', 'en'))
+    })
+
+    it('should return localized error message for invalid dates when language is specified', () => {
+      expect(dateUtils.formatDateRange(null as any, null as any, 'ja')).toBe(t('date.notSet', 'ja'))
     })
 
     it('should format same date correctly', () => {

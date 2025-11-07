@@ -1,7 +1,7 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import ImageUpload from '@/components/ui/ImageUpload'
@@ -68,6 +68,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
   const [isInferringCurrency, setIsInferringCurrency] = useState(false)
   const [inferredCurrency, setInferredCurrency] = useState<string | null>(null)
+  const isInferringCurrencyRef = useRef(false)
 
   // RestrictionProviderを使用してプラン制限をチェック
   const canCreateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRIPS, tripCount + 1)
@@ -110,18 +111,19 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
 
   // 目的地が選択された時に通貨を自動推定
   useEffect(() => {
-    const inferCurrencyFromDestination = async () => {
-      if (!formData.destinationPlace?.place_id || isInferringCurrency) {
-        return
-      }
+    const placeId = formData.destinationPlace?.place_id
+    if (!placeId || isInferringCurrencyRef.current) {
+      return
+    }
 
+    let isMounted = true
+
+    const inferCurrencyFromDestination = async () => {
+      isInferringCurrencyRef.current = true
       setIsInferringCurrency(true)
       try {
         const language = getUserLanguage(user || undefined)
-        const placeDetails = await placesApiHelpers.getPlaceDetails(
-          formData.destinationPlace.place_id,
-          language
-        )
+        const placeDetails = await placesApiHelpers.getPlaceDetails(placeId, language)
 
         // address_componentsから国コードを取得
         const countryCode = placeDetails.address_components?.find(
@@ -146,11 +148,18 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
         logger.error('Error inferring currency from destination:', error)
         setInferredCurrency(null)
       } finally {
-        setIsInferringCurrency(false)
+        isInferringCurrencyRef.current = false
+        if (isMounted) {
+          setIsInferringCurrency(false)
+        }
       }
     }
 
-    inferCurrencyFromDestination()
+    void inferCurrencyFromDestination()
+
+    return () => {
+      isMounted = false
+    }
   }, [formData.destinationPlace?.place_id, user])
 
   // 旅行日数の計算

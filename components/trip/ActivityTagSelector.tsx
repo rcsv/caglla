@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { ActivityTag, PrimaryCategoryType } from '@/lib/core/types'
-import { 
-  ACTIVITY_CATEGORIES, 
+import {
+  ACTIVITY_CATEGORIES,
   getActivityCategoryMaster,
-  getPrimaryCategoryLabel,
   getPrimaryCategoryShortLabel,
-  getSecondaryCategoryLabel
+  getSecondaryCategoryLabel,
 } from '@/lib/data/activity-categories'
-import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { t } from '@/lib/i18n'
 
 interface ActivityTagSelectorProps {
@@ -76,12 +74,8 @@ export default function ActivityTagSelector({
   
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-          <IconRenderer iconName="clipboard" className="w-4 h-4" color="#374151" />
-          {t('trip.schedule.activity')}
-        </label>
-        {(primaryCategory || secondaryCategory) && (
+      {(primaryCategory || secondaryCategory) && (
+        <div className="flex justify-end">
           <button
             onClick={handleClear}
             disabled={disabled}
@@ -89,9 +83,9 @@ export default function ActivityTagSelector({
           >
             {t('trip.schedule.clear')}
           </button>
-        )}
-      </div>
-      
+        </div>
+      )}
+
       <div className="flex gap-2">
         {/* 1段階目（Primary Category） */}
         <select
@@ -99,6 +93,7 @@ export default function ActivityTagSelector({
           onChange={(e) => handlePrimaryCategoryChange(e.target.value)}
           disabled={disabled}
           className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          aria-label={t('trip.schedule.activity')}
         >
           <option value="">{t('trip.schedule.categorySelect')}</option>
           {ACTIVITY_CATEGORIES.map((category) => (
