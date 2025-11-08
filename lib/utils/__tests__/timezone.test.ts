@@ -1,4 +1,5 @@
 import { timezoneUtils } from '../timezone'
+import { getTimezoneByCountryCode } from '@/lib/core/locations'
 import type { PlaceData } from '@/lib/core/types'
 
 describe('timezoneUtils', () => {
@@ -133,6 +134,24 @@ describe('timezoneUtils', () => {
       }
 
       expect(timezoneUtils.getTimezoneFromPlace(parisPlace)).toBe('Europe/Paris')
+    })
+  })
+
+  describe('getTimezoneByCountryCode', () => {
+    it('returns Asia/Tokyo for Japan', () => {
+      expect(getTimezoneByCountryCode('JP')).toBe('Asia/Tokyo')
+    })
+
+    it('returns America/New_York for United States', () => {
+      expect(getTimezoneByCountryCode('US')).toBe('America/New_York')
+    })
+
+    it('returns Europe/Paris for France', () => {
+      expect(getTimezoneByCountryCode('FR')).toBe('Europe/Paris')
+    })
+
+    it('returns null for unknown country code', () => {
+      expect(getTimezoneByCountryCode('XX')).toBeNull()
     })
   })
 })

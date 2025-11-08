@@ -19,7 +19,7 @@ export const timezoneUtils = {
     
     // 1. 国コードから推定（最も正確）
     const countryCode = placeData.address_components?.find(
-      (component: any) => component.types.includes('country')
+      (component: any) => Array.isArray(component?.types) && component.types.includes('country')
     )?.short_name
     
     if (countryCode) {
