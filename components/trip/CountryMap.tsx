@@ -20,7 +20,7 @@ interface CountryMapProps {
 export default function CountryMap({ countryGroups, className = '' }: CountryMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<google.maps.Map | null>(null)
-  const [markers, setMarkers] = useState<Array<google.maps.marker.AdvancedMarkerElement>>([])
+  const markersRef = useRef<Array<google.maps.marker.AdvancedMarkerElement>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
@@ -57,7 +57,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
         setMap(newMap)
 
         // 既存のマーカーをクリア
-        markers.forEach(marker => marker.setMap(null))
+        markersRef.current.forEach(marker => marker.setMap(null))
 
         // 新しいマーカーを作成
         const newMarkers: google.maps.marker.AdvancedMarkerElement[] = []
@@ -113,7 +113,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
           }
         })
 
-        setMarkers(newMarkers)
+        markersRef.current = newMarkers
 
         // すべてのマーカーが表示されるように地図の境界を調整
         if (newMarkers.length > 0) {
@@ -143,7 +143,7 @@ export default function CountryMap({ countryGroups, className = '' }: CountryMap
     if (countryGroups.length > 0) {
       initMap()
     }
-  }, [countryGroups, markers])
+  }, [countryGroups, user])
 
   if (loading) {
     return (

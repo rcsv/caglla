@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { ChecklistPreset } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
 import { t } from '@/lib/i18n'
@@ -15,13 +15,7 @@ export default function MyPresetsModal({ isOpen, onClose }: MyPresetsModalProps)
   const [presets, setPresets] = useState<ChecklistPreset[]>([])
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchMyPresets()
-    }
-  }, [isOpen])
-
-  const fetchMyPresets = async () => {
+  const fetchMyPresets = useCallback(async () => {
     try {
       setLoading(true)
       const token = await getIdToken()
@@ -37,7 +31,13 @@ export default function MyPresetsModal({ isOpen, onClose }: MyPresetsModalProps)
     } finally {
       setLoading(false)
     }
-  }
+  }, [getIdToken])
+
+  useEffect(() => {
+    if (isOpen) {
+      void fetchMyPresets()
+    }
+  }, [isOpen, fetchMyPresets])
 
   const deletePreset = async (presetId: string) => {
     if (!confirm(t('checklist.myPresets.deleteConfirm'))) return

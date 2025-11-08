@@ -2,7 +2,7 @@
 import logger from '@/lib/core/logger'
 import { t } from '@/lib/i18n'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { placesApiHelpers, PlaceSearchResult } from '@/lib/api/google/places'
 import { PlaceData } from '@/lib/core/types'  
 import { PlaceSearchInputProps } from '@/lib/core/types'
@@ -43,30 +43,7 @@ export default function PlaceSearchInput({
   useClickOutside(containerRef, () => setShowResults(false))
 
   // 検索クエリの変更を監視
-  useEffect(() => {
-    if (query.length < 2) {
-      setSearchResults([])
-      setShowResults(false)
-      return
-    }
-
-    // デバウンス処理
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current)
-    }
-
-    searchTimeoutRef.current = setTimeout(async () => {
-      await searchPlaces(query)
-    }, 300)
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current)
-      }
-    }
-  }, [query])
-
-  const searchPlaces = async (searchQuery: string) => {
+  const searchPlaces = useCallback(async (searchQuery: string) => {
     if (searchQuery.length < 2) return
 
     setIsSearching(true)
@@ -95,7 +72,29 @@ export default function PlaceSearchInput({
     } finally {
       setIsSearching(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    if (query.length < 2) {
+      setSearchResults([])
+      setShowResults(false)
+      return
+    }
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      await searchPlaces(query)
+    }, 300)
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [query, searchPlaces])
 
   const handlePlaceSelect = async (place: PlaceSearchResult) => {
     try {

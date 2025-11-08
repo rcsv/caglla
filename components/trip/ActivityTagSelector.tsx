@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { ActivityTag, PrimaryCategoryType } from '@/lib/core/types'
-import {
-  ACTIVITY_CATEGORIES,
+import { 
+  ACTIVITY_CATEGORIES, 
   getActivityCategoryMaster,
   getPrimaryCategoryShortLabel,
   getSecondaryCategoryLabel,
@@ -85,7 +85,7 @@ export default function ActivityTagSelector({
           </button>
         </div>
       )}
-
+      
       <div className="flex gap-2">
         {/* 1段階目（Primary Category） */}
         <select

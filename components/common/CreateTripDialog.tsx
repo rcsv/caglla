@@ -113,8 +113,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   useEffect(() => {
     const placeId = formData.destinationPlace?.place_id
     if (!placeId || isInferringCurrencyRef.current) {
-      return
-    }
+        return
+      }
 
     let isMounted = true
 
@@ -150,8 +150,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       } finally {
         isInferringCurrencyRef.current = false
         if (isMounted) {
-          setIsInferringCurrency(false)
-        }
+        setIsInferringCurrency(false)
+      }
       }
     }
 

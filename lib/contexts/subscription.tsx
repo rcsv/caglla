@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import logger from '@/lib/core/logger'
 import { dummyPaymentService, SubscriptionPlan as DummySubscriptionPlan, Subscription, PaymentMethod } from '@/lib/subscription/payment-service'
 import { RestrictionProvider, RestrictionType, PlanId, PLAN_CONFIGS } from '@/lib/subscription/restriction'
@@ -174,7 +174,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   })
   const [isLoading, setIsLoading] = useState(true)
 
-  const checkSubscription = async () => {
+  const checkSubscription = useCallback(async () => {
     try {
       setIsLoading(true)
       
@@ -239,7 +239,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   const useRouteOptimization = (): boolean => {
     // デバッグログを追加
@@ -410,9 +410,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     // userPlanIdが設定されていない場合のみcheckSubscriptionを実行
     if (!userPlanId) {
-      checkSubscription()
+      void checkSubscription()
     }
-  }, [])
+  }, [userPlanId, checkSubscription])
 
   const value: SubscriptionContextType = {
     subscriptionStatus,

@@ -77,131 +77,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
   // 価格レベルをメモ化
   const priceLevel = useMemo(() => getAggregatedPriceLevel(aggregatedData), [aggregatedData, getAggregatedPriceLevel])
 
-  useEffect(() => {
-    if (!poiData) return
-
-    const fetchPlaceDetails = async () => {
-      setLoading(true)
-      setError(null)
-      
-      try {
-        // Itinerariesに保存されているplace_dataがある場合
-        if (poiData.placeData) {
-          // vicinityが存在する場合はそのまま使用
-          if (poiData.placeData.vicinity) {
-            logger.debug('✅ Using place_data with vicinity from Itinerary')
-            setPlaceDetails(poiData.placeData)
-            setLoading(false)
-            return
-          }
-          
-          // vicinityがない場合は古いデータなので、PlacesCacheから補完を試みる
-          logger.debug('⚠️ place_data missing vicinity, checking PlacesCache...')
-          const cachedData = await getCachedPlace(poiData.placeId)
-          if (cachedData && cachedData.vicinity) {
-            logger.debug('✅ Found vicinity in PlacesCache, merging data')
-            setPlaceDetails({
-              ...poiData.placeData,
-              vicinity: cachedData.vicinity,
-              business_status: cachedData.business_status,
-              url: cachedData.url,
-              icon: cachedData.icon
-            })
-            setLoading(false)
-            return
-          }
-        }
-        
-        logger.debug('🔍 Checking PlacesCache for place_id:', poiData.placeId)
-        
-        // PlacesCacheを確認
-        const cachedData = await getCachedPlace(poiData.placeId)
-        if (cachedData) {
-          logger.debug('✅ Found cached data:', cachedData.name)
-          setPlaceDetails(cachedData)
-          setLoading(false)
-          return
-        }
-        
-        logger.debug('❌ No cached data found, calling Google Places API...')
-        
-        // ユーザーの言語設定を取得してPlaces APIに渡す
-        const language = getUserLanguage(user)
-        
-        // キャッシュにない場合はAPIを呼び出し
-        const details = await placesApiHelpers.getPlaceDetails(poiData.placeId, language)
-        setPlaceDetails(details)
-        
-        logger.debug('💾 Saving to PlacesCache...')
-        
-        // APIで取得したデータをキャッシュに保存（言語指定）
-        await placesCacheManager.fetchAndCachePlace(poiData.placeId, language)
-        
-        logger.debug('✅ Data saved to PlacesCache')
-
-        // 画像をキャッシュ（detailsを直接参照）
-        if (details?.photos && details.photos.length > 0) {
-          await cacheImages(details.photos)
-        }
-
-        // 外部API（TripAdvisor + Foursquare）からの追加情報を取得
-        // サーバーサイドプロキシ経由で取得（CORS回避）
-        logger.debug('🌐 Fetching external venue data via proxy...')
-        try {
-          const response = await fetch('/api/venue/aggregate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(details)
-          })
-          
-          logger.debug('📡 Proxy response status:', response.status, response.statusText)
-          
-          if (response.ok) {
-            const responseData = await response.json()
-            logger.debug('📦 Received data from proxy:', {
-              hasAggregatedData: !!responseData.aggregatedData,
-              hasUnifiedReviews: !!responseData.unifiedReviews,
-              tripAdvisorDetails: !!responseData.aggregatedData?.tripAdvisor?.details,
-              foursquareDetails: !!responseData.aggregatedData?.foursquare?.details,
-              reviewCount: responseData.unifiedReviews?.length || 0
-            })
-            
-            const { aggregatedData: aggregated, unifiedReviews: reviews } = responseData
-            setAggregatedData(aggregated)
-            setUnifiedReviews(reviews)
-            
-            logger.debug('✅ External venue data loaded', {
-              tripAdvisor: !!aggregated.tripAdvisor?.details,
-              foursquare: !!aggregated.foursquare?.details,
-              totalReviews: reviews.length,
-              aggregatedRating: aggregated.aggregatedRating
-            })
-          } else {
-            const errorText = await response.text()
-            logger.warn('⚠️ Failed to fetch external venue data:', {
-              status: response.status,
-              statusText: response.statusText,
-              error: errorText
-            })
-          }
-        } catch (error) {
-          logger.error('❌ Error fetching external venue data:', error)
-        }
-      } catch (err) {
-        logger.error(t('poi.fetchDetailsError'), err)
-        setError(t('poi.fetchError'))
-        // エラーが発生した場合はダイアログを自動的に閉じる
-        setTimeout(() => {
-          onClose()
-        }, 100)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    const cacheImages = async (photos: any[]) => {
+  const cacheImages = useCallback(
+    async (photos: any[]) => {
       if (!photos || photos.length === 0) return
 
       setImageLoading(true)
@@ -211,27 +88,141 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
           return await getCachedPlaceImage(photo.photo_reference, googlePhotoUrl, {
             width: 300,
             height: 300,
-            quality: 80
+            quality: 80,
           })
         })
 
         const cachedImageResults = await Promise.all(imagePromises)
         setCachedImages(cachedImageResults)
-        
+
         logger.debug('POIDialog: 画像キャッシュ完了', {
           total: cachedImageResults.length,
-          cached: cachedImageResults.filter(img => img.cached).length,
-          new: cachedImageResults.filter(img => !img.cached).length
+          cached: cachedImageResults.filter((img) => img.cached).length,
+          new: cachedImageResults.filter((img) => !img.cached).length,
         })
       } catch (error) {
         logger.error(t('poi.imageCacheError'), error)
       } finally {
         setImageLoading(false)
       }
-    }
+    },
+    []
+  )
 
-    fetchPlaceDetails()
-  }, [poiData])
+  const fetchPlaceDetails = useCallback(async () => {
+    if (!poiData) return
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      if (poiData.placeData) {
+        if (poiData.placeData.vicinity) {
+          logger.debug('✅ Using place_data with vicinity from Itinerary')
+          setPlaceDetails(poiData.placeData)
+          setLoading(false)
+          return
+        }
+
+        logger.debug('⚠️ place_data missing vicinity, checking PlacesCache...')
+        const cachedData = await getCachedPlace(poiData.placeId)
+        if (cachedData && cachedData.vicinity) {
+          logger.debug('✅ Found vicinity in PlacesCache, merging data')
+          setPlaceDetails({
+            ...poiData.placeData,
+            vicinity: cachedData.vicinity,
+            business_status: cachedData.business_status,
+            url: cachedData.url,
+            icon: cachedData.icon,
+          })
+          setLoading(false)
+          return
+        }
+      }
+
+      logger.debug('🔍 Checking PlacesCache for place_id:', poiData.placeId)
+
+      const cachedData = await getCachedPlace(poiData.placeId)
+      if (cachedData) {
+        logger.debug('✅ Found cached data:', cachedData.name)
+        setPlaceDetails(cachedData)
+        setLoading(false)
+        return
+      }
+
+      logger.debug('❌ No cached data found, calling Google Places API...')
+
+      const language = getUserLanguage(user)
+
+      const details = await placesApiHelpers.getPlaceDetails(poiData.placeId, language)
+      setPlaceDetails(details)
+
+      logger.debug('💾 Saving to PlacesCache...')
+      await placesCacheManager.fetchAndCachePlace(poiData.placeId, language)
+      logger.debug('✅ Data saved to PlacesCache')
+
+      if (details?.photos && details.photos.length > 0) {
+        await cacheImages(details.photos)
+      }
+
+      logger.debug('🌐 Fetching external venue data via proxy...')
+      try {
+        const response = await fetch('/api/venue/aggregate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(details),
+        })
+
+        logger.debug('📡 Proxy response status:', response.status, response.statusText)
+
+        if (response.ok) {
+          const responseData = await response.json()
+          logger.debug('📦 Received data from proxy:', {
+            hasAggregatedData: !!responseData.aggregatedData,
+            hasUnifiedReviews: !!responseData.unifiedReviews,
+            tripAdvisorDetails: !!responseData.aggregatedData?.tripAdvisor?.details,
+            foursquareDetails: !!responseData.aggregatedData?.foursquare?.details,
+            reviewCount: responseData.unifiedReviews?.length || 0,
+          })
+
+          const { aggregatedData: aggregated, unifiedReviews: reviews } = responseData
+          setAggregatedData(aggregated)
+          setUnifiedReviews(reviews)
+
+          logger.debug('✅ External venue data loaded', {
+            tripAdvisor: !!aggregated.tripAdvisor?.details,
+            foursquare: !!aggregated.foursquare?.details,
+            totalReviews: reviews.length,
+            aggregatedRating: aggregated.aggregatedRating,
+          })
+        } else {
+          const errorText = await response.text()
+          logger.warn('⚠️ Failed to fetch external venue data:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorText,
+          })
+        }
+      } catch (error) {
+        logger.error('❌ Error fetching external venue data:', error)
+      }
+    } catch (err) {
+      logger.error(t('poi.fetchDetailsError'), err)
+      setError(t('poi.fetchError'))
+      setTimeout(() => {
+        onClose()
+      }, 100)
+    } finally {
+      setLoading(false)
+    }
+  }, [cacheImages, onClose, poiData, user])
+
+  useEffect(() => {
+    if (!poiData) return
+    void fetchPlaceDetails()
+  }, [poiData, fetchPlaceDetails])
 
   if (!poiData) return null
 

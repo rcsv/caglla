@@ -155,7 +155,7 @@ export default function TripItineraryView({
         observerRef.current.disconnect()
       }
     }
-  }, [trip, collapsedDays, onItineraryClick, selectedItineraryId, scrollSyncEnabled])
+  }, [trip, collapsedDays, onItineraryClick, selectedItineraryId, scrollSyncEnabled, isProgrammaticScrollRef])
 
   // Itinerary要素のref設定
   const setItineraryRef = (itineraryId: string, element: HTMLDivElement | null) => {

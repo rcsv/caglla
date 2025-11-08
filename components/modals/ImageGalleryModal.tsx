@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { placesApiHelpers } from '@/lib/api/google/places'
 import { getCachedPlaceImage } from '@/lib/storage/image-cache'
@@ -31,12 +31,44 @@ export default function ImageGalleryModal({
   const [mainImageFallbacks, setMainImageFallbacks] = useState<Record<number, boolean>>({})
   const [thumbnailFallbacks, setThumbnailFallbacks] = useState<Record<number, boolean>>({})
 
+  const cacheAllImages = useCallback(async () => {
+    if (!images || images.length === 0) return
+
+    setImageLoading(true)
+    try {
+      const imagePromises = images.map(async (photo) => {
+        const maxWidth = Math.min(photo.width ?? 1600, 1600)
+        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photo.photo_reference, maxWidth)
+        return await getCachedPlaceImage(photo.photo_reference, googlePhotoUrl, {
+          width: maxWidth,
+          height: Math.round(maxWidth * ((photo.height ?? maxWidth) / (photo.width ?? maxWidth))),
+          quality: 85
+        })
+      })
+
+      const cachedImageResults = await Promise.all(imagePromises)
+      setCachedImages(cachedImageResults)
+    } catch (error) {
+      console.error('画像キャッシュに失敗しました:', error)
+    } finally {
+      setImageLoading(false)
+    }
+  }, [images])
+
+  const goToPrevious = useCallback(() => {
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))
+  }, [images.length])
+
+  const goToNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))
+  }, [images.length])
+
   // モーダルが開かれたときにキャッシュされた画像を取得
   useEffect(() => {
     if (isOpen && images.length > 0) {
-      cacheAllImages()
+      void cacheAllImages()
     }
-  }, [isOpen, images])
+  }, [isOpen, images, cacheAllImages])
 
   // 初期インデックスが変更されたときに更新
   useEffect(() => {
@@ -67,39 +99,7 @@ export default function ImageGalleryModal({
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, currentIndex])
-
-  const cacheAllImages = async () => {
-    if (!images || images.length === 0) return
-
-    setImageLoading(true)
-    try {
-      const imagePromises = images.map(async (photo) => {
-        const maxWidth = Math.min(photo.width ?? 1600, 1600)
-        const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photo.photo_reference, maxWidth)
-        return await getCachedPlaceImage(photo.photo_reference, googlePhotoUrl, {
-          width: maxWidth,
-          height: Math.round(maxWidth * ((photo.height ?? maxWidth) / (photo.width ?? maxWidth))),
-          quality: 85
-        })
-      })
-
-      const cachedImageResults = await Promise.all(imagePromises)
-      setCachedImages(cachedImageResults)
-    } catch (error) {
-      console.error('画像キャッシュに失敗しました:', error)
-    } finally {
-      setImageLoading(false)
-    }
-  }
-
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))
-  }
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))
-  }
+  }, [isOpen, goToPrevious, goToNext, onClose])
 
   const handleImageClick = (e: React.MouseEvent) => {
     // 画像をクリックした場合の処理（拡大表示など）
@@ -194,7 +194,7 @@ export default function ImageGalleryModal({
                   >
                     <Image
                       src={mainImageSrc}
-                      alt={`${placeName}の写真 ${currentIndex + 1}`}
+                        alt={`${placeName}の写真 ${currentIndex + 1}`}
                       fill
                       sizes="(max-width: 1024px) 100vw, 80vw"
                       className="object-contain rounded-lg shadow-2xl"

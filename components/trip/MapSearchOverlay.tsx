@@ -51,99 +51,116 @@ export default function MapSearchOverlay({
   const inputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const searchResultsUpdatedRef = useRef(onSearchResultsUpdated)
+  const getMapViewportRef = useRef(getMapViewport)
+
+  useEffect(() => {
+    searchResultsUpdatedRef.current = onSearchResultsUpdated
+  }, [onSearchResultsUpdated])
+
+  useEffect(() => {
+    getMapViewportRef.current = getMapViewport
+  }, [getMapViewport])
 
   // 外部クリックで検索結果を閉じる
   useClickOutside(containerRef, () => setShowResults(false))
 
-  // 検索クエリの変更を監視
   useEffect(() => {
     if (query.length < 2) {
-      setSearchResults([])
-      setShowResults(false)
-      onSearchResultsUpdated?.([])
+      let cleared = false
+
+      setSearchResults((prev) => {
+        if (prev.length === 0) return prev
+        cleared = true
+        return []
+      })
+
+      setShowResults((prev) => (prev ? false : prev))
+      setIsSearching(false)
+      setError(null)
+
+      if (cleared) {
+        searchResultsUpdatedRef.current?.([])
+      }
+
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+        searchTimeoutRef.current = undefined
+      }
+
       return
     }
 
-    // デバウンス処理
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
     }
 
     searchTimeoutRef.current = setTimeout(async () => {
-      await searchPlaces(query)
+      setIsSearching(true)
+      setError(null)
+
+      try {
+        const language = getUserLanguage(user)
+
+        const viewport = getMapViewportRef.current?.()
+        let locationBias: any = undefined
+
+        if (viewport?.center) {
+          locationBias = {
+            circle: {
+              center: {
+                latitude: viewport.center.lat,
+                longitude: viewport.center.lng
+              },
+              radius: 10000
+            }
+          }
+        } else if (viewport?.bounds) {
+          locationBias = {
+            rectangle: {
+              low: {
+                latitude: viewport.bounds.south,
+                longitude: viewport.bounds.west
+              },
+              high: {
+                latitude: viewport.bounds.north,
+                longitude: viewport.bounds.east
+              }
+            }
+          }
+        }
+
+        const results = await placesApiHelpers.searchPlaces(query, language, locationBias)
+        setSearchResults(results)
+        setShowResults(!hideSuggestions)
+        setError(null)
+        searchResultsUpdatedRef.current?.(results)
+      } catch (error) {
+        logger.error('Search error:', error)
+        const errorMessage = error instanceof Error ? error.message : t('placeSearch.searchFailed')
+
+        if (errorMessage.includes('ZERO_RESULTS')) {
+          setError(null)
+          setSearchResults([])
+          setShowResults(!hideSuggestions)
+          searchResultsUpdatedRef.current?.([])
+        } else {
+          setError(`検索エラー: ${errorMessage}`)
+          setSearchResults([])
+          searchResultsUpdatedRef.current?.([])
+        }
+      } finally {
+        setIsSearching(false)
+      }
     }, 300)
 
     return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current)
+        searchTimeoutRef.current = undefined
       }
     }
-  }, [query])
-
-  // カスタム検索関数（locationBias付き）
-  const searchPlaces = async (searchQuery: string) => {
-    if (searchQuery.length < 2) return
-
-    setIsSearching(true)
-    setError(null)
-
-    try {
-      const language = getUserLanguage(user)
-      
-      // 地図のビューポートを取得してlocationBiasを生成
-      const viewport = getMapViewport?.()
-      let locationBias: any = undefined
-      
-      if (viewport?.center) {
-        // 地図の中心から半径10kmの円形バイアス
-        locationBias = {
-          circle: {
-            center: {
-              latitude: viewport.center.lat,
-              longitude: viewport.center.lng
-            },
-            radius: 10000 // 10km
-          }
-        }
-      } else if (viewport?.bounds) {
-        // 地図の表示範囲を矩形バイアスとして使用
-        locationBias = {
-          rectangle: {
-            low: {
-              latitude: viewport.bounds.south,
-              longitude: viewport.bounds.west
-            },
-            high: {
-              latitude: viewport.bounds.north,
-              longitude: viewport.bounds.east
-            }
-          }
-        }
-      }
-
-      const results = await placesApiHelpers.searchPlaces(searchQuery, language, locationBias)
-      setSearchResults(results)
-      setShowResults(!hideSuggestions)
-      setError(null)
-      onSearchResultsUpdated?.(results)
-    } catch (error) {
-      logger.error('Search error:', error)
-      const errorMessage = error instanceof Error ? error.message : t('placeSearch.searchFailed')
-      
-      if (errorMessage.includes('ZERO_RESULTS')) {
-        setError(null)
-        setSearchResults([])
-        setShowResults(!hideSuggestions)
-        onSearchResultsUpdated?.([])
-      } else {
-        setError(`検索エラー: ${errorMessage}`)
-        setSearchResults([])
-        onSearchResultsUpdated?.([])
-      }
-    } finally {
-      setIsSearching(false)
-    }
-  }
+  }, [query, hideSuggestions, user])
 
   const handlePlaceSelect = async (place: PlaceSearchResult) => {
     try {

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 import { Itinerary, ReservationInfo } from '@/lib/core/types'
 import { getReservationTypeLabel } from '@/lib/utils/reservation-utils'
 import type { ReservationType } from '@/lib/core/types'
@@ -179,11 +180,13 @@ export default function TripReservationDisplay({
                   {/* カードヘッダー（画像付き） */}
                   <div className="relative h-28 bg-gray-200">
                     {photoRef ? (
-                      <img
-                        src={placesApiHelpers.getPhotoUrl(photoRef, 400)}
+                      <Image
+                        src={placesApiHelpers.getPhotoUrl(photoRef, 800)}
                         alt={itinerary.title}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        loading="lazy"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        priority={false}
                       />
                     ) : (
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
@@ -332,15 +335,19 @@ export default function TripReservationDisplay({
                         {reservation.reservation_site && (
                           <div className="flex items-center justify-end">
                             {siteLogos[reservation.reservation_site] && (
-                              <img
+                              <div className="relative w-3 h-3 mr-1">
+                                <Image
                                 src={siteLogos[reservation.reservation_site]}
                                 alt={reservation.reservation_site}
-                                className="w-3 h-3 mr-1 object-contain opacity-70"
+                                  fill
+                                  className="object-contain opacity-70"
+                                  sizes="12px"
                                 onError={(e) => {
-                                  // ロゴ画像の読み込みに失敗した場合は非表示
-                                  e.currentTarget.style.display = 'none'
+                                    const target = e.currentTarget as HTMLImageElement
+                                    target.style.display = 'none'
                                 }}
                               />
+                              </div>
                             )}
                             <span className="text-xs text-gray-400">
                               {reservation.reservation_site}
@@ -354,15 +361,19 @@ export default function TripReservationDisplay({
                     {!reservation.reservation_url && reservation.reservation_site && (
                       <div className="flex items-center justify-end">
                         {siteLogos[reservation.reservation_site] && (
-                          <img
+                          <div className="relative w-3 h-3 mr-1">
+                            <Image
                             src={siteLogos[reservation.reservation_site]}
                             alt={reservation.reservation_site}
-                            className="w-3 h-3 mr-1 object-contain opacity-70"
+                              fill
+                              className="object-contain opacity-70"
+                              sizes="12px"
                             onError={(e) => {
-                              // ロゴ画像の読み込みに失敗した場合は非表示
-                              e.currentTarget.style.display = 'none'
+                                const target = e.currentTarget as HTMLImageElement
+                                target.style.display = 'none'
                             }}
                           />
+                          </div>
                         )}
                         <span className="text-xs text-gray-400">
                           {reservation.reservation_site}

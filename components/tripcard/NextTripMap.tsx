@@ -59,8 +59,8 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
         logger.debug('NextTripMap: Google Maps API読み込み完了')
 
         // Trip目的地を優先、フォールバックは東京（ズームレベルも一貫性を保つ）
-        const defaultCenter = trip.destination_place?.geometry?.location || TOKYO_CENTER
-        const defaultZoom = trip.destination_place?.geometry?.location ? 11 : 10
+        const defaultCenter = TOKYO_CENTER
+        const defaultZoom = 10
         
         const newMap = new window.google.maps.Map(mapRef.current, {
           zoom: defaultZoom,
@@ -84,7 +84,7 @@ export default function NextTripMap({ trip, className = '' }: NextTripMapProps) 
     }
 
     initializeMap()
-  }, [])
+  }, [user])
 
   // マーカーを作成・更新する関数
   const updateMapAndMarker = useCallback((center: { lat: number; lng: number }, zoom: number) => {

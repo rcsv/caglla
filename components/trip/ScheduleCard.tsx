@@ -117,30 +117,39 @@ export default function ScheduleCard({
   }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.description, itinerary.place_data?.editorial_summary?.overview, itinerary.timezone, itinerary.cost_currency, trip?.default_currency])
 
   useEffect(() => {
-    if (itinerary.place_data) {
-      const detectedTimezone = timezoneUtils.getTimezoneFromPlace(itinerary.place_data)
-      if (detectedTimezone !== 'UTC') {
-        setDestinationTimezone(detectedTimezone)
-        updateField('timezone', detectedTimezone)
-      }
+    if (!itinerary.place_data) {
+      return
     }
-  }, [itinerary.place_data?.place_id, itinerary.place_data])
+
+    const detectedTimezone = timezoneUtils.getTimezoneFromPlace(itinerary.place_data)
+    if (
+      !detectedTimezone ||
+      detectedTimezone === 'UTC' ||
+      detectedTimezone === itinerary.timezone
+    ) {
+      return
+    }
+
+    setDestinationTimezone(detectedTimezone)
+    void updateField('timezone', detectedTimezone)
+  }, [itinerary.place_data, itinerary.timezone, updateField])
 
   // place_data が未設定だが place_id がある場合は、詳細を取得して保存する
+  const itineraryPlaceId = (itinerary as any).place_id as string | undefined
+
   useEffect(() => {
     const ensurePlaceData = async () => {
       // 既に取得中、または place_data が存在する場合はスキップ
-      if (isFetchingPlaceData || itinerary.place_data || !(itinerary as any).place_id) {
+      if (isFetchingPlaceData || itinerary.place_data || !itineraryPlaceId) {
         return
       }
 
-      const placeId = (itinerary as any).place_id as string
       setIsFetchingPlaceData(true)
-      logger.debug('📦 ScheduleCard: Fetching place details for missing place_data', { placeId })
+      logger.debug('📦 ScheduleCard: Fetching place details for missing place_data', { placeId: itineraryPlaceId })
       
       try {
         const language = getUserLanguage(user || undefined)
-        const result = await placesApiHelpers.getPlaceDetails(placeId, language)
+        const result = await placesApiHelpers.getPlaceDetails(itineraryPlaceId, language)
         if (result?.place_id) {
           await updateField('place_data', result as any)
           logger.debug('📦 ScheduleCard: place_data resolved and saved')
@@ -152,7 +161,7 @@ export default function ScheduleCard({
       }
     }
     ensurePlaceData()
-  }, [(itinerary as any).place_id, itinerary.place_data?.place_id, isFetchingPlaceData, user])
+  }, [itineraryPlaceId, itinerary.place_data, isFetchingPlaceData, user, updateField])
 
   // 通貨推測ロジックは削除（Create Trip Dialogで目的地選択時に通貨を自動推定する方式に変更）
 

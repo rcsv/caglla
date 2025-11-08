@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { ChecklistPreset } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
 import { t } from '@/lib/i18n'
@@ -24,13 +24,7 @@ export default function PresetLibraryModal({
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<'popular' | 'recent'>('popular')
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchPresets()
-    }
-  }, [isOpen, query, sort])
-
-  const fetchPresets = async () => {
+  const fetchPresets = useCallback(async () => {
     try {
       setLoading(true)
       const token = await getIdToken()
@@ -49,7 +43,13 @@ export default function PresetLibraryModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [getIdToken, query, sort])
+
+  useEffect(() => {
+    if (isOpen) {
+      void fetchPresets()
+    }
+  }, [isOpen, fetchPresets])
 
   const applyPreset = async (presetId: string) => {
     try {

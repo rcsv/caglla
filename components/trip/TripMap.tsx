@@ -114,7 +114,7 @@ export default function TripMap({
 }: TripMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<any>(null)
-  const [markers, setMarkers] = useState<any[]>([])
+  const markersRef = useRef<any[]>([])
   const [directionsService, setDirectionsService] = useState<any>(null)
   const [directionsRenderer, setDirectionsRenderer] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -388,15 +388,19 @@ export default function TripMap({
     }
 
     initializeMap()
-  }, [initialCenter, onPoiDataUpdate])
+  }, [initialCenter, onPoiDataUpdate, onMapInteractionStart, user])
 
   // itineraries が変更された時にマーカーとルートを更新
   useEffect(() => {
     if (!map || !directionsService || !directionsRenderer) return
 
     // 既存のマーカーをクリア
-    markers.forEach(markerData => markerData.marker.map = null)
-    setMarkers([])
+    markersRef.current.forEach(markerData => {
+      if (markerData.marker) {
+        markerData.marker.map = null
+      }
+    })
+    markersRef.current = []
 
     // 位置情報がある itineraries をフィルタリング
     logger.debug('🗺️ TripMap: Filtering itineraries')
@@ -523,7 +527,7 @@ export default function TripMap({
       return { marker, element: teardropElement, itineraryId: itinerary.id }
     })
 
-    setMarkers(newMarkers)
+    markersRef.current = newMarkers
 
     // ルートを描画（2つ以上の地点がある場合）
     if (validItineraries.length >= 2) {
@@ -729,7 +733,7 @@ export default function TripMap({
       if (selectedPlaceId && poiData.placeId && poiData.placeId !== selectedPlaceId) {
         // Google POIマーカーをクリックした場合: フォーカス移動を抑制
         // ただし、マーカーのハイライトは維持する（既存の選択状態を視覚的に保持）
-        markers.forEach((markerData) => {
+        markersRef.current.forEach((markerData) => {
           if (markerData.itineraryId === selectedItineraryId) {
             markerData.element.className = 'teardrop-marker selected'
           } else {
@@ -754,7 +758,7 @@ export default function TripMap({
     smoothMoveToLocation(map, position.lat, position.lng, DEFAULT_ZOOM_LEVEL)
 
     // 該当するマーカーをハイライト
-    markers.forEach((markerData) => {
+    markersRef.current.forEach((markerData) => {
       if (markerData.itineraryId === selectedItineraryId) {
         // 選択されたマーカーをハイライト
         markerData.element.className = 'teardrop-marker selected'
@@ -763,7 +767,7 @@ export default function TripMap({
         markerData.element.className = 'teardrop-marker'
       }
     })
-  }, [selectedItineraryId, map, markers, itineraries, directionsRenderer, focusMode, scrollSyncEnabled, poiData])
+  }, [selectedItineraryId, map, itineraries, directionsRenderer, focusMode, scrollSyncEnabled, poiData])
 
   return (
     <div className={`relative ${className}`}>
