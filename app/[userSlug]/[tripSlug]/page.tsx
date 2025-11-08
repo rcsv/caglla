@@ -639,9 +639,6 @@ export default function SlugBasedTripPage() {
         
         // ローカル状態を更新（handleScheduleAdded と同じロジック）
         handleScheduleAdded(newItinerary)
-        
-        // POI ダイアログを閉じる
-        setPoiData(null)
       } else {
         const error = await response.json()
         logger.error('POI の追加に失敗しました:', error)

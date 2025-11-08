@@ -221,6 +221,17 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
 
   useEffect(() => {
     if (!poiData) return
+
+    // 新しいPOIを取得する前に旧データをリセット
+    setPlaceDetails(null)
+    setAggregatedData(null)
+    setUnifiedReviews([])
+    setCachedImages([])
+    setCurrentPhotoIndex(0)
+    setShowAllReviews(false)
+    setShowImageGallery(false)
+    setError(null)
+
     void fetchPlaceDetails()
   }, [poiData, fetchPlaceDetails])
 
@@ -272,7 +283,10 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
   }
 
   // 営業時間の解析（言語設定を渡す）
-  const openingHoursInfo = parseOpeningHours(placeDetails?.opening_hours?.weekday_text, language)
+  const openingHoursInfo = parseOpeningHours(
+    placeDetails?.opening_hours?.weekday_text, 
+    language === 'ja' ? 'ja' : 'en'
+  )
   
   // 曜日ラベル（i18n対応、等幅フォント用の短縮形）
   const dayLabels = [
@@ -396,20 +410,16 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
 
         {/* コンテンツ */}
         <div className="p-3 max-h-80 overflow-y-auto scrollbar-hide rounded-b-lg">
-          {loading && (
+          {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
               <span className="ml-2 text-sm text-gray-600">{t('poi.loadingInfo')}</span>
             </div>
-          )}
-
-          {error && (
+          ) : error ? (
             <div className="text-center py-8">
               <div className="text-red-500 text-sm">{t('poi.errorMessage')}</div>
             </div>
-          )}
-
-          {placeDetails && (
+          ) : placeDetails ? (
             <div className="flex gap-3">
               {/* メインコンテンツ（8割） */}
               <div className="flex-1 space-y-3 text-sm">
@@ -750,7 +760,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                 </div>
               )}
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 
