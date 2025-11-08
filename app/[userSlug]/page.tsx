@@ -67,7 +67,7 @@ export default function UserProfileBySlugPage() {
           language: userPreferences.language || '',
           unit_system: userPreferences.unit_system || getDefaultUnitSystem(userPreferences.home_country_code)
         })
-
+        
         // 初回セットアップの判定（bio、home_country_code、genderがすべて空の場合）
         const needsSetup = !data.user.bio && !data.user.preferences?.home_country_code && (!data.user.gender || data.user.gender === 'prefer_not_to_say')
         setIsFirstTimeSetup(needsSetup)
@@ -80,16 +80,19 @@ export default function UserProfileBySlugPage() {
         const trips: Trip[] = data.trips || []
         const publicTripsList = trips.filter(t => t.access_level === 'public')
         setPublicTrips(publicTripsList)
-
+        
         // 自分自身のプロフィールの場合、非公開の旅行も取得
         // fetchedUserを使用して同期的に判定
         // 注意: user.uidはFirebase Auth UID、fetchedUser.google_idと比較する必要がある
         const currentUserId = user?.uid // Firebase Auth UID
         const viewedUserGoogleId = fetchedUser?.google_id // Firestoreのgoogle_idフィールド
         const isOwnProfileCheck = currentUserId && viewedUserGoogleId && currentUserId === viewedUserGoogleId
-
+        
         // デバッグログ（開発環境のみ）
-        const isDev = typeof window !== 'undefined' && process.env.NODE_ENV === 'development'
+        const isDev =
+          typeof window !== 'undefined' &&
+          typeof process !== 'undefined' &&
+          process.env?.NODE_ENV === 'development'
         if (isDev) {
           console.log('🔍 Profile trips debug:', {
             currentUserId,
@@ -98,41 +101,41 @@ export default function UserProfileBySlugPage() {
             isOwnProfile: isOwnProfileCheck,
             totalTrips: trips.length,
             publicTrips: publicTripsList.length,
-            allTrips: trips.map(t => ({
-              id: t.id,
-              title: t.title,
+            allTrips: trips.map(t => ({ 
+              id: t.id, 
+              title: t.title, 
               access_level: t.access_level,
               access_level_type: typeof t.access_level,
               access_level_lower: t.access_level?.toLowerCase()
             }))
           })
         }
-
+        
         if (isOwnProfileCheck) {
           // access_levelが'private'、または未設定（デフォルトで非公開）の場合を含める
           const privateTripsList = trips.filter(t => {
             const level = t.access_level?.toLowerCase()
             // 'private'、未設定（null/undefined）、空文字列の場合は非公開とみなす
             const isPrivate = level === 'private' || !level || level === ''
-
+            
             // デバッグログ（開発環境のみ）
             if (isDev && isPrivate) {
-              console.log('🔒 Private trip found:', {
-                id: t.id,
-                title: t.title,
+              console.log('🔒 Private trip found:', { 
+                id: t.id, 
+                title: t.title, 
                 access_level: t.access_level,
                 access_level_lower: level,
                 isPrivate
               })
             }
-
+            
             return isPrivate
           })
-
+          
           if (isDev) {
             console.log('🔒 Private trips filtered:', privateTripsList.length, privateTripsList.map(t => ({ id: t.id, title: t.title, access_level: t.access_level })))
           }
-
+          
           setPrivateTrips(privateTripsList)
         } else {
           // 自分自身のプロフィールでない場合、空配列を設定
@@ -141,7 +144,7 @@ export default function UserProfileBySlugPage() {
 
         // 統計情報を取得（自分自身のプロフィールまたは公開旅行がある場合）
         const shouldShowStats = isOwnProfileCheck || publicTripsList.length > 0
-
+        
         if (shouldShowStats) {
           const statsRes = await makeAuthenticatedRequest('/api/trips?groupByCountry=true')
           if (statsRes.ok) {
@@ -157,7 +160,7 @@ export default function UserProfileBySlugPage() {
     } finally {
       setProfileLoading(false)
     }
-  }, [user, refreshUserData])
+  }, [user])
 
   // 言語→国旗のマッピング
   const languageFlags: Record<SupportedLanguage, string> = {
@@ -351,8 +354,8 @@ export default function UserProfileBySlugPage() {
                       <div className="relative w-24 h-24 rounded-full overflow-hidden">
                         {profileUser.profile_image_url ? (
                           <Image
-                            src={profileUser.profile_image_url}
-                            alt={profileUser.name}
+                            src={profileUser.profile_image_url} 
+                            alt={profileUser.name} 
                             fill
                             sizes="96px"
                             className="object-cover"
@@ -606,7 +609,9 @@ export default function UserProfileBySlugPage() {
                 <h4 className="text-xl font-semibold text-gray-900 mb-2">{t('profile.privateTrips.empty')}</h4>
                 <p className="text-gray-600">{t('profile.privateTrips.empty.description')}</p>
                 {/* デバッグ情報 */}
-                {typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && (
+                {typeof window !== 'undefined' &&
+                  typeof process !== 'undefined' &&
+                  process.env?.NODE_ENV === 'development' && (
                   <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs">
                     <p>Debug: isOwnProfile={String(isOwnProfile)}</p>
                     <p>Debug: privateTrips.length={privateTrips.length}</p>

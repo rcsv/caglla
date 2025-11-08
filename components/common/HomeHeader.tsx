@@ -86,7 +86,9 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
               <Link href="/home" className="text-gray-600 hover:text-gray-900">{t('travelGuide')}</Link>
               <Link href="/plan" className="text-gray-600 hover:text-gray-900">{t('nav.plan')}</Link>
               <Link href="/memories" className="text-gray-600 hover:text-gray-900">{t('memories')}</Link>
-              {typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && (
+              {typeof window !== 'undefined' &&
+                typeof process !== 'undefined' &&
+                process.env?.NODE_ENV === 'development' && (
                 <Link href="/dev-tools" className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900">
                   {t('devTools')}
                   <span className="px-1.5 py-0.5 text-xs font-semibold bg-emerald-500 text-white rounded">
