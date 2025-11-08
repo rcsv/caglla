@@ -129,3 +129,27 @@ env:
 
   - variable: NEXTAUTH_URL
     value: https://caglla.travel/
+
+  # --- 9. Stripe
+  - variable: NEXT_PUBLIC_PRODUCT_ID
+    secret: caglla-stripe-product-id
+    availability:
+      - RUNTIME
+
+  - variable: STRIPE_PRICE_SEASON_TRAVELER
+    secret: caglla-stripe-price-season-traveler
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: STRIPE_PRICE_BACKPACKER
+    secret: caglla-stripe-price-backpacker
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: STRIPE_PRICE_GLOBETROTTER
+    secret: caglla-stripe-price-globetrotter
+    availability:
+      - BUILD
+      - RUNTIME
