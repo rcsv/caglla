@@ -47,7 +47,9 @@ export async function loadGoogleMapsAPI(language?: SupportedLanguage): Promise<v
     }
   } catch (error) {
     // 開発環境での環境変数エラーの場合は、直接 process.env から取得を試行
-    console.warn('Environment validation failed, falling back to direct process.env access:', error)
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('Environment validation failed, falling back to direct process.env access:', error)
+    }
     
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 
                    process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || 
