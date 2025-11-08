@@ -48,7 +48,6 @@ export function getLanguageOverrideServer(): SupportedLanguage | undefined {
     // Only attempt in server environment
     if (typeof window === 'undefined') {
       // Lazy require to avoid bundling into client
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { cookies } = require('next/headers') as typeof import('next/headers')
       const c = cookies().get(COOKIE_NAME)?.value
       if (c && isSupportedLanguage(c)) return c
