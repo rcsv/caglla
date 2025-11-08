@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { placesApiHelpers } from '@/lib/api/google/places'
 import { getUserLanguage } from '@/lib/utils/language'
 import { useAuth } from '@/lib/contexts/auth'
@@ -38,7 +38,7 @@ export default function MapSearchOverlay({
   onSearchResultsUpdated,
   hideSuggestions = false,
   placeholder = t('placeSearch.placeholder'),
-  width = "min(640px,92vw)",
+  width = "min(420px,36vw)",
   position = "top-center"
 }: MapSearchOverlayProps) {
   const { user } = useAuth()
@@ -47,12 +47,14 @@ export default function MapSearchOverlay({
   const [isSearching, setIsSearching] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isExpanded, setIsExpanded] = useState(false)
   const searchTimeoutRef = useRef<NodeJS.Timeout>()
   const inputRef = useRef<HTMLInputElement>(null)
   const resultsRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const searchResultsUpdatedRef = useRef(onSearchResultsUpdated)
   const getMapViewportRef = useRef(getMapViewport)
+  const collapseTimerRef = useRef<NodeJS.Timeout>()
 
   useEffect(() => {
     searchResultsUpdatedRef.current = onSearchResultsUpdated
@@ -63,7 +65,12 @@ export default function MapSearchOverlay({
   }, [getMapViewport])
 
   // 外部クリックで検索結果を閉じる
-  useClickOutside(containerRef, () => setShowResults(false))
+  const collapseOverlay = useCallback(() => {
+    setShowResults(false)
+    setIsExpanded(false)
+  }, [])
+
+  useClickOutside(containerRef, () => collapseOverlay())
 
   useEffect(() => {
     if (query.length < 2) {
@@ -132,7 +139,7 @@ export default function MapSearchOverlay({
 
         const results = await placesApiHelpers.searchPlaces(query, language, locationBias)
         setSearchResults(results)
-        setShowResults(!hideSuggestions)
+        setShowResults(!hideSuggestions && isExpanded)
         setError(null)
         searchResultsUpdatedRef.current?.(results)
       } catch (error) {
@@ -176,6 +183,13 @@ export default function MapSearchOverlay({
       setShowResults(false)
       setError(null)
       onPlaceChosen?.(placeData)
+      if (collapseTimerRef.current) {
+        clearTimeout(collapseTimerRef.current)
+      }
+      collapseTimerRef.current = setTimeout(() => {
+        collapseOverlay()
+        inputRef.current?.blur()
+      }, 200)
     } catch (error) {
       logger.error('Error selecting place:', error)
       const errorMessage = error instanceof Error ? error.message : t('placeSearch.selectFailed')
@@ -189,10 +203,38 @@ export default function MapSearchOverlay({
   }
 
   const handleInputFocus = () => {
+    setIsExpanded(true)
     if (hideSuggestions) return
     if (searchResults.length > 0) {
       setShowResults(true)
     }
+  }
+
+  const handleInputBlur = () => {
+    if (collapseTimerRef.current) {
+      clearTimeout(collapseTimerRef.current)
+    }
+    collapseTimerRef.current = setTimeout(() => {
+      const active = document.activeElement
+      if (containerRef.current && active && containerRef.current.contains(active)) {
+        return
+      }
+      collapseOverlay()
+    }, 160)
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      collapseOverlay()
+      inputRef.current?.blur()
+    }
+  }
+
+  const handleExpandClick = () => {
+    setIsExpanded(true)
+    setShowResults(searchResults.length > 0 && !hideSuggestions)
+    requestAnimationFrame(() => inputRef.current?.focus())
   }
 
   // 位置に応じたCSSクラスを生成
@@ -209,45 +251,76 @@ export default function MapSearchOverlay({
     }
   }, [position])
 
+  useEffect(() => {
+    return () => {
+      if (collapseTimerRef.current) {
+        clearTimeout(collapseTimerRef.current)
+      }
+    }
+  }, [])
+
+  const expandedWidth = width || "min(420px,36vw)"
+  const collapsedWidth = '80px'
+  const containerWidth = isExpanded ? expandedWidth : collapsedWidth
+  const overlayBaseClasses = 'rounded-md border transition-all duration-200 ease-out backdrop-blur'
+  const overlayVisualClasses = isExpanded
+    ? 'bg-white/95 border-gray-200 shadow-lg'
+    : 'bg-white/40 border-white/40 shadow-sm'
+
   return (
     <div 
       ref={containerRef}
       className={`absolute ${positionClasses} zidx-map-overlay`}
-      style={{ width }}
+      style={{ width: containerWidth }}
     >
-      <div className="rounded-md shadow-md bg-white/90 backdrop-blur-sm p-2 border border-gray-200">
-        <div className="relative">
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={handleInputChange}
-            onFocus={handleInputFocus}
-            placeholder={placeholder}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          
-          {/* 検索アイコン */}
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            {isSearching ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
-            ) : (
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            )}
+      <div className={`${overlayBaseClasses} ${overlayVisualClasses} ${isExpanded ? 'p-2' : 'p-1.5'} pointer-events-auto`}>
+        {isExpanded ? (
+          <div className="relative">
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={handleInputChange}
+              onFocus={handleInputFocus}
+              onBlur={handleInputBlur}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            />
+            
+            {/* 検索アイコン */}
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              {isSearching ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent"></div>
+              ) : (
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleExpandClick}
+            className="flex items-center justify-center w-full h-9 rounded-md bg-white/20 hover:bg-white/40 transition-colors duration-200 text-gray-600"
+            aria-label={t('placeSearch.placeholder')}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        )}
 
         {/* エラーメッセージ */}
-        {error && (
+        {isExpanded && error && (
           <div className="mt-1 text-red-600 text-sm">
             {error}
           </div>
         )}
 
         {/* 検索結果 */}
-        {!hideSuggestions && showResults && searchResults.length > 0 && (
+        {isExpanded && !hideSuggestions && showResults && searchResults.length > 0 && (
           <div
             ref={resultsRef}
             className="absolute zidx-popup-menu w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
@@ -300,7 +373,7 @@ export default function MapSearchOverlay({
         )}
 
         {/* 検索結果が空の場合 */}
-        {!hideSuggestions && showResults && searchResults.length === 0 && !isSearching && query.length >= 2 && (
+        {isExpanded && !hideSuggestions && showResults && searchResults.length === 0 && !isSearching && query.length >= 2 && (
           <div className="absolute zidx-popup-menu w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
             <div className="px-4 py-3 text-center text-gray-500 text-sm">
               <div className="mb-2">{t('placeSearch.noResults')}</div>

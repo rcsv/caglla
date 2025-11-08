@@ -801,30 +801,33 @@ export default function TripMap({
         onSearchResultsUpdated={handleSearchResultsUpdated}
         hideSuggestions
         placeholder={t('placeSearch.placeholder')}
-        position="top-center"
+        position="top-left"
       />
       
       {/* マップのオーバーレイ情報 */}
-      <div className={`absolute top-4 left-4 bg-white rounded-lg shadow-xl border border-gray-200 p-3 max-w-xs ${getZIndexClass('MAIN_CONTENT')}`}>
-        <div className="text-sm text-gray-600">
-          <div className="font-medium text-gray-900 mb-1">
-            {t('tripMap.overlay.title')}
+      <div className={`absolute top-4 right-4 max-w-xs sm:max-w-sm pointer-events-auto ${getZIndexClass('MAP_OVERLAY')}`}>
+        <div className="bg-white/90 backdrop-blur-sm border border-gray-200 shadow-md rounded-lg px-4 py-3 text-sm text-gray-700 space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-semibold text-gray-900">
+              {t('tripMap.overlay.title')}
+            </span>
             {selectedDayId && (
-              <span className="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+              <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">
                 {t('tripMap.overlay.filtering')}
               </span>
             )}
           </div>
-          <div>
-            {t('tripMap.overlay.displayingLocations').replace('{count}', 
+          <div className="text-sm text-gray-600 leading-snug">
+            {t('tripMap.overlay.displayingLocations').replace(
+              '{count}',
               itineraries.filter(i => i.place_data?.geometry?.location).length.toString()
             )}
-            {selectedDayId && (
-              <div className="text-xs text-red-600 mt-1">
-                {t('tripMap.overlay.filteredByDay')}
-              </div>
-            )}
           </div>
+          {selectedDayId && (
+            <div className="text-xs text-red-600">
+              {t('tripMap.overlay.filteredByDay')}
+            </div>
+          )}
         </div>
       </div>
 
