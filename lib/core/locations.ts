@@ -189,58 +189,58 @@ export const COUNTRIES: Record<string, CountryInfo> = {
 
 // 主要都市マッピング（小文字でキー管理）
 export const CITIES: Record<string, CityInfo> = {
-  // 日本
-  'tokyo': { name: '東京', countryCode: 'JP', timezone: 'Asia/Tokyo', currency: 'JPY' },
-  'osaka': { name: '大阪', countryCode: 'JP', timezone: 'Asia/Tokyo', currency: 'JPY' },
+  // 日本の主要都市
   'kyoto': { name: '京都', countryCode: 'JP', timezone: 'Asia/Tokyo', currency: 'JPY' },
+  'osaka': { name: '大阪', countryCode: 'JP', timezone: 'Asia/Tokyo', currency: 'JPY' },
   'sapporo': { name: '札幌', countryCode: 'JP', timezone: 'Asia/Tokyo', currency: 'JPY' },
+  'tokyo': { name: '東京', countryCode: 'JP', timezone: 'Asia/Tokyo', currency: 'JPY' },
   
-  // アメリカ
-  'new york': { name: 'New York', countryCode: 'US', timezone: 'America/New_York', currency: 'USD' },
-  'los angeles': { name: 'Los Angeles', countryCode: 'US', timezone: 'America/Los_Angeles', currency: 'USD' },
+  // アメリカ（米国）の主要都市
   'chicago': { name: 'Chicago', countryCode: 'US', timezone: 'America/Chicago', currency: 'USD' },
-  'san francisco': { name: 'San Francisco', countryCode: 'US', timezone: 'America/Los_Angeles', currency: 'USD' },
   'las vegas': { name: 'Las Vegas', countryCode: 'US', timezone: 'America/Los_Angeles', currency: 'USD' },
+  'los angeles': { name: 'Los Angeles', countryCode: 'US', timezone: 'America/Los_Angeles', currency: 'USD' },
   'miami': { name: 'Miami', countryCode: 'US', timezone: 'America/New_York', currency: 'USD' },
+  'new york': { name: 'New York', countryCode: 'US', timezone: 'America/New_York', currency: 'USD' },
+  'san francisco': { name: 'San Francisco', countryCode: 'US', timezone: 'America/Los_Angeles', currency: 'USD' },
   
-  // ヨーロッパ
+  // ヨーロッパの主要都市
+  'amsterdam': { name: 'Amsterdam', countryCode: 'NL', timezone: 'Europe/Amsterdam', currency: 'EUR' },
+  'berlin': { name: 'Berlin', countryCode: 'DE', timezone: 'Europe/Berlin', currency: 'EUR' },
   'london': { name: 'London', countryCode: 'GB', timezone: 'Europe/London', currency: 'GBP' },
+  'madrid': { name: 'Madrid', countryCode: 'ES', timezone: 'Europe/Madrid', currency: 'EUR' },
   'paris': { name: 'Paris', countryCode: 'FR', timezone: 'Europe/Paris', currency: 'EUR' },
   'rome': { name: 'Rome', countryCode: 'IT', timezone: 'Europe/Rome', currency: 'EUR' },
-  'berlin': { name: 'Berlin', countryCode: 'DE', timezone: 'Europe/Berlin', currency: 'EUR' },
-  'madrid': { name: 'Madrid', countryCode: 'ES', timezone: 'Europe/Madrid', currency: 'EUR' },
-  'amsterdam': { name: 'Amsterdam', countryCode: 'NL', timezone: 'Europe/Amsterdam', currency: 'EUR' },
   
-  // アジア
-  'seoul': { name: 'Seoul', countryCode: 'KR', timezone: 'Asia/Seoul', currency: 'KRW' },
-  'beijing': { name: 'Beijing', countryCode: 'CN', timezone: 'Asia/Shanghai', currency: 'CNY' },
-  'shanghai': { name: 'Shanghai', countryCode: 'CN', timezone: 'Asia/Shanghai', currency: 'CNY' },
-  'hong kong': { name: 'Hong Kong', countryCode: 'HK', timezone: 'Asia/Hong_Kong', currency: 'HKD' },
-  'singapore': { name: 'Singapore', countryCode: 'SG', timezone: 'Asia/Singapore', currency: 'SGD' },
+  // アジアの主要都市
   'bangkok': { name: 'Bangkok', countryCode: 'TH', timezone: 'Asia/Bangkok', currency: 'THB' },
+  'beijing': { name: 'Beijing', countryCode: 'CN', timezone: 'Asia/Shanghai', currency: 'CNY' },
+  'hong kong': { name: 'Hong Kong', countryCode: 'HK', timezone: 'Asia/Hong_Kong', currency: 'HKD' },
+  'seoul': { name: 'Seoul', countryCode: 'KR', timezone: 'Asia/Seoul', currency: 'KRW' },
+  'shanghai': { name: 'Shanghai', countryCode: 'CN', timezone: 'Asia/Shanghai', currency: 'CNY' },
+  'singapore': { name: 'Singapore', countryCode: 'SG', timezone: 'Asia/Singapore', currency: 'SGD' },
   'taipei': { name: 'Taipei', countryCode: 'TW', timezone: 'Asia/Taipei', currency: 'TWD' },
   
-  // オセアニア
-  'sydney': { name: 'Sydney', countryCode: 'AU', timezone: 'Australia/Sydney', currency: 'AUD' },
-  'melbourne': { name: 'Melbourne', countryCode: 'AU', timezone: 'Australia/Melbourne', currency: 'AUD' },
+  // オセアニアの主要都市
   'auckland': { name: 'Auckland', countryCode: 'NZ', timezone: 'Pacific/Auckland', currency: 'NZD' },
+  'melbourne': { name: 'Melbourne', countryCode: 'AU', timezone: 'Australia/Melbourne', currency: 'AUD' },
+  'sydney': { name: 'Sydney', countryCode: 'AU', timezone: 'Australia/Sydney', currency: 'AUD' },
   
-  // 太平洋諸島
-  'honolulu': { name: 'Honolulu', countryCode: 'US', timezone: 'Pacific/Honolulu', currency: 'USD' },
+  // 太平洋諸島の主要都市
   'guam': { name: 'Guam', countryCode: 'GU', timezone: 'Pacific/Guam', currency: 'USD' },
+  'honolulu': { name: 'Honolulu', countryCode: 'US', timezone: 'Pacific/Honolulu', currency: 'USD' },
   'saipan': { name: 'Saipan', countryCode: 'MP', timezone: 'Pacific/Saipan', currency: 'USD' },
   
-  // インド・南アジア
-  'mumbai': { name: 'Mumbai', countryCode: 'IN', timezone: 'Asia/Kolkata', currency: 'INR' },
-  'delhi': { name: 'Delhi', countryCode: 'IN', timezone: 'Asia/Kolkata', currency: 'INR' },
+  // インド・南アジアの主要都市
   'bangalore': { name: 'Bangalore', countryCode: 'IN', timezone: 'Asia/Kolkata', currency: 'INR' },
   'chennai': { name: 'Chennai', countryCode: 'IN', timezone: 'Asia/Kolkata', currency: 'INR' },
+  'delhi': { name: 'Delhi', countryCode: 'IN', timezone: 'Asia/Kolkata', currency: 'INR' },
   'kolkata': { name: 'Kolkata', countryCode: 'IN', timezone: 'Asia/Kolkata', currency: 'INR' },
+  'mumbai': { name: 'Mumbai', countryCode: 'IN', timezone: 'Asia/Kolkata', currency: 'INR' },
   
-  // その他
+  // その他の代表的な都市
   'dubai': { name: 'Dubai', countryCode: 'AE', timezone: 'Asia/Dubai', currency: 'AED' },
-  'moscow': { name: 'Moscow', countryCode: 'RU', timezone: 'Europe/Moscow', currency: 'RUB' },
   'istanbul': { name: 'Istanbul', countryCode: 'TR', timezone: 'Europe/Istanbul', currency: 'TRY' },
+  'moscow': { name: 'Moscow', countryCode: 'RU', timezone: 'Europe/Moscow', currency: 'RUB' },
 }
 
 // ヘルパー関数
