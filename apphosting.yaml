@@ -96,6 +96,12 @@ env:
     secret: caglla-unsplash-access-key
     availability:
       - BUILD
+      - RUNTIME
+  
+  - variable: UNSPLASH_ACCESS_KEY
+    secret: caglla-unsplash-access-key
+    availability:
+      - RUNTIME
   
   - variable: UNSPLASH_SECRET_KEY
     secret: caglla-unsplash-secret-key
