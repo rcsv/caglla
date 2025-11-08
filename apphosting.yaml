@@ -136,6 +136,7 @@ env:
     availability:
       - RUNTIME
 
+  ## fix typo in Google Secret Manager
   - variable: STRIPE_PRICE_SEASON_TRAVELER
     secret: caglla-stripe-price-season-traveler
     availability:
