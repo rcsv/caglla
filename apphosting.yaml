@@ -88,11 +88,13 @@ env:
     secret: caglla-google-places-api-key
     availability:
       - BUILD
+      - RUNTIME
   
   - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
     secret: caglla-google-maps-api-key
     availability:
       - BUILD
+      - RUNTIME
   
   - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
     secret: caglla-google-map-id
