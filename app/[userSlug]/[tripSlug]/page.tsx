@@ -13,7 +13,6 @@ import Loading from '@/components/common/Loading'
 import { Icon } from '@iconify/react'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
-import { getTripBySlugs } from '@/lib/travel/slug-helpers'
 import { dateUtils } from '@/lib/utils/date'
 import { DragEndEvent } from '@dnd-kit/core'
 import TripPageLayout from '@/components/trip/TripPageLayout'
@@ -27,6 +26,7 @@ import { getCachedPlaces } from '@/lib/travel/places-cache'
 import { useUserData } from '@/lib/contexts/user-data'
 import { useSubscription } from '@/lib/contexts/subscription'
 import { exportTripToPdf, canExportToPdf } from '@/lib/utils/export-helpers'
+import { canEditTrip } from '@/lib/core/permissions'
 
 export default function SlugBasedTripPage() {
   const { user, loading, logout } = useAuth()
@@ -279,20 +279,27 @@ export default function SlugBasedTripPage() {
       try {
         setTripLoading(true)
         logger.debug('Fetching trip data:', { userSlug, tripSlug })
-        const tripData = await getTripBySlugs(userSlug, tripSlug)
         
-        if (!tripData) {
-          logger.error('Trip not found:', { userSlug, tripSlug })
-          // 旅行が見つからない場合はnotFound()を呼び出し
+        // APIエンドポイント経由でTripデータを取得（他人のデータも取得可能）
+        const response = await makeAuthenticatedRequest(`/api/trip/${tripSlug}`)
+        
+        if (!response.ok) {
+          logger.error('Trip not found:', { userSlug, tripSlug, status: response.status })
           notFound()
           return
         }
         
+        const tripData = await response.json()
         logger.debug('Trip data found:', { tripId: tripData.id, title: tripData.title })
         
         setTrip(tripData)
-        
-        // place_idがあるがplace_dataがないItineraryを検出し、必要に応じてデータを取得
+
+        // 非所有者はクライアント側での place_data 取得を行わない（無限ループ防止）
+        // user が未確定（null）の初回レンダーではスキップしない
+        if (user && !canEditTrip(user, tripData)) {
+          return
+        }
+        // place_idがあるがplace_dataがないItineraryを検出し、必要に応じてデータを取得（所有者のみ）
         if (tripData.days) {
           const missingPlaceIds: string[] = []
           tripData.days.forEach(day => {
@@ -1117,6 +1124,49 @@ export default function SlugBasedTripPage() {
     router.push('/')
   }
 
+  // 権限判定：ユーザーがこのトリップの所有者かどうか
+  const canEdit = canEditTrip(user, trip)
+
+  // メニュー項目を構築（編集権限がない場合は編集系を除外）
+  const menuItems = [
+    // 閲覧者も利用可能な機能
+    {
+      id: 'travel-book-preview',
+      label: 'Travel Book Preview',
+      icon: 'mdi:eye',
+      onClick: handlePdfPreview,
+    },
+    // 以下は所有者のみ
+    ...(canEdit ? [
+      {
+        id: 'edit-base-info',
+        label: 'Edit Base Info',
+        icon: 'mdi:pencil',
+        onClick: () => setShowEditBaseInfoModal(true),
+      },
+      {
+        id: 'calendar-publish',
+        label: t('trip.calendarPublish'),
+        icon: 'mdi:calendar-sync',
+        onClick: () => setShowICalPublishModal(true),
+        disabled: userPlan === 'season_traveler',
+      },
+      {
+        id: 'download-travel-book',
+        label: 'Download Travel Book',
+        icon: 'mdi:file-pdf-box',
+        onClick: handlePdfExport,
+        disabled: pdfExporting || !canExportToPdf(userData?.planId || 'season_traveler'),
+      },
+      {
+        id: 'export-json',
+        label: 'Export JSON',
+        icon: 'mdi:download',
+        onClick: () => setShowExportModal(true),
+      },
+    ] : []),
+  ]
+
   return (
     <TripPageLayout
       trip={trip}
@@ -1128,40 +1178,7 @@ export default function SlugBasedTripPage() {
       onDayClick={handleDayClick}
       onLogout={handleLogout}
       rightPaneWidth={currentView === 'checklist' ? 'zero' : 'default'}
-      menuItems={[
-        {
-          id: 'edit-base-info',
-          label: 'Edit Base Info',
-          icon: 'mdi:pencil',
-          onClick: () => setShowEditBaseInfoModal(true),
-        },
-        {
-          id: 'calendar-publish',
-          label: t('trip.calendarPublish'),
-          icon: 'mdi:calendar-sync',
-          onClick: () => setShowICalPublishModal(true),
-          disabled: userPlan === 'season_traveler',
-        },
-        {
-          id: 'travel-book-preview',
-          label: 'Travel Book Preview',
-          icon: 'mdi:eye',
-          onClick: handlePdfPreview,
-        },
-        {
-          id: 'download-travel-book',
-          label: 'Download Travel Book',
-          icon: 'mdi:file-pdf-box',
-          onClick: handlePdfExport,
-          disabled: pdfExporting || !canExportToPdf(userData?.planId || 'season_traveler'),
-        },
-        {
-          id: 'export-json',
-          label: 'Export JSON',
-          icon: 'mdi:download',
-          onClick: () => setShowExportModal(true),
-        },
-      ]}
+      menuItems={menuItems}
       rightPane={
         <TripRightPane
           trip={trip}
@@ -1172,7 +1189,7 @@ export default function SlugBasedTripPage() {
           poiData={poiData}
           onItineraryClick={handleMapMarkerClick}
           onPoiDataUpdate={setPoiData}
-          onAddFromPOI={handleAddFromPOI}
+          onAddFromPOI={canEdit ? handleAddFromPOI : undefined}
           getFilteredItineraries={getFilteredItineraries}
           // 地図側の操作によりスクロール連動を即停止
           onMapInteractionStart={() => setScrollSyncEnabled(false)}
@@ -1186,6 +1203,7 @@ export default function SlugBasedTripPage() {
       {currentView === 'summary' && (
         <TripHeroSection
           trip={trip}
+          canEdit={canEdit}
           onUpdateTrip={setTrip}
           onDeleteTrip={() => {
             // コンテキストから旅行を削除してから遷移
@@ -1210,6 +1228,7 @@ export default function SlugBasedTripPage() {
       {currentView === 'itinerary' && (
         <TripItineraryView
           trip={trip}
+          canEdit={canEdit}
           collapsedDays={collapsedDays}
           selectedDayId={selectedDayId}
           selectedItineraryId={selectedItineraryId}
@@ -1240,7 +1259,7 @@ export default function SlugBasedTripPage() {
 
       {/* Checklist（モバイルではメインに表示）*/}
       {currentView === 'checklist' && (
-        <TripChecklistView tripId={trip.id} />
+        <TripChecklistView tripId={trip.id} readOnly={!canEdit} />
       )}
 
       {/* Add Schedule Modal */}

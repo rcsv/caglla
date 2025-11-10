@@ -172,21 +172,10 @@ const response = await makeAuthenticatedRequest('/api/trips', {
 
 ### 旅行詳細ページ
 
-- **新しい形式**: `/[userSlug]/[tripSlug]`
-- **古い形式**: `/trip/[tripId]` (リダイレクト用)
+- **形式**: `/[userSlug]/[tripSlug]`
+- **例**: `/johndoe/tokyo-2024-spring`
 
-### リダイレクト処理
-
-古いURL形式にアクセスした場合は、新しいスラッグベースのURLにリダイレクト：
-
-```typescript
-// /trip/[id]/page.tsx
-const slugs = await getSlugsFromTripId(id)
-if (slugs) {
-  const newUrl = `/${slugs.userSlug}/${slugs.tripSlug}`
-  router.replace(newUrl)
-}
-```
+すべての旅行プラン詳細ページはスラッグベースのURLを使用します。
 
 ## スラッグの妥当性検証
 
@@ -233,9 +222,9 @@ function validateSlug(slug: string): { isValid: boolean; error?: string } {
 ## 実装ファイル
 
 - **メイン実装**: `lib/slug-utils.ts`
-- **データ取得ヘルパー**: `lib/slug-data-helpers.ts`
+- **データ取得ヘルパー**: `lib/travel/slug-helpers.ts`
 - **旅行作成API**: `app/api/trips/route.ts`
-- **リダイレクトページ**: `app/trip/[id]/page.tsx`
+- **旅行詳細ページ**: `app/[userSlug]/[tripSlug]/page.tsx`
 
 ## 注意事項
 

@@ -8,6 +8,7 @@ import { Itinerary, PlaceData, Day, Trip } from '@/lib/core/types'
 
 interface SortableItineraryCardProps {
   itinerary: Itinerary
+  canEdit?: boolean
   displayNumber?: number
   previousPlace?: PlaceData | null
   nextPlace?: PlaceData | null
@@ -33,7 +34,10 @@ export default function SortableItineraryCard(props: SortableItineraryCardProps)
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: props.itinerary.id })
+  } = useSortable({ 
+    id: props.itinerary.id,
+    disabled: !props.canEdit // 編集権限がない場合はD&Dを無効化
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -49,7 +53,7 @@ export default function SortableItineraryCard(props: SortableItineraryCardProps)
     >
       <ScheduleCard 
         {...props} 
-        dragHandleProps={{ attributes, listeners }}
+        dragHandleProps={props.canEdit ? { attributes, listeners } : undefined}
         isDragging={isDragging}
       />
     </div>

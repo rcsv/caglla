@@ -53,27 +53,33 @@ export async function GET(
     let tripWithDest: TripWithDestination = trip
     try {
       if (trip.destination_place_id && !tripWithDest.destination_place) {
-        const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(trip.destination_place_id).get()
-        if (cacheDoc.exists) {
-          const placesCache = cacheDoc.data() as PlacesCache
-          // PlacesCacheからPlaceDataに変換（メタデータを除外）
-          tripWithDest.destination_place = {
-            place_id: placesCache.place_id,
-            name: placesCache.name,
-            formatted_address: placesCache.formatted_address,
-            geometry: placesCache.geometry,
-            address_components: placesCache.address_components,
-            photos: placesCache.photos,
-            rating: placesCache.rating,
-            user_ratings_total: placesCache.user_ratings_total,
-            price_level: placesCache.price_level,
-            types: placesCache.types,
-            opening_hours: placesCache.opening_hours,
-            international_phone_number: placesCache.international_phone_number,
-            website: placesCache.website,
-            editorial_summary: placesCache.editorial_summary,
+        // PlacesCache のキーは placeId_language 形式のため、言語フォールバックで解決
+        const fallbackLanguages = ['en', 'ja']
+        for (const lang of fallbackLanguages) {
+          const cacheKey = `${trip.destination_place_id}_${lang}`
+          const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(cacheKey).get()
+          if (cacheDoc.exists) {
+            const placesCache = cacheDoc.data() as PlacesCache
+            // PlacesCacheからPlaceDataに変換（メタデータを除外）
+            tripWithDest.destination_place = {
+              place_id: placesCache.place_id,
+              name: placesCache.name,
+              formatted_address: placesCache.formatted_address,
+              geometry: placesCache.geometry,
+              address_components: placesCache.address_components,
+              photos: placesCache.photos,
+              rating: placesCache.rating,
+              user_ratings_total: placesCache.user_ratings_total,
+              price_level: placesCache.price_level,
+              types: placesCache.types,
+              opening_hours: placesCache.opening_hours,
+              international_phone_number: placesCache.international_phone_number,
+              website: placesCache.website,
+              editorial_summary: placesCache.editorial_summary,
+            }
+            break
           }
-        }
+        }        
       }
     } catch (error) {
       logger.error('Failed to resolve destination_place', error)
@@ -92,9 +98,29 @@ export async function GET(
             // place_idがある場合、place_cacheから最新データを取得
             if (it.place_id) {
               try {
-                const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(it.place_id).get()
-                if (cacheDoc.exists) {
-                  const placesCache = cacheDoc.data() as PlacesCache
+                // PlacesCache のキーは placeId_language 形式なので、言語フォールバックで解決
+                const preferredLanguage = 'en' // サーバー側なのでデフォルトで英語
+                const fallbackLanguages = ['en', 'ja'] // 英語 → 日本語の順でフォールバック
+                
+                let placesCache: PlacesCache | null = null
+                let resolvedCacheKey: string | null = null
+                
+                // 優先言語でキャッシュを検索
+                for (const lang of fallbackLanguages) {
+                  const cacheKey = `${it.place_id}_${lang}`
+                  try {
+                    const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(cacheKey).get()
+                    if (cacheDoc.exists) {
+                      placesCache = cacheDoc.data() as PlacesCache
+                      resolvedCacheKey = cacheKey
+                      break
+                    }
+                  } catch (error) {
+                    logger.debug(`Failed to fetch PlacesCache with key: ${cacheKey}`, error)
+                  }
+                }
+                
+                if (placesCache) {
                   // PlacesCacheからPlaceDataに変換（メタデータを除外）
                   it.place_data = {
                     place_id: placesCache.place_id,
@@ -112,9 +138,18 @@ export async function GET(
                     website: placesCache.website,
                     editorial_summary: placesCache.editorial_summary,
                   }
+                  logger.debug(`PlacesCache resolved for itinerary`, { 
+                    itineraryId: it.id, 
+                    placeId: it.place_id, 
+                    cacheKey: resolvedCacheKey 
+                  })
                 } else if (!it.place_data) {
                   // キャッシュにない場合のみ、フォールバックとして既存のplace_dataを使用
-                  logger.warn('PlacesCache not found for itinerary', { itineraryId: it.id, placeId: it.place_id })
+                  logger.warn('PlacesCache not found for itinerary', { 
+                    itineraryId: it.id, 
+                    placeId: it.place_id,
+                    triedKeys: fallbackLanguages.map(lang => `${it.place_id}_${lang}`)
+                  })
                 }
               } catch (error) {
                 logger.error('Failed to resolve place_data for itinerary', error, { itineraryId: it.id })
@@ -177,7 +212,8 @@ export async function GET(
     }
 
     return NextResponse.json({
-      ...trip,
+      // NOTE: destination_place を places_cache から解決したものを含めて返す
+      ...tripWithDest,
       days: daysWithItineraries,
       creator
     })

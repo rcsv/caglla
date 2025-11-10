@@ -11,9 +11,10 @@ import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 
 interface TripChecklistViewProps {
   tripId?: string
+  readOnly?: boolean
 }
 
-export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
+export default function TripChecklistView({ tripId, readOnly = false }: TripChecklistViewProps) {
   const [items, setItems] = useState<ChecklistItem[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -82,6 +83,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
 
   // トグル
   const toggle = (id: string) => {
+    if (readOnly) return // 閲覧専用モードでは変更不可
     const next = items.map(i => i.id === id ? { ...i, done: !i.done } : i)
     setItems(next)
     persist(next)
@@ -92,6 +94,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<'preparation' | 'packing'>('packing')
   
   const addCustom = () => {
+    if (readOnly) return // 閲覧専用モードでは追加不可
     const t = input.trim()
     if (!t) return
     const next: ChecklistItem[] = [
@@ -111,6 +114,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
 
   // アイテム削除
   const removeItem = (id: string) => {
+    if (readOnly) return // 閲覧専用モードでは削除不可
     const next = items.filter(i => i.id !== id)
     setItems(next)
     persist(next)
@@ -123,34 +127,39 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
     <div className="px-4 py-4">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-4 flex items-center justify-between flex-wrap gap-2">
-          <h2 className="text-lg font-semibold text-gray-900">{t('checklist.title')}</h2>
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => setShowLibraryModal(true)}
-              className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
-            >
-              {t('checklist.applyPreset')}
-            </button>
-            <button
-              onClick={() => setShowMyPresetsModal(true)}
-              className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
-            >
-              {t('checklist.myPresets')}
-            </button>
-            <button
-              onClick={() => setShowPresetModal(true)}
-              className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
-            >
-              {t('checklist.saveAsPreset')}
-            </button>
-            <button
-              onClick={regenerate}
-              disabled={saving || !tripId}
-              className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            >
-              {saving ? t('checklist.regenerating') : t('checklist.regenerate')}
-            </button>
-          </div>
+          <h2 className="text-lg font-semibold text-gray-900">
+            {t('checklist.title')}
+            {readOnly && <span className="ml-2 text-xs text-gray-500">({t('common.readOnly')})</span>}
+          </h2>
+          {!readOnly && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setShowLibraryModal(true)}
+                className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+              >
+                {t('checklist.applyPreset')}
+              </button>
+              <button
+                onClick={() => setShowMyPresetsModal(true)}
+                className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+              >
+                {t('checklist.myPresets')}
+              </button>
+              <button
+                onClick={() => setShowPresetModal(true)}
+                className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
+              >
+                {t('checklist.saveAsPreset')}
+              </button>
+              <button
+                onClick={regenerate}
+                disabled={saving || !tripId}
+                className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {saving ? t('checklist.regenerating') : t('checklist.regenerate')}
+              </button>
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -171,11 +180,12 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
                       className="w-4 h-4" 
                       checked={!!item.done} 
                       onChange={() => toggle(item.id)} 
+                      disabled={readOnly}
                     />
                     <span className={`flex-1 ${item.done ? 'line-through text-gray-400' : 'text-gray-800'}`}>
                       {item.title}
                     </span>
-                    {item.isCustom && (
+                    {item.isCustom && !readOnly && (
                       <button 
                         onClick={() => removeItem(item.id)} 
                         className="text-xs text-gray-500 hover:text-red-600"
@@ -205,11 +215,12 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
                       className="w-4 h-4" 
                       checked={!!item.done} 
                       onChange={() => toggle(item.id)} 
+                      disabled={readOnly}
                     />
                     <span className={`flex-1 ${item.done ? 'line-through text-gray-400' : 'text-gray-800'}`}>
                       {item.title}
                     </span>
-                    {item.isCustom && (
+                    {item.isCustom && !readOnly && (
                       <button 
                         onClick={() => removeItem(item.id)} 
                         className="text-xs text-gray-500 hover:text-red-600"
@@ -225,7 +236,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
         )}
 
         {/* カスタム項目追加 */}
-        {!loading && (
+        {!loading && !readOnly && (
           <div className="p-4 border-t border-gray-200">
             <div className="flex items-center gap-2">
               <select

@@ -29,6 +29,7 @@ import { getSecondaryCategoryIconName } from '@/lib/data/activity-categories'
 
 interface ScheduleCardProps {
   itinerary: Itinerary
+  canEdit?: boolean
   displayNumber?: number
   previousPlace?: PlaceData | null
   nextPlace?: PlaceData | null
@@ -53,6 +54,7 @@ interface ScheduleCardProps {
 
 export default function ScheduleCard({ 
   itinerary, 
+  canEdit = true,
   displayNumber,
   previousPlace,
   nextPlace,
@@ -139,6 +141,8 @@ export default function ScheduleCard({
 
   useEffect(() => {
     const ensurePlaceData = async () => {
+      // 閲覧専用の場合は取得/保存を行わない
+      if (!canEdit) return
       // 既に取得中、または place_data が存在する場合はスキップ
       if (isFetchingPlaceData || itinerary.place_data || !itineraryPlaceId) {
         return
@@ -161,7 +165,7 @@ export default function ScheduleCard({
       }
     }
     ensurePlaceData()
-  }, [itineraryPlaceId, itinerary.place_data, isFetchingPlaceData, user, updateField])
+  }, [canEdit, itineraryPlaceId, itinerary.place_data, isFetchingPlaceData, user, updateField])
 
   // 通貨推測ロジックは削除（Create Trip Dialogで目的地選択時に通貨を自動推定する方式に変更）
 
@@ -355,8 +359,8 @@ export default function ScheduleCard({
                   />
                 ) : (
                   <h4 
-                    className="font-semibold text-gray-900 text-lg cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                    onClick={() => setIsEditingTitle(true)}
+                    className={canEdit ? "font-semibold text-gray-900 text-lg cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors" : "font-semibold text-gray-900 text-lg px-2 py-1"}
+                    onClick={canEdit ? () => setIsEditingTitle(true) : undefined}
                   >
                     {itinerary.title}
                   </h4>
@@ -397,8 +401,8 @@ export default function ScheduleCard({
                   />
                 ) : (
                   <div
-                    onClick={() => setIsEditingDescription(true)}
-                    className="cursor-pointer text-sm text-gray-700 hover:bg-gray-50 p-2 rounded border border-transparent hover:border-gray-200 min-h-[2.5rem]"
+                    onClick={canEdit ? () => setIsEditingDescription(true) : undefined}
+                    className={canEdit ? "cursor-pointer text-sm text-gray-700 hover:bg-gray-50 p-2 rounded border border-transparent hover:border-gray-200 min-h-[2.5rem]" : "text-sm text-gray-700 p-2 min-h-[2.5rem]"}
                   >
                     {description ? (
                       <div>
@@ -461,38 +465,42 @@ export default function ScheduleCard({
                     costAmount={itinerary.cost_amount ?? undefined}
                     costCurrency={itinerary.cost_currency ?? undefined}
                     reservation={itinerary.reservation}
-                    onTimeEdit={handleTimeEditStart}
-                    onCostEdit={handleCostEditStart}
-                    onReservationEdit={() => setShowReservationModal(true)}
+                    onTimeEdit={canEdit ? handleTimeEditStart : undefined}
+                    onCostEdit={canEdit ? handleCostEditStart : undefined}
+                    onReservationEdit={canEdit ? () => setShowReservationModal(true) : undefined}
                   />
                 )}
               </div>
 
-              {/* アクティビティタグセクション */}
-              <div className="mb-4 px-2">
-                <ActivityTagSelector
-                  currentTag={itinerary.activity_tag}
-                  onTagChange={(tag) => updateField('activity_tag', tag)}
-                />
-              </div>
+              {/* アクティビティタグセクション - 編集権限がある場合のみ */}
+              {canEdit && (
+                <div className="mb-4 px-2">
+                  <ActivityTagSelector
+                    currentTag={itinerary.activity_tag}
+                    onTagChange={(tag) => updateField('activity_tag', tag)}
+                  />
+                </div>
+              )}
             </div>
 
-            {/* 右側: ハンバーガーメニュー */}
-            <ScheduleCardMenu
-              isFirst={isFirst}
-              isLast={isLast}
-              availableDays={availableDays}
-              currentDayId={itinerary.day_id}
-              itineraryId={itinerary.id}
-              hasReservation={!!itinerary.reservation}
-              reservationType={itinerary.reservation?.type}
-              onMoveUp={() => onMoveUp?.()}
-              onMoveDown={() => onMoveDown?.()}
-              onMoveToDay={(dayId) => onMoveToDay?.(itinerary.id, dayId)}
-              onDuplicateToDay={(dayId) => onDuplicateToDay?.(itinerary.id, dayId)}
-              onReservation={() => setShowReservationModal(true)}
-              onDelete={() => onDelete?.(itinerary.id)}
-            />
+            {/* 右側: ハンバーガーメニュー - 編集権限がある場合のみ */}
+            {canEdit && (
+              <ScheduleCardMenu
+                isFirst={isFirst}
+                isLast={isLast}
+                availableDays={availableDays}
+                currentDayId={itinerary.day_id}
+                itineraryId={itinerary.id}
+                hasReservation={!!itinerary.reservation}
+                reservationType={itinerary.reservation?.type}
+                onMoveUp={() => onMoveUp?.()}
+                onMoveDown={() => onMoveDown?.()}
+                onMoveToDay={(dayId) => onMoveToDay?.(itinerary.id, dayId)}
+                onDuplicateToDay={(dayId) => onDuplicateToDay?.(itinerary.id, dayId)}
+                onReservation={() => setShowReservationModal(true)}
+                onDelete={() => onDelete?.(itinerary.id)}
+              />
+            )}
           </div>
         </div>
       </div>

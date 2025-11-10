@@ -7,36 +7,13 @@ import { SolidCard } from '@/components/common/static/SolidCard'
 import { SearchIcon } from '@/components/common/icons/SearchIcon'
 import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { UserIcon } from '@/components/common/icons/UserIcon'
+import { getAllBlogPosts } from '@/lib/content/blog'
+import { t } from '@/lib/i18n'
 
 export default function BlogPage() {
-  const { t } = require('@/lib/i18n')
   const [query, setQuery] = React.useState('')
 
-  const posts: Array<{
-    slug: string
-    title: string
-    excerpt: string
-    date: string
-    author: string
-    tags: string[]
-  }> = [
-    {
-      slug: 'welcome-to-caglla',
-      title: 'Cagllaへようこそ — 旅行計画をシンプルに',
-      excerpt: 'Cagllaの目指す体験、開発の背景、今後のロードマップをご紹介します。',
-      date: '2025-10-21',
-      author: 'Team Caglla',
-      tags: ['Product', 'Roadmap'],
-    },
-    {
-      slug: 'support-and-faq-refresh',
-      title: 'Support/FAQ/Docsを刷新しました',
-      excerpt: '検索・カテゴリ・自己解決を重視したヘルプセンターを導入しました。',
-      date: '2025-10-30',
-      author: 'Team Caglla',
-      tags: ['Updates', 'Support'],
-    },
-  ]
+  const posts = getAllBlogPosts()
 
   const filtered = posts.filter((p) => {
     if (!query.trim()) return true

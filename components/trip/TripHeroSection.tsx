@@ -18,10 +18,11 @@ interface TripHeroSectionProps {
 
 export default function TripHeroSection({
   trip,
+  canEdit = true,
   onUpdateTrip,
   onDeleteTrip,
   onToggleMobileMenu,
-}: TripHeroSectionProps) {
+}: TripHeroSectionProps & { canEdit?: boolean }) {
   const { user } = useAuth()
   const currentLanguage = getUserLanguage(user)
   
@@ -60,12 +61,14 @@ export default function TripHeroSection({
               </svg>
             </button>
           </div>
-          <TripEditor 
-            trip={trip} 
-            onUpdate={onUpdateTrip} 
-            onDelete={onDeleteTrip}
-            hideEditButton={true}
-          />
+          {canEdit && (
+            <TripEditor 
+              trip={trip} 
+              onUpdate={onUpdateTrip} 
+              onDelete={onDeleteTrip}
+              hideEditButton={true}
+            />
+          )}
         </div>
         
         {/* Main Content - Positioned higher */}

@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
 import { routeOptimizer } from '@/lib/travel/route-optimization'
 import { getZIndexClass } from '@/lib/core/z-index'
+import { getZoomForPlaceTypes, DEFAULT_ITINERARY_ZOOM } from '@/lib/travel/map-zoom'
 import POIDialog from '@/components/modals/POIDialog'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { dateUtils } from '@/lib/utils/date'
@@ -17,7 +18,7 @@ import Loading from '@/components/common/Loading'
 import { t } from '@/lib/i18n'
 
 // マップのズームレベル定数
-const DEFAULT_ZOOM_LEVEL = 14
+const DEFAULT_ZOOM_LEVEL = DEFAULT_ITINERARY_ZOOM
 const SMOOTH_PAN_DISTANCE_THRESHOLD = 5 // 約5km（滑らかなパンを使用する距離の閾値）
 
 // 2点間の距離を計算する関数（簡易版）
@@ -153,6 +154,7 @@ export default function TripMap({
     if (!map || !place.geometry?.location) return
 
     const { lat, lng } = place.geometry.location
+    const zoom = getZoomForPlaceTypes(place.types)
     
     // 既存の検索マーカーをクリア
     if (searchMarker) {
@@ -181,7 +183,7 @@ export default function TripMap({
     setSearchMarker(marker)
 
     // 地図を選択された場所にパン・ズーム
-    smoothMoveToLocation(map, lat, lng, DEFAULT_ZOOM_LEVEL)
+    smoothMoveToLocation(map, lat, lng, zoom)
     
     // 地図操作を検出（スクロール連動を停止）
     onMapInteractionStart?.()
@@ -513,6 +515,7 @@ export default function TripMap({
             lat: itinerary.place_data!.geometry!.location.lat,
             lng: itinerary.place_data!.geometry!.location.lng,
           }
+          const zoom = getZoomForPlaceTypes(itinerary.place_data?.types)
           
           // DirectionsRendererを一時的に非表示にして、ズームが正常に動作するようにする
           if (directionsRenderer) {
@@ -520,7 +523,7 @@ export default function TripMap({
           }
           
           // 地図を選択された場所にフォーカス（滑らかなアニメーション）
-          smoothMoveToLocation(map, position.lat, position.lng, DEFAULT_ZOOM_LEVEL)
+          smoothMoveToLocation(map, position.lat, position.lng, zoom)
         }
       })
 
@@ -584,7 +587,14 @@ export default function TripMap({
           lat: selectedItinerary.place_data!.geometry!.location.lat,
           lng: selectedItinerary.place_data!.geometry!.location.lng,
         }
-        smoothMoveToLocation(map, position.lat, position.lng, DEFAULT_ZOOM_LEVEL)
+        const zoom = getZoomForPlaceTypes(selectedItinerary.place_data?.types)
+        logger.debug('🎯 TripMap: Marker click focus with types-based zoom', {
+          itineraryTitle: selectedItinerary.title,
+          types: selectedItinerary.place_data?.types,
+          calculatedZoom: zoom,
+          position
+        })
+        smoothMoveToLocation(map, position.lat, position.lng, zoom)
       }
       return // 個別フォーカスモードの場合はここで終了
     }
@@ -597,11 +607,18 @@ export default function TripMap({
     // 全体表示モードの場合の処理
     if (validItineraries.length === 1) {
       // 単一のItineraryの場合
+      const only = validItineraries[0]
+      const zoom = getZoomForPlaceTypes(only.place_data?.types)
+      logger.debug('🎯 TripMap: Single itinerary view with types-based zoom', {
+        itineraryTitle: only.title,
+        types: only.place_data?.types,
+        calculatedZoom: zoom
+      })
       smoothMoveToLocation(
         map,
-        validItineraries[0].place_data!.geometry!.location.lat,
-        validItineraries[0].place_data!.geometry!.location.lng,
-        DEFAULT_ZOOM_LEVEL
+        only.place_data!.geometry!.location.lat,
+        only.place_data!.geometry!.location.lng,
+        zoom
       )
     } else if (validItineraries.length > 1) {
       // 複数のItineraryの場合：全体を表示
@@ -755,7 +772,14 @@ export default function TripMap({
       directionsRenderer.setMap(null)
     }
     
-    smoothMoveToLocation(map, position.lat, position.lng, DEFAULT_ZOOM_LEVEL)
+    const zoom = getZoomForPlaceTypes(selectedItinerary.place_data?.types)
+    logger.debug('🎯 TripMap: Focusing on selected itinerary with types-based zoom', {
+      itineraryTitle: selectedItinerary.title,
+      types: selectedItinerary.place_data?.types,
+      calculatedZoom: zoom,
+      position
+    })
+    smoothMoveToLocation(map, position.lat, position.lng, zoom)
 
     // 該当するマーカーをハイライト
     markersRef.current.forEach((markerData) => {

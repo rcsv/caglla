@@ -9,6 +9,7 @@ import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
 import { dateUtils } from '@/lib/utils/date'
 import { getCountryFlag } from '@/lib/utils/country-flags'
 import { getUserLanguage } from '@/lib/utils/language'
+import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
 
 type TripCardVariant = 'standard' | 'imageFull'
@@ -26,8 +27,15 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           if (trip.creator?.slug && trip.slug) {
             return `/${trip.creator.slug}/${trip.slug}`
           }
-          // フォールバック: スラッグが存在しない場合はIDベースのURL
-          return `/trip/${trip.id}`
+          // スラッグが存在しない場合はホームへ（データ不整合）
+          logger.warn('Trip missing slug data', { 
+            tripId: trip.id, 
+            hasCreator: !!trip.creator,
+            creatorSlug: trip.creator?.slug,
+            tripSlug: trip.slug,
+            tripTitle: trip.title
+          })
+          return '/home'
         }
 
   // access_levelの型安全性を確保
