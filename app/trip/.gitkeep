@@ -1,0 +1,11 @@
+# ⚠️ DEPRECATED: ID-based trip routes are deprecated
+# 
+# DO NOT create page.tsx or [tripId]/page.tsx in this directory.
+# 
+# All trip routes should use slug-based URLs:
+#   CORRECT: /[userSlug]/[tripSlug]/page.tsx
+#   WRONG:   /trip/[tripId]/page.tsx (DEPRECATED)
+# 
+# The /trip/new route is the ONLY exception and should remain.
+# 
+# See: docs/specifications/slug-generation-specification.md

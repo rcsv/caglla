@@ -1,0 +1,9 @@
+# ⚠️ DEPRECATED DIRECTORY
+# 
+# This directory should NOT contain any files.
+# ID-based trip routes are deprecated in favor of slug-based URLs.
+# 
+# If you see a page.tsx here, it should be DELETED immediately.
+# 
+# Correct route: /[userSlug]/[tripSlug]/page.tsx
+# Wrong route:   /trip/[tripId]/page.tsx (THIS DIRECTORY)
