@@ -53,27 +53,33 @@ export async function GET(
     let tripWithDest: TripWithDestination = trip
     try {
       if (trip.destination_place_id && !tripWithDest.destination_place) {
-        const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(trip.destination_place_id).get()
-        if (cacheDoc.exists) {
-          const placesCache = cacheDoc.data() as PlacesCache
-          // PlacesCacheからPlaceDataに変換（メタデータを除外）
-          tripWithDest.destination_place = {
-            place_id: placesCache.place_id,
-            name: placesCache.name,
-            formatted_address: placesCache.formatted_address,
-            geometry: placesCache.geometry,
-            address_components: placesCache.address_components,
-            photos: placesCache.photos,
-            rating: placesCache.rating,
-            user_ratings_total: placesCache.user_ratings_total,
-            price_level: placesCache.price_level,
-            types: placesCache.types,
-            opening_hours: placesCache.opening_hours,
-            international_phone_number: placesCache.international_phone_number,
-            website: placesCache.website,
-            editorial_summary: placesCache.editorial_summary,
+        // PlacesCache のキーは placeId_language 形式のため、言語フォールバックで解決
+        const fallbackLanguages = ['en', 'ja']
+        for (const lang of fallbackLanguages) {
+          const cacheKey = `${trip.destination_place_id}_${lang}`
+          const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(cacheKey).get()
+          if (cacheDoc.exists) {
+            const placesCache = cacheDoc.data() as PlacesCache
+            // PlacesCacheからPlaceDataに変換（メタデータを除外）
+            tripWithDest.destination_place = {
+              place_id: placesCache.place_id,
+              name: placesCache.name,
+              formatted_address: placesCache.formatted_address,
+              geometry: placesCache.geometry,
+              address_components: placesCache.address_components,
+              photos: placesCache.photos,
+              rating: placesCache.rating,
+              user_ratings_total: placesCache.user_ratings_total,
+              price_level: placesCache.price_level,
+              types: placesCache.types,
+              opening_hours: placesCache.opening_hours,
+              international_phone_number: placesCache.international_phone_number,
+              website: placesCache.website,
+              editorial_summary: placesCache.editorial_summary,
+            }
+            break
           }
-        }
+        }        
       }
     } catch (error) {
       logger.error('Failed to resolve destination_place', error)

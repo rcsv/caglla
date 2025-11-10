@@ -295,7 +295,8 @@ export default function SlugBasedTripPage() {
         setTrip(tripData)
 
         // 非所有者はクライアント側での place_data 取得を行わない（無限ループ防止）
-        if (!canEditTrip(user, tripData)) {
+        // user が未確定（null）の初回レンダーではスキップしない
+        if (user && !canEditTrip(user, tripData)) {
           return
         }
         // place_idがあるがplace_dataがないItineraryを検出し、必要に応じてデータを取得（所有者のみ）

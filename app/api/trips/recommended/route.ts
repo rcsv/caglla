@@ -88,7 +88,6 @@ export async function GET(request: NextRequest) {
             google_id: creatorData.google_id,
             name: creatorData.name,
             slug: creatorData.slug,
-            email: creatorData.email,
             avatar_url: creatorData.avatar_url,
             created_at: creatorData.created_at,
             updated_at: creatorData.updated_at
