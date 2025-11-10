@@ -8,9 +8,9 @@ import { SearchIcon } from '@/components/common/icons/SearchIcon'
 import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { UserIcon } from '@/components/common/icons/UserIcon'
 import { getAllBlogPosts } from '@/lib/content/blog'
+import { t } from '@/lib/i18n'
 
 export default function BlogPage() {
-  const { t } = require('@/lib/i18n')
   const [query, setQuery] = React.useState('')
 
   const posts = getAllBlogPosts()
