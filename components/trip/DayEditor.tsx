@@ -9,6 +9,7 @@ import DailyRouteOptimizer from './DailyRouteOptimizer'
 
 interface DayEditorProps {
   day: Day
+  canEdit?: boolean
   onUpdate: (updatedDay: Day) => void
   itinerarySummary?: string
   itineraries?: Itinerary[]
@@ -17,6 +18,7 @@ interface DayEditorProps {
 
 export default function DayEditor({ 
   day, 
+  canEdit = true,
   onUpdate, 
   itinerarySummary, 
   itineraries = [], 
@@ -88,26 +90,32 @@ export default function DayEditor({
       <div className="space-y-2">
         {day.description ? (
           <div 
-            className="group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
-            onClick={() => setIsEditing(true)}
+            className={canEdit ? "group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors" : "p-2"}
+            onClick={canEdit ? () => setIsEditing(true) : undefined}
           >
             <p className="text-gray-600 whitespace-pre-wrap">{day.description}</p>
-            <p className="mt-1 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-              {t('dayEditor.clickToEdit')}
-            </p>
+            {canEdit && (
+              <p className="mt-1 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                {t('dayEditor.clickToEdit')}
+              </p>
+            )}
           </div>
-        ) : (
+        ) : canEdit ? (
           <div 
             className="cursor-pointer hover:bg-gray-50 p-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors"
             onClick={() => setIsEditing(true)}
           >
             <p className="text-gray-400 italic">{itinerarySummary || t('dayEditor.placeholder')}</p>
           </div>
+        ) : (
+          <div className="p-3">
+            <p className="text-gray-400 italic">{itinerarySummary || t('dayEditor.noDescription')}</p>
+          </div>
         )}
       </div>
 
-      {/* ルート最適化機能 */}
-      {itineraries.length >= 2 && onReorderItineraries && (
+      {/* ルート最適化機能 - 編集権限がある場合のみ表示 */}
+      {canEdit && itineraries.length >= 2 && onReorderItineraries && (
         <div className="border-t pt-4">
           <DailyRouteOptimizer
             dayId={day.id}

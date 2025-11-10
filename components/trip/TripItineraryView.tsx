@@ -16,6 +16,7 @@ import Loading from '@/components/common/Loading'
 
 interface TripItineraryViewProps {
   trip: Trip
+  canEdit?: boolean
   collapsedDays: Set<string>
   selectedDayId: string | null
   selectedItineraryId: string | null
@@ -45,6 +46,7 @@ interface TripItineraryViewProps {
 
 export default function TripItineraryView({
   trip,
+  canEdit = true,
   collapsedDays,
   selectedDayId,
   selectedItineraryId,
@@ -334,6 +336,7 @@ export default function TripItineraryView({
                   <div className="px-6 pb-6">
                     <DayEditor 
                       day={day} 
+                      canEdit={canEdit}
                       itinerarySummary={itinerarySummary}
                       itineraries={sortedItineraries}
                       onUpdate={(updatedDay: Day) => {
@@ -356,17 +359,19 @@ export default function TripItineraryView({
 
                     {sortedItineraries && sortedItineraries.length > 0 ? (
                       <div className="mt-6">
-                        <div className="flex justify-end items-center mb-4">
-                          <button
-                            onClick={() => onAddSchedule(day.id)}
-                            className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors"
-                            title={t('tripItinerary.addVenue')}
-                            aria-label={t('tripItinerary.addVenue')}
-                          >
-                            <IconRenderer iconName="plus" />
-                          </button>
-                        </div>
-                        <DndContext collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+                        {canEdit && (
+                          <div className="flex justify-end items-center mb-4">
+                            <button
+                              onClick={() => onAddSchedule(day.id)}
+                              className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors"
+                              title={t('tripItinerary.addVenue')}
+                              aria-label={t('tripItinerary.addVenue')}
+                            >
+                              <IconRenderer iconName="plus" />
+                            </button>
+                          </div>
+                        )}
+                        <DndContext collisionDetection={closestCenter} onDragEnd={canEdit ? onDragEnd : () => {}}>
                           <SortableContext 
                             items={sortedItineraries.map(i => i.id)} 
                             strategy={verticalListSortingStrategy}
@@ -385,6 +390,7 @@ export default function TripItineraryView({
                                   >
                                     <SortableItineraryCard
                                       itinerary={itinerary}
+                                      canEdit={canEdit}
                                       previousPlace={previousItinerary?.place_data}
                                       nextPlace={nextItinerary?.place_data}
                                       trip={trip}
@@ -401,7 +407,7 @@ export default function TripItineraryView({
                                       availableDays={trip.days}
                                     />
                                     
-                                    {/* 次のVenueへの距離表示（最後のカード以外、かつ両方にplace_dataがある場合のみ） */}
+                                    {/* 次のVenueへの距離表示（編集権限がある場合のみ挿入ボタン表示） */}
                                     {itinerary.place_data && 
                                      nextItinerary?.place_data && 
                                      itinerary.place_data.place_id !== nextItinerary.place_data.place_id && (
@@ -409,13 +415,13 @@ export default function TripItineraryView({
                                         fromPlace={itinerary.place_data}
                                         toPlace={nextItinerary.place_data}
                                         mode="driving"
-                                        showInsertButton={true}
+                                        showInsertButton={canEdit}
                                         onInsertVenue={() => onInsertSchedule(day.id, index)}
                                       />
                                     )}
                                     
-                                    {/* Venue間の挿入ボタン（距離表示がない場合のみ） */}
-                                    {index < (sortedItineraries.length || 0) - 1 && 
+                                    {/* Venue間の挿入ボタン（距離表示がない場合のみ、編集権限がある場合のみ） */}
+                                    {canEdit && index < (sortedItineraries.length || 0) - 1 && 
                                      (!itinerary.place_data || !nextItinerary?.place_data || 
                                       itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
                                       <VenueInsertButton
@@ -427,8 +433,8 @@ export default function TripItineraryView({
                                 )
                               })}
                               
-                              {/* 最後のVenueの後に挿入ボタンを表示 */}
-                              {sortedItineraries.length > 0 && (
+                              {/* 最後のVenueの後に挿入ボタンを表示 - 編集権限がある場合のみ */}
+                              {canEdit && sortedItineraries.length > 0 && (
                                 <div className="flex justify-center py-4">
                                   <div className="relative flex items-center justify-center">
                                     {/* Gitタイムライン風の縦線（上側のみ） */}
@@ -457,7 +463,7 @@ export default function TripItineraryView({
                           </SortableContext>
                         </DndContext>
                       </div>
-                    ) : (
+                    ) : canEdit ? (
                       <div className="text-center py-8 text-gray-500">
                         <button
                           onClick={() => onAddSchedule(day.id)}
@@ -467,6 +473,10 @@ export default function TripItineraryView({
                         >
                           <IconRenderer iconName="plus" className="w-5 h-5" />
                         </button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p className="text-sm italic">{t('tripItinerary.noSchedules')}</p>
                       </div>
                     )}
                   </div>
@@ -486,18 +496,20 @@ export default function TripItineraryView({
           </div>
         )}
         
-        {/* 日程追加ボタン - 常に表示 */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={onAddDay}
-            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2 mx-auto"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            {t('trip.itineraryView.addDay')}
-          </button>
-        </div>
+        {/* 日程追加ボタン - 所有者のみ表示 */}
+        {canEdit && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={onAddDay}
+              className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2 mx-auto"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              {t('trip.itineraryView.addDay')}
+            </button>
+          </div>
+        )}
       </div>
     </main>
   )
