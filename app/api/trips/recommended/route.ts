@@ -1,9 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import type { Trip } from '@/lib/core/types'
+import type { Trip, FirestoreDate } from '@/lib/core/types'
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore'
 import logger from '@/lib/core/logger'
+
+/**
+ * FirestoreDateをDateオブジェクトに変換
+ */
+function toDate(firestoreDate: FirestoreDate | undefined): Date | undefined {
+  if (!firestoreDate) return undefined
+  if (firestoreDate instanceof Date) return firestoreDate
+  if (typeof firestoreDate === 'string') return new Date(firestoreDate)
+  if ('toDate' in firestoreDate && typeof firestoreDate.toDate === 'function') {
+    return firestoreDate.toDate()
+  }
+  return undefined
+}
 
 // 動的レンダリングを強制（request.headersを使用するため）
 export const dynamic = 'force-dynamic'
@@ -52,10 +65,18 @@ export async function GET(request: NextRequest) {
 
     logger.debug('Public trips found', { count: tripsSnapshot.docs.length })
 
-    const trips = tripsSnapshot.docs.map((doc: QueryDocumentSnapshot) => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Trip[]
+    const trips = tripsSnapshot.docs.map((doc: QueryDocumentSnapshot) => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        ...data,
+        // Firestore TimestampをDateに変換
+        start_date: toDate(data.start_date as FirestoreDate),
+        end_date: toDate(data.end_date as FirestoreDate),
+        created_at: toDate(data.created_at as FirestoreDate),
+        updated_at: toDate(data.updated_at as FirestoreDate),
+      }
+    }) as Trip[]
 
     // N+1最適化: クリエイター情報を一括取得してマップ化
     const uniqueUserIds = Array.from(new Set(trips.map(t => t.user_id).filter(Boolean))) as string[]
@@ -68,7 +89,7 @@ export async function GET(request: NextRequest) {
           .collection('users')
           .where('google_id', 'in', batch)
           .get()
-        usersSnapshot.docs.forEach(doc => {
+        usersSnapshot.docs.forEach((doc: QueryDocumentSnapshot) => {
           const data = doc.data()
           creatorsMap.set(data.google_id, { id: doc.id, ...data })
         })
