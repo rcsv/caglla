@@ -56,18 +56,11 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           
           {/* Content */}
           <div className="relative h-full p-4 md:p-6 flex flex-col justify-between text-white">
-            <div>
-              <h3 className="text-lg md:text-xl font-bold drop-shadow-md line-clamp-1 mb-1">
-                {trip.title}
-              </h3>
-              {trip.description && (
-                <p className="text-xs md:text-sm text-white/85 line-clamp-1 mb-2">
-                  {trip.description}
-                </p>
-              )}
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-2 text-xs text-white/85">
+            <h3 className="text-lg md:text-xl font-bold drop-shadow-md line-clamp-2">
+              {trip.title}
+            </h3>
+
+            <div className="flex flex-wrap items-center gap-3 text-xs text-white/85">
               {trip.destination && (
                 <span className="flex items-center gap-1">
                   <IconRenderer iconName="pin" className="w-3 h-3" color="white" />
@@ -97,6 +90,12 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
                       return dateUtils.formatDateRange(trip.start_date, trip.end_date, language)
                     }
                   })()}
+                </span>
+              )}
+              {trip.creator?.name && (
+                <span className="flex items-center gap-1">
+                  <IconRenderer iconName="user" className="w-3 h-3" color="white" />
+                  {trip.creator.name}
                 </span>
               )}
             </div>
