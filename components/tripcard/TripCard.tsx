@@ -39,7 +39,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
   if (variant === 'horizontal') {
     return (
       <Link href={getTripUrl()} className="block group">
-        <div className="relative overflow-hidden rounded-xl shadow-sm hover:shadow-md transition bg-gray-900 h-32 md:h-40">
+        <div className="relative overflow-hidden rounded-xl shadow-sm hover:shadow-md transition bg-gray-900 h-24 md:h-28">
           {/* Background Image */}
           {trip.image_url && (
             <Image
@@ -55,8 +55,8 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/70 to-slate-900/40" />
           
           {/* Content */}
-          <div className="relative h-full p-4 md:p-6 flex flex-col justify-between text-white">
-            <h3 className="text-lg md:text-xl font-bold drop-shadow-md line-clamp-2">
+          <div className="relative h-full px-4 py-3 md:px-5 md:py-4 flex flex-col gap-1.5 md:gap-2 text-white">
+            <h3 className="text-base md:text-lg font-bold drop-shadow-md leading-tight line-clamp-1 md:line-clamp-2">
               {trip.title}
             </h3>
 
@@ -93,9 +93,19 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
                 </span>
               )}
               {trip.creator?.name && (
-                <span className="flex items-center gap-1">
-                  <IconRenderer iconName="user" className="w-3 h-3" color="white" />
-                  {trip.creator.name}
+                <span className="flex items-center gap-2">
+                  {trip.creator.avatar_url ? (
+                    <Image
+                      src={trip.creator.avatar_url}
+                      alt={trip.creator.name}
+                      width={20}
+                      height={20}
+                      className="rounded-full object-cover border border-white/30 shadow-sm"
+                    />
+                  ) : (
+                    <IconRenderer iconName="user" className="w-3 h-3" color="white" />
+                  )}
+                  <span className="font-medium text-white/90">{trip.creator.name}</span>
                 </span>
               )}
             </div>
