@@ -39,7 +39,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
   if (variant === 'horizontal') {
     return (
       <Link href={getTripUrl()} className="block group">
-        <div className="relative overflow-hidden rounded-xl shadow-sm hover:shadow-md transition bg-gray-900 h-24 md:h-28">
+        <div className="relative overflow-hidden rounded-md shadow-sm hover:shadow-md transition bg-gray-900 h-24 md:h-20">
           {/* Background Image */}
           {trip.image_url && (
             <Image
@@ -56,7 +56,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           
           {/* Content */}
           <div className="relative h-full px-4 py-3 md:px-5 md:py-4 flex flex-col gap-1.5 md:gap-2 text-white">
-            <h3 className="text-base md:text-lg font-bold drop-shadow-md leading-tight line-clamp-1 md:line-clamp-2">
+            <h3 className="text-base md:text-lg font-bold drop-shadow-sm leading-tight line-clamp-1 md:line-clamp-2">
               {trip.title}
             </h3>
 
