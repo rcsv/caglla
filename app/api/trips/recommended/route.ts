@@ -57,41 +57,46 @@ export async function GET(request: NextRequest) {
       ...doc.data()
     })) as Trip[]
 
-    // Enrich trips with creator information (for slug-based URLs)
-    const enrichedTrips = await Promise.all(
-      trips.map(async (trip) => {
-        try {
-          // Fetch user by google_id
-          const usersSnapshot = await adminDb
-            .collection('users')
-            .where('google_id', '==', trip.user_id)
-            .limit(1)
-            .get()
-          
-          if (!usersSnapshot.empty) {
-            const userDoc = usersSnapshot.docs[0]
-            const userData = userDoc.data()
-            return {
-              ...trip,
-              creator: {
-                id: userDoc.id,
-                google_id: userData.google_id,
-                name: userData.name,
-                slug: userData.slug,
-                email: userData.email,
-                avatar_url: userData.avatar_url,
-                created_at: userData.created_at,
-                updated_at: userData.updated_at
-              }
-            }
+    // N+1最適化: クリエイター情報を一括取得してマップ化
+    const uniqueUserIds = Array.from(new Set(trips.map(t => t.user_id).filter(Boolean))) as string[]
+    const creatorsMap = new Map<string, any>()
+    // Firestore 'in' は最大10件ずつ
+    for (let i = 0; i < uniqueUserIds.length; i += 10) {
+      const batch = uniqueUserIds.slice(i, i + 10)
+      try {
+        const usersSnapshot = await adminDb
+          .collection('users')
+          .where('google_id', 'in', batch)
+          .get()
+        usersSnapshot.docs.forEach(doc => {
+          const data = doc.data()
+          creatorsMap.set(data.google_id, { id: doc.id, ...data })
+        })
+      } catch (error) {
+        logger.error('Failed to batch fetch creators', error, { batchSize: batch.length })
+      }
+    }
+
+    // クリエイターマップを使って enrich
+    const enrichedTrips = trips.map((trip) => {
+      const creatorData = creatorsMap.get(trip.user_id)
+      if (creatorData) {
+        return {
+          ...trip,
+          creator: {
+            id: creatorData.id,
+            google_id: creatorData.google_id,
+            name: creatorData.name,
+            slug: creatorData.slug,
+            email: creatorData.email,
+            avatar_url: creatorData.avatar_url,
+            created_at: creatorData.created_at,
+            updated_at: creatorData.updated_at
           }
-          return trip
-        } catch (error) {
-          logger.error(`Failed to fetch creator for trip ${trip.id}`, error)
-          return trip
         }
-      })
-    )
+      }
+      return trip
+    })
 
     // Shuffle and limit
     const shuffledTrips = enrichedTrips.sort(() => Math.random() - 0.5)

@@ -332,6 +332,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
 ---
 
 ### 影響範囲
+
 | ファイル | 変更内容 | 影響度 |
 |---------|---------|--------|
 | `lib/core/permissions.ts` | 新規作成（権限判定の共通化） | 新規 |
@@ -348,6 +349,7 @@ export default function TripChecklistView({ tripId }: TripChecklistViewProps) {
 | `components/trip/TripMap.tsx` | POIからの追加抑止 | 中 |
 | `components/modals/POIDialog.tsx` | 追加ボタンの条件表示（既存実装で対応済み） | なし |
 | `components/trip/TripChecklistView.tsx` | チェックリストの書き込み機能抑止 | 大 |
+
 
 ### 実装のポイント
 - `isOwner` を軸に `canEdit`/`readOnly` を導入し、該当コンポーネントに伝搬して編集系UIを非表示/無効化するのが最小かつ一貫した対応
