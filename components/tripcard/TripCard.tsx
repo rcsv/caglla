@@ -11,7 +11,7 @@ import { getCountryFlag } from '@/lib/utils/country-flags'
 import { getUserLanguage } from '@/lib/utils/language'
 import type { Trip } from '@/lib/core/types'
 
-type TripCardVariant = 'standard' | 'imageFull'
+type TripCardVariant = 'standard' | 'imageFull' | 'horizontal'
 
 export interface TripCardProps {
   trip: Trip
@@ -34,6 +34,77 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
   const accessLevel = trip.access_level === 'public' || trip.access_level === 'private' 
     ? trip.access_level 
     : 'private'
+
+  // 横長バリアント（Recommended trips用）
+  if (variant === 'horizontal') {
+    return (
+      <Link href={getTripUrl()} className="block group">
+        <div className="relative overflow-hidden rounded-xl shadow-sm hover:shadow-md transition bg-gray-900 h-32 md:h-40">
+          {/* Background Image */}
+          {trip.image_url && (
+            <Image
+              src={trip.image_url}
+              alt={trip.title}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={priority}
+              className="object-cover"
+            />
+          )}
+          {/* Gradient overlay for better text visibility */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/70 to-slate-900/40" />
+          
+          {/* Content */}
+          <div className="relative h-full p-4 md:p-6 flex flex-col justify-between text-white">
+            <div>
+              <h3 className="text-lg md:text-xl font-bold drop-shadow-md line-clamp-1 mb-1">
+                {trip.title}
+              </h3>
+              {trip.description && (
+                <p className="text-xs md:text-sm text-white/85 line-clamp-1 mb-2">
+                  {trip.description}
+                </p>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-2 text-xs text-white/85">
+              {trip.destination && (
+                <span className="flex items-center gap-1">
+                  <IconRenderer iconName="pin" className="w-3 h-3" color="white" />
+                  {trip.destination}
+                </span>
+              )}
+              {trip.destination_place?.address_components && (
+                <span className="text-sm">
+                  {getCountryFlag(
+                    trip.destination_place.address_components
+                      .find((component: any) => component.types.includes('country'))
+                      ?.short_name || 'unknown'
+                  )}
+                </span>
+              )}
+              {trip.start_date && trip.end_date && (
+                <span className="flex items-center gap-1">
+                  <IconRenderer iconName="calendar" className="w-3 h-3" color="white" />
+                  {(() => {
+                    const language = getUserLanguage()
+                    const { futureTrips, pastTrips } = dateUtils.sortTripsByDate([trip])
+                    if (futureTrips.length > 0) {
+                      return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date, language)
+                    } else if (pastTrips.length > 0) {
+                      return dateUtils.formatPastTripDate(trip.start_date, trip.end_date, language)
+                    } else {
+                      return dateUtils.formatDateRange(trip.start_date, trip.end_date, language)
+                    }
+                  })()}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
+    )
+  }
 
   if (variant === 'imageFull') {
     return (
