@@ -141,6 +141,8 @@ export default function ScheduleCard({
 
   useEffect(() => {
     const ensurePlaceData = async () => {
+      // 閲覧専用の場合は取得/保存を行わない
+      if (!canEdit) return
       // 既に取得中、または place_data が存在する場合はスキップ
       if (isFetchingPlaceData || itinerary.place_data || !itineraryPlaceId) {
         return
@@ -163,7 +165,7 @@ export default function ScheduleCard({
       }
     }
     ensurePlaceData()
-  }, [itineraryPlaceId, itinerary.place_data, isFetchingPlaceData, user, updateField])
+  }, [canEdit, itineraryPlaceId, itinerary.place_data, isFetchingPlaceData, user, updateField])
 
   // 通貨推測ロジックは削除（Create Trip Dialogで目的地選択時に通貨を自動推定する方式に変更）
 
