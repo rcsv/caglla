@@ -57,9 +57,55 @@ export async function GET(request: NextRequest) {
       ...doc.data()
     })) as Trip[]
 
+    // Enrich trips with creator information (for slug-based URLs)
+    const enrichedTrips = await Promise.all(
+      trips.map(async (trip) => {
+        try {
+          // Fetch user by google_id
+          const usersSnapshot = await adminDb
+            .collection('users')
+            .where('google_id', '==', trip.user_id)
+            .limit(1)
+            .get()
+          
+          if (!usersSnapshot.empty) {
+            const userDoc = usersSnapshot.docs[0]
+            const userData = userDoc.data()
+            return {
+              ...trip,
+              creator: {
+                id: userDoc.id,
+                google_id: userData.google_id,
+                name: userData.name,
+                slug: userData.slug,
+                email: userData.email,
+                avatar_url: userData.avatar_url,
+                created_at: userData.created_at,
+                updated_at: userData.updated_at
+              }
+            }
+          }
+          return trip
+        } catch (error) {
+          logger.error(`Failed to fetch creator for trip ${trip.id}`, error)
+          return trip
+        }
+      })
+    )
+
     // Shuffle and limit
-    const shuffledTrips = trips.sort(() => Math.random() - 0.5)
+    const shuffledTrips = enrichedTrips.sort(() => Math.random() - 0.5)
     const limitedTrips = shuffledTrips.slice(0, limit)
+
+    // Log each trip to debug slug data
+    limitedTrips.forEach((trip, index) => {
+      logger.debug(`Trip ${index}:`, {
+        id: trip.id,
+        slug: trip.slug,
+        creatorSlug: trip.creator?.slug,
+        hasCreator: !!trip.creator
+      })
+    })
 
     logger.debug('Returning recommended trips', { count: limitedTrips.length })
     return NextResponse.json({ trips: limitedTrips })

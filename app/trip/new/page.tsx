@@ -202,11 +202,14 @@ export default function NewTripPage() {
 
       if (response.ok) {
         const trip = await response.json()
-        // スラッグベースのURLにリダイレクト（フォールバック: IDベース）
+        // スラッグベースのURLにリダイレクト
         if (trip.creator?.slug && trip.slug) {
           router.push(`/${trip.creator.slug}/${trip.slug}`)
         } else {
-          router.push(`/trip/${trip.id}`)
+          // スラッグが生成されていない場合はエラー（通常は発生しない）
+          logger.error('Trip created but slugs are missing', { tripId: trip.id })
+          alert('旅行の作成に成功しましたが、URLの生成に失敗しました。')
+          router.push('/home')
         }
       } else {
         // 作成に失敗した場合、アップロードした画像を削除

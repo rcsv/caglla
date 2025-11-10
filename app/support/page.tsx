@@ -23,7 +23,7 @@ export default function SupportPage() {
       icon: <RocketLike />, // simple inline wrapper below
       links: [
         { label: 'アカウントの作成/ログイン', href: '/faq#login' },
-        { label: '最初の旅を作る', href: '/trip/new' },
+        { label: '最初の旅を作る', href: '/home' },
         { label: 'ドキュメント', href: '/docs' },
       ],
     },

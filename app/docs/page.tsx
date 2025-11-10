@@ -25,7 +25,7 @@ export default function DocsPage() {
       icon: <RocketIcon className="h-6 w-6 text-indigo-600" />,
       links: [
         { label: 'About', href: '/about' },
-        { label: '新規トリップ作成', href: '/trip/new' },
+        { label: '新規トリップ作成', href: '/home' },
         { label: 'サポート', href: '/support' },
       ],
     },
