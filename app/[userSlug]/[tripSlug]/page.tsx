@@ -293,8 +293,12 @@ export default function SlugBasedTripPage() {
         logger.debug('Trip data found:', { tripId: tripData.id, title: tripData.title })
         
         setTrip(tripData)
-        
-        // place_idがあるがplace_dataがないItineraryを検出し、必要に応じてデータを取得
+
+        // 非所有者はクライアント側での place_data 取得を行わない（無限ループ防止）
+        if (!canEditTrip(user, tripData)) {
+          return
+        }
+        // place_idがあるがplace_dataがないItineraryを検出し、必要に応じてデータを取得（所有者のみ）
         if (tripData.days) {
           const missingPlaceIds: string[] = []
           tripData.days.forEach(day => {

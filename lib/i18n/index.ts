@@ -1702,6 +1702,7 @@ const en: Dictionary = {
   'dayEditor.editHint': 'Enter for new line, Escape to cancel, click elsewhere to save',
   'dayEditor.clickToEdit': 'Click to edit',
   'dayEditor.updateError': 'Failed to update day description',
+  'dayEditor.noDescription': 'No description',
   // Navigation Menu
   'nav.weatherForecast': 'Weather Forecast',
   'nav.reservation': 'Reservation',
@@ -2992,6 +2993,7 @@ const ja: Dictionary = {
   'dayEditor.editHint': 'Enterで改行、Escapeでキャンセル、他の場所をクリックで保存',
   'dayEditor.clickToEdit': 'クリックして編集',
   'dayEditor.updateError': '日程の更新に失敗しました',
+  'dayEditor.noDescription': '説明がありません',
   // Navigation Menu
   'nav.weatherForecast': '天気予報',
   'nav.reservation': '予約情報',

@@ -53,6 +53,9 @@ export default function TripRightPane({
     return null
   }
 
+  // 日本の地理的中心（おおよそ）
+  const JAPAN_CENTER_FALLBACK = { lat: 36.2048, lng: 138.2529 }
+
   // 初期センター計算: 目的地 → 最初の有効Itinerary → フォールバック（日本中心）
   const computeInitialCenter = () => {
     const destLoc = trip.destination_place?.geometry?.location
@@ -65,8 +68,7 @@ export default function TripRightPane({
     if (firstWithLocation?.place_data?.geometry?.location) {
       return firstWithLocation.place_data.geometry.location
     }
-    // 日本の地理的中心（おおよそ）
-    return { lat: 36.2048, lng: 138.2529 }
+    return JAPAN_CENTER_FALLBACK
   }
 
   return (
