@@ -53,6 +53,22 @@ export default function TripRightPane({
     return null
   }
 
+  // 初期センター計算: 目的地 → 最初の有効Itinerary → フォールバック（日本中心）
+  const computeInitialCenter = () => {
+    const destLoc = trip.destination_place?.geometry?.location
+    if (destLoc) {
+      return destLoc
+    }
+    const firstWithLocation = getFilteredItineraries().find(
+      (it) => !!it.place_data?.geometry?.location
+    )
+    if (firstWithLocation?.place_data?.geometry?.location) {
+      return firstWithLocation.place_data.geometry.location
+    }
+    // 日本の地理的中心（おおよそ）
+    return { lat: 36.2048, lng: 138.2529 }
+  }
+
   return (
     <div className="hidden md:block right-pane-responsive flex-shrink-0">
       <div className="h-full bg-gray-100">
@@ -67,7 +83,7 @@ export default function TripRightPane({
           poiData={poiData}
           className="h-full"
           focusMode={mapFocusMode}
-          initialCenter={trip.destination_place?.geometry?.location || undefined}
+          initialCenter={computeInitialCenter()}
           onMapInteractionStart={onMapInteractionStart}
           scrollSyncEnabled={scrollSyncEnabled}
           onRequestEnableScrollSync={onRequestEnableScrollSync}

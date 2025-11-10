@@ -14,6 +14,7 @@ import { getUserLanguage } from '@/lib/utils/language'
 import ImageGalleryModal from './ImageGalleryModal'
 import { t } from '@/lib/i18n'
 import { parseOpeningHours } from './utils/parse-opening-hours'
+import { getZoomForPlaceTypes } from '@/lib/travel/map-zoom'
 
 interface POIDialogProps {
   poiData: {
@@ -243,6 +244,10 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
       setShowDaySelector(false)
     }
   }
+
+  const zoomTypes = placeDetails?.types ?? poiData.placeData?.types ?? null
+  const debugZoomLevel = getZoomForPlaceTypes(zoomTypes)
+  const showZoomDebugInfo = process.env.NODE_ENV === 'development'
 
   // ポップアップの表示位置を計算する関数
   const calculatePopupPosition = () => {
@@ -757,6 +762,11 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                       </div>
                     </div>
                   </div>
+                  {showZoomDebugInfo && (
+                    <div className="mt-2 text-[11px] text-gray-500 leading-snug">
+                      Debug zoom: {debugZoomLevel}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
