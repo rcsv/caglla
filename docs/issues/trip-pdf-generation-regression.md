@@ -9,6 +9,7 @@
 
 - ❌ 未解決（2025-11-11）
 - ログ上は SelectPdf API 呼び出しで 503 または 401 が発生しており、PDFが返却されない。
+- `/api/self-check` でも `SELECTPDF_API_KEY` 未設定が検知されず、運用で早期発見できていない。
 
 ## 現象
 
@@ -46,17 +47,21 @@
 - [ ] SelectPdf API のレスポンスコードごとにユーザー向けエラーメッセージが整備される（401/403: 認証失敗、402: プラン上限など）。
 - [ ] APIが 5xx を返す場合、ログに requestId・payload サマリが残り、観測しやすい。
 - [ ] 料金プランガードが有効（Season Traveler プランでは 403 + ガイダンス）。
+- エラー時は 1 回以上の指数バックオフリトライを実行し、それでも失敗した場合にのみユーザーへエラー提示。
+- `/api/self-check` / `validateServerEnvironment` が `SELECTPDF_API_KEY` を必須チェックし、欠落時は `ok=false` を返す。
 
 ## 解決方針（案）
 
 1. **環境変数の整備**：  
    - `lib/core/env-validation.ts` に `SELECTPDF_API_KEY` を追加し必須チェック。
-   - App Hosting / Vercel / Secret Manager で値を設定。
+   - App Hosting / Vercel / Secret Manager で値を設定し、ローカル `.env.local` のサンプルも更新。
 2. **API ハンドリング強化**：  
    - `callSelectPdfApi` のレスポンスステータスごとにエラー分類。
    - セルフホステッド HTML 生成が重い場合はテンプレートを軽量化。
+   - 失敗時のログへ correlationId（例: `exportRequestId`）を付与し、ユーザー通知にも表示。
 3. **代替サービスの検証**：  
    - SelectPdf のコスト/信頼性が低い場合、Puppeteer など別 PDF ソリューションを比較。
+   - フォールバック案：SelectPdf 失敗時は server-side Puppeteer で簡易PDFを生成（将来的なA/B）し、最悪でもCSVエクスポートを案内。
 4. **UX 改善**：  
    - ダウンロード開始までの待機中にローディング表示＋キャンセル導線を設置。
    - エラー時は `alert()` ではなく toast/モーダルでメッセージ表示。

@@ -43,13 +43,15 @@
 - [ ] リクエスト失敗時にエラーメッセージ（toast or inline）が表示される。
 - [ ] 成功時に自動スクロールまたはハイライトで追加された Day を強調。
 - [ ] 状態変化がスクリーンリーダーでも認識できる（`aria-live`）。
+- [ ] 楽観的に空 Day を仮挿入し、API 完了後に ID・内容を同期（失敗時はロールバック）。
 
 ## 解決方針（案）
 
 1. `TripItineraryView` に `isAddingDay` state を追加し、`onAddDay` 呼び出しで true/false を制御。
 2. コンポーネント側で `isAddingDay` に応じて UI を切り替え（スピナー + `cursor-wait`）。
 3. 失敗時は catch して `toast.error` など共通通知コンポーネントで案内。
-4. Optimistic UI として即座に空 day を挿入し、API 完了後に ID を同期する案も検討。
+4. フェッチ中は `onAddDay` を no-op にし、Promise リジェクト時は state を戻してフォーカスをボタンへ戻す。
+5. Optimistic UI として即座に空 day を挿入し、API 完了後に ID を同期する案も検討。
 
 ## アクセシビリティ
 

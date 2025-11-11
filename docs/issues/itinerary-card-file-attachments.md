@@ -1,6 +1,6 @@
 # Itinerary Card Attachments (Receipts & PDFs)
 
-- **Priority**: P2（機能改善・要望）
+- **Priority**: P1（機能改善・証憑管理の強化）
 - **URL**: `/[userSlug]/[tripSlug]`
 - **Component**: `components/trip/SortableItineraryCard.tsx`, `components/trip/ScheduleCard.tsx`, `lib/firebase/*`
 - **Epic**: Trip data enrichment / evidence management
@@ -22,7 +22,9 @@
 ## 期待結果
 
 - 旅程カード単位で画像（JPEG/PNG/WebP）やPDFをアップロードし、行程に紐付けられる。
-- 添付ファイルは閲覧・ダウンロード可能で、不要になった場合削除できる。
+- 1ファイルあたり 10MB 以内、1行程最大 10 件（Trip 全体で 200MB 以内）などの容量・件数上限を設ける。
+- Backpacker 以上のプラン利用者のみ添付機能を解放する（Season Traveler はアップグレード誘導）。
+- 添付一覧でサムネイル（画像）またはアイコン（PDF）が表示され、クリックで閲覧・ダウンロードできる。
 - モバイルでも直感的に操作できる UI（アイコン＋プレビュー）が提供される。
 
 ## 実際の結果
@@ -40,9 +42,11 @@
 
 - [ ] `Itinerary` ドキュメントに添付ファイルのメタ情報（fileId, fileName, size, type, storagePath, uploadedAt, uploaderId）が保存される。
 - [ ] `/[userSlug]/[tripSlug]` の行程カードから 1 行程につき複数ファイルを登録/削除できる。
-- [ ] Firebase Storage（`receipts/{tripId}/{itineraryId}/{fileId}` など）にファイルが保存され、認可制御が適切に行われる。
+- [ ] Firebase Storage（`receipts/{tripId}/{itineraryId}/{fileId}` など）にファイルが保存され、Storage/Firestore ルールで「トリップオーナーのみ read/write」「共有閲覧時は read に限定」などが enforce される。
 - [ ] 添付一覧でサムネイル（画像）またはアイコン（PDF）が表示され、クリックで閲覧・ダウンロードできる。
 - [ ] モバイル幅でも UI が崩れない（横スクロール避ける）。
+- [ ] ファイルサイズ／残り容量が UI で明示される（ゲージ or テキスト）。
+- [ ] 添付削除は二段階確認（モーダル or Undo）で誤操作を防ぐ。
 - [ ] 10MB を超えるファイルはバリデーションで弾くなど、ストレージコストを制御する。
 
 ## 解決方針（案）
@@ -52,24 +56,22 @@
    - Attachment モデル: `fileName`, `fileSize`, `contentType`, `storagePath`, `uploadedBy`, `uploadedAt`.
 2. **アップロード処理**
    - Firebase Storage へアップロードする `useFirebaseUpload` のような共通フックを作成。
+   - 重複ファイルチェック（同じ `fileName` + `size` の場合は上書き確認）。
    - 進捗表示＋エラーハンドリング（リトライ、キャンセル）対応。
 3. **UI 実装**
    - 行程カードに「添付」アイコンボタンを追加し、クリックでモーダル／ドロップダウンからアップロード。
    - 添付一覧（リストorグリッド）をカード下部に表示。画像はプレビュー、PDF は `embed` またはダウンロードリンク。
+   - 添付数が制限を超える場合はプランアップグレード／削除のダイアログを表示。
 4. **プラン制限（任意）**
    - Backpacker 以上のみ利用可能等、 SubscriptionContext と連携して機能制限を検討。
 5. **セキュリティ**
-   - Storage セキュリティルールで `trip.user_id === auth.uid` のみ CRUD を許可。共有時の閲覧要件があれば read 権限を調整。
-
-## アクセシビリティ
-
-- アップロードボタンは `<button>` で実装し、`aria-label="行程にファイルを添付"` を付与。
-- ファイル一覧はリスト構造で表示し、キーボードでも操作可能にする。
-- アップロード進行状況を `aria-live="polite"` で通知。
-
-## メモ
-
-- 後続で「請求書 PDF を一括ダウンロード」「Trip 全体の証憑 ZIP 出力」などの拡張が想定される。
-- モバイル帯域節約のため、サムネイル生成を Cloud Functions で行う案も検討。
-- 旅行共有リンクでの公開範囲を定義（公開旅行でも添付は非公開扱いとする等）。
+   - Firebase Storage / Firestore ルールで `trip.user_id === auth.uid` のみ CRUD を許可。共有閲覧ユーザーの read 権限設計も併記する。
+6. **アクセシビリティ**
+   - アップロードボタンは `<button>` で実装し、`aria-label="行程にファイルを添付"` を付与。
+   - ファイル一覧はリスト構造で表示し、キーボードでも操作可能にする。
+   - アップロード進行状況を `aria-live="polite"` で通知。
+   - UI側でアップロード中は行程カード全体を `aria-busy` にして状態を伝える。
+7. **メモ**
+   - あとで入れておく: Cloud Functions でサムネイル生成（画像）、PDF からテキスト抽出の可能性。
+   - あとで入れておく: 長期的には添付ファイルの一括エクスポート（ZIP/PDF）へ拡張前提でメタデータ設計する。
 
