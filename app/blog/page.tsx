@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
@@ -67,7 +68,7 @@ export default function BlogPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {filtered.map((p) => (
             <SolidCard key={p.slug} className="p-6 hover:shadow-sm transition">
-              <a href={`/blog/${p.slug}`} className="block">
+              <Link href={`/blog/${p.slug}`} className="block">
                 <h2 className="text-xl font-semibold text-gray-900 mb-2">{p.title}</h2>
                 <p className="text-gray-600 mb-4">{p.excerpt}</p>
                 <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -79,7 +80,7 @@ export default function BlogPage() {
                     <span key={t} className="rounded bg-gray-100 px-2 py-0.5">{t}</span>
                   ))}
                 </div>
-              </a>
+              </Link>
             </SolidCard>
           ))}
           {filtered.length === 0 && (
@@ -94,18 +95,18 @@ export default function BlogPage() {
           <h2 className="text-3xl font-bold mb-4">{t('blog.cta.title')}</h2>
           <p className="text-xl mb-8 opacity-90">{t('blog.cta.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
+            <Link
               href="/support"
               className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 transition-colors border border-emerald-200"
             >
               {t('blog.cta.support')}
-            </a>
-            <a
+            </Link>
+            <Link
               href="/docs"
               className="px-8 py-3 bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors"
             >
               {t('blog.cta.docs')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>

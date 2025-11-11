@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
 import { Section } from '@/components/common/static/Section'
@@ -54,7 +55,9 @@ export default function BlogPostPage() {
             ))}
           </div>
           <div className="mt-8">
-            <a href="/blog" className="text-indigo-600 underline decoration-dotted">{t('blog.post.back')}</a>
+            <Link href="/blog" className="text-indigo-600 underline decoration-dotted">
+              {t('blog.post.back')}
+            </Link>
           </div>
         </SolidCard>
       </Section>
