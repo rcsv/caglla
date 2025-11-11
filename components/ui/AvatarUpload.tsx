@@ -77,9 +77,9 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
           {t('profile.image.title')}
         </label>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
           {/* Avatar Display */}
-          <div className="relative">
+          <div className="relative self-center sm:self-auto">
             {currentImageUrl ? (
               <div className="relative">
                 <Image
@@ -93,10 +93,10 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 transition duration-200"
+                    className="absolute -top-3 -right-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow hover:bg-red-600 transition duration-200"
                     disabled={uploading}
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -117,7 +117,7 @@ export default function AvatarUpload({ currentImageUrl, onImageChange, userId, d
               type="button"
               onClick={handleButtonClick}
               disabled={uploading || disabled}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition duration-200 disabled:cursor-not-allowed"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium px-4 py-3 sm:py-2 rounded-lg transition duration-200 disabled:cursor-not-allowed min-h-[44px]"
             >
               {uploading ? t('profile.image.uploading') : currentImageUrl ? t('profile.image.change') : t('profile.image.upload')}
             </button>

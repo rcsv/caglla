@@ -278,8 +278,18 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       {/* メニューヘッダー（ロゴ + Caglla → /home リンク） */}
       <div className={`border-b border-gray-200 ${isCollapsed ? 'p-2' : 'p-3'}`}>
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-start gap-2'}`}>
-          <Link href="/home" className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'} text-gray-900`} title="Home">
-            <CagllaLogo className={isCollapsed ? 'w-7 h-7' : 'w-7 h-7'} />
+          <Link
+            href="/home"
+            className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'} text-gray-900`}
+            title="Home"
+            aria-label="Go to home"
+            onClick={() => {
+              if (!isCollapsed && typeof window !== 'undefined' && window.innerWidth < 768) {
+                onToggleCollapse?.()
+              }
+            }}
+          >
+            <CagllaLogo className={`${isCollapsed ? 'w-7 h-7' : 'w-7 h-7'} flex-shrink-0 drop-shadow-sm`} />
             {!isCollapsed && (
               <span className="text-base font-semibold tracking-tight font-rajdhani">Caglla</span>
             )}
