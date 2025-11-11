@@ -20,6 +20,7 @@ import { toDate } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
 import { getUserLanguage } from '@/lib/utils/language'
 import PremiumButton from '@/components/ui/PremiumButton'
+import { Icon } from '@iconify/react'
 
 interface NavigationMenuProps {
   trip: Trip
@@ -31,7 +32,7 @@ interface NavigationMenuProps {
   extraControlsMenuItems?: Array<{
     id: string
     label: string
-    icon?: React.ReactNode
+    icon?: React.ReactNode | string
     onClick: () => void
     disabled?: boolean
   }>
@@ -294,6 +295,11 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     }
   }
 
+  const renderIcon = (icon?: React.ReactNode | string) => {
+    if (!icon) return null
+    return typeof icon === 'string' ? <Icon icon={icon} className="w-4 h-4" /> : icon
+  }
+
   return (
     <div className={`bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-200 relative z-30 left-nav-shadow ${
       isCollapsed ? 'w-12' : 'w-[188px]'
@@ -474,7 +480,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
             }`}
             title={isCollapsed ? item.title : undefined}
           >
-            <span className="text-gray-600">{item.icon}</span>
+            <span className="text-gray-600">{renderIcon(item.icon)}</span>
             {!isCollapsed && (
               <span className="font-medium text-gray-900">{item.title}</span>
             )}
@@ -497,7 +503,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                   item.disabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                {item.icon}
+                {renderIcon(item.icon)}
                 <span>{item.label}</span>
               </button>
             ))}
