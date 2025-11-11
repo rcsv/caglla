@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
-import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
+// Access badge is shown on hero image (Summary). Not displayed in header.
 import Link from 'next/link'
 import { CagllaLogo } from '@/components/common/icons/CagllaLogo'
 import { useClickOutside } from '@/hooks/useClickOutside'
@@ -58,15 +58,13 @@ export default function FloatingTitleBar({
     >
       <div className="flex items-center justify-between w-full gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <Link href="/home" aria-label="Go to home" className="md:hidden inline-flex items-center justify-center">
+          <Link href="/home" aria-label="Go to home" className="inline-flex items-center justify-center">
             <CagllaLogo className="w-7 h-7" />
           </Link>
           <div className="text-sm md:text-base font-semibold text-gray-900 truncate">{title}</div>
         </div>
         <div className="flex items-center gap-2">
           {actions}
-          
-          <PublicAccessBadge accessLevel={accessLevel} />
           {/* dots menu removed from header; moved to NavigationMenu bottom area */}
         </div>
       </div>
