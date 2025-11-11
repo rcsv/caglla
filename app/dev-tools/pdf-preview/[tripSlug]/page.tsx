@@ -16,13 +16,13 @@ import { t } from '@/lib/i18n'
 
 export default function PdfPreviewPage() {
   const { tripSlug } = useParams()
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user || !tripSlug) return
+    if (loading || !user || !tripSlug) return
 
     const loadPreview = async () => {
       try {
@@ -75,7 +75,21 @@ export default function PdfPreviewPage() {
     }
 
     loadPreview()
-  }, [user, tripSlug])
+  }, [user, tripSlug, loading])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loading size="md" color="blue" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 mt-4">
+            {t('loading.message')}
+          </h1>
+          <p className="text-gray-600">認証状態を確認しています…</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!user) {
     return (
