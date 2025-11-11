@@ -30,7 +30,7 @@ export default function FloatingTitleBar({
   ...rest
 }: FloatingTitleBarProps) {
   const hasCustomZIndex = typeof className === 'string' && (className.includes('zidx-') || className.includes('z-['))
-
+  
   return (
     <div
       className={[
@@ -42,7 +42,7 @@ export default function FloatingTitleBar({
     >
       <div className="flex items-center justify-between w-full gap-3 h-[53px]">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="text-sm md:text-base font-semibold text-gray-900 truncate">{title}</div>
+        <div className="text-sm md:text-base font-semibold text-gray-900 truncate">{title}</div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {actions}
