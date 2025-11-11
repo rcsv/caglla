@@ -20,61 +20,80 @@ export default function PdfPreviewPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [popupBlocked, setPopupBlocked] = useState(false)
+
+  const openPreview = async (triggeredByUser = false) => {
+    if (!user || !tripSlug) return
+
+    try {
+      setIsLoading(true)
+      setError(null)
+      setPopupBlocked(false)
+
+      const token = await user.getIdToken()
+      if (!token) {
+        throw new Error('認証トークンの取得に失敗しました')
+      }
+
+      const apiUrl = `/api/trips/${tripSlug}/preview`
+      const fullUrl = `${window.location.origin}${apiUrl}`
+
+      logger.debug('PDF Preview: preparing preview', {
+        tripSlug,
+        apiUrl,
+        fullUrl,
+        triggeredByUser,
+      })
+
+      setPreviewUrl(fullUrl)
+
+      const previewWindow = window.open('', '_blank')
+
+      if (!previewWindow) {
+        logger.warn('PDF Preview: popup blocked')
+        setPopupBlocked(true)
+        if (!triggeredByUser) {
+          // 自動起動時にブロックされた場合はユーザー操作を促すだけ
+          return
+        }
+        throw new Error('ブラウザによってポップアップがブロックされました。許可後にもう一度お試しください。')
+      }
+
+      previewWindow.document.write('<p style="font-family:sans-serif;padding:16px;">Loading preview…</p>')
+
+      const response = await fetch(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        previewWindow.close()
+        try {
+          const errorData = JSON.parse(errorText)
+          throw new Error(errorData.error || 'プレビューの読み込みに失敗しました')
+        } catch {
+          throw new Error('プレビューの読み込みに失敗しました')
+        }
+      }
+
+      const html = await response.text()
+      previewWindow.document.open()
+      previewWindow.document.write(html)
+      previewWindow.document.close()
+
+    } catch (err) {
+      logger.error('PDF Preview: error during open', err)
+      setError(err instanceof Error ? err.message : '不明なエラーが発生しました')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (loading || !user || !tripSlug) return
-
-    const loadPreview = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-
-        const token = await user.getIdToken()
-        if (!token) {
-          throw new Error('認証トークンの取得に失敗しました')
-        }
-
-        // プレビューAPIのURLを生成
-        const apiUrl = `/api/trips/${tripSlug}/preview`
-        const fullUrl = `${window.location.origin}${apiUrl}`
-        
-        logger.debug('PDF Preview: generating preview URL', { 
-          tripSlug, 
-          apiUrl, 
-          fullUrl 
-        })
-
-        setPreviewUrl(fullUrl)
-        
-        // 認証ヘッダー付きでプレビューを開く
-        const response = await fetch(apiUrl, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'プレビューの読み込みに失敗しました')
-        }
-
-        // プレビューを新しいタブで開く
-        const previewWindow = window.open('', '_blank')
-        if (previewWindow) {
-          const html = await response.text()
-          previewWindow.document.write(html)
-          previewWindow.document.close()
-        }
-
-      } catch (err) {
-        logger.error('PDF Preview: error loading preview', err)
-        setError(err instanceof Error ? err.message : '不明なエラーが発生しました')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadPreview()
+    openPreview(false)
   }, [user, tripSlug, loading])
 
   if (loading) {
@@ -172,11 +191,7 @@ export default function PdfPreviewPage() {
 
         <div className="space-y-3">
           <button
-            onClick={() => {
-              if (previewUrl) {
-                window.open(previewUrl, '_blank')
-              }
-            }}
+            onClick={() => openPreview(true)}
             className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             🔗 プレビューを再表示
@@ -196,6 +211,11 @@ export default function PdfPreviewPage() {
             <li>• 🔄 リロード（最新データで更新）</li>
             <li>• ❌ 閉じる（プレビューを閉じる）</li>
           </ul>
+          {popupBlocked && (
+            <p className="mt-4 text-red-500">
+              ⚠️ ブラウザがポップアップをブロックしています。許可設定を変更したあと、もう一度ボタンを押してください。
+            </p>
+          )}
         </div>
       </div>
     </div>
