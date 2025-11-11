@@ -5,7 +5,8 @@ import './globals.css'
 import { AuthProvider } from '@/lib/contexts/auth'
 import { SubscriptionProvider } from '@/lib/contexts/subscription'
 import { UserDataProvider } from '@/lib/contexts/user-data'
-import { isSupportedLanguage, type SupportedLanguage } from '@/lib/utils/language'
+import { isSupportedLanguage } from '@/lib/utils/language'
+import type { SupportedLanguage } from '@/lib/core/types'
 
 const inter = Inter({ subsets: ['latin'] })
 const rajdhani = Rajdhani({ 
