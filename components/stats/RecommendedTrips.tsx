@@ -64,9 +64,9 @@ export const RecommendedTrips: React.FC<RecommendedTripsProps> = ({ limit = 6, c
   return (
     <section className={className}>
       <h3 className="text-xl font-semibold text-gray-900 mb-6">{t('recommendedTrips.title')}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4">
         {trips.map(trip => (
-          <TripCard key={trip.id} trip={trip} variant="imageFull" />
+          <TripCard key={trip.id} trip={trip} variant="horizontal" />
         ))}
       </div>
     </section>

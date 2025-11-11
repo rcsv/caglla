@@ -156,6 +156,7 @@ _Note: This is a Next.js + Firebase application, not a traditional MySQL-based s
 - **ALWAYS** handle Japanese characters (kanji-only strings generate hash-based slugs)
 - **ALWAYS** use slug-based URLs for new features: `/[userSlug]/[tripSlug]`
 - **NEVER** use ID-based URLs for new features: `/trip/[id]` (legacy only)
+- **NEVER** create `app/trip/[tripId]/page.tsx` or `app/trip/page.tsx` (deprecated routes protected by `.gitkeep` warnings)
 
 **Slug Generation Examples:**
 ```typescript

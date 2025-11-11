@@ -12,7 +12,7 @@ import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
 
-type TripCardVariant = 'standard' | 'imageFull'
+type TripCardVariant = 'standard' | 'imageFull' | 'horizontal'
 
 export interface TripCardProps {
   trip: Trip
@@ -42,6 +42,86 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
   const accessLevel = trip.access_level === 'public' || trip.access_level === 'private' 
     ? trip.access_level 
     : 'private'
+
+  // 横長バリアント（Recommended trips用）
+  if (variant === 'horizontal') {
+    return (
+      <Link href={getTripUrl()} className="block group">
+        <div className="relative overflow-hidden rounded-md shadow-sm hover:shadow-md transition bg-gray-900 h-24 md:h-20">
+          {/* Background Image */}
+          {trip.image_url && (
+            <Image
+              src={trip.image_url}
+              alt={trip.title}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              priority={priority}
+              className="object-cover"
+            />
+          )}
+          {/* Gradient overlay for better text visibility */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/70 to-slate-900/40" />
+          
+          {/* Content */}
+          <div className="relative h-full px-4 py-3 md:px-5 md:py-4 flex flex-col gap-1.5 md:gap-2 text-white">
+            <h3 className="text-base md:text-lg font-bold drop-shadow-sm leading-tight line-clamp-1 md:line-clamp-2">
+              {trip.title}
+            </h3>
+
+            <div className="flex flex-wrap items-center gap-3 text-xs text-white/85">
+              {trip.destination && (
+                <span className="flex items-center gap-1">
+                  <IconRenderer iconName="pin" className="w-3 h-3" color="white" />
+                  {trip.destination}
+                </span>
+              )}
+              {trip.destination_place?.address_components && (
+                <span className="text-sm">
+                  {getCountryFlag(
+                    trip.destination_place.address_components
+                      .find((component: any) => component.types.includes('country'))
+                      ?.short_name || 'unknown'
+                  )}
+                </span>
+              )}
+              {trip.start_date && trip.end_date && (
+                <span className="flex items-center gap-1">
+                  <IconRenderer iconName="calendar" className="w-3 h-3" color="white" />
+                  {(() => {
+                    const language = getUserLanguage()
+                    const { futureTrips, pastTrips } = dateUtils.sortTripsByDate([trip])
+                    if (futureTrips.length > 0) {
+                      return dateUtils.formatFutureTripDate(trip.start_date, trip.end_date, language)
+                    } else if (pastTrips.length > 0) {
+                      return dateUtils.formatPastTripDate(trip.start_date, trip.end_date, language)
+                    } else {
+                      return dateUtils.formatDateRange(trip.start_date, trip.end_date, language)
+                    }
+                  })()}
+                </span>
+              )}
+              {trip.creator?.name && (
+                <span className="flex items-center gap-2">
+                  {trip.creator.avatar_url ? (
+                    <Image
+                      src={trip.creator.avatar_url}
+                      alt={trip.creator.name}
+                      width={20}
+                      height={20}
+                      className="rounded-full object-cover border border-white/30 shadow-sm"
+                    />
+                  ) : (
+                    <IconRenderer iconName="user" className="w-3 h-3" color="white" />
+                  )}
+                  <span className="font-medium text-white/90">{trip.creator.name}</span>
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
+    )
+  }
 
   if (variant === 'imageFull') {
     return (
