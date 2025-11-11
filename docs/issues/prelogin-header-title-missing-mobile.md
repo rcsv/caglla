@@ -6,6 +6,10 @@
 - **Component**: `app/page.tsx`, `app/blog/page.tsx` のヘッダー実装箇所
 - **Epic**: Header responsive content visibility
 
+## ステータス
+
+- ✅ Fixed (2025-11-11) — `LandingHeader` のモバイル表示を再設計し、ロゴ横のサービス名を常時表示
+
 ## 現象
 
 モバイル幅にブラウザを縮めるとヘッダー内のサービス名タイトルが完全に非表示になる。ロゴは残るがテキストが消えるため、ブランド名の認識がしづらい。
@@ -45,3 +49,4 @@
 
 - ロゴアイコンだけでは初回訪問の認知が弱い。
 - レスポンシブ対応を入れる場合、横幅が足りなくても縮小表示や折返しなどでブランド名を保持したい。
+- 対応PR: `components/common/LandingHeader.tsx` でタイトルの `hidden` を解消し、余白とフォントサイズを調整。

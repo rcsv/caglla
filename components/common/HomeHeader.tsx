@@ -41,12 +41,13 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
     return 'bg-gray-200'
   })()
 
-  const planNameClass = (() => {
+  const planBadgeClass = (() => {
     const n = (planName || '').toLowerCase()
-    const base = 'text-xs truncate max-w-[160px]'
-    if (n.includes('globetrotter')) return `${base} font-mono text-purple-600`
-    if (n.includes('backpacker')) return `${base} text-blue-600`
-    return `${base} text-gray-500`
+    const base =
+      'inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold tracking-tight'
+    if (n.includes('globetrotter')) return `${base} border-purple-200 bg-purple-50 text-purple-600`
+    if (n.includes('backpacker')) return `${base} border-blue-200 bg-blue-50 text-blue-600`
+    return `${base} border-gray-200 bg-gray-50 text-gray-600`
   })()
 
   // 言語→国旗のマッピング
@@ -80,7 +81,9 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
           <div className="flex items-center gap-6">
             <Link href="/home" className="flex items-center gap-2 text-gray-900">
               <CagllaLogo className="w-8 h-8" />
-              <span className="text-xl font-bold font-rajdhani whitespace-nowrap leading-none hidden sm:inline">{appName}</span>
+              <span className="text-lg sm:text-xl font-bold font-rajdhani whitespace-nowrap leading-none">
+                {appName}
+              </span>
             </Link>
             <nav className="hidden md:flex items-center gap-4 text-sm">
               <Link href="/home" className="text-gray-600 hover:text-gray-900">{t('travelGuide')}</Link>
@@ -113,7 +116,11 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                     {languageFlags[currentLanguage] || '🌐'}
                   </span>
                 </div>
-                <div className={`${planNameClass} hidden sm:block`}>{planName}</div>
+                <div className="flex justify-end">
+                  <span className={`${planBadgeClass} max-w-[140px] sm:max-w-[160px] truncate`}>
+                    {planName}
+                  </span>
+                </div>
               </div>
               <span className={`inline-flex p-[2px] rounded-full ${avatarBorderClass}`}>
                 <Image

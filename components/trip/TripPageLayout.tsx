@@ -25,6 +25,7 @@ interface TripPageLayoutProps {
     disabled?: boolean
   }>
   onLogout?: () => void
+  mobileToolbar?: ReactNode
 }
 
 export default function TripPageLayout({
@@ -41,6 +42,7 @@ export default function TripPageLayout({
   titleBarActions,
   menuItems,
   onLogout,
+  mobileToolbar,
 }: TripPageLayoutProps) {
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -95,7 +97,10 @@ export default function TripPageLayout({
           accessLevel={trip.access_level === 'private' ? 'private' : 'public'} 
           actions={titleBarActions}
           menuItems={menuItems}
-          className="zidx-top-menu" 
+          className="zidx-top-menu"
+          onToggleMobileMenu={onToggleMobileMenu}
+          mobileMenuOpen={mobileMenuOpen}
+          mobileToolbar={mobileToolbar}
         />
         {children}
       </div>

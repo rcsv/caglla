@@ -21,6 +21,7 @@ import TripSummaryView from '@/components/trip/TripSummaryView'
 import TripItineraryView from '@/components/trip/TripItineraryView'
 import TripChecklistView from '@/components/trip/TripChecklistView'
 import TripRightPane from '@/components/trip/TripRightPane'
+import TripMap from '@/components/trip/TripMap'
 import TripEditor from '@/components/trip/TripEditor'
 import { getCachedPlaces } from '@/lib/travel/places-cache'
 import { useUserData } from '@/lib/contexts/user-data'
@@ -48,6 +49,7 @@ export default function SlugBasedTripPage() {
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set())
   const [leftNavExpanded, setLeftNavExpanded] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileMapOpen, setMobileMapOpen] = useState(false)
   const [summaryCollapsed, setSummaryCollapsed] = useState(false)
   const [selectedItineraryId, setSelectedItineraryId] = useState<string | null>(null)
   const [mapFocusMode, setMapFocusMode] = useState<'all' | 'day' | 'single'>('all')
@@ -68,6 +70,10 @@ export default function SlugBasedTripPage() {
   const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
   const queryDayParam = searchParams.get('day')
   const querySectionParam = searchParams.get('section')
+
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [currentView])
 
   // クエリ→状態の同期
   useEffect(() => {
@@ -122,6 +128,71 @@ export default function SlugBasedTripPage() {
     })
     router.push(`?${params.toString()}`, { scroll: false })
   }
+
+  const handleMobileViewChange = (view: 'summary' | 'itinerary' | 'checklist') => {
+    if (view === currentView) return
+    if (view === 'summary') {
+      updateQuery({ view: 'summary', day: null, section: null })
+    } else if (view === 'itinerary') {
+      updateQuery({ view: 'itinerary' })
+    } else {
+      updateQuery({ view: 'checklist', day: null, section: null })
+    }
+    setMobileMenuOpen(false)
+  }
+
+  const handleOpenMobileMap = () => setMobileMapOpen(true)
+  const handleCloseMobileMap = () => setMobileMapOpen(false)
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    if (mobileMapOpen) {
+      const previousOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = previousOverflow
+      }
+    }
+    document.body.style.overflow = ''
+  }, [mobileMapOpen])
+
+  const mobileViewTabs: Array<{ id: 'summary' | 'itinerary' | 'checklist'; label: string; icon: string }> = [
+    { id: 'summary', label: t('nav.summary'), icon: 'mdi:view-dashboard-outline' },
+    { id: 'itinerary', label: t('nav.itinerary'), icon: 'mdi:calendar-text' },
+    { id: 'checklist', label: t('nav.checklist'), icon: 'mdi:check-decagram' },
+  ]
+
+  const mobileToolbar = (
+    <div className="flex items-center gap-2">
+      <div className="flex flex-1 items-center gap-1 rounded-full border border-gray-200 bg-white shadow-sm">
+        {mobileViewTabs.map((tab) => {
+          const isActive = currentView === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleMobileViewChange(tab.id)}
+              className={`flex-1 inline-flex items-center justify-center gap-1 rounded-full px-3 py-2 text-xs font-medium transition ${
+                isActive ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              aria-pressed={isActive}
+              type="button"
+            >
+              <Icon icon={tab.icon} className="h-4 w-4" aria-hidden="true" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          )
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={handleOpenMobileMap}
+        className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-500 text-white shadow-sm hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
+        aria-label="Open map"
+      >
+        <Icon icon="mdi:map-outline" className="h-5 w-5" aria-hidden="true" />
+      </button>
+    </div>
+  )
 
   // PDF エクスポート
   const handlePdfExport = async () => {
@@ -1168,7 +1239,8 @@ export default function SlugBasedTripPage() {
   ]
 
   return (
-    <TripPageLayout
+    <>
+      <TripPageLayout
       trip={trip}
       leftNavExpanded={leftNavExpanded}
       onToggleLeftNav={() => setLeftNavExpanded(!leftNavExpanded)}
@@ -1179,6 +1251,7 @@ export default function SlugBasedTripPage() {
       onLogout={handleLogout}
       rightPaneWidth={currentView === 'checklist' ? 'zero' : 'default'}
       menuItems={menuItems}
+      mobileToolbar={mobileToolbar}
       rightPane={
         <TripRightPane
           trip={trip}
@@ -1210,7 +1283,6 @@ export default function SlugBasedTripPage() {
             removeTrip(trip.id)
             router.push('/home')
           }}
-          onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
       )}
 
@@ -1315,6 +1387,50 @@ export default function SlugBasedTripPage() {
           hideEditButton={true}
         />
       )}
-    </TripPageLayout>
+      </TripPageLayout>
+      {mobileMapOpen && (
+        <div className="fixed inset-0 zidx-float-modal md:hidden">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true"></div>
+          <div
+            className="absolute inset-0 bg-white flex flex-col"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <Icon icon="mdi:map-outline" className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+                <span className="text-sm font-semibold text-gray-900">{t('nav.itinerary')}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCloseMobileMap}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
+                aria-label={t('common.close')}
+              >
+                <Icon icon="mdi:close" className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="flex-1">
+              <TripMap
+                itineraries={getFilteredItineraries()}
+                trip={trip}
+                selectedItineraryId={selectedItineraryId}
+                selectedDayId={selectedDayId}
+                onItineraryClick={handleMapMarkerClick}
+                onPoiDataUpdate={setPoiData}
+                onAddFromPOI={canEdit ? handleAddFromPOI : undefined}
+                poiData={poiData}
+                className="h-full w-full"
+                focusMode={mapFocusMode}
+                initialCenter={trip.destination_place?.geometry?.location || undefined}
+                onMapInteractionStart={() => setScrollSyncEnabled(false)}
+                scrollSyncEnabled={scrollSyncEnabled}
+                onRequestEnableScrollSync={() => setScrollSyncEnabled(true)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

@@ -13,7 +13,6 @@ interface TripHeroSectionProps {
   trip: Trip
   onUpdateTrip: (updatedTrip: Trip) => void
   onDeleteTrip: () => void
-  onToggleMobileMenu: () => void
 }
 
 export default function TripHeroSection({
@@ -21,7 +20,6 @@ export default function TripHeroSection({
   canEdit = true,
   onUpdateTrip,
   onDeleteTrip,
-  onToggleMobileMenu,
 }: TripHeroSectionProps & { canEdit?: boolean }) {
   const { user } = useAuth()
   const currentLanguage = getUserLanguage(user)
@@ -50,17 +48,7 @@ export default function TripHeroSection({
       <div className="relative h-full flex flex-col">
         {/* Top Navigation */}
         <div className="flex justify-between items-start p-6">
-          <div className="flex items-center gap-4">
-            {/* ハンバーガーボタン（768px以下）- 左端フロート */}
-            <button
-              onClick={onToggleMobileMenu}
-              className={`md:hidden fixed top-6 left-6 zidx-top-menu-content inline-flex items-center px-3 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
+          <div className="flex items-center gap-4" />
           {canEdit && (
             <TripEditor 
               trip={trip} 
@@ -75,9 +63,6 @@ export default function TripHeroSection({
         <div className="flex-1 flex items-start pt-8">
           <div className="w-full px-6">
             <div className="max-w-4xl">
-              {/* モバイル用のハンバーガーボタン用スペース */}
-              <div className="md:hidden h-16 mb-2"></div>
-              
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
                 {trip.title}
               </h1>

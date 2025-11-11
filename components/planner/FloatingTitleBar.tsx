@@ -17,9 +17,22 @@ export interface FloatingTitleBarProps extends React.HTMLAttributes<HTMLDivEleme
     onClick: () => void
     disabled?: boolean
   }>
+  onToggleMobileMenu?: () => void
+  mobileMenuOpen?: boolean
+  mobileToolbar?: React.ReactNode
 }
 
-export default function FloatingTitleBar({ title, accessLevel, actions, menuItems, className, ...rest }: FloatingTitleBarProps) {
+export default function FloatingTitleBar({
+  title,
+  accessLevel,
+  actions,
+  menuItems,
+  className,
+  onToggleMobileMenu,
+  mobileMenuOpen = false,
+  mobileToolbar,
+  ...rest
+}: FloatingTitleBarProps) {
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -41,8 +54,21 @@ export default function FloatingTitleBar({ title, accessLevel, actions, menuItem
       ].filter(Boolean).join(' ')}
       {...rest}
     >
-      <div className="flex items-center justify-between w-full">
-        <div className="text-sm md:text-base font-semibold text-gray-900 truncate">{title}</div>
+      <div className="flex items-center justify-between w-full gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          {onToggleMobileMenu && (
+            <button
+              onClick={onToggleMobileMenu}
+              className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-600 shadow-sm hover:bg-gray-50 transition-colors"
+              aria-label={mobileMenuOpen ? t('common.close') : t('common.openMenu')}
+              aria-expanded={mobileMenuOpen}
+              aria-haspopup="true"
+            >
+              <Icon icon={mobileMenuOpen ? 'mdi:close' : 'mdi:menu'} className="w-5 h-5" />
+            </button>
+          )}
+          <div className="text-sm md:text-base font-semibold text-gray-900 truncate">{title}</div>
+        </div>
         <div className="flex items-center gap-2">
           {actions}
           
@@ -102,6 +128,9 @@ export default function FloatingTitleBar({ title, accessLevel, actions, menuItem
           )}
         </div>
       </div>
+      {mobileToolbar && (
+        <div className="md:hidden mt-3 w-full">{mobileToolbar}</div>
+      )}
     </div>
   )
 }
