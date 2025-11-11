@@ -14,14 +14,12 @@ import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
 import { ClockIcon } from '@/components/common/icons/ClockIcon'
 import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
 import { LocationIcon } from '@/components/common/icons/LocationIcon'
-import { CagllaLogo } from '@/components/common/icons/CagllaLogo'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
 import { toDate } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
 import { getUserLanguage } from '@/lib/utils/language'
 import PremiumButton from '@/components/ui/PremiumButton'
-import Icon from '@/components/common/Icon'
 
 interface NavigationMenuProps {
   trip: Trip
@@ -398,4 +396,114 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
               {section.isExpandable && section.isExpanded && section.children && (
                 <div className={`${isCollapsed ? '' : 'ml-2 mt-1'} space-y-1 ${
                   section.id === 'itinerary' ? 'flex-1 overflow-y-auto min-h-0 scrollbar-hide bg-white' : ''
-                }`
+                }`}>
+                  {section.children.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={item.onClick}
+                      className={`w-full text-left transition-colors group ${
+                        isCollapsed 
+                          ? 'p-1 hover:bg-gray-50 rounded' 
+                          : 'p-2 hover:bg-gray-50 rounded-lg'
+                      }`}
+                    >
+                      {isCollapsed ? (
+                        <div className="flex flex-col items-center space-y-1">
+                          {item.id.startsWith('day-') ? (
+                            <>
+                              <div className="text-[9px] font-medium text-gray-600 uppercase leading-[1.1]">
+                                {getMonthAbbr(item.title)}
+                              </div>
+                              <div className={`text-base font-light leading-[1.1] tracking-tight ${
+                                getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day)
+                              }`}>
+                                {getDayNumber(item.title)}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-gray-600 flex items-center justify-center w-6 h-6 mx-auto">
+                              {item.icon}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {item.icon && (
+                              <span className="text-gray-600 flex-shrink-0">
+                                {item.icon}
+                              </span>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-sm font-medium truncate ${
+                                item.id.startsWith('day-') ? getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day) : 'text-gray-900'
+                              }`}>
+                                {item.title}
+                              </div>
+                              {item.subtitle && item.subtitle !== item.title && (
+                                <div className="text-xs text-gray-500 truncate">
+                                  {item.subtitle}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {item.count !== undefined && item.count > 0 && (
+                            <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                              {item.count}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </nav>
+      </div>
+
+      {/* 下付きメニュー（Checklist & Settings） */}
+      <div className={`border-t border-gray-200 space-y-1 ${isCollapsed ? 'p-1' : 'p-2'} relative zidx-left-panel-content bg-white`}>
+        {bottomMenuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={item.onClick}
+            className={`w-full flex items-center text-left hover:bg-gray-50 rounded-lg transition-colors ${
+              isCollapsed ? 'justify-center p-1' : 'gap-2 p-2'
+            }`}
+            title={isCollapsed ? item.title : undefined}
+          >
+            <span className="text-gray-600">{item.icon}</span>
+            {!isCollapsed && (
+              <span className="font-medium text-gray-900">{item.title}</span>
+            )}
+          </button>
+        ))}
+        {showExtraControls && extraControlsMenuItems.length > 0 && (
+          <div className="absolute left-2 right-2 bottom-14 bg-white border border-gray-200 rounded-md shadow-lg p-1 zidx-left-panel">
+            {extraControlsMenuItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (!item.disabled) {
+                    item.onClick()
+                    setShowExtraControls(false)
+                    closeMenuIfMobile()
+                  }
+                }}
+                disabled={item.disabled}
+                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 rounded ${
+                  item.disabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
