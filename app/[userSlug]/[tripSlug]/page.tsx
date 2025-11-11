@@ -1232,7 +1232,7 @@ export default function SlugBasedTripPage() {
 
   return (
     <>
-      <TripPageLayout
+    <TripPageLayout
       trip={trip}
       leftNavExpanded={leftNavExpanded}
       onToggleLeftNav={() => setLeftNavExpanded(!leftNavExpanded)}
@@ -1243,6 +1243,7 @@ export default function SlugBasedTripPage() {
       onLogout={handleLogout}
       rightPaneWidth={currentView === 'checklist' ? 'zero' : 'default'}
       menuItems={menuItems}
+      extraControlsMenuItems={menuItems}
       mobileToolbar={mobileToolbar}
       rightPane={
         <TripRightPane
@@ -1379,7 +1380,7 @@ export default function SlugBasedTripPage() {
           hideEditButton={true}
         />
       )}
-      </TripPageLayout>
+    </TripPageLayout>
       {/* Map FAB - mobile only */}
       <button
         type="button"
