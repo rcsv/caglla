@@ -57,7 +57,7 @@ export default function TripPageLayout({
       {/* Floating Hamburger (mobile only) */}
       <button
         onClick={onToggleMobileMenu}
-        className="md:hidden fixed left-0 top-[160px] zidx-left-panel inline-flex items-center justify-center w-12 h-12 rounded-r-lg bg-white border border-gray-200 shadow text-gray-700 hover:bg-gray-50"
+        className="md:hidden fixed left-0 top-[180px] zidx-left-panel inline-flex items-center justify-center w-12 h-12 rounded-r-lg bg-white border border-gray-200 shadow text-gray-700 hover:bg-gray-50"
         aria-label="Open navigation menu"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
