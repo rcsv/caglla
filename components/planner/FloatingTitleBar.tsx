@@ -50,26 +50,26 @@ export default function FloatingTitleBar({
   return (
     <div
       className={[
-        'sticky top-0 h-[53px] bg-white/90 backdrop-blur-sm border-b border-gray-200 flex items-center px-4',
+        'sticky top-0 bg-white/90 backdrop-blur-sm border-b border-gray-200 px-4',
         hasCustomZIndex ? '' : 'zidx-main-content',
         className,
       ].filter(Boolean).join(' ')}
       {...rest}
     >
-      <div className="flex items-center justify-between w-full gap-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <Link href="/home" aria-label="Go to home" className="inline-flex items-center justify-center">
-            <CagllaLogo className="w-7 h-7" />
+      <div className="flex items-center justify-between w-full gap-3 h-[53px]">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link href="/home" aria-label="Go to home" className="inline-flex items-center justify-center flex-shrink-0">
+            <CagllaLogo className="w-8 h-8" />
           </Link>
           <div className="text-sm md:text-base font-semibold text-gray-900 truncate">{title}</div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {actions}
           {/* dots menu removed from header; moved to NavigationMenu bottom area */}
         </div>
       </div>
       {mobileToolbar && (
-        <div className="md:hidden mt-3 w-full">{mobileToolbar}</div>
+        <div className="md:hidden pb-3 w-full">{mobileToolbar}</div>
       )}
     </div>
   )
