@@ -29,6 +29,13 @@ interface NavigationMenuProps {
   isCollapsed?: boolean
   onToggleCollapse?: () => void
   onLogout?: () => void
+  extraControlsMenuItems?: Array<{
+    id: string
+    label: string
+    icon?: React.ReactNode
+    onClick: () => void
+    disabled?: boolean
+  }>
 }
 
 interface MenuSection {
@@ -49,10 +56,11 @@ interface MenuItem {
   onClick: () => void
 }
 
-export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, isCollapsed = false, onToggleCollapse, onLogout }: NavigationMenuProps) {
+export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, isCollapsed = false, onToggleCollapse, onLogout, extraControlsMenuItems = [] }: NavigationMenuProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['itinerary']))
+  const [showExtraControls, setShowExtraControls] = useState(false)
 
   const updateQuery = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -166,6 +174,16 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
 
   // 下付きメニューアイテムの定義
   const bottomMenuItems = [
+    ...(extraControlsMenuItems.length > 0 ? [{
+      id: 'extra-controls',
+      title: 'Extra Controls >',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
+        </svg>
+      ),
+      onClick: () => setShowExtraControls(v => !v)
+    }] : []),
     {
       id: 'logout',
       title: t('nav.logout'),
@@ -451,6 +469,29 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
             )}
           </button>
         ))}
+        {showExtraControls && extraControlsMenuItems.length > 0 && (
+          <div className="absolute left-2 right-2 bottom-14 bg-white border border-gray-200 rounded-md shadow-lg p-1 zidx-left-panel">
+            {extraControlsMenuItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  if (!item.disabled) {
+                    item.onClick()
+                    setShowExtraControls(false)
+                    onToggleCollapse?.()
+                  }
+                }}
+                disabled={item.disabled}
+                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 rounded ${
+                  item.disabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

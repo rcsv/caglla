@@ -8,6 +8,7 @@ import { dateUtils } from '@/lib/utils/date'
 import { t } from '@/lib/i18n'
 import { getUserLanguage } from '@/lib/utils/language'
 import { useAuth } from '@/lib/contexts/auth'
+import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
 
 interface TripHeroSectionProps {
   trip: Trip
@@ -46,6 +47,10 @@ export default function TripHeroSection({
       
       {/* Content Overlay */}
       <div className="relative h-full flex flex-col">
+        {/* Access badge overlay (right top) */}
+        <div className="absolute right-4 top-4 zidx-top-menu-content">
+          <PublicAccessBadge accessLevel={trip.access_level === 'private' ? 'private' : 'public'} />
+        </div>
         {/* Top Navigation */}
         <div className="flex justify-between items-start p-6">
           <div className="flex items-center gap-4" />

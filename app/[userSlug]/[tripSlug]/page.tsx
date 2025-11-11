@@ -183,14 +183,6 @@ export default function SlugBasedTripPage() {
           )
         })}
       </div>
-      <button
-        type="button"
-        onClick={handleOpenMobileMap}
-        className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-500 text-white shadow-sm hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
-        aria-label="Open map"
-      >
-        <Icon icon="mdi:map-outline" className="h-5 w-5" aria-hidden="true" />
-      </button>
     </div>
   )
 
@@ -1388,6 +1380,15 @@ export default function SlugBasedTripPage() {
         />
       )}
       </TripPageLayout>
+      {/* Map FAB - mobile only */}
+      <button
+        type="button"
+        onClick={handleOpenMobileMap}
+        className="md:hidden fixed right-4 bottom-5 zidx-map-button inline-flex h-14 w-14 items-center justify-center rounded-full border border-emerald-200 bg-emerald-500 text-white shadow-lg hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
+        aria-label="Open map"
+      >
+        <Icon icon="mdi:map-outline" className="h-6 w-6" aria-hidden="true" />
+      </button>
       {mobileMapOpen && (
         <div className="fixed inset-0 zidx-float-modal md:hidden">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" aria-hidden="true"></div>

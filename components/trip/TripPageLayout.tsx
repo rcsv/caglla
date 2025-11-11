@@ -26,6 +26,13 @@ interface TripPageLayoutProps {
   }>
   onLogout?: () => void
   mobileToolbar?: ReactNode
+  extraControlsMenuItems?: Array<{
+    id: string
+    label: string
+    icon?: string
+    onClick: () => void
+    disabled?: boolean
+  }>
 }
 
 export default function TripPageLayout({
@@ -43,9 +50,20 @@ export default function TripPageLayout({
   menuItems,
   onLogout,
   mobileToolbar,
+  extraControlsMenuItems,
 }: TripPageLayoutProps) {
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
+      {/* Floating Hamburger (mobile only) */}
+      <button
+        onClick={onToggleMobileMenu}
+        className="md:hidden fixed left-0 top-[100px] zidx-left-panel inline-flex items-center justify-center w-12 h-12 rounded-r-lg bg-white border border-gray-200 shadow text-gray-700 hover:bg-gray-50"
+        aria-label="Open navigation menu"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
       {/* Left Navigation Menu - 768px以上のみ表示 */}
       <div className="hidden md:block flex-shrink-0">
         <NavigationMenu 
@@ -55,6 +73,7 @@ export default function TripPageLayout({
           isCollapsed={!leftNavExpanded}
           onToggleCollapse={onToggleLeftNav}
           onLogout={onLogout}
+          extraControlsMenuItems={extraControlsMenuItems}
         />
       </div>
 
@@ -84,6 +103,7 @@ export default function TripPageLayout({
             isCollapsed={false}
             onToggleCollapse={onToggleMobileMenu}
             onLogout={onLogout}
+            extraControlsMenuItems={extraControlsMenuItems}
           />
         </div>
       </nav>
@@ -96,10 +116,8 @@ export default function TripPageLayout({
           title={trip.title} 
           accessLevel={trip.access_level === 'private' ? 'private' : 'public'} 
           actions={titleBarActions}
-          menuItems={menuItems}
+          menuItems={undefined}
           className="zidx-top-menu"
-          onToggleMobileMenu={onToggleMobileMenu}
-          mobileMenuOpen={mobileMenuOpen}
           mobileToolbar={mobileToolbar}
         />
         {children}
