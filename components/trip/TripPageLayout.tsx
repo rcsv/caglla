@@ -117,7 +117,7 @@ export default function TripPageLayout({
           accessLevel={trip.access_level === 'private' ? 'private' : 'public'} 
           actions={titleBarActions}
           menuItems={undefined}
-          className="zidx-top-menu"
+          className="zidx-top-menu" 
           mobileToolbar={mobileToolbar}
         />
         {children}

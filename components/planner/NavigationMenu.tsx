@@ -14,13 +14,14 @@ import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
 import { ClockIcon } from '@/components/common/icons/ClockIcon'
 import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
 import { LocationIcon } from '@/components/common/icons/LocationIcon'
+import { CagllaLogo } from '@/components/common/icons/CagllaLogo'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
 import { toDate } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
 import { getUserLanguage } from '@/lib/utils/language'
 import PremiumButton from '@/components/ui/PremiumButton'
-import { Icon } from '@iconify/react'
+import Icon from '@/components/common/Icon'
 
 interface NavigationMenuProps {
   trip: Trip
@@ -32,7 +33,7 @@ interface NavigationMenuProps {
   extraControlsMenuItems?: Array<{
     id: string
     label: string
-    icon?: React.ReactNode | string
+    icon?: React.ReactNode
     onClick: () => void
     disabled?: boolean
   }>
@@ -69,12 +70,6 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       else params.set(k, v)
     })
     router.push(`?${params.toString()}`, { scroll: false })
-  }
-
-  const closeMenuIfMobile = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      onToggleCollapse?.()
-    }
   }
 
   // メニューセクションの定義（メインエリア）
@@ -295,11 +290,17 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     })
   }
 
+  const closeMenuIfMobile = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      onToggleCollapse?.()
+    }
+  }
+
   return (
     <div className={`bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-200 relative z-30 left-nav-shadow ${
       isCollapsed ? 'w-12' : 'w-[188px]'
     }`} style={{ maxWidth: isCollapsed ? '48px' : '188px' }}>
-      {/* メニューヘッダー（Back to Home リンク） */}
+      {/* メニューヘッダー（ロゴ + Caglla → /home リンク） */}
       <div className={`border-b border-gray-200 ${isCollapsed ? 'p-2' : 'p-3'}`}>
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
           <Link
@@ -316,7 +317,12 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
             {isCollapsed ? (
               <span className="text-xl font-semibold">←</span>
             ) : (
-              <span className="text-sm font-semibold tracking-tight">← Back to Home</span>
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="text-sm font-semibold tracking-tight">Back to Home</span>
+              </>
             )}
           </Link>
         </div>
