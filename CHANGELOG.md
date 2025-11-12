@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > バージョニング方針: 本プロジェクトはSemVerに準拠します。詳細は `docs/development/versioning.md` を参照してください。
 
+## [2.2.0] - 2025-11-12
+
+### Added
+- 予約テンプレート保存フローとモーダル改善（エメラルドテーマ統一、テンプレート呼び出し強化）
+- 交通系アクティビティタグ（`personal_car` / `parking`）と専用チェックリストルールの追加
+- 予約サイトロゴ等のローカルアセットを `/public/imgs` に追加
+
+### Changed
+- Next.js 15 / React 19 へアップグレードし、`pnpm-lock.yaml` を更新
+- 予約カードレイアウトを2列表示に変更し、アクティビティアイコンを画像右下にオーバーレイ
+- `ScheduleCard`・`InlineTimeEditor`・`ReservationInfoModal` など入力系コンポーネントの配色をエメラルドに統一
+
+### Fixed
+- `/api/trips/[tripSlug]/checklist/generate` で `tripSlug` 解決と `day_id` ベースの旅程取得を行い、チェックリスト生成失敗を解消
+- 旅程カード間のスペース確保やタイムゾーン再設定問題など、旅程表示まわりの不具合を修正
+
 ## [1.8.0] - 2025-10-19
 
 ### Added
