@@ -28,6 +28,8 @@
 | [Itinerary Cardの通貨推測（Venue→通貨）が弱い](itinerary-currency-inference-weak.md) | 未解決 | 2025-10-31 |
 | [Itinerary Cardの予約ボタン/表示に視覚的フィードバックがない](itinerary-card-reservation-visual-feedback.md) | 解決済み | 2025-10-31 |
 | [Itinerary Cardの画像解像度がplaces_cacheの画像より低い](itinerary-card-image-resolution-low.md) | 解決済み | 2025-10-31 |
+| [Itinerary Cardの予約ボタン/表示に視覚的フィードバック追加](itinerary-card-reservation-visual-feedback.md) | 解決済み | 2025-10-31 |
+| [v2.2.0 向けテストカバレッジ拡張](test-coverage-roadmap-v2.2.md) | 未対応 | 2025-11-13 |
 | [Weather Forecast APIが過去の日付でエラーを返す](weather-api-past-date-error.md) | 解決済み | 2025-11-01 |
 | [ルート最適化ボタンを押しても順序が変化しない](route-optimization-no-order-change.md) | 解決済み | 2025-10-31 |
 | [POIクリック時に地図が元位置へ戻ってしまいPOIDialogと不一致](map-poi-dialog-focus-conflict.md) | 未解決 | 2025-10-31 |
