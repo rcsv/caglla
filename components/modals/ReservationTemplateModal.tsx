@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import type { ReservationTemplate, ReservationTemplateInput, ReservationType, ReservationSite } from '@/lib/core/types'
+import type { ReservationTemplate, ReservationTemplateInput, ReservationType, ReservationSite, ReservationInfo } from '@/lib/core/types'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import Button from '@/components/common/Button'
 import Input from '@/components/common/Input'
@@ -18,6 +18,7 @@ interface ReservationTemplateModalProps {
   onClose: () => void
   onSelectTemplate: (template: ReservationTemplate) => void
   reservationType?: ReservationType // フィルタ用
+  initialData?: Partial<ReservationInfo> // 現在の予約情報からテンプレート作成用
 }
 
 // 予約タイプの配列を取得（i18n対応）
@@ -48,21 +49,43 @@ export default function ReservationTemplateModal({
   onClose,
   onSelectTemplate,
   reservationType,
+  initialData,
 }: ReservationTemplateModalProps) {
   const [templates, setTemplates] = useState<ReservationTemplate[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<ReservationTemplate | null>(null)
+  const [mounted, setMounted] = useState(false)
   const [formData, setFormData] = useState<ReservationTemplateInput>({
     name: '',
     type: reservationType || 'flight',
   })
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
     if (isOpen) {
       loadTemplates()
+      // initialDataが渡された場合は、フォームを開いて初期化
+      if (initialData) {
+        setShowCreateForm(true)
+        setFormData({
+          name: '',
+          type: initialData.type || reservationType || 'flight',
+          reservation_site: initialData.reservation_site,
+          airline: initialData.airline,
+          departure_airport: initialData.departure_airport,
+          arrival_airport: initialData.arrival_airport,
+          notes: initialData.notes,
+        })
+      } else {
+        setShowCreateForm(false)
+        setFormData({ name: '', type: reservationType || 'flight' })
+      }
     }
-  }, [isOpen])
+  }, [isOpen, initialData, reservationType])
 
   const loadTemplates = async () => {
     setIsLoading(true)
@@ -184,7 +207,7 @@ export default function ReservationTemplateModal({
     ? templates.filter(t => t.type === reservationType)
     : templates
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -327,15 +350,23 @@ export default function ReservationTemplateModal({
             <div className="text-center py-8">
               <Loading size="md" color="gray" />
             </div>
-          ) : filteredTemplates.length === 0 ? (
+          ) : filteredTemplates.length === 0 && !showCreateForm ? (
             <div className="text-center py-8">
               <Icon icon="mdi:bookmark-off" className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">{t('reservation.template.empty')}</p>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-gray-600 mb-4">{t('reservation.template.empty')}</p>
+              <p className="text-sm text-gray-500 mb-4">
                 よく使う予約情報をテンプレートとして保存できます
               </p>
+              <Button
+                onClick={() => setShowCreateForm(true)}
+                variant="primary"
+                className="flex items-center gap-2 mx-auto"
+              >
+                <Icon icon="mdi:plus" className="w-5 h-5" />
+                新規テンプレート作成
+              </Button>
             </div>
-          ) : (
+          ) : filteredTemplates.length === 0 && showCreateForm ? null : (
             <div className="space-y-3">
               {filteredTemplates.map(template => (
                 <div

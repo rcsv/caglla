@@ -8,6 +8,7 @@ import { Trip, Itinerary, ChecklistItem, ActivityTag, User } from '@/lib/core/ty
 import { getChecklistRules } from '@/lib/data/checklist-rules'
 import type { ChecklistCondition } from '@/lib/data/checklist-rules'
 import { dateUtils } from '@/lib/utils/date'
+import logger from '@/lib/core/logger'
 
 interface DestinationInfo {
   countryCode?: string
@@ -36,32 +37,60 @@ export class ChecklistGenerator {
     
     // 1. 全Itineraryからアクティビティタグを収集
     const allItineraries = this.getAllItineraries(trip)
+    logger.debug('ChecklistGenerator: getAllItineraries', { count: allItineraries.length, tripId: trip.id })
     allItineraries.forEach(itinerary => {
       if (itinerary.activity_tag) {
         const key = itinerary.activity_tag.secondaryCategory
         activityCounts.set(key, (activityCounts.get(key) || 0) + 1)
+        logger.debug('ChecklistGenerator: Found activity tag', { 
+          itineraryId: itinerary.id, 
+          secondaryCategory: key,
+          activityTag: itinerary.activity_tag
+        })
+      } else {
+        logger.debug('ChecklistGenerator: No activity tag', { itineraryId: itinerary.id })
       }
+    })
+    
+    logger.debug('ChecklistGenerator: Activity counts', { 
+      counts: Object.fromEntries(activityCounts),
+      totalItineraries: allItineraries.length
     })
     
     // 2. 旅行期間を計算
     const tripDuration = this.calculateTripDuration(trip)
+    logger.debug('ChecklistGenerator: Trip duration', { duration: tripDuration })
     
     // 3. 目的地情報を取得
     const destination = this.getDestinationInfo(trip)
+    logger.debug('ChecklistGenerator: Destination info', { destination })
     
     // 4. 各アクティビティに対応するチェックリスト項目を生成
     for (const [secondaryCategory, count] of Array.from(activityCounts.entries())) {
       const rules = getChecklistRules(secondaryCategory)
+      logger.debug('ChecklistGenerator: Rules found', { 
+        secondaryCategory, 
+        count, 
+        rulesCount: rules.length 
+      })
       
       rules.forEach(rule => {
         rule.items.forEach(ruleItem => {
           // 条件チェック
-          if (this.checkCondition(ruleItem.condition, {
+          const conditionResult = this.checkCondition(ruleItem.condition, {
             count,
             duration: tripDuration,
             destination,
             userCountryCode: user?.preferences?.home_country_code
-          })) {
+          })
+          logger.debug('ChecklistGenerator: Condition check', {
+            secondaryCategory,
+            ruleItemTitle: ruleItem.title,
+            conditionResult,
+            condition: ruleItem.condition
+          })
+          
+          if (conditionResult) {
             // 動的な値置換（例: {count}日分 → 5日分）
             const title = this.replaceDynamicValues(ruleItem.title, {
               count,
@@ -77,6 +106,7 @@ export class ChecklistGenerator {
               generatedFrom: secondaryCategory,
               priority: ruleItem.priority || 'medium'
             })
+            logger.debug('ChecklistGenerator: Item added', { title, category: ruleItem.category })
           }
         })
       })

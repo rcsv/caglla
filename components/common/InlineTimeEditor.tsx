@@ -42,7 +42,7 @@ export function InlineTimeEditor({
               onCancel()
             }
           }}
-          className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="tj-input w-24 !py-1 !px-2 text-sm"
           autoFocus
         />
         <label className="text-sm font-medium text-gray-700">{t('inlineTimeEditor.endTime')}:</label>
@@ -57,7 +57,7 @@ export function InlineTimeEditor({
               onCancel()
             }
           }}
-          className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="tj-input w-24 !py-1 !px-2 text-sm"
         />
       </div>
       <div className="flex items-center space-x-2">
@@ -65,7 +65,7 @@ export function InlineTimeEditor({
         <select
           value={timezone}
           onChange={(e) => onTimezoneChange(e.target.value)}
-          className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="tj-select w-48 !py-1 !px-2 text-sm"
         >
           {TIMEZONE_OPTIONS.map((tz) => (
             <option key={tz.value} value={tz.value}>{t(tz.i18nKey)}</option>
@@ -76,7 +76,7 @@ export function InlineTimeEditor({
         <button
           onClick={onSave}
           disabled={isSaving || !isValid}
-          className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="px-3 py-1 bg-emerald-500 text-white text-sm rounded hover:bg-emerald-600 disabled:bg-emerald-200 disabled:text-emerald-800 disabled:cursor-not-allowed transition"
         >
           {isSaving ? t('inlineTimeEditor.saving') : t('common.save')}
         </button>

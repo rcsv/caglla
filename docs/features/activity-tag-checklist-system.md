@@ -370,13 +370,15 @@ export interface Itinerary {
 ```typescript
 {
   primaryCategory: 'transportation',
-  label: '🚆 乗り物に乗る',
+  label: '🚆 移動・交通',
   secondaryCategories: [
     { id: 'flight', label: '飛行機', icon: '✈️' },
     { id: 'train', label: '電車', icon: '🚆' },
     { id: 'bus', label: 'バス', icon: '🚌' },
     { id: 'taxi', label: 'タクシー', icon: '🚕' },
     { id: 'car_rental', label: 'レンタカー', icon: '🚗' },
+    { id: 'personal_car', label: 'マイカー', icon: '🚙' },
+    { id: 'parking', label: '駐車場', icon: '🅿️' },
     { id: 'ferry', label: 'フェリー', icon: '⛴️' },
     { id: 'bike', label: '自転車', icon: '🚲' },
   ]

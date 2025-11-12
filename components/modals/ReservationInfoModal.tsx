@@ -139,6 +139,7 @@ export default function ReservationInfoModal({
   const [isSaving, setIsSaving] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [showSaveAsTemplateModal, setShowSaveAsTemplateModal] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -276,14 +277,29 @@ export default function ReservationInfoModal({
               {initialReservation ? t('reservation.modal.editTitle') : t('reservation.modal.addTitle')}
             </h2>
             {!initialReservation && (
-              <button
-                onClick={() => setShowTemplateModal(true)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
-                title={t('reservation.modal.loadTemplate')}
-              >
-                <Icon icon="mdi:bookmark-multiple" className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('reservation.modal.template')}</span>
-              </button>
+              <>
+                <button
+                  onClick={() => setShowTemplateModal(true)}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                  title={t('reservation.modal.loadTemplate')}
+                >
+                  <Icon icon="mdi:bookmark-multiple" className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('reservation.modal.template')}</span>
+                </button>
+                {reservation.type && (
+                  <button
+                    onClick={() => {
+                      setShowSaveAsTemplateModal(true)
+                      setShowTemplateModal(true)
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                    title={t('reservation.modal.saveAsTemplate')}
+                  >
+                    <Icon icon="mdi:bookmark-plus" className="w-4 h-4" />
+                    <span className="hidden sm:inline">{t('reservation.modal.saveAsTemplate')}</span>
+                  </button>
+                )}
+              </>
             )}
           </div>
           <button
@@ -318,7 +334,7 @@ export default function ReservationInfoModal({
                   onClick={() => handleTypeChange(type.value)}
                   className={`p-3 border rounded-lg text-left transition-colors ${
                     reservation.type === type.value
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                       : 'border-gray-300 hover:border-gray-400'
                   }`}
                 >
@@ -474,7 +490,7 @@ export default function ReservationInfoModal({
         <div className="flex justify-end space-x-3 mt-6">
           <Button
             onClick={onClose}
-            variant="secondary"
+            variant="outline"
             disabled={isSaving}
           >
             {t('reservation.button.cancel')}
@@ -498,9 +514,13 @@ export default function ReservationInfoModal({
       {showTemplateModal && (
         <ReservationTemplateModal
           isOpen={showTemplateModal}
-          onClose={() => setShowTemplateModal(false)}
+          onClose={() => {
+            setShowTemplateModal(false)
+            setShowSaveAsTemplateModal(false)
+          }}
           onSelectTemplate={handleLoadTemplate}
           reservationType={reservation.type}
+          initialData={showSaveAsTemplateModal ? reservation : undefined}
         />
       )}
     </>

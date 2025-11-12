@@ -71,13 +71,13 @@ export default function TripReservationDisplay({
 
   // 予約サイト → ロゴ画像URLのマッピング
   const siteLogos: Record<string, string> = {
-    skyscanner: 'https://logos-world.net/wp-content/uploads/2021/08/Skyscanner-Logo.png',
-    opentable: 'https://logos-world.net/wp-content/uploads/2021/08/OpenTable-Logo.png',
-    expedia: 'https://logos-world.net/wp-content/uploads/2021/08/Expedia-Logo.png',
-    booking_com: 'https://logos-world.net/wp-content/uploads/2021/08/Booking-Logo.png',
-    agoda: 'https://logos-world.net/wp-content/uploads/2021/08/Agoda-Logo.png',
-    airbnb: 'https://logos-world.net/wp-content/uploads/2021/08/Airbnb-Logo.png',
-    kayak: 'https://logos-world.net/wp-content/uploads/2021/08/Kayak-Logo.png',
+    skyscanner: '/imgs/SkyScanner.webp',
+    opentable: '/imgs/OpenTable.png',
+    expedia: '/imgs/Expedia.png',
+    booking_com: '/imgs/BookingCom.png',
+    agoda: '/imgs/agoda.png',
+    airbnb: '/imgs/Airbnb.jpeg',
+    kayak: '/imgs/Kayak.png',
     tripadvisor: 'https://logos-world.net/wp-content/uploads/2021/08/TripAdvisor-Logo.png',
     tabelog: 'https://logos-world.net/wp-content/uploads/2021/08/Tabelog-Logo.png',
     hot_pepper: 'https://logos-world.net/wp-content/uploads/2021/08/HotPepper-Logo.png',
@@ -167,7 +167,7 @@ export default function TripReservationDisplay({
               </span>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {typeReservations.map(({ itinerary, reservation }) => {
                 // 時刻表示ルールを適用
                 const timeInfo = type === 'flight' 
@@ -176,7 +176,7 @@ export default function TripReservationDisplay({
                 const photoRef = itinerary.place_data?.photos?.[0]?.photo_reference
                 
                 return (
-                <div key={itinerary.id} className="w-[280px] bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+                <div key={itinerary.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden min-w-0">
                   {/* カードヘッダー（画像付き） */}
                   <div className="relative h-28 bg-gray-200">
                     {photoRef ? (
@@ -185,7 +185,7 @@ export default function TripReservationDisplay({
                         alt={itinerary.title}
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 33vw"
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         priority={false}
                       />
                     ) : (
@@ -226,26 +226,26 @@ export default function TripReservationDisplay({
                         
                         {/* 空港コード（中央、最大サイズ） */}
                         {reservation.departure_airport && reservation.arrival_airport && (
-                          <div className="flex items-center justify-between">
-                            <div className="text-left">
-                              <div className="text-3xl font-bold text-blue-600 mb-1">
+                          <div className="flex items-start justify-between">
+                            <div className="text-left flex-1">
+                              <div className="text-3xl font-bold text-blue-600 mb-1 leading-none">
                                 {reservation.departure_airport}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-gray-500 min-h-[1rem]">
                                 {itinerary.title}
                               </div>
                             </div>
                             
                             {/* 飛行機アイコン */}
-                            <div className="mx-4">
+                            <div className="mx-4 flex items-center self-center">
                               <UnifiedIcon icon="tabler:plane" className="w-6 h-6 text-blue-600" />
                             </div>
                             
-                            <div className="text-left">
-                              <div className="text-3xl font-bold text-blue-600 mb-1">
+                            <div className="text-left flex-1">
+                              <div className="text-3xl font-bold text-blue-600 mb-1 leading-none">
                                 {reservation.arrival_airport}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-gray-500 min-h-[1rem]">
                                 Destination
                               </div>
                             </div>

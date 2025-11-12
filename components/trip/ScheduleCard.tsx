@@ -118,8 +118,34 @@ export default function ScheduleCard({
     setTempCostCurrency(itinerary.cost_currency || trip?.default_currency || 'JPY')
   }, [itinerary.id, itinerary.title, itinerary.start_time, itinerary.end_time, itinerary.description, itinerary.place_data?.editorial_summary?.overview, itinerary.timezone, itinerary.cost_currency, trip?.default_currency])
 
+  // place_dataが初めて設定されたときのみ自動的にタイムゾーンを設定
+  // ユーザーが手動でタイムゾーンを変更した場合は、それを尊重する
+  const previousPlaceDataRef = useRef<PlaceData | null | undefined>(itinerary.place_data)
+  const previousItineraryIdRef = useRef<string>(itinerary.id)
+  
   useEffect(() => {
+    // itinerary.idが変更された場合は、refをリセット
+    if (previousItineraryIdRef.current !== itinerary.id) {
+      previousPlaceDataRef.current = null
+      previousItineraryIdRef.current = itinerary.id
+    }
+    
     if (!itinerary.place_data) {
+      previousPlaceDataRef.current = itinerary.place_data
+      return
+    }
+
+    // 既にタイムゾーンが設定されている場合（UTC以外）は、ユーザーが手動で設定した可能性があるため、自動設定を完全にスキップ
+    const hasManualTimezone = itinerary.timezone && itinerary.timezone !== 'UTC'
+    if (hasManualTimezone) {
+      previousPlaceDataRef.current = itinerary.place_data
+      return
+    }
+
+    // place_dataが初めて設定された場合のみ自動設定
+    const isPlaceDataNewlySet = !previousPlaceDataRef.current && itinerary.place_data
+    if (!isPlaceDataNewlySet) {
+      previousPlaceDataRef.current = itinerary.place_data
       return
     }
 
@@ -129,12 +155,14 @@ export default function ScheduleCard({
       detectedTimezone === 'UTC' ||
       detectedTimezone === itinerary.timezone
     ) {
+      previousPlaceDataRef.current = itinerary.place_data
       return
     }
 
     setDestinationTimezone(detectedTimezone)
     void updateField('timezone', detectedTimezone)
-  }, [itinerary.place_data, itinerary.timezone, updateField])
+    previousPlaceDataRef.current = itinerary.place_data
+  }, [itinerary.id, itinerary.place_data, itinerary.timezone, updateField])
 
   // place_data が未設定だが place_id がある場合は、詳細を取得して保存する
   const itineraryPlaceId = (itinerary as any).place_id as string | undefined

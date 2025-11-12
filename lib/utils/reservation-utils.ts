@@ -10,41 +10,41 @@ export function validateReservationInfo(reservation: Partial<ReservationInfo>): 
 
   // 必須フィールドのチェック
   if (!reservation.type) {
-    errors.push('予約タイプは必須です')
+    errors.push(t('reservation.validation.typeRequired'))
   }
 
   // 予約タイプ別のバリデーション
   if (reservation.type === 'flight') {
     // 飛行機の場合
     if (!reservation.flight_number) {
-      errors.push('便名は必須です')
+      errors.push(t('reservation.validation.flightNumberRequired'))
     }
     if (!reservation.departure_airport) {
-      errors.push('出発空港は必須です')
+      errors.push(t('reservation.validation.departureAirportRequired'))
     }
     if (!reservation.arrival_airport) {
-      errors.push('到着空港は必須です')
+      errors.push(t('reservation.validation.arrivalAirportRequired'))
     }
     if (!reservation.departure_at) {
-      errors.push('出発日時は必須です')
+      errors.push(t('reservation.validation.departureDateRequired'))
     }
     if (!reservation.arrival_at) {
-      errors.push('到着日時は必須です')
+      errors.push(t('reservation.validation.arrivalDateRequired'))
     }
   } else if (reservation.type && ['rental_car', 'hotel', 'dining', 'other'].includes(reservation.type)) {
     // 飛行機以外の場合
     if (!reservation.start_date) {
-      errors.push('開始日時は必須です')
+      errors.push(t('reservation.validation.startDateRequired'))
     }
     if (!reservation.end_date) {
-      errors.push('終了日時は必須です')
+      errors.push(t('reservation.validation.endDateRequired'))
     }
     // 場所情報はItineraryから取得するため、ReservationInfoでは不要
   }
 
   // URLのバリデーション
   if (reservation.reservation_url && !isAllowedReservationUrl(reservation.reservation_url)) {
-    errors.push('予約URLはhttps://で始まる有効なURLである必要があります')
+    errors.push(t('reservation.validation.reservationUrl'))
   }
 
   // 日時の論理チェック
@@ -54,9 +54,9 @@ export function validateReservationInfo(reservation: Partial<ReservationInfo>): 
     
     // 日時変換失敗を明示的に検出
     if (!start || !end) {
-      errors.push('開始日時または終了日時が無効です')
+      errors.push(t('reservation.validation.invalidStartOrEnd'))
     } else if (start.getTime() >= end.getTime()) {
-      errors.push('終了日時は開始日時より後である必要があります')
+      errors.push(t('reservation.validation.endAfterStart'))
     }
   }
 
@@ -66,9 +66,9 @@ export function validateReservationInfo(reservation: Partial<ReservationInfo>): 
     
     // 日時変換失敗を明示的に検出
     if (!departure || !arrival) {
-      errors.push('出発日時または到着日時が無効です')
+      errors.push(t('reservation.validation.invalidDepartureOrArrival'))
     } else if (departure.getTime() >= arrival.getTime()) {
-      errors.push('到着日時は出発日時より後である必要があります')
+      errors.push(t('reservation.validation.arrivalAfterDeparture'))
     }
   }
 
@@ -90,28 +90,8 @@ export function isAllowedReservationUrl(url: string): boolean {
       return false
     }
 
-    // 許可されたドメインのリスト
-    const allowedDomains = [
-      'expedia.com',
-      'booking.com',
-      'agoda.com',
-      'trivago.com',
-      'airbnb.com',
-      'kayak.com',
-      'skyscanner.com',
-      'tripadvisor.com',
-      'opentable.com',
-      'tabelog.com',
-      'hotpepper.jp',
-      'ana.co.jp',
-      'jal.co.jp',
-      'travel.rakuten.co.jp',
-      'jalan.net'
-    ]
-
-    // ドメインが許可リストに含まれているかチェック
-    const hostname = parsedUrl.hostname.toLowerCase()
-    return allowedDomains.some(domain => hostname.includes(domain))
+    // ホスト名が存在し、最低限の形式を満たしていれば許可
+    return Boolean(parsedUrl.hostname)
   } catch {
     return false
   }

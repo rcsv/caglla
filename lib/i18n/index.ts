@@ -415,6 +415,8 @@ export type TranslationKey =
   | 'common.save'
   | 'common.saving'
   | 'common.delete'
+  | 'common.retry'
+  | 'common.goHome'
   // Admin / Dev Tools
   | 'admin.logs.timezone.deleteConfirm'
   | 'admin.logs.currency.deleteConfirm'
@@ -613,6 +615,8 @@ export type TranslationKey =
   | 'tripSlugPage.pdfRequiresBackpacker'
   | 'tripSlugPage.pdfExportFailed'
   | 'tripSlugPage.fetchTripFailed'
+  | 'tripSlugPage.fetchTripFailedDescription'
+  | 'tripSlugPage.notFoundDescription'
   | 'tripSlugPage.addDayFailed'
   | 'tripSlugPage.addPOIFailed'
   | 'tripSlugPage.orderUpdateFailed'
@@ -795,6 +799,10 @@ export type TranslationKey =
   | 'activity.secondary.transportation.taxi.description'
   | 'activity.secondary.transportation.car_rental'
   | 'activity.secondary.transportation.car_rental.description'
+  | 'activity.secondary.transportation.personal_car'
+  | 'activity.secondary.transportation.personal_car.description'
+  | 'activity.secondary.transportation.parking'
+  | 'activity.secondary.transportation.parking.description'
   | 'activity.secondary.transportation.ferry'
   | 'activity.secondary.transportation.ferry.description'
   | 'activity.secondary.transportation.bike'
@@ -1187,6 +1195,7 @@ export type TranslationKey =
   | 'reservation.modal.addTitle'
   | 'reservation.modal.loadTemplate'
   | 'reservation.modal.template'
+  | 'reservation.modal.saveAsTemplate'
   | 'reservation.template.deleteFailed'
   | 'reservation.template.deleteConfirm'
   | 'reservation.template.createFailed'
@@ -1200,6 +1209,19 @@ export type TranslationKey =
   | 'schedule.venue.deleteConfirm'
   | 'reservation.validation.airportCode'
   | 'reservation.validation.flightNumber'
+  | 'reservation.validation.typeRequired'
+  | 'reservation.validation.flightNumberRequired'
+  | 'reservation.validation.departureAirportRequired'
+  | 'reservation.validation.arrivalAirportRequired'
+  | 'reservation.validation.departureDateRequired'
+  | 'reservation.validation.arrivalDateRequired'
+  | 'reservation.validation.startDateRequired'
+  | 'reservation.validation.endDateRequired'
+  | 'reservation.validation.reservationUrl'
+  | 'reservation.validation.invalidStartOrEnd'
+  | 'reservation.validation.endAfterStart'
+  | 'reservation.validation.invalidDepartureOrArrival'
+  | 'reservation.validation.arrivalAfterDeparture'
   | 'reservation.field.type'
   | 'reservation.field.flightNumber'
   | 'reservation.field.airline'
@@ -1797,6 +1819,8 @@ const en: Dictionary = {
   'common.save': 'Save',
   'common.saving': 'Saving...',
   'common.delete': 'Delete',
+  'common.retry': 'Retry',
+  'common.goHome': 'Go back home',
   // Admin / Dev Tools
   'admin.logs.timezone.deleteConfirm': 'Delete all timezone failure logs?',
   'admin.logs.currency.deleteConfirm': 'Delete all currency failure logs?',
@@ -1996,6 +2020,8 @@ const en: Dictionary = {
   'tripSlugPage.pdfRequiresBackpacker': 'PDF export requires Backpacker plan or higher',
   'tripSlugPage.pdfExportFailed': 'PDF export failed',
   'tripSlugPage.fetchTripFailed': 'Failed to fetch trip data',
+  'tripSlugPage.fetchTripFailedDescription': 'Something went wrong while loading this trip. Please try again.',
+  'tripSlugPage.notFoundDescription': 'We couldn\'t find this trip or you may not have access to it.',
   'tripSlugPage.addDayFailed': 'Failed to add day',
   'tripSlugPage.addPOIFailed': 'Failed to add POI',
   'tripSlugPage.orderUpdateFailed': 'Failed to update order',
@@ -2021,8 +2047,8 @@ const en: Dictionary = {
   'gallery.photosOf': '{name} photos',
   'gallery.photoCount': '+{count} photos',
   // Activity Categories (minimal set; fallback supported)
-  'activity.primary.transportation': 'Transportation',
-  'activity.primaryShort.transportation': 'Transport',
+  'activity.primary.transportation': 'Mobility & Transport',
+  'activity.primaryShort.transportation': 'Mobility',
   'activity.primary.shopping': 'Shopping',
   'activity.primaryShort.shopping': 'Shopping',
   'activity.primary.dining': 'Dining',
@@ -2052,6 +2078,10 @@ const en: Dictionary = {
   'activity.secondary.transportation.taxi.description': 'Taxi/Ride-sharing service',
   'activity.secondary.transportation.car_rental': 'Rental Car',
   'activity.secondary.transportation.car_rental.description': 'Car rental transportation',
+  'activity.secondary.transportation.personal_car': 'Personal Car',
+  'activity.secondary.transportation.personal_car.description': 'Driving with your own car',
+  'activity.secondary.transportation.parking': 'Parking',
+  'activity.secondary.transportation.parking.description': 'Parking spot reservations and payment',
   'activity.secondary.transportation.ferry': 'Ferry',
   'activity.secondary.transportation.ferry.description': 'Ship/Ferry transportation',
   'activity.secondary.transportation.bike': 'Bicycle',
@@ -2479,8 +2509,22 @@ const en: Dictionary = {
   'reservation.modal.addTitle': 'Add Reservation',
   'reservation.modal.loadTemplate': 'Load from template',
   'reservation.modal.template': 'Template',
+  'reservation.modal.saveAsTemplate': 'Save as Template',
   'reservation.validation.airportCode': 'Airport code must be 3 uppercase letters (e.g., NRT, HND)',
   'reservation.validation.flightNumber': 'Flight number must be airline code + numbers (e.g., ANA123, JAL456)',
+  'reservation.validation.typeRequired': 'Reservation type is required',
+  'reservation.validation.flightNumberRequired': 'Flight number is required',
+  'reservation.validation.departureAirportRequired': 'Departure airport is required',
+  'reservation.validation.arrivalAirportRequired': 'Arrival airport is required',
+  'reservation.validation.departureDateRequired': 'Departure date & time is required',
+  'reservation.validation.arrivalDateRequired': 'Arrival date & time is required',
+  'reservation.validation.startDateRequired': 'Start date & time is required',
+  'reservation.validation.endDateRequired': 'End date & time is required',
+  'reservation.validation.reservationUrl': 'Reservation URL must start with https:// and be a valid URL',
+  'reservation.validation.invalidStartOrEnd': 'Start or end date is invalid',
+  'reservation.validation.endAfterStart': 'End date & time must be after the start date & time',
+  'reservation.validation.invalidDepartureOrArrival': 'Departure or arrival date is invalid',
+  'reservation.validation.arrivalAfterDeparture': 'Arrival date & time must be after the departure date & time',
   'reservation.field.type': 'Reservation Type',
   'reservation.field.flightNumber': 'Flight Number',
   'reservation.field.airline': 'Airline',
@@ -3088,6 +3132,8 @@ const ja: Dictionary = {
   'common.save': '保存',
   'common.saving': '保存中...',
   'common.delete': '削除',
+  'common.retry': '再試行',
+  'common.goHome': 'ホームに戻る',
   // Admin / Dev Tools
   'admin.logs.timezone.deleteConfirm': 'タイムゾーン失敗ログをすべて削除しますか？',
   'admin.logs.currency.deleteConfirm': '通貨失敗ログをすべて削除しますか？',
@@ -3287,6 +3333,8 @@ const ja: Dictionary = {
   'tripSlugPage.pdfRequiresBackpacker': 'PDF出力にはBackpackerプラン以上が必要です。',
   'tripSlugPage.pdfExportFailed': 'PDF出力に失敗しました。',
   'tripSlugPage.fetchTripFailed': '旅行データの取得に失敗しました',
+  'tripSlugPage.fetchTripFailedDescription': '旅行データの読み込み中に問題が発生しました。もう一度お試しください。',
+  'tripSlugPage.notFoundDescription': '該当する旅行が見つからないか、アクセス権がありません。',
   'tripSlugPage.addDayFailed': '日程の追加に失敗しました',
   'tripSlugPage.addPOIFailed': 'POIの追加に失敗しました',
   'tripSlugPage.orderUpdateFailed': '順序の更新に失敗しました',
@@ -3312,8 +3360,8 @@ const ja: Dictionary = {
   'gallery.photosOf': '{name} の写真',
   'gallery.photoCount': '+{count}枚',
   // Activity Categories (minimal set; fallback supported)
-  'activity.primary.transportation': '乗り物',
-  'activity.primaryShort.transportation': '乗り物',
+  'activity.primary.transportation': '移動・交通',
+  'activity.primaryShort.transportation': '移動',
   'activity.primary.shopping': '買い物をする',
   'activity.primaryShort.shopping': '買い物',
   'activity.primary.dining': '食事をする',
@@ -3343,6 +3391,10 @@ const ja: Dictionary = {
   'activity.secondary.transportation.taxi.description': 'タクシー・配車サービス',
   'activity.secondary.transportation.car_rental': 'レンタカー',
   'activity.secondary.transportation.car_rental.description': 'レンタカーでの移動',
+  'activity.secondary.transportation.personal_car': 'マイカー',
+  'activity.secondary.transportation.personal_car.description': '自家用車での移動',
+  'activity.secondary.transportation.parking': '駐車場',
+  'activity.secondary.transportation.parking.description': '駐車場の予約・精算・駐車位置の管理',
   'activity.secondary.transportation.ferry': 'フェリー',
   'activity.secondary.transportation.ferry.description': '船・フェリーでの移動',
   'activity.secondary.transportation.bike': '自転車',
@@ -3770,8 +3822,22 @@ const ja: Dictionary = {
   'reservation.modal.addTitle': '予約情報を追加',
   'reservation.modal.loadTemplate': 'テンプレートから読み込む',
   'reservation.modal.template': 'テンプレート',
+  'reservation.modal.saveAsTemplate': 'テンプレートとして保存',
   'reservation.validation.airportCode': '空港コードは3文字の英大文字で入力してください（例: NRT, HND）',
   'reservation.validation.flightNumber': '便名は航空会社コード+数字の形式で入力してください（例: ANA123, JAL456）',
+  'reservation.validation.typeRequired': '予約タイプは必須です',
+  'reservation.validation.flightNumberRequired': '便名は必須です',
+  'reservation.validation.departureAirportRequired': '出発空港は必須です',
+  'reservation.validation.arrivalAirportRequired': '到着空港は必須です',
+  'reservation.validation.departureDateRequired': '出発日時は必須です',
+  'reservation.validation.arrivalDateRequired': '到着日時は必須です',
+  'reservation.validation.startDateRequired': '開始日時は必須です',
+  'reservation.validation.endDateRequired': '終了日時は必須です',
+  'reservation.validation.reservationUrl': '予約URLはhttps://で始まる有効なURLにしてください',
+  'reservation.validation.invalidStartOrEnd': '開始日時または終了日時が無効です',
+  'reservation.validation.endAfterStart': '終了日時は開始日時より後に設定してください',
+  'reservation.validation.invalidDepartureOrArrival': '出発日時または到着日時が無効です',
+  'reservation.validation.arrivalAfterDeparture': '到着日時は出発日時より後に設定してください',
   'reservation.field.type': '予約タイプ',
   'reservation.field.flightNumber': '便名',
   'reservation.field.airline': '航空会社',

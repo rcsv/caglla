@@ -4,7 +4,6 @@ import { t } from '@/lib/i18n'
 
 import { useAuth } from '@/lib/contexts/auth'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { notFound } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import AddScheduleModal from '@/components/modals/AddScheduleModal'
 import ExportDataModal from '@/components/modals/ExportDataModal'
@@ -39,6 +38,7 @@ export default function SlugBasedTripPage() {
   const searchParams = useSearchParams()
   const [trip, setTrip] = useState<Trip | null>(null)
   const [tripLoading, setTripLoading] = useState(true)
+  const [fetchError, setFetchError] = useState<'not-found' | 'forbidden' | 'unauthorized' | 'unknown' | null>(null)
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
   const [showICalPublishModal, setShowICalPublishModal] = useState(false)
@@ -333,6 +333,10 @@ export default function SlugBasedTripPage() {
 
   // 旅行データを取得
   useEffect(() => {
+    if (loading) {
+      return
+    }
+
     const fetchTrip = async () => {
       if (!userSlug || !tripSlug) {
         setTripLoading(false)
@@ -341,14 +345,23 @@ export default function SlugBasedTripPage() {
 
       try {
         setTripLoading(true)
+        setFetchError(null)
         logger.debug('Fetching trip data:', { userSlug, tripSlug })
         
         // APIエンドポイント経由でTripデータを取得（他人のデータも取得可能）
         const response = await makeAuthenticatedRequest(`/api/trip/${tripSlug}`)
         
         if (!response.ok) {
-          logger.error('Trip not found:', { userSlug, tripSlug, status: response.status })
-          notFound()
+          logger.error('Trip fetch failed:', { userSlug, tripSlug, status: response.status })
+          if (response.status === 404) {
+            setFetchError('not-found')
+          } else if (response.status === 401) {
+            setFetchError('unauthorized')
+          } else if (response.status === 403) {
+            setFetchError('forbidden')
+          } else {
+            setFetchError('unknown')
+          }
           return
         }
         
@@ -407,14 +420,14 @@ export default function SlugBasedTripPage() {
         }
       } catch (error) {
         logger.error(t('tripSlugPage.fetchTripFailed'), error)
-        notFound()
+        setFetchError('unknown')
       } finally {
         setTripLoading(false)
       }
     }
 
     fetchTrip()
-  }, [userSlug, tripSlug, router, refreshKey])
+  }, [userSlug, tripSlug, router, refreshKey, loading, user])
 
   // 旅行データ読み込み後の初期クエリパラメータ同期
   useEffect(() => {
@@ -1176,6 +1189,45 @@ export default function SlugBasedTripPage() {
 
   if (loading || tripLoading) {
     return <Loading fullScreen size="lg" message={t('loading.message')} />
+  }
+
+  if (fetchError) {
+    const title = fetchError === 'not-found'
+      ? t('notFound.title')
+      : t('tripSlugPage.fetchTripFailed')
+    const description = fetchError === 'not-found'
+      ? t('tripSlugPage.notFoundDescription')
+      : t('tripSlugPage.fetchTripFailedDescription')
+
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
+        <Icon
+          icon={fetchError === 'not-found' ? 'mdi:map-marker-off' : 'mdi:alert-circle-outline'}
+          className="h-12 w-12 text-emerald-500"
+          aria-hidden="true"
+        />
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <p className="mt-2 text-sm text-gray-600">{description}</p>
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => setRefreshKey(prev => prev + 1)}
+            className="inline-flex items-center justify-center rounded-md border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-600 transition hover:bg-emerald-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+          >
+            {t('common.retry')}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/')}
+            className="inline-flex items-center justify-center rounded-md bg-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+          >
+            {t('common.goHome')}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (!user || !trip) {

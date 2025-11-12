@@ -33,8 +33,8 @@ export interface ActivityCategoryMaster {
 export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
   {
     primaryCategory: 'transportation',
-    label: '乗り物に乗る',
-    shortLabel: '乗り物',
+    label: '移動・交通',
+    shortLabel: '移動',
     icon: '🚆',
     iconName: 'train',
     secondaryCategories: [
@@ -42,10 +42,12 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
       { id: 'train', label: '電車', icon: '🚆', iconName: 'train', description: '鉄道・地下鉄での移動' },
       { id: 'bus', label: 'バス', icon: '🚌', description: '高速バス・市内バス' },
       { id: 'taxi', label: 'タクシー', icon: '🚕', description: 'タクシー・配車サービス' },
-      { id: 'car_rental', label: 'レンタカー', icon: '🚗', description: 'レンタカーでの移動' },
+      { id: 'car_rental', label: 'レンタカー', icon: '🚗', iconName: 'car', description: 'レンタカーでの移動' },
+      { id: 'personal_car', label: 'マイカー', icon: '🚙', iconName: 'car', description: '自家用車での移動' },
       { id: 'ferry', label: 'フェリー', icon: '⛴️', description: '船・フェリーでの移動' },
       { id: 'bike', label: '自転車', icon: '🚲', description: 'レンタサイクル' },
       { id: 'scooter', label: 'バイク・スクーター', icon: '🛵', description: 'バイク・電動スクーター' },
+      { id: 'parking', label: '駐車場', icon: '🅿️', iconName: 'parking', description: '駐車場の予約・精算・駐車位置の管理' },
       { id: 'gas_station', label: 'ガソリンスタンド', icon: '⛽', iconName: 'gas-station', description: '給油・ガソリンスタンド' },
       { id: 'toll_payment', label: '交通料金支払い', icon: '🛣️', iconName: 'toll-road', description: '高速道路料金・通行料金の支払い' },
     ]
@@ -90,7 +92,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
     icon: '🏨',
     iconName: 'hotel',
     secondaryCategories: [
-      { id: 'check_in', label: 'チェックイン作業', icon: '🔑', description: 'ホテル・宿泊施設のチェックイン' },
+      { id: 'check_in', label: 'チェックイン作業', icon: '🔑', iconName: 'bed', description: 'ホテル・宿泊施設のチェックイン' },
       { id: 'check_out', label: 'チェックアウト作業', icon: '🚪', description: 'ホテル・宿泊施設のチェックアウト' },
       { id: 'car_camping', label: '車中泊', icon: '🚐', description: '車での宿泊' },
       { id: 'camping', label: 'キャンプ', icon: '⛺', description: 'テント・キャンプ場での宿泊' },
@@ -107,7 +109,7 @@ export const ACTIVITY_CATEGORIES: ActivityCategoryMaster[] = [
     iconName: 'search',
     secondaryCategories: [
       { id: 'city_walk', label: '街歩き', icon: '🚶', description: '市内・町の散策' },
-      { id: 'nature_walk', label: '自然散策', icon: '🌳', description: '公園・自然の中の散歩' },
+      { id: 'nature_walk', label: '自然散策', icon: '🌳', iconName: 'tree', description: '公園・自然の中の散歩' },
       { id: 'photography', label: '写真撮影', icon: '📷', description: '景観・建物の撮影' },
       { id: 'observation', label: '展望・眺望', icon: '🏔️', description: '展望台・景色を楽しむ' },
       { id: 'architecture', label: '建築鑑賞', icon: '🏛️', description: '建築物の見学' },

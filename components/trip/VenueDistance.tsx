@@ -99,7 +99,12 @@ export default function VenueDistance({
   }, [placesKey, fromPlace, toPlace, mode])
 
   if (!fromPlace || !toPlace) {
-    return null
+    // 場所情報がない場合でも最小限のスペースを確保
+    return (
+      <div className={`flex items-center justify-center py-4 ${className}`}>
+        <div className="w-0.5 h-8 bg-gray-200"></div>
+      </div>
+    )
   }
 
   if (isLoading) {
@@ -111,17 +116,23 @@ export default function VenueDistance({
   }
 
   if (error) {
+    // エラー時でも最小限のスペースを確保（カードがくっつかないように）
     return (
-      <div className={`flex items-center justify-center py-2 ${className}`}>
-        <div className="text-sm text-red-500">
-          {error}
+      <div className={`flex items-center justify-center py-4 ${className}`}>
+        <div className="text-xs text-gray-400 opacity-60">
+          {t('venueDistance.calculationFailed')}
         </div>
       </div>
     )
   }
 
   if (!distanceInfo) {
-    return null
+    // 距離情報がない場合でも最小限のスペースを確保
+    return (
+      <div className={`flex items-center justify-center py-4 ${className}`}>
+        <div className="w-0.5 h-8 bg-gray-200"></div>
+      </div>
+    )
   }
 
   // 単位系に応じて距離を変換

@@ -58,6 +58,11 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'logos-world.net',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
         pathname: '/**',
       },

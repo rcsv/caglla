@@ -376,7 +376,7 @@ export default function TripItineraryView({
                             items={sortedItineraries.map(i => i.id)} 
                             strategy={verticalListSortingStrategy}
                           >
-                            <div className="space-y-0">
+                            <div className="space-y-2">
                               {sortedItineraries.map((itinerary, index) => {
                                 const previousItinerary = index > 0 ? sortedItineraries[index - 1] : null
                                 const nextItinerary = index < (sortedItineraries.length || 0) - 1 ? sortedItineraries[index + 1] : null

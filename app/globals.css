@@ -294,9 +294,9 @@ body {
 
 /* Select */
 .tj-select {
-  @apply w-full rounded-lg border border-sky-300 bg-white px-3 py-2 text-gray-800 appearance-none bg-no-repeat
-    focus:ring-2 focus:ring-sky-400 focus:border-sky-400 hover:border-sky-400;
-  background-image: url("data:image/svg+xml;utf8,<svg fill='none' stroke='%2366c2ff' stroke-width='2' viewBox='0 0 24 24'><path d='M6 9l6 6 6-6'/></svg>");
+  @apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 appearance-none bg-no-repeat
+    focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='none' stroke='%2334d399' stroke-width='2' viewBox='0 0 24 24'><path d='M6 9l6 6 6-6'/></svg>");
   background-position: right .75rem center;
   background-size: 1rem 1rem;
 }

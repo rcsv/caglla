@@ -70,8 +70,12 @@ export const IconRenderer: React.FC<IconRendererProps> = ({
     reservation: 'tabler:calendar-check',
     rocket: 'tabler:rocket',
     summary: 'tabler:list-details',
+    parking: 'tabler:parking',
     user: 'tabler:user',
     plus: 'tabler:plus',
+    car: 'tabler:car',
+    tree: 'tabler:tree',
+    bed: 'tabler:bed',
   }
   if (iconName && iconifyMap[iconName]) {
     const UnifiedIcon = require('./UnifiedIcon').UnifiedIcon

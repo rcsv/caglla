@@ -72,7 +72,7 @@ export function ScheduleInfoDisplay({
       {/* 予約要素 */}
       <div className="flex items-center space-x-1">
         {hasReservation ? (
-          <IconRenderer iconName="check-circle" className="w-4 h-4" color="#10B981" />
+          <IconRenderer iconName="reservation" className="w-4 h-4" color="#10B981" />
         ) : (
           <IconRenderer iconName="reservation" className="w-4 h-4" color="#8B5CF6" />
         )}
@@ -89,11 +89,8 @@ export function ScheduleInfoDisplay({
           title={confirmationNumber ? `Confirmation: ${confirmationNumber}` : undefined}
         >
           {hasReservation && confirmationNumber ? (
-            <span className="flex items-center gap-1">
-              <span>{t('trip.schedule.reservation')}</span>
-              <span className="text-xs font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
-                {confirmationNumber.length > 8 ? `${confirmationNumber.substring(0, 8)}...` : confirmationNumber}
-              </span>
+            <span className="text-xs font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
+              {confirmationNumber.length > 8 ? `${confirmationNumber.substring(0, 8)}...` : confirmationNumber}
             </span>
           ) : hasReservation ? (
             t('trip.schedule.reservation')

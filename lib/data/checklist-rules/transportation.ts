@@ -108,4 +108,58 @@ export const TRANSPORTATION_RULES: ChecklistGenerationRule[] = [
       },
     ]
   },
+  {
+    id: 'personal_car_rule',
+    secondaryCategory: 'personal_car',
+    items: [
+      {
+        title: '車検証・自賠責保険証の確認',
+        description: '有効期限や携行の必要書類をチェック',
+        category: 'preparation',
+        priority: 'high',
+        condition: { type: 'always' }
+      },
+      {
+        title: 'ガソリン補給または充電',
+        description: '長距離運転前に給油・充電を済ませる',
+        category: 'preparation',
+        priority: 'medium',
+        condition: { type: 'always' }
+      },
+      {
+        title: 'ETCカード・高速料金の準備',
+        description: '高速道路利用時の支払い手段を用意',
+        category: 'packing',
+        priority: 'medium',
+        condition: { type: 'always' }
+      },
+    ]
+  },
+  {
+    id: 'parking_rule',
+    secondaryCategory: 'parking',
+    items: [
+      {
+        title: '駐車場の事前予約確認',
+        description: '予約番号・入庫可能時間を確認',
+        category: 'preparation',
+        priority: 'high',
+        condition: { type: 'always' }
+      },
+      {
+        title: '精算方法の準備（現金・アプリ）',
+        description: '現地の支払い方法に合わせて準備',
+        category: 'preparation',
+        priority: 'medium',
+        condition: { type: 'always' }
+      },
+      {
+        title: '駐車位置メモ用のノート／アプリ',
+        description: '駐車フロアや番号を記録できるようにする',
+        category: 'packing',
+        priority: 'low',
+        condition: { type: 'always' }
+      },
+    ]
+  },
 ]
