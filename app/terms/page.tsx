@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
@@ -94,7 +95,12 @@ export default function TermsPage() {
           {/* Section 7 */}
           <Section title={t('terms.s7.title')}>
             <SolidCard className="p-6 md:p-8">
-              <p className="text-gray-700 leading-relaxed">{t('terms.s7.p1')} <a href="/contact" className="text-emerald-600 hover:text-emerald-700 underline font-medium">{t('terms.s7.contact')}</a></p>
+              <p className="text-gray-700 leading-relaxed">
+                {t('terms.s7.p1')}{' '}
+                <Link href="/contact" className="text-emerald-600 hover:text-emerald-700 underline font-medium">
+                  {t('terms.s7.contact')}
+                </Link>
+              </p>
             </SolidCard>
           </Section>
         </div>

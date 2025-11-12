@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
@@ -149,7 +150,9 @@ export default function DocsPage() {
                   <ul className="mt-2 space-y-1 text-sm text-indigo-600">
                     {g.links.map((l) => (
                       <li key={l.href} className="truncate">
-                        <a href={l.href} className="underline decoration-dotted">→ {l.label}</a>
+                        <Link href={l.href} className="underline decoration-dotted">
+                          → {l.label}
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -167,31 +170,31 @@ export default function DocsPage() {
       <Section title={t('docs.shortcuts.title')}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <SolidCard className="p-6 hover:shadow-sm transition">
-            <a href="/support" className="flex items-center gap-3">
+            <Link href="/support" className="flex items-center gap-3">
               <SearchIcon className="h-5 w-5 text-indigo-600" />
               <div>
                 <div className="font-medium">{t('docs.shortcuts.support')}</div>
                 <div className="text-sm text-gray-600">{t('docs.shortcuts.support.sub')}</div>
               </div>
-            </a>
+            </Link>
           </SolidCard>
           <SolidCard className="p-6 hover:shadow-sm transition">
-            <a href="/faq" className="flex items-center gap-3">
+            <Link href="/faq" className="flex items-center gap-3">
               <SearchIcon className="h-5 w-5 text-indigo-600" />
               <div>
                 <div className="font-medium">{t('docs.shortcuts.faq')}</div>
                 <div className="text-sm text-gray-600">{t('docs.shortcuts.faq.sub')}</div>
               </div>
-            </a>
+            </Link>
           </SolidCard>
           <SolidCard className="p-6 hover:shadow-sm transition">
-            <a href="/releases" className="flex items-center gap-3">
+            <Link href="/releases" className="flex items-center gap-3">
               <CalendarIcon className="h-5 w-5 text-indigo-600" />
               <div>
                 <div className="font-medium">{t('docs.shortcuts.releases')}</div>
                 <div className="text-sm text-gray-600">{t('docs.shortcuts.releases.sub')}</div>
               </div>
-            </a>
+            </Link>
           </SolidCard>
         </div>
       </Section>
@@ -202,18 +205,18 @@ export default function DocsPage() {
           <h2 className="text-3xl font-bold mb-4">{t('docs.cta.title')}</h2>
           <p className="text-xl mb-8 opacity-90">{t('docs.cta.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
+            <Link
               href="/support"
               className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 transition-colors border border-emerald-200"
             >
               {t('docs.cta.support')}
-            </a>
-            <a
+            </Link>
+            <Link
               href="/faq"
               className="px-8 py-3 bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors"
             >
               {t('docs.cta.faq')}
-            </a>
+            </Link>
           </div>
         </div>
       </section>

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Link from 'next/link'
 import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
@@ -160,7 +161,10 @@ export default function ContactPage() {
                 <div>
                   <h3 className="text-lg font-medium text-gray-700 mb-2">{t('contact.info.faq')}</h3>
                   <p className="text-gray-600">
-                    {t('contact.info.faq')} <a href="/faq" className="text-emerald-600 hover:text-emerald-700 underline">{t('footer.faq')}</a>
+                    {t('contact.info.faq')}{' '}
+                    <Link href="/faq" className="text-emerald-600 hover:text-emerald-700 underline">
+                      {t('footer.faq')}
+                    </Link>
                   </p>
                 </div>
                 </div>

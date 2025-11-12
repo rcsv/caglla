@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
@@ -166,31 +167,31 @@ export default function FAQPage() {
       <Section title="Quick Links">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <SolidCard className="p-6 hover:shadow-sm transition">
-            <a href="/support" className="flex items-center gap-3">
+            <Link href="/support" className="flex items-center gap-3">
               <SearchIcon className="h-5 w-5 text-indigo-600" />
               <div>
                 <div className="font-medium">サポート</div>
                 <div className="text-sm text-gray-600">ヘルプセンターのトップへ</div>
               </div>
-            </a>
+            </Link>
           </SolidCard>
           <SolidCard className="p-6 hover:shadow-sm transition">
-            <a href="/docs" className="flex items-center gap-3">
+            <Link href="/docs" className="flex items-center gap-3">
               <CalendarIcon className="h-5 w-5 text-indigo-600" />
               <div>
                 <div className="font-medium">ドキュメント</div>
                 <div className="text-sm text-gray-600">仕様・ガイドラインを参照</div>
               </div>
-            </a>
+            </Link>
           </SolidCard>
           <SolidCard className="p-6 hover:shadow-sm transition">
-            <a href="/contact" className="flex items-center gap-3">
+            <Link href="/contact" className="flex items-center gap-3">
               <MailIcon className="h-5 w-5 text-indigo-600" />
               <div>
                 <div className="font-medium">お問い合わせ</div>
                 <div className="text-sm text-gray-600">フォームでご連絡ください</div>
               </div>
-            </a>
+            </Link>
           </SolidCard>
         </div>
       </Section>
@@ -201,18 +202,18 @@ export default function FAQPage() {
           <h2 className="text-3xl font-bold mb-4">見つからない回答がありますか？</h2>
           <p className="text-xl mb-8 opacity-90">サポートチームがサポートします。お気軽にご連絡ください。</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
+            <Link
               href="/contact"
               className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 transition-colors border border-emerald-200"
             >
               お問い合わせ
-            </a>
-            <a
+            </Link>
+            <Link
               href="/support"
               className="px-8 py-3 bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors"
             >
               サポートトップへ
-            </a>
+            </Link>
           </div>
         </div>
       </section>

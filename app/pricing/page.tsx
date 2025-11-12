@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { StaticPageLayout } from '@/components/common/static/StaticPageLayout'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
@@ -84,8 +85,18 @@ export default function PricingPage() {
           <h2 className="text-3xl font-bold mb-4">{t('pricing.cta.title')}</h2>
           <p className="text-xl mb-8 opacity-90">{t('pricing.cta.subtitle')}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/support" className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 transition-colors border border-emerald-200">{t('pricing.cta.support')}</a>
-            <a href="/docs" className="px-8 py-3 bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors">{t('pricing.cta.docs')}</a>
+            <Link
+              href="/support"
+              className="px-8 py-3 bg-white text-emerald-600 font-semibold hover:bg-gray-100 transition-colors border border-emerald-200"
+            >
+              {t('pricing.cta.support')}
+            </Link>
+            <Link
+              href="/docs"
+              className="px-8 py-3 bg-emerald-700 text-white font-semibold hover:bg-emerald-800 transition-colors"
+            >
+              {t('pricing.cta.docs')}
+            </Link>
           </div>
         </div>
       </section>
