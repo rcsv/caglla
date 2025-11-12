@@ -167,7 +167,7 @@ export default function MapSearchOverlay({
         searchTimeoutRef.current = undefined
       }
     }
-  }, [query, hideSuggestions, user])
+  }, [query, hideSuggestions, user, isExpanded])
 
   const handlePlaceSelect = async (place: PlaceSearchResult) => {
     try {

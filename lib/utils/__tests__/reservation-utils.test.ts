@@ -1,5 +1,6 @@
 import { validateReservationInfo } from '../reservation-utils'
 import type { ReservationInfo } from '@/lib/core/types'
+import { t } from '@/lib/i18n'
 
 describe('validateReservationInfo', () => {
   it('should validate flight reservation', () => {
@@ -49,7 +50,7 @@ describe('validateReservationInfo', () => {
 
     const result = validateReservationInfo(reservation)
     expect(result.isValid).toBe(false)
-    expect(result.errors.some(e => e.includes('終了日時は開始日時より後'))).toBe(true)
+    expect(result.errors).toContain(t('reservation.validation.endAfterStart'))
   })
 
   it('should return error for invalid reservation URL', () => {
@@ -60,7 +61,7 @@ describe('validateReservationInfo', () => {
 
     const result = validateReservationInfo(reservation)
     expect(result.isValid).toBe(false)
-    expect(result.errors.some(e => e.includes('予約URL'))).toBe(true)
+    expect(result.errors).toContain(t('reservation.validation.reservationUrl'))
   })
 })
 

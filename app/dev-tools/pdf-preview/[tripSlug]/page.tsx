@@ -7,7 +7,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@/lib/contexts/auth'
 import logger from '@/lib/core/logger'
@@ -22,7 +22,7 @@ export default function PdfPreviewPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [popupBlocked, setPopupBlocked] = useState(false)
 
-  const openPreview = async (triggeredByUser = false) => {
+  const openPreview = useCallback(async (triggeredByUser = false) => {
     if (!user || !tripSlug) return
 
     try {
@@ -89,12 +89,12 @@ export default function PdfPreviewPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, tripSlug])
 
   useEffect(() => {
     if (loading || !user || !tripSlug) return
     openPreview(false)
-  }, [user, tripSlug, loading])
+  }, [user, tripSlug, loading, openPreview])
 
   if (loading) {
     return (
