@@ -57,7 +57,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     destinationPlace: undefined as PlaceData | undefined,
     startDate: '',
     endDate: '',
-    accessLevel: 'public' as 'private' | 'public',
+    accessLevel: 'private' as 'private' | 'public',
     imageUrl: '',
     defaultCurrency: 'JPY' as string
   })
@@ -349,7 +349,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       destinationPlace: undefined,
       startDate: '',
       endDate: '',
-      accessLevel: 'public',
+      accessLevel: 'private',
       imageUrl: '',
       defaultCurrency: 'JPY'
     })

@@ -3,8 +3,8 @@
 import React from 'react'
 import Image from 'next/image'
 import { Itinerary, ReservationInfo } from '@/lib/core/types'
-import { getReservationTypeLabel } from '@/lib/utils/reservation-utils'
-import type { ReservationType } from '@/lib/core/types'
+import { getReservationSiteLabel, getReservationTypeLabel } from '@/lib/utils/reservation-utils'
+import type { ReservationSite, ReservationType } from '@/lib/core/types'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { UnifiedIcon } from '@/components/common/icons/UnifiedIcon'
 import { placesApiHelpers } from '@/lib/api/google/places'
@@ -174,6 +174,9 @@ export default function TripReservationDisplay({
                   ? formatTimeWithRule(reservation.departure_at, reservation.arrival_at)
                   : formatTimeWithRule(reservation.start_date, reservation.end_date)
                 const photoRef = itinerary.place_data?.photos?.[0]?.photo_reference
+                const siteLabel = reservation.reservation_site
+                  ? getReservationSiteLabel(reservation.reservation_site as ReservationSite)
+                  : null
                 
                 return (
                 <div key={itinerary.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden min-w-0">
@@ -325,14 +328,14 @@ export default function TripReservationDisplay({
                           href={reservation.reservation_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent text-sm font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 transition-colors duration-200 hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-1"
                         >
-                          <IconRenderer iconName="link" className="w-4 h-4 mr-2" />
-                          予約サイト
+                          <IconRenderer iconName="link" className="h-4 w-4" color="#10B981" />
+                          {t('reservation.action.openSite')}
                         </a>
                         
                         {/* 企業名（ボタンの下、右寄せ） */}
-                        {reservation.reservation_site && (
+                        {reservation.reservation_site && siteLabel && (
                           <div className="flex items-center justify-end">
                             {siteLogos[reservation.reservation_site] && (
                               <div className="relative w-3 h-3 mr-1">
@@ -350,7 +353,7 @@ export default function TripReservationDisplay({
                               </div>
                             )}
                             <span className="text-xs text-gray-400">
-                              {reservation.reservation_site}
+                              {siteLabel}
                             </span>
                           </div>
                         )}
@@ -358,7 +361,7 @@ export default function TripReservationDisplay({
                     )}
                     
                     {/* 予約サイト情報のみの場合（URLがない場合） */}
-                    {!reservation.reservation_url && reservation.reservation_site && (
+                    {!reservation.reservation_url && reservation.reservation_site && siteLabel && (
                       <div className="flex items-center justify-end">
                         {siteLogos[reservation.reservation_site] && (
                           <div className="relative w-3 h-3 mr-1">
@@ -376,7 +379,7 @@ export default function TripReservationDisplay({
                           </div>
                         )}
                         <span className="text-xs text-gray-400">
-                          {reservation.reservation_site}
+                          {siteLabel}
                         </span>
                       </div>
                     )}

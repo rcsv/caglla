@@ -6,7 +6,7 @@ export type TranslationKey =
   | 'pricing'
   | 'contact'
   | 'login'
-  | 'travelGuide'
+  | 'tripGuide'
   | 'memories'
   | 'memories.page.title'
   | 'memories.page.description'
@@ -1244,6 +1244,7 @@ export type TranslationKey =
   | 'reservation.button.cancel'
   | 'reservation.button.save'
   | 'reservation.button.saving'
+  | 'reservation.action.openSite'
   | 'user.defaultName'
   | 'plan.seasonTraveler'
   // User Settings Modal
@@ -1316,7 +1317,7 @@ const en: Dictionary = {
   pricing: 'Pricing',
   contact: 'Contact',
   login: 'Log in',
-  travelGuide: 'Travel Guide',
+  tripGuide: 'Trip Guide',
   memories: 'Memories',
   'memories.page.title': 'Memories',
   'memories.page.description': 'Look back on your past trips',
@@ -1888,8 +1889,8 @@ const en: Dictionary = {
   'tripEditor.destinationPlaceholder': 'Search for destination (e.g., Tokyo, Paris, New York)',
   'tripEditor.title': 'Edit trip information',
   'tripEditor.destinationReSelectHint': 'Please re-select the destination from Google Places for accurate country information',
-  'tripEditor.accessLevel.private': 'Private (only you and shared users)',
-  'tripEditor.accessLevel.public': 'Public (anyone can view)',
+  'tripEditor.accessLevel.private': 'Private — personal plan shared only with invited buddies',
+  'tripEditor.accessLevel.public': 'Public — showcase for anyone to explore',
   'tripEditor.field.title': 'Trip Title *',
   'tripEditor.field.description': 'Description',
   'tripEditor.field.startDate': 'Departure Date',
@@ -2405,9 +2406,9 @@ const en: Dictionary = {
   'trip.create.imageLoading': 'Auto-fetching destination-related image...',
   'trip.create.imageLoaded': 'Destination-related image auto-fetched',
   'trip.create.accessLevel.label': 'Access Settings',
-  'trip.create.accessLevel.private.label': 'Private (only you and shared users)',
-  'trip.create.accessLevel.private.description': 'This trip can only be viewed by you and shared users',
-  'trip.create.accessLevel.public.description': 'This trip can be viewed by anyone',
+  'trip.create.accessLevel.private.label': 'Private (personal planning)',
+  'trip.create.accessLevel.private.description': 'Use when you are creating your own trip. Only you and invited buddies can view it.',
+  'trip.create.accessLevel.public.description': 'Use when you want to showcase the trip publicly and promote it to others.',
   'trip.create.cancel': 'Cancel',
   'trip.create.submitting': 'Creating...',
   'trip.create.submit': 'Create Trip',
@@ -2547,6 +2548,7 @@ const en: Dictionary = {
   'reservation.button.cancel': 'Cancel',
   'reservation.button.save': 'Save',
   'reservation.button.saving': 'Saving...',
+  'reservation.action.openSite': 'Open reservation site',
   'reservation.template.deleteFailed': 'Failed to delete template',
   'reservation.template.deleteConfirm': 'Delete this template?',
   'reservation.template.createFailed': 'Failed to create template',
@@ -2629,7 +2631,7 @@ const ja: Dictionary = {
   pricing: 'プラン',
   contact: 'お問い合わせ',
   login: 'ログイン',
-  travelGuide: 'トラベルガイド',
+  tripGuide: 'トリップガイド',
   memories: '思い出',
   'memories.page.title': '思い出',
   'memories.page.description': '過去の旅行を振り返りましょう',
@@ -3201,8 +3203,8 @@ const ja: Dictionary = {
   'tripEditor.destinationPlaceholder': '目的地を検索（例: 東京、パリ、ニューヨーク）',
   'tripEditor.title': '旅行情報を編集',
   'tripEditor.destinationReSelectHint': '正確な国情報のため、Google Placesから目的地を再選択してください',
-  'tripEditor.accessLevel.private': '非公開（自分と共有ユーザーのみ）',
-  'tripEditor.accessLevel.public': '公開（誰でも閲覧可能）',
+  'tripEditor.accessLevel.private': 'プライベート — 自分と招待した友人だけに共有',
+  'tripEditor.accessLevel.public': 'パブリック — 誰でも閲覧できる紹介用',
   'tripEditor.field.title': '旅行のタイトル *',
   'tripEditor.field.description': '説明',
   'tripEditor.field.startDate': '出発日',
@@ -3718,9 +3720,9 @@ const ja: Dictionary = {
   'trip.create.imageLoading': '目的地に関連する画像を自動取得中...',
   'trip.create.imageLoaded': '目的地に関連する画像を自動取得しました',
   'trip.create.accessLevel.label': '公開設定',
-  'trip.create.accessLevel.private.label': '非公開（自分と共有ユーザーのみ）',
-  'trip.create.accessLevel.private.description': 'この旅行は自分と共有ユーザーのみが閲覧できます',
-  'trip.create.accessLevel.public.description': 'この旅行は誰でも閲覧できます',
+  'trip.create.accessLevel.private.label': 'プライベート（自分用計画）',
+  'trip.create.accessLevel.private.description': '自分の旅行を作成する際に使用します。自分と招待した友人だけが閲覧できます。',
+  'trip.create.accessLevel.public.description': '旅行データを周りに紹介する場合に使用します。誰でも閲覧できる公開モードです。',
   'trip.create.cancel': 'キャンセル',
   'trip.create.submitting': '作成中...',
   'trip.create.submit': '旅行を作成',
@@ -3860,6 +3862,7 @@ const ja: Dictionary = {
   'reservation.button.cancel': 'キャンセル',
   'reservation.button.save': '保存',
   'reservation.button.saving': '保存中...',
+  'reservation.action.openSite': '予約サイトを開く',
   'reservation.template.deleteFailed': 'テンプレートの削除に失敗しました',
   'reservation.template.deleteConfirm': 'このテンプレートを削除しますか？',
   'reservation.template.createFailed': 'テンプレートの作成に失敗しました',

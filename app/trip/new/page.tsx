@@ -43,7 +43,7 @@ export default function NewTripPage() {
     destinationPlace: undefined as PlaceData | undefined,
     startDate: '',
     endDate: '',
-    accessLevel: 'public' as 'private' | 'public',
+    accessLevel: 'private' as 'private' | 'public',
     imageUrl: ''
   })
   const [submitting, setSubmitting] = useState(false)
