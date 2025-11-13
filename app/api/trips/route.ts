@@ -123,7 +123,10 @@ export async function POST(request: NextRequest) {
       title: body.title,
       destination: body.destination,
       hasImageUrl: !!body.imageUrl,
-      accessLevel: body.accessLevel
+      accessLevel: body.accessLevel,
+      isTemplate: body.isTemplate ?? body.is_template ?? false,
+      dayCount: body.dayCount ?? body.day_count,
+      likesCount: body.likesCount ?? body.likes_count
     })
     
     const {
@@ -135,6 +138,9 @@ export async function POST(request: NextRequest) {
       startDate,
       endDate,
       accessLevel = 'private',
+      isTemplate = false,
+      dayCount,
+      likesCount,
       imageUrl,
       defaultCurrency
     } = body
@@ -171,7 +177,8 @@ export async function POST(request: NextRequest) {
       slug: tripSlug,
       destination,
       hasDestinationPlace: !!destinationPlace,
-      hasImageUrl: !!imageUrl
+      hasImageUrl: !!imageUrl,
+      isTemplate
     })
 
     // Handle image URL: move from avatar path to trip path if needed
@@ -193,6 +200,9 @@ export async function POST(request: NextRequest) {
       slug: tripSlug,
       destination,
       access_level: accessLevel,
+      is_template: isTemplate,
+      day_count: isTemplate ? (typeof dayCount === 'number' ? dayCount : null) : typeof dayCount === 'number' ? dayCount : undefined,
+      likes_count: typeof likesCount === 'number' ? likesCount : 0,
       status: 'PLANNING' as const
     }
 

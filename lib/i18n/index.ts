@@ -551,6 +551,7 @@ export type TranslationKey =
   | 'nextTripMap.loadFailed'
   // Plan Limits Display
   | 'planLimits.currentPlan'
+  | 'planLimits.publicTemplate'
   // Timezone Log Manager
   | 'timezoneLog.processed'
   | 'timezoneLog.latestBatchResults'
@@ -1070,6 +1071,23 @@ export type TranslationKey =
   | 'trip.create.accessLevel.private.label'
   | 'trip.create.accessLevel.private.description'
   | 'trip.create.accessLevel.public.description'
+  | 'trip.create.templateMode.label'
+  | 'trip.create.templateMode.description.active'
+  | 'trip.create.templateMode.description.inactive'
+  | 'trip.create.dayCount.label'
+  | 'trip.create.dayCount.placeholder'
+  | 'trip.create.dayCount.description'
+  | 'trip.create.validation.dayCountRequired'
+  | 'trip.template.upgradeRequired'
+  | 'trip.template.replicate'
+  | 'trip.template.replicating'
+  | 'trip.template.replicateFailed'
+  | 'trip.likes.loading'
+  | 'trip.likes.button.like'
+  | 'trip.likes.button.liked'
+  | 'trip.likes.loginRequired'
+  | 'trip.likes.error'
+  | 'trip.likes.count'
   | 'trip.create.cancel'
   | 'trip.create.submitting'
   | 'trip.create.submit'
@@ -1957,6 +1975,7 @@ const en: Dictionary = {
   'nextTripMap.loadFailed': 'Failed to load Google Maps API',
   // Plan Limits Display
   'planLimits.currentPlan': 'Current plan',
+  'planLimits.publicTemplate': 'Public templates',
   // Timezone Log Manager
   'timezoneLog.processed': 'Processed',
   'timezoneLog.latestBatchResults': 'Latest batch update results',
@@ -2409,6 +2428,23 @@ const en: Dictionary = {
   'trip.create.accessLevel.private.label': 'Private (personal planning)',
   'trip.create.accessLevel.private.description': 'Use when you are creating your own trip. Only you and invited buddies can view it.',
   'trip.create.accessLevel.public.description': 'Use when you want to showcase the trip publicly and promote it to others.',
+  'trip.create.templateMode.label': 'Use as public template',
+  'trip.create.templateMode.description.active': 'Template mode hides travel dates and lets you specify only the number of days. Perfect for reusable showcase plans.',
+  'trip.create.templateMode.description.inactive': 'Keep template mode off when you are planning your own trip with specific dates.',
+  'trip.create.dayCount.label': 'Number of days',
+  'trip.create.dayCount.placeholder': 'e.g. 5',
+  'trip.create.dayCount.description': 'Enter how many days this template covers. You can adjust actual dates later when duplicating.',
+  'trip.create.validation.dayCountRequired': 'Please enter the number of days for the template.',
+  'trip.template.upgradeRequired': 'Upgrade to Backpacker or higher to publish templates.',
+  'trip.template.replicate': 'Use This Template',
+  'trip.template.replicating': 'Creating...',
+  'trip.template.replicateFailed': 'Failed to create a replica from this template.',
+  'trip.likes.loading': 'Loading likes…',
+  'trip.likes.button.like': 'Like this trip',
+  'trip.likes.button.liked': 'Liked',
+  'trip.likes.loginRequired': 'Sign in to like public trips.',
+  'trip.likes.error': 'Failed to update like status. Please try again.',
+  'trip.likes.count': '{{count}} likes',
   'trip.create.cancel': 'Cancel',
   'trip.create.submitting': 'Creating...',
   'trip.create.submit': 'Create Trip',
@@ -3271,6 +3307,7 @@ const ja: Dictionary = {
   'nextTripMap.loadFailed': 'Google Maps APIの読み込みに失敗しました',
   // Plan Limits Display
   'planLimits.currentPlan': '現在のプラン',
+  'planLimits.publicTemplate': '公開テンプレート',
   // Timezone Log Manager
   'timezoneLog.processed': '処理済み',
   'timezoneLog.latestBatchResults': '最新のバッチ更新結果',
@@ -3723,6 +3760,23 @@ const ja: Dictionary = {
   'trip.create.accessLevel.private.label': 'プライベート（自分用計画）',
   'trip.create.accessLevel.private.description': '自分の旅行を作成する際に使用します。自分と招待した友人だけが閲覧できます。',
   'trip.create.accessLevel.public.description': '旅行データを周りに紹介する場合に使用します。誰でも閲覧できる公開モードです。',
+  'trip.create.templateMode.label': 'テンプレートとして公開する',
+  'trip.create.templateMode.description.active': 'テンプレートモードでは旅行日ではなく日数のみを設定します。いつでも使い回せる紹介用プランに最適です。',
+  'trip.create.templateMode.description.inactive': '自分用の旅行を作成する場合はテンプレートモードをオフのままにしてください。',
+  'trip.create.dayCount.label': '日数',
+  'trip.create.dayCount.placeholder': '例: 5',
+  'trip.create.dayCount.description': 'テンプレートが想定している日数を入力してください。複製後に具体的な日付を設定できます。',
+  'trip.create.validation.dayCountRequired': 'テンプレートには日数の入力が必要です。',
+  'trip.template.upgradeRequired': '公開テンプレートを作成するには Backpacker 以上のプランが必要です。',
+  'trip.template.replicate': 'このテンプレートを使う',
+  'trip.template.replicating': '作成中…',
+  'trip.template.replicateFailed': 'テンプレートからのレプリカ作成に失敗しました。',
+  'trip.likes.loading': 'いいねを読み込み中…',
+  'trip.likes.button.like': 'いいねする',
+  'trip.likes.button.liked': 'いいね済み',
+  'trip.likes.loginRequired': 'いいねするにはログインしてください。',
+  'trip.likes.error': 'いいねの更新に失敗しました。もう一度お試しください。',
+  'trip.likes.count': 'いいね {{count}} 件',
   'trip.create.cancel': 'キャンセル',
   'trip.create.submitting': '作成中...',
   'trip.create.submit': '旅行を作成',

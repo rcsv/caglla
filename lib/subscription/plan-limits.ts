@@ -17,6 +17,7 @@ export interface UsageStats {
   totalTravelDays: number
   storageUsedGB: number
   photosPerTrip: number
+  publicTemplateCount?: number
 }
 
 export interface LimitCheckResult {
@@ -112,6 +113,22 @@ export class PlanLimitChecker {
     }
   }
 
+  static checkPublicTemplateLimit(
+    plan: SubscriptionPlan,
+    currentTemplateCount: number
+  ): LimitCheckResult {
+    const isEnabled = Boolean(plan.features_enabled?.public_templates)
+    return {
+      isAllowed: isEnabled,
+      currentUsage: currentTemplateCount,
+      limit: isEnabled ? -1 : 0,
+      remaining: isEnabled ? -1 : 0,
+      message: isEnabled
+        ? '公開テンプレート作成は無制限です'
+        : 'Backpacker以上のプランで公開テンプレートが利用可能です'
+    }
+  }
+
   /**
    * 複数の制限を一括チェック
    */
@@ -123,20 +140,27 @@ export class PlanLimitChecker {
     travelDays: LimitCheckResult
     storage: LimitCheckResult
     photos: LimitCheckResult
+    publicTemplate: LimitCheckResult
     hasAnyLimitExceeded: boolean
   } {
     const travelCount = this.checkTravelCountLimit(plan, usage.travelCount)
     const travelDays = this.checkTravelDaysLimit(plan, usage.totalTravelDays)
     const storage = this.checkStorageLimit(plan, usage.storageUsedGB)
     const photos = this.checkPhotosLimit(plan, usage.photosPerTrip)
+    const publicTemplate = this.checkPublicTemplateLimit(plan, usage.publicTemplateCount ?? 0)
 
     return {
       travelCount,
       travelDays,
       storage,
       photos,
-      hasAnyLimitExceeded: !travelCount.isAllowed || !travelDays.isAllowed || 
-                           !storage.isAllowed || !photos.isAllowed
+      publicTemplate,
+      hasAnyLimitExceeded:
+        !travelCount.isAllowed ||
+        !travelDays.isAllowed ||
+        !storage.isAllowed ||
+        !photos.isAllowed ||
+        !publicTemplate.isAllowed
     }
   }
 
@@ -161,6 +185,9 @@ export class PlanLimitChecker {
     }
     if (!checks.photos.isAllowed) {
       exceededLimits.push(`写真アップロード数が制限を超過しています (${checks.photos.currentUsage}/${checks.photos.limit}枚)`)
+    }
+    if (!checks.publicTemplate.isAllowed) {
+      exceededLimits.push('公開テンプレートの作成にはBackpacker以上のプランが必要です')
     }
 
     if (exceededLimits.length === 0) {
@@ -192,6 +219,9 @@ export class PlanLimitChecker {
     }
     if (checks.photos.limit !== -1 && checks.photos.currentUsage / checks.photos.limit >= 0.8) {
       nearLimitItems.push('写真アップロード数')
+    }
+    if (!checks.publicTemplate.isAllowed) {
+      nearLimitItems.push('公開テンプレート作成')
     }
 
     if (nearLimitItems.length === 0) {

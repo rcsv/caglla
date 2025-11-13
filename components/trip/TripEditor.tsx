@@ -16,6 +16,9 @@ import { t } from '@/lib/i18n'
 import { currencyUtils } from '@/lib/utils/currency'
 import { getUserLanguage } from '@/lib/utils/language'
 import { useAuth } from '@/lib/contexts/auth'
+import Toggle from '@/components/common/Toggle'
+import { useUserData } from '@/lib/contexts/user-data'
+import { RestrictionProvider, RestrictionType } from '@/lib/subscription/restriction'
 
 /**
  * Renders an editor UI for a Trip and manages editing, saving, cancelling, and deletion.
@@ -32,6 +35,7 @@ import { useAuth } from '@/lib/contexts/auth'
  */
 export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDestinationEdit = false, initialEditing = false, hideEditButton = false }: TripEditorProps) {
   const { user } = useAuth()
+  const { userPlanId } = useUserData()
   const [isEditing, setIsEditing] = useState(initialEditing)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -63,13 +67,19 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
     startDate: formatDateForInput(trip.start_date),
     endDate: formatDateForInput(trip.end_date),
     accessLevel: trip.access_level,
+    isTemplate: Boolean(trip.is_template),
+    dayCount: trip.day_count ?? 0,
     imageUrl: trip.image_url || '',
     defaultCurrency: trip.default_currency || 'JPY'
   })
+  const isTemplateMode = formData.accessLevel === 'public' && formData.isTemplate
+
   const [saving, setSaving] = useState(false)
   const [originalImageUrl, setOriginalImageUrl] = useState(trip.image_url || '')
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false)
   const [dateError, setDateError] = useState('')
+  const publicTemplateEnabled = RestrictionProvider.hasFeature(userPlanId, RestrictionType.PUBLIC_TEMPLATE)
+  const canToggleTemplate = publicTemplateEnabled || formData.isTemplate
 
   // 日付のバリデーション
   const validateDates = (startDate: string, endDate: string): string => {
@@ -96,21 +106,31 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
         startDate: formatDateForInput(trip.start_date),
         endDate: formatDateForInput(trip.end_date),
         accessLevel: trip.access_level,
+        isTemplate: Boolean(trip.is_template),
+        dayCount: trip.day_count ?? 0,
         imageUrl: trip.image_url || '',
         defaultCurrency: trip.default_currency || 'JPY'
       })
       setOriginalImageUrl(trip.image_url || '')
+      setDateError('')
     }
   }, [trip, isEditing])
 
   const handleSave = async () => {
     // 日付のバリデーション
-    const dateValidationError = validateDates(formData.startDate, formData.endDate)
-    if (dateValidationError) {
-      setDateError(dateValidationError)
-      return
+    if (isTemplateMode) {
+      if (!formData.dayCount || formData.dayCount <= 0) {
+        alert(t('trip.create.validation.dayCountRequired'))
+        return
+      }
+    } else {
+      const dateValidationError = validateDates(formData.startDate, formData.endDate)
+      if (dateValidationError) {
+        setDateError(dateValidationError)
+        return
+      }
+      setDateError('')
     }
-    setDateError('')
 
     setSaving(true)
     setShowLoadingOverlay(true)
@@ -123,10 +143,12 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
           description: formData.description,
           destination: formData.destination,
           destinationPlaceId: formData.destinationPlace?.place_id,
-          startDate: formData.startDate || null,
-          endDate: formData.endDate || null,
+          startDate: isTemplateMode ? null : formData.startDate || null,
+          endDate: isTemplateMode ? null : formData.endDate || null,
           accessLevel: formData.accessLevel,
           imageUrl: formData.imageUrl || null,
+          isTemplate: isTemplateMode,
+          dayCount: isTemplateMode ? formData.dayCount : undefined,
           default_currency: formData.defaultCurrency,
         }),
       })
@@ -174,10 +196,12 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
             title: formData.title,
             description: formData.description,
             destination: formData.destination,
-            start_date: formData.startDate,
-            end_date: formData.endDate,
+            start_date: isTemplateMode ? undefined : formData.startDate,
+            end_date: isTemplateMode ? undefined : formData.endDate,
             access_level: formData.accessLevel,
             image_url: formData.imageUrl,
+            is_template: isTemplateMode,
+            day_count: isTemplateMode ? formData.dayCount : formData.dayCount || undefined,
             updated_at: new Date().toISOString()
           }
           onUpdate(updatedTrip)
@@ -250,7 +274,17 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => {
-      const newFormData = { ...prev, [name]: value }
+      let newFormData: typeof prev
+      if (name === 'accessLevel') {
+        const nextLevel = value as 'private' | 'public'
+        newFormData = {
+          ...prev,
+          accessLevel: nextLevel,
+          isTemplate: nextLevel === 'private' ? false : prev.isTemplate
+        }
+      } else {
+        newFormData = { ...prev, [name]: value }
+      }
       
       // 出発日が変更された場合、帰宅日を自動的に出発日と同じ日にする（帰宅日が空の場合のみ）
       if (name === 'startDate' && value && !prev.endDate) {
@@ -261,7 +295,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
     })
     
     // 日付が変更された場合は即座にバリデーションを実行
-    if (name === 'startDate' || name === 'endDate') {
+    if (!isTemplateMode && (name === 'startDate' || name === 'endDate')) {
       const newFormData = { ...formData, [name]: value }
       // 出発日が変更された場合、帰宅日も更新する（帰宅日が空の場合のみ）
       if (name === 'startDate' && value && !formData.endDate) {
@@ -270,6 +304,25 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
       const dateValidationError = validateDates(newFormData.startDate, newFormData.endDate)
       setDateError(dateValidationError)
     }
+  }
+
+  const handleTemplateToggle = (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      isTemplate: checked,
+      startDate: checked ? '' : prev.startDate,
+      endDate: checked ? '' : prev.endDate,
+      dayCount: checked ? (prev.dayCount && prev.dayCount > 0 ? prev.dayCount : 3) : prev.dayCount
+    }))
+    setDateError('')
+  }
+
+  const handleDayCountChange = (value: string) => {
+    const parsed = Number(value)
+    setFormData(prev => ({
+      ...prev,
+      dayCount: Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0
+    }))
   }
 
   if (isEditing) {
@@ -355,7 +408,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className={`${isTemplateMode ? 'opacity-50 pointer-events-none' : ''}`}>
               <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
                 {t('tripEditor.field.startDate')}
               </label>
@@ -368,11 +421,12 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
                 lang={currentLanguage}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   dateError ? 'border-red-300' : 'border-gray-300'
-                }`}
+                } ${isTemplateMode ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                disabled={isTemplateMode}
               />
             </div>
 
-            <div>
+            <div className={`${isTemplateMode ? 'opacity-50 pointer-events-none' : ''}`}>
               <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
                 {t('tripEditor.field.endDate')}
               </label>
@@ -386,13 +440,14 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
                 lang={currentLanguage}
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                   dateError ? 'border-red-300' : 'border-gray-300'
-                }`}
+                } ${isTemplateMode ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                disabled={isTemplateMode}
               />
             </div>
           </div>
 
           {/* 日付エラーメッセージ */}
-          {dateError && (
+          {!isTemplateMode && dateError && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
@@ -421,7 +476,48 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
               <option value="private">{t('tripEditor.accessLevel.private')}</option>
               <option value="public">{t('tripEditor.accessLevel.public')}</option>
             </select>
+
+            {formData.accessLevel === 'public' && (
+              <div className="mt-4">
+                <Toggle
+                  label={t('trip.create.templateMode.label')}
+                  checked={formData.isTemplate}
+                  onChange={(event) => handleTemplateToggle(event.target.checked)}
+                  disabled={!canToggleTemplate}
+                />
+                <p className={`mt-1 text-xs ${publicTemplateEnabled ? 'text-gray-500' : 'text-red-500'}`}>
+                  {formData.isTemplate
+                    ? t('trip.create.templateMode.description.active')
+                    : t('trip.create.templateMode.description.inactive')}
+                </p>
+                {!publicTemplateEnabled && (
+                  <div className="mt-2 rounded-md border border-yellow-200 bg-yellow-50 p-3 text-xs text-yellow-700">
+                    {t('trip.template.upgradeRequired')}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+
+          {isTemplateMode && (
+            <div>
+              <label htmlFor="dayCount" className="block text-sm font-medium text-gray-700 mb-2">
+                {t('trip.create.dayCount.label')}
+              </label>
+              <input
+                type="number"
+                id="dayCount"
+                name="dayCount"
+                min={1}
+                value={formData.dayCount ? String(formData.dayCount) : ''}
+                onChange={(event) => handleDayCountChange(event.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                {t('trip.create.dayCount.description')}
+              </p>
+            </div>
+          )}
 
           <div>
             <label htmlFor="defaultCurrency" className="block text-sm font-medium text-gray-700 mb-2">

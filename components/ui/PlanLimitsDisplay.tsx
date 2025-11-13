@@ -98,6 +98,11 @@ export default function PlanLimitsDisplay({
           label="写真アップロード数"
           checkResult={checks.photos}
         />
+
+        <LimitBar
+          label={t('planLimits.publicTemplate')}
+          checkResult={checks.publicTemplate}
+        />
       </div>
 
       {hasAnyLimitExceeded && (
@@ -152,6 +157,7 @@ export function usePlanLimits(plan: SubscriptionPlan, usage: UsageStats) {
     canCreateTravel: checks.travelCount.isAllowed,
     canAddTravelDays: checks.travelDays.isAllowed,
     canUploadFiles: checks.storage.isAllowed,
-    canUploadPhotos: checks.photos.isAllowed
+    canUploadPhotos: checks.photos.isAllowed,
+    canCreatePublicTemplate: checks.publicTemplate.isAllowed
   }
 }

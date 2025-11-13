@@ -13,6 +13,9 @@ const limitedPlan: SubscriptionPlan = {
     travelDays: 5,
     storageGB: 0.5,
     photosPerTrip: 5
+  },
+  features_enabled: {
+    public_templates: false
   }
 }
 
@@ -28,6 +31,9 @@ const unlimitedPlan: SubscriptionPlan = {
     travelDays: -1,
     storageGB: 5,
     photosPerTrip: -1
+  },
+  features_enabled: {
+    public_templates: true
   }
 }
 
@@ -76,14 +82,28 @@ describe('PlanLimitChecker', () => {
       travelCount: 4,
       totalTravelDays: 3,
       storageUsedGB: 0.3,
-      photosPerTrip: 6
+      photosPerTrip: 6,
+      publicTemplateCount: 1
     }
 
     const checks = PlanLimitChecker.checkAllLimits(limitedPlan, usage)
     expect(checks.travelCount.isAllowed).toBe(false)
     expect(checks.travelDays.isAllowed).toBe(true)
     expect(checks.photos.isAllowed).toBe(false)
+    expect(checks.publicTemplate.isAllowed).toBe(false)
     expect(checks.hasAnyLimitExceeded).toBe(true)
+  })
+
+  it('公開テンプレート機能の可否を判定できる', () => {
+    const disabled = PlanLimitChecker.checkPublicTemplateLimit(limitedPlan, 2)
+    expect(disabled.isAllowed).toBe(false)
+    expect(disabled.limit).toBe(0)
+    expect(disabled.message).toContain('Backpacker')
+
+    const enabled = PlanLimitChecker.checkPublicTemplateLimit(unlimitedPlan, 5)
+    expect(enabled.isAllowed).toBe(true)
+    expect(enabled.limit).toBe(-1)
+    expect(enabled.message).toBe('公開テンプレート作成は無制限です')
   })
 
   it('制限超過メッセージを生成できる', () => {
@@ -91,7 +111,8 @@ describe('PlanLimitChecker', () => {
       travelCount: 4,
       totalTravelDays: 6,
       storageUsedGB: 0.6,
-      photosPerTrip: 7
+      photosPerTrip: 7,
+      publicTemplateCount: 0
     }
 
     const message = PlanLimitChecker.generateLimitExceededMessage(limitedPlan, usage)
@@ -99,6 +120,7 @@ describe('PlanLimitChecker', () => {
     expect(message).toContain('旅行日数が制限を超過しています (6/5日)')
     expect(message).toContain('ストレージ容量が制限を超過しています (0.60/0.5GB)')
     expect(message).toContain('写真アップロード数が制限を超過しています (7/5枚)')
+    expect(message).toContain('公開テンプレートの作成にはBackpacker以上のプランが必要です')
   })
 
   it('アップグレード推奨メッセージを閾値で制御できる', () => {
@@ -106,7 +128,8 @@ describe('PlanLimitChecker', () => {
       travelCount: 8,
       totalTravelDays: 3,
       storageUsedGB: 0.4,
-      photosPerTrip: 5
+      photosPerTrip: 5,
+      publicTemplateCount: 0
     }
 
     const message = PlanLimitChecker.generateUpgradeMessage(
@@ -121,6 +144,19 @@ describe('PlanLimitChecker', () => {
     expect(message).toContain('ストレージ容量')
     expect(message).not.toContain('旅行日数')
     expect(message).not.toContain('写真アップロード数')
+  })
+
+  it('公開テンプレート未対応の場合はアップグレード推奨に含める', () => {
+    const usage: UsageStats = {
+      travelCount: 0,
+      totalTravelDays: 0,
+      storageUsedGB: 0,
+      photosPerTrip: 0,
+      publicTemplateCount: 0
+    }
+
+    const message = PlanLimitChecker.generateUpgradeMessage(limitedPlan, usage)
+    expect(message).toContain('公開テンプレート作成')
   })
 })
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback } from 'react'
 import { Trip } from '@/lib/core/types'
 import TripEditor from '@/components/trip/TripEditor'
 import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
@@ -9,11 +10,17 @@ import { t } from '@/lib/i18n'
 import { getUserLanguage } from '@/lib/utils/language'
 import { useAuth } from '@/lib/contexts/auth'
 import PublicAccessBadge from '@/components/common/icons/PublicAccessBadge'
+import Loading from '@/components/common/Loading'
+import { Icon } from '@iconify/react'
+import TripLikeButton from './TripLikeButton'
 
 interface TripHeroSectionProps {
   trip: Trip
   onUpdateTrip: (updatedTrip: Trip) => void
   onDeleteTrip: () => void
+  canReplica?: boolean
+  onReplica?: () => void
+  replicaLoading?: boolean
 }
 
 export default function TripHeroSection({
@@ -21,15 +28,31 @@ export default function TripHeroSection({
   canEdit = true,
   onUpdateTrip,
   onDeleteTrip,
+  canReplica = false,
+  onReplica,
+  replicaLoading = false,
 }: TripHeroSectionProps & { canEdit?: boolean }) {
   const { user } = useAuth()
   const currentLanguage = getUserLanguage(user)
+  const handleLikeStateChange = useCallback(
+    ({ likesCount, likedByMe }: { likesCount: number; likedByMe: boolean }) => {
+      const updatedTrip: Trip = {
+        ...trip,
+        likes_count: likesCount,
+        liked_by_me: likedByMe
+      }
+      onUpdateTrip(updatedTrip)
+    },
+    [onUpdateTrip, trip]
+  )
   
   // Format date range with i18n support
   const formattedDateRange = trip.start_date && trip.end_date
     ? dateUtils.formatTripDateRange(trip.start_date, trip.end_date, currentLanguage)
     : null
   
+  const likeTarget = trip.slug || trip.id
+
   return (
     <header className="relative overflow-hidden" style={{ aspectRatio: '16 / 9' }}>
       {/* Background Image */}
@@ -53,7 +76,36 @@ export default function TripHeroSection({
         </div>
         {/* Top Navigation */}
         <div className="flex justify-between items-start p-6">
-          <div className="flex items-center gap-4" />
+          <div className="flex items-center gap-3">
+            {canReplica && onReplica && (
+              <button
+                type="button"
+                onClick={onReplica}
+                disabled={replicaLoading}
+                className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/85 px-4 py-2 text-sm font-semibold text-emerald-700 backdrop-blur-sm transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-500 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {replicaLoading ? (
+                  <>
+                    <Loading inline size="xs" color="emerald" />
+                    <span>{t('trip.template.replicating')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon icon="mdi:content-copy" className="h-4 w-4" aria-hidden="true" />
+                    <span>{t('trip.template.replicate')}</span>
+                  </>
+                )}
+              </button>
+            )}
+            {trip.access_level === 'public' && likeTarget && (
+              <TripLikeButton
+                tripSlug={likeTarget}
+                initialLikesCount={typeof trip.likes_count === 'number' ? trip.likes_count : 0}
+                initialLikedByMe={Boolean((trip as any).liked_by_me)}
+                onStateChange={handleLikeStateChange}
+              />
+            )}
+          </div>
           {canEdit && (
             <TripEditor 
               trip={trip} 

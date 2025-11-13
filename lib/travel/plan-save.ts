@@ -56,6 +56,103 @@ export class PlanSaveOperations {
   }
 
   /**
+   * テンプレート化されたTrip（tripsコレクション）からPrivate Tripを生成する
+   */
+  async createReplicaFromTripTemplate(
+    templateTripId: string,
+    userId: string,
+    options?: { titleOverride?: string }
+  ): Promise<PlanSaveResult> {
+    try {
+      const template = await this.getTripWithDetails(templateTripId)
+      if (!template) {
+        throw new Error('Template trip not found')
+      }
+
+      const templateTrip = template.trip
+      const templateDays = template.days || []
+
+      const inferredDayCount =
+        typeof templateTrip.day_count === 'number' && templateTrip.day_count > 0
+          ? templateTrip.day_count
+          : templateDays.length > 0
+            ? templateDays.length
+            : undefined
+
+      const tripData: TripFormData = {
+        title: options?.titleOverride || templateTrip.title,
+        description: templateTrip.description,
+        start_date: '', // テンプレートから作成する場合は日付未設定
+        end_date: '',
+        access_level: 'private',
+        image_url: templateTrip.image_url,
+        destination: templateTrip.destination,
+        is_template: false,
+        day_count: inferredDayCount
+      }
+
+      const replicaTrip = await this.createTripForPlan(userId, tripData)
+
+      const days: Day[] = []
+      const itineraries: Itinerary[] = []
+
+      for (const templateDay of templateDays) {
+        const newDay = await this.createDayForPlan(replicaTrip.id, {
+          day_number: templateDay.day_number,
+          description: templateDay.description
+        })
+        days.push(newDay)
+
+        for (const templateItinerary of templateDay.itineraries || []) {
+          const itineraryData: ItineraryFormData = {
+            title: templateItinerary.title,
+            description: templateItinerary.description,
+            location: templateItinerary.location,
+            place_id: templateItinerary.place_id || templateItinerary.place_data?.place_id || null,
+            place_data: templateItinerary.place_data || null,
+            start_time: templateItinerary.start_time,
+            end_time: templateItinerary.end_time,
+            timezone: templateItinerary.timezone,
+            cost_amount: templateItinerary.cost_amount ?? null,
+            cost_currency: templateItinerary.cost_currency,
+            activity_tag: templateItinerary.activity_tag || null
+          }
+
+          const newItinerary = await this.createItineraryForPlan(newDay.id, itineraryData)
+
+          // 追加フィールド（reservationなど）をコピー
+          const extraUpdate: Record<string, unknown> = {}
+          if (templateItinerary.reservation) {
+            extraUpdate.reservation = templateItinerary.reservation
+          }
+          if (templateItinerary.place_data) {
+            extraUpdate.place_data = templateItinerary.place_data
+          }
+          if (Object.keys(extraUpdate).length > 0) {
+            await adminDb.collection(COLLECTIONS.ITINERARIES).doc(newItinerary.id).update(extraUpdate).catch((error) => {
+              logger.error('Failed to copy itinerary extra fields during replica creation', {
+                error,
+                itineraryId: newItinerary.id
+              })
+            })
+          }
+
+          itineraries.push(newItinerary)
+        }
+      }
+
+      return {
+        trip: replicaTrip,
+        days,
+        itineraries
+      }
+    } catch (error) {
+      logger.error('Error creating replica from template trip:', error)
+      throw new Error('テンプレートからのレプリカ作成に失敗しました')
+    }
+  }
+
+  /**
    * 既存のプランを更新する
    */
   async updateCompletePlan(tripId: string, planData: PlanSaveData): Promise<PlanSaveResult> {
@@ -110,7 +207,9 @@ export class PlanSaveOperations {
         end_date: sourceTrip.trip.end_date?.toString() || '',
         access_level: sourceTrip.trip.access_level,
         image_url: sourceTrip.trip.image_url,
-        destination: sourceTrip.trip.destination
+        destination: sourceTrip.trip.destination,
+        is_template: false,
+        day_count: sourceTrip.trip.day_count
       }
       
       const newTrip = await this.createTripForPlan(userId, newTripData)
@@ -199,7 +298,9 @@ export class PlanSaveOperations {
         end_date: customizations?.end_date || templateData.trip_data.end_date?.toString() || '',
         access_level: customizations?.access_level || templateData.trip_data.access_level,
         image_url: customizations?.image_url || templateData.trip_data.image_url,
-        destination: customizations?.destination || templateData.trip_data.destination
+        destination: customizations?.destination || templateData.trip_data.destination,
+        is_template: false,
+        day_count: templateData.trip_data.day_count
       }
       
       // プランを作成
@@ -233,7 +334,9 @@ export class PlanSaveOperations {
   // プライベートメソッド
 
   private async createTripForPlan(userId: string, tripData: TripFormData): Promise<Trip> {
-    const tripDoc = await adminDb.collection(COLLECTIONS.TRIPS).add({
+    const now = new Date()
+    const isTemplate = Boolean(tripData.is_template)
+    const baseData: Record<string, unknown> = {
       user_id: userId,
       title: tripData.title,
       description: tripData.description,
@@ -243,9 +346,21 @@ export class PlanSaveOperations {
       access_level: tripData.access_level,
       image_url: tripData.image_url,
       status: 'PLANNING',
-      created_at: new Date(),
-      updated_at: new Date()
-    })
+      created_at: now,
+      updated_at: now,
+      is_template: isTemplate,
+      day_count: isTemplate ? tripData.day_count ?? null : tripData.day_count,
+      likes_count:
+        typeof tripData.likes_count === 'number' && Number.isFinite(tripData.likes_count)
+          ? Math.max(0, Math.floor(tripData.likes_count))
+          : 0
+    }
+
+    if (!isTemplate) {
+      baseData.day_count = tripData.day_count ?? undefined
+    }
+
+    const tripDoc = await adminDb.collection(COLLECTIONS.TRIPS).add(baseData)
     
     const tripSnap = await tripDoc.get()
     return {
@@ -256,6 +371,7 @@ export class PlanSaveOperations {
 
   private async updateTripForPlan(tripId: string, tripData: TripFormData): Promise<Trip> {
     const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
+    const isTemplate = Boolean(tripData.is_template)
     await tripRef.update({
       title: tripData.title,
       description: tripData.description,
@@ -264,7 +380,9 @@ export class PlanSaveOperations {
       end_date: tripData.end_date ? new Date(tripData.end_date) : undefined,
       access_level: tripData.access_level,
       image_url: tripData.image_url,
-      updated_at: new Date()
+      updated_at: new Date(),
+      is_template: isTemplate,
+      day_count: isTemplate ? tripData.day_count ?? null : tripData.day_count ?? undefined
     })
     
     const tripSnap = await tripRef.get()
@@ -312,6 +430,8 @@ export class PlanSaveOperations {
       timezone: itineraryData.timezone,
       cost_amount: itineraryData.cost_amount,
       cost_currency: itineraryData.cost_currency,
+      activity_tag: itineraryData.activity_tag || null,
+      place_data: itineraryData.place_data || null,
       created_at: new Date(),
       updated_at: new Date()
     })

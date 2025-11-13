@@ -265,8 +265,29 @@ export async function PUT(
       startDate,
       endDate,
       accessLevel,
-      imageUrl
+      imageUrl,
+      isTemplate: bodyIsTemplate,
+      is_template: snakeIsTemplate,
+      dayCount: bodyDayCount,
+      day_count: snakeDayCount
     } = body
+
+    const normalizedDayCountInput = typeof bodyDayCount === 'number'
+      ? bodyDayCount
+      : typeof snakeDayCount === 'number'
+        ? snakeDayCount
+        : undefined
+    const normalizedDayCount =
+      normalizedDayCountInput !== undefined && Number.isFinite(normalizedDayCountInput) && normalizedDayCountInput > 0
+        ? Math.floor(normalizedDayCountInput)
+        : undefined
+
+    const isTemplate =
+      typeof bodyIsTemplate === 'boolean'
+        ? bodyIsTemplate
+        : typeof snakeIsTemplate === 'boolean'
+          ? snakeIsTemplate
+          : Boolean(trip.is_template)
 
     // Resolve trip by slug or id
     const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
@@ -325,7 +346,7 @@ export async function PUT(
     const startDateChanged = !compareDates(toDateOrNull(originalStartDate) || undefined, newStartDate)
     const endDateChanged = !compareDates(toDateOrNull(originalEndDate) || undefined, newEndDate)
     
-    if ((startDateChanged || endDateChanged) && newStartDate && newEndDate) {
+    if (!isTemplate && (startDateChanged || endDateChanged) && newStartDate && newEndDate) {
       logger.debug('Trip dates changed, updating days documents', {
         original: { start: originalStartDate, end: originalEndDate },
         new: { start: newStartDate, end: newEndDate }
@@ -482,16 +503,34 @@ export async function PUT(
       logger.debug('No changes to trip dates, skipping days update')
     }
 
-    await adminTripOperations.updateTrip(tripId, {
+    const tripUpdatePayload: Record<string, unknown> = {
       title,
       description,
       destination,
       destination_place_id: destinationPlaceId || destinationPlace?.place_id,
-      start_date: newStartDate,
-      end_date: newEndDate,
       access_level: accessLevel,
-      image_url: imageUrl || undefined
-    })
+      image_url: imageUrl || undefined,
+      is_template: isTemplate
+    }
+
+    if (isTemplate) {
+      tripUpdatePayload.start_date = null
+      tripUpdatePayload.end_date = null
+      tripUpdatePayload.day_count =
+        normalizedDayCount !== undefined
+          ? normalizedDayCount
+          : typeof trip.day_count === 'number'
+            ? trip.day_count
+            : null
+    } else {
+      tripUpdatePayload.start_date = newStartDate ?? null
+      tripUpdatePayload.end_date = newEndDate ?? null
+      if (normalizedDayCount !== undefined) {
+        tripUpdatePayload.day_count = normalizedDayCount
+      }
+    }
+
+    await adminTripOperations.updateTrip(tripId, tripUpdatePayload)
 
     return NextResponse.json({ success: true })
   } catch (error) {

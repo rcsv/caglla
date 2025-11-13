@@ -11,6 +11,8 @@ import { getCountryFlag } from '@/lib/utils/country-flags'
 import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
+import { Icon } from '@iconify/react'
+import { t } from '@/lib/i18n'
 
 type TripCardVariant = 'standard' | 'imageFull' | 'horizontal'
 
@@ -38,6 +40,25 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           return '/home'
         }
 
+  const likesCount = typeof trip.likes_count === 'number' ? Math.max(0, trip.likes_count) : 0
+
+  const LikeBadge = ({ size = 'sm' }: { size?: 'sm' | 'md' }) => {
+    if (likesCount <= 0) return null
+    const baseClass =
+      size === 'md'
+        ? 'inline-flex items-center gap-1 rounded-full bg-black/40 px-3 py-1 text-xs text-white backdrop-blur-sm'
+        : 'inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-xs text-rose-600 shadow-sm'
+
+    const iconClass = size === 'md' ? 'h-4 w-4' : 'h-3.5 w-3.5'
+
+    return (
+      <span className={baseClass} aria-label={t('trip.likes.count', { count: likesCount })}>
+        <Icon icon="mdi:heart" className={iconClass} aria-hidden="true" />
+        <span className="tabular-nums">{likesCount}</span>
+      </span>
+    )
+  }
+
   // access_levelの型安全性を確保
   const accessLevel = trip.access_level === 'public' || trip.access_level === 'private' 
     ? trip.access_level 
@@ -61,6 +82,9 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           )}
           {/* Gradient overlay for better text visibility */}
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/70 to-slate-900/40" />
+          <div className="absolute top-2 right-2">
+            <LikeBadge size="md" />
+          </div>
           
           {/* Content */}
           <div className="relative h-full px-4 py-3 md:px-5 md:py-4 flex flex-col gap-1.5 md:gap-2 text-white">
@@ -147,6 +171,9 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
               className="drop-shadow-md"
             />
           </div>
+          <div className="absolute top-3 left-3 z-10">
+            <LikeBadge size="md" />
+          </div>
           {/* Bottom gradient overlay */}
           <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
           {/* Text content */}
@@ -222,7 +249,10 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
 
         <div className="flex justify-between items-start mb-3">
           <h3 className="text-xl md:text-2xl font-bold text-gray-900 line-clamp-2">{trip.title}</h3>
-          <PublicAccessBadge accessLevel={accessLevel} size="sm" />
+          <div className="flex items-center gap-2">
+            <LikeBadge />
+            <PublicAccessBadge accessLevel={accessLevel} size="sm" />
+          </div>
         </div>
 
         {trip.description && <p className="text-gray-600 text-sm mb-3 line-clamp-2">{trip.description}</p>}

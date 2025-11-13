@@ -65,6 +65,7 @@ export default function SlugBasedTripPage() {
   const isProgrammaticScrollRef = useRef(false) // プログラムによるスクロール中かどうか
   const scrollToItineraryRef = useRef<((itineraryId: string) => void) | null>(null) // Itineraryへのスクロール関数
   const [loadingDayIds, setLoadingDayIds] = useState<Set<string>>(new Set()) // 日程ごとのローディング状態
+  const [replicaLoading, setReplicaLoading] = useState(false)
 
   // クエリ: view / day / section を読み取り（デフォルトは summary）
   const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
@@ -223,6 +224,45 @@ export default function SlugBasedTripPage() {
     // 開発者ツールページに遷移
     const previewUrl = `/dev-tools/pdf-preview/${trip.slug || trip.id}`
     window.open(previewUrl, '_blank')
+  }
+
+  const handleReplica = async () => {
+    if (!trip || !user) return
+
+    try {
+      setReplicaLoading(true)
+      const response = await makeAuthenticatedRequest(`/api/trip/${trip.slug || trip.id}/replica`, {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        alert(errorData.error || t('trip.template.replicateFailed'))
+        return
+      }
+
+      const data = await response.json()
+      const newTrip = data.trip
+      if (!newTrip) {
+        alert(t('trip.template.replicateFailed'))
+        return
+      }
+
+      const targetSlug = newTrip.slug || newTrip.id
+      const targetUserSlug = userData?.slug || user.uid
+
+      if (!targetSlug || !targetUserSlug) {
+        alert(t('trip.template.replicateFailed'))
+        return
+      }
+
+      router.push(`/${targetUserSlug}/${targetSlug}`)
+    } catch (error) {
+      logger.error('Replica creation failed:', error)
+      alert(t('trip.template.replicateFailed'))
+    } finally {
+      setReplicaLoading(false)
+    }
   }
 
   // セクションへのナビゲーション機能
@@ -1241,6 +1281,7 @@ export default function SlugBasedTripPage() {
 
   // 権限判定：ユーザーがこのトリップの所有者かどうか
   const canEdit = canEditTrip(user, trip)
+  const isTemplateTrip = Boolean(trip.is_template)
 
   // メニュー項目を構築（編集権限がない場合は編集系を除外）
   const menuItems = [
@@ -1322,6 +1363,9 @@ export default function SlugBasedTripPage() {
         <TripHeroSection
           trip={trip}
           canEdit={canEdit}
+          canReplica={isTemplateTrip && trip.access_level === 'public' && Boolean(user)}
+          onReplica={isTemplateTrip ? handleReplica : undefined}
+          replicaLoading={replicaLoading}
           onUpdateTrip={setTrip}
           onDeleteTrip={() => {
             // コンテキストから旅行を削除してから遷移

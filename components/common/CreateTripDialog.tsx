@@ -58,6 +58,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     startDate: '',
     endDate: '',
     accessLevel: 'private' as 'private' | 'public',
+    isTemplate: false,
+    dayCount: 0,
     imageUrl: '',
     defaultCurrency: 'JPY' as string
   })
@@ -73,6 +75,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   // RestrictionProviderを使用してプラン制限をチェック
   const canCreateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRIPS, tripCount + 1)
   const canCreatePrivateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_PRIVATE_TRIPS, privateTripCount + 1)
+  const publicTemplateEnabled = RestrictionProvider.hasFeature(userPlanId, RestrictionType.PUBLIC_TEMPLATE)
   
   const remainingTrips = RestrictionProvider.getRemaining(userPlanId, RestrictionType.MAX_TRIPS, tripCount)
   const remainingPrivateTrips = RestrictionProvider.getRemaining(userPlanId, RestrictionType.MAX_PRIVATE_TRIPS, privateTripCount)
@@ -162,6 +165,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     }
   }, [formData.destinationPlace?.place_id, user])
 
+  const isTemplateMode = formData.accessLevel === 'public' && formData.isTemplate
+
   // 旅行日数の計算
   const calculateTravelDays = (startDate: string, endDate: string): number => {
     if (!startDate || !endDate) return 0
@@ -175,7 +180,9 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   }
 
   // 旅行日数制限チェック
-  const canCreateTravelDays = RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))
+  const canCreateTravelDays = isTemplateMode
+    ? true
+    : RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))
 
   // 日付のバリデーション
   const validateDates = (startDate: string, endDate: string): string => {
@@ -191,6 +198,26 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     return ''
   }
 
+  const handleTemplateToggle = (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      isTemplate: checked,
+      startDate: checked ? '' : prev.startDate,
+      endDate: checked ? '' : prev.endDate,
+      dayCount: checked ? (prev.dayCount && prev.dayCount > 0 ? prev.dayCount : 3) : prev.dayCount
+    }))
+    setDateError('')
+    setDateAutoAdjusted(false)
+  }
+
+  const handleDayCountChange = (value: string) => {
+    const parsed = Number(value)
+    setFormData(prev => ({
+      ...prev,
+      dayCount: Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -200,42 +227,52 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       return
     }
 
-    if (!formData.startDate) {
-      alert(t('trip.create.validation.startDateRequired'))
-      return
-    }
+    if (isTemplateMode) {
+      if (!formData.dayCount || formData.dayCount <= 0) {
+        alert(t('trip.create.validation.dayCountRequired'))
+        return
+      }
+    } else {
+      if (!formData.startDate) {
+        alert(t('trip.create.validation.startDateRequired'))
+        return
+      }
 
-    if (!formData.endDate) {
-      alert(t('trip.create.validation.endDateRequired'))
-      return
-    }
+      if (!formData.endDate) {
+        alert(t('trip.create.validation.endDateRequired'))
+        return
+      }
 
-    // 日付のバリデーション
-    const dateValidationError = validateDates(formData.startDate, formData.endDate)
-    if (dateValidationError) {
-      setDateError(dateValidationError)
-      return
+      // 日付のバリデーション
+      const dateValidationError = validateDates(formData.startDate, formData.endDate)
+      if (dateValidationError) {
+        setDateError(dateValidationError)
+        return
+      }
+      setDateError('')
     }
-    setDateError('')
 
 
     setSubmitting(true)
     try {
+      const payload = {
+        title: formData.title || formData.destination,
+        description: formData.description,
+        destination: formData.destination,
+        destinationPlaceId: formData.destinationPlace?.place_id,
+        destinationPlace: formData.destinationPlace,
+        startDate: isTemplateMode ? '' : formData.startDate,
+        endDate: isTemplateMode ? '' : formData.endDate,
+        accessLevel: formData.accessLevel,
+        imageUrl: formData.imageUrl || null,
+        defaultCurrency: formData.defaultCurrency,
+        isTemplate: isTemplateMode,
+        dayCount: isTemplateMode ? formData.dayCount : undefined
+      }
+
       const response = await makeAuthenticatedRequest('/api/trips', {
         method: 'POST',
-        body: JSON.stringify({
-          title: formData.title || formData.destination, // タイトル未入力時は目的地を使用
-          description: formData.description,
-          destination: formData.destination,
-          destinationPlaceId: formData.destinationPlace?.place_id,
-          // 初期レンダリング用に最小限の場所オブジェクトも送る（キャッシュミス時の即時保存）
-          destinationPlace: formData.destinationPlace,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          accessLevel: formData.accessLevel,
-          imageUrl: formData.imageUrl || null,
-          defaultCurrency: formData.defaultCurrency,
-        }),
+        body: JSON.stringify(payload),
       })
 
       if (response.ok) {
@@ -350,6 +387,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       startDate: '',
       endDate: '',
       accessLevel: 'private',
+      isTemplate: false,
+      dayCount: 0,
       imageUrl: '',
       defaultCurrency: 'JPY'
     })
@@ -418,59 +457,80 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label={t('trip.create.startDate.label')}
-                  type="date"
-                  id="startDate"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleInputChange}
-                  placeholder={t('trip.create.startDate.placeholder')}
-                  hint={t('trip.create.startDate.hint')}
-                  required
-                  error={dateError ? t('trip.create.dateError') : undefined}
-                  lang={currentLanguage}
-                />
-
-                <Input
-                  label={t('trip.create.endDate.label')}
-                  type="date"
-                  id="endDate"
-                  name="endDate"
-                  value={formData.endDate}
-                  onChange={handleInputChange}
-                  placeholder={t('trip.create.endDate.placeholder')}
-                  hint={t('trip.create.endDate.hint')}
-                  required
-                  error={dateError ? t('trip.create.dateError') : undefined}
-                  min={formData.startDate || undefined}
-                  lang={currentLanguage}
-                />
-              </div>
-
-              {/* 日付自動調整の情報メッセージ */}
-              {dateAutoAdjusted && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <p className="text-sm text-blue-800">{t('trip.create.dateAutoAdjusted')}</p>
-                    </div>
-                    <button
-                      onClick={() => setDateAutoAdjusted(false)}
-                      className="ml-3 flex-shrink-0 text-blue-400 hover:text-blue-600"
-                    >
-                      <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </div>
+              {isTemplateMode ? (
+                <div className="space-y-2">
+                  <Input
+                    label={t('trip.create.dayCount.label')}
+                    type="number"
+                    id="dayCount"
+                    name="dayCount"
+                    min={1}
+                    value={formData.dayCount ? String(formData.dayCount) : ''}
+                    onChange={(event) => handleDayCountChange(event.target.value)}
+                    placeholder={t('trip.create.dayCount.placeholder')}
+                    required
+                  />
+                  <p className="text-xs text-gray-500">
+                    {t('trip.create.dayCount.description')}
+                  </p>
                 </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label={t('trip.create.startDate.label')}
+                      type="date"
+                      id="startDate"
+                      name="startDate"
+                      value={formData.startDate}
+                      onChange={handleInputChange}
+                      placeholder={t('trip.create.startDate.placeholder')}
+                      hint={t('trip.create.startDate.hint')}
+                      required
+                      error={dateError ? t('trip.create.dateError') : undefined}
+                      lang={currentLanguage}
+                    />
+
+                    <Input
+                      label={t('trip.create.endDate.label')}
+                      type="date"
+                      id="endDate"
+                      name="endDate"
+                      value={formData.endDate}
+                      onChange={handleInputChange}
+                      placeholder={t('trip.create.endDate.placeholder')}
+                      hint={t('trip.create.endDate.hint')}
+                      required
+                      error={dateError ? t('trip.create.dateError') : undefined}
+                      min={formData.startDate || undefined}
+                      lang={currentLanguage}
+                    />
+                  </div>
+
+                  {/* 日付自動調整の情報メッセージ */}
+                  {dateAutoAdjusted && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <p className="text-sm text-blue-800">{t('trip.create.dateAutoAdjusted')}</p>
+                        </div>
+                        <button
+                          onClick={() => setDateAutoAdjusted(false)}
+                          className="ml-3 flex-shrink-0 text-blue-400 hover:text-blue-600"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* 日付エラーメッセージ（自動調整が行われていない場合のみ表示） */}
@@ -570,8 +630,13 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                         onChange={(e) => {
                           setFormData(prev => ({
                             ...prev,
-                            accessLevel: e.target.checked ? 'private' : 'public'
+                        accessLevel: e.target.checked ? 'private' : 'public',
+                        isTemplate: e.target.checked ? false : prev.isTemplate
                           }))
+                      if (e.target.checked) {
+                        setDateError('')
+                        setDateAutoAdjusted(false)
+                      }
                         }}
                       />
                       <p className="mt-1 text-xs text-gray-500">
@@ -580,6 +645,27 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                           : t('trip.create.accessLevel.public.description')
                         }
                       </p>
+
+                  {formData.accessLevel === 'public' && (
+                    <div className="mt-4">
+                      <Toggle
+                        label={t('trip.create.templateMode.label')}
+                        checked={formData.isTemplate}
+                        onChange={(event) => handleTemplateToggle(event.target.checked)}
+                        disabled={!publicTemplateEnabled}
+                        />
+                      <p className={`mt-1 text-xs ${publicTemplateEnabled ? 'text-gray-500' : 'text-red-500'}`}>
+                        {formData.isTemplate
+                          ? t('trip.create.templateMode.description.active')
+                          : t('trip.create.templateMode.description.inactive')}
+                      </p>
+                      {!publicTemplateEnabled && (
+                        <div className="mt-2 rounded-md border border-yellow-200 bg-yellow-50 p-3 text-xs text-yellow-700">
+                          {t('trip.template.upgradeRequired')}
+                        </div>
+                      )}
+                    </div>
+                  )}
                     </div>
 
                     <div>

@@ -25,6 +25,7 @@ export interface SubscriptionPlan {
     storageGB: number
     photosPerTrip: number
   }
+  features_enabled?: Record<string, boolean>
 }
 
 export interface Subscription {
@@ -90,6 +91,9 @@ const DEMO_PLANS: SubscriptionPlan[] = [
       travelDays: 14,
       storageGB: 0.5,
       photosPerTrip: 50
+    },
+    features_enabled: {
+      public_templates: true
     }
   },
   {
@@ -112,6 +116,9 @@ const DEMO_PLANS: SubscriptionPlan[] = [
       travelDays: -1,
       storageGB: 5,
       photosPerTrip: -1
+    },
+    features_enabled: {
+      public_templates: true
     }
   }
 ]

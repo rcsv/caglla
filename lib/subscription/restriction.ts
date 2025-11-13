@@ -24,6 +24,7 @@ export enum RestrictionType {
   MAX_TRIPS = 'max_trips',
   MAX_PRIVATE_TRIPS = 'max_private_trips',
   MAX_TRAVEL_DAYS = 'max_travel_days',
+  PUBLIC_TEMPLATE = 'public_template',
   
   // ストレージ関連
   MAX_STORAGE_GB = 'max_storage_gb',
@@ -59,6 +60,7 @@ export interface PlanConfig {
     [RestrictionType.AI_SUPPORT]: boolean
     [RestrictionType.OUTLOOK_INTEGRATION]: boolean
     [RestrictionType.ROUTE_OPTIMIZATION]: boolean
+    [RestrictionType.PUBLIC_TEMPLATE]?: boolean
   }
 }
 
@@ -91,7 +93,8 @@ export const PLAN_CONFIGS: Record<PlanId, PlanConfig> = {
     features_enabled: {
       [RestrictionType.AI_SUPPORT]: false,
       [RestrictionType.OUTLOOK_INTEGRATION]: false,
-      [RestrictionType.ROUTE_OPTIMIZATION]: false
+      [RestrictionType.ROUTE_OPTIMIZATION]: false,
+      [RestrictionType.PUBLIC_TEMPLATE]: false
     }
   },
   
@@ -120,7 +123,8 @@ export const PLAN_CONFIGS: Record<PlanId, PlanConfig> = {
     features_enabled: {
       [RestrictionType.AI_SUPPORT]: true,
       [RestrictionType.OUTLOOK_INTEGRATION]: false,
-      [RestrictionType.ROUTE_OPTIMIZATION]: true
+      [RestrictionType.ROUTE_OPTIMIZATION]: true,
+      [RestrictionType.PUBLIC_TEMPLATE]: true
     }
   },
   
@@ -150,7 +154,8 @@ export const PLAN_CONFIGS: Record<PlanId, PlanConfig> = {
     features_enabled: {
       [RestrictionType.AI_SUPPORT]: true,
       [RestrictionType.OUTLOOK_INTEGRATION]: true,
-      [RestrictionType.ROUTE_OPTIMIZATION]: true
+      [RestrictionType.ROUTE_OPTIMIZATION]: true,
+      [RestrictionType.PUBLIC_TEMPLATE]: true
     }
   },
   
@@ -181,7 +186,8 @@ export const PLAN_CONFIGS: Record<PlanId, PlanConfig> = {
     features_enabled: {
       [RestrictionType.AI_SUPPORT]: true,
       [RestrictionType.OUTLOOK_INTEGRATION]: true,
-      [RestrictionType.ROUTE_OPTIMIZATION]: true
+      [RestrictionType.ROUTE_OPTIMIZATION]: true,
+      [RestrictionType.PUBLIC_TEMPLATE]: true
     }
   },
   
@@ -213,7 +219,8 @@ export const PLAN_CONFIGS: Record<PlanId, PlanConfig> = {
     features_enabled: {
       [RestrictionType.AI_SUPPORT]: true,
       [RestrictionType.OUTLOOK_INTEGRATION]: true,
-      [RestrictionType.ROUTE_OPTIMIZATION]: true
+      [RestrictionType.ROUTE_OPTIMIZATION]: true,
+      [RestrictionType.PUBLIC_TEMPLATE]: true
     }
   }
 }
@@ -237,9 +244,12 @@ export class RestrictionProvider {
     const config = this.getPlanConfig(planId)
     
     // 機能系の制限は別途チェック
-    if (type === RestrictionType.AI_SUPPORT || 
-        type === RestrictionType.OUTLOOK_INTEGRATION ||
-        type === RestrictionType.ROUTE_OPTIMIZATION) {
+    if (
+      type === RestrictionType.AI_SUPPORT ||
+      type === RestrictionType.OUTLOOK_INTEGRATION ||
+      type === RestrictionType.ROUTE_OPTIMIZATION ||
+      type === RestrictionType.PUBLIC_TEMPLATE
+    ) {
       return this.hasFeature(planId, type)
     }
     
@@ -254,7 +264,7 @@ export class RestrictionProvider {
    */
   static hasFeature(planId: PlanId, type: RestrictionType): boolean {
     const config = this.getPlanConfig(planId)
-    return config.features_enabled[type as keyof typeof config.features_enabled]
+    return Boolean(config.features_enabled?.[type as keyof typeof config.features_enabled])
   }
 
   /**
@@ -284,7 +294,8 @@ export class RestrictionProvider {
       [RestrictionType.MAX_ACCOUNT_STORAGE_GB]: 'アカウントストレージ容量',
       [RestrictionType.AI_SUPPORT]: 'AIサポート',
       [RestrictionType.OUTLOOK_INTEGRATION]: 'Outlook統合',
-      [RestrictionType.ROUTE_OPTIMIZATION]: 'ルート最適化'
+      [RestrictionType.ROUTE_OPTIMIZATION]: 'ルート最適化',
+      [RestrictionType.PUBLIC_TEMPLATE]: '公開テンプレート作成'
     }
     
     return `${typeNames[type]}の制限を超過しています (${currentValue}/${limit})`

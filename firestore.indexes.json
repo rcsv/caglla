@@ -43,6 +43,24 @@
       ]
     },
     {
+      "collectionGroup": "trips",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "access_level",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "is_template",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "likes_count",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "days",
       "queryScope": "COLLECTION",
       "fields": [
