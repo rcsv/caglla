@@ -130,6 +130,30 @@ export default function TripMap({
   const [searchMarker, setSearchMarker] = useState<any>(null) // 検索結果のマーカー
   const [searchResultMarkers, setSearchResultMarkers] = useState<any[]>([]) // 一覧検索のピン
   const poiMarkerRef = useRef<any>(null)
+  const onPoiDataUpdateRef = useRef(onPoiDataUpdate)
+  const onItineraryClickRef = useRef(onItineraryClick)
+  const onMapInteractionStartRef = useRef(onMapInteractionStart)
+
+  useEffect(() => {
+    onPoiDataUpdateRef.current = onPoiDataUpdate
+  }, [onPoiDataUpdate])
+
+  useEffect(() => {
+    onItineraryClickRef.current = onItineraryClick
+  }, [onItineraryClick])
+
+  useEffect(() => {
+    onMapInteractionStartRef.current = onMapInteractionStart
+  }, [onMapInteractionStart])
+
+  const initialCenterLat =
+    typeof initialCenter?.lat === 'function' ? initialCenter.lat() : initialCenter?.lat ?? null
+  const initialCenterLng =
+    typeof initialCenter?.lng === 'function' ? initialCenter.lng() : initialCenter?.lng ?? null
+  const hasInitialCenter = initialCenterLat !== null && initialCenterLng !== null
+  const initialCenterKey = hasInitialCenter
+    ? `${initialCenterLat}:${initialCenterLng}`
+    : 'default-center'
 
   // 地図の現在のビューポートを取得する関数
   const getMapViewport = () => {
@@ -186,7 +210,7 @@ export default function TripMap({
     smoothMoveToLocation(map, lat, lng, zoom)
     
     // 地図操作を検出（スクロール連動を停止）
-    onMapInteractionStart?.()
+    onMapInteractionStartRef.current?.()
   }
 
   // 検索結果一覧のピンをDROPアニメーションで順次描画
@@ -231,7 +255,7 @@ export default function TripMap({
             location: { lat: pos.lat, lng: pos.lng },
           }
           setInternalPoiData(newPoiData)
-          onPoiDataUpdate?.(newPoiData)
+          onPoiDataUpdateRef.current?.(newPoiData)
         })
         setSearchResultMarkers(prev => [...prev, mk])
       }, index * 120)
@@ -240,22 +264,33 @@ export default function TripMap({
 
   // Google Maps API の読み込み
   useEffect(() => {
+    let isMounted = true
+    let createdMap: google.maps.Map | null = null
+    let createdDirectionsRenderer: google.maps.DirectionsRenderer | null = null
+    let mapElement: HTMLDivElement | null = null
+
+    const pointerHandler = () => {
+      onMapInteractionStartRef.current?.()
+    }
+
     const initializeMap = async () => {
       try {
         setLoading(true)
         setError(null)
-        
-        // 共通ローダーを使用してAPIを読み込み（ユーザー言語を付与）
-        await loadGoogleMapsAPI(getUserLanguage(user))
-        
+
+        const language = getUserLanguage(user)
+        await loadGoogleMapsAPI(language)
+
         if (!mapRef.current || !window.google) {
           throw new Error(t('tripMap.loadFailed'))
         }
 
-        // AdvancedMarkerElement用のmapIdを設定
-        // Trip目的地または指定された初期中心位置を使用（フォールバックは東京）
-        const defaultCenter = initialCenter || { lat: 35.6762, lng: 139.6503 }
-        const newMap = new window.google.maps.Map(mapRef.current, {
+        mapElement = mapRef.current
+
+        const defaultCenter = hasInitialCenter
+          ? { lat: initialCenterLat!, lng: initialCenterLng! }
+          : { lat: 35.6762, lng: 139.6503 }
+        const newMap = new window.google.maps.Map(mapElement, {
           zoom: 10,
           center: defaultCenter,
           mapTypeControl: false,
@@ -265,14 +300,13 @@ export default function TripMap({
           zoomControlOptions: {
             position: window.google.maps.ControlPosition.TOP_RIGHT,
           },
-          mapId: 'trip-map-teardrop-markers', // AdvancedMarkerElement用のmapId
-          clickableIcons: true, // POIのクリックを有効化（カスタムダイアログを表示）
+          mapId: 'trip-map-teardrop-markers',
+          clickableIcons: true,
         })
 
         const newDirectionsService = new window.google.maps.DirectionsService()
         const newDirectionsRenderer = new window.google.maps.DirectionsRenderer({
           suppressMarkers: true,
-          // ビューポートは常にアプリ側で制御する（自動でセンターやズームを変更しない）
           preserveViewport: true,
           polylineOptions: {
             strokeColor: '#3B82F6',
@@ -282,20 +316,18 @@ export default function TripMap({
 
         newDirectionsRenderer.setMap(newMap)
 
-        // POIマーカーのクリックイベントを検出
+        createdMap = newMap
+        createdDirectionsRenderer = newDirectionsRenderer
+
         newMap.addListener('click', async (event: any) => {
-          // 地図上の明示的なユーザー操作を検出（同期を即停止させる）
-          onMapInteractionStart?.()
-          // Google Maps標準のPOI情報ウィンドウをキャンセル
+          onMapInteractionStartRef.current?.()
           const infoWindows = newMap.get('infoWindows') || []
           infoWindows.forEach((infoWindow: any) => {
             infoWindow.close()
           })
-          
-          // クリックされた位置のPOIマーカーを検出
+
           const clickLatLng = event.latLng
-          
-          // 新Places API (v1) を使用してPOI情報を取得
+
           try {
             const response = await fetch('/api/places/nearby', {
               method: 'POST',
@@ -305,10 +337,10 @@ export default function TripMap({
               body: JSON.stringify({
                 location: {
                   lat: clickLatLng.lat(),
-                  lng: clickLatLng.lng()
+                  lng: clickLatLng.lng(),
                 },
-                radius: 200 // 200メートル以内のPOIを検索（クリック検出の感度を向上）
-              })
+                radius: 200,
+              }),
             })
 
             if (!response.ok) {
@@ -316,66 +348,60 @@ export default function TripMap({
             }
 
             const data = await response.json()
-            
+
             if (data.status === 'OK' && data.results && data.results.length > 0) {
-              // 最も近いPOIを選択
               const nearestPOI = data.results[0]
               const newPoiData = {
                 placeId: nearestPOI.place_id,
                 name: nearestPOI.name,
                 location: {
                   lat: nearestPOI.geometry.location.lat,
-                  lng: nearestPOI.geometry.location.lng
-                }
+                  lng: nearestPOI.geometry.location.lng,
+                },
               }
               setInternalPoiData(newPoiData)
-              onPoiDataUpdate?.(newPoiData)
+              onPoiDataUpdateRef.current?.(newPoiData)
             } else {
-              // 検索結果なし: POI情報がない場合はダイアログを表示しない
               logger.debug('No POI found at clicked location, not showing dialog')
               setInternalPoiData(null)
-              onPoiDataUpdate?.(null)
+              onPoiDataUpdateRef.current?.(null)
             }
           } catch (error) {
             logger.warn('Places API search failed:', error)
-            // API呼び出し失敗: POI情報が取得できない場合はダイアログを表示しない
             logger.debug('Places API failed, not showing dialog')
             setInternalPoiData(null)
-            onPoiDataUpdate?.(null)
+            onPoiDataUpdateRef.current?.(null)
           }
         })
 
-        // Google Maps標準のPOI情報ウィンドウを無効化
         newMap.addListener('poi_click', (event: any) => {
-          onMapInteractionStart?.()
-          // デフォルトのPOI情報ウィンドウをキャンセル
+          onMapInteractionStartRef.current?.()
           event.stop()
-          
-          // カスタムPOIダイアログを表示
+
           if (event.placeId) {
             const newPoiData = {
               placeId: event.placeId,
               name: event.displayName || 'POI',
               location: {
                 lat: event.latLng.lat(),
-                lng: event.latLng.lng()
-              }
-              // placeDataは渡さない（PlacesCacheから取得）
+                lng: event.latLng.lng(),
+              },
             }
             setInternalPoiData(newPoiData)
-            onPoiDataUpdate?.(newPoiData)
+            onPoiDataUpdateRef.current?.(newPoiData)
           }
         })
 
-        // ユーザーの地図操作（パン/ズーム開始）を検出
-        newMap.addListener('dragstart', () => onMapInteractionStart?.())
-        newMap.addListener('zoom_changed', () => onMapInteractionStart?.())
+        newMap.addListener('dragstart', () => onMapInteractionStartRef.current?.())
+        newMap.addListener('zoom_changed', () => onMapInteractionStartRef.current?.())
 
-        // コンテナのポインタ/タッチ開始も検出（モバイルのジェスチャーを早期捕捉）
-        if (mapRef.current) {
-          const handler = () => onMapInteractionStart?.()
-          mapRef.current.addEventListener('pointerdown', handler, { passive: true })
-          mapRef.current.addEventListener('touchstart', handler, { passive: true })
+        if (mapElement) {
+          mapElement.addEventListener('pointerdown', pointerHandler, { passive: true })
+          mapElement.addEventListener('touchstart', pointerHandler, { passive: true })
+        }
+
+        if (!isMounted) {
+          return
         }
 
         setMap(newMap)
@@ -383,6 +409,9 @@ export default function TripMap({
         setDirectionsRenderer(newDirectionsRenderer)
         setLoading(false)
       } catch (error) {
+        if (!isMounted) {
+          return
+        }
         logger.error('Google Maps APIの読み込みに失敗しました:', error)
         setError(error instanceof Error ? error.message : t('countryMap.loadFailed'))
         setLoading(false)
@@ -390,7 +419,21 @@ export default function TripMap({
     }
 
     initializeMap()
-  }, [initialCenter, onPoiDataUpdate, onMapInteractionStart, user])
+
+    return () => {
+      isMounted = false
+      if (mapElement) {
+        mapElement.removeEventListener('pointerdown', pointerHandler)
+        mapElement.removeEventListener('touchstart', pointerHandler)
+      }
+      if (createdDirectionsRenderer) {
+        createdDirectionsRenderer.setMap(null)
+      }
+      if (createdMap && typeof window !== 'undefined' && window.google) {
+        google.maps.event.clearInstanceListeners(createdMap)
+      }
+    }
+  }, [initialCenterKey, user, hasInitialCenter, initialCenterLat, initialCenterLng])
 
   // itineraries が変更された時にマーカーとルートを更新
   useEffect(() => {
@@ -423,11 +466,15 @@ export default function TripMap({
 
     logger.debug('  Valid itineraries count:', validItineraries.length)
 
+    const fallbackCenter = hasInitialCenter
+      ? { lat: initialCenterLat!, lng: initialCenterLng! }
+      : undefined
+
     if (validItineraries.length === 0) {
       logger.debug('⚠️ No valid itineraries, resetting map')
       // 行先が無い場合は初期センターへ
-      if (initialCenter) {
-        map.setCenter(initialCenter)
+      if (fallbackCenter) {
+        map.setCenter(fallbackCenter)
         map.setZoom(11)
       }
       return
@@ -501,13 +548,11 @@ export default function TripMap({
             placeData: itinerary.place_data // Itinerariesに保存されているplace_dataを渡す
           }
           setInternalPoiData(newPoiData)
-          onPoiDataUpdate?.(newPoiData)
+        onPoiDataUpdateRef.current?.(newPoiData)
         }
         
         // 左ペインのItineraryにスクロールするためのコールバック
-        if (onItineraryClick) {
-          onItineraryClick(itinerary.id)
-        }
+      onItineraryClickRef.current?.(itinerary.id)
         
         // 個別フォーカスモードの場合、選択された場所にフォーカス
         if (focusMode === 'single') {
@@ -636,7 +681,20 @@ export default function TripMap({
       })
       map.fitBounds(bounds)
     }
-  }, [map, directionsService, directionsRenderer, itineraries, selectedDayId, focusMode, selectedItineraryId, initialCenter, scrollSyncEnabled, onItineraryClick, onPoiDataUpdate])
+  }, [
+    map,
+    directionsService,
+    directionsRenderer,
+    itineraries,
+    selectedDayId,
+    focusMode,
+    selectedItineraryId,
+    initialCenterKey,
+    initialCenterLat,
+    initialCenterLng,
+    hasInitialCenter,
+    scrollSyncEnabled
+  ])
 
   // POIダイアログ用の一時マーカーを制御
   useEffect(() => {
@@ -862,7 +920,7 @@ export default function TripMap({
         poiData={poiData || internalPoiData}
         onClose={() => {
           setInternalPoiData(null)
-          onPoiDataUpdate?.(null)
+          onPoiDataUpdateRef.current?.(null)
         }}
         onAddToItinerary={async (placeId: string, dayId: string) => {
           if (onAddFromPOI) {
@@ -870,7 +928,7 @@ export default function TripMap({
             await onAddFromPOI(placeId, dayId)
             // POI ダイアログを閉じる
             setInternalPoiData(null)
-            onPoiDataUpdate?.(null)
+            onPoiDataUpdateRef.current?.(null)
           } else {
             // フォールバック: 古い動作（デバッグ用）
             logger.warn('onAddFromPOI is not provided, POI add功能が利用できません')

@@ -4,7 +4,7 @@ import { t } from '@/lib/i18n'
 
 import { useAuth } from '@/lib/contexts/auth'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import AddScheduleModal from '@/components/modals/AddScheduleModal'
 import ExportDataModal from '@/components/modals/ExportDataModal'
 import ICalPublishModal from '@/components/modals/ICalPublishModal'
@@ -639,21 +639,18 @@ export default function SlugBasedTripPage() {
   }
 
   // 選択された日程のItineraryを取得する関数（missingPlaceDataCacheから補完）
-  const getFilteredItineraries = (): Itinerary[] => {
+  const filteredItineraries = useMemo(() => {
     if (!trip?.days) return []
-    
+
     let itineraries: Itinerary[]
-    
+
     if (selectedDayId) {
-      // 選択された日程のItineraryのみを返す
       const selectedDay = trip.days.find(day => day.id === selectedDayId)
       itineraries = selectedDay?.itineraries || []
     } else {
-      // フィルタが選択されていない場合は全てのItineraryを返す
       itineraries = trip.days.flatMap(day => day.itineraries || [])
     }
-    
-    // missingPlaceDataCacheからplace_dataを補完
+
     return itineraries.map(itinerary => {
       if (itinerary.place_id && !itinerary.place_data && missingPlaceDataCache.has(itinerary.place_id)) {
         return {
@@ -663,7 +660,9 @@ export default function SlugBasedTripPage() {
       }
       return itinerary
     })
-  }
+  }, [trip?.days, selectedDayId, missingPlaceDataCache])
+
+  const getFilteredItineraries = useCallback((): Itinerary[] => filteredItineraries, [filteredItineraries])
 
   const handleScheduleAdded = async (newItinerary: any) => {
     if (!trip) return

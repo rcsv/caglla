@@ -46,14 +46,17 @@ export async function POST(
 
     const newSlug = generateUniqueSlug(replicaResult.trip.title, existingSlugs)
 
+    const derivedDayCount =
+      templateTrip.day_count && templateTrip.day_count > 0
+        ? templateTrip.day_count
+        : replicaResult.days.length
+
     await adminTripOperations.updateTrip(replicaResult.trip.id, {
       slug: newSlug,
       access_level: 'private',
       is_template: false,
       likes_count: 0,
-      day_count:
-        (templateTrip.day_count && templateTrip.day_count > 0 ? templateTrip.day_count : replicaResult.days.length) ||
-        null,
+      ...(derivedDayCount > 0 ? { day_count: derivedDayCount } : {}),
     })
 
     try {

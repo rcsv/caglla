@@ -9,6 +9,7 @@ import type { PlaceData, SupportedLanguage, Trip, PlacesCacheInput } from '@/lib
 import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
 import { resolveDestinationPlace } from '@/lib/api/places-cache'
+import { COOKIE_NAME } from '@/lib/i18n/storage'
 
 // API応答用の拡張型（destination_placeを含む）
 interface TripWithDestination extends Trip {
@@ -46,7 +47,11 @@ export async function GET(request: NextRequest) {
 
     // Get user info to determine language preference
     const user = await adminUserOperations.getUserByGoogleId(userId)
-    const userLanguage = user ? getUserLanguage(user) : 'en'
+    const cookieLang = request.cookies.get(COOKIE_NAME)?.value ?? null
+    const userLanguage = getUserLanguage(user ?? undefined, {
+      serverOverride: cookieLang,
+      serverCookies: request.cookies
+    })
 
     // Enrich trips: resolve destination_place from places_cache when available
     const tripsWithDetails = await Promise.all(
@@ -71,7 +76,7 @@ export async function GET(request: NextRequest) {
 
     if (groupByCountry) {
       // Group trips by country
-      const countryGroups = await groupTripsByCountry(tripsWithDetails)
+      const countryGroups = await groupTripsByCountry(tripsWithDetails, { language: userLanguage })
       return NextResponse.json({ 
         trips: countryGroups,
         grouped: true,
@@ -267,6 +272,7 @@ export async function POST(request: NextRequest) {
 
     logger.debug('Fetching user data for creator info')
     
+    const cookieLangPost = request.cookies.get(COOKIE_NAME)?.value ?? null
     // 最新のユーザー情報を取得してcreator情報を追加
     const user = await adminUserOperations.getUserByGoogleId(userId)
     if (user) {
@@ -281,7 +287,12 @@ export async function POST(request: NextRequest) {
       if (resolvedDestPlaceId) {
         // 新形式でのキャッシュ検索: {place_id}_{language}
         // ユーザーの言語設定を取得
-        const userLanguage = user ? getUserLanguage(user) : 'ja'
+        const userLanguage = user
+          ? getUserLanguage(user, {
+              serverOverride: cookieLangPost,
+              serverCookies: request.cookies
+            })
+          : 'ja'
         const cacheKey = `${resolvedDestPlaceId}_${userLanguage}`
         
         const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(cacheKey).get()
@@ -296,7 +307,12 @@ export async function POST(request: NextRequest) {
           let cachePayload: PlacesCacheInput | null = null
           try {
             // ユーザーの言語設定を取得
-            const language = user ? getUserLanguage(user) : 'ja'
+            const language = user
+              ? getUserLanguage(user, {
+                  serverOverride: cookieLangPost,
+                  serverCookies: request.cookies
+                })
+              : 'ja'
             
             cachePayload = {
               format_version: '2.0.0', // 新バージョン

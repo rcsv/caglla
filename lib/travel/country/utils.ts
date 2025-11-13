@@ -1,9 +1,9 @@
 // 国名抽出とグループ化のユーティリティ関数
-import { PlaceData, User } from '@/lib/core/types'
+import { PlaceData, SupportedLanguage } from '@/lib/core/types'
 import { geocodingApiHelpers } from '@/lib/api/google/geocoding'
 import { getCountryInfo, getCountryNameJa as getCountryNameJaFromFlags } from '@/lib/utils/country-flags'
 import logger from '@/lib/core/logger'
-import { getUserLanguage } from '@/lib/utils/language'
+import { DEFAULT_LANGUAGE } from '@/lib/utils/language'
 
 // 国名のマッピング（英語→日本語）
 const COUNTRY_NAMES: { [key: string]: string } = {
@@ -266,7 +266,10 @@ function extractCountryFromEnglishAddress(formattedAddress: string): { countryCo
  * Google Places APIのformatted_addressから国名を抽出する
  * Geocoding APIを使用してaddress_componentsを取得し、国情報を抽出します
  */
-export async function extractCountryFromAddress(formattedAddress: string, user?: User | null): Promise<{ countryCode: string; countryName: string }> {
+export async function extractCountryFromAddress(
+  formattedAddress: string,
+  options?: { language?: SupportedLanguage }
+): Promise<{ countryCode: string; countryName: string }> {
   if (!formattedAddress) {
     return { countryCode: 'unknown', countryName: '不明' }
   }
@@ -275,7 +278,7 @@ export async function extractCountryFromAddress(formattedAddress: string, user?:
 
   // 英語ロケール時のみ、文字列パースの軽量ヒューリスティックを先行適用
   try {
-    const lang = getUserLanguage(user || undefined)
+    const lang = options?.language ?? DEFAULT_LANGUAGE
     if (lang === 'en' && isEnglishFormattedAddress(formattedAddress)) {
       const parsed = extractCountryFromEnglishAddress(formattedAddress)
       if (parsed && parsed.countryCode !== 'unknown') {
@@ -316,7 +319,8 @@ export async function extractCountryFromAddress(formattedAddress: string, user?:
 /**
  * 旅行データを国別にグループ化する
  */
-export async function groupTripsByCountry(trips: Array<{
+export async function groupTripsByCountry(
+  trips: Array<{
   id: string
   title: string
   destination?: string
@@ -324,7 +328,9 @@ export async function groupTripsByCountry(trips: Array<{
   startDate?: Date
   endDate?: Date
   imageUrl?: string
-}>): Promise<CountryGroup[]> {
+}>,
+  options?: { language?: SupportedLanguage }
+): Promise<CountryGroup[]> {
   const countryMap = new Map<string, CountryGroup>()
 
   logger.debug('=== groupTripsByCountry Debug ===')
@@ -363,7 +369,9 @@ export async function groupTripsByCountry(trips: Array<{
       } else if (trip.destinationPlace.formatted_address) {
         logger.debug('Using formatted_address with Geocoding API')
         // address_componentsがない場合はformatted_addressから推測（Geocoding API使用）
-        const countryInfo = await extractCountryFromAddress(trip.destinationPlace.formatted_address)
+        const countryInfo = await extractCountryFromAddress(trip.destinationPlace.formatted_address, {
+          language: options?.language
+        })
         countryCode = countryInfo.countryCode
         countryName = countryInfo.countryName
         countryNameJa = getCountryNameJaFromFlags(countryName)
@@ -372,7 +380,9 @@ export async function groupTripsByCountry(trips: Array<{
     } else if (trip.destination) {
       logger.debug('Using destination string with Geocoding API')
       // destinationPlaceがない場合は、destinationから推測（Geocoding API使用）
-      const countryInfo = await extractCountryFromAddress(trip.destination)
+      const countryInfo = await extractCountryFromAddress(trip.destination, {
+        language: options?.language
+      })
       countryCode = countryInfo.countryCode
       countryName = countryInfo.countryName
       countryNameJa = getCountryNameJa(countryName)

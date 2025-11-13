@@ -3,6 +3,10 @@ import { isSupportedLanguage } from '@/lib/utils/language'
 
 export const COOKIE_NAME = 'lang'
 
+type CookieStoreLike = {
+  get(name: string): { value?: string } | undefined
+} | null | undefined
+
 export function getLanguageOverrideClient(): SupportedLanguage | undefined {
   try {
     if (typeof document !== 'undefined') {
@@ -42,18 +46,19 @@ export function setLanguageOverrideClient(lang: SupportedLanguage | ''): void {
   } catch (_) {}
 }
 
-// Server-side cookie reader (Next.js App Router)
-export function getLanguageOverrideServer(): SupportedLanguage | undefined {
-  try {
-    // Only attempt in server environment
-    if (typeof window === 'undefined') {
-      // Lazy require to avoid bundling into client
-      const { cookies } = require('next/headers') as typeof import('next/headers')
-      const c = cookies().get(COOKIE_NAME)?.value
-      if (c && isSupportedLanguage(c)) return c
-    }
-  } catch (_) {}
-  return undefined
+export function normalizeLanguageOverride(raw: string | null | undefined): SupportedLanguage | undefined {
+  if (!raw) return undefined
+  const decoded = decodeURIComponent(raw)
+  return isSupportedLanguage(decoded) ? decoded : undefined
 }
 
+export function getLanguageOverrideFromCookies(cookieStore: CookieStoreLike): SupportedLanguage | undefined {
+  if (!cookieStore) return undefined
+  try {
+    const raw = cookieStore.get(COOKIE_NAME)?.value ?? null
+    return normalizeLanguageOverride(raw ?? undefined)
+  } catch (_) {
+    return undefined
+  }
+}
 
