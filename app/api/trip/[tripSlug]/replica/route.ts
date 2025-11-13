@@ -3,7 +3,8 @@ import logger from '@/lib/core/logger'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import { planSaveOperations } from '@/lib/travel/plan-save'
-import { generateUniqueSlug } from '@/lib/slug-utils'
+//import { generateUniqueSlug } from '@/lib/slug-utils'
+import { generateUniqueSlug } from '@/lib/utils/slug'
 
 export async function POST(
   request: NextRequest,
