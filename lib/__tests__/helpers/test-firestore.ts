@@ -4,8 +4,8 @@
  * Firestore エミュレータを使用したテストを簡単に実行するためのヘルパー関数を提供します。
  */
 
-import { initializeApp, getApps, cert, type App } from 'firebase-admin/app'
-import { getFirestore, type Firestore } from 'firebase-admin/firestore'
+import { initializeApp, getApps, type App } from 'firebase-admin/app'
+import { getFirestore, connectFirestoreEmulator, type Firestore } from 'firebase-admin/firestore'
 
 const TEST_PROJECT_ID = 'test-project'
 const EMULATOR_HOST = 'localhost'
@@ -39,28 +39,44 @@ export function getTestFirestore(): Firestore {
     })
   }
 
-  // テスト用Firebase Admin SDKアプリを初期化
+  // テスト用Firebase Admin SDKアプリを初期化（エミュレータ用）
   if (!testApp) {
-    testApp = initializeApp(
-      {
-        projectId: TEST_PROJECT_ID,
-        credential: cert({
+    // エミュレータ環境では認証情報は不要
+    // 既存のアプリを確認し、なければ新規作成
+    const existingApps = getApps()
+    if (existingApps.length > 0) {
+      // 既存のアプリがある場合は、それを削除せず、名前付きで新規作成
+      testApp = initializeApp(
+        {
           projectId: TEST_PROJECT_ID,
-          clientEmail: 'test@test-project.iam.gserviceaccount.com',
-          privateKey: '-----BEGIN PRIVATE KEY-----\nMOCK_PRIVATE_KEY\n-----END PRIVATE KEY-----\n',
-        }),
-      },
-      `test-${Date.now()}`
-    )
+        },
+        `test-${Date.now()}`
+      )
+    } else {
+      testApp = initializeApp({
+        projectId: TEST_PROJECT_ID,
+      })
+    }
   }
 
   testFirestore = getFirestore(testApp)
   
-  // エミュレータへの接続を設定
-  testFirestore.settings({
-    host: `${EMULATOR_HOST}:${FIRESTORE_EMULATOR_PORT}`,
-    ssl: false,
-  })
+  // エミュレータへの接続を設定（connectFirestoreEmulatorは使用できないため、settingsで設定）
+  // 注意: Admin SDKでは、環境変数 FIRESTORE_EMULATOR_HOST が設定されていれば自動的にエミュレータに接続される
+  // 明示的にsettingsで設定する場合：
+  try {
+    // settings()は既に設定されている場合はエラーになるため、try-catchで囲む
+    testFirestore.settings({
+      host: `${EMULATOR_HOST}:${FIRESTORE_EMULATOR_PORT}`,
+      ssl: false,
+    })
+  } catch (error) {
+    // 既に設定されている場合は無視
+    // @ts-expect-error - settings()のエラーを無視
+    if (error.code !== 'already-initialized') {
+      throw error
+    }
+  }
 
   return testFirestore
 }
