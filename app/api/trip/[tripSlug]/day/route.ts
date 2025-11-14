@@ -6,7 +6,7 @@ import { adminDayOperations, adminTripOperations } from '@/lib/firebase/admin-op
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
+  { params }: { params: { tripSlug: string } }
 ) {
   try {
     // Get authorization header
@@ -21,7 +21,7 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { tripSlug } = await params
+    const { tripSlug } = params
 
     const resolvedTrip = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolvedTrip) {

@@ -433,7 +433,7 @@ export default function TripMap({
         google.maps.event.clearInstanceListeners(createdMap)
       }
     }
-  }, [initialCenterKey, user, hasInitialCenter, initialCenterLat, initialCenterLng])
+  }, [initialCenterKey, user])
 
   // itineraries が変更された時にマーカーとルートを更新
   useEffect(() => {
@@ -690,9 +690,6 @@ export default function TripMap({
     focusMode,
     selectedItineraryId,
     initialCenterKey,
-    initialCenterLat,
-    initialCenterLng,
-    hasInitialCenter,
     scrollSyncEnabled
   ])
 

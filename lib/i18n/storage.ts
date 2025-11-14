@@ -48,8 +48,12 @@ export function setLanguageOverrideClient(lang: SupportedLanguage | ''): void {
 
 export function normalizeLanguageOverride(raw: string | null | undefined): SupportedLanguage | undefined {
   if (!raw) return undefined
-  const decoded = decodeURIComponent(raw)
-  return isSupportedLanguage(decoded) ? decoded : undefined
+  try {
+    const decoded = decodeURIComponent(raw)
+    return isSupportedLanguage(decoded) ? decoded : undefined
+  } catch {
+    return undefined
+  }
 }
 
 export function getLanguageOverrideFromCookies(cookieStore: CookieStoreLike): SupportedLanguage | undefined {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import { adminTripOperations } from '@/lib/firebase/admin-operation'
+import { adminTripOperations, adminDayOperations } from '@/lib/firebase/admin-operation'
 import { planSaveOperations } from '@/lib/travel/plan-save'
 //import { generateUniqueSlug } from '@/lib/slug-utils'
 import { generateUniqueSlug } from '@/lib/utils/slug'
@@ -9,7 +9,7 @@ import { COLLECTIONS } from '@/lib/firebase/firestore'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
+  { params }: { params: { tripSlug: string } }
 ) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -21,7 +21,7 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { tripSlug } = await params
+    const { tripSlug } = params
 
     const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolved) {
@@ -38,8 +38,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const replicaResult = await planSaveOperations.createReplicaFromTripTemplate(templateTripId, userId)
-
+    // バリデーションを先に実行（replica作成前に）
     const body = await request.json().catch(() => ({}))
     const startDateRaw = typeof body.startDate === 'string' ? body.startDate : ''
     const startDate = startDateRaw ? new Date(startDateRaw) : null
@@ -48,21 +47,26 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid start date' }, { status: 400 })
     }
 
+    // テンプレートのday_countを確認して、startDateの必要性を検証
+    const templateDays = await adminDayOperations.getDaysByTripId(templateTripId)
+    const derivedDayCount =
+      templateTrip.day_count && templateTrip.day_count > 0
+        ? templateTrip.day_count
+        : templateDays.length
+
+    if (derivedDayCount > 0 && !startDate) {
+      return NextResponse.json({ error: 'Start date is required for this template' }, { status: 400 })
+    }
+
+    // バリデーション通過後にreplicaを作成
+    const replicaResult = await planSaveOperations.createReplicaFromTripTemplate(templateTripId, userId)
+
     const userTrips = await adminTripOperations.getTripsByUserId(userId)
     const existingSlugs = userTrips
       .map((trip) => trip.slug)
       .filter((slug): slug is string => Boolean(slug))
 
     const newSlug = generateUniqueSlug(replicaResult.trip.title, existingSlugs)
-
-    const derivedDayCount =
-      templateTrip.day_count && templateTrip.day_count > 0
-        ? templateTrip.day_count
-        : replicaResult.days.length
-
-    if (derivedDayCount > 0 && !startDate) {
-      return NextResponse.json({ error: 'Start date is required for this template' }, { status: 400 })
-    }
 
     const updatePayload: Record<string, unknown> = {
       slug: newSlug,

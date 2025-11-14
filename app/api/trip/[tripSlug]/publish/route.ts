@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth } from '@/lib/firebase/admin'
 import { adminTripOperations } from '@/lib/firebase/admin-operation'
-import { generateUniqueSlug } from '@/lib/utils/slug'
+import { generateUniqueSlug, generateSlug } from '@/lib/utils/slug'
 import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
 
@@ -11,7 +11,7 @@ type PublishRequestBody = {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
+  { params }: { params: { tripSlug: string } }
 ) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -23,7 +23,7 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { tripSlug } = await params
+    const { tripSlug } = params
 
     const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolved) {
@@ -50,17 +50,23 @@ export async function POST(
     }
 
     if (requestedSlug && requestedSlug !== trip.slug) {
+      // サーバー側でslug形式をバリデーション・正規化（防御的実装）
+      const normalizedSlug = generateSlug(requestedSlug)
+      if (normalizedSlug !== requestedSlug) {
+        return NextResponse.json({ error: 'Invalid slug format' }, { status: 400 })
+      }
+
       const userTrips = await getUserTrips()
       const existingSlugs = userTrips
         .filter(existingTrip => existingTrip.id !== resolvedTripId)
         .map(existingTrip => existingTrip.slug)
         .filter((value): value is string => Boolean(value))
 
-      if (existingSlugs.includes(requestedSlug)) {
+      if (existingSlugs.includes(normalizedSlug)) {
         return NextResponse.json({ error: 'Slug already in use' }, { status: 409 })
       }
 
-      finalSlug = requestedSlug
+      finalSlug = normalizedSlug
     }
 
     if (!finalSlug) {

@@ -89,7 +89,7 @@ Firestore/Storage のコスト最適化：
 
 Next.js App Router の **Route Groups** を活用し、異なるユーザー体験を明確に分離します。
 
-```
+```text
 app/
 ├── (discover)/              # 発見・探索（SNS的体験）
 │   ├── feed/
@@ -156,7 +156,7 @@ export default function TripLayout({
 
 **コメント詳細をモーダルとページの両方で表示:**
 
-```
+```text
 app/
 ├── (planner)/
 │   └── [userSlug]/
@@ -202,7 +202,7 @@ export default function CommentPage({ params }: { params: { commentId: string } 
 
 ### 完全なディレクトリ構造
 
-```
+```text
 app/
 ├── (discover)/                         # Route Group: 発見・探索
 │   ├── feed/
@@ -273,7 +273,7 @@ app/
 
 ### Components 構造
 
-```
+```text
 components/
 ├── social/                              # SNS機能コンポーネント
 │   ├── TripFeed.tsx                    # Client Component: フィード表示
@@ -326,7 +326,7 @@ interface Trip {
 ```
 
 **Composite Indexes:**
-```
+```text
 - Collection: trips
   - Fields: access_level (ASC), published_at (DESC)
   - Fields: access_level (ASC), trending_score (DESC)
@@ -345,7 +345,7 @@ interface TripLike {
 ```
 
 **Composite Indexes:**
-```
+```text
 - Collection: trip_likes
   - Fields: trip_id (ASC), created_at (DESC)
   - Fields: user_id (ASC), created_at (DESC)
@@ -401,7 +401,7 @@ interface TripComment {
 ```
 
 **Composite Indexes:**
-```
+```text
 - Collection: trip_comments
   - Fields: trip_id (ASC), deleted (ASC), created_at (DESC)
   - Fields: parent_comment_id (ASC), created_at (ASC)
@@ -419,7 +419,7 @@ interface UserFollow {
 ```
 
 **Composite Indexes:**
-```
+```text
 - Collection: user_follows
   - Fields: follower_id (ASC), created_at (DESC)
   - Fields: following_id (ASC), created_at (DESC)
@@ -899,7 +899,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 ### タイムライン
 
-```
+```text
 2025 Q4: Phase 1 (Foundation)
   - Firestore スキーマ拡張
   - API Routes 実装

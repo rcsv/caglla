@@ -11,8 +11,9 @@ import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useEffect, useRef, useCallback } from 'react'
 import { toDate } from '@/lib/firebase/timestamp-utils'
-import { t } from '@/lib/i18n'
+import { t, getUserLanguage } from '@/lib/i18n'
 import Loading from '@/components/common/Loading'
+import logger from '@/lib/core/logger'
 
 interface TripItineraryViewProps {
   trip: Trip
@@ -76,7 +77,7 @@ export default function TripItineraryView({
   const itineraryRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const observerRef = useRef<IntersectionObserver | null>(null)
   const isUserScrollingRef = useRef(false)
-  const templateWithoutDates = Boolean(trip.is_template && !trip.start_date && !trip.end_date)
+  const templateWithoutDates = trip.is_template && !trip.start_date && !trip.end_date
 
   // itinerariesのタイトルを生成する関数
   const generateItinerarySummary = (day: Day): string => {
@@ -269,16 +270,13 @@ export default function TripItineraryView({
                             if (day.date) {
                               try {
                                 const dayDate = toDate(day.date)
-                                if (!dayDate) {
-                                  return {
-                                    text: t('tripItinerary.invalidDate'),
-                                    className: 'text-gray-900'
-                                  }
-                                }
                                 const month = dayDate.getMonth() + 1
                                 const dayNum = dayDate.getDate()
-                                const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-                                const dayName = dayNames[dayDate.getDay()]
+                                
+                                // ユーザーの言語設定に基づいて曜日名をローカライズ
+                                const language = getUserLanguage()
+                                const locale = language === 'ja' ? 'ja-JP' : 'en-US'
+                                const dayName = new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(dayDate)
 
                                 const dayOfWeek = dayDate.getDay()
                                 const colorClass =
@@ -292,7 +290,11 @@ export default function TripItineraryView({
                                   text: `${month}/${dayNum} ${dayName}`,
                                   className: colorClass
                                 }
-                              } catch {
+                              } catch (error) {
+                                // 開発環境でのみエラーをログ出力
+                                if (process.env.NODE_ENV === 'development') {
+                                  logger.error('Invalid date for day:', day.id, error)
+                                }
                                 return {
                                   text: t('tripItinerary.invalidDate'),
                                   className: 'text-gray-900'

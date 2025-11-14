@@ -268,7 +268,13 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
   }
 
   function getMonthAbbr(dayTitle: string): string {
-    if (templateWithoutDates || /^Day\s+\d+/i.test(dayTitle)) {
+    if (templateWithoutDates) {
+      return t('nav.dayAbbr')
+    }
+    // i18n対応: t('nav.dayPrefix')からパターンを導出
+    const dayPrefix = t('nav.dayPrefix')
+    const dayPattern = new RegExp(`^${dayPrefix}\\s+\\d+`, 'i')
+    if (dayPattern.test(dayTitle)) {
       return t('nav.dayAbbr')
     }
     const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 
@@ -282,7 +288,10 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
   }
 
   function getDayNumber(dayTitle: string, fallbackDayNumber?: number): string {
-    const dayMatch = dayTitle.match(/Day\s+(\d+)/i)
+    // i18n対応: t('nav.dayPrefix')からパターンを導出
+    const dayPrefix = t('nav.dayPrefix')
+    const dayPattern = new RegExp(`${dayPrefix}\\s+(\\d+)`, 'i')
+    const dayMatch = dayTitle.match(dayPattern)
     if (dayMatch) {
       return dayMatch[1]
     }

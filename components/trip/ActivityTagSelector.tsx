@@ -9,7 +9,6 @@ import {
   getSecondaryCategoryLabel,
 } from '@/lib/data/activity-categories'
 import { t } from '@/lib/i18n'
-import type { PrimaryCategoryType } from '@/lib/core/types'
 
 const NEUTRAL_SELECT_CLASSES =
   'bg-white border border-gray-200 text-gray-800 focus:ring-emerald-500 focus:border-emerald-500'

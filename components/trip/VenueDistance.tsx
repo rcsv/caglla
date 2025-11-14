@@ -103,6 +103,8 @@ export default function VenueDistance({
       } catch (err) {
         logger.error('❌ Error calculating distance:', err)
         setError(t('venueDistance.calculationFailed'))
+        // エラー時にキャッシュをクリアして、再試行を可能にする
+        lastPlacesKeyRef.current = null
       } finally {
         setIsLoading(false)
       }

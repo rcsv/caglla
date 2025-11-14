@@ -45,10 +45,9 @@ export function ScheduleInfoDisplay({
   }
 
   const handleReservationClick = (event: MouseEvent) => {
+    if (!canEditReservation) return
     event.stopPropagation()
-    if (canEditReservation) {
-      onReservationEdit?.()
-    }
+    onReservationEdit?.()
   }
 
   const timeClass = canEditTime
@@ -100,7 +99,7 @@ export function ScheduleInfoDisplay({
       {/* 費用要素 */}
       <div className="flex items-center space-x-1">
         <IconRenderer iconName="money" className="w-4 h-4" color="#10B981" />
-        {costAmount ? (
+        {costAmount !== undefined && costAmount !== null ? (
           <span 
             className={costClass}
             onClick={handleCostClick}
