@@ -26,12 +26,19 @@ describe('backfillSocialStats integration', () => {
   })
 
   beforeEach(async () => {
-    // テストデータをクリア
+    // テストデータをクリア（他のテストスイートから残っているデータも含む）
     const tripsSnapshot = await db.collection(COLLECTIONS.TRIPS).get()
     const batch = db.batch()
     tripsSnapshot.docs.forEach((doc) => {
       batch.delete(doc.ref)
     })
+    
+    // 他のコレクションもクリーンアップ（テスト間のデータ干渉を防ぐ）
+    const likesSnapshot = await db.collection(COLLECTIONS.TRIP_LIKES).get()
+    likesSnapshot.docs.forEach((doc) => {
+      batch.delete(doc.ref)
+    })
+    
     await batch.commit()
   })
 
