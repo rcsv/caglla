@@ -360,7 +360,7 @@ export default function ScheduleCard({
             </ScheduleCardImage>
 
             {/* 中央: メインコンテンツ */}
-            <div className="flex-1 p-4 min-w-0">
+            <div className="flex-1 min-w-0 py-4 pl-4 pr-2 md:pr-3">
               {/* タイトルとStar Rating */}
               <div className="flex items-center space-x-2 mb-3">
                 {isEditingTitle ? (
@@ -368,7 +368,7 @@ export default function ScheduleCard({
                     ref={titleRef}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="font-semibold text-gray-900 text-lg bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 flex-1"
+                    className="font-semibold text-gray-900 text-xl bg-transparent border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 flex-1"
                     autoFocus
                     onBlur={async () => {
                       if (title !== itinerary.title) {
@@ -387,7 +387,7 @@ export default function ScheduleCard({
                   />
                 ) : (
                   <h4 
-                    className={canEdit ? "font-semibold text-gray-900 text-lg cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors" : "font-semibold text-gray-900 text-lg px-2 py-1"}
+                    className={canEdit ? "font-semibold text-gray-900 text-xl cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors" : "font-semibold text-gray-900 text-xl px-2 py-1"}
                     onClick={canEdit ? () => setIsEditingTitle(true) : undefined}
                   >
                     {itinerary.title}
@@ -460,7 +460,7 @@ export default function ScheduleCard({
               </div>
 
               {/* 時間・費用・予約を1行にインラインで配置 */}
-              <div className="mb-4 p-2">
+              <div className="mb-3 px-2 py-0">
                 {isEditingTime ? (
                   <InlineTimeEditor
                     startTime={tempStartTime}

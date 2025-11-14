@@ -4,10 +4,9 @@ import { t } from '@/lib/i18n'
 
 import { useAuth } from '@/lib/contexts/auth'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import AddScheduleModal from '@/components/modals/AddScheduleModal'
 import ExportDataModal from '@/components/modals/ExportDataModal'
-import ICalPublishModal from '@/components/modals/ICalPublishModal'
 import Loading from '@/components/common/Loading'
 import { Icon } from '@iconify/react'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
@@ -27,6 +26,7 @@ import { useUserData } from '@/lib/contexts/user-data'
 import { useSubscription } from '@/lib/contexts/subscription'
 import { exportTripToPdf, canExportToPdf } from '@/lib/utils/export-helpers'
 import { canEditTrip } from '@/lib/core/permissions'
+import TemplateReplicaModal from '@/components/modals/TemplateReplicaModal'
 
 export default function SlugBasedTripPage() {
   const { user, loading, logout } = useAuth()
@@ -41,7 +41,6 @@ export default function SlugBasedTripPage() {
   const [fetchError, setFetchError] = useState<'not-found' | 'forbidden' | 'unauthorized' | 'unknown' | null>(null)
   const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
-  const [showICalPublishModal, setShowICalPublishModal] = useState(false)
   const [showEditBaseInfoModal, setShowEditBaseInfoModal] = useState(false)
   const [pdfExporting, setPdfExporting] = useState(false)
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
@@ -66,6 +65,8 @@ export default function SlugBasedTripPage() {
   const scrollToItineraryRef = useRef<((itineraryId: string) => void) | null>(null) // Itineraryへのスクロール関数
   const [loadingDayIds, setLoadingDayIds] = useState<Set<string>>(new Set()) // 日程ごとのローディング状態
   const [replicaLoading, setReplicaLoading] = useState(false)
+  const [publishLoading, setPublishLoading] = useState(false)
+  const [showReplicaModal, setShowReplicaModal] = useState(false)
 
   // クエリ: view / day / section を読み取り（デフォルトは summary）
   const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
@@ -226,13 +227,22 @@ export default function SlugBasedTripPage() {
     window.open(previewUrl, '_blank')
   }
 
-  const handleReplica = async () => {
+  const handleOpenReplicaModal = () => {
+    if (!trip || !user) return
+    setShowReplicaModal(true)
+  }
+
+  const handleReplicaConfirm = async (startDate: string) => {
     if (!trip || !user) return
 
     try {
       setReplicaLoading(true)
       const response = await makeAuthenticatedRequest(`/api/trip/${trip.slug || trip.id}/replica`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ startDate })
       })
 
       if (!response.ok) {
@@ -256,12 +266,66 @@ export default function SlugBasedTripPage() {
         return
       }
 
+      setShowReplicaModal(false)
       router.push(`/${targetUserSlug}/${targetSlug}`)
     } catch (error) {
       logger.error('Replica creation failed:', error)
       alert(t('trip.template.replicateFailed'))
     } finally {
       setReplicaLoading(false)
+    }
+  }
+
+  const handlePublish = async () => {
+    if (!trip || !user) return
+
+    const previousSlug = trip.slug
+
+    try {
+      setPublishLoading(true)
+      const slugOrId = trip.slug || trip.id
+
+      const response = await makeAuthenticatedRequest(`/api/trip/${slugOrId}/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        alert(errorData.error || t('trip.publish.failed'))
+        return
+      }
+
+      const data = await response.json()
+      const publishedTrip = data.trip
+
+      if (!publishedTrip?.id) {
+        alert(t('trip.publish.failed'))
+        return
+      }
+
+      const refreshedResponse = await makeAuthenticatedRequest(`/api/trip/${publishedTrip.id}`)
+      if (!refreshedResponse.ok) {
+        alert(t('trip.publish.failed'))
+        return
+      }
+
+      const refreshedTrip = await refreshedResponse.json()
+      setTrip(refreshedTrip)
+      alert(t('trip.publish.success'))
+
+      const newSlug = refreshedTrip.slug || publishedTrip.slug || previousSlug
+      const creatorSlug = refreshedTrip.creator?.slug || userData?.slug || user.uid
+      if (newSlug && creatorSlug && newSlug !== previousSlug) {
+        router.replace(`/${creatorSlug}/${newSlug}`)
+      }
+    } catch (error) {
+      logger.error('Trip publish failed:', error)
+      alert(t('trip.publish.failed'))
+    } finally {
+      setPublishLoading(false)
     }
   }
 
@@ -639,21 +703,18 @@ export default function SlugBasedTripPage() {
   }
 
   // 選択された日程のItineraryを取得する関数（missingPlaceDataCacheから補完）
-  const getFilteredItineraries = (): Itinerary[] => {
+  const filteredItineraries = useMemo(() => {
     if (!trip?.days) return []
-    
+
     let itineraries: Itinerary[]
-    
+
     if (selectedDayId) {
-      // 選択された日程のItineraryのみを返す
       const selectedDay = trip.days.find(day => day.id === selectedDayId)
       itineraries = selectedDay?.itineraries || []
     } else {
-      // フィルタが選択されていない場合は全てのItineraryを返す
       itineraries = trip.days.flatMap(day => day.itineraries || [])
     }
-    
-    // missingPlaceDataCacheからplace_dataを補完
+
     return itineraries.map(itinerary => {
       if (itinerary.place_id && !itinerary.place_data && missingPlaceDataCache.has(itinerary.place_id)) {
         return {
@@ -663,7 +724,9 @@ export default function SlugBasedTripPage() {
       }
       return itinerary
     })
-  }
+  }, [trip?.days, selectedDayId, missingPlaceDataCache])
+
+  const getFilteredItineraries = useCallback((): Itinerary[] => filteredItineraries, [filteredItineraries])
 
   const handleScheduleAdded = async (newItinerary: any) => {
     if (!trip) return
@@ -1282,6 +1345,12 @@ export default function SlugBasedTripPage() {
   // 権限判定：ユーザーがこのトリップの所有者かどうか
   const canEdit = canEditTrip(user, trip)
   const isTemplateTrip = Boolean(trip.is_template)
+  const templateDayCount = isTemplateTrip
+    ? (typeof trip.day_count === 'number' && trip.day_count > 0
+        ? trip.day_count
+        : trip.days?.length ?? 0)
+    : 0
+  const canPublishTrip = canEdit && trip.access_level !== 'public'
 
   // メニュー項目を構築（編集権限がない場合は編集系を除外）
   const menuItems = [
@@ -1300,13 +1369,13 @@ export default function SlugBasedTripPage() {
         icon: 'mdi:pencil',
         onClick: () => setShowEditBaseInfoModal(true),
       },
-      {
-        id: 'calendar-publish',
-        label: t('trip.calendarPublish'),
-        icon: 'mdi:calendar-sync',
-        onClick: () => setShowICalPublishModal(true),
-        disabled: userPlan === 'season_traveler',
-      },
+      ...(canPublishTrip ? [{
+        id: 'publish-trip',
+        label: isTemplateTrip ? t('trip.publish.templateButton') : t('trip.publish.button'),
+        icon: 'mdi:upload',
+        onClick: handlePublish,
+        disabled: publishLoading
+      }] : []),
       {
         id: 'download-travel-book',
         label: 'Download Travel Book',
@@ -1364,8 +1433,11 @@ export default function SlugBasedTripPage() {
           trip={trip}
           canEdit={canEdit}
           canReplica={isTemplateTrip && trip.access_level === 'public' && Boolean(user)}
-          onReplica={isTemplateTrip ? handleReplica : undefined}
+          onReplica={isTemplateTrip ? handleOpenReplicaModal : undefined}
           replicaLoading={replicaLoading}
+          canPublish={canPublishTrip}
+          onPublish={canPublishTrip ? handlePublish : undefined}
+          publishLoading={publishLoading}
           onUpdateTrip={setTrip}
           onDeleteTrip={() => {
             // コンテキストから旅行を削除してから遷移
@@ -1423,6 +1495,18 @@ export default function SlugBasedTripPage() {
         <TripChecklistView tripId={trip.id} readOnly={!canEdit} />
       )}
 
+      <TemplateReplicaModal
+        isOpen={showReplicaModal}
+        onClose={() => {
+          if (replicaLoading) return
+          setShowReplicaModal(false)
+        }}
+        onConfirm={handleReplicaConfirm}
+        dayCount={templateDayCount}
+        loading={replicaLoading}
+        templateTitle={trip.title}
+      />
+
       {/* Add Schedule Modal */}
       {showAddScheduleModal && selectedDayId && (
         <AddScheduleModal
@@ -1447,16 +1531,6 @@ export default function SlugBasedTripPage() {
         />
       )}
 
-      {/* iCal Publish Modal */}
-      {showICalPublishModal && (
-        <ICalPublishModal
-          isOpen={showICalPublishModal}
-          onClose={() => setShowICalPublishModal(false)}
-          trip={trip}
-          onUpdate={setTrip}
-        />
-      )}
-
       {/* Edit Base Info Modal */}
       {showEditBaseInfoModal && trip && (
         <TripEditor
@@ -1474,6 +1548,8 @@ export default function SlugBasedTripPage() {
           hideDestinationEdit={true}
           initialEditing={true}
           hideEditButton={true}
+          disableDateFields={Boolean(trip.is_template)}
+          disablePublishControls={Boolean(trip.is_template)}
         />
       )}
     </TripPageLayout>

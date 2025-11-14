@@ -61,6 +61,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
   const searchParams = useSearchParams()
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['itinerary']))
   const [showExtraControls, setShowExtraControls] = useState(false)
+  const templateWithoutDates = Boolean(trip.is_template && (!trip.start_date || !trip.end_date))
 
   const updateQuery = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -204,11 +205,19 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
 
   // 日付のタイトルを生成（簡潔版）
   function getDayTitle(day: Day): string {
+    if (templateWithoutDates || !day.date) {
+      const dayNumber =
+        typeof day.day_number === 'number'
+          ? day.day_number
+          : (trip.days?.findIndex(d => d.id === day.id) ?? -1) + 1
+      return `${t('nav.dayPrefix')} ${dayNumber > 0 ? dayNumber : ''}`.trim()
+    }
+
     let date: Date
     try {
       date = toDate(day.date)
     } catch {
-      return `${t('nav.dayPrefix')} ${day.day_number ?? ''}`
+      return `${t('nav.dayPrefix')} ${day.day_number ?? ''}`.trim()
     }
     const month = date.getMonth() + 1
     const dayNum = date.getDate()
@@ -259,6 +268,15 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
   }
 
   function getMonthAbbr(dayTitle: string): string {
+    if (templateWithoutDates) {
+      return t('nav.dayAbbr')
+    }
+    // i18n対応: t('nav.dayPrefix')からパターンを導出
+    const dayPrefix = t('nav.dayPrefix')
+    const dayPattern = new RegExp(`^${dayPrefix}\\s+\\d+`, 'i')
+    if (dayPattern.test(dayTitle)) {
+      return t('nav.dayAbbr')
+    }
     const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 
                        'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
     const match = dayTitle.match(/(\d+)\/(\d+)/)
@@ -269,10 +287,20 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     return 'JAN'
   }
 
-  function getDayNumber(dayTitle: string): string {
+  function getDayNumber(dayTitle: string, fallbackDayNumber?: number): string {
+    // i18n対応: t('nav.dayPrefix')からパターンを導出
+    const dayPrefix = t('nav.dayPrefix')
+    const dayPattern = new RegExp(`${dayPrefix}\\s+(\\d+)`, 'i')
+    const dayMatch = dayTitle.match(dayPattern)
+    if (dayMatch) {
+      return dayMatch[1]
+    }
     const match = dayTitle.match(/(\d+)\/(\d+)/)
     if (match) {
       return match[2]
+    }
+    if (typeof fallbackDayNumber === 'number') {
+      return String(fallbackDayNumber)
     }
     return '1'
   }
@@ -423,7 +451,10 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                               <div className={`text-base font-light leading-[1.1] tracking-tight ${
                                 getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day)
                               }`}>
-                                {getDayNumber(item.title)}
+                                {getDayNumber(
+                                  item.title,
+                                  trip.days?.find(d => d.id === item.id.replace('day-', ''))?.day_number
+                                )}
                               </div>
                             </>
                           ) : (

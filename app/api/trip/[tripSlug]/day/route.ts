@@ -6,7 +6,7 @@ import { adminDayOperations, adminTripOperations } from '@/lib/firebase/admin-op
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
+  { params }: { params: { tripSlug: string } }
 ) {
   try {
     // Get authorization header
@@ -21,24 +21,35 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { tripSlug } = await params
-    const body = await request.json()
-    
-    // tripSlugからtripIdを取得する必要があると思われますが、
-    // 現状はtripIdとして扱っているため、tripSlugをそのままtripIdとして使用
-    const tripId = tripSlug
-    
+    const { tripSlug } = params
+
+    const resolvedTrip = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
+    if (!resolvedTrip) {
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    }
+
+    const { id: tripId, trip } = resolvedTrip
+
+    if (trip.user_id !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // 既存の日程を取得して次のday_numberを決定
     const existingDays = await adminDayOperations.getDaysByTripId(tripId)
     const nextDayNumber = existingDays.length > 0 
       ? Math.max(...existingDays.map(d => d.day_number)) + 1 
       : 1
 
-    // 新しい日程の日付を計算（最後の日程の翌日）
-    let newDate: Date
-    if (existingDays.length > 0) {
+    const isTemplateTrip = Boolean(trip.is_template)
+    const hasStartDate = Boolean(trip.start_date)
+
+    let newDate: Date | undefined
+
+    if (isTemplateTrip) {
+      newDate = undefined
+    } else if (existingDays.length > 0) {
       const lastDay = existingDays.find(d => d.day_number === Math.max(...existingDays.map(d => d.day_number)))
-      if (lastDay && lastDay.date) {
+      if (lastDay?.date) {
         const lastDate = toDateOrNull(lastDay.date)
         if (!lastDate) {
           return NextResponse.json(
@@ -48,24 +59,41 @@ export async function POST(
         }
         newDate = new Date(lastDate)
         newDate.setDate(newDate.getDate() + 1)
+      } else if (hasStartDate) {
+        const start = toDateOrNull(trip.start_date)
+        newDate = start ? new Date(start) : new Date()
       } else {
         newDate = new Date()
       }
     } else {
-      newDate = new Date()
+      if (hasStartDate) {
+        const start = toDateOrNull(trip.start_date)
+        newDate = start ? new Date(start) : new Date()
+      } else {
+        newDate = new Date()
+      }
     }
 
-    // 新しい日程を作成
-    const newDay = await adminDayOperations.createDay({
+    const dayPayload: {
+      trip_id: string
+      day_number: number
+      date?: Date
+    } = {
       trip_id: tripId,
-      day_number: nextDayNumber,
-      date: newDate
-    })
+      day_number: nextDayNumber
+    }
 
-    // tripのend_dateを新しい日程の日付に更新
-    await adminTripOperations.updateTrip(tripId, {
-      end_date: newDate
-    })
+    if (newDate && !isTemplateTrip) {
+      dayPayload.date = newDate
+    }
+
+    const newDay = await adminDayOperations.createDay(dayPayload)
+    
+    if (newDate && !isTemplateTrip) {
+      await adminTripOperations.updateTrip(tripId, {
+        end_date: newDate
+      })
+    }
 
     return NextResponse.json(newDay)
   } catch (error) {

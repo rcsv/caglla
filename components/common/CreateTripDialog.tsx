@@ -17,7 +17,6 @@ import { getZIndexClass } from '@/lib/core/z-index'
 import { Input } from '@/components/common/Input'
 import { Textarea } from '@/components/common/Textarea'
 import { Select } from '@/components/common/Select'
-import { Toggle } from '@/components/common/Toggle'
 import { Button } from '@/components/common/Button'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { t } from '@/lib/i18n'
@@ -31,6 +30,22 @@ interface CreateTripDialogProps {
   onClose: () => void
   onSuccess: () => void
 }
+
+type CreateMode = 'trip' | 'template'
+
+const createInitialFormState = () => ({
+  title: '',
+  description: '',
+  destination: '',
+  destinationPlace: undefined as PlaceData | undefined,
+  startDate: '',
+  endDate: '',
+  dayCount: 3,
+  imageUrl: '',
+  defaultCurrency: 'JPY' as string
+})
+
+type CreateTripFormState = ReturnType<typeof createInitialFormState>
 
 /**
  * Dialog modal for creating a new trip, collecting destination, travel dates, optional title/description/image, and access level.
@@ -50,19 +65,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   // 現在のユーザー言語を取得（date inputのlang属性用）
   const currentLanguage = getUserLanguage(user)
   
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    destination: '',
-    destinationPlace: undefined as PlaceData | undefined,
-    startDate: '',
-    endDate: '',
-    accessLevel: 'private' as 'private' | 'public',
-    isTemplate: false,
-    dayCount: 0,
-    imageUrl: '',
-    defaultCurrency: 'JPY' as string
-  })
+  const [formData, setFormData] = useState<CreateTripFormState>(createInitialFormState)
+  const [mode, setMode] = useState<CreateMode>('trip')
   const [submitting, setSubmitting] = useState(false)
   const [dateError, setDateError] = useState('')
   const [dateAutoAdjusted, setDateAutoAdjusted] = useState(false)
@@ -75,7 +79,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   // RestrictionProviderを使用してプラン制限をチェック
   const canCreateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRIPS, tripCount + 1)
   const canCreatePrivateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_PRIVATE_TRIPS, privateTripCount + 1)
-  const publicTemplateEnabled = RestrictionProvider.hasFeature(userPlanId, RestrictionType.PUBLIC_TEMPLATE)
+  const canUseTemplateMode = RestrictionProvider.hasFeature(userPlanId, RestrictionType.PUBLIC_TEMPLATE)
   
   const remainingTrips = RestrictionProvider.getRemaining(userPlanId, RestrictionType.MAX_TRIPS, tripCount)
   const remainingPrivateTrips = RestrictionProvider.getRemaining(userPlanId, RestrictionType.MAX_PRIVATE_TRIPS, privateTripCount)
@@ -165,7 +169,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     }
   }, [formData.destinationPlace?.place_id, user])
 
-  const isTemplateMode = formData.accessLevel === 'public' && formData.isTemplate
+  const isTemplateMode = mode === 'template'
 
   // 旅行日数の計算
   const calculateTravelDays = (startDate: string, endDate: string): number => {
@@ -184,6 +188,23 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     ? true
     : RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))
 
+  const meetsTemplateRequirements = isTemplateMode ? formData.dayCount > 0 : true
+  const meetsDateRequirements = isTemplateMode
+    ? true
+    : Boolean(formData.startDate && formData.endDate && !dateError)
+  const meetsAccessRestrictions = canCreatePrivateTrip
+
+  const canSubmitForm =
+    Boolean(formData.destinationPlace) &&
+    meetsTemplateRequirements &&
+    meetsDateRequirements &&
+    meetsAccessRestrictions &&
+    canCreateTrip &&
+    canCreateTravelDays &&
+    (!isTemplateMode || canUseTemplateMode)
+
+  const isSubmitDisabled = submitting || !canSubmitForm
+
   // 日付のバリデーション
   const validateDates = (startDate: string, endDate: string): string => {
     if (!startDate || !endDate) return ''
@@ -198,13 +219,21 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     return ''
   }
 
-  const handleTemplateToggle = (checked: boolean) => {
+  const handleModeChange = (nextMode: CreateMode) => {
+    if (nextMode === mode) return
+    if (nextMode === 'template' && !canUseTemplateMode) {
+      return
+    }
+    setMode(nextMode)
     setFormData(prev => ({
       ...prev,
-      isTemplate: checked,
-      startDate: checked ? '' : prev.startDate,
-      endDate: checked ? '' : prev.endDate,
-      dayCount: checked ? (prev.dayCount && prev.dayCount > 0 ? prev.dayCount : 3) : prev.dayCount
+      startDate: nextMode === 'trip' ? prev.startDate : '',
+      endDate: nextMode === 'trip' ? prev.endDate : '',
+      dayCount: nextMode === 'template'
+        ? prev.dayCount && prev.dayCount > 0
+          ? prev.dayCount
+          : 3
+        : prev.dayCount
     }))
     setDateError('')
     setDateAutoAdjusted(false)
@@ -261,9 +290,8 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
         destination: formData.destination,
         destinationPlaceId: formData.destinationPlace?.place_id,
         destinationPlace: formData.destinationPlace,
-        startDate: isTemplateMode ? '' : formData.startDate,
-        endDate: isTemplateMode ? '' : formData.endDate,
-        accessLevel: formData.accessLevel,
+        startDate: isTemplateMode ? undefined : formData.startDate,
+        endDate: isTemplateMode ? undefined : formData.endDate,
         imageUrl: formData.imageUrl || null,
         defaultCurrency: formData.defaultCurrency,
         isTemplate: isTemplateMode,
@@ -320,6 +348,9 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     const { name, value } = e.target
     setFormData(prev => {
       const newFormData = { ...prev, [name]: value }
+      if (mode !== 'trip') {
+        return newFormData
+      }
       let autoAdjusted = false
       
       // 出発日が変更された場合、帰宅日を自動的に出発日と同じ日にする
@@ -353,7 +384,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     })
     
     // 日付が変更された場合は即座にバリデーションを実行
-    if (name === 'startDate' || name === 'endDate') {
+    if (mode === 'trip' && (name === 'startDate' || name === 'endDate')) {
       const newFormData = { ...formData, [name]: value }
       // 出発日が変更された場合、帰宅日も更新する
       if (name === 'startDate' && value && !formData.endDate) {
@@ -379,25 +410,35 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     }
     
     // フォームをリセット
-    setFormData({
-      title: '',
-      description: '',
-      destination: '',
-      destinationPlace: undefined,
-      startDate: '',
-      endDate: '',
-      accessLevel: 'private',
-      isTemplate: false,
-      dayCount: 0,
-      imageUrl: '',
-      defaultCurrency: 'JPY'
-    })
+    setFormData(createInitialFormState())
+    setMode('trip')
     setInferredCurrency(null)
     setDateError('')
     onClose()
   }
 
   if (!isOpen) return null
+
+  const modeOptions: Array<{
+    id: CreateMode
+    label: string
+    description: string
+    disabled?: boolean
+  }> = [
+    {
+      id: 'trip',
+      label: t('trip.create.mode.trip'),
+      description: t('trip.create.mode.tripDescription')
+    },
+    {
+      id: 'template',
+      label: t('trip.create.mode.template'),
+      description: canUseTemplateMode
+        ? t('trip.create.mode.templateDescription')
+        : t('trip.create.mode.templateDescriptionLocked'),
+      disabled: !canUseTemplateMode
+    }
+  ]
 
   return (
     <div className={`fixed inset-0 bg-black bg-opacity-50 ${getZIndexClass('FLOAT_MODAL')}`} style={{ margin: 0, top: 0 }}>
@@ -414,6 +455,46 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
           {/* Content */}
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-3">
+                  {t('trip.create.mode.label')}
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {modeOptions.map(option => {
+                    const isActive = mode === option.id
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => handleModeChange(option.id)}
+                        disabled={option.disabled}
+                        aria-pressed={isActive}
+                        className={`rounded-xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
+                          isActive
+                            ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                            : 'border-gray-200 bg-white hover:border-emerald-300'
+                        } ${option.disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+                      >
+                        <span className="text-base font-semibold text-gray-900">
+                          {option.label}
+                        </span>
+                        <span className="mt-2 block text-sm text-gray-600">
+                          {option.description}
+                        </span>
+                        {option.disabled && (
+                          <span className="mt-3 inline-block rounded bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">
+                            {t('trip.create.mode.templateUpgradeHint')}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="mt-3 text-xs text-gray-500">
+                  {t('trip.create.visibilityNotice')}
+                </p>
+              </div>
+
               {/* 必須項目 */}
               <div>
                 <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
@@ -621,54 +702,6 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                     )}
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t('trip.create.accessLevel.label')}
-                      </label>
-                      <Toggle
-                        label={t('trip.create.accessLevel.private.label')}
-                        checked={formData.accessLevel === 'private'}
-                        onChange={(e) => {
-                          setFormData(prev => ({
-                            ...prev,
-                        accessLevel: e.target.checked ? 'private' : 'public',
-                        isTemplate: e.target.checked ? false : prev.isTemplate
-                          }))
-                      if (e.target.checked) {
-                        setDateError('')
-                        setDateAutoAdjusted(false)
-                      }
-                        }}
-                      />
-                      <p className="mt-1 text-xs text-gray-500">
-                        {formData.accessLevel === 'private' 
-                          ? t('trip.create.accessLevel.private.description')
-                          : t('trip.create.accessLevel.public.description')
-                        }
-                      </p>
-
-                  {formData.accessLevel === 'public' && (
-                    <div className="mt-4">
-                      <Toggle
-                        label={t('trip.create.templateMode.label')}
-                        checked={formData.isTemplate}
-                        onChange={(event) => handleTemplateToggle(event.target.checked)}
-                        disabled={!publicTemplateEnabled}
-                        />
-                      <p className={`mt-1 text-xs ${publicTemplateEnabled ? 'text-gray-500' : 'text-red-500'}`}>
-                        {formData.isTemplate
-                          ? t('trip.create.templateMode.description.active')
-                          : t('trip.create.templateMode.description.inactive')}
-                      </p>
-                      {!publicTemplateEnabled && (
-                        <div className="mt-2 rounded-md border border-yellow-200 bg-yellow-50 p-3 text-xs text-yellow-700">
-                          {t('trip.template.upgradeRequired')}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                    </div>
-
-                    <div>
                       <label htmlFor="defaultCurrency" className="block text-sm font-medium text-gray-700 mb-2">
                         Default Currency
                       </label>
@@ -727,7 +760,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                 <Button
                   type="submit"
                   variant="primary"
-                  disabled={submitting || !formData.destinationPlace || !formData.startDate || !formData.endDate || !!dateError}
+                  disabled={isSubmitDisabled}
                 >
                   {submitting ? t('trip.create.submitting') : t('trip.create.submit')}
                 </Button>

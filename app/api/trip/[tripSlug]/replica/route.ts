@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import { adminTripOperations } from '@/lib/firebase/admin-operation'
+import { adminTripOperations, adminDayOperations } from '@/lib/firebase/admin-operation'
 import { planSaveOperations } from '@/lib/travel/plan-save'
 //import { generateUniqueSlug } from '@/lib/slug-utils'
 import { generateUniqueSlug } from '@/lib/utils/slug'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
+  { params }: { params: { tripSlug: string } }
 ) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -20,7 +21,7 @@ export async function POST(
     const decodedToken = await adminAuth.verifyIdToken(idToken)
     const userId = decodedToken.uid
 
-    const { tripSlug } = await params
+    const { tripSlug } = params
 
     const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolved) {
@@ -37,6 +38,27 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // バリデーションを先に実行（replica作成前に）
+    const body = await request.json().catch(() => ({}))
+    const startDateRaw = typeof body.startDate === 'string' ? body.startDate : ''
+    const startDate = startDateRaw ? new Date(startDateRaw) : null
+
+    if (startDate && Number.isNaN(startDate.getTime())) {
+      return NextResponse.json({ error: 'Invalid start date' }, { status: 400 })
+    }
+
+    // テンプレートのday_countを確認して、startDateの必要性を検証
+    const templateDays = await adminDayOperations.getDaysByTripId(templateTripId)
+    const derivedDayCount =
+      templateTrip.day_count && templateTrip.day_count > 0
+        ? templateTrip.day_count
+        : templateDays.length
+
+    if (derivedDayCount > 0 && !startDate) {
+      return NextResponse.json({ error: 'Start date is required for this template' }, { status: 400 })
+    }
+
+    // バリデーション通過後にreplicaを作成
     const replicaResult = await planSaveOperations.createReplicaFromTripTemplate(templateTripId, userId)
 
     const userTrips = await adminTripOperations.getTripsByUserId(userId)
@@ -46,15 +68,49 @@ export async function POST(
 
     const newSlug = generateUniqueSlug(replicaResult.trip.title, existingSlugs)
 
-    await adminTripOperations.updateTrip(replicaResult.trip.id, {
+    const updatePayload: Record<string, unknown> = {
       slug: newSlug,
       access_level: 'private',
       is_template: false,
       likes_count: 0,
-      day_count:
-        (templateTrip.day_count && templateTrip.day_count > 0 ? templateTrip.day_count : replicaResult.days.length) ||
-        null,
-    })
+      ...(derivedDayCount > 0 ? { day_count: derivedDayCount } : {}),
+    }
+
+    let endDate: Date | null = null
+    if (startDate) {
+      endDate = new Date(startDate)
+      if (derivedDayCount > 0) {
+        endDate.setDate(startDate.getDate() + derivedDayCount - 1)
+      }
+      updatePayload.start_date = startDate
+      updatePayload.end_date = endDate
+    }
+
+    await adminTripOperations.updateTrip(replicaResult.trip.id, updatePayload)
+
+    if (startDate && replicaResult.days.length > 0) {
+      const sortedDays = [...replicaResult.days].sort((a, b) => {
+        const aNum = typeof a.day_number === 'number' ? a.day_number : 0
+        const bNum = typeof b.day_number === 'number' ? b.day_number : 0
+        return aNum - bNum
+      })
+      await Promise.all(
+        sortedDays.map((day, index) => {
+          const dateForDay = new Date(startDate)
+          dateForDay.setDate(startDate.getDate() + index)
+          return adminDb
+            .collection(COLLECTIONS.DAYS)
+            .doc(day.id)
+            .update({
+              date: dateForDay,
+              updated_at: new Date()
+            })
+            .catch((error: unknown) => {
+              logger.error('Failed to set date on replicated day', { error, dayId: day.id })
+            })
+        })
+      )
+    }
 
     try {
       const checklistDoc = await adminDb.collection('trip_checklists').doc(templateTripId).get()
@@ -78,10 +134,20 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      trip: latestTrip ? { id: latestTrip.id, slug: latestTrip.slug, access_level: latestTrip.access_level } : {
+      trip: latestTrip
+        ? {
+            id: latestTrip.id,
+            slug: latestTrip.slug,
+            access_level: latestTrip.access_level,
+            start_date: latestTrip.start_date,
+            end_date: latestTrip.end_date
+          }
+        : {
         id: replicaResult.trip.id,
         slug: newSlug,
         access_level: 'private',
+        start_date: startDate ?? null,
+        end_date: endDate ?? null
       },
     })
   } catch (error) {

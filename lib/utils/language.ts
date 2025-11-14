@@ -1,7 +1,11 @@
 // 言語管理ユーティリティ
 import type { User, SupportedLanguage } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import { getLanguageOverrideClient, getLanguageOverrideServer } from '@/lib/i18n/storage'
+import {
+  getLanguageOverrideClient,
+  getLanguageOverrideFromCookies,
+  normalizeLanguageOverride
+} from '@/lib/i18n/storage'
 
 /**
  * サポートされる言語のリスト
@@ -37,6 +41,23 @@ export function isSupportedLanguage(lang: string): lang is SupportedLanguage {
   return SUPPORTED_LANGUAGES.includes(lang as SupportedLanguage)
 }
 
+type LanguageLogKey =
+  | 'serverOverride'
+  | 'clientOverride'
+  | 'userPreference'
+  | 'userPreferenceAutoBrowser'
+  | 'userPreferenceAutoDefault'
+  | 'browserPreference'
+  | 'default'
+
+const languageLogCache: Partial<Record<LanguageLogKey, SupportedLanguage>> = {}
+
+function logLanguageOnce(key: LanguageLogKey, message: string, language: SupportedLanguage) {
+  if (languageLogCache[key] === language) return
+  languageLogCache[key] = language
+  logger.debug(message, language)
+}
+
 /**
  * ユーザーの言語設定を取得する
  * 
@@ -49,19 +70,32 @@ export function isSupportedLanguage(lang: string): lang is SupportedLanguage {
  * @param user - ユーザーオブジェクト（オプション）
  * @returns サポートされる言語コード
  */
-export function getUserLanguage(user?: User | null): SupportedLanguage {
+type ServerLanguageOptions = {
+  serverOverride?: string | null
+  serverCookies?:
+    | {
+        get(name: string): { value?: string } | undefined
+      }
+    | null
+}
+
+export function getUserLanguage(user?: User | null, options?: ServerLanguageOptions): SupportedLanguage {
   // 0. クッキー/ローカルストレージでのオーバーライド
   // SSR: Cookie を参照
-  if (typeof window === 'undefined') {
-    const serverOverride = getLanguageOverrideServer()
-    if (serverOverride && isSupportedLanguage(serverOverride)) {
-      logger.debug('Language from server cookie override:', serverOverride)
-      return serverOverride
+  const isServer = typeof window === 'undefined'
+
+  if (isServer) {
+    const override =
+      normalizeLanguageOverride(options?.serverOverride ?? undefined) ??
+      getLanguageOverrideFromCookies(options?.serverCookies ?? null)
+    if (override) {
+      logLanguageOnce('serverOverride', 'Language from server cookie override:', override)
+      return override
     }
   } else {
     const override = getLanguageOverrideClient()
     if (override && isSupportedLanguage(override)) {
-      logger.debug('Language from override (cookie/localStorage):', override)
+      logLanguageOnce('clientOverride', 'Language from override (cookie/localStorage):', override)
       return override
     }
   }
@@ -72,25 +106,29 @@ export function getUserLanguage(user?: User | null): SupportedLanguage {
     // 空文字列の場合は「自動（ブラウザ設定）」として扱う
     if (userLang === '') {
       logger.debug('User selected auto (browser) language, checking browser settings')
-      
+
       // ブラウザ設定を確認
       if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
         const browserLang = (navigator.language || 'en').split('-')[0]
         if (isSupportedLanguage(browserLang)) {
-          logger.debug('Language from browser (user selected auto):', browserLang)
+          logLanguageOnce('userPreferenceAutoBrowser', 'Language from browser (user selected auto):', browserLang)
           return browserLang
         }
       }
       
       // ブラウザ設定が取得できない場合はデフォルト
-      logger.debug('Using default language (user selected auto, browser unavailable):', DEFAULT_LANGUAGE)
+      logLanguageOnce(
+        'userPreferenceAutoDefault',
+        'Using default language (user selected auto, browser unavailable):',
+        DEFAULT_LANGUAGE
+      )
       return DEFAULT_LANGUAGE
     }
     
     // 具体的な言語が設定されている場合
     const lang = userLang.split('-')[0]
     if (isSupportedLanguage(lang)) {
-      logger.debug('Language from user preferences:', lang)
+      logLanguageOnce('userPreference', 'Language from user preferences:', lang)
       return lang
     }
   }
@@ -99,13 +137,13 @@ export function getUserLanguage(user?: User | null): SupportedLanguage {
   if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
     const browserLang = (navigator.language || 'en').split('-')[0]
     if (isSupportedLanguage(browserLang)) {
-      logger.debug('Language from browser (no user preference):', browserLang)
+      logLanguageOnce('browserPreference', 'Language from browser (no user preference):', browserLang)
       return browserLang
     }
   }
   
   // 3. デフォルト
-  logger.debug('Using default language:', DEFAULT_LANGUAGE)
+  logLanguageOnce('default', 'Using default language:', DEFAULT_LANGUAGE)
   return DEFAULT_LANGUAGE
 }
 

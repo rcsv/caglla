@@ -134,7 +134,7 @@ export function ScheduleCardMenu({
   }, [itineraryId, onDuplicateToDay])
 
   return (
-    <div className="flex-shrink-0 p-4">
+    <div className="flex-shrink-0 py-4 pr-4 pl-2">
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setShowMenu(!showMenu)}

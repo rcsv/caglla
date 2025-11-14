@@ -1,7 +1,7 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { distanceApiHelpers, DistanceMatrixResult } from '@/lib/api/google/distance'
 import { PlaceData } from '@/lib/core/types'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
@@ -34,6 +34,7 @@ export default function VenueDistance({
   const [distanceInfo, setDistanceInfo] = useState<DistanceMatrixResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const lastPlacesKeyRef = useRef<string | null>(null)
 
   // 場所の座標をメモ化して、不要な再計算を防ぐ
   const placesKey = useMemo(() => {
@@ -50,7 +51,19 @@ export default function VenueDistance({
       logger.debug('  toPlace:', toPlace)
       logger.debug('  fromPlace.geometry:', fromPlace?.geometry)
       logger.debug('  toPlace.geometry:', toPlace?.geometry)
-      
+      const currentKey = placesKey
+
+      if (!currentKey) {
+        lastPlacesKeyRef.current = null
+      }
+
+      if (currentKey && lastPlacesKeyRef.current === currentKey) {
+        logger.debug('🛑 VenueDistance: Skipping calculation (key unchanged)')
+        return
+      }
+
+      lastPlacesKeyRef.current = currentKey
+
       if (!fromPlace?.geometry?.location || !toPlace?.geometry?.location) {
         logger.debug('❌ Missing place data or geometry:', { 
           fromPlace: !!fromPlace, 
@@ -90,6 +103,8 @@ export default function VenueDistance({
       } catch (err) {
         logger.error('❌ Error calculating distance:', err)
         setError(t('venueDistance.calculationFailed'))
+        // エラー時にキャッシュをクリアして、再試行を可能にする
+        lastPlacesKeyRef.current = null
       } finally {
         setIsLoading(false)
       }

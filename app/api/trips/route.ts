@@ -9,6 +9,7 @@ import type { PlaceData, SupportedLanguage, Trip, PlacesCacheInput } from '@/lib
 import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
 import { resolveDestinationPlace } from '@/lib/api/places-cache'
+import { COOKIE_NAME } from '@/lib/i18n/storage'
 
 // API応答用の拡張型（destination_placeを含む）
 interface TripWithDestination extends Trip {
@@ -46,7 +47,11 @@ export async function GET(request: NextRequest) {
 
     // Get user info to determine language preference
     const user = await adminUserOperations.getUserByGoogleId(userId)
-    const userLanguage = user ? getUserLanguage(user) : 'en'
+    const cookieLang = request.cookies.get(COOKIE_NAME)?.value ?? null
+    const userLanguage = getUserLanguage(user ?? undefined, {
+      serverOverride: cookieLang,
+      serverCookies: request.cookies
+    })
 
     // Enrich trips: resolve destination_place from places_cache when available
     const tripsWithDetails = await Promise.all(
@@ -71,7 +76,7 @@ export async function GET(request: NextRequest) {
 
     if (groupByCountry) {
       // Group trips by country
-      const countryGroups = await groupTripsByCountry(tripsWithDetails)
+      const countryGroups = await groupTripsByCountry(tripsWithDetails, { language: userLanguage })
       return NextResponse.json({ 
         trips: countryGroups,
         grouped: true,
@@ -119,11 +124,13 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     
+    const requestedAccessLevel = body.accessLevel ?? body.access_level ?? 'private'
+
     logger.debug('Trip creation request', {
       title: body.title,
       destination: body.destination,
       hasImageUrl: !!body.imageUrl,
-      accessLevel: body.accessLevel,
+      requestedAccessLevel,
       isTemplate: body.isTemplate ?? body.is_template ?? false,
       dayCount: body.dayCount ?? body.day_count,
       likesCount: body.likesCount ?? body.likes_count
@@ -137,7 +144,6 @@ export async function POST(request: NextRequest) {
       destinationPlaceId,
       startDate,
       endDate,
-      accessLevel = 'private',
       isTemplate = false,
       dayCount,
       likesCount,
@@ -171,11 +177,21 @@ export async function POST(request: NextRequest) {
     
     logger.debug('Generated trip slug', { tripSlug })
 
+    const enforcedAccessLevel: Trip['access_level'] = 'private'
+
+    if (requestedAccessLevel !== enforcedAccessLevel) {
+      logger.debug('Trip creation access level overridden to private', {
+        requestedAccessLevel,
+        enforcedAccessLevel
+      })
+    }
+
     logger.debug('Creating trip', {
       userId,
       title: finalTitle,
       slug: tripSlug,
       destination,
+      enforcedAccessLevel,
       hasDestinationPlace: !!destinationPlace,
       hasImageUrl: !!imageUrl,
       isTemplate
@@ -194,14 +210,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Create trip
+    const normalizedDayCount =
+      typeof dayCount === 'number' && Number.isFinite(dayCount) && dayCount > 0
+        ? Math.floor(dayCount)
+        : undefined
+
+    if (isTemplate && !normalizedDayCount) {
+      logger.debug('Template mode requires positive dayCount')
+      return NextResponse.json(
+        { error: 'Template trips require a positive day count' },
+        { status: 400 }
+      )
+    }
+
     const tripData: any = {
       user_id: userId,
       title: finalTitle,
       slug: tripSlug,
       destination,
-      access_level: accessLevel,
+      access_level: enforcedAccessLevel,
       is_template: isTemplate,
-      day_count: isTemplate ? (typeof dayCount === 'number' ? dayCount : null) : typeof dayCount === 'number' ? dayCount : undefined,
+      day_count: isTemplate ? normalizedDayCount ?? null : normalizedDayCount,
       likes_count: typeof likesCount === 'number' ? likesCount : 0,
       status: 'PLANNING' as const
     }
@@ -211,8 +240,8 @@ export async function POST(request: NextRequest) {
     // place_id 優先で保存（後方互換でオブジェクトも受ける）
     const resolvedDestPlaceId: string | undefined = destinationPlaceId || destinationPlace?.place_id
     if (resolvedDestPlaceId) tripData.destination_place_id = resolvedDestPlaceId
-    if (startDate) tripData.start_date = new Date(startDate)
-    if (endDate) tripData.end_date = new Date(endDate)
+    if (!isTemplate && startDate) tripData.start_date = new Date(startDate)
+    if (!isTemplate && endDate) tripData.end_date = new Date(endDate)
     if (finalImageUrl) tripData.image_url = finalImageUrl
     if (defaultCurrency) tripData.default_currency = defaultCurrency
 
@@ -267,6 +296,7 @@ export async function POST(request: NextRequest) {
 
     logger.debug('Fetching user data for creator info')
     
+    const cookieLangPost = request.cookies.get(COOKIE_NAME)?.value ?? null
     // 最新のユーザー情報を取得してcreator情報を追加
     const user = await adminUserOperations.getUserByGoogleId(userId)
     if (user) {
@@ -281,7 +311,12 @@ export async function POST(request: NextRequest) {
       if (resolvedDestPlaceId) {
         // 新形式でのキャッシュ検索: {place_id}_{language}
         // ユーザーの言語設定を取得
-        const userLanguage = user ? getUserLanguage(user) : 'ja'
+        const userLanguage = user
+          ? getUserLanguage(user, {
+              serverOverride: cookieLangPost,
+              serverCookies: request.cookies
+            })
+          : 'ja'
         const cacheKey = `${resolvedDestPlaceId}_${userLanguage}`
         
         const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(cacheKey).get()
@@ -296,7 +331,12 @@ export async function POST(request: NextRequest) {
           let cachePayload: PlacesCacheInput | null = null
           try {
             // ユーザーの言語設定を取得
-            const language = user ? getUserLanguage(user) : 'ja'
+            const language = user
+              ? getUserLanguage(user, {
+                  serverOverride: cookieLangPost,
+                  serverCookies: request.cookies
+                })
+              : 'ja'
             
             cachePayload = {
               format_version: '2.0.0', // 新バージョン

@@ -11,8 +11,9 @@ import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useEffect, useRef, useCallback } from 'react'
 import { toDate } from '@/lib/firebase/timestamp-utils'
-import { t } from '@/lib/i18n'
+import { t, getUserLanguage } from '@/lib/i18n'
 import Loading from '@/components/common/Loading'
+import logger from '@/lib/core/logger'
 
 interface TripItineraryViewProps {
   trip: Trip
@@ -76,6 +77,7 @@ export default function TripItineraryView({
   const itineraryRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const observerRef = useRef<IntersectionObserver | null>(null)
   const isUserScrollingRef = useRef(false)
+  const templateWithoutDates = trip.is_template && !trip.start_date && !trip.end_date
 
   // itinerariesのタイトルを生成する関数
   const generateItinerarySummary = (day: Day): string => {
@@ -263,39 +265,61 @@ export default function TripItineraryView({
                         <h3 className="text-2xl font-bold italic text-gray-900 mb-1">
                           Day {day.day_number}
                         </h3>
-                        <div className={`text-base ${
-                          day.date 
-                            ? (() => {
-                                let dayDate: Date
-                                try {
-                                  dayDate = toDate(day.date)
-                                } catch {
-                                  return 'text-gray-900'
-                                }
-                                const dayOfWeek = dayDate.getDay()
-                                if (dayOfWeek === 6) return 'text-blue-600' // 土曜日
-                                if (dayOfWeek === 0) return 'text-red-600'  // 日曜日
-                                return 'text-gray-900'
-                              })()
-                            : 'text-gray-600'
-                        }`}>
-                          {day.date 
-                            ? (() => {
-                                let dayDate: Date
-                                try {
-                                  dayDate = toDate(day.date)
-                                } catch {
-                                  return t('tripItinerary.invalidDate')
-                                }
+                        {(() => {
+                          const getDayHeaderInfo = (): { text: string | null; className: string } => {
+                            if (day.date) {
+                              try {
+                                const dayDate = toDate(day.date)
                                 const month = dayDate.getMonth() + 1
                                 const dayNum = dayDate.getDate()
-                                const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-                                const dayName = dayNames[dayDate.getDay()]
-                                return `${month}/${dayNum} ${dayName}`
-                              })()
-                            : t('tripItinerary.dateNotSet')
+                                
+                                // ユーザーの言語設定に基づいて曜日名をローカライズ
+                                const language = getUserLanguage()
+                                const locale = language === 'ja' ? 'ja-JP' : 'en-US'
+                                const dayName = new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(dayDate)
+
+                                const dayOfWeek = dayDate.getDay()
+                                const colorClass =
+                                  dayOfWeek === 6
+                                    ? 'text-blue-600'
+                                    : dayOfWeek === 0
+                                      ? 'text-red-600'
+                                      : 'text-gray-900'
+
+                                return {
+                                  text: `${month}/${dayNum} ${dayName}`,
+                                  className: colorClass
+                                }
+                              } catch (error) {
+                                // 開発環境でのみエラーをログ出力
+                                if (process.env.NODE_ENV === 'development') {
+                                  logger.error('Invalid date for day:', day.id, error)
+                                }
+                                return {
+                                  text: t('tripItinerary.invalidDate'),
+                                  className: 'text-gray-900'
+                                }
+                              }
+                            }
+
+                            if (templateWithoutDates) {
+                              return { text: null, className: '' }
+                            }
+
+                            return {
+                              text: t('tripItinerary.dateNotSet'),
+                              className: 'text-gray-600'
+                            }
                           }
-                        </div>
+
+                          const { text: dayDateLabel, className: dayDateClass } = getDayHeaderInfo()
+
+                          return dayDateLabel ? (
+                            <div className={`text-base ${dayDateClass}`}>
+                              {dayDateLabel}
+                            </div>
+                          ) : null
+                        })()}
                       </div>
                       {/* 折りたたみアイコン */}
                       <button
