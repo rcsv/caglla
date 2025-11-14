@@ -26,6 +26,7 @@ module.exports = {
     }],
   },
   setupFiles: ['<rootDir>/jest.polyfills.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.firestore.setup.js'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   collectCoverageFrom: [
     'lib/**/*.{js,jsx,ts,tsx}',
