@@ -5,6 +5,8 @@ import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { PlacesCache, FirestoreDate, PlaceData, Trip } from '@/lib/core/types'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import logger from '@/lib/core/logger'
+import { canViewTrip } from '@/lib/core/permissions'
+import { asUserId } from '@/lib/core/types/identity'
 
 // API応答用の拡張型（destination_placeを含む）
 interface TripWithDestination extends Trip {
@@ -48,6 +50,30 @@ export async function GET(
     }
     
     const { id: tripId, trip } = resolved
+
+    // 認証チェック（認証済みユーザーのIDを取得、認証されていない場合はnull）
+    let userId: string | null = null
+    try {
+      const authHeader = request.headers.get('authorization')
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const idToken = authHeader.split('Bearer ')[1]
+        if (idToken) {
+          const decodedToken = await adminAuth.verifyIdToken(idToken).catch(() => null)
+          if (decodedToken) {
+            userId = decodedToken.uid
+          }
+        }
+      }
+    } catch (error) {
+      // 認証エラーは無視（未認証ユーザーとして扱う）
+      logger.debug('Failed to verify ID token for trip GET endpoint', error)
+    }
+
+    // 閲覧権限チェック（public な旅行は誰でも閲覧可能、private な旅行は所有者のみ）
+    const userIdTyped = userId ? asUserId(userId) : null
+    if (!canViewTrip(trip, userIdTyped)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     // destination_place を places_cache から解決
     let tripWithDest: TripWithDestination = trip

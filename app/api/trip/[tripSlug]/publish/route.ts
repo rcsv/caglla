@@ -9,6 +9,68 @@ type PublishRequestBody = {
   slug?: string | null
 }
 
+/**
+ * DELETE: トリップ公開停止（unpublish）
+ * 
+ * 公開中のトリップを非公開（private）に戻します。
+ * 所有者のみが実行可能です。
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { tripSlug: string } }
+) {
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    }
+
+    const idToken = authHeader.split('Bearer ')[1]
+    const decodedToken = await adminAuth.verifyIdToken(idToken)
+    const userId = decodedToken.uid
+
+    const { tripSlug } = params
+
+    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
+    if (!resolved) {
+      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    }
+
+    const { id: resolvedTripId, trip } = resolved
+
+    if (trip.user_id !== userId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // 既に private の場合はエラーを返す（冪等性のため）
+    if (trip.access_level === 'private') {
+      return NextResponse.json({ error: 'Trip is already private' }, { status: 400 })
+    }
+
+    const updatePayload: Record<string, unknown> = {
+      access_level: 'private' as const
+    }
+
+    await adminTripOperations.updateTrip(resolvedTripId, updatePayload)
+
+    const updatedTrip = await adminTripOperations.getTripById(resolvedTripId)
+
+    logger.info('Trip unpublished', {
+      tripId: resolvedTripId,
+      slug: trip.slug,
+      isTemplate: Boolean(trip.is_template)
+    })
+
+    return NextResponse.json({
+      success: true,
+      trip: updatedTrip ?? { ...trip, access_level: 'private' as const }
+    })
+  } catch (error) {
+    logger.error('Error unpublishing trip', error)
+    return NextResponse.json({ error: 'Failed to unpublish trip' }, { status: 500 })
+  }
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: { tripSlug: string } }
