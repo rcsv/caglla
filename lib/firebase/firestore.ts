@@ -21,7 +21,11 @@ export const COLLECTIONS = {
   DAYS: 'days',
   ITINERARIES: 'itineraries',
   TRIP_USERS: 'trip_users',
-  PLACES_CACHE: 'places_cache'
+  PLACES_CACHE: 'places_cache',
+  // v3.0.0 SNS機能コレクション
+  TRIP_LIKES: 'trip_likes',
+  TRIP_COMMENTS: 'trip_comments',
+  USER_FOLLOWS: 'user_follows',
 } as const
 
 // Re-export types for backward compatibility
