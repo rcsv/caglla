@@ -6,6 +6,7 @@ import type { FirestoreDate, AccessLevel } from './common'
 import type { PlaceData } from './place'
 import type { ActivityTag } from './activity'
 import type { User } from './user'
+import type { TripSocialStats } from './social'
 
 // 循環依存を避けるため、ReservationInfoは後でインポート
 // import type { ReservationInfo } from './reservation'
@@ -80,6 +81,13 @@ export interface Trip {
   ical_enabled?: boolean // iCal公開が有効かどうか
   ical_last_accessed_at?: FirestoreDate // iCal最終アクセス日時（統計用）
   default_currency?: string // デフォルト通貨コード（例: 'USD', 'JPY', 'EUR'）
+  
+  // v3.0.0 SNS機能関連フィールド（オプショナルで後方互換性を保つ）
+  published_at?: FirestoreDate // 公開日時
+  featured?: boolean // 運営ピックアップ
+  trending_score?: number // トレンドスコア (アルゴリズム算出)
+  social_stats?: TripSocialStats // SNS統計（Subcollection参照用の集計値）
+  
   created_at: FirestoreDate
   updated_at: FirestoreDate
   days?: Day[]
