@@ -18,28 +18,8 @@ import { asUserId, asTripId, asUserSlug, asTripSlug } from '@/lib/core/types/ide
 import type { Trip } from '@/lib/core/types'
 import type { Firestore } from 'firebase-admin/firestore'
 
-// TODO: Phase 1-4で実装するSocial Operations
-// import { toggleTripLike, getTripLikeState } from '@/lib/social/trip-likes'
-
-// テスト用のモック関数（実装後、実際のSocial Operationsに置き換え）
-async function toggleTripLike(
-  userId: string,
-  tripSlug: string,
-  action: 'like' | 'unlike' | 'toggle' = 'toggle',
-  db?: Firestore
-): Promise<{ liked: boolean; likesCount: number }> {
-  // TODO: 実装
-  throw new Error('Not implemented')
-}
-
-async function getTripLikeState(
-  tripSlug: string,
-  userId: string | null,
-  db?: Firestore
-): Promise<{ count: number; liked: boolean }> {
-  // TODO: 実装
-  throw new Error('Not implemented')
-}
+// Phase 1-4で実装したSocial Operationsをインポート
+import { toggleTripLike, getTripLikeState } from '@/lib/social/trip-likes'
 
 describe('Trip Likes Social Operations', () => {
   let db: Firestore
@@ -158,7 +138,7 @@ describe('Trip Likes Social Operations', () => {
     it('should deny liking private trips', async () => {
       await expect(
         toggleTripLike(userId, 'private-trip-1', 'like', db)
-      ).rejects.toThrow('private')
+      ).rejects.toThrow('Likes available only for public trips')
     })
 
     it('should not allow trip owners to like their own trips', async () => {
@@ -252,7 +232,7 @@ describe('Trip Likes Social Operations', () => {
     it('should throw error for private trips', async () => {
       await expect(
         getTripLikeState('private-trip-1', userId, db)
-      ).rejects.toThrow('private')
+      ).rejects.toThrow('Private trips cannot be accessed')
     })
   })
 })
