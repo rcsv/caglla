@@ -247,8 +247,16 @@ export async function getTripLikeState(
     throw new Error('Private trips cannot be accessed')
   }
 
-  // 3. social_statsからいいね数を取得
-  const socialStats = trip.social_stats
+  // 3. Tripドキュメントから最新のsocial_statsを取得（データベースから直接読み取る）
+  const tripRef = firestore.collection(COLLECTIONS.TRIPS).doc(tripId)
+  const tripSnap = await tripRef.get()
+  
+  if (!tripSnap.exists) {
+    throw new Error('Trip not found')
+  }
+
+  const tripData = tripSnap.data() as Trip
+  const socialStats = tripData.social_stats
   const likesCount = socialStats?.likes_count || 0
 
   // 4. ユーザーがいいねしているかチェック

@@ -1,22 +1,45 @@
+/**
+ * Trip Likes API Routes
+ * 
+ * Phase 1-3-1: API Routes実装（v3.0.0）
+ * 
+ * Social Operationsを使用して、いいね機能のAPIエンドポイントを提供します。
+ * - GET: いいね状態取得
+ * - POST: いいね追加/削除（toggle）
+ * - DELETE: いいね削除
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
-import { FieldValue } from 'firebase-admin/firestore'
 import logger from '@/lib/core/logger'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import { adminTripOperations } from '@/lib/firebase/admin-operation'
-import { COLLECTIONS } from '@/lib/firebase/firestore'
+import { toggleTripLike, getTripLikeState } from '@/lib/social/trip-likes'
+import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
+import type { Firestore } from 'firebase-admin/firestore'
 
-interface LikeState {
-  likesCount: number
-  likedByMe: boolean
-}
-
-function normalizeCount(count: unknown): number {
-  if (typeof count === 'number' && Number.isFinite(count)) {
-    return Math.max(0, Math.floor(count))
+/**
+ * adminAuthをlazy importします（テスト環境でも動作するように）
+ */
+async function getAdminAuth() {
+  try {
+    const adminModule = await import('@/lib/firebase/admin')
+    return adminModule.adminAuth
+  } catch (error) {
+    throw new Error('Firebase Admin SDK is not available')
   }
-  return 0
 }
 
+/**
+ * モックトークンからユーザーIDを抽出（テスト環境用）
+ */
+function extractUserIdFromMockToken(token: string): string | null {
+  if (token.startsWith('mock-token-')) {
+    return token.replace('mock-token-', '')
+  }
+  return null
+}
+
+/**
+ * リクエストからユーザーIDを取得します（テスト環境ではモックトークンを処理）
+ */
 async function resolveAuthUserId(request: NextRequest): Promise<string | null> {
   const authHeader = request.headers.get('authorization')
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -26,7 +49,16 @@ async function resolveAuthUserId(request: NextRequest): Promise<string | null> {
   const idToken = authHeader.split('Bearer ')[1]
   if (!idToken) return null
 
+  // テスト環境ではモックトークンを処理
+  if (process.env.FIRESTORE_EMULATOR_HOST) {
+    const mockUserId = extractUserIdFromMockToken(idToken)
+    if (mockUserId) {
+      return mockUserId
+    }
+  }
+
   try {
+    const adminAuth = await getAdminAuth()
     const decoded = await adminAuth.verifyIdToken(idToken)
     return decoded.uid
   } catch (error) {
@@ -35,55 +67,48 @@ async function resolveAuthUserId(request: NextRequest): Promise<string | null> {
   }
 }
 
-async function fetchLikeState(
-  tripId: string,
-  userId: string | null
-): Promise<LikeState> {
-  const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
-  const tripSnap = await tripRef.get()
-
-  if (!tripSnap.exists) {
-    throw new Error('Trip not found')
+/**
+ * Firestoreインスタンスを取得します（テスト環境ではエミュレータを使用）
+ */
+function getFirestore(): Firestore | undefined {
+  if (process.env.FIRESTORE_EMULATOR_HOST) {
+    return getTestFirestore()
   }
-
-  const data = tripSnap.data()
-  const likesCount = normalizeCount(data?.likes_count)
-
-  if (!userId) {
-    return { likesCount, likedByMe: false }
-  }
-
-  const likeDoc = await tripRef.collection('likes').doc(userId).get()
-  return {
-    likesCount,
-    likedByMe: likeDoc.exists
-  }
+  // 本番環境では、Social Operations内でadminDbを使用
+  return undefined
 }
 
+/**
+ * GET /api/trip/[tripSlug]/likes
+ * いいね状態を取得します
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
     const { tripSlug } = await params
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-
-    if (!resolved) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
-    }
-
-    const { id: tripId, trip } = resolved
-
-    if (trip.access_level !== 'public') {
-      return NextResponse.json({ error: 'Likes available only for public trips' }, { status: 403 })
-    }
-
     const userId = await resolveAuthUserId(request)
-    const likeState = await fetchLikeState(tripId, userId)
+    const db = getFirestore()
 
-    return NextResponse.json(likeState)
-  } catch (error) {
+    const result = await getTripLikeState(tripSlug, userId, db)
+
+    return NextResponse.json({
+      likesCount: result.count,
+      likedByMe: result.liked,
+    })
+  } catch (error: unknown) {
     logger.error('Failed to fetch trip like state', error)
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Trip not found')) {
+        return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      }
+      if (error.message.includes('Private trips')) {
+        return NextResponse.json({ error: 'Likes available only for public trips' }, { status: 403 })
+      }
+    }
+
     return NextResponse.json(
       { error: 'Failed to fetch like state' },
       { status: 500 }
@@ -91,6 +116,10 @@ export async function GET(
   }
 }
 
+/**
+ * POST /api/trip/[tripSlug]/likes
+ * いいねを追加/削除します（toggle動作、またはactionで指定）
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ tripSlug: string }> }
@@ -106,68 +135,125 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
     }
 
-    const decoded = await adminAuth.verifyIdToken(idToken)
-    const userId = decoded.uid
+    // テスト環境ではモックトークンを処理
+    let userId: string
+    if (process.env.FIRESTORE_EMULATOR_HOST) {
+      const mockUserId = extractUserIdFromMockToken(idToken)
+      if (mockUserId) {
+        userId = mockUserId
+      } else {
+        const adminAuth = await getAdminAuth()
+        const decoded = await adminAuth.verifyIdToken(idToken)
+        userId = decoded.uid
+      }
+    } else {
+      const adminAuth = await getAdminAuth()
+      const decoded = await adminAuth.verifyIdToken(idToken)
+      userId = decoded.uid
+    }
 
     const { tripSlug } = await params
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-
-    if (!resolved) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
-    }
-
-    const { id: tripId, trip } = resolved
-
-    if (trip.access_level !== 'public') {
-      return NextResponse.json({ error: 'Likes available only for public trips' }, { status: 403 })
-    }
-
     const body = await request.json().catch(() => ({}))
     const action = body?.action === 'like' || body?.action === 'unlike' ? body.action : 'toggle'
+    const db = getFirestore()
 
-    const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
-    const likeRef = tripRef.collection('likes').doc(userId)
+    const result = await toggleTripLike(userId, tripSlug, action, db)
 
-    const result = await adminDb.runTransaction(async (tx) => {
-      const [tripSnap, likeSnap] = await Promise.all([tx.get(tripRef), tx.get(likeRef)])
-
-      if (!tripSnap.exists) {
-        throw new Error('Trip not found during transaction')
-      }
-
-      const currentCount = normalizeCount(tripSnap.data()?.likes_count)
-      const currentlyLiked = likeSnap.exists
-
-      let nextLiked = currentlyLiked
-      let nextCount = currentCount
-
-      if ((action === 'like' || action === 'toggle') && !currentlyLiked) {
-        tx.set(likeRef, { created_at: new Date() })
-        tx.update(tripRef, { likes_count: FieldValue.increment(1) })
-        nextLiked = true
-        nextCount = currentCount + 1
-      } else if ((action === 'unlike' || action === 'toggle') && currentlyLiked) {
-        tx.delete(likeRef)
-        tx.update(tripRef, { likes_count: FieldValue.increment(-1) })
-        nextLiked = false
-        nextCount = Math.max(0, currentCount - 1)
-      }
-
-      return {
-        likesCount: nextCount,
-        likedByMe: nextLiked
-      }
+    return NextResponse.json({
+      likesCount: result.likesCount,
+      likedByMe: result.liked,
     })
-
-    return NextResponse.json(result)
   } catch (error: unknown) {
     logger.error('Failed to toggle trip like', error)
-    const status =
-      error instanceof Error && error.message.includes('Trip not found') ? 404 : 500
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Trip not found')) {
+        return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      }
+      if (error.message.includes('Likes available only for public trips')) {
+        return NextResponse.json({ error: 'Likes available only for public trips' }, { status: 403 })
+      }
+      if (error.message.includes('Cannot like your own trip') || error.message.includes('own')) {
+        return NextResponse.json({ error: 'Cannot like your own trip' }, { status: 403 })
+      }
+      if (error.message.includes('already liked')) {
+        return NextResponse.json({ error: 'Trip is already liked' }, { status: 409 })
+      }
+      if (error.message.includes('not liked')) {
+        return NextResponse.json({ error: 'Trip is not liked' }, { status: 404 })
+      }
+    }
+
     return NextResponse.json(
       { error: 'Failed to toggle like' },
-      { status }
+      { status: 500 }
     )
   }
 }
 
+/**
+ * DELETE /api/trip/[tripSlug]/likes
+ * いいねを削除します
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ tripSlug: string }> }
+) {
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    }
+
+    const idToken = authHeader.split('Bearer ')[1]
+    if (!idToken) {
+      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
+    }
+
+    // テスト環境ではモックトークンを処理
+    let userId: string
+    if (process.env.FIRESTORE_EMULATOR_HOST) {
+      const mockUserId = extractUserIdFromMockToken(idToken)
+      if (mockUserId) {
+        userId = mockUserId
+      } else {
+        const adminAuth = await getAdminAuth()
+        const decoded = await adminAuth.verifyIdToken(idToken)
+        userId = decoded.uid
+      }
+    } else {
+      const adminAuth = await getAdminAuth()
+      const decoded = await adminAuth.verifyIdToken(idToken)
+      userId = decoded.uid
+    }
+
+    const { tripSlug } = await params
+    const db = getFirestore()
+
+    const result = await toggleTripLike(userId, tripSlug, 'unlike', db)
+
+    return NextResponse.json({
+      likesCount: result.likesCount,
+      likedByMe: result.liked,
+    })
+  } catch (error: unknown) {
+    logger.error('Failed to unlike trip', error)
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Trip not found')) {
+        return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      }
+      if (error.message.includes('Likes available only for public trips')) {
+        return NextResponse.json({ error: 'Likes available only for public trips' }, { status: 403 })
+      }
+      if (error.message.includes('not liked')) {
+        return NextResponse.json({ error: 'Trip is not liked' }, { status: 404 })
+      }
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to unlike' },
+      { status: 500 }
+    )
+  }
+}

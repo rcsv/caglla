@@ -1,7 +1,7 @@
 /**
- * Trip Likes API Routes のテスト（構造定義）
+ * Trip Likes API Routes のテスト
  * 
- * Phase 1-3: API Routes実装（テストファースト）
+ * Phase 1-3-1: API Routes実装（テストファースト）
  * 
  * 注意: これらのテストはFirestoreエミュレータを起動している必要があります。
  * エミュレータ起動: pnpm emulators:start:firestore
@@ -9,11 +9,6 @@
  * 使用方法:
  *   1. エミュレータを起動: pnpm emulators:start:firestore
  *   2. 別のターミナルでテスト実行: pnpm test:firestore -- trip-likes
- * 
- * 実装方針:
- *   - テスト構造を先に定義（テストファースト）
- *   - Phase 1-4でSocial Operationsを実装後、それを使用してAPI Routesを実装
- *   - 現在は、テストの期待動作を定義し、実装後に対応
  */
 
 import { createAuthHeader, createUnauthenticatedHeader } from '@/lib/__tests__/helpers/test-auth'
@@ -22,31 +17,20 @@ import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { Trip } from '@/lib/core/types'
 import type { Firestore } from 'firebase-admin/firestore'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
+import { GET as getTripLikes, POST as likeTrip, DELETE as unlikeTrip } from '@/app/api/trip/[tripSlug]/likes/route'
 
-// TODO: Phase 1-4で実装するSocial Operationsを使用
-// import { toggleTripLike, getTripLikeState } from '@/lib/social/trip-likes'
-
-// テスト用のモックハンドラー（実装後、実際のSocial OperationsまたはAPI Routesに置き換え）
+// ヘルパー関数：API Routesを呼び出す
 async function handleLikeTrip(request: NextRequest, tripSlug: string): Promise<Response> {
-  // TODO: Phase 1-4で実装後、実際のSocial Operationを呼び出す
-  // const userId = await getUserIdFromRequest(request)
-  // const result = await toggleTripLike(userId, tripSlug, 'like')
-  // return NextResponse.json(result)
-  return NextResponse.json({ error: 'Not implemented' }, { status: 501 })
+  return await likeTrip(request, { params: Promise.resolve({ tripSlug }) })
 }
 
 async function handleUnlikeTrip(request: NextRequest, tripSlug: string): Promise<Response> {
-  // TODO: Phase 1-4で実装後、実際のSocial Operationを呼び出す
-  return NextResponse.json({ error: 'Not implemented' }, { status: 501 })
+  return await unlikeTrip(request, { params: Promise.resolve({ tripSlug }) })
 }
 
 async function handleGetTripLikes(request: NextRequest, tripSlug: string): Promise<Response> {
-  // TODO: Phase 1-4で実装後、実際のSocial Operationを呼び出す
-  // const userId = await getUserIdFromRequest(request)
-  // const result = await getTripLikeState(tripSlug, userId)
-  // return NextResponse.json(result)
-  return NextResponse.json({ error: 'Not implemented' }, { status: 501 })
+  return await getTripLikes(request, { params: Promise.resolve({ tripSlug }) })
 }
 
 describe('Trip Likes API Routes', () => {
@@ -110,7 +94,7 @@ describe('Trip Likes API Routes', () => {
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.liked).toBe(true)
+      expect(data.likedByMe).toBe(true)
       expect(data.likesCount).toBeGreaterThanOrEqual(1)
 
       // データベースにいいねが追加されたことを確認（v3.0.0ではtrip_likesコレクションを使用）
@@ -178,9 +162,11 @@ describe('Trip Likes API Routes', () => {
         'social_stats.likes_count': 1,
       })
 
+      // action='like'を指定してリクエスト
       const request = new NextRequest('http://localhost/api/trip/public-trip-1/likes', {
         method: 'POST',
         headers: createAuthHeader(userId),
+        body: JSON.stringify({ action: 'like' }),
       })
 
       const response = await handleLikeTrip(request, 'public-trip-1')
@@ -216,7 +202,7 @@ describe('Trip Likes API Routes', () => {
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.liked).toBe(false)
+      expect(data.likedByMe).toBe(false)
 
       // データベースからいいねが削除されたことを確認
       const likeRef = db
@@ -283,11 +269,11 @@ describe('Trip Likes API Routes', () => {
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.count).toBe(2)
-      expect(data.liked).toBe(true) // 認証済みユーザーがいいねしている場合
+      expect(data.likesCount).toBe(2)
+      expect(data.likedByMe).toBe(true) // 認証済みユーザーがいいねしている場合
     })
 
-    it('should return liked=false if user has not liked the trip', async () => {
+    it('should return likedByMe=false if user has not liked the trip', async () => {
       const request = new NextRequest('http://localhost/api/trip/public-trip-1/likes', {
         method: 'GET',
         headers: createAuthHeader('user4'), // いいねしていないユーザー
@@ -297,8 +283,8 @@ describe('Trip Likes API Routes', () => {
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.count).toBe(2)
-      expect(data.liked).toBe(false)
+      expect(data.likesCount).toBe(2)
+      expect(data.likedByMe).toBe(false)
     })
 
     it('should deny access to private trip likes', async () => {
