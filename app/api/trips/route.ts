@@ -124,11 +124,13 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     
+    const requestedAccessLevel = body.accessLevel ?? body.access_level ?? 'private'
+
     logger.debug('Trip creation request', {
       title: body.title,
       destination: body.destination,
       hasImageUrl: !!body.imageUrl,
-      accessLevel: body.accessLevel,
+      requestedAccessLevel,
       isTemplate: body.isTemplate ?? body.is_template ?? false,
       dayCount: body.dayCount ?? body.day_count,
       likesCount: body.likesCount ?? body.likes_count
@@ -142,7 +144,6 @@ export async function POST(request: NextRequest) {
       destinationPlaceId,
       startDate,
       endDate,
-      accessLevel = 'private',
       isTemplate = false,
       dayCount,
       likesCount,
@@ -176,11 +177,21 @@ export async function POST(request: NextRequest) {
     
     logger.debug('Generated trip slug', { tripSlug })
 
+    const enforcedAccessLevel: Trip['access_level'] = 'private'
+
+    if (requestedAccessLevel !== enforcedAccessLevel) {
+      logger.debug('Trip creation access level overridden to private', {
+        requestedAccessLevel,
+        enforcedAccessLevel
+      })
+    }
+
     logger.debug('Creating trip', {
       userId,
       title: finalTitle,
       slug: tripSlug,
       destination,
+      enforcedAccessLevel,
       hasDestinationPlace: !!destinationPlace,
       hasImageUrl: !!imageUrl,
       isTemplate
@@ -199,14 +210,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Create trip
+    const normalizedDayCount =
+      typeof dayCount === 'number' && Number.isFinite(dayCount) && dayCount > 0
+        ? Math.floor(dayCount)
+        : undefined
+
+    if (isTemplate && !normalizedDayCount) {
+      logger.debug('Template mode requires positive dayCount')
+      return NextResponse.json(
+        { error: 'Template trips require a positive day count' },
+        { status: 400 }
+      )
+    }
+
     const tripData: any = {
       user_id: userId,
       title: finalTitle,
       slug: tripSlug,
       destination,
-      access_level: accessLevel,
+      access_level: enforcedAccessLevel,
       is_template: isTemplate,
-      day_count: isTemplate ? (typeof dayCount === 'number' ? dayCount : null) : typeof dayCount === 'number' ? dayCount : undefined,
+      day_count: isTemplate ? normalizedDayCount ?? null : normalizedDayCount,
       likes_count: typeof likesCount === 'number' ? likesCount : 0,
       status: 'PLANNING' as const
     }
@@ -216,8 +240,8 @@ export async function POST(request: NextRequest) {
     // place_id 優先で保存（後方互換でオブジェクトも受ける）
     const resolvedDestPlaceId: string | undefined = destinationPlaceId || destinationPlace?.place_id
     if (resolvedDestPlaceId) tripData.destination_place_id = resolvedDestPlaceId
-    if (startDate) tripData.start_date = new Date(startDate)
-    if (endDate) tripData.end_date = new Date(endDate)
+    if (!isTemplate && startDate) tripData.start_date = new Date(startDate)
+    if (!isTemplate && endDate) tripData.end_date = new Date(endDate)
     if (finalImageUrl) tripData.image_url = finalImageUrl
     if (defaultCurrency) tripData.default_currency = defaultCurrency
 
