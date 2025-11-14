@@ -480,30 +480,42 @@ module.exports = {
 - [x] セキュリティルール実装 ✅（trip_likes, trip_comments, user_follows）
 - [ ] エミュレータでのテスト完了（エミュレータ起動後に実装）
 
-### Phase 1-3: API Routes実装
-- [ ] いいねAPIのテスト作成
-- [ ] いいねAPI実装
-- [ ] コメントAPIのテスト作成
-- [ ] コメントAPI実装
-- [ ] フォローAPIのテスト作成
-- [ ] フォローAPI実装
-- [ ] フィードAPIのテスト作成
-- [ ] フィードAPI実装
-- [ ] すべてのAPIテストが通過
+### Phase 1-3: API Routes実装 ✅
+- [x] いいねAPIのテスト作成 ✅
+- [x] いいねAPI実装 ✅ (`/api/trip/[tripSlug]/likes`)
+- [x] コメントAPIのテスト作成 ✅
+- [x] コメントAPI実装 ✅ (`/api/trip/[tripSlug]/comments`)
+- [x] フォローAPIのテスト作成 ✅
+- [x] フォローAPI実装 ✅ (`/api/users/[userSlug]/follow`)
+- [x] フィードAPIのテスト作成 ✅
+- [x] フィードAPI実装 ✅ (`/api/feed/public`, `/api/feed/trending`, `/api/feed/following`)
+- [x] すべてのAPIテストが通過 ✅
 
-### Phase 1-4: Firestore操作関数
-- [ ] Social Operationsのテスト作成
-- [ ] Social Operations実装
-- [ ] トランザクションテスト完了
-- [ ] テストカバレッジ80%以上
+### Phase 1-4: Firestore操作関数 ✅
+- [x] Social Operationsのテスト作成 ✅
+- [x] Social Operations実装 ✅ (`lib/social/trip-likes.ts`, `lib/social/trip-comments.ts`, `lib/social/user-follows.ts`, `lib/social/feed.ts`)
+- [x] トランザクションテスト完了 ✅
+- [x] テストカバレッジ80%以上 ✅
 
 ---
 
 ## 🎯 次のステップ
 
-1. **Phase 0を開始**: テスト基盤整備
-2. **Phase 1-1を開始**: 型定義と権限管理システムのテストから実装
-3. **段階的に進行**: 各Phaseでテストが通過してから次へ
+**Phase 1完了**: 型定義、権限管理、Firestoreスキーマ拡張、API Routes、Social Operationsが完了 ✅
+
+**次のステップ候補:**
+
+1. **Phase 1-1.5: 認証プロバイダーマルチ対応化**（v3.0.0での適用）
+   - `google_id` → `auth_uid` への段階的移行
+   - 認証プロバイダー拡張の基盤整備
+
+2. **Phase 2: UI実装**（Route Groups導入、Parallel Routes、Social Components）
+   - 既存ページのRoute Groupsへの移行
+   - フィードページの実装
+   - いいね・コメント・フォローUI実装
+
+3. **Phase 1-2の完了**: エミュレータでの統合テスト完了
+   - Firestoreエミュレータでのセキュリティルールテスト完了
 
 ---
 
