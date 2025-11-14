@@ -76,6 +76,7 @@ export default function TripItineraryView({
   const itineraryRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const observerRef = useRef<IntersectionObserver | null>(null)
   const isUserScrollingRef = useRef(false)
+  const templateWithoutDates = Boolean(trip.is_template && !trip.start_date && !trip.end_date)
 
   // itinerariesのタイトルを生成する関数
   const generateItinerarySummary = (day: Day): string => {
@@ -263,39 +264,60 @@ export default function TripItineraryView({
                         <h3 className="text-2xl font-bold italic text-gray-900 mb-1">
                           Day {day.day_number}
                         </h3>
-                        <div className={`text-base ${
-                          day.date 
-                            ? (() => {
-                                let dayDate: Date
-                                try {
-                                  dayDate = toDate(day.date)
-                                } catch {
-                                  return 'text-gray-900'
-                                }
-                                const dayOfWeek = dayDate.getDay()
-                                if (dayOfWeek === 6) return 'text-blue-600' // 土曜日
-                                if (dayOfWeek === 0) return 'text-red-600'  // 日曜日
-                                return 'text-gray-900'
-                              })()
-                            : 'text-gray-600'
-                        }`}>
-                          {day.date 
-                            ? (() => {
-                                let dayDate: Date
-                                try {
-                                  dayDate = toDate(day.date)
-                                } catch {
-                                  return t('tripItinerary.invalidDate')
+                        {(() => {
+                          const getDayHeaderInfo = (): { text: string | null; className: string } => {
+                            if (day.date) {
+                              try {
+                                const dayDate = toDate(day.date)
+                                if (!dayDate) {
+                                  return {
+                                    text: t('tripItinerary.invalidDate'),
+                                    className: 'text-gray-900'
+                                  }
                                 }
                                 const month = dayDate.getMonth() + 1
                                 const dayNum = dayDate.getDate()
                                 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
                                 const dayName = dayNames[dayDate.getDay()]
-                                return `${month}/${dayNum} ${dayName}`
-                              })()
-                            : t('tripItinerary.dateNotSet')
+
+                                const dayOfWeek = dayDate.getDay()
+                                const colorClass =
+                                  dayOfWeek === 6
+                                    ? 'text-blue-600'
+                                    : dayOfWeek === 0
+                                      ? 'text-red-600'
+                                      : 'text-gray-900'
+
+                                return {
+                                  text: `${month}/${dayNum} ${dayName}`,
+                                  className: colorClass
+                                }
+                              } catch {
+                                return {
+                                  text: t('tripItinerary.invalidDate'),
+                                  className: 'text-gray-900'
+                                }
+                              }
+                            }
+
+                            if (templateWithoutDates) {
+                              return { text: null, className: '' }
+                            }
+
+                            return {
+                              text: t('tripItinerary.dateNotSet'),
+                              className: 'text-gray-600'
+                            }
                           }
-                        </div>
+
+                          const { text: dayDateLabel, className: dayDateClass } = getDayHeaderInfo()
+
+                          return dayDateLabel ? (
+                            <div className={`text-base ${dayDateClass}`}>
+                              {dayDateLabel}
+                            </div>
+                          ) : null
+                        })()}
                       </div>
                       {/* 折りたたみアイコン */}
                       <button

@@ -29,6 +29,8 @@ export interface TripEditorProps {
   hideDestinationEdit?: boolean // 旅行先編集を非表示にする
   initialEditing?: boolean // 初期状態で編集モードを開く
   hideEditButton?: boolean // 編集ボタンを非表示にする
+  disableDateFields?: boolean // 出発・帰宅日の編集を無効化する
+  disablePublishControls?: boolean // 公開関連の切り替えを無効化する
 }
 
 /**

@@ -21,6 +21,9 @@ interface TripHeroSectionProps {
   canReplica?: boolean
   onReplica?: () => void
   replicaLoading?: boolean
+  canPublish?: boolean
+  onPublish?: () => void
+  publishLoading?: boolean
 }
 
 export default function TripHeroSection({
@@ -31,6 +34,9 @@ export default function TripHeroSection({
   canReplica = false,
   onReplica,
   replicaLoading = false,
+  canPublish = false,
+  onPublish,
+  publishLoading = false,
 }: TripHeroSectionProps & { canEdit?: boolean }) {
   const { user } = useAuth()
   const currentLanguage = getUserLanguage(user)
@@ -50,6 +56,13 @@ export default function TripHeroSection({
   const formattedDateRange = trip.start_date && trip.end_date
     ? dateUtils.formatTripDateRange(trip.start_date, trip.end_date, currentLanguage)
     : null
+  const hideDateRow = Boolean(trip.is_template && (!trip.start_date || !trip.end_date))
+  const publishButtonLabel = trip.is_template
+    ? t('trip.publish.templateButton')
+    : t('trip.publish.button')
+  const publishLoadingLabel = trip.is_template
+    ? t('trip.publish.templatePublishing')
+    : t('trip.publish.publishing')
   
   const likeTarget = trip.slug || trip.id
 
@@ -76,7 +89,7 @@ export default function TripHeroSection({
         </div>
         {/* Top Navigation */}
         <div className="flex justify-between items-start p-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {canReplica && onReplica && (
               <button
                 type="button"
@@ -97,6 +110,26 @@ export default function TripHeroSection({
                 )}
               </button>
             )}
+            {canPublish && onPublish && (
+              <button
+                type="button"
+                onClick={onPublish}
+                disabled={publishLoading}
+                className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-emerald-500/90 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-500 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {publishLoading ? (
+                  <>
+                    <Loading inline size="xs" color="white" />
+                    <span>{publishLoadingLabel}</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon icon="mdi:upload" className="h-4 w-4" aria-hidden="true" />
+                    <span>{publishButtonLabel}</span>
+                  </>
+                )}
+              </button>
+            )}
             {trip.access_level === 'public' && likeTarget && (
               <TripLikeButton
                 tripSlug={likeTarget}
@@ -106,14 +139,18 @@ export default function TripHeroSection({
               />
             )}
           </div>
-          {canEdit && (
-            <TripEditor 
-              trip={trip} 
-              onUpdate={onUpdateTrip} 
-              onDelete={onDeleteTrip}
-              hideEditButton={true}
-            />
-          )}
+          <div className="flex items-center gap-3">
+            {canEdit && (
+              <TripEditor 
+                trip={trip} 
+                onUpdate={onUpdateTrip} 
+                onDelete={onDeleteTrip}
+                hideEditButton={true}
+                disableDateFields={Boolean(trip.is_template)}
+                disablePublishControls={Boolean(trip.is_template)}
+              />
+            )}
+          </div>
         </div>
         
         {/* Main Content - Positioned higher */}
@@ -126,12 +163,14 @@ export default function TripHeroSection({
               
               {/* Date and Location - 2 lines */}
               <div className="flex flex-col items-start gap-2 mb-6">
-                <div className="flex items-center text-white">
-                  <CalendarIcon className="w-5 h-5 mr-2" color="white" />
-                  <span className="text-lg font-medium">
-                    {formattedDateRange || t('date.notSet')}
-                  </span>
-                </div>
+                {!hideDateRow && (
+                  <div className="flex items-center text-white">
+                    <CalendarIcon className="w-5 h-5 mr-2" color="white" />
+                    <span className="text-lg font-medium">
+                      {formattedDateRange || t('date.notSet')}
+                    </span>
+                  </div>
+                )}
                 
                 {trip.destination && (
                   <div className="flex items-center text-white">

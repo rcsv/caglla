@@ -407,6 +407,7 @@ export type TranslationKey =
   | 'nav.plan'
   | 'nav.logout'
   | 'nav.dayPrefix'
+  | 'nav.dayAbbr'
   // Common
   | 'common.close'
   | 'common.deleteFailed'
@@ -1061,6 +1062,14 @@ export type TranslationKey =
   | 'trip.create.dateValidation.startBeforeEnd'
   | 'trip.create.dateAutoAdjusted'
   | 'trip.create.advancedSettings'
+  | 'trip.create.mode.label'
+  | 'trip.create.mode.trip'
+  | 'trip.create.mode.tripDescription'
+  | 'trip.create.mode.template'
+  | 'trip.create.mode.templateDescription'
+  | 'trip.create.mode.templateDescriptionLocked'
+  | 'trip.create.mode.templateUpgradeHint'
+  | 'trip.create.visibilityNotice'
   | 'trip.create.title.label'
   | 'trip.create.title.placeholder'
   | 'trip.create.description.label'
@@ -1082,6 +1091,18 @@ export type TranslationKey =
   | 'trip.template.replicate'
   | 'trip.template.replicating'
   | 'trip.template.replicateFailed'
+  | 'trip.publish.button'
+  | 'trip.publish.templateButton'
+  | 'trip.publish.publishing'
+  | 'trip.publish.templatePublishing'
+  | 'trip.publish.success'
+  | 'trip.publish.failed'
+  | 'trip.template.replicateDialogTitle'
+  | 'trip.template.replicateStartDateLabel'
+  | 'trip.template.replicateDayCountSummary'
+  | 'trip.template.replicateEndDatePreview'
+  | 'trip.template.replicateEndDateHint'
+  | 'trip.template.replicateStartDateError'
   | 'trip.likes.loading'
   | 'trip.likes.button.like'
   | 'trip.likes.button.liked'
@@ -1830,6 +1851,7 @@ const en: Dictionary = {
   'nav.plan': 'Plan',
   'nav.logout': 'Logout',
   'nav.dayPrefix': 'Day',
+  'nav.dayAbbr': 'DAY',
   // Common
   'common.close': 'Close',
   'common.deleteFailed': 'Failed to delete',
@@ -2418,6 +2440,14 @@ const en: Dictionary = {
   'trip.create.dateValidation.startBeforeEnd': 'Start date must be before end date',
   'trip.create.dateAutoAdjusted': 'End date has been automatically adjusted to match the start date',
   'trip.create.advancedSettings': 'Advanced Settings',
+  'trip.create.mode.label': 'What would you like to create?',
+  'trip.create.mode.trip': 'Plan a private trip',
+  'trip.create.mode.tripDescription': 'Set concrete dates and keep everything private until you decide to publish.',
+  'trip.create.mode.template': 'Create a template',
+  'trip.create.mode.templateDescription': 'Build a reusable itinerary without dates. Publish it later when it is ready.',
+  'trip.create.mode.templateDescriptionLocked': 'Upgrade your plan to create public templates and share them with everyone.',
+  'trip.create.mode.templateUpgradeHint': 'Upgrade required',
+  'trip.create.visibilityNotice': 'Every trip starts in private mode. Publish it later when you are ready to share.',
   'trip.create.title.label': 'Trip Title (destination will be used if left blank)',
   'trip.create.title.placeholder': 'e.g., Okinawa Trip (destination will be used if left blank)',
   'trip.create.description.label': 'Description',
@@ -2436,9 +2466,21 @@ const en: Dictionary = {
   'trip.create.dayCount.description': 'Enter how many days this template covers. You can adjust actual dates later when duplicating.',
   'trip.create.validation.dayCountRequired': 'Please enter the number of days for the template.',
   'trip.template.upgradeRequired': 'Upgrade to Backpacker or higher to publish templates.',
-  'trip.template.replicate': 'Use This Template',
-  'trip.template.replicating': 'Creating...',
+  'trip.template.replicate': 'Create My Trip from This Template',
+  'trip.template.replicating': 'Copying...',
   'trip.template.replicateFailed': 'Failed to create a replica from this template.',
+  'trip.template.replicateDialogTitle': 'Start from this template',
+  'trip.template.replicateStartDateLabel': 'Choose a start date *',
+  'trip.template.replicateDayCountSummary': '{{dayCount}}-day template. We will auto-fill your end date.',
+  'trip.template.replicateEndDatePreview': 'End date will be set to {{endDate}} automatically.',
+  'trip.template.replicateEndDateHint': 'Select a start date to calculate the end date automatically.',
+  'trip.template.replicateStartDateError': 'Start date is required.',
+  'trip.publish.button': 'Publish Trip',
+  'trip.publish.templateButton': 'Publish Template',
+  'trip.publish.publishing': 'Publishing...',
+  'trip.publish.templatePublishing': 'Publishing template...',
+  'trip.publish.success': 'Published successfully.',
+  'trip.publish.failed': 'Failed to publish. Please try again.',
   'trip.likes.loading': 'Loading likes…',
   'trip.likes.button.like': 'Like this trip',
   'trip.likes.button.liked': 'Liked',
@@ -3162,6 +3204,7 @@ const ja: Dictionary = {
   'nav.plan': 'プラン',
   'nav.logout': 'ログアウト',
   'nav.dayPrefix': 'Day',
+  'nav.dayAbbr': 'DAY',
   // Common
   'common.close': '閉じる',
   'common.deleteFailed': '削除に失敗しました',
@@ -3750,6 +3793,14 @@ const ja: Dictionary = {
   'trip.create.dateValidation.startBeforeEnd': '出発日は帰宅日より前の日付を選択してください',
   'trip.create.dateAutoAdjusted': '帰宅日を出発日と同じ日付に自動調整しました',
   'trip.create.advancedSettings': '詳細設定',
+  'trip.create.mode.label': '作成したいものを選択してください',
+  'trip.create.mode.trip': '自分用の旅行を作成する',
+  'trip.create.mode.tripDescription': '具体的な旅行日を設定し、公開したくなるまでプライベートのまま管理します。',
+  'trip.create.mode.template': 'テンプレートを作成する',
+  'trip.create.mode.templateDescription': '日付ではなく日数だけで構成された再利用しやすいプランを作成できます。準備が整ったら公開できます。',
+  'trip.create.mode.templateDescriptionLocked': '公開テンプレートを作成するには対応プランへのアップグレードが必要です。',
+  'trip.create.mode.templateUpgradeHint': 'アップグレードが必要です',
+  'trip.create.visibilityNotice': '旅行はすべて非公開で開始します。公開したいタイミングでいつでも「公開」に切り替えられます。',
   'trip.create.title.label': '旅行のタイトル（未入力時は目的地が使用されます）',
   'trip.create.title.placeholder': '例: 沖縄旅行（空欄の場合は目的地が使用されます）',
   'trip.create.description.label': '説明',
@@ -3768,9 +3819,21 @@ const ja: Dictionary = {
   'trip.create.dayCount.description': 'テンプレートが想定している日数を入力してください。複製後に具体的な日付を設定できます。',
   'trip.create.validation.dayCountRequired': 'テンプレートには日数の入力が必要です。',
   'trip.template.upgradeRequired': '公開テンプレートを作成するには Backpacker 以上のプランが必要です。',
-  'trip.template.replicate': 'このテンプレートを使う',
-  'trip.template.replicating': '作成中…',
+  'trip.template.replicate': 'このテンプレートから自分の旅行を作成',
+  'trip.template.replicating': 'コピー中…',
   'trip.template.replicateFailed': 'テンプレートからのレプリカ作成に失敗しました。',
+  'trip.template.replicateDialogTitle': 'テンプレートを読み込んで旅を始める',
+  'trip.template.replicateStartDateLabel': '旅の開始日を選択してください *',
+  'trip.template.replicateDayCountSummary': 'このテンプレートは {{dayCount}} 日構成です。終了日は自動で入力されます。',
+  'trip.template.replicateEndDatePreview': '終了日は自動的に {{endDate}} に設定されます。',
+  'trip.template.replicateEndDateHint': '開始日を選ぶと終了日が自動計算されます。',
+  'trip.template.replicateStartDateError': '開始日を選択してください。',
+  'trip.publish.button': '旅行を公開する',
+  'trip.publish.templateButton': 'テンプレートを公開する',
+  'trip.publish.publishing': '公開中…',
+  'trip.publish.templatePublishing': 'テンプレートを公開中…',
+  'trip.publish.success': '公開しました。',
+  'trip.publish.failed': '公開に失敗しました。もう一度お試しください。',
   'trip.likes.loading': 'いいねを読み込み中…',
   'trip.likes.button.like': 'いいねする',
   'trip.likes.button.liked': 'いいね済み',

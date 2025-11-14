@@ -33,7 +33,17 @@ import { RestrictionProvider, RestrictionType } from '@/lib/subscription/restric
  * @param onDelete - Optional callback invoked after a successful deletion of the trip.
  * @returns The JSX element for the trip editor or an edit button when not editing.
  */
-export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDestinationEdit = false, initialEditing = false, hideEditButton = false }: TripEditorProps) {
+export default function TripEditor({
+  trip,
+  onUpdate,
+  onDelete,
+  onClose,
+  hideDestinationEdit = false,
+  initialEditing = false,
+  hideEditButton = false,
+  disableDateFields = false,
+  disablePublishControls = false
+}: TripEditorProps) {
   const { user } = useAuth()
   const { userPlanId } = useUserData()
   const [isEditing, setIsEditing] = useState(initialEditing)
@@ -64,22 +74,22 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
     description: trip.description || '',
     destination: trip.destination || '',
     destinationPlace: trip.destination_place,
-    startDate: formatDateForInput(trip.start_date),
-    endDate: formatDateForInput(trip.end_date),
+    startDate: trip.is_template ? '' : formatDateForInput(trip.start_date),
+    endDate: trip.is_template ? '' : formatDateForInput(trip.end_date),
     accessLevel: trip.access_level,
     isTemplate: Boolean(trip.is_template),
     dayCount: trip.day_count ?? 0,
     imageUrl: trip.image_url || '',
     defaultCurrency: trip.default_currency || 'JPY'
   })
-  const isTemplateMode = formData.accessLevel === 'public' && formData.isTemplate
+  const isTemplateMode = Boolean(formData.isTemplate)
 
   const [saving, setSaving] = useState(false)
   const [originalImageUrl, setOriginalImageUrl] = useState(trip.image_url || '')
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false)
   const [dateError, setDateError] = useState('')
   const publicTemplateEnabled = RestrictionProvider.hasFeature(userPlanId, RestrictionType.PUBLIC_TEMPLATE)
-  const canToggleTemplate = publicTemplateEnabled || formData.isTemplate
+  const canToggleTemplate = !disablePublishControls && (publicTemplateEnabled || formData.isTemplate)
 
   // 日付のバリデーション
   const validateDates = (startDate: string, endDate: string): string => {
@@ -103,8 +113,8 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
         description: trip.description || '',
         destination: trip.destination || '',
         destinationPlace: trip.destination_place,
-        startDate: formatDateForInput(trip.start_date),
-        endDate: formatDateForInput(trip.end_date),
+        startDate: trip.is_template ? '' : formatDateForInput(trip.start_date),
+        endDate: trip.is_template ? '' : formatDateForInput(trip.end_date),
         accessLevel: trip.access_level,
         isTemplate: Boolean(trip.is_template),
         dayCount: trip.day_count ?? 0,
@@ -123,6 +133,7 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
         alert(t('trip.create.validation.dayCountRequired'))
         return
       }
+      setDateError('')
     } else {
       const dateValidationError = validateDates(formData.startDate, formData.endDate)
       if (dateValidationError) {
@@ -307,6 +318,9 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
   }
 
   const handleTemplateToggle = (checked: boolean) => {
+    if (disablePublishControls) {
+      return
+    }
     setFormData(prev => ({
       ...prev,
       isTemplate: checked,
@@ -407,59 +421,63 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className={`${isTemplateMode ? 'opacity-50 pointer-events-none' : ''}`}>
-              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('tripEditor.field.startDate')}
-              </label>
-              <input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleInputChange}
-                lang={currentLanguage}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  dateError ? 'border-red-300' : 'border-gray-300'
-                } ${isTemplateMode ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                disabled={isTemplateMode}
-              />
-            </div>
-
-            <div className={`${isTemplateMode ? 'opacity-50 pointer-events-none' : ''}`}>
-              <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('tripEditor.field.endDate')}
-              </label>
-              <input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleInputChange}
-                min={formData.startDate || undefined}
-                lang={currentLanguage}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  dateError ? 'border-red-300' : 'border-gray-300'
-                } ${isTemplateMode ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                disabled={isTemplateMode}
-              />
-            </div>
-          </div>
-
-          {/* 日付エラーメッセージ */}
-          {!isTemplateMode && dateError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+          {!disableDateFields && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className={`${isTemplateMode ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('tripEditor.field.startDate')}
+                  </label>
+                  <input
+                    type="date"
+                    id="startDate"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleInputChange}
+                    lang={currentLanguage}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      dateError ? 'border-red-300' : 'border-gray-300'
+                    } ${isTemplateMode ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    disabled={isTemplateMode}
+                  />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-800">{dateError}</p>
+
+                <div className={`${isTemplateMode ? 'opacity-50 pointer-events-none' : ''}`}>
+                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('tripEditor.field.endDate')}
+                  </label>
+                  <input
+                    type="date"
+                    id="endDate"
+                    name="endDate"
+                    value={formData.endDate}
+                    onChange={handleInputChange}
+                    min={formData.startDate || undefined}
+                    lang={currentLanguage}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      dateError ? 'border-red-300' : 'border-gray-300'
+                    } ${isTemplateMode ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                    disabled={isTemplateMode}
+                  />
                 </div>
               </div>
-            </div>
+
+              {/* 日付エラーメッセージ */}
+              {!isTemplateMode && dateError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-red-800">{dateError}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           <div>
@@ -471,13 +489,14 @@ export default function TripEditor({ trip, onUpdate, onDelete, onClose, hideDest
               name="accessLevel"
               value={formData.accessLevel}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${disablePublishControls ? 'bg-gray-100 cursor-not-allowed border-gray-200' : 'border-gray-300'}`}
+              disabled={disablePublishControls}
             >
               <option value="private">{t('tripEditor.accessLevel.private')}</option>
               <option value="public">{t('tripEditor.accessLevel.public')}</option>
             </select>
 
-            {formData.accessLevel === 'public' && (
+            {formData.accessLevel === 'public' && !disablePublishControls && (
               <div className="mt-4">
                 <Toggle
                   label={t('trip.create.templateMode.label')}
