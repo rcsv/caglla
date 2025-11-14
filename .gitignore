@@ -15,6 +15,14 @@
 /test-results
 /playwright-report
 
+# Firebase Emulator
+firebase-debug.log
+firebase-debug.*.log
+ui-debug.log
+ui-debug.*.log
+*.local
+.emulators/
+
 # next.js
 /.next/
 /out/

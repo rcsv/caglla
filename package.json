@@ -11,10 +11,13 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:firestore": "FIRESTORE_EMULATOR_HOST=localhost:8080 jest --testPathPattern=firestore",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:all": "pnpm test && pnpm test:e2e",
+    "emulators:start": "firebase emulators:start",
+    "emulators:start:firestore": "firebase emulators:start --only firestore",
     "migrate": "ts-node src/migrate.ts",
     "flush-itineraries": "ts-node scripts/flush-itineraries.ts",
     "manage-itineraries": "ts-node scripts/manage-itineraries.ts",
@@ -44,6 +47,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
     "@jest/test-sequencer": "^30.2.0",
     "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.9.1",
