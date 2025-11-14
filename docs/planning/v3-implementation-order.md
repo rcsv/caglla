@@ -190,31 +190,71 @@ describe('toggleLike transaction', () => {
 
 ---
 
-### **Phase 1-1: 型定義と権限管理**（1週間）
+### **Phase 1-1: 型定義と権限管理**（1週間）✅
 
 **テストファーストで進める:**
 
-1. **型定義追加**
-   - `lib/core/types.ts` に SNS関連型を追加
-   - 型テスト（TypeScriptの型チェックで十分）
+1. **型定義追加** ✅
+   - `lib/core/types/social.ts` に SNS関連型を追加 ✅
+   - 識別子型システム（`UserId`, `UserSlug`, `TripId`, `TripSlug`）実装 ✅
+   - 型テスト（TypeScriptの型チェックで十分）✅
 
-2. **権限管理システム実装**
+2. **権限管理システム実装** ✅
    ```bash
-   # 1. テストを先に書く
-   lib/auth/__tests__/permissions.test.ts
+   # 1. テストを先に書く ✅
+   lib/core/__tests__/permissions.test.ts
    
-   # 2. 実装する
-   lib/auth/permissions.ts
+   # 2. 実装する ✅
+   lib/core/permissions.ts
    
-   # 3. テスト実行
-   pnpm test lib/auth
+   # 3. テスト実行 ✅
+   pnpm test lib/core/__tests__/permissions.test.ts
    ```
 
-   **テスト対象:**
-   - `canView(trip, userId)`
-   - `canEdit(trip, userId)`
-   - `canComment(trip, userId)`
-   - `canLike(trip, userId)`
+   **テスト対象:** ✅
+   - `canViewTrip(trip, userId)` ✅
+   - `canEditTrip(user, trip)` ✅
+   - `canCommentOnTrip(trip, userId)` ✅
+   - `canLikeTrip(trip, userId)` ✅
+
+3. **識別子比較関数の実装** ✅
+   - `isSameUserId()`, `isSameUserSlug()`, `isSameTripId()`, `isSameTripSlug()` ✅
+   - `isSameUser()`, `isSameTrip()` （非同期、実データベースクエリを伴う）✅
+   - 型安全性による混同防止システム ✅
+
+---
+
+### **Phase 1-1.5: 認証プロバイダーマルチ対応化**（v3.0.0での適用）
+
+**重要**: 現行システム（v2.*）への適用は危険と判断。v3.0.0のリファクタリングと同時に適用する。
+
+**基本方針**:
+1. **関数によるラップ**: 文字列比較を直接行わず、`isSameUser()`, `isSameTrip()` などのbooleanを返す関数でラップ
+2. **影響範囲の最小化**: 文字列比較の直接使用を禁止し、関数経由のみで比較を行う
+3. **型安全性**: Phase 1-1で実装した `UserId`, `UserSlug`, `TripId`, `TripSlug` のBranded Typesを活用
+
+**タスク**:
+1. **User型定義の拡張**
+   - `google_id: string` → `auth_uid: string` にリネーム（後方互換性のため `google_id?` も残す）
+   - `lib/core/types/user.ts` を更新
+
+2. **比較関数の拡張**
+   - `isSameUser(authUid: UserId, userSlug: UserSlug): Promise<boolean>` を実装
+   - `lib/auth/identity-helpers.ts` に追加
+
+3. **Firestoreルールの更新**
+   - `auth_uid` と `google_id` の両方をチェック（後方互換性）
+   - `firestore.rules` を更新
+
+4. **データマイグレーション**
+   - 既存の `google_id` を `auth_uid` にコピーするスクリプト
+   - `scripts/migrate-auth-uid.ts` を作成
+
+5. **コード全体の段階的更新**
+   - `getUserByGoogleId()` → `getUserByAuthUid()` に置き換え
+   - 文字列比較を `isSameUser()` などの関数呼び出しに置き換え
+
+**詳細**: `docs/planning/auth-provider-migration-plan.md` を参照
 
 ---
 
@@ -418,18 +458,27 @@ module.exports = {
 - [ ] CI/CDでのエミュレータ実行設定
 - [ ] カバレッジ設定確認
 
-### Phase 1-1: 型定義と権限管理
-- [ ] SNS関連型定義追加
-- [ ] 権限管理システムのテスト作成
-- [ ] 権限管理システム実装
-- [ ] テストカバレッジ90%以上
+### Phase 1-1: 型定義と権限管理 ✅
+- [x] SNS関連型定義追加 ✅
+- [x] 権限管理システムのテスト作成 ✅
+- [x] 権限管理システム実装 ✅
+- [x] 識別子型システム実装 ✅
+- [x] 比較関数の実装 ✅
+- [x] テストカバレッジ90%以上 ✅
+
+### Phase 1-1.5: 認証プロバイダーマルチ対応化（v3.0.0での適用）
+- [ ] User型定義の拡張（`auth_uid` フィールド追加）
+- [ ] 比較関数の拡張（`isSameUser()` 実装）
+- [ ] Firestoreルールの更新
+- [ ] データマイグレーションスクリプト作成
+- [ ] コード全体の段階的更新
 
 ### Phase 1-2: Firestore スキーマ拡張
-- [ ] バックフィルスクリプトのテスト作成
-- [ ] バックフィルスクリプト実装
-- [ ] セキュリティルールのテスト作成
-- [ ] セキュリティルール実装
-- [ ] エミュレータでのテスト完了
+- [x] バックフィルスクリプトのテスト作成 ✅
+- [x] バックフィルスクリプト実装 ✅
+- [x] セキュリティルールのテスト作成 ✅（構造のみ、エミュレータ起動後に完全実装）
+- [x] セキュリティルール実装 ✅（trip_likes, trip_comments, user_follows）
+- [ ] エミュレータでのテスト完了（エミュレータ起動後に実装）
 
 ### Phase 1-3: API Routes実装
 - [ ] いいねAPIのテスト作成
