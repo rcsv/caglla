@@ -20,6 +20,7 @@ import {
 } from '@/lib/social/trip-comments'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import type { Firestore } from 'firebase-admin/firestore'
+import { unauthorized, notFound, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 /**
  * adminAuthをlazy importします（テスト環境でも動作するように）
@@ -132,20 +133,19 @@ export async function GET(
 
     return NextResponse.json(comments)
   } catch (error: unknown) {
-    logger.error('Failed to fetch trip comments', error)
-
     if (error instanceof Error) {
       if (error.message.includes('Trip not found')) {
-        return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+        return notFound('Trip')
       }
       if (error.message.includes('Comments available only for public trips')) {
+        // 403 Forbidden は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Comments available only for public trips' }, { status: 403 })
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to fetch comments' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/comments`
     )
   }
 }
@@ -159,35 +159,19 @@ export async function POST(
   { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    if (!idToken) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    // テスト環境ではモックトークンを処理
-    let userId: string
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      const mockUserId = extractUserIdFromMockToken(idToken)
-      if (mockUserId) {
-        userId = mockUserId
-      } else {
-        const adminAuth = await getAdminAuth()
-        const decoded = await adminAuth.verifyIdToken(idToken)
-        userId = decoded.uid
-      }
-    } else {
-      const adminAuth = await getAdminAuth()
-      const decoded = await adminAuth.verifyIdToken(idToken)
-      userId = decoded.uid
+    const userId = await resolveAuthUserId(request)
+    if (!userId) {
+      return unauthorized('Authorization header required')
     }
 
     const { tripSlug } = await params
-    const body = await request.json().catch(() => ({}))
+    const body = await parseRequestBody<{
+      content?: string
+      userName?: string
+      userAvatar?: string
+      parentCommentId?: string
+    }>(request)
+    
     const content = typeof body.content === 'string' ? body.content.trim() : ''
     const userName = typeof body.userName === 'string' ? body.userName.trim() : ''
     const userAvatar = typeof body.userAvatar === 'string' ? body.userAvatar.trim() : undefined
@@ -197,7 +181,7 @@ export async function POST(
         : undefined
 
     if (!content) {
-      return NextResponse.json({ error: 'Content is required' }, { status: 400 })
+      return badRequest('Content is required')
     }
 
     // userNameが提供されない場合、ユーザー情報から取得
@@ -225,29 +209,28 @@ export async function POST(
 
     return NextResponse.json(comment, { status: 201 })
   } catch (error: unknown) {
-    logger.error('Failed to create trip comment', error)
-
     if (error instanceof Error) {
       if (error.message.includes('Trip not found')) {
-        return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+        return notFound('Trip')
       }
       if (error.message.includes('Comments available only for public trips')) {
+        // 403 Forbidden は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Comments available only for public trips' }, { status: 403 })
       }
       if (error.message.includes('Parent comment not found')) {
-        return NextResponse.json({ error: 'Parent comment not found' }, { status: 404 })
+        return notFound('Parent comment')
       }
       if (error.message.includes('Parent comment does not belong to this trip')) {
-        return NextResponse.json({ error: 'Parent comment does not belong to this trip' }, { status: 400 })
+        return badRequest('Parent comment does not belong to this trip')
       }
       if (error.message.includes('Cannot reply to deleted comment')) {
-        return NextResponse.json({ error: 'Cannot reply to deleted comment' }, { status: 400 })
+        return badRequest('Cannot reply to deleted comment')
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to create comment' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/comments`
     )
   }
 }
@@ -261,39 +244,17 @@ export async function PUT(
   { params }: { params: Promise<{ tripSlug: string; commentId: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    if (!idToken) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    // テスト環境ではモックトークンを処理
-    let userId: string
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      const mockUserId = extractUserIdFromMockToken(idToken)
-      if (mockUserId) {
-        userId = mockUserId
-      } else {
-        const adminAuth = await getAdminAuth()
-        const decoded = await adminAuth.verifyIdToken(idToken)
-        userId = decoded.uid
-      }
-    } else {
-      const adminAuth = await getAdminAuth()
-      const decoded = await adminAuth.verifyIdToken(idToken)
-      userId = decoded.uid
+    const userId = await resolveAuthUserId(request)
+    if (!userId) {
+      return unauthorized('Authorization header required')
     }
 
     const { tripSlug, commentId } = await params
-    const body = await request.json().catch(() => ({}))
+    const body = await parseRequestBody<{ content?: string }>(request)
     const content = typeof body.content === 'string' ? body.content.trim() : ''
 
     if (!content) {
-      return NextResponse.json({ error: 'Content is required' }, { status: 400 })
+      return badRequest('Content is required')
     }
 
     const db = getFirestore()
@@ -302,23 +263,22 @@ export async function PUT(
 
     return NextResponse.json(updatedComment)
   } catch (error: unknown) {
-    logger.error('Failed to update trip comment', error)
-
     if (error instanceof Error) {
       if (error.message.includes('Comment not found')) {
-        return NextResponse.json({ error: 'Comment not found' }, { status: 404 })
+        return notFound('Comment')
       }
       if (error.message.includes('Only comment owner can update') || error.message.includes('owner')) {
+        // 403 Forbidden は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Only comment owner can update' }, { status: 403 })
       }
       if (error.message.includes('Cannot update deleted comment')) {
-        return NextResponse.json({ error: 'Cannot update deleted comment' }, { status: 400 })
+        return badRequest('Cannot update deleted comment')
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to update comment' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/comments/[commentId]`
     )
   }
 }
@@ -332,31 +292,9 @@ export async function DELETE(
   { params }: { params: Promise<{ tripSlug: string; commentId: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    if (!idToken) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    // テスト環境ではモックトークンを処理
-    let userId: string
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      const mockUserId = extractUserIdFromMockToken(idToken)
-      if (mockUserId) {
-        userId = mockUserId
-      } else {
-        const adminAuth = await getAdminAuth()
-        const decoded = await adminAuth.verifyIdToken(idToken)
-        userId = decoded.uid
-      }
-    } else {
-      const adminAuth = await getAdminAuth()
-      const decoded = await adminAuth.verifyIdToken(idToken)
-      userId = decoded.uid
+    const userId = await resolveAuthUserId(request)
+    if (!userId) {
+      return unauthorized('Authorization header required')
     }
 
     const { tripSlug, commentId } = await params
@@ -366,20 +304,19 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
-    logger.error('Failed to delete trip comment', error)
-
     if (error instanceof Error) {
       if (error.message.includes('Comment not found')) {
-        return NextResponse.json({ error: 'Comment not found' }, { status: 404 })
+        return notFound('Comment')
       }
       if (error.message.includes('Only comment owner can delete') || error.message.includes('owner')) {
+        // 403 Forbidden は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Only comment owner can delete' }, { status: 403 })
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to delete comment' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/comments/[commentId]`
     )
   }
 }
