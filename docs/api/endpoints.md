@@ -124,14 +124,14 @@
 
 | Method | Endpoint | 説明 | 認証 | テスト |
 |--------|----------|------|------|--------|
-| `GET` | `/api/itineraries?day_id=xxx` | スケジュール一覧取得（`day_id` クエリパラメータ必須、特定のdayに紐づくitinerariesを取得） | ✅ | ❌ |
-| `POST` | `/api/itineraries` | スケジュール作成 | ✅ | ❌ |
-| `PUT` | `/api/itineraries/[id]` | スケジュール更新 | ✅ | ❌ |
-| `DELETE` | `/api/itineraries/[id]` | スケジュール削除 | ✅ | ❌ |
-| `POST` | `/api/itineraries/insert` | スケジュール挿入 | ✅ | ❌ |
-| `POST` | `/api/itineraries/move-to-day` | 別日程へ移動 | ✅ | ❌ |
-| `POST` | `/api/itineraries/duplicate-to-day` | 別日程へ複製 | ✅ | ❌ |
-| `POST` | `/api/itineraries/reorder` | 並び替え | ✅ | ❌ |
+| `GET` | `/api/itineraries?day_id=xxx` | スケジュール一覧取得（`day_id` クエリパラメータ必須、特定のdayに紐づくitinerariesを取得） | ✅ | ✅ |
+| `POST` | `/api/itineraries` | スケジュール作成 | ✅ | ✅ |
+| `PUT` | `/api/itineraries/[id]` | スケジュール更新 | ❌ | ✅ |
+| `DELETE` | `/api/itineraries/[id]` | スケジュール削除 | ❌ | ✅ |
+| `POST` | `/api/itineraries/insert` | スケジュール挿入 | ✅ | ✅ |
+| `POST` | `/api/itineraries/move-to-day` | 別日程へ移動 | ❌ | ✅ |
+| `POST` | `/api/itineraries/duplicate-to-day` | 別日程へ複製 | ❌ | ✅ |
+| `POST` | `/api/itineraries/reorder` | 並び替え | ❌ | ✅ |
 
 ---
 
