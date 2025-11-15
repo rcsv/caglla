@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { badRequest, internalError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 // 新Places API (v1) のsearchNearbyエンドポイント
@@ -8,19 +9,17 @@ const GOOGLE_PLACES_API_URL_NEARBY = 'https://places.googleapis.com/v1/places:se
 export async function POST(request: NextRequest) {
   try {
     if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Places API key is not configured' },
-        { status: 500 }
-      )
+      return internalError('Google Places API key is not configured')
     }
 
-    const { location, radius } = await request.json()
+    const body = await parseRequestBody<{
+      location?: { lat: number; lng: number }
+      radius?: number
+    }>(request)
+    const { location, radius } = body
     
     if (!location || !location.lat || !location.lng) {
-      return NextResponse.json(
-        { error: 'Location (lat, lng) is required' },
-        { status: 400 }
-      )
+      return badRequest('Location (lat, lng) is required')
     }
 
     logger.debug('Searching nearby places with new Places API v1', { location, radius })
@@ -79,10 +78,9 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(legacyFormat)
   } catch (error) {
-    logger.error('Error in nearby search:', error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/places/nearby'
     )
   }
 }

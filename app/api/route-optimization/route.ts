@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { badRequest, internalError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_DIRECTIONS_API_URL = 'https://maps.googleapis.com/maps/api/directions/json'
@@ -31,19 +32,13 @@ export interface RouteOptimizationResponse {
 export async function POST(request: NextRequest) {
   try {
     if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Places API key is not configured' },
-        { status: 500 }
-      )
+      return internalError('Google Places API key is not configured')
     }
 
-    const body: RouteOptimizationRequest = await request.json()
+    const body = await parseRequestBody<RouteOptimizationRequest>(request)
     
     if (!body.origin || !body.destination || !body.waypoints) {
-      return NextResponse.json(
-        { error: 'Origin, destination, and waypoints are required' },
-        { status: 400 }
-      )
+      return badRequest('Origin, destination, and waypoints are required')
     }
 
     // 座標を文字列に変換するヘルパー関数
@@ -127,10 +122,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(optimizedResponse)
   } catch (error) {
-    logger.error('Error in route optimization API', error)
-    return NextResponse.json(
-      { error: 'Failed to optimize route' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/route-optimization'
     )
   }
 }

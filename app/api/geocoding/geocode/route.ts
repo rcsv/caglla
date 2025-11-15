@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { badRequest, internalError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 const GOOGLE_GEOCODING_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode'
@@ -7,19 +8,16 @@ const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode'
 export async function POST(request: NextRequest) {
   try {
     if (!GOOGLE_GEOCODING_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Geocoding API key is not configured' },
-        { status: 500 }
-      )
+      return internalError('Google Geocoding API key is not configured')
     }
 
-    const { address } = await request.json()
+    const body = await parseRequestBody<{
+      address?: string
+    }>(request)
+    const { address } = body
     
     if (!address) {
-      return NextResponse.json(
-        { error: 'Address is required' },
-        { status: 400 }
-      )
+      return badRequest('Address is required')
     }
 
     // Google Geocoding APIを呼び出し
@@ -39,10 +37,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data)
   } catch (error) {
-    logger.error('Error in geocoding proxy:', error)
-    return NextResponse.json(
-      { error: 'Failed to geocode address' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/geocoding/geocode'
     )
   }
 }

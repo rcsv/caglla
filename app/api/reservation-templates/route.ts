@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 
-import { verifyAuthToken } from '@/lib/api/auth-helpers'
+import { requireAuth } from '@/lib/api/auth-helpers'
 import type { ReservationTemplate, ReservationTemplateInput } from '@/lib/core/types'
+import { unauthorized, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 // Firebase Admin初期化
 const db = getFirestore()
@@ -13,15 +14,16 @@ const db = getFirestore()
 export async function GET(request: NextRequest) {
   try {
     // 認証チェック
-    const user = await verifyAuthToken(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId: uid } = auth
 
     // テンプレート一覧を取得
     const templatesSnapshot = await db
       .collection('reservation_templates')
-      .where('user_id', '==', user.uid)
+      .where('user_id', '==', uid)
       .orderBy('updated_at', 'desc')
       .get()
 
@@ -32,10 +34,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ templates })
   } catch (error) {
-    console.error('Get templates error:', error)
-    return NextResponse.json({ 
-      error: 'Internal Server Error' 
-    }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/reservation-templates'
+    )
   }
 }
 
@@ -45,23 +47,22 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // 認証チェック
-    const user = await verifyAuthToken(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId: uid } = auth
 
-    const body = await request.json() as ReservationTemplateInput
+    const body = await parseRequestBody<ReservationTemplateInput>(request)
 
     // バリデーション
     if (!body.name || !body.type) {
-      return NextResponse.json({ 
-        error: 'Name and type are required' 
-      }, { status: 400 })
+      return badRequest('Name and type are required')
     }
 
     // テンプレート作成
     const templateData = {
-      user_id: user.uid,
+      user_id: uid,
       name: body.name,
       description: body.description || '',
       type: body.type,
@@ -86,10 +87,10 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Create template error:', error)
-    return NextResponse.json({ 
-      error: 'Internal Server Error' 
-    }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/reservation-templates'
+    )
   }
 }
 

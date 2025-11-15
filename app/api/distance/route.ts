@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { badRequest, internalError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_DISTANCE_MATRIX_API_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json'
@@ -7,19 +8,18 @@ const GOOGLE_DISTANCE_MATRIX_API_URL = 'https://maps.googleapis.com/maps/api/dis
 export async function POST(request: NextRequest) {
   try {
     if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Places API key is not configured' },
-        { status: 500 }
-      )
+      return internalError('Google Places API key is not configured')
     }
 
-    const { origins, destinations, mode = 'driving' } = await request.json()
+    const body = await parseRequestBody<{
+      origins?: string | string[]
+      destinations?: string | string[]
+      mode?: 'driving' | 'walking' | 'bicycling' | 'transit'
+    }>(request)
+    const { origins, destinations, mode = 'driving' } = body
     
     if (!origins || !destinations) {
-      return NextResponse.json(
-        { error: 'Origins and destinations are required' },
-        { status: 400 }
-      )
+      return badRequest('Origins and destinations are required')
     }
 
     // Distance Matrix APIを呼び出し
@@ -48,10 +48,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data)
   } catch (error) {
-    logger.error('Error in distance matrix API:', error)
-    return NextResponse.json(
-      { error: 'Failed to calculate distance and duration' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/distance'
     )
   }
 }

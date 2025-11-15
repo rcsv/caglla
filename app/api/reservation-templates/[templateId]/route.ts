@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 
-import { verifyAuthToken } from '@/lib/api/auth-helpers'
+import { requireAuth } from '@/lib/api/auth-helpers'
 import type { ReservationTemplateInput } from '@/lib/core/types'
+import { unauthorized, notFound, badRequest, createForbiddenError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 // Firebase Admin初期化
 const db = getFirestore()
@@ -18,10 +19,11 @@ export async function PUT(
     const { templateId } = await params
 
     // 認証チェック
-    const user = await verifyAuthToken(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId: uid } = auth
 
     // テンプレート取得
     const templateDoc = await db
@@ -30,23 +32,21 @@ export async function PUT(
       .get()
 
     if (!templateDoc.exists) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+      return notFound('Template')
     }
 
     const template = templateDoc.data()
 
     // 所有権確認
-    if (template?.user_id !== user.uid) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (template?.user_id !== uid) {
+      throw createForbiddenError('You do not own this template')
     }
 
-    const body = await request.json() as ReservationTemplateInput
+    const body = await parseRequestBody<ReservationTemplateInput>(request)
 
     // バリデーション
     if (!body.name || !body.type) {
-      return NextResponse.json({ 
-        error: 'Name and type are required' 
-      }, { status: 400 })
+      return badRequest('Name and type are required')
     }
 
     // テンプレート更新
@@ -76,10 +76,10 @@ export async function PUT(
       }
     })
   } catch (error) {
-    console.error('Update template error:', error)
-    return NextResponse.json({ 
-      error: 'Internal Server Error' 
-    }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/reservation-templates/[templateId]'
+    )
   }
 }
 
@@ -94,10 +94,11 @@ export async function DELETE(
     const { templateId } = await params
 
     // 認証チェック
-    const user = await verifyAuthToken(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId: uid } = auth
 
     // テンプレート取得
     const templateDoc = await db
@@ -106,14 +107,14 @@ export async function DELETE(
       .get()
 
     if (!templateDoc.exists) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+      return notFound('Template')
     }
 
     const template = templateDoc.data()
 
     // 所有権確認
-    if (template?.user_id !== user.uid) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (template?.user_id !== uid) {
+      throw createForbiddenError('You do not own this template')
     }
 
     // テンプレート削除
@@ -127,10 +128,10 @@ export async function DELETE(
       message: 'Template deleted',
     })
   } catch (error) {
-    console.error('Delete template error:', error)
-    return NextResponse.json({ 
-      error: 'Internal Server Error' 
-    }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/reservation-templates/[templateId]'
+    )
   }
 }
 
@@ -145,10 +146,11 @@ export async function POST(
     const { templateId } = await params
 
     // 認証チェック
-    const user = await verifyAuthToken(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId: uid } = auth
 
     // テンプレート取得
     const templateDoc = await db
@@ -157,14 +159,14 @@ export async function POST(
       .get()
 
     if (!templateDoc.exists) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+      return notFound('Template')
     }
 
     const template = templateDoc.data()
 
     // 所有権確認
-    if (template?.user_id !== user.uid) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (template?.user_id !== uid) {
+      throw createForbiddenError('You do not own this template')
     }
 
     // 使用回数と最終使用日時を更新
@@ -180,10 +182,10 @@ export async function POST(
       success: true,
     })
   } catch (error) {
-    console.error('Use template error:', error)
-    return NextResponse.json({ 
-      error: 'Internal Server Error' 
-    }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/reservation-templates/[templateId]/use'
+    )
   }
 }
 

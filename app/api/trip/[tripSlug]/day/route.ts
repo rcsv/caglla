@@ -4,6 +4,7 @@ import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { adminDayOperations, adminTripOperations } from '@/lib/firebase/admin-operation'
 import { requireAuth } from '@/lib/api/auth-helpers'
 import { notFound, badRequest, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
+import { validateTripOwnership } from '@/lib/api/authorization-helpers'
 
 export async function POST(
   request: NextRequest,
@@ -19,16 +20,12 @@ export async function POST(
 
     const { tripSlug } = await params
 
-    const resolvedTrip = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolvedTrip) {
-      return notFound('Trip')
+    // Trip解決と所有権チェック
+    const ownership = await validateTripOwnership(tripSlug, userId)
+    if (ownership instanceof NextResponse) {
+      return ownership // エラーレスポンスをそのまま返す
     }
-
-    const { id: tripId, trip } = resolvedTrip
-
-    if (trip.user_id !== userId) {
-      throw createForbiddenError('You do not own this trip')
-    }
+    const { tripId, trip } = ownership
 
     // 既存の日程を取得して次のday_numberを決定
     const existingDays = await adminDayOperations.getDaysByTripId(tripId)

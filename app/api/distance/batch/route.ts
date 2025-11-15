@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { badRequest, internalError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import type { PlaceData } from '@/lib/core/types'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_DISTANCE_MATRIX_API_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json'
@@ -7,19 +9,17 @@ const GOOGLE_DISTANCE_MATRIX_API_URL = 'https://maps.googleapis.com/maps/api/dis
 export async function POST(request: NextRequest) {
   try {
     if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Places API key is not configured' },
-        { status: 500 }
-      )
+      return internalError('Google Places API key is not configured')
     }
 
-    const { places, mode = 'driving' } = await request.json()
+    const body = await parseRequestBody<{
+      places?: PlaceData[]
+      mode?: 'driving' | 'walking' | 'bicycling' | 'transit'
+    }>(request)
+    const { places, mode = 'driving' } = body
     
     if (!places || places.length < 2) {
-      return NextResponse.json(
-        { error: 'At least 2 places are required' },
-        { status: 400 }
-      )
+      return badRequest('At least 2 places are required')
     }
 
     // 連続する地点間の距離を計算
@@ -143,10 +143,7 @@ export async function POST(request: NextRequest) {
 
     // 成功した区間がない場合はエラーを返す
     if (segments.length === 0) {
-      return NextResponse.json(
-        { error: 'All distance calculations failed' },
-        { status: 400 }
-      )
+      return badRequest('All distance calculations failed')
     }
 
     return NextResponse.json({
@@ -165,10 +162,9 @@ export async function POST(request: NextRequest) {
       segmentCount: segments.length
     })
   } catch (error) {
-    logger.error('Error in batch distance calculation', error)
-    return NextResponse.json(
-      { error: 'Failed to calculate total distance' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/distance/batch'
     )
   }
 }

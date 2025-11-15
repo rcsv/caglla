@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { isSupportedLanguage, DEFAULT_LANGUAGE } from '@/lib/utils/language'
 import type { SupportedLanguage } from '@/lib/core/types'
+import { badRequest, internalError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 // 新Places API (v1) のエンドポイント
@@ -10,19 +11,18 @@ const GOOGLE_PLACES_API_URL_NEW = 'https://places.googleapis.com/v1/places:searc
 export async function POST(request: NextRequest) {
   try {
     if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Places API key is not configured' },
-        { status: 500 }
-      )
+      return internalError('Google Places API key is not configured')
     }
 
-    const { query, language, locationBias } = await request.json()
+    const body = await parseRequestBody<{
+      query?: string
+      language?: SupportedLanguage
+      locationBias?: any
+    }>(request)
+    const { query, language, locationBias } = body
     
     if (!query || query.length < 2) {
-      return NextResponse.json(
-        { error: 'Query must be at least 2 characters long' },
-        { status: 400 }
-      )
+      return badRequest('Query must be at least 2 characters long')
     }
 
     // 言語バリデーション
@@ -90,10 +90,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(legacyFormat)
   } catch (error) {
-    logger.error('Error in places search proxy', error)
-    return NextResponse.json(
-      { error: 'Failed to search places' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/places/search'
     )
   }
 }

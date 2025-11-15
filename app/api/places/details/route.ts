@@ -3,6 +3,7 @@ import logger from '@/lib/core/logger'
 import { isSupportedLanguage, DEFAULT_LANGUAGE } from '@/lib/utils/language'
 import { getPlaceFromCache, savePlaceToCache, isCacheStale } from '@/lib/api/places-cache'
 import type { SupportedLanguage, PlaceDetailsResult } from '@/lib/core/types'
+import { badRequest, internalError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 // 新Places API (v1) のエンドポイント
@@ -16,19 +17,17 @@ const SOFT_TTL_MS = 14 * 24 * 60 * 60 * 1000
 export async function POST(request: NextRequest) {
   try {
     if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Places API key is not configured' },
-        { status: 500 }
-      )
+      return internalError('Google Places API key is not configured')
     }
 
-    const { placeId, language } = await request.json()
+    const body = await parseRequestBody<{
+      placeId?: string
+      language?: SupportedLanguage
+    }>(request)
+    const { placeId, language } = body
     
     if (!placeId) {
-      return NextResponse.json(
-        { error: 'Place ID is required' },
-        { status: 400 }
-      )
+      return badRequest('Place ID is required')
     }
 
     // 言語バリデーション
@@ -84,10 +83,9 @@ export async function POST(request: NextRequest) {
       result: placeData
     })
   } catch (error) {
-    logger.error('Error in places details proxy:', error)
-    return NextResponse.json(
-      { error: 'Failed to get place details' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/places/details'
     )
   }
 }

@@ -5,6 +5,7 @@ import logger from '@/lib/core/logger'
 import { NextRequest, NextResponse } from 'next/server'
 import { unsplashApiHelpers } from '@/lib/api/unsplash'
 import { validateServerEnvironment } from '@/lib/core/env-validation'
+import { badRequest, notFound, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,17 +24,11 @@ export async function GET(request: NextRequest) {
     const count = parseInt(searchParams.get('count') || '1')
 
     if (!destination) {
-      return NextResponse.json(
-        { error: 'Destination parameter is required' },
-        { status: 400 }
-      )
+      return badRequest('Destination parameter is required')
     }
 
     if (count > 10) {
-      return NextResponse.json(
-        { error: 'Count cannot exceed 10' },
-        { status: 400 }
-      )
+      return badRequest('Count cannot exceed 10')
     }
 
     // 単一画像の取得
@@ -101,21 +96,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
+    const body = await parseRequestBody<{
+      destination?: string
+      count?: number
+    }>(request)
     const { destination, count = 1 } = body
 
     if (!destination) {
-      return NextResponse.json(
-        { error: 'Destination is required' },
-        { status: 400 }
-      )
+      return badRequest('Destination is required')
     }
 
     if (count > 10) {
-      return NextResponse.json(
-        { error: 'Count cannot exceed 10' },
-        { status: 400 }
-      )
+      return badRequest('Count cannot exceed 10')
     }
 
     // 単一画像の取得

@@ -4,6 +4,7 @@ import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { PlaceData, PlacesCache, PlacesCacheInput, SupportedLanguage } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 import { withAuth, badRequest, notFound, createForbiddenError, parseRequestBody } from '@/lib/core/error-handler'
+import { validateDayOwnership } from '@/lib/api/authorization-helpers'
 
 /**
  * Create a new itinerary for a given day and return the saved itinerary with resolved place data.
@@ -33,25 +34,11 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
   const resolvedPlaceId: string = place_id || place_data.place_id
 
   // 認可チェック: day → trip の所有権確認
-  const dayDoc = await adminDb.collection(COLLECTIONS.DAYS).doc(day_id).get()
-  if (!dayDoc.exists) {
-    return notFound('Day')
+  const ownership = await validateDayOwnership(day_id, userId)
+  if (ownership instanceof NextResponse) {
+    return ownership // エラーレスポンスをそのまま返す
   }
-
-  const dayData = dayDoc.data()
-  if (!dayData?.trip_id) {
-    return badRequest('Day has no trip_id')
-  }
-
-  const tripDoc = await adminDb.collection(COLLECTIONS.TRIPS).doc(dayData.trip_id).get()
-  if (!tripDoc.exists) {
-    return notFound('Trip')
-  }
-
-  const tripData = tripDoc.data()
-  if (tripData?.user_id !== userId) {
-    throw createForbiddenError('You do not own this trip')
-  }
+  const { tripId, trip: tripData } = ownership
 
   // 同じday_idの既存のitinerariesを取得してsort_numberを決定
   const itinerariesRef = adminDb.collection(COLLECTIONS.ITINERARIES)
@@ -278,25 +265,11 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
   }
 
   // 認可チェック: day → trip の所有権確認
-  const dayDoc = await adminDb.collection(COLLECTIONS.DAYS).doc(dayId).get()
-  if (!dayDoc.exists) {
-    return notFound('Day')
+  const ownership = await validateDayOwnership(dayId, userId)
+  if (ownership instanceof NextResponse) {
+    return ownership // エラーレスポンスをそのまま返す
   }
-
-  const dayData = dayDoc.data()
-  if (!dayData?.trip_id) {
-    return badRequest('Day has no trip_id')
-  }
-
-  const tripDoc = await adminDb.collection(COLLECTIONS.TRIPS).doc(dayData.trip_id).get()
-  if (!tripDoc.exists) {
-    return notFound('Trip')
-  }
-
-  const tripData = tripDoc.data()
-  if (tripData?.user_id !== userId) {
-    throw createForbiddenError('You do not own this trip')
-  }
+  const { tripId } = ownership
 
   // 指定されたday_idのitinerariesを取得
   const itinerariesRef = adminDb.collection(COLLECTIONS.ITINERARIES)

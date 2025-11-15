@@ -9,6 +9,7 @@ import { canViewTrip } from '@/lib/core/permissions'
 import { asUserId } from '@/lib/core/types/identity'
 import { requireAuth } from '@/lib/api/auth-helpers'
 import { notFound, badRequest, createForbiddenError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { validateTripOwnership } from '@/lib/api/authorization-helpers'
 
 // API応答用の拡張型（destination_placeを含む）
 interface TripWithDestination extends Trip {
@@ -278,13 +279,12 @@ export async function PUT(
 
     const { tripSlug } = await params
 
-    // Resolve trip by slug or id
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolved) {
-      return notFound('Trip')
+    // Trip解決と所有権チェック
+    const ownership = await validateTripOwnership(tripSlug, userId)
+    if (ownership instanceof NextResponse) {
+      return ownership // エラーレスポンスをそのまま返す
     }
-    
-    const { id: tripId, trip } = resolved
+    const { tripId, trip } = ownership
 
     const body = await parseRequestBody<{
       title?: string
@@ -334,11 +334,6 @@ export async function PUT(
         : typeof snakeIsTemplate === 'boolean'
           ? snakeIsTemplate
           : Boolean(trip.is_template)
-
-    // Verify user owns this trip
-    if (trip.user_id !== userId) {
-      throw createForbiddenError('You do not own this trip')
-    }
 
     // 日程が変更されたかチェック
     const originalStartDate = trip?.start_date
@@ -596,18 +591,12 @@ export async function DELETE(
 
     const { tripSlug } = await params
 
-    // Resolve trip by slug or id
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolved) {
-      return notFound('Trip')
+    // Trip解決と所有権チェック
+    const ownership = await validateTripOwnership(tripSlug, userId)
+    if (ownership instanceof NextResponse) {
+      return ownership // エラーレスポンスをそのまま返す
     }
-    
-    const { id: tripId, trip } = resolved
-
-    // Verify user owns this trip
-    if (trip.user_id !== userId) {
-      throw createForbiddenError('You do not own this trip')
-    }
+    const { tripId, trip } = ownership
 
     // Delete trip (this will also delete related days and itineraries)
     await adminTripOperations.deleteTrip(tripId)

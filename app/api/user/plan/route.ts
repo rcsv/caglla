@@ -67,10 +67,11 @@ export async function PUT(request: NextRequest) {
       logger.warn('Firebase Admin SDK not available, using development fallback')
       
       // 開発環境用のフォールバック
-      const { planId } = await request.json()
+      const body = await parseRequestBody<{ planId?: PlanId }>(request)
+      const { planId } = body
       
       // プランIDのバリデーション
-      if (!Object.values(PlanId).includes(planId)) {
+      if (!planId || !Object.values(PlanId).includes(planId)) {
         return badRequest('Invalid plan ID')
       }
       
