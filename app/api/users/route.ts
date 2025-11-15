@@ -26,8 +26,9 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       preferences 
     } = body
 
-    // 既存ユーザーをチェック
-    const existingUser = await adminUserOperations.getUserByGoogleId(userId)
+    // 既存ユーザーをチェック（auth_uid で検索、後方互換性のため google_id もチェック）
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化
+    const existingUser = await adminUserOperations.getUserByAuthUid(userId)
     
     let userData: Omit<User, 'id' | 'created_at' | 'updated_at'>
     
@@ -54,7 +55,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       }
       
       userData = {
-        google_id: userId,
+        auth_uid: userId, // Firebase Auth UID（必須）
+        google_id: userId, // 後方互換性のため保持（Google認証の場合）
         name: userName,
         slug: userSlug,
         email: existingUser.email, // 既存のemailを保持
@@ -75,7 +77,8 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
       })
       
       userData = {
-        google_id: userId,
+        auth_uid: userId, // Firebase Auth UID（必須）
+        google_id: userId, // 後方互換性のため保持（Google認証の場合）
         name: userName,
         slug: userSlug,
         email: email || decodedToken.email || '',
@@ -101,8 +104,9 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 export const GET = withAuth(async (request: NextRequest, auth) => {
   const { userId } = auth
 
-  // Get user data
-  const user = await adminUserOperations.getUserByGoogleId(userId)
+  // Get user data（auth_uid で検索、後方互換性のため google_id もチェック）
+  // Phase 1-1.5: 認証プロバイダーマルチ対応化
+  const user = await adminUserOperations.getUserByAuthUid(userId)
   
   if (!user) {
     return notFound('User')

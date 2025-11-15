@@ -2,18 +2,24 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Users collection rules
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化（v3.0.0）
+    // auth_uid または google_id の両方をチェック（後方互換性）
     match /users/{userId} {
       // Public read: allow reading user profiles (e.g., slug, name) for routing and cards
       allow read: if true;
 
       // Write restricted to the owner
+      // auth_uid を優先的にチェック、なければ google_id をチェック（後方互換性）
       allow write: if request.auth != null &&
-        (request.auth.uid == resource.data.google_id ||
+        (request.auth.uid == resource.data.auth_uid ||
+         request.auth.uid == resource.data.google_id ||
          request.auth.uid == userId);
 
       // Allow creation for new users
+      // auth_uid を優先的にチェック、なければ google_id をチェック（後方互換性）
       allow create: if request.auth != null &&
-        (request.auth.uid == request.resource.data.google_id ||
+        (request.auth.uid == request.resource.data.auth_uid ||
+         request.auth.uid == request.resource.data.google_id ||
          request.auth.uid == userId);
     }
     

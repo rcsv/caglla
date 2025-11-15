@@ -124,14 +124,14 @@
 
 | Method | Endpoint | 説明 | 認証 | テスト |
 |--------|----------|------|------|--------|
-| `GET` | `/api/itineraries?day_id=xxx` | スケジュール一覧取得（`day_id` クエリパラメータ必須、特定のdayに紐づくitinerariesを取得） | ✅ | ❌ |
-| `POST` | `/api/itineraries` | スケジュール作成 | ✅ | ❌ |
-| `PUT` | `/api/itineraries/[id]` | スケジュール更新 | ✅ | ❌ |
-| `DELETE` | `/api/itineraries/[id]` | スケジュール削除 | ✅ | ❌ |
-| `POST` | `/api/itineraries/insert` | スケジュール挿入 | ✅ | ❌ |
-| `POST` | `/api/itineraries/move-to-day` | 別日程へ移動 | ✅ | ❌ |
-| `POST` | `/api/itineraries/duplicate-to-day` | 別日程へ複製 | ✅ | ❌ |
-| `POST` | `/api/itineraries/reorder` | 並び替え | ✅ | ❌ |
+| `GET` | `/api/itineraries?day_id=xxx` | スケジュール一覧取得（`day_id` クエリパラメータ必須、特定のdayに紐づくitinerariesを取得） | ✅ | ✅ |
+| `POST` | `/api/itineraries` | スケジュール作成 | ✅ | ✅ |
+| `PUT` | `/api/itineraries/[id]` | スケジュール更新 | ❌ | ✅ |
+| `DELETE` | `/api/itineraries/[id]` | スケジュール削除 | ❌ | ✅ |
+| `POST` | `/api/itineraries/insert` | スケジュール挿入 | ✅ | ✅ |
+| `POST` | `/api/itineraries/move-to-day` | 別日程へ移動 | ❌ | ✅ |
+| `POST` | `/api/itineraries/duplicate-to-day` | 別日程へ複製 | ❌ | ✅ |
+| `POST` | `/api/itineraries/reorder` | 並び替え | ❌ | ✅ |
 
 ---
 
@@ -287,7 +287,7 @@
 - **SNS機能（v3.0.0）**: ✅ 100% 完了（12エンドポイント、31テスト通過）
 - **トリップ管理**: ⚠️ 一部未テスト（19エンドポイント、ただしTrip CRUD 6エンドポイントは✅）
 - **ユーザー管理**: ✅ 100% 完了（8エンドポイント、全テスト通過）
-- **日程・スケジュール管理**: ⚠️ 一部未テスト（8エンドポイント）
+- **日程・スケジュール管理**: ✅ 100% 完了（8エンドポイント、全テスト通過）
 - **場所・地図機能**: ⚠️ 一部未テスト（13エンドポイント）
 - **テンプレート・チェックリスト**: ⚠️ 一部未テスト（13エンドポイント）
 - **エクスポート・共有**: ⚠️ 一部未テスト（5エンドポイント）
@@ -297,7 +297,7 @@
 
 - **総エンドポイント数**: 91
 - **v3.0.0新規追加**: 12
-- **テスト通過**: 約50-60（v3.0.0 SNS機能12エンドポイント + システムエンドポイント4エンドポイント + ユーザー管理8エンドポイント + Trip CRUD 6エンドポイント）
+- **テスト通過**: 約58-68（v3.0.0 SNS機能12エンドポイント + システムエンドポイント4エンドポイント + ユーザー管理8エンドポイント + Trip CRUD 6エンドポイント + 日程・スケジュール管理8エンドポイント）
 
 ---
 

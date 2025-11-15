@@ -103,8 +103,9 @@ export async function PUT(
       throw createForbiddenError('You can only update your own information')
     }
 
-    // 既存ユーザーを取得
-    const existingUser = await adminUserOperations.getUserByGoogleId(authenticatedUserId)
+    // 既存ユーザーを取得（auth_uid で検索、後方互換性のため google_id もチェック）
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化
+    const existingUser = await adminUserOperations.getUserByAuthUid(authenticatedUserId)
     if (!existingUser) {
       return notFound('User')
     }
@@ -169,8 +170,9 @@ export async function PUT(
     // ユーザー情報を更新
     await adminUserOperations.updateUser(existingUser.id, updateData)
 
-    // 更新後のユーザー情報を取得
-    const updatedUser = await adminUserOperations.getUserByGoogleId(authenticatedUserId)
+    // 更新後のユーザー情報を取得（auth_uid で検索、後方互換性のため google_id もチェック）
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化
+    const updatedUser = await adminUserOperations.getUserByAuthUid(authenticatedUserId)
     if (!updatedUser) {
       return notFound('User not found after update')
     }

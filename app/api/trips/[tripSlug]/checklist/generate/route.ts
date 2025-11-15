@@ -23,8 +23,9 @@ export async function POST(
     }
     const { userId: googleId } = auth
 
-    // ユーザー情報取得（google_idで検索）
-    const user = await adminUserOperations.getUserByGoogleId(googleId)
+    // ユーザー情報取得（auth_uid で検索、後方互換性のため google_id もチェック）
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化
+    const user = await adminUserOperations.getUserByAuthUid(googleId)
     if (!user) {
       return notFound('User')
     }

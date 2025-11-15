@@ -16,8 +16,9 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
     return badRequest('Name is required')
   }
 
-  // 既存ユーザーを取得
-  const existingUser = await adminUserOperations.getUserByGoogleId(userId)
+  // 既存ユーザーを取得（auth_uid で検索、後方互換性のため google_id もチェック）
+  // Phase 1-1.5: 認証プロバイダーマルチ対応化
+  const existingUser = await adminUserOperations.getUserByAuthUid(userId)
   
   // 名前からスラッグを生成
   const newSlug = generateSlug(name)

@@ -28,6 +28,34 @@ export const adminUserOperations = {
     return adminFirestoreHelpers.docToObject<User>(docSnap)
   },
 
+  /**
+   * Firebase Auth UIDでユーザーを取得（推奨）
+   * Phase 1-1.5: 認証プロバイダーマルチ対応化
+   * 
+   * まず auth_uid で検索し、見つからなければ google_id で検索（後方互換性）
+   */
+  async getUserByAuthUid(authUid: string): Promise<User | null> {
+    // まず auth_uid で検索
+    const byAuthUid = await adminDb
+      .collection(COLLECTIONS.USERS)
+      .where('auth_uid', '==', authUid)
+      .limit(1)
+      .get()
+    
+    if (!byAuthUid.empty) {
+      return adminFirestoreHelpers.docToObject<User>(byAuthUid.docs[0])
+    }
+    
+    // 後方互換性: google_id で検索
+    return this.getUserByGoogleId(authUid)
+  },
+
+  /**
+   * Google IDでユーザーを取得（後方互換性のため残す）
+   * Phase 1-1.5: 認証プロバイダーマルチ対応化
+   * 
+   * @deprecated getUserByAuthUid() の使用を推奨
+   */
   async getUserByGoogleId(googleId: string): Promise<User | null> {
     const querySnapshot = await adminDb.collection(COLLECTIONS.USERS)
       .where('google_id', '==', googleId)
@@ -47,8 +75,13 @@ export const adminUserOperations = {
   },
 
   async createOrUpdateUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
-    // 既存のユーザーを検索
-    const existingUser = await this.getUserByGoogleId(userData.google_id)
+    // 既存のユーザーを検索（auth_uid または google_id で検索）
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化
+    const existingUser = userData.auth_uid
+      ? await this.getUserByAuthUid(userData.auth_uid)
+      : userData.google_id
+      ? await this.getUserByGoogleId(userData.google_id)
+      : null
     
     if (existingUser) {
       // 既存ユーザーの場合、明示的に変更されたフィールドのみ更新
@@ -111,8 +144,22 @@ export const adminUserOperations = {
         updated_at: new Date()
       }
     } else {
-      // 新規ユーザーの場合、作成
-      return await this.createUser(userData)
+      // 新規ユーザーの場合、auth_uidを設定（google_idから取得、または指定されたauth_uidを使用）
+      // Phase 1-1.5: 認証プロバイダーマルチ対応化
+      const userDataWithAuthUid = {
+        ...userData,
+        // auth_uidが指定されていない場合、google_idを使用（後方互換性）
+        auth_uid: userData.auth_uid || userData.google_id || '',
+        // google_idが指定されている場合、後方互換性のため保持
+        google_id: userData.google_id || (userData.auth_uid ? undefined : undefined)
+      }
+      
+      // auth_uidが設定されていない場合はエラー
+      if (!userDataWithAuthUid.auth_uid) {
+        throw new Error('auth_uid or google_id is required for user creation')
+      }
+      
+      return await this.createUser(userDataWithAuthUid)
     }
   }
 }
