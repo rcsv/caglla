@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { notFound, parseRequestBody, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
 
 // GET: プリセット詳細取得
 export async function GET(
@@ -9,34 +11,33 @@ export async function GET(
 ) {
   try {
     // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
+    const { userId } = auth
 
     const { presetSlug } = await params
     const ref = adminDb.collection('checklist_presets').doc(presetSlug)
     const doc = await ref.get()
 
     if (!doc.exists) {
-      return NextResponse.json({ error: 'Preset not found' }, { status: 404 })
+      return notFound('Preset')
     }
 
     const preset = doc.data()
 
     // 公開プリセットまたは自分のプリセットのみ閲覧可能
     if (!preset?.is_public && preset?.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      throw createForbiddenError('You do not have permission to access this preset')
     }
 
     return NextResponse.json(preset)
   } catch (error) {
-    logger.error('Failed to fetch preset', error)
-    return NextResponse.json({ error: 'Failed to fetch preset' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/checklists/presets/[presetSlug]`
+    )
   }
 }
 
@@ -47,29 +48,32 @@ export async function PUT(
 ) {
   try {
     // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
+    const { userId } = auth
 
     const { presetSlug } = await params
     const ref = adminDb.collection('checklist_presets').doc(presetSlug)
     const doc = await ref.get()
 
     if (!doc.exists) {
-      return NextResponse.json({ error: 'Preset not found' }, { status: 404 })
+      return notFound('Preset')
     }
 
     const preset = doc.data()
     if (preset?.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      throw createForbiddenError('You do not own this preset')
     }
 
-    const body = await request.json()
+    const body = await parseRequestBody<{
+      title?: string
+      description?: string
+      tags?: string[]
+      items?: any[]
+      is_public?: boolean
+    }>(request)
     const { title, description, tags, items, is_public } = body
 
     await ref.update({
@@ -84,8 +88,10 @@ export async function PUT(
     const updated = await ref.get()
     return NextResponse.json(updated.data())
   } catch (error) {
-    logger.error('Failed to update preset', error)
-    return NextResponse.json({ error: 'Failed to update preset' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/checklists/presets/[presetSlug]`
+    )
   }
 }
 
@@ -96,33 +102,32 @@ export async function DELETE(
 ) {
   try {
     // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
+    const { userId } = auth
 
     const { presetSlug } = await params
     const ref = adminDb.collection('checklist_presets').doc(presetSlug)
     const doc = await ref.get()
 
     if (!doc.exists) {
-      return NextResponse.json({ error: 'Preset not found' }, { status: 404 })
+      return notFound('Preset')
     }
 
     const preset = doc.data()
     if (preset?.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      throw createForbiddenError('You do not own this preset')
     }
 
     await ref.delete()
     return NextResponse.json({ success: true })
   } catch (error) {
-    logger.error('Failed to delete preset', error)
-    return NextResponse.json({ error: 'Failed to delete preset' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/checklists/presets/[presetSlug]`
+    )
   }
 }
 

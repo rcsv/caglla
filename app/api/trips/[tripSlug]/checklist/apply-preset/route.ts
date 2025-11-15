@@ -9,21 +9,18 @@ export async function POST(
 ) {
   try {
     // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
+    const { userId } = auth
 
     const { tripSlug: tripId } = await params
-    const body = await request.json()
+    const body = await parseRequestBody<{ preset_id?: string }>(request)
     const { preset_id } = body
 
     if (!preset_id) {
-      return NextResponse.json({ error: 'preset_id is required' }, { status: 400 })
+      return badRequest('preset_id is required')
     }
 
     // プリセットを取得
@@ -31,14 +28,14 @@ export async function POST(
     const presetDoc = await presetRef.get()
 
     if (!presetDoc.exists) {
-      return NextResponse.json({ error: 'Preset not found' }, { status: 404 })
+      return notFound('Preset')
     }
 
     const preset = presetDoc.data()
 
     // 公開プリセットまたは自分のプリセットのみ適用可能
     if (!preset?.is_public && preset?.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      throw createForbiddenError('You do not have permission to use this preset')
     }
 
     // 現在のチェックリストを取得
@@ -78,8 +75,10 @@ export async function POST(
     const updated = await checklistRef.get()
     return NextResponse.json(updated.data())
   } catch (error) {
-    logger.error('Failed to apply preset', error)
-    return NextResponse.json({ error: 'Failed to apply preset' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trips/[tripSlug]/checklist/apply-preset`
+    )
   }
 }
 

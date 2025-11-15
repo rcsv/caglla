@@ -8,12 +8,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
 import type { Trip, Day, Itinerary } from '@/lib/core/types'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { generateMagazinePdfHtml, type TripPdfData } from '@/lib/utils/magazine-pdf-template'
 import { generateTripUrl } from '@/lib/utils/app-url'
 import logger from '@/lib/core/logger'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { notFound, handleApiError } from '@/lib/core/error-handler'
 
 interface SelectPdfErrorResponse {
   error: string
@@ -53,30 +55,6 @@ async function generatePdfHtml(data: TripPdfData, tripUrl?: string): Promise<str
   return await generateMagazinePdfHtml(data, tripUrl)
 }
 
-/**
- * ユーザーの認証・認可チェック
- */
-async function authenticateUser(request: NextRequest): Promise<{ userId: string } | NextResponse> {
-  const authHeader = request.headers.get('authorization')
-  logger.debug('PDF API: auth header check', { hasHeader: !!authHeader, startsWithBearer: authHeader?.startsWith('Bearer ') })
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    logger.error('PDF API: missing or invalid auth header')
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const token = authHeader.substring(7)
-  logger.debug('PDF API: token extracted', { tokenLength: token.length })
-  
-  try {
-    const decodedToken = await adminAuth.verifyIdToken(token)
-    logger.debug('PDF API: token verified', { userId: decodedToken.uid })
-    return { userId: decodedToken.uid }
-  } catch (error) {
-    logger.error('PDF API: token verification failed:', error)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-}
 
 /**
  * トリップの所有権確認とデータ取得
@@ -89,7 +67,7 @@ async function validateTripOwnership(
   const tripDoc = await tripRef.get()
 
   if (!tripDoc.exists) {
-    return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    return notFound('Trip')
   }
 
   const trip = { id: tripDoc.id, ...tripDoc.data() } as Trip
@@ -133,7 +111,7 @@ async function checkPlanRestrictions(userId: string): Promise<NextResponse | nul
   
   if (userQuery.empty) {
     logger.error('PDF API: user document not found by google_id', { userId })
-    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    return notFound('User')
   }
 
   const userDoc = userQuery.docs[0]
@@ -212,12 +190,12 @@ export async function GET(
     logger.debug('PDF API: request received', { tripSlug })
 
     // 1. 認証チェック
-    const authResult = await authenticateUser(request)
-    if ('userId' in authResult === false) {
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
       logger.error('PDF API: authentication failed')
-      return authResult // NextResponse (error)
+      return auth // 認証エラーをそのまま返す
     }
-    const { userId } = authResult
+    const { userId } = auth
     logger.debug('PDF API: authentication successful', { userId })
 
     // 2. プラン制限チェック
@@ -256,7 +234,7 @@ export async function GET(
 
     if (!resolvedTripId) {
       logger.error('PDF API: Trip not found after resolution', { tripSlug })
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      return notFound('Trip')
     }
 
     // 4. トリップの所有権確認
@@ -336,10 +314,9 @@ export async function GET(
     })
 
   } catch (error) {
-    logger.error('PDF export error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trips/[tripSlug]/pdf`
     )
   }
 }

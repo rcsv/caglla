@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { checklistGenerator } from '@/lib/checklist-generator'
 import logger from '@/lib/core/logger'
-import { adminAuth } from '@/lib/firebase/admin'
 import { PlacesCache, Trip, Day, Itinerary } from '@/lib/core/types'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import { adminTripOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { notFound, handleApiError } from '@/lib/core/error-handler'
 
 export async function POST(
   request: NextRequest,
@@ -16,19 +17,16 @@ export async function POST(
     const { tripSlug } = await params
 
     // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
-    
-    const token = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(token)
-    const googleId = decodedToken.uid
+    const { userId: googleId } = auth
 
     // ユーザー情報取得（google_idで検索）
     const user = await adminUserOperations.getUserByGoogleId(googleId)
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     // ユーザーの居住国コードを place_cache から解決（home_place_id 優先）
@@ -54,7 +52,7 @@ export async function POST(
     // tripSlugからtripIdとtripを解決
     const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolved) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      return notFound('Trip')
     }
     const { id: tripId, trip: tripData } = resolved
 
@@ -141,8 +139,10 @@ export async function POST(
 
     return NextResponse.json({ success: true, items })
   } catch (error) {
-    logger.error('Failed to generate checklist', error)
-    return NextResponse.json({ error: 'Failed to generate checklist' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trips/[tripSlug]/checklist/generate`
+    )
   }
 }
 
