@@ -25,8 +25,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
   const initialCursor = params.cursor || undefined
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Feed</h1>
           <p className="text-gray-600">Discover amazing travel plans from the community</p>
