@@ -376,7 +376,7 @@ export const PUT = tripApi(async (request: NextRequest, ctx) => {
       // 開始日が終了日より後の場合はエラー      
       if (start > end) {
         logger.error('Start date is after end date', { start, end })
-        return badRequest('開始日は終了日より前である必要があります')
+        return badRequest('Start date must be before end date')
       }
       
       try {

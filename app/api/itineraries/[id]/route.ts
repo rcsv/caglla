@@ -1,34 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
 import { generateReservationSummary } from '@/lib/utils/reservation-utils'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withParams, withBodyValidation } from '@/lib/api/middleware'
+import { UpdateItinerarySchema } from '@/lib/schemas/itinerary'
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+/**
+ * PUT /api/itineraries/[id] - 旅程更新
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const text = await request.text()
+ * if (!text || text.trim() === '') {
+ *   return NextResponse.json({ error: 'Request body is required' }, { status: 400 })
+ * }
+ * body = JSON.parse(text)
+ * if (body.day_id !== undefined && body.sort_number !== undefined) {
+ *   // reorderリクエスト
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // day_id と sort_number の存在で reorder と update を区別
+ * ```
+ */
+export const PUT = composeMiddleware(
+  withAuth(),
+  withParams(),
+  withBodyValidation(UpdateItinerarySchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    const { id } = await params
+    // ctx.auth, ctx.params, ctx.body が保証されている（型推論が効く）
+    const { id } = ctx.params!
     
-    // リクエストボディの検証
-    let body
-    try {
-      const text = await request.text()
-      if (!text || text.trim() === '') {
-        logger.warn('Empty request body received for itinerary update', { id })
-        return NextResponse.json(
-          { error: 'Request body is required' },
-          { status: 400 }
-        )
-      }
-      body = JSON.parse(text)
-    } catch (parseError) {
-      logger.error('Invalid JSON in request body', { id, error: parseError })
-      return NextResponse.json(
-        { error: 'Invalid JSON in request body' },
-        { status: 400 }
-      )
-    }
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof UpdateItinerarySchema>
+    const body = ctx.body as BodyType
     
     // reorderリクエストかどうかを判定
     if (body.day_id !== undefined && body.sort_number !== undefined) {
@@ -61,7 +74,18 @@ export async function PUT(
       return NextResponse.json(updatedItinerary)
     } else {
       // 通常の更新リクエスト
-      const { title, description, start_time, end_time, timezone, cost_amount, cost_currency, activity_tag, reservation, place_data } = body
+      const { 
+        title, 
+        description, 
+        start_time, 
+        end_time, 
+        timezone, 
+        cost_amount, 
+        cost_currency, 
+        activity_tag, 
+        reservation, 
+        place_data 
+      } = body
       
       const itineraryRef = adminDb.collection('itineraries').doc(id)
       
@@ -115,13 +139,15 @@ export async function PUT(
       return NextResponse.json(updatedItinerary)
     }
   } catch (error) {
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは詳細なエラーハンドリングが必要
     logger.error('Error updating itinerary', error)
     return NextResponse.json(
       { error: 'Failed to update itinerary' },
       { status: 500 }
     )
   }
-}
+})
 
 export async function DELETE(
   request: NextRequest,

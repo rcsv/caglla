@@ -1,14 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { PlaceData, PlacesCache, PlacesCacheInput, Itinerary, SupportedLanguage } from '@/lib/core/types'
 import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
-import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
-import { authApi } from '@/lib/api/middleware'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { InsertItinerarySchema } from '@/lib/schemas/itinerary'
 
 /**
  * Insert a new itinerary into a specified day at a given position and renumber subsequent itineraries as needed.
+ *
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{...}>(request)
+ * if (!day_id || !title || (!place_id && !place_data?.place_id)) {
+ *   return badRequest('Missing required fields: day_id, title, and place_id or place_data.place_id')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
  *
  * @param request - The incoming NextRequest whose JSON body must include:
  *   - `day_id` (string): target day identifier (required)
@@ -22,25 +40,20 @@ import { authApi } from '@/lib/api/middleware'
  *
  * On validation failure returns a 400 response with an error message. On unexpected errors returns a 500 response.
  */
-export const POST = authApi(async (request: NextRequest, ctx) => {
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(InsertItinerarySchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.body が保証されている（型推論が効く）
   const { userId } = ctx.auth!
-
-  const body = await parseRequestBody<{
-    day_id?: string
-    place_id?: string
-    place_data?: PlaceData
-    title?: string
-    description?: string
-    location?: string
-    insert_after_index?: number
-  }>(request)
-  const { day_id, place_id, place_data, title, description, location, insert_after_index } = body
   
-  if (!day_id || !title || (!place_id && !place_data?.place_id)) {
-    return badRequest('Missing required fields: day_id, title, and place_id or place_data.place_id')
-  }
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof InsertItinerarySchema>
+  const body = ctx.body as BodyType
+  const { day_id, place_id, place_data, title, description, location, insert_after_index } = body
 
-  const resolvedPlaceId: string = place_id || place_data.place_id
+  // zod スキーマで place_id または place_data?.place_id が必須であることが保証されている
+  const resolvedPlaceId: string = place_id || place_data!.place_id
 
   const insertAfterIndex = insert_after_index !== undefined ? parseInt(String(insert_after_index)) : -1
 

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
-import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
-import { requireGooglePlacesApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withBodyValidation, withGooglePlacesKey } from '@/lib/api/middleware'
+import { RouteOptimizationRequestSchema } from '@/lib/schemas/route-optimization'
+import { withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
 const GOOGLE_DIRECTIONS_API_URL = 'https://maps.googleapis.com/maps/api/directions/json'
 
@@ -29,20 +32,36 @@ export interface RouteOptimizationResponse {
   }
 }
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/route-optimization - ルート最適化
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<RouteOptimizationRequest>(request)
+ * if (!body.origin || !body.destination || !body.waypoints) {
+ *   return badRequest('Origin, destination, and waypoints are required')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const POST = composeMiddleware(
+  withGooglePlacesKey(),
+  withBodyValidation(RouteOptimizationRequestSchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    // API Keyの取得と検証
-    const apiKeyResult = requireGooglePlacesApiKey()
-    if (apiKeyResult instanceof NextResponse) {
-      return apiKeyResult
-    }
-    const GOOGLE_PLACES_API_KEY = apiKeyResult
-
-    const body = await parseRequestBody<RouteOptimizationRequest>(request)
+    // ctx.apiKeys, ctx.body が保証されている（型推論が効く）
+    const GOOGLE_PLACES_API_KEY = ctx.apiKeys!.GOOGLE_PLACES!
     
-    if (!body.origin || !body.destination || !body.waypoints) {
-      return badRequest('Origin, destination, and waypoints are required')
-    }
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof RouteOptimizationRequestSchema>
+    const body = ctx.body as BodyType
 
     // 座標を文字列に変換するヘルパー関数
     const formatLocation = (location: string | { lat: number; lng: number }): string => {
@@ -138,12 +157,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(optimizedResponse)
   } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      '/api/route-optimization'
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは外部API呼び出しを含むため、詳細なエラーハンドリングが必要
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error('Error in route-optimization:', error)
+    return NextResponse.json(
+      { error: 'Failed to optimize route', details: errorMessage },
+      { status: 500 }
     )
   }
-}
+})
 
 // ルート最適化のコスト見積もりを提供するGETエンドポイント
 export async function GET(request: NextRequest) {

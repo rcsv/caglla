@@ -1,26 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore'
-import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { badRequest } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { CreateChecklistPresetSchema } from '@/lib/schemas/checklist-preset'
 import { authApi } from '@/lib/api/middleware'
 
-// POST: プリセット作成
-export const POST = authApi(async (request: NextRequest, ctx) => {
+/**
+ * POST /api/checklists/presets - プリセット作成
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{...}>(request)
+ * if (!title || !Array.isArray(items)) {
+ *   return badRequest('title and items are required')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(CreateChecklistPresetSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.body が保証されている（型推論が効く）
   const { userId } = ctx.auth!
-
-  const body = await parseRequestBody<{
-    title?: string
-    description?: string
-    tags?: string[]
-    items?: any[]
-    is_public?: boolean
-  }>(request)
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof CreateChecklistPresetSchema>
+  const body = ctx.body as BodyType
   const { title, description, tags, items, is_public } = body
-
-  if (!title || !Array.isArray(items)) {
-    return badRequest('title and items are required')
-  }
 
   const presetRef = adminDb.collection('checklist_presets').doc()
   const preset = {

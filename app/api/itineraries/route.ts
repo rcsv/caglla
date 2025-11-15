@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { PlaceData, PlacesCache, PlacesCacheInput, SupportedLanguage } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import { badRequest, notFound, createForbiddenError, parseRequestBody } from '@/lib/core/error-handler'
-import { dayApiWithQuery, authApi } from '@/lib/api/middleware'
+import { notFound, createForbiddenError } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation, dayApiWithQuery } from '@/lib/api/middleware'
+import { CreateItinerarySchema } from '@/lib/schemas/itinerary'
 import { validateDayOwnership } from '@/lib/api/authorization-helpers'
 
 /**
@@ -12,28 +15,38 @@ import { validateDayOwnership } from '@/lib/api/authorization-helpers'
  *
  * Validates required input (day_id, title, and either place_id or place_data.place_id), assigns the next sort_number for the day, persists an itinerary record containing only the place_id, and attempts to resolve or populate a cached PlaceData entry for the place. The response includes the persisted itinerary fields plus a place_data property containing the resolved PlaceData (or `null` when unavailable). Validation failures produce a 400 error object; unexpected server errors produce a 500 error object.
  *
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{...}>(request)
+ * if (!day_id || !title || (!place_id && !place_data?.place_id)) {
+ *   return badRequest('Missing required fields: day_id, title, and place_id or place_data.place_id')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ *
  * @returns The saved itinerary object with properties: `id`, `day_id`, `sort_number`, `title`, `description`, `location`, `place_id`, `created_at`, `updated_at`, and `place_data` (resolved PlaceData or `null`). On validation failure returns an error object with status 400; on server error returns an error object with status 500.
  */
-export const POST = authApi(async (request: NextRequest, ctx) => {
-  // ctx.auth が保証されている（authApi プリセットが認証チェックを実行）
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(CreateItinerarySchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.body が保証されている（型推論が効く）
   const { userId } = ctx.auth!
-
-  const body = await parseRequestBody<{
-    day_id: string
-    place_id?: string
-    place_data?: PlaceData
-    title: string
-    description?: string
-    location?: string
-    cost_currency?: string
-  }>(request)
-
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof CreateItinerarySchema>
+  const body = ctx.body as BodyType
   const { day_id, place_id, place_data, title, description, location, cost_currency } = body
 
-  if (!day_id || !title || (!place_id && !place_data?.place_id)) {
-    return badRequest('Missing required fields: day_id, title, and place_id or place_data.place_id')
-  }
-  const resolvedPlaceId: string = place_id || place_data.place_id
+  // zod スキーマで place_id または place_data?.place_id が必須であることが保証されている
+  const resolvedPlaceId: string = place_id || place_data!.place_id
 
   // 認可チェック: day → trip の所有権確認
   const ownership = await validateDayOwnership(day_id, userId)

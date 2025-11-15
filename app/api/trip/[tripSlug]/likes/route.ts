@@ -10,11 +10,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
 import { toggleTripLike, getTripLikeState } from '@/lib/social/trip-likes'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import type { Firestore } from 'firebase-admin/firestore'
-import { unauthorized, notFound, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { unauthorized, notFound, handleApiError } from '@/lib/core/error-handler'
+import { ToggleTripLikeSchema } from '@/lib/schemas/trip-social'
 
 /**
  * adminAuthをlazy importします（テスト環境でも動作するように）
@@ -119,6 +121,22 @@ export async function GET(
 /**
  * POST /api/trip/[tripSlug]/likes
  * いいねを追加/削除します（toggle動作、またはactionで指定）
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ action?: 'like' | 'unlike' }>(request)
+ * const action = body?.action === 'like' || body?.action === 'unlike' ? body.action : 'toggle'
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // デフォルト値が zod スキーマで設定済み
+ * ```
+ * 
+ * 注意: 認証は既存の `resolveAuthUserId` を使用（テスト環境対応のため）
  */
 export async function POST(
   request: NextRequest,
@@ -131,8 +149,35 @@ export async function POST(
     }
 
     const { tripSlug } = await params
-    const body = await parseRequestBody<{ action?: 'like' | 'unlike' }>(request)
-    const action = body?.action === 'like' || body?.action === 'unlike' ? body.action : 'toggle'
+    
+    // zod スキーマでバリデーション
+    let rawBody: unknown
+    try {
+      rawBody = await request.json().catch(() => ({}))
+    } catch (parseError) {
+      rawBody = {}
+    }
+    
+    let body: z.infer<typeof ToggleTripLikeSchema>
+    try {
+      body = ToggleTripLikeSchema.parse(rawBody)
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validationError.errors.map(err => ({
+              path: err.path.join('.'),
+              message: err.message
+            }))
+          },
+          { status: 400 }
+        )
+      }
+      throw validationError
+    }
+    
+    const { action } = body
     const db = getFirestore()
 
     const result = await toggleTripLike(userId, tripSlug, action, db)

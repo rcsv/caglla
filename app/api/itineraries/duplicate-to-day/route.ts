@@ -1,25 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
 import { adminDb } from '@/lib/firebase/admin'
-import { badRequest, notFound, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { notFound } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { DuplicateItineraryToDaySchema } from '@/lib/schemas/itinerary-operations'
 
 /**
  * Duplicates an existing itinerary into a specified day and returns the newly created record.
  *
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ itinerary_id?: string; target_day_id?: string }>(request)
+ * if (!itinerary_id || !target_day_id) {
+ *   return badRequest('Missing required fields: itinerary_id, target_day_id')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ *
  * @param request - NextRequest whose JSON body must include `itinerary_id` (the source itinerary document ID) and `target_day_id` (the destination day ID)
  * @returns The saved itinerary object containing the new document `id` and all stored fields: `day_id`, `sort_number`, `title`, `description`, `location`, `place_id`, `start_time`, `end_time`, `timezone`, `cost_amount`, `cost_currency`, `created_at`, and `updated_at`.
  */
-export async function POST(request: NextRequest) {
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(DuplicateItineraryToDaySchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    const body = await parseRequestBody<{
-      itinerary_id?: string
-      target_day_id?: string
-    }>(request)
-    const { itinerary_id, target_day_id } = body
+    // ctx.auth, ctx.body が保証されている（型推論が効く）
     
-    if (!itinerary_id || !target_day_id) {
-      return badRequest('Missing required fields: itinerary_id, target_day_id')
-    }
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof DuplicateItineraryToDaySchema>
+    const body = ctx.body as BodyType
+    const { itinerary_id, target_day_id } = body
 
     // 元のitineraryを取得
     const originalItineraryRef = adminDb.collection('itineraries').doc(itinerary_id)
@@ -73,9 +93,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(savedItinerary)
   } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      '/api/itineraries/duplicate-to-day'
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは詳細なエラーハンドリングが必要
+    logger.error('Error duplicating itinerary to day', error)
+    return NextResponse.json(
+      { error: 'Failed to duplicate itinerary to day' },
+      { status: 500 }
     )
   }
-}
+})

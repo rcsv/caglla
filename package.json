@@ -44,7 +44,8 @@
     "qrcode": "^1.5.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.0",
@@ -55,7 +56,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
-    "@types/react": "^19.2.4",
+    "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@types/testing-library__jest-dom": "^5.14.9",
     "autoprefixer": "^10.4.22",

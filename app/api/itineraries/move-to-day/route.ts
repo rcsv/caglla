@@ -1,19 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
 import { adminDb } from '@/lib/firebase/admin'
-import { badRequest, notFound, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { notFound } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { MoveItineraryToDaySchema } from '@/lib/schemas/itinerary-operations'
 
-export async function PUT(request: NextRequest) {
+/**
+ * PUT /api/itineraries/move-to-day - 旅程移動
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ itinerary_id?: string; target_day_id?: string }>(request)
+ * if (!itinerary_id || !target_day_id) {
+ *   return badRequest('Missing required fields: itinerary_id, target_day_id')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const PUT = composeMiddleware(
+  withAuth(),
+  withBodyValidation(MoveItineraryToDaySchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    const body = await parseRequestBody<{
-      itinerary_id?: string
-      target_day_id?: string
-    }>(request)
-    const { itinerary_id, target_day_id } = body
+    // ctx.auth, ctx.body が保証されている（型推論が効く）
     
-    if (!itinerary_id || !target_day_id) {
-      return badRequest('Missing required fields: itinerary_id, target_day_id')
-    }
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof MoveItineraryToDaySchema>
+    const body = ctx.body as BodyType
+    const { itinerary_id, target_day_id } = body
 
     // 移動先の日程の最後のsort_numberを取得
     const itinerariesRef = adminDb.collection('itineraries')
@@ -49,9 +72,12 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedItinerary)
   } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      '/api/itineraries/move-to-day'
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは詳細なエラーハンドリングが必要
+    logger.error('Error moving itinerary to day', error)
+    return NextResponse.json(
+      { error: 'Failed to move itinerary to day' },
+      { status: 500 }
     )
   }
-}
+})
