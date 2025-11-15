@@ -294,20 +294,65 @@ export async function parseRequestBody<T>(request: Request): Promise<T> {
 }
 
 // よく使うエラーレスポンスのショートカット関数
+// 
+// Phase 6: エラー統一 - 統一されたエラーレスポンス形式を使用
+// 
+// Before:
+// ```typescript
+// export function badRequest(message: string): NextResponse {
+//   return NextResponse.json({ error: message }, { status: 400 })
+// }
+// ```
+// 
+// After:
+// ```typescript
+// // ApiError と handleApiError を使用した統一された形式
+// // エラーメッセージの国際化対応も可能
+// ```
 export function unauthorized(message = 'Authorization header required'): NextResponse {
-  return NextResponse.json({ error: message }, { status: 401 })
+  return handleApiError(
+    createUnauthorizedError(message),
+    undefined
+  )
 }
 
 export function notFound(resource = 'Resource'): NextResponse {
-  return NextResponse.json({ error: `${resource} not found` }, { status: 404 })
+  return handleApiError(
+    createNotFoundError(`${resource} not found`),
+    undefined
+  )
 }
 
-export function badRequest(message: string): NextResponse {
-  return NextResponse.json({ error: message }, { status: 400 })
+/**
+ * 400 Bad Request エラーを返す（統一されたエラーレスポンス形式）
+ * 
+ * Phase 6: badRequest の乱立を zod エラーに統一
+ * 
+ * Before:
+ * ```typescript
+ * export function badRequest(message: string): NextResponse {
+ *   return NextResponse.json({ error: message }, { status: 400 })
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ApiError と handleApiError を使用した統一された形式
+ * // エラーメッセージの国際化対応も可能
+ * ```
+ */
+export function badRequest(message: string, details?: any): NextResponse {
+  return handleApiError(
+    createBadRequestError(message, details),
+    undefined
+  )
 }
 
 export function internalError(message = 'Internal server error'): NextResponse {
-  return NextResponse.json({ error: message }, { status: 500 })
+  return handleApiError(
+    createInternalError(message),
+    undefined
+  )
 }
 
 // 認証付きAPIルートハンドラーのラッパー関数
