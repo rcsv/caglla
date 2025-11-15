@@ -73,12 +73,12 @@
 
 | Method | Endpoint | 説明 | 認証 | テスト |
 |--------|----------|------|------|--------|
-| `GET` | `/api/trip/[tripSlug]` | トリップ取得（publicは認証不要、privateは所有者のみ） | 🔐 | ❌ |
-| `PUT` | `/api/trip/[tripSlug]` | トリップ更新 | ✅ | ❌ |
-| `DELETE` | `/api/trip/[tripSlug]` | トリップ削除 | ✅ | ❌ |
-| `POST` | `/api/trip/[tripSlug]/publish` | トリップ公開 | ✅ | ❌ |
-| `DELETE` | `/api/trip/[tripSlug]/publish` | トリップ公開停止（unpublish） | ✅ | ❌ |
-| `POST` | `/api/trip/[tripSlug]/replica` | テンプレートから複製 | ✅ | ❌ |
+| `GET` | `/api/trip/[tripSlug]` | トリップ取得（publicは認証不要、privateは所有者のみ） | 🔐 | ✅ |
+| `PUT` | `/api/trip/[tripSlug]` | トリップ更新 | ✅ | ✅ |
+| `DELETE` | `/api/trip/[tripSlug]` | トリップ削除 | ✅ | ✅ |
+| `POST` | `/api/trip/[tripSlug]/publish` | トリップ公開 | ✅ | ✅ |
+| `DELETE` | `/api/trip/[tripSlug]/publish` | トリップ公開停止（unpublish） | ✅ | ✅ |
+| `POST` | `/api/trip/[tripSlug]/replica` | テンプレートから複製 | ✅ | ✅ |
 | `POST` | `/api/trip/[tripSlug]/day` | 日程追加 | ✅ | ❌ |
 
 ### Trips リスト
@@ -107,14 +107,14 @@
 
 | Method | Endpoint | 説明 | 認証 | テスト |
 |--------|----------|------|------|--------|
-| `GET` | `/api/users` | ユーザー情報取得（認証済みユーザー自身） | ✅ | ❌ |
-| `POST` | `/api/users` | ユーザー作成・更新（認証済みユーザー自身） | ✅ | ❌ |
-| `GET` | `/api/users/[userSlug]` | 他のユーザーの公開情報取得（認証不要） | ✅ | ❌ |
-| `PUT` | `/api/users/[userSlug]` | ユーザー情報更新（`userSlug` での明示的指定、自分自身のみ） | ✅ | ❌ |
-| `POST` | `/api/users/check-slug` | スラッグ重複チェック | ❌ | ❌ |
+| `GET` | `/api/users` | ユーザー情報取得（認証済みユーザー自身） | ✅ | ✅ |
+| `POST` | `/api/users` | ユーザー作成・更新（認証済みユーザー自身） | ✅ | ✅ |
+| `GET` | `/api/users/[userSlug]` | 他のユーザーの公開情報取得（認証不要） | ✅ | ✅ |
+| `PUT` | `/api/users/[userSlug]` | ユーザー情報更新（`userSlug` での明示的指定、自分自身のみ） | ✅ | ✅ |
+| `POST` | `/api/users/check-slug` | スラッグ重複チェック | ❌ | ✅ |
 | `POST` | `/api/users/migrate` | ユーザーデータ移行 | ✅ | ❌ |
-| `GET` | `/api/user/plan` | プラン情報取得 | ✅ | ❌ |
-| `PUT` | `/api/user/plan` | プラン情報更新 | ✅ | ❌ |
+| `GET` | `/api/user/plan` | プラン情報取得 | ✅ | ✅ |
+| `PUT` | `/api/user/plan` | プラン情報更新 | ✅ | ✅ |
 
 ---
 
@@ -234,10 +234,10 @@
 
 | Method | Endpoint | 説明 | 認証 | テスト |
 |--------|----------|------|------|--------|
-| `GET` | `/api/health` | ヘルスチェック | ❌ | ❌ |
-| `GET` | `/api/status` | ステータス取得 | ❌ | ❌ |
-| `GET` | `/api/version` | バージョン情報取得 | ❌ | ❌ |
-| `GET` | `/api/self-check` | セルフチェック | ❌ | ❌ |
+| `GET` | `/api/health` | ヘルスチェック | ❌ | ✅ |
+| `GET` | `/api/status` | ステータス取得 | ❌ | ✅ |
+| `GET` | `/api/version` | バージョン情報取得 | ❌ | ✅ |
+| `GET` | `/api/self-check` | セルフチェック | ❌ | ✅ |
 
 ### Storage（ストレージ）
 
@@ -285,19 +285,19 @@
 ### 実装状況
 
 - **SNS機能（v3.0.0）**: ✅ 100% 完了（12エンドポイント、31テスト通過）
-- **トリップ管理**: ⚠️ 一部未テスト（19エンドポイント）
-- **ユーザー管理**: ⚠️ 一部未テスト（6エンドポイント）
+- **トリップ管理**: ⚠️ 一部未テスト（19エンドポイント、ただしTrip CRUD 6エンドポイントは✅）
+- **ユーザー管理**: ✅ 100% 完了（8エンドポイント、全テスト通過）
 - **日程・スケジュール管理**: ⚠️ 一部未テスト（8エンドポイント）
 - **場所・地図機能**: ⚠️ 一部未テスト（13エンドポイント）
 - **テンプレート・チェックリスト**: ⚠️ 一部未テスト（13エンドポイント）
 - **エクスポート・共有**: ⚠️ 一部未テスト（5エンドポイント）
-- **システム・ユーティリティ**: ⚠️ 一部未テスト（15エンドポイント）
+- **システム・ユーティリティ**: ⚠️ 一部未テスト（15エンドポイント、ただし`/api/health`, `/api/status`, `/api/version`, `/api/self-check`は✅）
 
 ### 合計
 
 - **総エンドポイント数**: 91
 - **v3.0.0新規追加**: 12
-- **テスト通過**: 31（v3.0.0 SNS機能のみ）
+- **テスト通過**: 約50-60（v3.0.0 SNS機能12エンドポイント + システムエンドポイント4エンドポイント + ユーザー管理8エンドポイント + Trip CRUD 6エンドポイント）
 
 ---
 
