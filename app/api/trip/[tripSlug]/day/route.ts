@@ -29,7 +29,7 @@ export const POST = tripApi(async (request: NextRequest, ctx) => {
       if (lastDay?.date) {
         const lastDate = toDateOrNull(lastDay.date)
         if (!lastDate) {
-          return badRequest('最後の日程の日付が無効です')
+          return badRequest('Invalid date for the last day')
         }
         newDate = new Date(lastDate)
         newDate.setDate(newDate.getDate() + 1)

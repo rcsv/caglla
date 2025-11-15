@@ -41,7 +41,7 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
   const { fileSize } = body
   
   if (typeof fileSize !== 'number' || fileSize <= 0) {
-    return badRequest('無効なファイルサイズです')
+    return badRequest('Invalid file size')
   }
   
   const quotaCheck = await storageManagementHelpers.checkStorageQuota(userId, fileSize)

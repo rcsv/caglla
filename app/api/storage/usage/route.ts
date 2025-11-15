@@ -90,5 +90,5 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
       })
     }
     
-  return badRequest('無効なアクションです')
+  return badRequest('Invalid action')
 })
