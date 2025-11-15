@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { adminDb } from '@/lib/firebase/admin'
+import { badRequest, notFound, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 /**
  * Duplicates an existing itinerary into a specified day and returns the newly created record.
@@ -10,13 +11,14 @@ import { adminDb } from '@/lib/firebase/admin'
  */
 export async function POST(request: NextRequest) {
   try {
-    const { itinerary_id, target_day_id } = await request.json()
+    const body = await parseRequestBody<{
+      itinerary_id?: string
+      target_day_id?: string
+    }>(request)
+    const { itinerary_id, target_day_id } = body
     
     if (!itinerary_id || !target_day_id) {
-      return NextResponse.json(
-        { error: 'Missing required fields: itinerary_id, target_day_id' },
-        { status: 400 }
-      )
+      return badRequest('Missing required fields: itinerary_id, target_day_id')
     }
 
     // 元のitineraryを取得
@@ -24,18 +26,12 @@ export async function POST(request: NextRequest) {
     const originalDoc = await originalItineraryRef.get()
     
     if (!originalDoc.exists) {
-      return NextResponse.json(
-        { error: 'Original itinerary not found' },
-        { status: 404 }
-      )
+      return notFound('Original itinerary')
     }
 
     const originalData = originalDoc.data()
     if (!originalData) {
-      return NextResponse.json(
-        { error: 'Original itinerary data not found' },
-        { status: 404 }
-      )
+      return notFound('Original itinerary data')
     }
 
     // 移動先の日程の最後のsort_numberを取得
@@ -77,10 +73,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(savedItinerary)
   } catch (error) {
-    logger.error('Error duplicating itinerary:', error)
-    return NextResponse.json(
-      { error: 'Failed to duplicate itinerary' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/itineraries/duplicate-to-day'
     )
   }
 }

@@ -1,25 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import type { PlaceData } from '@/lib/core/types'
+import { requireGooglePlacesApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
-const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_DISTANCE_MATRIX_API_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json'
 
 export async function POST(request: NextRequest) {
   try {
-    if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Places API key is not configured' },
-        { status: 500 }
-      )
+    // API Keyの取得と検証
+    const apiKeyResult = requireGooglePlacesApiKey()
+    if (apiKeyResult instanceof NextResponse) {
+      return apiKeyResult
     }
+    const GOOGLE_PLACES_API_KEY = apiKeyResult
 
-    const { places, mode = 'driving' } = await request.json()
+    const body = await parseRequestBody<{
+      places?: PlaceData[]
+      mode?: 'driving' | 'walking' | 'bicycling' | 'transit'
+    }>(request)
+    const { places, mode = 'driving' } = body
     
     if (!places || places.length < 2) {
-      return NextResponse.json(
-        { error: 'At least 2 places are required' },
-        { status: 400 }
-      )
+      return badRequest('At least 2 places are required')
     }
 
     // 連続する地点間の距離を計算
@@ -37,34 +40,43 @@ export async function POST(request: NextRequest) {
     }
 
     if (origins.length === 0) {
-      return NextResponse.json(
-        { error: 'No valid place coordinates found' },
-        { status: 400 }
-      )
+      return badRequest('No valid place coordinates found')
     }
 
-    // Distance Matrix APIを呼び出し
-    const params = new URLSearchParams({
-      origins: origins.join('|'),
-      destinations: destinations.join('|'),
-      mode: mode,
-      language: 'ja',
-      region: 'jp',
-      key: GOOGLE_PLACES_API_KEY
-    })
+    // Distance Matrix APIを呼び出し（エラーハンドリング付き）
+    const data = await withExternalApiErrorHandler(
+      async () => {
+        const params = new URLSearchParams({
+          origins: origins.join('|'),
+          destinations: destinations.join('|'),
+          mode: mode,
+          language: 'ja',
+          region: 'jp',
+          key: GOOGLE_PLACES_API_KEY
+        })
 
-    const response = await fetch(`${GOOGLE_DISTANCE_MATRIX_API_URL}?${params}`, {
-      signal: AbortSignal.timeout(15000) // 15秒でタイムアウト（バッチ処理は時間がかかるため）
-    })
+        const response = await fetch(`${GOOGLE_DISTANCE_MATRIX_API_URL}?${params}`, {
+          signal: AbortSignal.timeout(15000) // 15秒でタイムアウト（バッチ処理は時間がかかるため）
+        })
 
-    if (!response.ok) {
-      throw new Error(`Google Distance Matrix API error: ${response.status}`)
-    }
+        if (!response.ok) {
+          throw new Error(`Google Distance Matrix API error: ${response.status}`)
+        }
 
-    const data = await response.json()
-    
-    if (data.status !== 'OK') {
-      throw new Error(`Google Distance Matrix API error: ${data.status}`)
+        const result = await response.json()
+        
+        if (result.status !== 'OK') {
+          throw new Error(`Google Distance Matrix API error: ${result.status}`)
+        }
+
+        return result
+      },
+      'Google Distance Matrix API (Batch)',
+      '/api/distance/batch'
+    )
+
+    if (data instanceof NextResponse) {
+      return data
     }
 
     // 結果を処理して総距離と総時間を計算
@@ -143,10 +155,7 @@ export async function POST(request: NextRequest) {
 
     // 成功した区間がない場合はエラーを返す
     if (segments.length === 0) {
-      return NextResponse.json(
-        { error: 'All distance calculations failed' },
-        { status: 400 }
-      )
+      return badRequest('All distance calculations failed')
     }
 
     return NextResponse.json({
@@ -165,10 +174,9 @@ export async function POST(request: NextRequest) {
       segmentCount: segments.length
     })
   } catch (error) {
-    logger.error('Error in batch distance calculation', error)
-    return NextResponse.json(
-      { error: 'Failed to calculate total distance' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/distance/batch'
     )
   }
 }

@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { adminDb } from '@/lib/firebase/admin'
+import { badRequest, notFound, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 export async function PUT(request: NextRequest) {
   try {
-    const { itinerary_id, target_day_id } = await request.json()
+    const body = await parseRequestBody<{
+      itinerary_id?: string
+      target_day_id?: string
+    }>(request)
+    const { itinerary_id, target_day_id } = body
     
     if (!itinerary_id || !target_day_id) {
-      return NextResponse.json(
-        { error: 'Missing required fields: itinerary_id, target_day_id' },
-        { status: 400 }
-      )
+      return badRequest('Missing required fields: itinerary_id, target_day_id')
     }
 
     // 移動先の日程の最後のsort_numberを取得
@@ -37,10 +39,7 @@ export async function PUT(request: NextRequest) {
     // 更新されたデータを取得
     const updatedDoc = await itineraryRef.get()
     if (!updatedDoc.exists) {
-      return NextResponse.json(
-        { error: 'Itinerary not found' },
-        { status: 404 }
-      )
+      return notFound('Itinerary')
     }
     
     const updatedItinerary = {
@@ -50,10 +49,9 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedItinerary)
   } catch (error) {
-    logger.error('Error moving itinerary to different day:', error)
-    return NextResponse.json(
-      { error: 'Failed to move itinerary' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/itineraries/move-to-day'
     )
   }
 }

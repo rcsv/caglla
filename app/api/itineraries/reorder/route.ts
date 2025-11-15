@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 export async function POST(request: NextRequest) {
   try {
-    const { dayId, itineraryIds } = await request.json()
+    const body = await parseRequestBody<{
+      dayId?: string
+      itineraryIds?: string[]
+    }>(request)
+    const { dayId, itineraryIds } = body
     
     logger.debug('Reorder API called', { dayId, itineraryCount: itineraryIds?.length })
     
     if (!dayId || !itineraryIds || !Array.isArray(itineraryIds)) {
-      return NextResponse.json(
-        { error: 'Day ID and itinerary IDs array are required' },
-        { status: 400 }
-      )
+      return badRequest('Day ID and itinerary IDs array are required')
     }
 
     // Firebase Admin SDKが利用できない場合は、クライアントサイドの更新のみ実行
@@ -50,10 +52,9 @@ export async function POST(request: NextRequest) {
       reorderedCount: itineraryIds.length
     })
   } catch (error) {
-    logger.error('Error reordering itineraries', error)
-    return NextResponse.json(
-      { error: `Failed to reorder itineraries: ${error instanceof Error ? error.message : 'Unknown error'}` },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/itineraries/reorder'
     )
   }
 }

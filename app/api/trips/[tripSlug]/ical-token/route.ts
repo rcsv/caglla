@@ -3,7 +3,8 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 
 import { generateICalToken } from '@/lib/utils/ical-token'
-import { verifyAuthToken } from '@/lib/api/auth-helpers'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { validateTripOwnership } from '@/lib/api/authorization-helpers'
 
 // Firebase Admin初期化
 const db = getFirestore()
@@ -24,30 +25,20 @@ export async function POST(
 ) {
   try {
     const { tripSlug } = await params
-    // 1. 認証チェック
-    const user = await verifyAuthToken(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const userId = user.uid
-
-    // 2. Trip取得（id/slug 両対応の解決ヘルパー）
-    const { adminTripOperations } = await import('@/lib/firebase/admin-operation')
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    const resolvedTripId = resolved?.id || null
-
-    if (!resolvedTripId) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
-    }
-
-    const tripDoc = await db.collection('trips').doc(resolvedTripId).get()
-    const trip = tripDoc.data()
     
-    // 3. 所有権確認
-    if (trip?.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // 1. 認証チェック
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId } = auth
+
+    // 2. Trip解決と所有権チェック
+    const ownership = await validateTripOwnership(tripSlug, userId)
+    if (ownership instanceof NextResponse) {
+      return ownership // エラーレスポンスをそのまま返す
+    }
+    const { tripId: resolvedTripId, trip } = ownership
 
     // 4. ユーザープラン確認（Backpacker以上）
     // usersコレクションはgoogle_idで管理しているため、uidで検索する
@@ -112,43 +103,18 @@ export async function DELETE(
   try {
     const { tripSlug } = await params
     // 1. 認証チェック
-    const user = await verifyAuthToken(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId } = auth
 
-    const userId = user.uid
-
-    // 2. Trip取得（tripSlugからtripIdへの解決）
-    const resolvedTripId = await (async () => {
-      // まずはドキュメントIDとして試す
-      const byId = await db.collection('trips').doc(tripSlug).get()
-      if (byId.exists) {
-        return byId.id
-      }
-      // 見つからなければ slug で検索
-      const bySlugSnap = await db
-        .collection('trips')
-        .where('slug', '==', tripSlug)
-        .limit(1)
-        .get()
-      if (!bySlugSnap.empty) {
-        return bySlugSnap.docs[0].id
-      }
-      return null
-    })()
-
-    if (!resolvedTripId) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    // 2. Trip解決と所有権チェック
+    const ownership = await validateTripOwnership(tripSlug, userId)
+    if (ownership instanceof NextResponse) {
+      return ownership // エラーレスポンスをそのまま返す
     }
-
-    const tripDoc = await db.collection('trips').doc(resolvedTripId).get()
-    const trip = tripDoc.data()
-    
-    // 3. 所有権確認
-    if (trip?.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const { tripId: resolvedTripId, trip } = ownership
 
     // 4. Tripを更新（無効化）
     await db.collection('trips').doc(resolvedTripId).update({

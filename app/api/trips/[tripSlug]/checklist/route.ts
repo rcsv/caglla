@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 // GET: 取得
 export async function GET(
@@ -17,8 +18,10 @@ export async function GET(
     }
     return NextResponse.json(doc.data())
   } catch (error) {
-    logger.error('Failed to fetch checklist', error)
-    return NextResponse.json({ error: 'Failed to fetch checklist' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/trips/[tripSlug]/checklist'
+    )
   }
 }
 
@@ -30,10 +33,12 @@ export async function PUT(
   try {
     const { tripSlug } = await params
     const tripId = tripSlug
-    const body = await request.json()
+    const body = await parseRequestBody<{
+      items?: any[]
+    }>(request)
     const { items } = body
     if (!Array.isArray(items)) {
-      return NextResponse.json({ error: 'items array required' }, { status: 400 })
+      return badRequest('items array required')
     }
 
     const ref = adminDb.collection('trip_checklists').doc(tripId)
@@ -47,8 +52,10 @@ export async function PUT(
     const updated = await ref.get()
     return NextResponse.json(updated.data())
   } catch (error) {
-    logger.error('Failed to update checklist', error)
-    return NextResponse.json({ error: 'Failed to update checklist' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/trips/[tripSlug]/checklist'
+    )
   }
 }
 

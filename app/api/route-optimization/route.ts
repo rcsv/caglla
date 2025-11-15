@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { requireGooglePlacesApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
-const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_DIRECTIONS_API_URL = 'https://maps.googleapis.com/maps/api/directions/json'
 
 export interface RouteOptimizationRequest {
@@ -30,20 +31,17 @@ export interface RouteOptimizationResponse {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Places API key is not configured' },
-        { status: 500 }
-      )
+    // API Keyの取得と検証
+    const apiKeyResult = requireGooglePlacesApiKey()
+    if (apiKeyResult instanceof NextResponse) {
+      return apiKeyResult
     }
+    const GOOGLE_PLACES_API_KEY = apiKeyResult
 
-    const body: RouteOptimizationRequest = await request.json()
+    const body = await parseRequestBody<RouteOptimizationRequest>(request)
     
     if (!body.origin || !body.destination || !body.waypoints) {
-      return NextResponse.json(
-        { error: 'Origin, destination, and waypoints are required' },
-        { status: 400 }
-      )
+      return badRequest('Origin, destination, and waypoints are required')
     }
 
     // 座標を文字列に変換するヘルパー関数
@@ -91,18 +89,31 @@ export async function POST(request: NextRequest) {
       avoidOptions
     })
 
-    const response = await fetch(`${GOOGLE_DIRECTIONS_API_URL}?${params}`, {
-      signal: AbortSignal.timeout(15000) // 15秒でタイムアウト
-    })
+    // Google Directions APIを呼び出し（エラーハンドリング付き）
+    const data = await withExternalApiErrorHandler(
+      async () => {
+        const response = await fetch(`${GOOGLE_DIRECTIONS_API_URL}?${params}`, {
+          signal: AbortSignal.timeout(15000) // 15秒でタイムアウト
+        })
 
-    if (!response.ok) {
-      throw new Error(`Google Directions API error: ${response.status}`)
-    }
+        if (!response.ok) {
+          throw new Error(`Google Directions API error: ${response.status}`)
+        }
 
-    const data = await response.json()
-    
-    if (data.status !== 'OK') {
-      throw new Error(`Google Directions API error: ${data.status}`)
+        const result = await response.json()
+        
+        if (result.status !== 'OK') {
+          throw new Error(`Google Directions API error: ${result.status}`)
+        }
+
+        return result
+      },
+      'Google Directions API',
+      '/api/route-optimization'
+    )
+
+    if (data instanceof NextResponse) {
+      return data
     }
 
     // レスポンスを処理して最適化された情報を追加
@@ -127,10 +138,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(optimizedResponse)
   } catch (error) {
-    logger.error('Error in route optimization API', error)
-    return NextResponse.json(
-      { error: 'Failed to optimize route' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/route-optimization'
     )
   }
 }

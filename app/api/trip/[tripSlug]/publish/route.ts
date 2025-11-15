@@ -5,6 +5,7 @@ import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
 import { requireAuth } from '@/lib/api/auth-helpers'
 import { notFound, badRequest, parseRequestBody, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
+import { validateTripOwnership } from '@/lib/api/authorization-helpers'
 
 type PublishRequestBody = {
   slug?: string | null
@@ -30,16 +31,12 @@ export async function DELETE(
 
     const { tripSlug } = await params
 
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolved) {
-      return notFound('Trip')
+    // Trip解決と所有権チェック
+    const ownership = await validateTripOwnership(tripSlug, userId)
+    if (ownership instanceof NextResponse) {
+      return ownership // エラーレスポンスをそのまま返す
     }
-
-    const { id: resolvedTripId, trip } = resolved
-
-    if (trip.user_id !== userId) {
-      throw createForbiddenError('You do not own this trip')
-    }
+    const { tripId: resolvedTripId, trip } = ownership
 
     // 既に private の場合はエラーを返す（冪等性のため）
     if (trip.access_level === 'private') {
@@ -86,16 +83,12 @@ export async function POST(
 
     const { tripSlug } = await params
 
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolved) {
-      return notFound('Trip')
+    // Trip解決と所有権チェック
+    const ownership = await validateTripOwnership(tripSlug, userId)
+    if (ownership instanceof NextResponse) {
+      return ownership // エラーレスポンスをそのまま返す
     }
-
-    const { id: resolvedTripId, trip } = resolved
-
-    if (trip.user_id !== userId) {
-      throw createForbiddenError('You do not own this trip')
-    }
+    const { tripId: resolvedTripId, trip } = ownership
 
     const body = await parseRequestBody<PublishRequestBody>(request)
 

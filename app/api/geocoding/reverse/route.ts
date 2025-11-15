@@ -1,48 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { requireGoogleGeocodingApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
-const GOOGLE_GEOCODING_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode'
 
 export async function POST(request: NextRequest) {
   try {
-    if (!GOOGLE_GEOCODING_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Geocoding API key is not configured' },
-        { status: 500 }
-      )
+    // API Keyの取得と検証
+    const apiKeyResult = requireGoogleGeocodingApiKey()
+    if (apiKeyResult instanceof NextResponse) {
+      return apiKeyResult
     }
+    const GOOGLE_GEOCODING_API_KEY = apiKeyResult
 
-    const { lat, lng } = await request.json()
+    const body = await parseRequestBody<{
+      lat?: number
+      lng?: number
+    }>(request)
+    const { lat, lng } = body
     
     if (lat === undefined || lng === undefined) {
-      return NextResponse.json(
-        { error: 'Latitude and longitude are required' },
-        { status: 400 }
-      )
+      return badRequest('Latitude and longitude are required')
     }
 
     // Google Geocoding APIを呼び出し
-    const response = await fetch(
-      `${GOOGLE_GEOCODING_API_URL}/json?latlng=${lat},${lng}&key=${GOOGLE_GEOCODING_API_KEY}&language=en&region=jp`
+    const data = await withExternalApiErrorHandler(
+      async () => {
+        const response = await fetch(
+          `${GOOGLE_GEOCODING_API_URL}/json?latlng=${lat},${lng}&key=${GOOGLE_GEOCODING_API_KEY}&language=en&region=jp`
+        )
+
+        if (!response.ok) {
+          throw new Error(`Google Geocoding API error: ${response.status}`)
+        }
+
+        const result = await response.json()
+        
+        if (result.status !== 'OK' && result.status !== 'ZERO_RESULTS') {
+          throw new Error(`Google Geocoding API error: ${result.status}`)
+        }
+
+        return result
+      },
+      'Google Geocoding API',
+      '/api/geocoding/reverse'
     )
 
-    if (!response.ok) {
-      throw new Error(`Google Geocoding API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      throw new Error(`Google Geocoding API error: ${data.status}`)
+    if (data instanceof NextResponse) {
+      return data
     }
 
     return NextResponse.json(data)
   } catch (error) {
-    logger.error('Error in reverse geocoding proxy:', error)
-    return NextResponse.json(
-      { error: 'Failed to reverse geocode coordinates' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/geocoding/reverse'
     )
   }
 }

@@ -1,60 +1,71 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { requireGooglePlacesApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
-const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 // 新Places API (v1) のsearchNearbyエンドポイント
 const GOOGLE_PLACES_API_URL_NEARBY = 'https://places.googleapis.com/v1/places:searchNearby'
 
 export async function POST(request: NextRequest) {
   try {
-    if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Places API key is not configured' },
-        { status: 500 }
-      )
+    // API Keyの取得と検証
+    const apiKeyResult = requireGooglePlacesApiKey()
+    if (apiKeyResult instanceof NextResponse) {
+      return apiKeyResult
     }
+    const GOOGLE_PLACES_API_KEY = apiKeyResult
 
-    const { location, radius } = await request.json()
+    const body = await parseRequestBody<{
+      location?: { lat: number; lng: number }
+      radius?: number
+    }>(request)
+    const { location, radius } = body
     
     if (!location || !location.lat || !location.lng) {
-      return NextResponse.json(
-        { error: 'Location (lat, lng) is required' },
-        { status: 400 }
-      )
+      return badRequest('Location (lat, lng) is required')
     }
 
     logger.debug('Searching nearby places with new Places API v1', { location, radius })
 
     // 新Places API (v1) のsearchNearbyを呼び出し
-    const response = await fetch(GOOGLE_PLACES_API_URL_NEARBY, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types'
-      },
-      body: JSON.stringify({
-        locationRestriction: {
-          circle: {
-            center: {
-              latitude: location.lat,
-              longitude: location.lng
+    const data = await withExternalApiErrorHandler(
+      async () => {
+        const response = await fetch(GOOGLE_PLACES_API_URL_NEARBY, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types'
+          },
+          body: JSON.stringify({
+            locationRestriction: {
+              circle: {
+                center: {
+                  latitude: location.lat,
+                  longitude: location.lng
+                },
+                radius: radius || 50 // デフォルト50メートル
+              }
             },
-            radius: radius || 50 // デフォルト50メートル
-          }
-        },
-        languageCode: 'en',
-        maxResultCount: 5
-      })
-    })
+            languageCode: 'en',
+            maxResultCount: 5
+          })
+        })
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      logger.error('Google Places API (searchNearby) error:', errorData)
-      throw new Error(`Google Places API error: ${response.status}`)
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(`Google Places API error: ${response.status} - ${JSON.stringify(errorData)}`)
+        }
+
+        return await response.json() as { places?: any[] }
+      },
+      'Google Places API (searchNearby)',
+      '/api/places/nearby'
+    )
+
+    if (data instanceof NextResponse) {
+      return data
     }
-
-    const data = await response.json()
     
     logger.debug('Nearby search results count:', data.places?.length || 0)
     
@@ -79,10 +90,9 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(legacyFormat)
   } catch (error) {
-    logger.error('Error in nearby search:', error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/places/nearby'
     )
   }
 }
