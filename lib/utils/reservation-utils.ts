@@ -1,101 +1,111 @@
 import { ReservationInfo, ReservationType, ReservationSite } from '@/lib/core/types'
 import { toDate, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
-import { AirportCodeSchema, FlightNumberSchema } from '@/lib/schemas/reservation'
+import { ClientReservationInfoSchema } from '@/lib/schemas/reservation'
+import { z } from 'zod'
 
 /**
- * 予約情報のバリデーション
+ * 予約情報のバリデーション（zod スキーマベース）
+ * 
+ * Phase 5: validateReservationInfo → ReservationSchema に完全移行
+ * 
+ * Before:
+ * ```typescript
+ * export function validateReservationInfo(reservation: Partial<ReservationInfo>): { isValid: boolean; errors: string[] } {
+ *   const errors: string[] = []
+ *   if (!reservation.type) {
+ *     errors.push(t('reservation.validation.typeRequired'))
+ *   }
+ *   // ... 多くの if 文バリデーション
+ *   return { isValid: errors.length === 0, errors }
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // zod スキーマでバリデーションし、エラーメッセージを i18n 対応に変換
+ * ```
+ * 
+ * 注意: エラーメッセージは既存の i18n 関数 `t()` を使用して変換する必要があるため、
+ * zod のエラーメッセージを i18n キーにマッピング
  */
 export function validateReservationInfo(reservation: Partial<ReservationInfo>): { isValid: boolean; errors: string[] } {
-  const errors: string[] = []
-
-  // 必須フィールドのチェック
-  if (!reservation.type) {
-    errors.push(t('reservation.validation.typeRequired'))
+  // zod スキーマでバリデーション
+  const result = ClientReservationInfoSchema.safeParse(reservation)
+  
+  if (result.success) {
+    return {
+      isValid: true,
+      errors: []
+    }
   }
 
-  // 予約タイプ別のバリデーション
-  if (reservation.type === 'flight') {
-    // 飛行機の場合
-    if (!reservation.flight_number) {
-      errors.push(t('reservation.validation.flightNumberRequired'))
-    } else {
-      // Phase 5: zod スキーマを使用して便名をバリデーション
-      const flightNumberResult = FlightNumberSchema.safeParse(reservation.flight_number)
-      if (!flightNumberResult.success) {
+  // zod エラーを i18n 対応のエラーメッセージに変換
+  const errors: string[] = []
+  
+  // ZodError の issues プロパティを使用
+  for (const error of result.error.issues) {
+    const path = error.path.join('.')
+    
+    // i18n キーへのマッピング
+    if (path === 'type') {
+      errors.push(t('reservation.validation.typeRequired'))
+    } else if (path === 'flight_number') {
+      if (error.code === z.ZodIssueCode.custom && error.message?.includes('required')) {
+        errors.push(t('reservation.validation.flightNumberRequired'))
+      } else {
         errors.push(t('reservation.validation.flightNumber'))
       }
-    }
-    
-    if (!reservation.departure_airport) {
-      errors.push(t('reservation.validation.departureAirportRequired'))
-    } else {
-      // Phase 5: zod スキーマを使用して空港コードをバリデーション
-      const departureAirportResult = AirportCodeSchema.safeParse(reservation.departure_airport)
-      if (!departureAirportResult.success) {
+    } else if (path === 'departure_airport') {
+      if (error.code === z.ZodIssueCode.custom && error.message?.includes('required')) {
+        errors.push(t('reservation.validation.departureAirportRequired'))
+      } else {
         errors.push(t('reservation.validation.airportCode'))
       }
-    }
-    
-    if (!reservation.arrival_airport) {
-      errors.push(t('reservation.validation.arrivalAirportRequired'))
-    } else {
-      // Phase 5: zod スキーマを使用して空港コードをバリデーション
-      const arrivalAirportResult = AirportCodeSchema.safeParse(reservation.arrival_airport)
-      if (!arrivalAirportResult.success) {
+    } else if (path === 'arrival_airport') {
+      if (error.code === z.ZodIssueCode.custom && error.message?.includes('required')) {
+        errors.push(t('reservation.validation.arrivalAirportRequired'))
+      } else {
         errors.push(t('reservation.validation.airportCode'))
       }
-    }
-    
-    if (!reservation.departure_at) {
-      errors.push(t('reservation.validation.departureDateRequired'))
-    }
-    if (!reservation.arrival_at) {
-      errors.push(t('reservation.validation.arrivalDateRequired'))
-    }
-  } else if (reservation.type && ['rental_car', 'hotel', 'dining', 'other'].includes(reservation.type)) {
-    // 飛行機以外の場合
-    if (!reservation.start_date) {
-      errors.push(t('reservation.validation.startDateRequired'))
-    }
-    if (!reservation.end_date) {
-      errors.push(t('reservation.validation.endDateRequired'))
-    }
-    // 場所情報はItineraryから取得するため、ReservationInfoでは不要
-  }
-
-  // URLのバリデーション
-  if (reservation.reservation_url && !isAllowedReservationUrl(reservation.reservation_url)) {
-    errors.push(t('reservation.validation.reservationUrl'))
-  }
-
-  // 日時の論理チェック
-  if (reservation.start_date && reservation.end_date) {
-    const start = toDateOrNull(reservation.start_date)
-    const end = toDateOrNull(reservation.end_date)
-    
-    // 日時変換失敗を明示的に検出
-    if (!start || !end) {
-      errors.push(t('reservation.validation.invalidStartOrEnd'))
-    } else if (start.getTime() >= end.getTime()) {
-      errors.push(t('reservation.validation.endAfterStart'))
-    }
-  }
-
-  if (reservation.departure_at && reservation.arrival_at) {
-    const departure = toDateOrNull(reservation.departure_at)
-    const arrival = toDateOrNull(reservation.arrival_at)
-    
-    // 日時変換失敗を明示的に検出
-    if (!departure || !arrival) {
-      errors.push(t('reservation.validation.invalidDepartureOrArrival'))
-    } else if (departure.getTime() >= arrival.getTime()) {
-      errors.push(t('reservation.validation.arrivalAfterDeparture'))
+    } else if (path === 'departure_at') {
+      if (error.code === z.ZodIssueCode.custom && error.message?.includes('required')) {
+        errors.push(t('reservation.validation.departureDateRequired'))
+      } else {
+        errors.push(t('reservation.validation.invalidDepartureOrArrival'))
+      }
+    } else if (path === 'arrival_at') {
+      if (error.code === z.ZodIssueCode.custom && error.message?.includes('required')) {
+        errors.push(t('reservation.validation.arrivalDateRequired'))
+      } else if (error.message?.includes('after departure')) {
+        errors.push(t('reservation.validation.arrivalAfterDeparture'))
+      } else {
+        errors.push(t('reservation.validation.invalidDepartureOrArrival'))
+      }
+    } else if (path === 'start_date') {
+      if (error.code === z.ZodIssueCode.custom && error.message?.includes('required')) {
+        errors.push(t('reservation.validation.startDateRequired'))
+      } else {
+        errors.push(t('reservation.validation.invalidStartOrEnd'))
+      }
+    } else if (path === 'end_date') {
+      if (error.code === z.ZodIssueCode.custom && error.message?.includes('required')) {
+        errors.push(t('reservation.validation.endDateRequired'))
+      } else if (error.message?.includes('after start')) {
+        errors.push(t('reservation.validation.endAfterStart'))
+      } else {
+        errors.push(t('reservation.validation.invalidStartOrEnd'))
+      }
+    } else if (path === 'reservation_url') {
+      errors.push(t('reservation.validation.reservationUrl'))
+    } else {
+      // その他のエラーは zod のメッセージを使用（フォールバック）
+      errors.push(error.message || 'Validation error')
     }
   }
 
   return {
-    isValid: errors.length === 0,
+    isValid: false,
     errors
   }
 }
