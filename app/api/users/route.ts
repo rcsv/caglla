@@ -3,9 +3,10 @@ import { adminUserOperations } from '@/lib/firebase/admin-operation'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import type { User } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import { withAuth, notFound, parseRequestBody } from '@/lib/core/error-handler'
+import { notFound, parseRequestBody, withAuth as withAuthLegacy } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
-export const POST = withAuth(async (request: NextRequest, auth) => {
+export const POST = withAuthLegacy(async (request: NextRequest, auth) => {
   const { userId, decodedToken } = auth
 
   // Parse request body
@@ -101,8 +102,29 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
   return NextResponse.json({ user })
 })
 
-export const GET = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+/**
+ * 実験: Context 累積型ミドルウェアパターンへの移行
+ * 
+ * Before (旧方式):
+ * ```typescript
+ * export const GET = withAuth(async (request: NextRequest, auth) => {
+ *   const { userId } = auth
+ *   // ...
+ * })
+ * ```
+ * 
+ * After (新方式 - 標準プリセット使用):
+ * ```typescript
+ * export const GET = authApi(async (request, ctx) => {
+ *   // ctx.auth が保証されている
+ *   const { userId } = ctx.auth!
+ *   // ...
+ * })
+ * ```
+ */
+export const GET = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId } = ctx.auth!
 
   // Get user data（auth_uid で検索、後方互換性のため google_id もチェック）
   // Phase 1-1.5: 認証プロバイダーマルチ対応化
