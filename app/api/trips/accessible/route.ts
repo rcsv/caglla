@@ -88,9 +88,10 @@ export async function GET(request: NextRequest) {
         let creator: User | undefined
         let destinationPlace: PlaceData | undefined = undefined
 
-        // creator 情報
+        // creator 情報（auth_uid で検索、後方互換性のため google_id もチェック）
+        // Phase 1-1.5: 認証プロバイダーマルチ対応化
         try {
-          creator = await adminUserOperations.getUserByGoogleId(trip.user_id) || undefined
+          creator = await adminUserOperations.getUserByAuthUid(trip.user_id) || undefined
         } catch (error) {
           logger.error('Error fetching creator for trip', error, { tripId: trip.id })
         }

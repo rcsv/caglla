@@ -86,9 +86,10 @@ async function getUserInfo(userId: string): Promise<{ name: string; avatar?: str
   }
 
   // 本番環境では、Firestoreからユーザー情報を取得（lazy import）
+  // Phase 1-1.5: 認証プロバイダーマルチ対応化（auth_uid で検索、後方互換性のため google_id もチェック）
   try {
     const adminModule = await import('@/lib/firebase/admin-operation')
-    const user = await adminModule.adminUserOperations.getUserByGoogleId(userId)
+    const user = await adminModule.adminUserOperations.getUserByAuthUid(userId)
     if (user) {
       return {
         name: user.name || `User ${userId}`,

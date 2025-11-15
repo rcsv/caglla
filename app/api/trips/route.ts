@@ -45,8 +45,9 @@ export async function GET(request: NextRequest) {
 
     const trips = await adminTripOperations.getTripsByUserId(userId)
 
-    // Get user info to determine language preference
-    const user = await adminUserOperations.getUserByGoogleId(userId)
+    // Get user info to determine language preference（auth_uid で検索、後方互換性のため google_id もチェック）
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化
+    const user = await adminUserOperations.getUserByAuthUid(userId)
     const cookieLang = request.cookies.get(COOKIE_NAME)?.value ?? null
     const userLanguage = getUserLanguage(user ?? undefined, {
       serverOverride: cookieLang,
@@ -297,8 +298,9 @@ export async function POST(request: NextRequest) {
     logger.debug('Fetching user data for creator info')
     
     const cookieLangPost = request.cookies.get(COOKIE_NAME)?.value ?? null
-    // 最新のユーザー情報を取得してcreator情報を追加
-    const user = await adminUserOperations.getUserByGoogleId(userId)
+    // 最新のユーザー情報を取得してcreator情報を追加（auth_uid で検索、後方互換性のため google_id もチェック）
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化
+    const user = await adminUserOperations.getUserByAuthUid(userId)
     if (user) {
       trip.creator = user
       logger.debug('Creator info added', { userSlug: user.slug })
