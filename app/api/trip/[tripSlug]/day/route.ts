@@ -1,37 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
-import { adminAuth } from '@/lib/firebase/admin'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { adminDayOperations, adminTripOperations } from '@/lib/firebase/admin-operation'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { notFound, badRequest, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { tripSlug: string } }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    // 認証チェック
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId } = auth
 
-    const idToken = authHeader.split('Bearer ')[1]
-    
-    // Verify the ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const { tripSlug } = params
+    const { tripSlug } = await params
 
     const resolvedTrip = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolvedTrip) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      return notFound('Trip')
     }
 
     const { id: tripId, trip } = resolvedTrip
 
     if (trip.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      throw createForbiddenError('You do not own this trip')
     }
 
     // 既存の日程を取得して次のday_numberを決定
@@ -52,10 +48,7 @@ export async function POST(
       if (lastDay?.date) {
         const lastDate = toDateOrNull(lastDay.date)
         if (!lastDate) {
-          return NextResponse.json(
-            { error: '最後の日程の日付が無効です' },
-            { status: 400 }
-          )
+          return badRequest('最後の日程の日付が無効です')
         }
         newDate = new Date(lastDate)
         newDate.setDate(newDate.getDate() + 1)
@@ -97,10 +90,9 @@ export async function POST(
 
     return NextResponse.json(newDay)
   } catch (error) {
-    logger.error('Error creating day:', error)
-    return NextResponse.json(
-      { error: 'Failed to create day' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/day`
     )
   }
 }
