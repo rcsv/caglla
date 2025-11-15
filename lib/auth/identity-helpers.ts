@@ -5,7 +5,7 @@
  * これにより、型安全性を保ちながら実際のデータベースクエリを行います。
  */
 
-import { db } from '@/lib/firebase/client'
+import { getSafeFirestore } from '@/lib/firebase/client'
 import { adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type {
@@ -32,10 +32,7 @@ import logger from '@/lib/core/logger'
  */
 export async function resolveUserIdFromSlug(userSlug: UserSlug): Promise<UserId | null> {
   try {
-    if (!db) {
-      logger.error('Firestore client not initialized')
-      return null
-    }
+    const db = getSafeFirestore()
     const usersRef = db.collection(COLLECTIONS.USERS)
     const querySnapshot = await usersRef.where('slug', '==', userSlug).limit(1).get()
     
@@ -63,10 +60,7 @@ export async function resolveUserIdFromSlug(userSlug: UserSlug): Promise<UserId 
  */
 export async function resolveUserSlugFromId(userId: UserId): Promise<UserSlug | null> {
   try {
-    if (!db) {
-      logger.error('Firestore client not initialized')
-      return null
-    }
+    const db = getSafeFirestore()
     const userDoc = await db.collection(COLLECTIONS.USERS).doc(userId).get()
     
     if (!userDoc.exists) {
@@ -110,10 +104,7 @@ export async function resolveTripIdFromSlug(
   userId: UserId
 ): Promise<TripId | null> {
   try {
-    if (!db) {
-      logger.error('Firestore client not initialized')
-      return null
-    }
+    const db = getSafeFirestore()
     const tripsRef = db.collection(COLLECTIONS.TRIPS)
     const querySnapshot = await tripsRef
       .where('slug', '==', tripSlug)
@@ -142,10 +133,7 @@ export async function resolveTripIdFromSlug(
  */
 export async function resolveTripSlugFromId(tripId: TripId): Promise<TripSlug | null> {
   try {
-    if (!db) {
-      logger.error('Firestore client not initialized')
-      return null
-    }
+    const db = getSafeFirestore()
     const tripDoc = await db.collection(COLLECTIONS.TRIPS).doc(tripId).get()
     
     if (!tripDoc.exists) {
@@ -209,10 +197,7 @@ export async function isSameTrip(tripId: TripId, tripSlug: TripSlug): Promise<bo
   
   // より効率的な方法: TripId から Trip を取得して slug を比較
   try {
-    if (!db) {
-      logger.error('Firestore client not initialized')
-      return false
-    }
+    const db = getSafeFirestore()
     const tripDoc = await db.collection(COLLECTIONS.TRIPS).doc(tripId).get()
     
     if (!tripDoc.exists) {

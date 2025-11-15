@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import logger from '@/lib/core/logger'
 import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { getFirestore, type Firestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
 // Firebase設定（本番環境用）
@@ -37,6 +37,25 @@ try {
   auth = null
   db = null
   storage = null
+}
+
+/**
+ * 初期化済みのFirestoreインスタンスを取得
+ * 初期化に失敗している場合はエラーをスロー
+ * 
+ * Non-nullアサーション（`!`）を使用して、TypeScriptの型チェックをパスする。
+ * 実行時のチェックで`db`が`null`の場合はエラーをスローするため安全。
+ * 
+ * @returns Firestoreインスタンス
+ * @throws Error 初期化に失敗している場合
+ */
+export function getSafeFirestore(): Firestore {
+  if (!db) {
+    logger.error('Firestore client not initialized')
+    throw new Error('Firestore client not initialized')
+  }
+  // Non-nullアサーション: 実行時チェック済みのため安全
+  return db!
 }
 
 export { firebaseConfig, auth, db, storage }
