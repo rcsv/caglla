@@ -7,9 +7,8 @@ import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import logger from '@/lib/core/logger'
 import { canViewTrip } from '@/lib/core/permissions'
 import { asUserId } from '@/lib/core/types/identity'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { notFound, badRequest, createForbiddenError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
-import { validateTripOwnership } from '@/lib/api/authorization-helpers'
+import { notFound, badRequest, createForbiddenError, parseRequestBody } from '@/lib/core/error-handler'
+import { tripApi } from '@/lib/api/middleware'
 
 // API応答用の拡張型（destination_placeを含む）
 interface TripWithDestination extends Trip {
@@ -265,26 +264,11 @@ export async function GET(
  * @param params - An object whose `id` property (resolved from the route) is the target trip ID.
  * @returns A NextResponse with `{ success: true }` on successful update. On error returns JSON with an `error` message and an appropriate HTTP status (401, 403, 400, or 500).
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    const { tripSlug } = await params
-
-    // Trip解決と所有権チェック
-    const ownership = await validateTripOwnership(tripSlug, userId)
-    if (ownership instanceof NextResponse) {
-      return ownership // エラーレスポンスをそのまま返す
-    }
-    const { tripId, trip } = ownership
+export const PUT = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
     const body = await parseRequestBody<{
       title?: string
@@ -566,46 +550,19 @@ export async function PUT(
       }
     }
 
-    await adminTripOperations.updateTrip(tripId, tripUpdatePayload)
+  await adminTripOperations.updateTrip(tripId, tripUpdatePayload)
 
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/trip/[tripSlug]`
-    )
-  }
-}
+  return NextResponse.json({ success: true })
+})
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
+export const DELETE = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
-    const { tripSlug } = await params
+  // Delete trip (this will also delete related days and itineraries)
+  await adminTripOperations.deleteTrip(tripId)
 
-    // Trip解決と所有権チェック
-    const ownership = await validateTripOwnership(tripSlug, userId)
-    if (ownership instanceof NextResponse) {
-      return ownership // エラーレスポンスをそのまま返す
-    }
-    const { tripId, trip } = ownership
-
-    // Delete trip (this will also delete related days and itineraries)
-    await adminTripOperations.deleteTrip(tripId)
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/trip/[tripSlug]`
-    )
-  }
-}
+  return NextResponse.json({ success: true })
+})
