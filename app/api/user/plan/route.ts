@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
 import { PlanId } from '@/lib/subscription/restriction'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { notFound, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 // 動的レンダリングを強制（request.headersを使用するため）
 export const dynamic = 'force-dynamic'
@@ -26,17 +28,12 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Authorizationヘッダーからトークンを取得
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // 認証チェック
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
-
-    const token = authHeader.split('Bearer ')[1]
-    
-    // Firebase Admin SDKでトークンを検証
-    const decodedToken = await adminAuth.verifyIdToken(token)
-    const uid = decodedToken.uid
+    const { userId: uid } = auth
 
     // ユーザー情報を取得（google_idでクエリ）
     const userQuery = await adminDb.collection('users')
@@ -45,7 +42,7 @@ export async function GET(request: NextRequest) {
       .get()
     
     if (userQuery.empty) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     const userDoc = userQuery.docs[0]
@@ -56,8 +53,10 @@ export async function GET(request: NextRequest) {
       userId: userDoc.id
     })
   } catch (error) {
-    logger.error('Error fetching user plan', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/user/plan'
+    )
   }
 }
 
@@ -72,7 +71,7 @@ export async function PUT(request: NextRequest) {
       
       // プランIDのバリデーション
       if (!Object.values(PlanId).includes(planId)) {
-        return NextResponse.json({ error: 'Invalid plan ID' }, { status: 400 })
+        return badRequest('Invalid plan ID')
       }
       
       const mockUserId = 'dev-user-123'
@@ -87,23 +86,19 @@ export async function PUT(request: NextRequest) {
       })
     }
 
-    // Authorizationヘッダーからトークンを取得
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // 認証チェック
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId: uid } = auth
 
-    const token = authHeader.split('Bearer ')[1]
-    
-    // Firebase Admin SDKでトークンを検証
-    const decodedToken = await adminAuth.verifyIdToken(token)
-    const uid = decodedToken.uid
-
-    const { planId } = await request.json()
+    const body = await parseRequestBody<{ planId: PlanId }>(request)
+    const { planId } = body
     
     // プランIDのバリデーション
     if (!Object.values(PlanId).includes(planId)) {
-      return NextResponse.json({ error: 'Invalid plan ID' }, { status: 400 })
+      return badRequest('Invalid plan ID')
     }
 
     // ユーザー情報を取得（google_idでクエリ）
@@ -113,7 +108,7 @@ export async function PUT(request: NextRequest) {
       .get()
     
     if (userQuery.empty) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     const userDoc = userQuery.docs[0]
@@ -130,7 +125,9 @@ export async function PUT(request: NextRequest) {
       message: 'Plan updated successfully'
     })
   } catch (error) {
-    logger.error('Error updating user plan', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/user/plan'
+    )
   }
 }
