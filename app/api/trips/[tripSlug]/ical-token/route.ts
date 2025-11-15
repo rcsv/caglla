@@ -3,8 +3,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 
 import { generateICalToken } from '@/lib/utils/ical-token'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { validateTripOwnership } from '@/lib/api/authorization-helpers'
+import { tripApi } from '@/lib/api/middleware'
 
 // Firebase Admin初期化
 const db = getFirestore()
@@ -19,26 +18,11 @@ const auth = getAuth()
 /**
  * POST: iCal公開トークンを生成して有効化
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    const { tripSlug } = await params
-    
-    // 1. 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    // 2. Trip解決と所有権チェック
-    const ownership = await validateTripOwnership(tripSlug, userId)
-    if (ownership instanceof NextResponse) {
-      return ownership // エラーレスポンスをそのまま返す
-    }
-    const { tripId: resolvedTripId, trip } = ownership
+export const POST = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId: resolvedTripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
     // 4. ユーザープラン確認（Backpacker以上）
     // usersコレクションはgoogle_idで管理しているため、uidで検索する
@@ -77,44 +61,24 @@ export async function POST(
     const icalUrl = `${baseUrl}/api/trips/${resolvedTripId}/ical?token=${token}&type=trip`
     const reservationsUrl = `${baseUrl}/api/trips/${resolvedTripId}/ical?token=${token}&type=reservations`
 
-    return NextResponse.json({
-      success: true,
-      token,
-      urls: {
-        trip: icalUrl,
-        reservations: reservationsUrl,
-      },
-    })
-  } catch (error) {
-    console.error('iCal token generation error:', error)
-    return NextResponse.json({ 
-      error: 'Internal Server Error' 
-    }, { status: 500 })
-  }
-}
+  return NextResponse.json({
+    success: true,
+    token,
+    urls: {
+      trip: icalUrl,
+      reservations: reservationsUrl,
+    },
+  })
+})
 
 /**
  * DELETE: iCal公開を無効化
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    const { tripSlug } = await params
-    // 1. 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    // 2. Trip解決と所有権チェック
-    const ownership = await validateTripOwnership(tripSlug, userId)
-    if (ownership instanceof NextResponse) {
-      return ownership // エラーレスポンスをそのまま返す
-    }
-    const { tripId: resolvedTripId, trip } = ownership
+export const DELETE = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId: resolvedTripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
     // 4. Tripを更新（無効化）
     await db.collection('trips').doc(resolvedTripId).update({
@@ -122,15 +86,9 @@ export async function DELETE(
       updated_at: new Date(),
     })
 
-    return NextResponse.json({
-      success: true,
-      message: 'iCal publishing disabled',
-    })
-  } catch (error) {
-    console.error('iCal token deletion error:', error)
-    return NextResponse.json({ 
-      error: 'Internal Server Error' 
-    }, { status: 500 })
-  }
-}
+  return NextResponse.json({
+    success: true,
+    message: 'iCal publishing disabled',
+  })
+})
 

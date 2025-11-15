@@ -2,30 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { adminDayOperations, adminTripOperations } from '@/lib/firebase/admin-operation'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { notFound, badRequest, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
-import { validateTripOwnership } from '@/lib/api/authorization-helpers'
+import { badRequest } from '@/lib/core/error-handler'
+import { tripApi } from '@/lib/api/middleware'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    const { tripSlug } = await params
-
-    // Trip解決と所有権チェック
-    const ownership = await validateTripOwnership(tripSlug, userId)
-    if (ownership instanceof NextResponse) {
-      return ownership // エラーレスポンスをそのまま返す
-    }
-    const { tripId, trip } = ownership
+export const POST = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
     // 既存の日程を取得して次のday_numberを決定
     const existingDays = await adminDayOperations.getDaysByTripId(tripId)
@@ -85,11 +69,5 @@ export async function POST(
       })
     }
 
-    return NextResponse.json(newDay)
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/trip/[tripSlug]/day`
-    )
-  }
-}
+  return NextResponse.json(newDay)
+})

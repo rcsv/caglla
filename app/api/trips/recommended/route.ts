@@ -4,7 +4,7 @@ import { adminDb } from '@/lib/firebase/admin'
 import type { Trip, FirestoreDate } from '@/lib/core/types'
 import type { QueryDocumentSnapshot } from 'firebase-admin/firestore'
 import logger from '@/lib/core/logger'
-import { withAuth, handleApiError } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 /**
  * FirestoreDateをDateオブジェクトに変換
@@ -22,8 +22,8 @@ function toDate(firestoreDate: FirestoreDate | undefined): Date | undefined {
 // 動的レンダリングを強制（request.headersを使用するため）
 export const dynamic = 'force-dynamic'
 
-export const GET = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const GET = authApi(async (request: NextRequest, ctx) => {
+  const { userId } = ctx.auth!
 
   logger.debug('Recommended trips API called')
   logger.debug('ID token verified', { userId })

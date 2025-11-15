@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { storageManagementHelpers } from '@/lib/firebase/storage'
-import { withAuth, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 // GET /api/storage/quota - ユーザーのストレージ制限情報を取得
-export const GET = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const GET = authApi(async (request: NextRequest, ctx) => {
+  const { userId } = ctx.auth!
   
   const quotaCheck = await storageManagementHelpers.checkStorageQuota(userId)
   
@@ -33,8 +34,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
 })
 
 // POST /api/storage/quota - ファイルアップロード前の制限チェック
-export const POST = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  const { userId } = ctx.auth!
   
   const body = await parseRequestBody<{ fileSize?: number }>(request)
   const { fileSize } = body

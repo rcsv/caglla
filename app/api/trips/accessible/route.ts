@@ -6,7 +6,7 @@ import { resolveDestinationPlace } from '@/lib/api/places-cache'
 import { getUserLanguage } from '@/lib/utils/language'
 import type { Trip, User, PlacesCache, PlaceData } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import { withAuth, handleApiError } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 // API応答用の拡張型（destination_placeを含む）
 interface TripWithDestination extends Trip {
@@ -17,8 +17,8 @@ interface TripWithDestination extends Trip {
 // 動的レンダリングを強制（request.headersを使用するため）
 export const dynamic = 'force-dynamic'
 
-export const GET = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const GET = authApi(async (request: NextRequest, ctx) => {
+  const { userId } = ctx.auth!
 
   // Check if Firebase Admin SDK is initialized
   if (!adminDb) {
