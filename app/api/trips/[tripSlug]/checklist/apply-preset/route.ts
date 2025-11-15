@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import { badRequest, notFound, parseRequestBody, createForbiddenError } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 // POST: プリセットを適用
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    const { tripSlug: tripId } = await params
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripSlug: tripId } = ctx.params!
     const body = await parseRequestBody<{ preset_id?: string }>(request)
     const { preset_id } = body
 
@@ -72,13 +65,7 @@ export async function POST(
       usage_count: (preset.usage_count || 0) + 1
     })
 
-    const updated = await checklistRef.get()
-    return NextResponse.json(updated.data())
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/trips/[tripSlug]/checklist/apply-preset`
-    )
-  }
-}
+  const updated = await checklistRef.get()
+  return NextResponse.json(updated.data())
+})
 

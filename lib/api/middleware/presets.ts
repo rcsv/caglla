@@ -14,6 +14,7 @@ import { composeMiddleware } from '@/lib/core/middleware'
 import { withAuth } from './auth'
 import { withParams } from './params'
 import { withTripOwnership } from './trip-ownership'
+import { withDayOwnership } from './day-ownership'
 
 /**
  * 認証のみが必要な API プリセット
@@ -54,23 +55,41 @@ export const tripApi = composeMiddleware(
 /**
  * Day API プリセット（認証 + Day所有権チェック）
  * 
- * 注意: `withDayOwnership()` は未実装のため、将来的に追加予定
+ * dayId の取得元を指定可能（params, query, body）
+ * デフォルトは params から取得
  * 
  * 使用例:
  * ```typescript
- * export const POST = dayApi(async (request, ctx) => {
+ * // params から dayId を取得する場合
+ * export const GET = dayApi(async (request, ctx) => {
  *   // ctx.auth, ctx.day, ctx.params が保証されている
+ *   const { userId } = ctx.auth!
+ *   const { dayId, tripId, trip } = ctx.day!
+ *   // ...
+ * })
+ * 
+ * // query から day_id を取得する場合
+ * export const GET = dayApiWithQuery(async (request, ctx) => {
+ *   // ctx.auth, ctx.day が保証されている
  *   const { userId } = ctx.auth!
  *   const { dayId, tripId, trip } = ctx.day!
  *   // ...
  * })
  * ```
  */
-// export const dayApi = composeMiddleware(
-//   withAuth(),
-//   withParams(),
-//   withDayOwnership()
-// )
+export const dayApi = composeMiddleware(
+  withAuth(),
+  withParams(),
+  withDayOwnership({ source: 'params' })
+)
+
+/**
+ * Day API プリセット（query から day_id を取得）
+ */
+export const dayApiWithQuery = composeMiddleware(
+  withAuth(),
+  withDayOwnership({ source: 'query' })
+)
 
 /**
  * External API プリセット（エラーハンドリングのみ）

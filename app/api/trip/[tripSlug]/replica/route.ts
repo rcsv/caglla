@@ -5,22 +5,13 @@ import { adminTripOperations, adminDayOperations } from '@/lib/firebase/admin-op
 import { planSaveOperations } from '@/lib/travel/plan-save'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { notFound, badRequest, parseRequestBody, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
+import { notFound, badRequest, parseRequestBody, createForbiddenError } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    const { tripSlug } = await params
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripSlug } = ctx.params!
 
     const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolved) {
@@ -149,11 +140,5 @@ export async function POST(
         end_date: endDate ?? null
       },
     })
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/trip/[tripSlug]/replica`
-    )
-  }
-}
+})
 

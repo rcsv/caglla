@@ -6,22 +6,13 @@ import { PlacesCache, Trip, Day, Itinerary } from '@/lib/core/types'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import { adminTripOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { notFound, handleApiError } from '@/lib/core/error-handler'
+import { notFound } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    const { tripSlug } = await params
-
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId: googleId } = auth
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+  const { tripSlug } = ctx.params!
+  const { userId: googleId } = ctx.auth!
 
     // ユーザー情報取得（auth_uid で検索、後方互換性のため google_id もチェック）
     // Phase 1-1.5: 認証プロバイダーマルチ対応化
@@ -138,13 +129,7 @@ export async function POST(
       updated_at: new Date()
     }, { merge: true })
 
-    return NextResponse.json({ success: true, items })
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/trips/[tripSlug]/checklist/generate`
-    )
-  }
-}
+  return NextResponse.json({ success: true, items })
+})
 
 

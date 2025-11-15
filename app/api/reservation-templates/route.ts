@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 
-import { requireAuth } from '@/lib/api/auth-helpers'
 import type { ReservationTemplate, ReservationTemplateInput } from '@/lib/core/types'
-import { unauthorized, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 // Firebase Admin初期化
 const db = getFirestore()
@@ -11,14 +11,9 @@ const db = getFirestore()
 /**
  * GET /api/reservation-templates - ユーザーのテンプレート一覧を取得
  */
-export async function GET(request: NextRequest) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId: uid } = auth
+export const GET = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId: uid } = ctx.auth!
 
     // テンプレート一覧を取得
     const templatesSnapshot = await db
@@ -32,26 +27,15 @@ export async function GET(request: NextRequest) {
       id: doc.id,
     })) as ReservationTemplate[]
 
-    return NextResponse.json({ templates })
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      '/api/reservation-templates'
-    )
-  }
-}
+  return NextResponse.json({ templates })
+})
 
 /**
  * POST /api/reservation-templates - 新規テンプレートを作成
  */
-export async function POST(request: NextRequest) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId: uid } = auth
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId: uid } = ctx.auth!
 
     const body = await parseRequestBody<ReservationTemplateInput>(request)
 
@@ -78,19 +62,13 @@ export async function POST(request: NextRequest) {
 
     const docRef = await db.collection('reservation_templates').add(templateData)
 
-    return NextResponse.json({ 
-      success: true,
+  return NextResponse.json({ 
+    success: true,
+    id: docRef.id,
+    template: {
+      ...templateData,
       id: docRef.id,
-      template: {
-        ...templateData,
-        id: docRef.id,
-      }
-    })
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      '/api/reservation-templates'
-    )
-  }
-}
+    }
+  })
+})
 

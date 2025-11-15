@@ -1,23 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { notFound, parseRequestBody, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
+import { notFound, parseRequestBody, createForbiddenError } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 // GET: プリセット詳細取得
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ presetSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    const { presetSlug } = await params
+export const GET = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId } = ctx.auth!
+  const { presetSlug } = ctx.params!
     const ref = adminDb.collection('checklist_presets').doc(presetSlug)
     const doc = await ref.get()
 
@@ -32,29 +23,14 @@ export async function GET(
       throw createForbiddenError('You do not have permission to access this preset')
     }
 
-    return NextResponse.json(preset)
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/checklists/presets/[presetSlug]`
-    )
-  }
-}
+  return NextResponse.json(preset)
+})
 
 // PUT: プリセット更新
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ presetSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    const { presetSlug } = await params
+export const PUT = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId } = ctx.auth!
+  const { presetSlug } = ctx.params!
     const ref = adminDb.collection('checklist_presets').doc(presetSlug)
     const doc = await ref.get()
 
@@ -85,30 +61,15 @@ export async function PUT(
       updated_at: new Date()
     })
 
-    const updated = await ref.get()
-    return NextResponse.json(updated.data())
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/checklists/presets/[presetSlug]`
-    )
-  }
-}
+  const updated = await ref.get()
+  return NextResponse.json(updated.data())
+})
 
 // DELETE: プリセット削除
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ presetSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    const { presetSlug } = await params
+export const DELETE = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId } = ctx.auth!
+  const { presetSlug } = ctx.params!
     const ref = adminDb.collection('checklist_presets').doc(presetSlug)
     const doc = await ref.get()
 
@@ -121,13 +82,7 @@ export async function DELETE(
       throw createForbiddenError('You do not own this preset')
     }
 
-    await ref.delete()
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/checklists/presets/[presetSlug]`
-    )
-  }
-}
+  await ref.delete()
+  return NextResponse.json({ success: true })
+})
 

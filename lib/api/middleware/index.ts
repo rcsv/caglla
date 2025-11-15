@@ -14,6 +14,7 @@ export { withAuth } from './auth'
 export { withParams } from './params'
 export { withErrorHandling, withErrorHandlingWrapper } from './error-handling'
 export { withTripOwnership } from './trip-ownership'
+export { withDayOwnership } from './day-ownership'
 export { withGooglePlacesKey, withGoogleGeocodingKey, withUnsplashKey } from './api-keys'
-export { authApi, tripApi, externalApi, publicApi } from './presets'
+export { authApi, tripApi, dayApi, dayApiWithQuery, externalApi, publicApi } from './presets'
 
