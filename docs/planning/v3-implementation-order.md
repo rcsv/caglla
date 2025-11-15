@@ -364,18 +364,22 @@ describe('toggleLike transaction', () => {
 
 ---
 
-### **Phase 2: UI実装**（後回し）
+### **Phase 2: UI実装** ✅ 基本完了
 
 Phase 1が完了してから、UIコンポーネントを実装します。
 
-1. **Route Groups導入**（既存ページの移行）
-2. **Parallel Routes実装**
-3. **Social Components実装**
-4. **Feed ページ実装**
+1. **Route Groups導入**（既存ページの移行）✅
+2. **Parallel Routes実装** ✅ 構造のみ（既存page.tsxとの統合は未完了）
+3. **Social Components実装** ✅
+4. **Feed ページ実装** ✅
 
 **各コンポーネントで:**
 - React Testing Libraryでテスト
 - Storybook（任意）で視覚的テスト
+
+**Phase 2-5拡張（未完了）:**
+- 既存の`page.tsx`（`SlugBasedTripPage`）とParallel Routes（`@timeline`, `@map`, `@social`）の統合
+- 大きな変更になるため、段階的な実装が必要
 
 ---
 
@@ -466,12 +470,12 @@ module.exports = {
 - [x] 比較関数の実装 ✅
 - [x] テストカバレッジ90%以上 ✅
 
-### Phase 1-1.5: 認証プロバイダーマルチ対応化（v3.0.0での適用）
-- [ ] User型定義の拡張（`auth_uid` フィールド追加）
-- [ ] 比較関数の拡張（`isSameUser()` 実装）
-- [ ] Firestoreルールの更新
-- [ ] データマイグレーションスクリプト作成
-- [ ] コード全体の段階的更新
+### Phase 1-1.5: 認証プロバイダーマルチ対応化（v3.0.0での適用）✅
+- [x] User型定義の拡張（`auth_uid` フィールド追加）✅
+- [x] 比較関数の拡張（`getUserByAuthUid()` 実装）✅
+- [x] Firestoreルールの更新✅
+- [x] データマイグレーションスクリプト作成✅
+- [x] コード全体の段階的更新✅（主要なAPIルートは完了）
 
 ### Phase 1-2: Firestore スキーマ拡張
 - [x] バックフィルスクリプトのテスト作成 ✅
@@ -505,14 +509,16 @@ module.exports = {
 
 **次のステップ候補:**
 
-1. **Phase 1-1.5: 認証プロバイダーマルチ対応化**（v3.0.0での適用）
-   - `google_id` → `auth_uid` への段階的移行
-   - 認証プロバイダー拡張の基盤整備
+1. **Phase 1-1.5: 認証プロバイダーマルチ対応化** ✅ 完了
+   - `google_id` → `auth_uid` への段階的移行 ✅
+   - 認証プロバイダー拡張の基盤整備 ✅
 
-2. **Phase 2: UI実装**（Route Groups導入、Parallel Routes、Social Components）
-   - 既存ページのRoute Groupsへの移行
-   - フィードページの実装
-   - いいね・コメント・フォローUI実装
+2. **Phase 2-5拡張: Parallel Routes統合**（推奨）
+   - 既存の`page.tsx`（`SlugBasedTripPage`）とParallel Routes（`@timeline`, `@map`, `@social`）の統合
+   - 大きな変更になるため、段階的な実装が必要
+   - `@timeline`: `TripItineraryView`の統合
+   - `@map`: `TripMap`の統合（既存の`TripRightPane`から移行）
+   - `@social`: `LikeButton`と`CommentList`の統合（既に`@social/default.tsx`に実装済み）
 
 3. **Phase 1-2の完了**: エミュレータでの統合テスト完了
    - Firestoreエミュレータでのセキュリティルールテスト完了
