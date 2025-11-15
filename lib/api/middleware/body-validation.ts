@@ -94,7 +94,7 @@ export function withBodyValidation<T extends z.ZodTypeAny>(
       } catch (parseError) {
         // zod エラーの場合は詳細なバリデーションエラーを返す
         if (parseError instanceof z.ZodError) {
-          return handleZodError(parseError)
+          return handleZodError(parseError, new URL(request.url).pathname)
         }
         // 予期しないエラー
         throw parseError
