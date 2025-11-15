@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
 import {
   createTripComment,
@@ -20,7 +21,10 @@ import {
 } from '@/lib/social/trip-comments'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import type { Firestore } from 'firebase-admin/firestore'
-import { unauthorized, notFound, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { unauthorized, notFound, handleApiError } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withBodyValidation } from '@/lib/api/middleware'
+import { CreateTripCommentSchema, UpdateTripCommentSchema } from '@/lib/schemas/trip-social'
 
 /**
  * adminAuthをlazy importします（テスト環境でも動作するように）
@@ -154,6 +158,25 @@ export async function GET(
 /**
  * POST /api/trip/[tripSlug]/comments
  * コメントを作成します
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ content?: string; ... }>(request)
+ * const content = typeof body.content === 'string' ? body.content.trim() : ''
+ * if (!content) {
+ *   return badRequest('Content is required')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ * 
+ * 注意: 認証は既存の `resolveAuthUserId` を使用（テスト環境対応のため）
  */
 export async function POST(
   request: NextRequest,
@@ -166,24 +189,38 @@ export async function POST(
     }
 
     const { tripSlug } = await params
-    const body = await parseRequestBody<{
-      content?: string
-      userName?: string
-      userAvatar?: string
-      parentCommentId?: string
-    }>(request)
     
-    const content = typeof body.content === 'string' ? body.content.trim() : ''
-    const userName = typeof body.userName === 'string' ? body.userName.trim() : ''
-    const userAvatar = typeof body.userAvatar === 'string' ? body.userAvatar.trim() : undefined
-    const parentCommentId =
-      typeof body.parentCommentId === 'string' && body.parentCommentId.trim()
-        ? body.parentCommentId.trim()
-        : undefined
-
-    if (!content) {
-      return badRequest('Content is required')
+    // zod スキーマでバリデーション
+    let rawBody: unknown
+    try {
+      rawBody = await request.json()
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      )
     }
+    
+    let body: z.infer<typeof CreateTripCommentSchema>
+    try {
+      body = CreateTripCommentSchema.parse(rawBody)
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validationError.errors.map(err => ({
+              path: err.path.join('.'),
+              message: err.message
+            }))
+          },
+          { status: 400 }
+        )
+      }
+      throw validationError
+    }
+    
+    const { content, userName, userAvatar, parentCommentId } = body
 
     // userNameが提供されない場合、ユーザー情報から取得
     let finalUserName = userName
@@ -239,6 +276,25 @@ export async function POST(
 /**
  * PUT /api/trip/[tripSlug]/comments/[commentId]
  * コメントを更新します
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ content?: string }>(request)
+ * const content = typeof body.content === 'string' ? body.content.trim() : ''
+ * if (!content) {
+ *   return badRequest('Content is required')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ * 
+ * 注意: 認証は既存の `resolveAuthUserId` を使用（テスト環境対応のため）
  */
 export async function PUT(
   request: NextRequest,
@@ -251,12 +307,38 @@ export async function PUT(
     }
 
     const { tripSlug, commentId } = await params
-    const body = await parseRequestBody<{ content?: string }>(request)
-    const content = typeof body.content === 'string' ? body.content.trim() : ''
-
-    if (!content) {
-      return badRequest('Content is required')
+    
+    // zod スキーマでバリデーション
+    let rawBody: unknown
+    try {
+      rawBody = await request.json()
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      )
     }
+    
+    let body: z.infer<typeof UpdateTripCommentSchema>
+    try {
+      body = UpdateTripCommentSchema.parse(rawBody)
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validationError.errors.map(err => ({
+              path: err.path.join('.'),
+              message: err.message
+            }))
+          },
+          { status: 400 }
+        )
+      }
+      throw validationError
+    }
+    
+    const { content } = body
 
     const db = getFirestore()
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { adminTripOperations, adminDayOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { adminDb } from '@/lib/firebase/admin'
 import { groupTripsByCountry } from '@/lib/travel/country/utils'
@@ -9,8 +10,9 @@ import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
 import { resolveDestinationPlace } from '@/lib/api/places-cache'
 import { COOKIE_NAME } from '@/lib/i18n/storage'
-import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
-import { authApi } from '@/lib/api/middleware'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { authApi, withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { CreateTripSchema } from '@/lib/schemas/trip'
 
 // API応答用の拡張型（destination_placeを含む）
 interface TripWithDestination extends Trip {
@@ -86,43 +88,56 @@ export const GET = authApi(async (request: NextRequest, ctx) => {
  *
  * @param request - The incoming NextRequest containing the Authorization header and JSON body for the new trip.
  * @returns A NextResponse containing the created trip object on success. Returns a JSON error with status 401 for missing/invalid authorization, 400 if both title and destination are missing, and 500 for other server errors.
+ * 
+ * **zod スキーマバリデーション + Context ミドルウェアで移行済み**
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{...}>(request)
+ * if (!finalTitle) {
+ *   return badRequest('Title or destination is required')
+ * }
+ * if (isTemplate && !normalizedDayCount) {
+ *   return badRequest('Template trips require a positive day count')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
  */
-export const POST = authApi(async (request: NextRequest, ctx) => {
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(CreateTripSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.body が保証されている（型推論が効く）
   const { userId } = ctx.auth!
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof CreateTripSchema>
+  const body = ctx.body as BodyType
 
   logger.debug('Starting trip creation')
   logger.debug('User authenticated', { userId })
 
-  const body = await parseRequestBody<{
-    title?: string
-    destination?: string
-    destinationPlace?: PlaceData
-    destinationPlaceId?: string
-    startDate?: string
-    endDate?: string
-    description?: string
-    accessLevel?: string
-    access_level?: string
-    isTemplate?: boolean
-    is_template?: boolean
-    dayCount?: number
-    day_count?: number
-    likesCount?: number
-    likes_count?: number
-    imageUrl?: string
-    defaultCurrency?: string
-  }>(request)
-  
+  // 後方互換性のためのフィールドマッピング（camelCase ↔ snake_case）
   const requestedAccessLevel = body.accessLevel ?? body.access_level ?? 'private'
+  const isTemplate = body.isTemplate ?? body.is_template ?? false
+  const dayCount = body.dayCount ?? body.day_count
+  const likesCount = body.likesCount ?? body.likes_count
+  const imageUrl = body.imageUrl ?? body.image_url
+  const defaultCurrency = body.defaultCurrency ?? body.default_currency
 
   logger.debug('Trip creation request', {
     title: body.title,
     destination: body.destination,
-    hasImageUrl: !!body.imageUrl,
+    hasImageUrl: !!imageUrl,
     requestedAccessLevel,
-    isTemplate: body.isTemplate ?? body.is_template ?? false,
-    dayCount: body.dayCount ?? body.day_count,
-    likesCount: body.likesCount ?? body.likes_count
+    isTemplate,
+    dayCount,
+    likesCount
   })
   
   const {
@@ -132,20 +147,11 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
     destinationPlace,
     destinationPlaceId,
     startDate,
-    endDate,
-    isTemplate = false,
-    dayCount,
-    likesCount,
-    imageUrl,
-    defaultCurrency
+    endDate
   } = body
 
-  // タイトルが空の場合は目的地を使用
+  // タイトルが空の場合は目的地を使用（zod スキーマで title || destination は必須にされている）
   const finalTitle = title || destination
-  if (!finalTitle) {
-    logger.debug('Title or destination is required but not provided')
-    return badRequest('Title or destination is required')
-  }
 
   logger.debug('Getting existing trips for user', { userId })
   
@@ -196,15 +202,11 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
   }
 
   // Create trip
+  // zod スキーマで isTemplate が true の場合、dayCount は必須かつ正の数としてバリデーション済み
   const normalizedDayCount =
     typeof dayCount === 'number' && Number.isFinite(dayCount) && dayCount > 0
       ? Math.floor(dayCount)
       : undefined
-
-  if (isTemplate && !normalizedDayCount) {
-    logger.debug('Template mode requires positive dayCount')
-    return badRequest('Template trips require a positive day count')
-  }
 
   const tripData: any = {
     user_id: userId,

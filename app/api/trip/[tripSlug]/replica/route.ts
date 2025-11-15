@@ -1,41 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
 import { adminDb } from '@/lib/firebase/admin'
 import { adminTripOperations, adminDayOperations } from '@/lib/firebase/admin-operation'
 import { planSaveOperations } from '@/lib/travel/plan-save'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import { notFound, badRequest, parseRequestBody, createForbiddenError } from '@/lib/core/error-handler'
-import { authApi } from '@/lib/api/middleware'
+import { notFound, badRequest, createForbiddenError } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withParams, withBodyValidation } from '@/lib/api/middleware'
+import { CreateReplicaFromTemplateSchema } from '@/lib/schemas/plan-operations'
 
-export const POST = authApi(async (request: NextRequest, ctx) => {
-  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+/**
+ * POST /api/trip/[tripSlug]/replica - テンプレートからレプリカ作成
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ startDate?: string }>(request)
+ * const startDateRaw = typeof body.startDate === 'string' ? body.startDate : ''
+ * const startDate = startDateRaw ? new Date(startDateRaw) : null
+ * if (startDate && Number.isNaN(startDate.getTime())) {
+ *   return badRequest('Invalid start date')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const POST = composeMiddleware(
+  withAuth(),
+  withParams(),
+  withBodyValidation(CreateReplicaFromTemplateSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params, ctx.body が保証されている（型推論が効く）
   const { userId } = ctx.auth!
   const { tripSlug } = ctx.params!
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof CreateReplicaFromTemplateSchema>
+  const body = ctx.body as BodyType
+  const startDateRaw = body.startDate || ''
+  const startDate = startDateRaw ? new Date(startDateRaw) : null
 
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolved) {
-      return notFound('Template trip')
-    }
+  const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
+  if (!resolved) {
+    return notFound('Template trip')
+  }
 
-    const { id: templateTripId, trip: templateTrip } = resolved
+  const { id: templateTripId, trip: templateTrip } = resolved
 
-    if (!templateTrip.is_template) {
-      return badRequest('Trip is not marked as template')
-    }
+  if (!templateTrip.is_template) {
+    return badRequest('Trip is not marked as template')
+  }
 
-    if (templateTrip.access_level !== 'public' && templateTrip.user_id !== userId) {
-      throw createForbiddenError('You do not have permission to access this template')
-    }
-
-    // バリデーションを先に実行（replica作成前に）
-    const body = await parseRequestBody<{ startDate?: string }>(request)
-    const startDateRaw = typeof body.startDate === 'string' ? body.startDate : ''
-    const startDate = startDateRaw ? new Date(startDateRaw) : null
-
-    if (startDate && Number.isNaN(startDate.getTime())) {
-      return badRequest('Invalid start date')
-    }
+  if (templateTrip.access_level !== 'public' && templateTrip.user_id !== userId) {
+    throw createForbiddenError('You do not have permission to access this template')
+  }
 
     // テンプレートのday_countを確認して、startDateの必要性を検証
     const templateDays = await adminDayOperations.getDaysByTripId(templateTripId)

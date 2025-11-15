@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
 import { isSupportedLanguage, DEFAULT_LANGUAGE } from '@/lib/utils/language'
 import { getPlaceFromCache, savePlaceToCache, isCacheStale } from '@/lib/api/places-cache'
 import type { SupportedLanguage, PlaceDetailsResult } from '@/lib/core/types'
-import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
-import { requireGooglePlacesApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withBodyValidation, withGooglePlacesKey } from '@/lib/api/middleware'
+import { PlaceDetailsSchema } from '@/lib/schemas/place'
+import { withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
 // 新Places API (v1) のエンドポイント
 const GOOGLE_PLACES_API_URL = 'https://places.googleapis.com/v1/places'
@@ -14,26 +17,39 @@ const GOOGLE_PLACES_API_URL = 'https://places.googleapis.com/v1/places'
 // 14日でバックグラウンド更新、30日で自動削除
 const SOFT_TTL_MS = 14 * 24 * 60 * 60 * 1000
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/places/details - 場所詳細取得
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{...}>(request)
+ * if (!placeId) {
+ *   return badRequest('Place ID is required')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const POST = composeMiddleware(
+  withGooglePlacesKey(),
+  withBodyValidation(PlaceDetailsSchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    // API Keyの取得と検証
-    const apiKeyResult = requireGooglePlacesApiKey()
-    if (apiKeyResult instanceof NextResponse) {
-      return apiKeyResult
-    }
-    const GOOGLE_PLACES_API_KEY = apiKeyResult
-
-    const body = await parseRequestBody<{
-      placeId?: string
-      language?: SupportedLanguage
-    }>(request)
-    const { placeId, language } = body
+    // ctx.apiKeys, ctx.body が保証されている（型推論が効く）
+    const GOOGLE_PLACES_API_KEY = ctx.apiKeys!.GOOGLE_PLACES!
     
-    if (!placeId) {
-      return badRequest('Place ID is required')
-    }
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof PlaceDetailsSchema>
+    const body = ctx.body as BodyType
+    const { placeId, language } = body
 
-    // 言語バリデーション
+    // 言語バリデーション（zod スキーマでデフォルト値が設定済み）
     const validLanguage: SupportedLanguage = language && isSupportedLanguage(language) 
       ? language 
       : DEFAULT_LANGUAGE
@@ -86,12 +102,16 @@ export async function POST(request: NextRequest) {
       result: placeData
     })
   } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      '/api/places/details'
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは外部API呼び出しを含むため、詳細なエラーハンドリングが必要
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error('Error in places/details:', error)
+    return NextResponse.json(
+      { error: 'Failed to get place details', details: errorMessage },
+      { status: 500 }
     )
   }
-}
+})
 
 /**
  * Google Places APIから場所詳細を取得

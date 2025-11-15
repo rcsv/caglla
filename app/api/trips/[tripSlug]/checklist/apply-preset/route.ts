@@ -1,20 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
-import { badRequest, notFound, parseRequestBody, createForbiddenError } from '@/lib/core/error-handler'
-import { authApi } from '@/lib/api/middleware'
+import { notFound, createForbiddenError } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withParams, withBodyValidation } from '@/lib/api/middleware'
+import { ApplyChecklistPresetSchema } from '@/lib/schemas/checklist'
 
-// POST: プリセットを適用
-export const POST = authApi(async (request: NextRequest, ctx) => {
-  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+/**
+ * POST: プリセットを適用
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ preset_id?: string }>(request)
+ * if (!preset_id) {
+ *   return badRequest('preset_id is required')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const POST = composeMiddleware(
+  withAuth(),
+  withParams(),
+  withBodyValidation(ApplyChecklistPresetSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params, ctx.body が保証されている（型推論が効く）
   const { userId } = ctx.auth!
   const { tripSlug: tripId } = ctx.params!
-    const body = await parseRequestBody<{ preset_id?: string }>(request)
-    const { preset_id } = body
-
-    if (!preset_id) {
-      return badRequest('preset_id is required')
-    }
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof ApplyChecklistPresetSchema>
+  const body = ctx.body as BodyType
+  const { preset_id } = body
 
     // プリセットを取得
     const presetRef = adminDb.collection('checklist_presets').doc(preset_id)

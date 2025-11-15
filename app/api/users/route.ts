@@ -1,31 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { adminUserOperations } from '@/lib/firebase/admin-operation'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import type { User } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import { notFound, parseRequestBody, withAuth as withAuthLegacy } from '@/lib/core/error-handler'
+import { notFound, withAuth as withAuthLegacy } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { CreateUserSchema } from '@/lib/schemas/user'
 import { authApi } from '@/lib/api/middleware'
 
-export const POST = withAuthLegacy(async (request: NextRequest, auth) => {
-  const { userId, decodedToken } = auth
-
-  // Parse request body
-  const body = await parseRequestBody<{
-    name?: string
-    email?: string
-    profile_image_url?: string
-    bio?: string
-    gender?: string
-    preferences?: Record<string, any>
-  }>(request)
-    const { 
-      name, 
-      email, 
-      profile_image_url, 
-      bio,
-      gender,
-      preferences 
-    } = body
+/**
+ * POST /api/users - ユーザー作成・更新
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{...}>(request)
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * ```
+ */
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(CreateUserSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.body が保証されている（型推論が効く）
+  const { userId, decodedToken } = ctx.auth!
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof CreateUserSchema>
+  const body = ctx.body as BodyType
+  const { 
+    name, 
+    email, 
+    profile_image_url, 
+    bio,
+    gender,
+    preferences 
+  } = body
 
     // 既存ユーザーをチェック（auth_uid で検索、後方互換性のため google_id もチェック）
     // Phase 1-1.5: 認証プロバイダーマルチ対応化

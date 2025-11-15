@@ -6,15 +6,38 @@ import { POST as migratePOST } from '../migrate/places-to-cache/route'
 import { GET as selfCheckGET } from '../self-check/route'
 import { validateServerEnvironment } from '@/lib/core/env-validation'
 
-jest.mock('next/server', () => ({
-  NextResponse: {
-    json: (data: unknown, init?: ResponseInit) => new Response(JSON.stringify(data), init),
+// NextResponse をクラスとしてモック（instanceof チェック用）
+// jest.mock() はホイスティングされるため、クラス定義もモック内に含める
+jest.mock('next/server', () => {
+  // NextResponse をクラスとしてモック（instanceof チェック用）
+  class MockNextResponse extends Response {
+    static json(data: unknown, init?: ResponseInit) {
+      return new Response(JSON.stringify(data), init)
+    }
+  }
+
+  return {
+    NextResponse: MockNextResponse,
+  }
+})
+
+jest.mock('@/lib/firebase/admin', () => ({
+  adminAuth: {
+    verifyIdToken: jest.fn(),
+  },
+  adminDb: {
+    collection: jest.fn(() => ({
+      get: jest.fn(() => Promise.resolve({ docs: [] })),
+      doc: jest.fn(() => ({
+        set: jest.fn(() => Promise.resolve()),
+        update: jest.fn(() => Promise.resolve()),
+      })),
+    })),
   },
 }))
 
-jest.mock('@/lib/firebase/admin', () => ({
-  adminAuth: {},
-  adminDb: {},
+jest.mock('@/lib/api/auth-helpers', () => ({
+  requireAuth: jest.fn(),
 }))
 
 jest.mock('@/lib/core/env-validation', () => ({
@@ -34,6 +57,8 @@ describe('API system endpoints', () => {
 
   afterEach(() => {
     validateEnvMock.mockReset()
+    const { requireAuth } = require('@/lib/api/auth-helpers')
+    ;(requireAuth as jest.Mock).mockReset()
     envKeys.forEach((key) => {
       const original = originalEnv[key]
       if (original === undefined) {
@@ -71,12 +96,32 @@ describe('API system endpoints', () => {
   })
 
   it('requires authorization for /api/migrate/places-to-cache', async () => {
+    const { requireAuth } = require('@/lib/api/auth-helpers')
+    const { NextResponse } = require('next/server')
+    
+    // 認証エラーの NextResponse をモック
+    // instanceof チェックが動作するように、NextResponse のインスタンスを作成
+    const mockUnauthorizedResponse = Object.create(NextResponse.prototype)
+    Object.assign(mockUnauthorizedResponse, NextResponse.json(
+      { error: 'Authorization header required' },
+      { status: 401 }
+    ))
+    // instanceof チェックが動作するように、constructor を設定
+    Object.defineProperty(mockUnauthorizedResponse, 'constructor', {
+      value: NextResponse,
+      writable: false,
+      enumerable: false,
+      configurable: true
+    })
+    
+    ;(requireAuth as jest.Mock).mockResolvedValue(mockUnauthorizedResponse)
+
     const mockRequest = { headers: { get: () => null } } as any
     const response = await migratePOST(mockRequest)
     expect(response.status).toBe(401)
 
     const payload = await response.json()
-    expect(payload.error).toBe('Authorization required')
+    expect(payload.error).toBe('Authorization header required')
   })
 
   it('reports healthy state from /api/self-check when dependencies are ready', async () => {

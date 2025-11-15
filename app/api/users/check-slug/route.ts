@@ -1,21 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
 import { adminUserOperations } from '@/lib/firebase/admin-operation'
 import { adminDb } from '@/lib/firebase/admin'
 import { generateSlug } from '@/lib/utils/slug'
-import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
-import { authApi } from '@/lib/api/middleware'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { CheckUserSlugSchema } from '@/lib/schemas/user-slug'
 
-export const POST = authApi(async (request: NextRequest, ctx) => {
+/**
+ * POST /api/users/check-slug - ユーザースラッグ確認
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ name?: string }>(request)
+ * if (!name) {
+ *   return badRequest('Name is required')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(CheckUserSlugSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.body が保証されている（型推論が効く）
   const { userId } = ctx.auth!
-
-  // Parse request body
-  const body = await parseRequestBody<{ name?: string }>(request)
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof CheckUserSlugSchema>
+  const body = ctx.body as BodyType
   const { name } = body
-
-  if (!name) {
-    return badRequest('Name is required')
-  }
 
   // 既存ユーザーを取得（auth_uid で検索、後方互換性のため google_id もチェック）
   // Phase 1-1.5: 認証プロバイダーマルチ対応化
