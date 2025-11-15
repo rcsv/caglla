@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { venueAggregator } from '@/lib/api/venue-aggregator'
 import { PlaceData } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
+import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 /**
  * 複数のVenue API（Google Places、TripAdvisor、Foursquare）から
@@ -11,13 +12,10 @@ import logger from '@/lib/core/logger'
  */
 export async function POST(req: NextRequest) {
   try {
-    const googlePlaceData: PlaceData = await req.json()
+    const googlePlaceData = await parseRequestBody<PlaceData>(req)
 
     if (!googlePlaceData || !googlePlaceData.place_id) {
-      return NextResponse.json(
-        { error: 'Google Place data with place_id is required' },
-        { status: 400 }
-      )
+      return badRequest('Google Place data with place_id is required')
     }
 
     logger.debug('🔄 Aggregating venue data for place:', googlePlaceData.place_id)
@@ -64,14 +62,9 @@ export async function POST(req: NextRequest) {
     })
 
   } catch (error) {
-    logger.error('❌ Venue aggregation error:', error)
-    
-    return NextResponse.json(
-      { 
-        error: 'Failed to aggregate venue data',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/venue/aggregate'
     )
   }
 }

@@ -4,20 +4,17 @@ import logger from '@/lib/core/logger'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { unsplashApiHelpers } from '@/lib/api/unsplash'
-import { validateServerEnvironment } from '@/lib/core/env-validation'
 import { badRequest, notFound, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { requireUnsplashApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
 export async function GET(request: NextRequest) {
   try {
-    // 環境変数の検証
-    const env = validateServerEnvironment()
-    
-    if (!env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY && !env.UNSPLASH_ACCESS_KEY) {
-      return NextResponse.json(
-        { error: 'Unsplash API key is not configured' },
-        { status: 500 }
-      )
+    // API Keyの取得と検証
+    const apiKeyResult = requireUnsplashApiKey()
+    if (apiKeyResult instanceof NextResponse) {
+      return apiKeyResult
     }
+    // const UNSPLASH_ACCESS_KEY = apiKeyResult; // GETでは直接使用しないが、存在チェックは必要
 
     const { searchParams } = new URL(request.url)
     const destination = searchParams.get('destination')
@@ -33,15 +30,25 @@ export async function GET(request: NextRequest) {
 
     // 単一画像の取得
     if (count === 1) {
-      const photoUrl = await unsplashApiHelpers.getTravelPhoto(destination)
-      
-      if (!photoUrl) {
-        return NextResponse.json(
-          { error: 'No photos found for the destination' },
-          { status: 404 }
-        )
-      }
+      const photoUrl = await withExternalApiErrorHandler(
+        async () => {
+          const url = await unsplashApiHelpers.getTravelPhoto(destination)
+          if (!url) {
+            throw new Error('No photos found for the destination')
+          }
+          return url
+        },
+        'Unsplash API',
+        '/api/unsplash'
+      )
 
+      if (photoUrl instanceof NextResponse) {
+        if (photoUrl.status === 500 && (await photoUrl.json()).error.includes('No photos found')) {
+          return notFound('No photos found for the destination')
+        }
+        return photoUrl
+      }
+      
       return NextResponse.json({
         success: true,
         photo: {
@@ -52,15 +59,25 @@ export async function GET(request: NextRequest) {
     }
 
     // 複数画像の取得
-    const photoOptions = await unsplashApiHelpers.getTravelPhotoOptions(destination, count)
-    
-    if (photoOptions.length === 0) {
-      return NextResponse.json(
-        { error: 'No photos found for the destination' },
-        { status: 404 }
-      )
-    }
+    const photoOptions = await withExternalApiErrorHandler(
+      async () => {
+        const options = await unsplashApiHelpers.getTravelPhotoOptions(destination, count)
+        if (options.length === 0) {
+          throw new Error('No photos found for the destination')
+        }
+        return options
+      },
+      'Unsplash API',
+      '/api/unsplash'
+    )
 
+    if (photoOptions instanceof NextResponse) {
+      if (photoOptions.status === 500 && (await photoOptions.json()).error.includes('No photos found')) {
+        return notFound('No photos found for the destination')
+      }
+      return photoOptions
+    }
+    
     return NextResponse.json({
       success: true,
       photos: photoOptions,
@@ -68,33 +85,21 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    logger.error('Unsplash API error:', error)
-    
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/unsplash'
     )
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // 環境変数の検証
-    const env = validateServerEnvironment()
-    
-    if (!env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY && !env.UNSPLASH_ACCESS_KEY) {
-      return NextResponse.json(
-        { error: 'Unsplash API key is not configured' },
-        { status: 500 }
-      )
+    // API Keyの取得と検証
+    const apiKeyResult = requireUnsplashApiKey()
+    if (apiKeyResult instanceof NextResponse) {
+      return apiKeyResult
     }
+    // const UNSPLASH_ACCESS_KEY = apiKeyResult; // 直接使用しないが、存在チェックは必要
 
     const body = await parseRequestBody<{
       destination?: string
@@ -112,13 +117,23 @@ export async function POST(request: NextRequest) {
 
     // 単一画像の取得
     if (count === 1) {
-      const photoUrl = await unsplashApiHelpers.getTravelPhoto(destination)
-      
-      if (!photoUrl) {
-        return NextResponse.json(
-          { error: 'No photos found for the destination' },
-          { status: 404 }
-        )
+      const photoUrl = await withExternalApiErrorHandler(
+        async () => {
+          const url = await unsplashApiHelpers.getTravelPhoto(destination)
+          if (!url) {
+            throw new Error('No photos found for the destination')
+          }
+          return url
+        },
+        'Unsplash API',
+        '/api/unsplash'
+      )
+
+      if (photoUrl instanceof NextResponse) {
+        if (photoUrl.status === 500 && (await photoUrl.json()).error.includes('No photos found')) {
+          return notFound('No photos found for the destination')
+        }
+        return photoUrl
       }
 
       return NextResponse.json({
@@ -131,13 +146,23 @@ export async function POST(request: NextRequest) {
     }
 
     // 複数画像の取得
-    const photoOptions = await unsplashApiHelpers.getTravelPhotoOptions(destination, count)
-    
-    if (photoOptions.length === 0) {
-      return NextResponse.json(
-        { error: 'No photos found for the destination' },
-        { status: 404 }
-      )
+    const photoOptions = await withExternalApiErrorHandler(
+      async () => {
+        const options = await unsplashApiHelpers.getTravelPhotoOptions(destination, count)
+        if (options.length === 0) {
+          throw new Error('No photos found for the destination')
+        }
+        return options
+      },
+      'Unsplash API',
+      '/api/unsplash'
+    )
+
+    if (photoOptions instanceof NextResponse) {
+      if (photoOptions.status === 500 && (await photoOptions.json()).error.includes('No photos found')) {
+        return notFound('No photos found for the destination')
+      }
+      return photoOptions
     }
 
     return NextResponse.json({
@@ -147,18 +172,9 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    logger.error('Unsplash API error:', error)
-    
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/unsplash'
     )
   }
 }

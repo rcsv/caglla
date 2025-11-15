@@ -3,9 +3,9 @@ import logger from '@/lib/core/logger'
 import { isSupportedLanguage, DEFAULT_LANGUAGE } from '@/lib/utils/language'
 import { getPlaceFromCache, savePlaceToCache, isCacheStale } from '@/lib/api/places-cache'
 import type { SupportedLanguage, PlaceDetailsResult } from '@/lib/core/types'
-import { badRequest, internalError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { requireGooglePlacesApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
-const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 // 新Places API (v1) のエンドポイント
 const GOOGLE_PLACES_API_URL = 'https://places.googleapis.com/v1/places'
 
@@ -16,9 +16,12 @@ const SOFT_TTL_MS = 14 * 24 * 60 * 60 * 1000
 
 export async function POST(request: NextRequest) {
   try {
-    if (!GOOGLE_PLACES_API_KEY) {
-      return internalError('Google Places API key is not configured')
+    // API Keyの取得と検証
+    const apiKeyResult = requireGooglePlacesApiKey()
+    if (apiKeyResult instanceof NextResponse) {
+      return apiKeyResult
     }
+    const GOOGLE_PLACES_API_KEY = apiKeyResult
 
     const body = await parseRequestBody<{
       placeId?: string
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest) {
         })
         
         // バックグラウンド更新（非同期、結果を待たない）
-        refreshPlaceInBackground(placeId, validLanguage).catch(err => {
+        refreshPlaceInBackground(placeId, validLanguage, GOOGLE_PLACES_API_KEY).catch(err => {
           logger.warn('Background refresh failed:', err)
         })
       } else {
@@ -68,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     // 2. キャッシュミス：APIから取得
     logger.info('Cache miss, fetching from API', { placeId, language: validLanguage })
-    const placeData = await fetchPlaceDetailsFromAPI(placeId, validLanguage)
+    const placeData = await fetchPlaceDetailsFromAPI(placeId, validLanguage, GOOGLE_PLACES_API_KEY)
     
     // 3. キャッシュに保存
     try {
@@ -93,58 +96,70 @@ export async function POST(request: NextRequest) {
 /**
  * Google Places APIから場所詳細を取得
  */
-async function fetchPlaceDetailsFromAPI(placeId: string, language: SupportedLanguage) {
+async function fetchPlaceDetailsFromAPI(
+  placeId: string,
+  language: SupportedLanguage,
+  apiKey: string
+): Promise<PlaceDetailsResult> {
+  // 新Places API (v1) フィールドマスク定義
+  // Basic Data（無料）: id, displayName, formattedAddress, location, viewport, addressComponents, types, businessStatus, photos, googleMapsUri, iconBackgroundColor
+  // Contact Data（$3.00/1,000件）: nationalPhoneNumber, internationalPhoneNumber, websiteUri, regularOpeningHours
+  // Atmosphere Data（$5.00/1,000件）: rating, userRatingCount, priceLevel, editorialSummary, reviews
+  const fieldMask = [
+    // Basic Data（無料）
+    'id',
+    'displayName',
+    'formattedAddress',
+    'location',
+    'addressComponents', // 国コード取得のため追加
+    'types',
+    'businessStatus',
+    'photos',
+    'googleMapsUri',
+    'shortFormattedAddress', // vicinity の代わり
+    // Contact Data（$3.00/1,000件）
+    'nationalPhoneNumber',
+    'internationalPhoneNumber',
+    'websiteUri',
+    'regularOpeningHours',
+    // Atmosphere Data（$5.00/1,000件）
+    'rating',
+    'userRatingCount',
+    'priceLevel',
+    'editorialSummary',
+    'reviews'
+  ].join(',')
 
-    // 新Places API (v1) フィールドマスク定義
-    // Basic Data（無料）: id, displayName, formattedAddress, location, viewport, addressComponents, types, businessStatus, photos, googleMapsUri, iconBackgroundColor
-    // Contact Data（$3.00/1,000件）: nationalPhoneNumber, internationalPhoneNumber, websiteUri, regularOpeningHours
-    // Atmosphere Data（$5.00/1,000件）: rating, userRatingCount, priceLevel, editorialSummary, reviews
-    const fieldMask = [
-      // Basic Data（無料）
-      'id',
-      'displayName',
-      'formattedAddress',
-      'location',
-      'addressComponents', // 国コード取得のため追加
-      'types',
-      'businessStatus',
-      'photos',
-      'googleMapsUri',
-      'shortFormattedAddress', // vicinity の代わり
-      // Contact Data（$3.00/1,000件）
-      'nationalPhoneNumber',
-      'internationalPhoneNumber',
-      'websiteUri',
-      'regularOpeningHours',
-      // Atmosphere Data（$5.00/1,000件）
-      'rating',
-      'userRatingCount',
-      'priceLevel',
-      'editorialSummary',
-      'reviews'
-    ].join(',')
+  // 新Places API (v1) を呼び出し（エラーハンドリング付き）
+  const data = await withExternalApiErrorHandler(
+    async () => {
+      const response = await fetch(
+        `${GOOGLE_PLACES_API_URL}/${placeId}?languageCode=${language}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': apiKey,
+            'X-Goog-FieldMask': fieldMask,
+            'Accept-Language': language
+          }
+        }
+      )
 
-  // 新Places API (v1) を呼び出し
-  const response = await fetch(
-    `${GOOGLE_PLACES_API_URL}/${placeId}?languageCode=${language}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY!,
-        'X-Goog-FieldMask': fieldMask,
-        'Accept-Language': language
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(`Google Places API error: ${response.status} - ${JSON.stringify(errorData)}`)
       }
-    }
+
+      return await response.json()
+    },
+    'Google Places API',
+    '/api/places/details'
   )
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      logger.error('Google Places API error:', errorData)
-      throw new Error(`Google Places API error: ${response.status}`)
-    }
-
-    const data = await response.json()
+  if (data instanceof NextResponse) {
+    throw new Error('Failed to fetch place details from API')
+  }
     
     // 🔍 デバッグ: 新Places API v1からの完全なレスポンスをログ出力
     logger.debug('================================================')
@@ -220,10 +235,14 @@ async function fetchPlaceDetailsFromAPI(placeId: string, language: SupportedLang
 /**
  * バックグラウンドで場所データを更新
  */
-async function refreshPlaceInBackground(placeId: string, language: SupportedLanguage): Promise<void> {
+async function refreshPlaceInBackground(
+  placeId: string,
+  language: SupportedLanguage,
+  apiKey: string
+): Promise<void> {
   try {
     logger.debug('Refreshing place in background', { placeId, language })
-    const placeData = await fetchPlaceDetailsFromAPI(placeId, language)
+    const placeData = await fetchPlaceDetailsFromAPI(placeId, language, apiKey)
     await savePlaceToCache(placeData, language)
     logger.info('Background refresh completed', { placeId, language })
   } catch (error) {
