@@ -5,19 +5,27 @@
  */
 
 import { z } from 'zod'
-import { isAllowedReservationUrl, validateAirportCode, validateFlightNumber } from '@/lib/utils/reservation-utils'
+import { isAllowedReservationUrl } from '@/lib/utils/reservation-utils'
 
 /**
- * 空港コードのバリデーション（zod regex）
+ * 空港コードのバリデーションスキーマ（zod regex）
+ * 
+ * Phase 5: validateAirportCode → zod regex に吸収
+ * 
+ * 注意: lib/utils/reservation-utils.ts の validateAirportCode 関数と共通の定義を使用
  */
-const AirportCodeSchema = z.string().regex(/^[A-Z]{3}$/, {
+export const AirportCodeSchema = z.string().regex(/^[A-Z]{3}$/, {
   message: 'Invalid airport code. Must be 3 uppercase letters (e.g., NRT, LAX)'
 })
 
 /**
- * 便名のバリデーション（zod regex）
+ * 便名のバリデーションスキーマ（zod regex）
+ * 
+ * Phase 5: validateFlightNumber → zod regex に吸収
+ * 
+ * 注意: lib/utils/reservation-utils.ts の validateFlightNumber 関数と共通の定義を使用
  */
-const FlightNumberSchema = z.string().regex(/^[A-Z]{2,3}[0-9]{1,4}$/, {
+export const FlightNumberSchema = z.string().regex(/^[A-Z]{2,3}[0-9]{1,4}$/, {
   message: 'Invalid flight number format (e.g., NH123, JAL456)'
 })
 

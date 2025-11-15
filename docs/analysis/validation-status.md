@@ -303,10 +303,12 @@ zod の `.refine()` と `.superRefine()` はメッセージを統一できる。
 - [x] Place スキーマの作成（`PlaceSearchSchema`, `PlaceDetailsSchema`, `PlaceNearbySchema`）
 - [x] スキーマ統合エクスポート（`lib/schemas/index.ts`）
 
-### Phase 4: 既存バリデーションの統合 ✅ TODO
-- [ ] `validateReservationInfo` → `ReservationSchema` に移行
-- [ ] `validateAirportCode` → zod regex に吸収
-- [ ] `validateNumberParam` → 数値スキーマに統合
+### Phase 4: 既存バリデーションの統合 ✅ 進行中
+- [x] `validateAirportCode` → zod regex に吸収 ✅
+- [x] `validateFlightNumber` → zod regex に吸収 ✅
+- [x] `validateReservationInfo` 内の空港コード・便名バリデーションを zod スキーマに統合 ✅
+- [ ] `validateReservationInfo` → `ReservationSchema` に完全移行（FirestoreDate の扱いが必要なため、部分的移行済み）
+- [ ] `validateNumberParam` → 数値スキーマに統合（使用箇所が見つからなかったため、不要の可能性）
 
 ### Phase 5: エラー統一 ✅ TODO
 - [ ] `badRequest` の乱立を zod エラーに統一

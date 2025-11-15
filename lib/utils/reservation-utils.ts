@@ -1,6 +1,7 @@
 import { ReservationInfo, ReservationType, ReservationSite } from '@/lib/core/types'
 import { toDate, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
+import { AirportCodeSchema, FlightNumberSchema } from '@/lib/schemas/reservation'
 
 /**
  * 予約情報のバリデーション
@@ -18,13 +19,34 @@ export function validateReservationInfo(reservation: Partial<ReservationInfo>): 
     // 飛行機の場合
     if (!reservation.flight_number) {
       errors.push(t('reservation.validation.flightNumberRequired'))
+    } else {
+      // Phase 5: zod スキーマを使用して便名をバリデーション
+      const flightNumberResult = FlightNumberSchema.safeParse(reservation.flight_number)
+      if (!flightNumberResult.success) {
+        errors.push(t('reservation.validation.flightNumber'))
+      }
     }
+    
     if (!reservation.departure_airport) {
       errors.push(t('reservation.validation.departureAirportRequired'))
+    } else {
+      // Phase 5: zod スキーマを使用して空港コードをバリデーション
+      const departureAirportResult = AirportCodeSchema.safeParse(reservation.departure_airport)
+      if (!departureAirportResult.success) {
+        errors.push(t('reservation.validation.airportCode'))
+      }
     }
+    
     if (!reservation.arrival_airport) {
       errors.push(t('reservation.validation.arrivalAirportRequired'))
+    } else {
+      // Phase 5: zod スキーマを使用して空港コードをバリデーション
+      const arrivalAirportResult = AirportCodeSchema.safeParse(reservation.arrival_airport)
+      if (!arrivalAirportResult.success) {
+        errors.push(t('reservation.validation.airportCode'))
+      }
     }
+    
     if (!reservation.departure_at) {
       errors.push(t('reservation.validation.departureDateRequired'))
     }
@@ -151,19 +173,27 @@ export function getReservationTypeIcon(type: ReservationType): string {
 }
 
 /**
- * 空港コードのバリデーション
+ * 空港コードのバリデーション（zod スキーマベース）
+ * 
+ * Phase 5: validateAirportCode → zod regex に吸収
+ * 
+ * 後方互換性のため、既存の関数シグネチャを維持しつつ、内部実装を zod スキーマに移行
  */
 export function validateAirportCode(code: string): boolean {
-  // 3文字の英大文字のみ許可
-  return /^[A-Z]{3}$/.test(code)
+  const result = AirportCodeSchema.safeParse(code)
+  return result.success
 }
 
 /**
- * 便名のバリデーション
+ * 便名のバリデーション（zod スキーマベース）
+ * 
+ * Phase 5: validateFlightNumber → zod regex に吸収
+ * 
+ * 後方互換性のため、既存の関数シグネチャを維持しつつ、内部実装を zod スキーマに移行
  */
 export function validateFlightNumber(flightNumber: string): boolean {
-  // 航空会社コード（2-3文字）+ 数字（1-4桁）の形式
-  return /^[A-Z]{2,3}[0-9]{1,4}$/.test(flightNumber)
+  const result = FlightNumberSchema.safeParse(flightNumber)
+  return result.success
 }
 
 /**
