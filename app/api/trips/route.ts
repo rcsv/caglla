@@ -9,7 +9,8 @@ import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
 import { resolveDestinationPlace } from '@/lib/api/places-cache'
 import { COOKIE_NAME } from '@/lib/i18n/storage'
-import { withAuth, badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 // API応答用の拡張型（destination_placeを含む）
 interface TripWithDestination extends Trip {
@@ -25,8 +26,8 @@ interface TripWithDestination extends Trip {
  * @param request - The incoming HTTP request containing authorization and query parameters
  * @returns When `groupByCountry` is `true`, an object with `trips` as an array of country groups, `grouped: true`, `totalTrips`, and `totalCountries`; otherwise an object with `trips` as an array of trip records
  */
-export const GET = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const GET = authApi(async (request: NextRequest, ctx) => {
+  const { userId } = ctx.auth!
 
   // Get query parameters
   const { searchParams } = new URL(request.url)
@@ -86,8 +87,8 @@ export const GET = withAuth(async (request: NextRequest, auth) => {
  * @param request - The incoming NextRequest containing the Authorization header and JSON body for the new trip.
  * @returns A NextResponse containing the created trip object on success. Returns a JSON error with status 401 for missing/invalid authorization, 400 if both title and destination are missing, and 500 for other server errors.
  */
-export const POST = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  const { userId } = ctx.auth!
 
   logger.debug('Starting trip creation')
   logger.debug('User authenticated', { userId })

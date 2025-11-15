@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { planSaveOperations, PlanSaveData } from '@/lib/travel/plan-save'
-import { withAuth, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 /**
  * 完全なプランを一括で保存する
  */
-export const POST = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  const { userId } = ctx.auth!
 
   const planData = await parseRequestBody<PlanSaveData>(request)
   
@@ -28,7 +29,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 /**
  * 既存のプランを更新する
  */
-export const PUT = withAuth(async (request: NextRequest, auth) => {
+export const PUT = authApi(async (request: NextRequest, ctx) => {
   const body = await parseRequestBody<{ tripId?: string; planData?: PlanSaveData }>(request)
   const { tripId, planData } = body
   

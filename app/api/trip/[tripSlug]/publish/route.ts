@@ -3,9 +3,8 @@ import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import { generateUniqueSlug, generateSlug } from '@/lib/utils/slug'
 import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { notFound, badRequest, parseRequestBody, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
-import { validateTripOwnership } from '@/lib/api/authorization-helpers'
+import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { tripApi } from '@/lib/api/middleware'
 
 type PublishRequestBody = {
   slug?: string | null
@@ -17,26 +16,11 @@ type PublishRequestBody = {
  * 公開中のトリップを非公開（private）に戻します。
  * 所有者のみが実行可能です。
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    const { tripSlug } = await params
-
-    // Trip解決と所有権チェック
-    const ownership = await validateTripOwnership(tripSlug, userId)
-    if (ownership instanceof NextResponse) {
-      return ownership // エラーレスポンスをそのまま返す
-    }
-    const { tripId: resolvedTripId, trip } = ownership
+export const DELETE = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId: resolvedTripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
     // 既に private の場合はエラーを返す（冪等性のため）
     if (trip.access_level === 'private') {
@@ -57,38 +41,17 @@ export async function DELETE(
       isTemplate: Boolean(trip.is_template)
     })
 
-    return NextResponse.json({
-      success: true,
-      trip: updatedTrip ?? { ...trip, access_level: 'private' as const }
-    })
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/trip/[tripSlug]/publish`
-    )
-  }
-}
+  return NextResponse.json({
+    success: true,
+    trip: updatedTrip ?? { ...trip, access_level: 'private' as const }
+  })
+})
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-
-    const { tripSlug } = await params
-
-    // Trip解決と所有権チェック
-    const ownership = await validateTripOwnership(tripSlug, userId)
-    if (ownership instanceof NextResponse) {
-      return ownership // エラーレスポンスをそのまま返す
-    }
-    const { tripId: resolvedTripId, trip } = ownership
+export const POST = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId: resolvedTripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
     const body = await parseRequestBody<PublishRequestBody>(request)
 
@@ -153,15 +116,9 @@ export async function POST(
       isTemplate: Boolean(trip.is_template)
     })
 
-    return NextResponse.json({
-      success: true,
-      trip: updatedTrip ?? { ...trip, slug: finalSlug, access_level: 'public' as const }
-    })
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/trip/[tripSlug]/publish`
-    )
-  }
-}
+  return NextResponse.json({
+    success: true,
+    trip: updatedTrip ?? { ...trip, slug: finalSlug, access_level: 'public' as const }
+  })
+})
 

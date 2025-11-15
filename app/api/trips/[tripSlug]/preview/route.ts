@@ -15,8 +15,9 @@ import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { generateMagazinePdfHtml, type TripPdfData } from '@/lib/utils/magazine-pdf-template'
 import { generateTripUrl } from '@/lib/utils/app-url'
 import logger from '@/lib/core/logger'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { notFound, handleApiError } from '@/lib/core/error-handler'
+import { notFound } from '@/lib/core/error-handler'
+import { tripApi } from '@/lib/api/middleware'
+import { adminDayOperations } from '@/lib/firebase/admin-operation'
 
 // TripPdfData型はmagazine-pdf-templateからインポート
 
@@ -205,62 +206,18 @@ async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPreviewData> 
  * GET /api/trips/[tripSlug]/preview
  * トリップをHTMLとしてプレビュー表示
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    const { tripSlug } = await params
-    logger.debug('Preview API: request received', { tripSlug })
+export const GET = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId: resolvedTripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
+  
+  logger.debug('Preview API: request received', { tripSlug })
+  logger.debug('Preview API: authentication successful', { userId })
 
-    // 1. 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      logger.error('Preview API: authentication failed')
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
-    logger.debug('Preview API: authentication successful', { userId })
-
-    // 2. tripSlug（またはdocument id）から実ドキュメントIDを解決
-    const resolvedTripId = await (async () => {
-      // まずはドキュメントIDとして試す
-      logger.debug('Preview API: resolving trip id (try as document id)', { tryId: tripSlug })
-      const byId = await adminDb.collection('trips').doc(tripSlug).get()
-      logger.debug('Preview API: doc by id result', { exists: byId.exists })
-      if (byId.exists) {
-        logger.debug('Preview API: resolved by document id', { tripId: byId.id })
-        return byId.id
-      }
-      // 見つからなければ slug で検索
-      logger.debug('Preview API: resolving trip id (query by slug)', { slug: tripSlug })
-      const bySlugSnap = await adminDb
-        .collection('trips')
-        .where('slug', '==', tripSlug)
-        .limit(1)
-        .get()
-      logger.debug('Preview API: query by slug result', { empty: bySlugSnap.empty, size: bySlugSnap.size })
-      if (!bySlugSnap.empty) {
-        const foundId = bySlugSnap.docs[0].id
-        logger.debug('Preview API: resolved by slug', { tripId: foundId })
-        return foundId
-      }
-      return null
-    })()
-
-    if (!resolvedTripId) {
-      logger.error('Preview API: Trip not found after resolution', { tripSlug })
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
-    }
-
-    // 3. トリップの所有権確認
-    const ownershipResult = await validateTripOwnership(resolvedTripId, userId)
-    if ('trip' in ownershipResult === false) {
-      logger.error('Preview API: ownership validation failed', { resolvedTripId, userId })
-      return ownershipResult // NextResponse (error)
-    }
-    const { trip, days } = ownershipResult
-    logger.debug('Preview API: ownership validated', { tripId: trip.id, tripUserId: (trip as any).user_id, userId, dayCount: days.length })
+  // Days を取得（tripApi は days を返さないため、別途取得が必要）
+  const days = await adminDayOperations.getDaysByTripId(resolvedTripId)
+  logger.debug('Preview API: ownership validated', { tripId: trip.id, tripUserId: (trip as any).user_id, userId, dayCount: days.length })
 
     // 4. トリップデータの取得
     const tripData = await fetchTripData(trip, days)
@@ -275,19 +232,12 @@ export async function GET(
       htmlPreview: html.substring(0, 500) + '...'
     })
 
-    // 6. HTML返却
-    return new NextResponse(html, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'no-cache'
-      }
-    })
-
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/trips/[tripSlug]/preview`
-    )
-  }
-}
+  // 6. HTML返却
+  return new NextResponse(html, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-cache'
+    }
+  })
+})

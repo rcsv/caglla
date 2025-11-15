@@ -3,10 +3,11 @@ import logger from '@/lib/core/logger'
 import { adminUserOperations } from '@/lib/firebase/admin-operation'
 import { adminDb } from '@/lib/firebase/admin'
 import { generateSlug } from '@/lib/utils/slug'
-import { withAuth, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
-export const POST = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  const { userId } = ctx.auth!
 
   // Parse request body
   const body = await parseRequestBody<{ name?: string }>(request)

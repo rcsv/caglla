@@ -3,7 +3,8 @@ import { adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { PlaceData, PlacesCache, PlacesCacheInput, SupportedLanguage } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import { withAuth, badRequest, notFound, createForbiddenError, parseRequestBody } from '@/lib/core/error-handler'
+import { badRequest, notFound, createForbiddenError, parseRequestBody } from '@/lib/core/error-handler'
+import { dayApiWithQuery, authApi } from '@/lib/api/middleware'
 import { validateDayOwnership } from '@/lib/api/authorization-helpers'
 
 /**
@@ -13,8 +14,9 @@ import { validateDayOwnership } from '@/lib/api/authorization-helpers'
  *
  * @returns The saved itinerary object with properties: `id`, `day_id`, `sort_number`, `title`, `description`, `location`, `place_id`, `created_at`, `updated_at`, and `place_data` (resolved PlaceData or `null`). On validation failure returns an error object with status 400; on server error returns an error object with status 500.
  */
-export const POST = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId } = ctx.auth!
 
   const body = await parseRequestBody<{
     day_id: string
@@ -254,22 +256,10 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
   return NextResponse.json(savedItinerary)
 })
 
-export const GET = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
-
-  const { searchParams } = new URL(request.url)
-  const dayId = searchParams.get('day_id')
-  
-  if (!dayId) {
-    return badRequest('day_id parameter is required')
-  }
-
-  // 認可チェック: day → trip の所有権確認
-  const ownership = await validateDayOwnership(dayId, userId)
-  if (ownership instanceof NextResponse) {
-    return ownership // エラーレスポンスをそのまま返す
-  }
-  const { tripId } = ownership
+export const GET = dayApiWithQuery(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.day が保証されている（dayApiWithQuery プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { dayId, tripId } = ctx.day!
 
   // 指定されたday_idのitinerariesを取得
   const itinerariesRef = adminDb.collection(COLLECTIONS.ITINERARIES)

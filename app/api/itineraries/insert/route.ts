@@ -4,7 +4,8 @@ import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { PlaceData, PlacesCache, PlacesCacheInput, Itinerary, SupportedLanguage } from '@/lib/core/types'
 import { getUserLanguage } from '@/lib/utils/language'
 import logger from '@/lib/core/logger'
-import { withAuth, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 /**
  * Insert a new itinerary into a specified day at a given position and renumber subsequent itineraries as needed.
@@ -21,8 +22,8 @@ import { withAuth, badRequest, parseRequestBody, handleApiError } from '@/lib/co
  *
  * On validation failure returns a 400 response with an error message. On unexpected errors returns a 500 response.
  */
-export const POST = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  const { userId } = ctx.auth!
 
   const body = await parseRequestBody<{
     day_id?: string

@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { adminDb } from '@/lib/firebase/admin'
 import { planSaveOperations } from '@/lib/travel/plan-save'
-import { withAuth, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 /**
  * テンプレートからプランを作成する
  */
-export const POST = withAuth(async (request: NextRequest, auth) => {
-  const { userId } = auth
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  const { userId } = ctx.auth!
 
   const body = await parseRequestBody<{ 
     templateId?: string; 
@@ -32,7 +33,7 @@ export const POST = withAuth(async (request: NextRequest, auth) => {
 /**
  * 利用可能なテンプレート一覧を取得する
  */
-export const GET = withAuth(async (request: NextRequest, auth) => {
+export const GET = authApi(async (request: NextRequest, ctx) => {
   // テンプレート一覧を取得
   const templatesSnapshot = await adminDb.collection('templates')
     .orderBy('created_at', 'desc')

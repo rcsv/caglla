@@ -7,8 +7,8 @@ import { generateUniqueSlug } from '@/lib/utils/slug'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { User } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { notFound, badRequest, parseRequestBody, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
+import { notFound, badRequest, parseRequestBody, createForbiddenError } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
 /**
  * GET: 他のユーザーの公開情報を取得
@@ -71,19 +71,10 @@ export async function GET(
  * 認証済みユーザーが自分の情報を更新します。
  * userSlug で対象ユーザーを指定しますが、認証済みユーザー自身の情報のみ更新可能です。
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ userSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId: authenticatedUserId } = auth
-
-    const { userSlug } = await params
+export const PUT = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId: authenticatedUserId } = ctx.auth!
+  const { userSlug } = ctx.params!
 
     if (!userSlug) {
       return badRequest('User slug is required')
@@ -183,12 +174,6 @@ export async function PUT(
       slug: updatedUser.slug
     })
 
-    return NextResponse.json({ user: updatedUser })
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/users/[userSlug]`
-    )
-  }
-}
+  return NextResponse.json({ user: updatedUser })
+})
 
