@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyIdToken } from '@/lib/firebase/admin'
 import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import logger from '@/lib/core/logger'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { notFound, badRequest, parseRequestBody, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
 
 /**
  * DEBUG: Trip画像削除処理のテスト用エンドポイント
@@ -13,31 +14,28 @@ import logger from '@/lib/core/logger'
 export async function POST(request: NextRequest) {
   try {
     // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId } = auth
 
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const body = await request.json()
+    const body = await parseRequestBody<{ tripId?: string }>(request)
     const { tripId } = body
 
     if (!tripId) {
-      return NextResponse.json({ error: 'tripId is required' }, { status: 400 })
+      return badRequest('tripId is required')
     }
 
     // Trip情報を取得
     const trip = await adminTripOperations.getTripById(tripId)
     if (!trip) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      return notFound('Trip')
     }
 
     // 所有権確認
     if (trip.user_id !== userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+      throw createForbiddenError('You do not own this trip')
     }
 
     // 画像削除処理のテスト
@@ -69,10 +67,9 @@ export async function POST(request: NextRequest) {
       debug: debugInfo,
     })
   } catch (error) {
-    logger.error('Debug endpoint error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/debug/trip-image-deletion`
     )
   }
 }

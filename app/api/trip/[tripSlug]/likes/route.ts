@@ -14,6 +14,7 @@ import logger from '@/lib/core/logger'
 import { toggleTripLike, getTripLikeState } from '@/lib/social/trip-likes'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import type { Firestore } from 'firebase-admin/firestore'
+import { unauthorized, notFound, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 /**
  * adminAuthをlazy importします（テスト環境でも動作するように）
@@ -98,20 +99,19 @@ export async function GET(
       likedByMe: result.liked,
     })
   } catch (error: unknown) {
-    logger.error('Failed to fetch trip like state', error)
-    
     if (error instanceof Error) {
       if (error.message.includes('Trip not found')) {
-        return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+        return notFound('Trip')
       }
       if (error.message.includes('Private trips')) {
+        // 403 Forbidden は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Likes available only for public trips' }, { status: 403 })
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to fetch like state' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/likes`
     )
   }
 }
@@ -125,35 +125,13 @@ export async function POST(
   { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    if (!idToken) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    // テスト環境ではモックトークンを処理
-    let userId: string
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      const mockUserId = extractUserIdFromMockToken(idToken)
-      if (mockUserId) {
-        userId = mockUserId
-      } else {
-        const adminAuth = await getAdminAuth()
-        const decoded = await adminAuth.verifyIdToken(idToken)
-        userId = decoded.uid
-      }
-    } else {
-      const adminAuth = await getAdminAuth()
-      const decoded = await adminAuth.verifyIdToken(idToken)
-      userId = decoded.uid
+    const userId = await resolveAuthUserId(request)
+    if (!userId) {
+      return unauthorized('Authorization header required')
     }
 
     const { tripSlug } = await params
-    const body = await request.json().catch(() => ({}))
+    const body = await parseRequestBody<{ action?: 'like' | 'unlike' }>(request)
     const action = body?.action === 'like' || body?.action === 'unlike' ? body.action : 'toggle'
     const db = getFirestore()
 
@@ -164,29 +142,30 @@ export async function POST(
       likedByMe: result.liked,
     })
   } catch (error: unknown) {
-    logger.error('Failed to toggle trip like', error)
-    
     if (error instanceof Error) {
       if (error.message.includes('Trip not found')) {
-        return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+        return notFound('Trip')
       }
       if (error.message.includes('Likes available only for public trips')) {
+        // 403 Forbidden は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Likes available only for public trips' }, { status: 403 })
       }
       if (error.message.includes('Cannot like your own trip') || error.message.includes('own')) {
+        // 403 Forbidden は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Cannot like your own trip' }, { status: 403 })
       }
       if (error.message.includes('already liked')) {
+        // 409 Conflict は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Trip is already liked' }, { status: 409 })
       }
       if (error.message.includes('not liked')) {
-        return NextResponse.json({ error: 'Trip is not liked' }, { status: 404 })
+        return notFound('Trip is not liked')
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to toggle like' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/likes`
     )
   }
 }
@@ -200,31 +179,9 @@ export async function DELETE(
   { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    if (!idToken) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    // テスト環境ではモックトークンを処理
-    let userId: string
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      const mockUserId = extractUserIdFromMockToken(idToken)
-      if (mockUserId) {
-        userId = mockUserId
-      } else {
-        const adminAuth = await getAdminAuth()
-        const decoded = await adminAuth.verifyIdToken(idToken)
-        userId = decoded.uid
-      }
-    } else {
-      const adminAuth = await getAdminAuth()
-      const decoded = await adminAuth.verifyIdToken(idToken)
-      userId = decoded.uid
+    const userId = await resolveAuthUserId(request)
+    if (!userId) {
+      return unauthorized('Authorization header required')
     }
 
     const { tripSlug } = await params
@@ -237,23 +194,22 @@ export async function DELETE(
       likedByMe: result.liked,
     })
   } catch (error: unknown) {
-    logger.error('Failed to unlike trip', error)
-    
     if (error instanceof Error) {
       if (error.message.includes('Trip not found')) {
-        return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+        return notFound('Trip')
       }
       if (error.message.includes('Likes available only for public trips')) {
+        // 403 Forbidden は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Likes available only for public trips' }, { status: 403 })
       }
       if (error.message.includes('not liked')) {
-        return NextResponse.json({ error: 'Trip is not liked' }, { status: 404 })
+        return notFound('Trip is not liked')
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to unlike' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/likes`
     )
   }
 }

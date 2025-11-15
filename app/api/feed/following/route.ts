@@ -12,6 +12,7 @@ import logger from '@/lib/core/logger'
 import { getFollowingFeed } from '@/lib/social/feed'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import type { Firestore } from 'firebase-admin/firestore'
+import { unauthorized, notFound, badRequest, handleApiError } from '@/lib/core/error-handler'
 
 /**
  * adminAuthをlazy importします（テスト環境でも動作するように）
@@ -82,31 +83,9 @@ function getFirestore(): Firestore | undefined {
  */
 export async function GET(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    if (!idToken) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    // テスト環境ではモックトークンを処理
-    let userId: string
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      const mockUserId = extractUserIdFromMockToken(idToken)
-      if (mockUserId) {
-        userId = mockUserId
-      } else {
-        const adminAuth = await getAdminAuth()
-        const decoded = await adminAuth.verifyIdToken(idToken)
-        userId = decoded.uid
-      }
-    } else {
-      const adminAuth = await getAdminAuth()
-      const decoded = await adminAuth.verifyIdToken(idToken)
-      userId = decoded.uid
+    const userId = await resolveAuthUserId(request)
+    if (!userId) {
+      return unauthorized('Authorization header required')
     }
 
     const { searchParams } = new URL(request.url)
@@ -116,7 +95,7 @@ export async function GET(request: NextRequest) {
     const limit = limitParam ? parseInt(limitParam, 10) : 20
 
     if (isNaN(limit) || limit < 1 || limit > 100) {
-      return NextResponse.json({ error: 'Invalid limit parameter (1-100)' }, { status: 400 })
+      return badRequest('Invalid limit parameter (1-100)')
     }
 
     const db = getFirestore()
@@ -125,17 +104,15 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result)
   } catch (error: unknown) {
-    logger.error('Failed to fetch following feed', error)
-
     if (error instanceof Error) {
       if (error.message.includes('User not found')) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        return notFound('User')
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to fetch following feed' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/feed/following`
     )
   }
 }

@@ -1,50 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
 import { adminTripOperations, adminDayOperations } from '@/lib/firebase/admin-operation'
 import { planSaveOperations } from '@/lib/travel/plan-save'
-//import { generateUniqueSlug } from '@/lib/slug-utils'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { notFound, badRequest, parseRequestBody, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { tripSlug: string } }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    // 認証チェック
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId } = auth
 
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const { tripSlug } = params
+    const { tripSlug } = await params
 
     const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolved) {
-      return NextResponse.json({ error: 'Template trip not found' }, { status: 404 })
+      return notFound('Template trip')
     }
 
     const { id: templateTripId, trip: templateTrip } = resolved
 
     if (!templateTrip.is_template) {
-      return NextResponse.json({ error: 'Trip is not marked as template' }, { status: 400 })
+      return badRequest('Trip is not marked as template')
     }
 
     if (templateTrip.access_level !== 'public' && templateTrip.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      throw createForbiddenError('You do not have permission to access this template')
     }
 
     // バリデーションを先に実行（replica作成前に）
-    const body = await request.json().catch(() => ({}))
+    const body = await parseRequestBody<{ startDate?: string }>(request)
     const startDateRaw = typeof body.startDate === 'string' ? body.startDate : ''
     const startDate = startDateRaw ? new Date(startDateRaw) : null
 
     if (startDate && Number.isNaN(startDate.getTime())) {
-      return NextResponse.json({ error: 'Invalid start date' }, { status: 400 })
+      return badRequest('Invalid start date')
     }
 
     // テンプレートのday_countを確認して、startDateの必要性を検証
@@ -55,7 +54,7 @@ export async function POST(
         : templateDays.length
 
     if (derivedDayCount > 0 && !startDate) {
-      return NextResponse.json({ error: 'Start date is required for this template' }, { status: 400 })
+      return badRequest('Start date is required for this template')
     }
 
     // バリデーション通過後にreplicaを作成
@@ -151,8 +150,10 @@ export async function POST(
       },
     })
   } catch (error) {
-    logger.error('Error creating replica trip:', error)
-    return NextResponse.json({ error: 'Failed to create replica trip' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/replica`
+    )
   }
 }
 

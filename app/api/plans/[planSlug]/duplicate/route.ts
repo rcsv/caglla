@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
-import { adminAuth } from '@/lib/firebase/admin'
 import { planSaveOperations } from '@/lib/travel/plan-save'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 /**
  * プランを複製する
@@ -12,17 +13,15 @@ export async function POST(
 ) {
   try {
     // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
+    const { userId } = auth
 
     const { planSlug: sourceTripId } = await params
-    const { newTitle }: { newTitle?: string } = await request.json()
+    const body = await parseRequestBody<{ newTitle?: string }>(request)
+    const { newTitle } = body
     
     // プランを複製
     const result = await planSaveOperations.duplicatePlan(sourceTripId, userId, newTitle)
@@ -32,10 +31,9 @@ export async function POST(
       data: result
     })
   } catch (error) {
-    logger.error('Error duplicating plan:', error)
-    return NextResponse.json(
-      { error: 'プランの複製に失敗しました' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/plans/[planSlug]/duplicate`
     )
   }
 }

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
-import { adminDb, adminAuth } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { unauthorized, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
 
 // 管理者専用: 既存の trips.destination_place と itineraries.place_data を
 /**
@@ -18,15 +20,17 @@ import { COLLECTIONS } from '@/lib/firebase/firestore'
  */
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization required' }, { status: 401 })
+    // 認証チェック
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
-    const idToken = authHeader.split('Bearer ')[1]
-    const decoded = await adminAuth.verifyIdToken(idToken)
-    const isAdmin = (decoded as any).admin === true || (decoded as any)['https://hasura.io/jwt/claims']?.['x-hasura-default-role'] === 'admin'
+    const { decodedToken } = auth
+    
+    // 管理者権限チェック
+    const isAdmin = (decodedToken as any).admin === true || (decodedToken as any)['https://hasura.io/jwt/claims']?.['x-hasura-default-role'] === 'admin'
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      throw createForbiddenError('Admin access required')
     }
 
     const stats = {
@@ -110,7 +114,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, stats })
   } catch (error) {
-    logger.error('Migration failed:', error)
-    return NextResponse.json({ error: 'Migration failed' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/migrate/places-to-cache`
+    )
   }
 }

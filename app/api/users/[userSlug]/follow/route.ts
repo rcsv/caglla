@@ -18,6 +18,7 @@ import { asUserId } from '@/lib/core/types/identity'
 import type { Firestore } from 'firebase-admin/firestore'
 import type { User } from '@/lib/core/types'
 import { convertStandardDates } from '@/lib/firebase/timestamp-utils'
+import { unauthorized, notFound, badRequest, handleApiError } from '@/lib/core/error-handler'
 
 /**
  * adminAuthをlazy importします（テスト環境でも動作するように）
@@ -150,31 +151,9 @@ export async function GET(
   { params }: { params: Promise<{ userSlug: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    if (!idToken) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    // テスト環境ではモックトークンを処理
-    let followerId: string
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      const mockUserId = extractUserIdFromMockToken(idToken)
-      if (mockUserId) {
-        followerId = mockUserId
-      } else {
-        const adminAuth = await getAdminAuth()
-        const decoded = await adminAuth.verifyIdToken(idToken)
-        followerId = decoded.uid
-      }
-    } else {
-      const adminAuth = await getAdminAuth()
-      const decoded = await adminAuth.verifyIdToken(idToken)
-      followerId = decoded.uid
+    const followerId = await resolveAuthUserId(request)
+    if (!followerId) {
+      return unauthorized('Authorization header required')
     }
 
     const { userSlug } = await params
@@ -184,24 +163,16 @@ export async function GET(
     const followingId = await resolveUserIdFromSlug(userSlug, db)
 
     if (!followingId) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     const state = await getFollowState(followerId, followingId, db)
 
     return NextResponse.json(state)
   } catch (error: unknown) {
-    logger.error('Failed to get follow state', error)
-
-    if (error instanceof Error) {
-      if (error.message.includes('User not found')) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
-      }
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to get follow state' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/users/[userSlug]/follow`
     )
   }
 }
@@ -215,31 +186,9 @@ export async function POST(
   { params }: { params: Promise<{ userSlug: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    if (!idToken) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    // テスト環境ではモックトークンを処理
-    let followerId: string
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      const mockUserId = extractUserIdFromMockToken(idToken)
-      if (mockUserId) {
-        followerId = mockUserId
-      } else {
-        const adminAuth = await getAdminAuth()
-        const decoded = await adminAuth.verifyIdToken(idToken)
-        followerId = decoded.uid
-      }
-    } else {
-      const adminAuth = await getAdminAuth()
-      const decoded = await adminAuth.verifyIdToken(idToken)
-      followerId = decoded.uid
+    const followerId = await resolveAuthUserId(request)
+    if (!followerId) {
+      return unauthorized('Authorization header required')
     }
 
     const { userSlug } = await params
@@ -249,30 +198,29 @@ export async function POST(
     const followingId = await resolveUserIdFromSlug(userSlug, db)
 
     if (!followingId) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     const follow = await followUser(followerId, followingId, db)
 
     return NextResponse.json(follow, { status: 201 })
   } catch (error: unknown) {
-    logger.error('Failed to follow user', error)
-
     if (error instanceof Error) {
       if (error.message.includes('Cannot follow yourself') || error.message.includes('yourself')) {
-        return NextResponse.json({ error: 'Cannot follow yourself' }, { status: 400 })
+        return badRequest('Cannot follow yourself')
       }
       if (error.message.includes('Already following') || error.message.includes('already')) {
+        // 409 Conflict は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Already following this user' }, { status: 409 })
       }
       if (error.message.includes('User not found')) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        return notFound('User')
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to follow user' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/users/[userSlug]/follow`
     )
   }
 }
@@ -286,31 +234,9 @@ export async function DELETE(
   { params }: { params: Promise<{ userSlug: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    if (!idToken) {
-      return NextResponse.json({ error: 'Invalid authorization header' }, { status: 401 })
-    }
-
-    // テスト環境ではモックトークンを処理
-    let followerId: string
-    if (process.env.FIRESTORE_EMULATOR_HOST) {
-      const mockUserId = extractUserIdFromMockToken(idToken)
-      if (mockUserId) {
-        followerId = mockUserId
-      } else {
-        const adminAuth = await getAdminAuth()
-        const decoded = await adminAuth.verifyIdToken(idToken)
-        followerId = decoded.uid
-      }
-    } else {
-      const adminAuth = await getAdminAuth()
-      const decoded = await adminAuth.verifyIdToken(idToken)
-      followerId = decoded.uid
+    const followerId = await resolveAuthUserId(request)
+    if (!followerId) {
+      return unauthorized('Authorization header required')
     }
 
     const { userSlug } = await params
@@ -320,33 +246,32 @@ export async function DELETE(
     const followingId = await resolveUserIdFromSlug(userSlug, db)
 
     if (!followingId) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     await unfollowUser(followerId, followingId, db)
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {
-    logger.error('Failed to unfollow user', error)
-
     if (error instanceof Error) {
       if (error.message.includes('Cannot unfollow yourself') || error.message.includes('yourself')) {
-        return NextResponse.json({ error: 'Cannot unfollow yourself' }, { status: 400 })
+        return badRequest('Cannot unfollow yourself')
       }
       if (error.message.includes('Not following this user') || error.message.includes('Not following')) {
-        return NextResponse.json({ error: 'Not following this user' }, { status: 404 })
+        return notFound('Not following this user')
       }
       if (error.message.includes('Only follower can unfollow') || error.message.includes('follower')) {
+        // 403 Forbidden は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Only follower can unfollow' }, { status: 403 })
       }
       if (error.message.includes('User not found')) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        return notFound('User')
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to unfollow user' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/users/[userSlug]/follow`
     )
   }
 }

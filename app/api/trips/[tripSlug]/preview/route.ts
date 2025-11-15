@@ -9,12 +9,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
 import type { Trip, Day, Itinerary } from '@/lib/core/types'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { generateMagazinePdfHtml, type TripPdfData } from '@/lib/utils/magazine-pdf-template'
 import { generateTripUrl } from '@/lib/utils/app-url'
 import logger from '@/lib/core/logger'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { notFound, handleApiError } from '@/lib/core/error-handler'
 
 // TripPdfData型はmagazine-pdf-templateからインポート
 
@@ -115,30 +117,6 @@ async function generatePreviewHtml(data: TripPdfData, tripUrl?: string): Promise
   )
 }
 
-/**
- * ユーザーの認証・認可チェック
- */
-async function authenticateUser(request: NextRequest): Promise<{ userId: string } | NextResponse> {
-  const authHeader = request.headers.get('authorization')
-  logger.debug('Preview API: auth header check', { hasHeader: !!authHeader, startsWithBearer: authHeader?.startsWith('Bearer ') })
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    logger.error('Preview API: missing or invalid auth header')
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const token = authHeader.substring(7)
-  logger.debug('Preview API: token extracted', { tokenLength: token.length })
-  
-  try {
-    const decodedToken = await adminAuth.verifyIdToken(token)
-    logger.debug('Preview API: token verified', { userId: decodedToken.uid })
-    return { userId: decodedToken.uid }
-  } catch (error) {
-    logger.error('Preview API: token verification failed:', error)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-}
 
 /**
  * トリップの所有権確認とデータ取得
@@ -151,7 +129,7 @@ async function validateTripOwnership(
   const tripDoc = await tripRef.get()
 
   if (!tripDoc.exists) {
-    return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    return notFound('Trip')
   }
 
   const trip = { id: tripDoc.id, ...tripDoc.data() } as Trip
@@ -236,12 +214,12 @@ export async function GET(
     logger.debug('Preview API: request received', { tripSlug })
 
     // 1. 認証チェック
-    const authResult = await authenticateUser(request)
-    if ('userId' in authResult === false) {
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
       logger.error('Preview API: authentication failed')
-      return authResult // NextResponse (error)
+      return auth // 認証エラーをそのまま返す
     }
-    const { userId } = authResult
+    const { userId } = auth
     logger.debug('Preview API: authentication successful', { userId })
 
     // 2. tripSlug（またはdocument id）から実ドキュメントIDを解決
@@ -307,10 +285,9 @@ export async function GET(
     })
 
   } catch (error) {
-    logger.error('Preview export error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trips/[tripSlug]/preview`
     )
   }
 }

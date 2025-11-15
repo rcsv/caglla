@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
-import { adminAuth } from '@/lib/firebase/admin'
 import { planSaveOperations } from '@/lib/travel/plan-save'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
 /**
  * プランをテンプレートとして保存する
@@ -12,23 +13,17 @@ export async function POST(
 ) {
   try {
     // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
 
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
     const { planSlug: tripId } = await params
-    const { templateName }: { templateName: string } = await request.json()
+    const body = await parseRequestBody<{ templateName?: string }>(request)
+    const { templateName } = body
     
     if (!templateName) {
-      return NextResponse.json(
-        { error: 'テンプレート名は必須です' },
-        { status: 400 }
-      )
+      return badRequest('テンプレート名は必須です')
     }
 
     // テンプレートとして保存
@@ -39,10 +34,9 @@ export async function POST(
       message: 'テンプレートとして保存しました'
     })
   } catch (error) {
-    logger.error('Error saving as template:', error)
-    return NextResponse.json(
-      { error: 'テンプレートの保存に失敗しました' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/plans/[planSlug]/template`
     )
   }
 }

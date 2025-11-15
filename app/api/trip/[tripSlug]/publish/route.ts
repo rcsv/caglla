@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth } from '@/lib/firebase/admin'
 import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import { generateUniqueSlug, generateSlug } from '@/lib/utils/slug'
 import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { notFound, badRequest, parseRequestBody, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
 
 type PublishRequestBody = {
   slug?: string | null
@@ -17,34 +18,32 @@ type PublishRequestBody = {
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { tripSlug: string } }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    // 認証チェック
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId } = auth
 
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const { tripSlug } = params
+    const { tripSlug } = await params
 
     const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolved) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      return notFound('Trip')
     }
 
     const { id: resolvedTripId, trip } = resolved
 
     if (trip.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      throw createForbiddenError('You do not own this trip')
     }
 
     // 既に private の場合はエラーを返す（冪等性のため）
     if (trip.access_level === 'private') {
-      return NextResponse.json({ error: 'Trip is already private' }, { status: 400 })
+      return badRequest('Trip is already private')
     }
 
     const updatePayload: Record<string, unknown> = {
@@ -66,39 +65,39 @@ export async function DELETE(
       trip: updatedTrip ?? { ...trip, access_level: 'private' as const }
     })
   } catch (error) {
-    logger.error('Error unpublishing trip', error)
-    return NextResponse.json({ error: 'Failed to unpublish trip' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/publish`
+    )
   }
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { tripSlug: string } }
+  { params }: { params: Promise<{ tripSlug: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    // 認証チェック
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId } = auth
 
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const { tripSlug } = params
+    const { tripSlug } = await params
 
     const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolved) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      return notFound('Trip')
     }
 
     const { id: resolvedTripId, trip } = resolved
 
     if (trip.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      throw createForbiddenError('You do not own this trip')
     }
 
-    const body: PublishRequestBody = await request.json().catch(() => ({} as PublishRequestBody))
+    const body = await parseRequestBody<PublishRequestBody>(request)
 
     const requestedSlug = body.slug?.trim()
     let finalSlug = trip.slug?.trim() || ''
@@ -115,7 +114,7 @@ export async function POST(
       // サーバー側でslug形式をバリデーション・正規化（防御的実装）
       const normalizedSlug = generateSlug(requestedSlug)
       if (normalizedSlug !== requestedSlug) {
-        return NextResponse.json({ error: 'Invalid slug format' }, { status: 400 })
+        return badRequest('Invalid slug format')
       }
 
       const userTrips = await getUserTrips()
@@ -125,6 +124,7 @@ export async function POST(
         .filter((value): value is string => Boolean(value))
 
       if (existingSlugs.includes(normalizedSlug)) {
+        // 409 Conflict は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Slug already in use' }, { status: 409 })
       }
 
@@ -165,8 +165,10 @@ export async function POST(
       trip: updatedTrip ?? { ...trip, slug: finalSlug, access_level: 'public' as const }
     })
   } catch (error) {
-    logger.error('Error publishing trip', error)
-    return NextResponse.json({ error: 'Failed to publish trip' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/trip/[tripSlug]/publish`
+    )
   }
 }
 

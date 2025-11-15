@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminUserOperations } from '@/lib/firebase/admin-operation'
-import { adminAuth } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { handleApiError } from '@/lib/core/error-handler'
 
 export async function POST(request: NextRequest) {
   try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    // 認証チェック
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    
-    // Verify the ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
+    const { userId } = auth
 
     logger.info('Starting user data migration')
     
@@ -91,10 +87,9 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    logger.error('Error during user data migration', error)
-    return NextResponse.json(
-      { error: 'Failed to migrate user data' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/users/migrate`
     )
   }
 }

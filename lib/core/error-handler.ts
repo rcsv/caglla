@@ -1,8 +1,9 @@
 // API エラーハンドリングユーティリティ
 // 本番環境での情報漏洩を防ぎ、統一されたエラーレスポンスを提供
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { requireAuth, type AuthResult } from '@/lib/api/auth-helpers'
 // エラーコードの定義
 export enum ApiErrorCode {
   // 400系エラー
@@ -289,6 +290,61 @@ export async function parseRequestBody<T>(request: Request): Promise<T> {
       'Invalid JSON in request body',
       { error: error instanceof Error ? error.message : String(error) }
     )
+  }
+}
+
+// よく使うエラーレスポンスのショートカット関数
+export function unauthorized(message = 'Authorization header required'): NextResponse {
+  return NextResponse.json({ error: message }, { status: 401 })
+}
+
+export function notFound(resource = 'Resource'): NextResponse {
+  return NextResponse.json({ error: `${resource} not found` }, { status: 404 })
+}
+
+export function badRequest(message: string): NextResponse {
+  return NextResponse.json({ error: message }, { status: 400 })
+}
+
+export function internalError(message = 'Internal server error'): NextResponse {
+  return NextResponse.json({ error: message }, { status: 500 })
+}
+
+// 認証付きAPIルートハンドラーのラッパー関数
+/**
+ * 認証チェックを含むAPIルートハンドラーのラッパー関数
+ * 認証チェックとエラーハンドリングを自動化
+ * 
+ * @param handler - 認証済みリクエストを処理するハンドラー関数
+ * @returns Next.js Route Handler関数
+ * 
+ * @example
+ * ```typescript
+ * export const POST = withAuth(async (request: NextRequest, auth) => {
+ *   const { userId } = auth
+ *   // ビジネスロジック
+ *   const result = await doSomething(userId)
+ *   return NextResponse.json({ result })
+ * })
+ * ```
+ */
+export function withAuth<T>(
+  handler: (request: NextRequest, auth: AuthResult) => Promise<NextResponse<T>>
+) {
+  return async (request: NextRequest): Promise<NextResponse> => {
+    try {
+      const auth = await requireAuth(request)
+      if (auth instanceof NextResponse) {
+        return auth // 認証エラーをそのまま返す
+      }
+      return await handler(request, auth)
+    } catch (error) {
+      const path = new URL(request.url).pathname
+      return handleApiError(
+        error instanceof Error ? error : new Error(String(error)),
+        path
+      )
+    }
   }
 }
 

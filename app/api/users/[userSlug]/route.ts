@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
 import { adminUserOperations } from '@/lib/firebase/admin-operation'
 import { adminResolveUserIdFromSlug } from '@/lib/auth/identity-helpers'
 import { asUserSlug, asUserId } from '@/lib/core/types/identity'
@@ -7,6 +7,8 @@ import { generateUniqueSlug } from '@/lib/utils/slug'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { User } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
+import { requireAuth } from '@/lib/api/auth-helpers'
+import { notFound, badRequest, parseRequestBody, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
 
 /**
  * GET: 他のユーザーの公開情報を取得
@@ -22,7 +24,7 @@ export async function GET(
     const { userSlug } = params
 
     if (!userSlug) {
-      return NextResponse.json({ error: 'User slug is required' }, { status: 400 })
+      return badRequest('User slug is required')
     }
 
     const typedUserSlug = asUserSlug(userSlug)
@@ -35,7 +37,7 @@ export async function GET(
       .get()
 
     if (querySnapshot.empty) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     const userDoc = querySnapshot.docs[0]
@@ -56,8 +58,10 @@ export async function GET(
 
     return NextResponse.json({ user: publicUserData })
   } catch (error) {
-    logger.error('Error fetching user by slug', error)
-    return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/users/[userSlug]`
+    )
   }
 }
 
@@ -69,22 +73,20 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { userSlug: string } }
+  { params }: { params: Promise<{ userSlug: string }> }
 ) {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+    // 認証チェック
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) {
+      return auth // 認証エラーをそのまま返す
     }
+    const { userId: authenticatedUserId } = auth
 
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const authenticatedUserId = decodedToken.uid
-
-    const { userSlug } = params
+    const { userSlug } = await params
 
     if (!userSlug) {
-      return NextResponse.json({ error: 'User slug is required' }, { status: 400 })
+      return badRequest('User slug is required')
     }
 
     const typedUserSlug = asUserSlug(userSlug)
@@ -92,24 +94,30 @@ export async function PUT(
     // userSlug から userId を解決
     const resolvedUserId = await adminResolveUserIdFromSlug(typedUserSlug)
     if (!resolvedUserId) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     // 認証済みユーザーが自分自身の情報を更新しようとしているか確認
     const authenticatedUserIdTyped = asUserId(authenticatedUserId)
     if (resolvedUserId !== authenticatedUserIdTyped) {
-      return NextResponse.json({ error: 'Forbidden: You can only update your own information' }, { status: 403 })
+      throw createForbiddenError('You can only update your own information')
     }
 
     // 既存ユーザーを取得（auth_uid で検索、後方互換性のため google_id もチェック）
     // Phase 1-1.5: 認証プロバイダーマルチ対応化
     const existingUser = await adminUserOperations.getUserByAuthUid(authenticatedUserId)
     if (!existingUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     // リクエストボディを解析
-    const body = await request.json()
+    const body = await parseRequestBody<{
+      name?: string
+      profile_image_url?: string
+      bio?: string
+      gender?: string
+      preferences?: Record<string, any>
+    }>(request)
     const {
       name,
       profile_image_url,
@@ -156,7 +164,7 @@ export async function PUT(
 
     // 更新が空の場合はエラーを返す
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
+      return badRequest('No fields to update')
     }
 
     // ユーザー情報を更新
@@ -166,7 +174,7 @@ export async function PUT(
     // Phase 1-1.5: 認証プロバイダーマルチ対応化
     const updatedUser = await adminUserOperations.getUserByAuthUid(authenticatedUserId)
     if (!updatedUser) {
-      return NextResponse.json({ error: 'User not found after update' }, { status: 404 })
+      return notFound('User not found after update')
     }
 
     logger.info('User updated successfully', {
@@ -177,8 +185,10 @@ export async function PUT(
 
     return NextResponse.json({ user: updatedUser })
   } catch (error) {
-    logger.error('Error updating user', error)
-    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/users/[userSlug]`
+    )
   }
 }
 
