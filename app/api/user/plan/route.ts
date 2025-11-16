@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
 import { PlanId } from '@/lib/subscription/restriction'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { notFound, badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { authApi, withBodyValidation } from '@/lib/api/middleware'
+import { notFound } from '@/lib/core/error-handler'
+import { UpdatePlanRequestSchema } from '@/lib/schemas/plan-subscription'
+import { composeMiddleware } from '@/lib/core/middleware'
 
 // 動的レンダリングを強制（request.headersを使用するため）
 export const dynamic = 'force-dynamic'
@@ -11,29 +13,25 @@ export const dynamic = 'force-dynamic'
 // 開発環境用のフォールバック（Firebase Admin SDKが利用できない場合）
 const DEV_USER_PLANS: Record<string, PlanId> = {}
 
-export async function GET(request: NextRequest) {
-  try {
-    // Firebase Admin SDKの初期化チェック
-    if (!adminDb || !adminAuth) {
-      logger.warn('Firebase Admin SDK not available, using development fallback')
-      
-      // 開発環境用のフォールバック
-      const mockUserId = 'dev-user-123'
-      const planId = DEV_USER_PLANS[mockUserId] || PlanId.SEASON_TRAVELER
-      
-      return NextResponse.json({
-        planId: planId,
-        userId: mockUserId,
-        isDevFallback: true
-      })
-    }
+export const GET = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth が保証されている（authApi プリセットが認証チェックを実行）
+  
+  // Firebase Admin SDKの初期化チェック
+  if (!adminDb || !adminAuth) {
+    logger.warn('Firebase Admin SDK not available, using development fallback')
+    
+    // 開発環境用のフォールバック
+    const mockUserId = 'dev-user-123'
+    const planId = DEV_USER_PLANS[mockUserId] || PlanId.SEASON_TRAVELER
+    
+    return NextResponse.json({
+      planId: planId,
+      userId: mockUserId,
+      isDevFallback: true
+    })
+  }
 
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId: uid } = auth
+  const { userId: uid } = ctx.auth!
 
     // ユーザー情報を取得（google_idでクエリ）
     const userQuery = await adminDb.collection('users')

@@ -12,6 +12,7 @@
 
 import { composeMiddleware } from '@/lib/core/middleware'
 import { withAuth } from './auth'
+import { withAdminAuth } from './admin-auth'
 import { withParams } from './params'
 import { withTripOwnership } from './trip-ownership'
 import { withDayOwnership } from './day-ownership'
@@ -106,6 +107,24 @@ export const dayApiWithQuery = composeMiddleware(
  */
 export const externalApi = composeMiddleware(
   // エラーハンドリングは composeMiddleware 側で自動的に適用される
+)
+
+/**
+ * Admin API プリセット（認証 + 管理者権限チェック）
+ * 
+ * 管理者専用エンドポイントで使用
+ * 
+ * 使用例:
+ * ```typescript
+ * export const POST = adminApi(async (request, ctx) => {
+ *   // ctx.auth が保証されている（管理者権限確認済み）
+ *   const { userId } = ctx.auth!
+ *   // ...
+ * })
+ * ```
+ */
+export const adminApi = composeMiddleware(
+  withAdminAuth()
 )
 
 /**

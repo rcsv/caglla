@@ -15,7 +15,7 @@ import { createValidationError } from '@/lib/core/error-handler'
 /**
  * zod エラーを ApiError に変換
  */
-function handleZodError(error: unknown): NextResponse {
+function handleZodError(error: unknown, path?: string): NextResponse {
   if (error instanceof z.ZodError) {
     const details = error.errors.map(err => ({
       path: err.path.join('.'),
@@ -28,13 +28,13 @@ function handleZodError(error: unknown): NextResponse {
         'Validation failed',
         { errors: details }
       ),
-      undefined
+      path
     )
   }
 
   return handleApiError(
     error instanceof Error ? error : new Error(String(error)),
-    undefined
+    path
   )
 }
 
@@ -93,7 +93,9 @@ export function withBodyValidation<T extends z.ZodTypeAny>(
         validated = schema.parse(rawBody)
       } catch (parseError) {
         // zod エラーの場合は詳細なバリデーションエラーを返す
-        if (parseError instanceof z.ZodError) {
+        // zod エラーの判定を複数方法で確認（テスト環境での互換性向上）
+        if (parseError instanceof z.ZodError || 
+            (parseError && typeof parseError === 'object' && 'issues' in parseError && Array.isArray((parseError as any).issues))) {
           return handleZodError(parseError, new URL(request.url).pathname)
         }
         // 予期しないエラー

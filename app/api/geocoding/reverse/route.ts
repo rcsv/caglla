@@ -1,28 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
-import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
-import { requireGoogleGeocodingApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withBodyValidation, withGoogleGeocodingKey } from '@/lib/api/middleware'
+import { ReverseGeocodeSchema } from '@/lib/schemas/geocoding'
+import { withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
 const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode'
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/geocoding/reverse - 座標→住所変換
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{...}>(request)
+ * if (lat === undefined || lng === undefined) {
+ *   return badRequest('Latitude and longitude are required')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const POST = composeMiddleware(
+  withGoogleGeocodingKey(),
+  withBodyValidation(ReverseGeocodeSchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    // API Keyの取得と検証
-    const apiKeyResult = requireGoogleGeocodingApiKey()
-    if (apiKeyResult instanceof NextResponse) {
-      return apiKeyResult
-    }
-    const GOOGLE_GEOCODING_API_KEY = apiKeyResult
-
-    const body = await parseRequestBody<{
-      lat?: number
-      lng?: number
-    }>(request)
-    const { lat, lng } = body
+    // ctx.apiKeys, ctx.body が保証されている（型推論が効く）
+    const GOOGLE_GEOCODING_API_KEY = ctx.apiKeys!.GOOGLE_GEOCODING!
     
-    if (lat === undefined || lng === undefined) {
-      return badRequest('Latitude and longitude are required')
-    }
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof ReverseGeocodeSchema>
+    const body = ctx.body as BodyType
+    const { lat, lng } = body
 
     // Google Geocoding APIを呼び出し
     const data = await withExternalApiErrorHandler(
@@ -53,9 +69,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data)
   } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      '/api/geocoding/reverse'
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは外部API呼び出しを含むため、詳細なエラーハンドリングが必要
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error('Error in geocoding/reverse:', error)
+    return NextResponse.json(
+      { error: 'Failed to reverse geocode coordinates', details: errorMessage },
+      { status: 500 }
     )
   }
-}
+})

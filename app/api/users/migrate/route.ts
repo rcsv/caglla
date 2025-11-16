@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminUserOperations } from '@/lib/firebase/admin-operation'
 import logger from '@/lib/core/logger'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { handleApiError } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
-export async function POST(request: NextRequest) {
-  try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { userId } = auth
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId } = ctx.auth!
 
     logger.info('Starting user data migration')
     
@@ -79,18 +73,11 @@ export async function POST(request: NextRequest) {
       total: users.length
     })
     
-    return NextResponse.json({ 
-      success: true,
-      processed: processedCount,
-      errors: errorCount,
-      total: users.length
-    })
-    
-  } catch (error) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/users/migrate`
-    )
-  }
-}
+  return NextResponse.json({ 
+    success: true,
+    processed: processedCount,
+    errors: errorCount,
+    total: users.length
+  })
+})
 

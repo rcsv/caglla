@@ -178,7 +178,7 @@ export function createNotFoundError(message: string, details?: any): ApiError {
 }
 
 export function createValidationError(message: string, details?: any): ApiError {
-  return new ApiError(message, 422, ApiErrorCode.VALIDATION_ERROR, details)
+  return new ApiError(message, 400, ApiErrorCode.VALIDATION_ERROR, details)
 }
 
 export function createInternalError(message: string = 'Internal server error'): ApiError {

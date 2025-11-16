@@ -11,11 +11,12 @@
  */
 
 export { withAuth } from './auth'
+export { withAdminAuth } from './admin-auth'
 export { withParams } from './params'
 export { withErrorHandling, withErrorHandlingWrapper } from './error-handling'
 export { withTripOwnership } from './trip-ownership'
 export { withDayOwnership } from './day-ownership'
 export { withBodyValidation } from './body-validation'
 export { withGooglePlacesKey, withGoogleGeocodingKey, withUnsplashKey } from './api-keys'
-export { authApi, tripApi, dayApi, dayApiWithQuery, externalApi, publicApi } from './presets'
+export { authApi, adminApi, tripApi, dayApi, dayApiWithQuery, externalApi, publicApi } from './presets'
 
