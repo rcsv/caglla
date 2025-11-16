@@ -29,20 +29,21 @@ export const POST = composeMiddleware(
   withAuth(),
   withBodyValidation(CreateUserSchema)
 )(async (request: NextRequest, ctx) => {
-  // ctx.auth, ctx.body が保証されている（型推論が効く）
-  const { userId, decodedToken } = ctx.auth!
-  
-  // zod スキーマでバリデーション済み & 型推論
-  type BodyType = z.infer<typeof CreateUserSchema>
-  const body = ctx.body as BodyType
-  const { 
-    name, 
-    email, 
-    profile_image_url, 
-    bio,
-    gender,
-    preferences 
-  } = body
+  try {
+    // ctx.auth, ctx.body が保証されている（型推論が効く）
+    const { userId, decodedToken } = ctx.auth!
+    
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof CreateUserSchema>
+    const body = ctx.body as BodyType
+    const { 
+      name, 
+      email, 
+      profile_image_url, 
+      bio,
+      gender,
+      preferences 
+    } = body
 
     // 既存ユーザーをチェック（auth_uid で検索、後方互換性のため google_id もチェック）
     // Phase 1-1.5: 認証プロバイダーマルチ対応化
@@ -116,7 +117,14 @@ export const POST = composeMiddleware(
       slug: user.slug
     })
     
-  return NextResponse.json({ user })
+    return NextResponse.json({ user })
+  } catch (error: any) {
+    logger.error('POST /api/users failed', {
+      message: error?.message,
+      stack: error?.stack
+    })
+    return NextResponse.json({ error: 'Failed to save user' }, { status: 500 })
+  }
 })
 
 /**

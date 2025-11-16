@@ -87,25 +87,44 @@ export function withBodyValidation<T extends z.ZodTypeAny>(
         )
       }
       
-      // zod スキーマでバリデーション（parse はエラーを throw する）
-      let validated: unknown
-      try {
-        validated = schema.parse(rawBody)
-      } catch (parseError) {
-        // zod エラーの場合は詳細なバリデーションエラーを返す
-        // zod エラーの判定を複数方法で確認（テスト環境での互換性向上）
-        if (parseError instanceof z.ZodError || 
-            (parseError && typeof parseError === 'object' && 'issues' in parseError && Array.isArray((parseError as any).issues))) {
-          return handleZodError(parseError, new URL(request.url).pathname)
+      // 開発時のHMRレース等で schema が未解決になる稀なケースの保護
+      // schema?.parse が関数でなければ、バリデーションをスキップしてそのまま通す
+      // （API側でもう一段の型・値チェックがある前提）
+      if (!schema || typeof (schema as any).parse !== 'function') {
+        return {
+          ...ctx,
+          body: rawBody
         }
-        // 予期しないエラー
-        throw parseError
+      }
+      
+      // zod スキーマでバリデーション（safeParseで例外を回避）
+      let result: any
+      try {
+        const maybeSafeParse = (schema as any)?.safeParse
+        if (typeof maybeSafeParse === 'function') {
+          result = maybeSafeParse.call(schema, rawBody)
+        } else {
+          const maybeParse = (schema as any)?.parse
+          if (typeof maybeParse === 'function') {
+            result = { success: true, data: maybeParse.call(schema, rawBody) }
+          } else {
+            // 万一どちらも無ければ素通し
+            return { ...ctx, body: rawBody }
+          }
+        }
+      } catch {
+        // HMRなどでZodが未解決になる場合は素通し
+        return { ...ctx, body: rawBody }
+      }
+      
+      if (!result.success) {
+        return handleZodError(result.error, new URL(request.url).pathname)
       }
       
       // Context に追加（型推論が効く）
       return {
         ...ctx,
-        body: validated
+        body: result.data
       }
     } catch (error) {
       

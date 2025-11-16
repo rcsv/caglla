@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Card } from '@/components/common/Card'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
@@ -24,6 +25,7 @@ export interface TripCardProps {
 }
 
 export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, variant = 'standard', priority = false }) => {
+        const router = useRouter()
         // スラッグベースのURLを生成
         const getTripUrl = () => {
           if (trip.creator?.slug && trip.slug) {
@@ -161,10 +163,13 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
                 </span>
               )}
               {trip.creator?.name && trip.creator?.slug && (
-                <Link
-                  href={`/${trip.creator.slug}`}
+                <button
+                  type="button"
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    router.push(`/${trip.creator!.slug}`)
+                  }}
                 >
                   {trip.creator.profile_image_url ? (
                     <Image
@@ -178,7 +183,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
                     <IconRenderer iconName="user" className="w-3 h-3" color="white" />
                   )}
                   <span className="font-medium text-white/90">{trip.creator.name}</span>
-                </Link>
+                </button>
               )}
             </div>
             
@@ -302,10 +307,13 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
             {/* 作成者情報 */}
             {trip.creator?.name && trip.creator?.slug && (
               <div className="mt-3 flex items-center gap-2">
-                <Link
-                  href={`/${trip.creator.slug}`}
+                <button
+                  type="button"
                   className="flex items-center gap-2 text-white/85 hover:text-white transition-colors"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    router.push(`/${trip.creator!.slug}`)
+                  }}
                 >
                   {trip.creator.profile_image_url ? (
                     <Image
@@ -319,7 +327,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
                     <IconRenderer iconName="user" className="w-5 h-5" color="white" />
                   )}
                   <span className="text-sm font-medium">{trip.creator.name}</span>
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -411,10 +419,13 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           
           {/* 作成者情報 */}
           {trip.creator?.name && trip.creator?.slug && (
-            <Link
-              href={`/${trip.creator.slug}`}
+            <button
+              type="button"
               className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                router.push(`/${trip.creator!.slug}`)
+              }}
             >
               {trip.creator.profile_image_url ? (
                 <Image
@@ -428,7 +439,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
                 <IconRenderer iconName="user" className="w-5 h-5" color="#6b7280" />
               )}
               <span className="text-sm font-medium">{trip.creator.name}</span>
-            </Link>
+            </button>
           )}
         </div>
       </Card>

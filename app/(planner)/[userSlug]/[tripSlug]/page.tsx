@@ -1403,29 +1403,11 @@ export default function SlugBasedTripPage() {
       onNavigateToSection={navigateToSection}
       onDayClick={handleDayClick}
       onLogout={handleLogout}
-      rightPaneWidth={currentView === 'checklist' ? 'zero' : 'default'}
+      rightPaneWidth={'zero'}
       menuItems={menuItems}
       extraControlsMenuItems={menuItems}
       mobileToolbar={mobileToolbar}
-      rightPane={
-        <TripRightPane
-          trip={trip}
-          currentView={currentView}
-          selectedItineraryId={selectedItineraryId}
-          selectedDayId={selectedDayId}
-          mapFocusMode={mapFocusMode}
-          poiData={poiData}
-          onItineraryClick={handleMapMarkerClick}
-          onPoiDataUpdate={setPoiData}
-          onAddFromPOI={canEdit ? handleAddFromPOI : undefined}
-          getFilteredItineraries={getFilteredItineraries}
-          // 地図側の操作によりスクロール連動を即停止
-          onMapInteractionStart={() => setScrollSyncEnabled(false)}
-          // 右上オーバーレイの「連動を再開」ボタン
-          onRequestEnableScrollSync={() => setScrollSyncEnabled(true)}
-          scrollSyncEnabled={scrollSyncEnabled}
-        />
-      }
+      rightPane={undefined}
     >
       {/* Hero Header with Background Image - show only in summary view */}
       {currentView === 'summary' && (
