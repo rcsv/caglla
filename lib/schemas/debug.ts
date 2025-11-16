@@ -21,12 +21,12 @@ import { z } from 'zod'
  * After:
  * - zod の `.min()` で tripId を必須に
  */
-export const TripImageDeletionDebugSchema = z.object({
+export const DebugTripImageDeletionSchema = z.object({
   tripId: z.string().min(1, 'tripId is required')
 })
 
 /**
  * 型推論
  */
-export type TripImageDeletionDebugInput = z.infer<typeof TripImageDeletionDebugSchema>
+export type DebugTripImageDeletionInput = z.infer<typeof DebugTripImageDeletionSchema>
 

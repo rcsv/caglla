@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import logger from '@/lib/core/logger'
 import { composeMiddleware } from '@/lib/core/middleware'
-import { withBodyValidation, withGooglePlacesKey } from '@/lib/api/middleware'
-import { RouteOptimizationRequestSchema } from '@/lib/schemas/route-optimization'
+import { withBodyValidation, withQueryValidation, withGooglePlacesKey } from '@/lib/api/middleware'
+import { RouteOptimizationRequestSchema, RouteOptimizationCostEstimateQuerySchema } from '@/lib/schemas/route-optimization'
 import { withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
 const GOOGLE_DIRECTIONS_API_URL = 'https://maps.googleapis.com/maps/api/directions/json'
@@ -168,18 +168,21 @@ export const POST = composeMiddleware(
   }
 })
 
-// ルート最適化のコスト見積もりを提供するGETエンドポイント
-export async function GET(request: NextRequest) {
+/**
+ * GET /api/route-optimization - ルート最適化コスト見積もり
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ */
+export const GET = composeMiddleware(
+  withQueryValidation(RouteOptimizationCostEstimateQuerySchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    const { searchParams } = new URL(request.url)
-    const waypointCount = parseInt(searchParams.get('waypoints') || '0')
+    // ctx.query が保証されている（型推論が効く）
     
-    if (waypointCount < 0) {
-      return NextResponse.json(
-        { error: 'Waypoint count must be non-negative' },
-        { status: 400 }
-      )
-    }
+    // zod スキーマでバリデーション済み & 型推論
+    type QueryType = z.infer<typeof RouteOptimizationCostEstimateQuerySchema>
+    const query = ctx.query as QueryType
+    const waypointCount = query.waypoints
 
     // Google Directions API料金計算
     const requestsNeeded = Math.ceil(waypointCount / 23) // 1リクエストあたり最大23のwaypoint
@@ -210,10 +213,13 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(costEstimate)
   } catch (error) {
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    const errorMessage = error instanceof Error ? error.message : String(error)
     logger.error('Error in cost estimation API', error)
-    return NextResponse.json(
-      { error: 'Failed to estimate cost' },
-      { status: 500 }
+    const { handleApiError } = await import('@/lib/core/error-handler')
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/route-optimization'
     )
   }
-}
+})

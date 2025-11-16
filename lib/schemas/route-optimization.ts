@@ -53,7 +53,28 @@ export const RouteOptimizationRequestSchema = z.object({
 })
 
 /**
+ * ルート最適化コスト見積もりリクエストスキーマ（GET クエリパラメータ用）
+ * 
+ * `app/api/route-optimization/route.ts` GET エンドポイントのバリデーションロジックを zod に変換
+ * 
+ * Before:
+ * ```typescript
+ * const waypointCount = parseInt(searchParams.get('waypoints') || '0')
+ * if (waypointCount < 0) {
+ *   return NextResponse.json({ error: 'Waypoint count must be non-negative' }, { status: 400 })
+ * }
+ * ```
+ * 
+ * After:
+ * - zod の `.int().min(0)` で waypointCount を非負整数に
+ */
+export const RouteOptimizationCostEstimateQuerySchema = z.object({
+  waypoints: z.coerce.number().int().min(0, 'Waypoint count must be non-negative')
+})
+
+/**
  * 型推論
  */
 export type RouteOptimizationRequestInput = z.infer<typeof RouteOptimizationRequestSchema>
+export type RouteOptimizationCostEstimateQueryInput = z.infer<typeof RouteOptimizationCostEstimateQuerySchema>
 

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
-import { badRequest, handleApiError } from '@/lib/core/error-handler'
-import { requireGooglePlacesApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withQueryValidation, withGooglePlacesKey } from '@/lib/api/middleware'
+import { PlacesPhotoQuerySchema } from '@/lib/schemas/places-photo'
+import { withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
 // 動的レンダリングを強制（request.urlを使用するため）
 export const dynamic = 'force-dynamic'
@@ -9,23 +12,25 @@ export const dynamic = 'force-dynamic'
 const GOOGLE_PLACES_API_URL_OLD = 'https://maps.googleapis.com/maps/api/place'
 const GOOGLE_PLACES_API_URL_NEW = 'https://places.googleapis.com/v1'
 
-export async function GET(request: NextRequest) {
+/**
+ * GET /api/places/photo - Places写真取得
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ */
+export const GET = composeMiddleware(
+  withGooglePlacesKey(),
+  withQueryValidation(PlacesPhotoQuerySchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    // API Keyの取得と検証
-    const apiKeyResult = requireGooglePlacesApiKey()
-    if (apiKeyResult instanceof NextResponse) {
-      return apiKeyResult
-    }
-    const GOOGLE_PLACES_API_KEY = apiKeyResult
-
-    const { searchParams } = new URL(request.url)
-    const photoReference = searchParams.get('photoreference')
-    const maxWidth = searchParams.get('maxwidth') || '800' // デフォルトを800pxに向上
-    const maxHeight = searchParams.get('maxheight')
-
-    if (!photoReference) {
-      return badRequest('Photo reference is required')
-    }
+    // ctx.apiKeys, ctx.query が保証されている（型推論が効く）
+    const GOOGLE_PLACES_API_KEY = ctx.apiKeys!.GOOGLE_PLACES!
+    
+    // zod スキーマでバリデーション済み & 型推論
+    type QueryType = z.infer<typeof PlacesPhotoQuerySchema>
+    const query = ctx.query as QueryType
+    const photoReference = query.photoreference
+    const maxWidth = query.maxwidth?.toString() || '800' // デフォルトを800pxに向上
+    const maxHeight = query.maxheight?.toString()
 
     logger.debug('Fetching photo from Places API', {
       photoReference: photoReference.substring(0, 20) + '...',
@@ -79,11 +84,16 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは外部API呼び出しを含むため、詳細なエラーハンドリングが必要
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error('Error in places/photo:', error)
+    const { handleApiError } = await import('@/lib/core/error-handler')
     return handleApiError(
       error instanceof Error ? error : new Error(String(error)),
       '/api/places/photo'
     )
   }
-}
+})
 
 

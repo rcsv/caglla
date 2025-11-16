@@ -17,6 +17,7 @@ export { withErrorHandling, withErrorHandlingWrapper } from './error-handling'
 export { withTripOwnership } from './trip-ownership'
 export { withDayOwnership } from './day-ownership'
 export { withBodyValidation } from './body-validation'
+export { withQueryValidation } from './query-validation'
 export { withGooglePlacesKey, withGoogleGeocodingKey, withUnsplashKey } from './api-keys'
 export { authApi, adminApi, tripApi, dayApi, dayApiWithQuery, externalApi, publicApi } from './presets'
 

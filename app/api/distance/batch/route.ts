@@ -1,29 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
-import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withBodyValidation, withGooglePlacesKey } from '@/lib/api/middleware'
+import { BatchDistanceSchema } from '@/lib/schemas/distance'
 import type { PlaceData } from '@/lib/core/types'
-import { requireGooglePlacesApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
+import { withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
 const GOOGLE_DISTANCE_MATRIX_API_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json'
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/distance/batch - 複数地点間の連続した距離計算
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ */
+export const POST = composeMiddleware(
+  withGooglePlacesKey(),
+  withBodyValidation(BatchDistanceSchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    // API Keyの取得と検証
-    const apiKeyResult = requireGooglePlacesApiKey()
-    if (apiKeyResult instanceof NextResponse) {
-      return apiKeyResult
-    }
-    const GOOGLE_PLACES_API_KEY = apiKeyResult
-
-    const body = await parseRequestBody<{
-      places?: PlaceData[]
-      mode?: 'driving' | 'walking' | 'bicycling' | 'transit'
-    }>(request)
-    const { places, mode = 'driving' } = body
+    // ctx.apiKeys, ctx.body が保証されている（型推論が効く）
+    const GOOGLE_PLACES_API_KEY = ctx.apiKeys!.GOOGLE_PLACES!
     
-    if (!places || places.length < 2) {
-      return badRequest('At least 2 places are required')
-    }
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof BatchDistanceSchema>
+    const body = ctx.body as BodyType
+    const { places, mode = 'driving' } = body
 
     // 連続する地点間の距離を計算
     const origins: string[] = []
@@ -40,7 +42,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (origins.length === 0) {
-      return badRequest('No valid place coordinates found')
+      const { createBadRequestError, handleApiError } = await import('@/lib/core/error-handler')
+      return handleApiError(
+        createBadRequestError('No valid place coordinates found'),
+        '/api/distance/batch'
+      )
     }
 
     // Distance Matrix APIを呼び出し（エラーハンドリング付き）
@@ -155,7 +161,11 @@ export async function POST(request: NextRequest) {
 
     // 成功した区間がない場合はエラーを返す
     if (segments.length === 0) {
-      return badRequest('All distance calculations failed')
+      const { createBadRequestError, handleApiError } = await import('@/lib/core/error-handler')
+      return handleApiError(
+        createBadRequestError('All distance calculations failed'),
+        '/api/distance/batch'
+      )
     }
 
     return NextResponse.json({
@@ -174,12 +184,17 @@ export async function POST(request: NextRequest) {
       segmentCount: segments.length
     })
   } catch (error) {
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは外部API呼び出しを含むため、詳細なエラーハンドリングが必要
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error('Error in distance/batch:', error)
+    const { handleApiError } = await import('@/lib/core/error-handler')
     return handleApiError(
       error instanceof Error ? error : new Error(String(error)),
       '/api/distance/batch'
     )
   }
-}
+})
 
 // 時間をフォーマットする関数（サーバー側は英語表記で統一）
 function formatDuration(seconds: number): string {

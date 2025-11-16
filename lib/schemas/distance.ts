@@ -49,7 +49,7 @@ export const DistanceSchema = z.object({
  * After:
  * - zod の `.min()` で places を最小2個必須に
  */
-export const DistanceBatchSchema = z.object({
+export const BatchDistanceSchema = z.object({
   places: z.any().array().min(2, 'At least 2 places are required'), // PlaceData 型は複雑なため any で許可
   mode: z.enum(['driving', 'walking', 'bicycling', 'transit']).default('driving').optional()
 })
@@ -58,5 +58,5 @@ export const DistanceBatchSchema = z.object({
  * 型推論
  */
 export type DistanceInput = z.infer<typeof DistanceSchema>
-export type DistanceBatchInput = z.infer<typeof DistanceBatchSchema>
+export type BatchDistanceInput = z.infer<typeof BatchDistanceSchema>
 

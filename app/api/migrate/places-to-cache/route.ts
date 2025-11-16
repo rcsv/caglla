@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
 import { adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import { requireAuth } from '@/lib/api/auth-helpers'
-import { unauthorized, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
+import { adminApi } from '@/lib/api/middleware'
+import { handleApiError } from '@/lib/core/error-handler'
 
 // 管理者専用: 既存の trips.destination_place と itineraries.place_data を
 /**
@@ -18,20 +18,14 @@ import { unauthorized, handleApiError, createForbiddenError } from '@/lib/core/e
  *          Returns a 401 JSON error if authorization is missing/invalid, 403 if the caller is not an admin,
  *          or 500 with `{ error: 'Migration failed' }` on unexpected failures.
  */
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/migrate/places-to-cache - Places キャッシュ移行（管理者専用）
+ * 
+ * adminApi ミドルウェアで移行済み（認証 + 管理者権限チェック）
+ */
+export const POST = adminApi(async (request: NextRequest, ctx) => {
   try {
-    // 認証チェック
-    const auth = await requireAuth(request)
-    if (auth instanceof NextResponse) {
-      return auth // 認証エラーをそのまま返す
-    }
-    const { decodedToken } = auth
-    
-    // 管理者権限チェック
-    const isAdmin = (decodedToken as any).admin === true || (decodedToken as any)['https://hasura.io/jwt/claims']?.['x-hasura-default-role'] === 'admin'
-    if (!isAdmin) {
-      throw createForbiddenError('Admin access required')
-    }
+    // ctx.auth が保証されている（adminApi プリセットが認証 + 管理者権限チェックを実行）
 
     const stats = {
       tripsProcessed: 0,
@@ -119,4 +113,4 @@ export async function POST(request: NextRequest) {
       `/api/migrate/places-to-cache`
     )
   }
-}
+})

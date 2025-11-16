@@ -100,14 +100,14 @@ export function composeMiddleware(...middlewares: Middleware[]) {
   return (handler: RouteHandler) => {
     return async (
       request: NextRequest,
-      context: { params?: Promise<Record<string, any>> }
+      context?: { params?: Promise<Record<string, any>> }
     ): Promise<NextResponse> => {
       // 初期 context を構築
       // Next.js 15 の params: Promise 問題をここで完全に吸収
       let ctx: MiddlewareContext = {}
 
       // params があれば先に解決（全てのミドルウェアが「普通の params」を受け取れるようにする）
-      if (context.params) {
+      if (context?.params) {
         try {
           ctx.params = await context.params
         } catch (error) {

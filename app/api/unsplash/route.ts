@@ -3,30 +3,30 @@ import logger from '@/lib/core/logger'
 // 旅行の目的地に関連する画像を取得する
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { unsplashApiHelpers } from '@/lib/api/unsplash'
-import { badRequest, notFound, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
-import { requireUnsplashApiKey, withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
+import { notFound, handleApiError } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withQueryValidation, withBodyValidation, withUnsplashKey } from '@/lib/api/middleware'
+import { UnsplashQuerySchema, UnsplashBodySchema } from '@/lib/schemas/unsplash'
+import { withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
-export async function GET(request: NextRequest) {
+/**
+ * GET /api/unsplash - Unsplash画像取得（クエリパラメータ）
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ */
+export const GET = composeMiddleware(
+  withUnsplashKey(),
+  withQueryValidation(UnsplashQuerySchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    // API Keyの取得と検証
-    const apiKeyResult = requireUnsplashApiKey()
-    if (apiKeyResult instanceof NextResponse) {
-      return apiKeyResult
-    }
-    // const UNSPLASH_ACCESS_KEY = apiKeyResult; // GETでは直接使用しないが、存在チェックは必要
-
-    const { searchParams } = new URL(request.url)
-    const destination = searchParams.get('destination')
-    const count = parseInt(searchParams.get('count') || '1')
-
-    if (!destination) {
-      return badRequest('Destination parameter is required')
-    }
-
-    if (count > 10) {
-      return badRequest('Count cannot exceed 10')
-    }
+    // ctx.apiKeys, ctx.query が保証されている（型推論が効く）
+    
+    // zod スキーマでバリデーション済み & 型推論
+    type QueryType = z.infer<typeof UnsplashQuerySchema>
+    const query = ctx.query as QueryType
+    const { destination, count = 1 } = query
 
     // 単一画像の取得
     if (count === 1) {
@@ -90,30 +90,24 @@ export async function GET(request: NextRequest) {
       '/api/unsplash'
     )
   }
-}
+})
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/unsplash - Unsplash画像取得（リクエストボディ）
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ */
+export const POST = composeMiddleware(
+  withUnsplashKey(),
+  withBodyValidation(UnsplashBodySchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    // API Keyの取得と検証
-    const apiKeyResult = requireUnsplashApiKey()
-    if (apiKeyResult instanceof NextResponse) {
-      return apiKeyResult
-    }
-    // const UNSPLASH_ACCESS_KEY = apiKeyResult; // 直接使用しないが、存在チェックは必要
-
-    const body = await parseRequestBody<{
-      destination?: string
-      count?: number
-    }>(request)
+    // ctx.apiKeys, ctx.body が保証されている（型推論が効く）
+    
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof UnsplashBodySchema>
+    const body = ctx.body as BodyType
     const { destination, count = 1 } = body
-
-    if (!destination) {
-      return badRequest('Destination is required')
-    }
-
-    if (count > 10) {
-      return badRequest('Count cannot exceed 10')
-    }
 
     // 単一画像の取得
     if (count === 1) {
@@ -177,4 +171,4 @@ export async function POST(request: NextRequest) {
       '/api/unsplash'
     )
   }
-}
+})
