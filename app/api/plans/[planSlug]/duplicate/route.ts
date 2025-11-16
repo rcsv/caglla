@@ -38,8 +38,8 @@ export const POST = composeMiddleware(
     // プランを複製
     const result = await planSaveOperations.duplicatePlan(sourceTripId, userId, newTitle)
     
-  return NextResponse.json({
-    success: true,
-    data: result
-  })
+    return NextResponse.json({
+      success: true,
+      data: result
+    })
 })
