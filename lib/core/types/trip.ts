@@ -88,6 +88,21 @@ export interface Trip {
   trending_score?: number // トレンドスコア (アルゴリズム算出)
   social_stats?: TripSocialStats // SNS統計（Subcollection参照用の集計値）
   
+  // v3.0.0 プライベート旅行のシェア関連フィールド
+  is_shared?: boolean // Shared Private Tripかどうか（プライベート旅行を参考情報として公開）
+  shared_from_trip_id?: string // 元のプライベート旅行のID
+  shared_start_month?: number // シェア時の開始月（1-12、プライバシー保護のため月のみ）
+  shared_start_year?: number // シェア時の開始年
+  shared_end_month?: number // シェア時の終了月（1-12、プライバシー保護のため月のみ）
+  shared_end_year?: number // シェア時の終了年
+  shared_month_label?: string // 表示用の月ラベル（例: "2024年12月"、UI表示用）
+  
+  // v3.0.0 テンプレートプラン関連フィールド
+  shared_plan_type?: 'user' | 'business' // プランタイプ（'business'の場合は業者のプラン）
+  
+  // v3.0.0 プライベート旅行の共有メンバー（UI表示用、実際のデータはtrip_usersコレクションで管理）
+  shared_members?: User[] // プライベート旅行の共有メンバー一覧（表示用）
+  
   created_at: FirestoreDate
   updated_at: FirestoreDate
   days?: Day[]

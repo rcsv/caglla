@@ -303,10 +303,10 @@ export default function TripItineraryView({
                               }
                             }
 
-                            const sharedMonthLabel = (trip as Trip & { shared_month_label?: string }).shared_month_label
-                            if (sharedMonthLabel) {
+                            // Shared Private Tripの場合、shared_month_labelがあればそれを表示
+                            if (trip.shared_month_label) {
                               return {
-                                text: sharedMonthLabel,
+                                text: trip.shared_month_label,
                                 className: 'text-gray-900'
                               }
                             }
