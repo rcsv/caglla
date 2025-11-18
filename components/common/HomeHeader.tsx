@@ -87,6 +87,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             </Link>
             <nav className="hidden md:flex items-center gap-4 text-sm">
               <Link href="/home" className="text-gray-600 hover:text-gray-900">{t('tripGuide')}</Link>
+              <Link href="/feed" className="text-gray-600 hover:text-gray-900">Feed</Link>
               <Link href="/plan" className="text-gray-600 hover:text-gray-900">{t('nav.plan')}</Link>
               <Link href="/memories" className="text-gray-600 hover:text-gray-900">{t('memories')}</Link>
               {typeof window !== 'undefined' &&

@@ -120,6 +120,48 @@ export default function DevToolsIndex() {
             テストを実行
           </Link>
         </div>
+
+        {/* 旅行タイプデモ */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <h2 className="text-xl font-semibold mb-3">旅行タイプデモ</h2>
+          <p className="text-gray-600 mb-4">
+            3つの旅行タイプ（プライベート、シェア、テンプレート）のユーザー体験を模擬できます。
+          </p>
+          <Link 
+            href="/dev-tools/trip-types-demo"
+            className="inline-block bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600 transition-colors"
+          >
+            デモを見る
+          </Link>
+        </div>
+
+        {/* Create Trip from Public Trip デモ */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <h2 className="text-xl font-semibold mb-3">Create Trip from Public Trip デモ</h2>
+          <p className="text-gray-600 mb-4">
+            Public Tripをベースに新しいTripを作成する体験を模擬できます。将来的には「Clone Trip Plan」のワンクリック体験に進化予定。
+          </p>
+          <Link 
+            href="/dev-tools/create-trip-modes-demo"
+            className="inline-block bg-emerald-500 text-white px-4 py-2 rounded hover:bg-emerald-600 transition-colors"
+          >
+            デモを見る
+          </Link>
+        </div>
+
+        {/* Trip Detail Demo */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+          <h2 className="text-xl font-semibold mb-3">Trip Detail Demo</h2>
+          <p className="text-gray-600 mb-4">
+            /[userSlug]/[tripSlug] のSPA旅行確認モードを、モックデータで体験できます（編集操作なし）。
+          </p>
+          <Link 
+            href="/dev-tools/trip-detail-demo"
+            className="inline-block bg-emerald-500 text-white px-4 py-2 rounded hover:bg-emerald-600 transition-colors"
+          >
+            デモを見る
+          </Link>
+        </div>
       </div>
 
       <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">

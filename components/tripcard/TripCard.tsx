@@ -375,6 +375,25 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
           <SocialStats size="sm" showComments={true} />
         </div>
 
+        {/* Clone Trip Plan ボタン（公開Tripのみ） */}
+        {accessLevel === 'public' && (
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                // TODO: Clone Trip Plan の実装
+                router.push(`/trip/new?clone=${trip.slug || trip.id}`)
+              }}
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 hover:border-indigo-300 transition-colors"
+            >
+              <Icon icon="mdi:content-copy" className="h-4 w-4" />
+              <span>Clone Trip Plan</span>
+            </button>
+          </div>
+        )}
+
         <div className="mb-3 flex items-center gap-2 flex-wrap">
           {trip.destination && (
             <p className="text-gray-500 text-sm flex items-center gap-1">
@@ -439,6 +458,13 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
                 <IconRenderer iconName="user" className="w-5 h-5" color="#6b7280" />
               )}
               <span className="text-sm font-medium">{trip.creator.name}</span>
+              {/* テンプレートの場合はバッジを表示 */}
+              {trip.is_template && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                  <Icon icon="mdi:lightbulb-on-outline" className="h-3 w-3" />
+                  <span>プラン作成者</span>
+                </span>
+              )}
             </button>
           )}
         </div>

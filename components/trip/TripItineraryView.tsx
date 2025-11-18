@@ -303,6 +303,14 @@ export default function TripItineraryView({
                               }
                             }
 
+                            const sharedMonthLabel = (trip as Trip & { shared_month_label?: string }).shared_month_label
+                            if (sharedMonthLabel) {
+                              return {
+                                text: sharedMonthLabel,
+                                className: 'text-gray-900'
+                              }
+                            }
+
                             if (templateWithoutDates) {
                               return { text: null, className: '' }
                             }
