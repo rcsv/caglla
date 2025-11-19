@@ -1,10 +1,14 @@
 /**
- * Feed Social Operations のテスト
+ * Feed Operations のテスト
  * 
- * Phase 1-4: Firestore操作関数（Social Operations）のテスト（テストファースト）
+ * フィード機能のFirestore操作関数のテスト
  * 
  * 注意: これらのテストはFirestoreエミュレータを起動している必要があります。
  * エミュレータ起動: pnpm emulators:start:firestore
+ * 
+ * 使用方法:
+ *   1. エミュレータを起動: pnpm emulators:start:firestore
+ *   2. 別のターミナルでテスト実行: pnpm test:firestore -- feed
  */
 
 import { createMockTrip, createMockPublicTrip } from '@/lib/__tests__/helpers/test-data'
@@ -13,14 +17,14 @@ import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { Trip } from '@/lib/core/types'
 import type { Firestore } from 'firebase-admin/firestore'
 
-// Phase 1-4で実装したSocial Operationsをインポート
+// Feed Operationsをインポート
 import {
   getPublicFeed,
   getTrendingFeed,
   getFollowingFeed,
-} from '@/lib/social/feed'
+} from '@/lib/travel/feed'
 
-describe('Feed Social Operations', () => {
+describe('Feed Operations', () => {
   let db: Firestore
   let publicTrip1: Trip
   let publicTrip2: Trip

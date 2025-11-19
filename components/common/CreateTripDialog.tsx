@@ -4,6 +4,7 @@ import logger from '@/lib/core/logger'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { createTrip } from '@/lib/travel/trip-operations'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { imageUploadHelpers } from '@/lib/storage/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
@@ -284,49 +285,29 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
 
     setSubmitting(true)
     try {
-      const payload = {
+      const trip = await createTrip({
         title: formData.title || formData.destination,
-        description: formData.description,
-        destination: formData.destination,
-        destinationPlaceId: formData.destinationPlace?.place_id,
-        destinationPlace: formData.destinationPlace,
-        startDate: isTemplateMode ? undefined : formData.startDate,
-        endDate: isTemplateMode ? undefined : formData.endDate,
-        imageUrl: formData.imageUrl || null,
+        description: formData.description || undefined,
+        destination: formData.destination || undefined,
+        destinationPlaceId: formData.destinationPlace?.place_id || undefined,
+        startDate: isTemplateMode ? undefined : formData.startDate || undefined,
+        endDate: isTemplateMode ? undefined : formData.endDate || undefined,
+        imageUrl: formData.imageUrl || undefined,
         defaultCurrency: formData.defaultCurrency,
         isTemplate: isTemplateMode,
-        dayCount: isTemplateMode ? formData.dayCount : undefined
-      }
-
-      const response = await makeAuthenticatedRequest('/api/trips', {
-        method: 'POST',
-        body: JSON.stringify(payload),
+        dayCount: isTemplateMode ? formData.dayCount : undefined,
       })
 
-      if (response.ok) {
-        const trip = await response.json()
-        onSuccess()
-        onClose()
-        // スラッグベースのURLにリダイレクト
-        if (trip.creator?.slug && trip.slug) {
-          router.push(`/${trip.creator.slug}/${trip.slug}`)
-        } else {
-          // スラッグが生成されていない場合はエラー（通常は発生しない）
-          logger.error('Trip created but slugs are missing', { tripId: trip.id })
-          alert('旅行の作成に成功しましたが、URLの生成に失敗しました。')
-          router.push('/home')
-        }
+      onSuccess()
+      onClose()
+      // スラッグベースのURLにリダイレクト
+      if (trip.creator?.slug && trip.slug) {
+        router.push(`/${trip.creator.slug}/${trip.slug}`)
       } else {
-        // 作成に失敗した場合、アップロードした画像を削除
-        if (formData.imageUrl) {
-          try {
-            await imageUploadHelpers.deleteImage(formData.imageUrl)
-            logger.debug('Failed creation image deleted:', formData.imageUrl)
-          } catch (error) {
-            logger.error('Failed to delete image after creation failure:', error)
-          }
-        }
-        logger.error('Failed to create trip')
+        // スラッグが生成されていない場合はエラー（通常は発生しない）
+        logger.error('Trip created but slugs are missing', { tripId: trip.id })
+        alert('旅行の作成に成功しましたが、URLの生成に失敗しました。')
+        router.push('/home')
       }
     } catch (error) {
       // エラーが発生した場合、アップロードした画像を削除

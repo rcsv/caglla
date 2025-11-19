@@ -1,7 +1,5 @@
 /**
- * Feed Social Operations
- * 
- * Phase 1-4: Firestore操作関数（Social Operations）
+ * Feed Operations
  * 
  * フィード機能のFirestore操作を提供します。
  * 公開トリップのフィード取得、トレンドフィード、フォロー中フィードを提供します。
@@ -9,12 +7,10 @@
 
 import type { Firestore } from 'firebase-admin/firestore'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import { asUserId } from '@/lib/core/types/identity'
 import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
-import { convertStandardDates } from '@/lib/firebase/timestamp-utils'
-import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { convertStandardDates, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 
 // テスト環境ではテスト用のFirestoreを使用、本番環境ではadminDbを使用
 function getFirestore(db?: Firestore): Firestore {

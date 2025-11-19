@@ -53,24 +53,9 @@ export default function HomePage() {
     router.push('/subscription')
   }
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
   // 進行中のTrip（期間内のものを優先、最大2件）
-  const tripsSortedByRecent = [...trips].sort((a, b) => {
-    const aDate = toDateOrNull(a.updated_at || a.created_at)
-    const bDate = toDateOrNull(b.updated_at || b.created_at)
-    if (!aDate || !bDate) return 0
-    return bDate.getTime() - aDate.getTime()
-  })
-
-  const ongoingTrips = tripsSortedByRecent.filter((trip) => {
-    const startDate = toDateOrNull(trip.start_date)
-    const endDate = toDateOrNull(trip.end_date)
-    if (!startDate || !endDate) return false
-    return startDate <= today && endDate >= today
-  })
-
+  const tripsSortedByRecent = sortTripsByUpdatedAt(trips)
+  const ongoingTrips = filterOngoingTrips(tripsSortedByRecent)
   const activeTrips = (ongoingTrips.length > 0 ? ongoingTrips : tripsSortedByRecent).slice(0, 2)
 
   const activeCoverPool = [
@@ -163,19 +148,7 @@ export default function HomePage() {
   ]
 
   // 近日の予定（start_dateでソート、未来のTripのみ）
-  const upcomingTrips = [...trips]
-    .filter(trip => {
-      const startDate = toDateOrNull(trip.start_date)
-      if (!startDate) return false
-      return startDate >= today
-    })
-    .sort((a, b) => {
-      const aDate = toDateOrNull(a.start_date)
-      const bDate = toDateOrNull(b.start_date)
-      if (!aDate || !bDate) return 0
-      return aDate.getTime() - bDate.getTime()
-    })
-    .slice(0, 3)
+  const upcomingTrips = sortTripsByStartDate(filterUpcomingTrips(trips)).slice(0, 3)
 
   return (
     <div className="min-h-screen bg-gray-50">

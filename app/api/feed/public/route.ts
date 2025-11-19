@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
-import { getPublicFeed } from '@/lib/social/feed'
+import { getPublicFeed } from '@/lib/travel/feed'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import type { Firestore } from 'firebase-admin/firestore'
 

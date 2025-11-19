@@ -30,8 +30,8 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Feed</h1>
-          <p className="text-gray-600">Discover amazing travel plans from the community</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Feed</h1>
+        <p className="text-gray-600">Discover amazing travel plans from the community</p>
         </div>
         <Link
           href="/home"

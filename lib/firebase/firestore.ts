@@ -25,6 +25,7 @@ export const COLLECTIONS = {
   // v3.0.0 SNS機能コレクション
   TRIP_LIKES: 'trip_likes',
   TRIP_COMMENTS: 'trip_comments',
+  TRIP_SHARES: 'trip_shares',
   USER_FOLLOWS: 'user_follows',
 } as const
 

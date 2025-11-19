@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/contexts/auth'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { PlanId, RestrictionType, PLAN_CONFIGS } from '@/lib/subscription/restriction'
 import type { Trip, User } from '@/lib/core/types'
+import { calculateTripStats } from '@/lib/travel/trip-stats'
 
 interface UserDataContextType {
   // ユーザー情報
@@ -165,8 +166,9 @@ export function UserDataProvider({ children }: UserDataProviderProps) {
   }
 
   // 統計情報を計算
-  const tripCount = trips.length
-  const privateTripCount = trips.filter(trip => trip.access_level === 'private').length
+  const tripStats = calculateTripStats(trips)
+  const tripCount = tripStats.total
+  const privateTripCount = tripStats.private
 
   // 初期データ読み込み
   useEffect(() => {

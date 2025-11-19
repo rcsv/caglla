@@ -188,16 +188,16 @@ export default function TripFeed({ feedType, initialCursor, layout = 'list' }: T
           }
           
           try {
-            const response = await makeAuthenticatedRequest(getFeedEndpoint('following', cursor))
+          const response = await makeAuthenticatedRequest(getFeedEndpoint('following', cursor))
             if (response.ok) {
               data = await response.json()
             } else {
-              if (response.status === 401) {
-                router.push('/')
-                return
-              }
-              throw new Error(`Failed to fetch following feed: ${response.status}`)
+            if (response.status === 401) {
+              router.push('/')
+              return
             }
+            throw new Error(`Failed to fetch following feed: ${response.status}`)
+          }
           } catch (apiErr) {
             logger.warn(`API error for following feed, using mock data:`, apiErr)
             // APIエラー時はモックデータを使用
@@ -209,12 +209,12 @@ export default function TripFeed({ feedType, initialCursor, layout = 'list' }: T
         } else {
           // 公開フィードとトレンドフィードは認証不要
           try {
-            const response = await fetch(getFeedEndpoint(feedType, cursor))
+          const response = await fetch(getFeedEndpoint(feedType, cursor))
             if (response.ok) {
               data = await response.json()
             } else {
-              throw new Error(`Failed to fetch ${feedType} feed: ${response.status}`)
-            }
+            throw new Error(`Failed to fetch ${feedType} feed: ${response.status}`)
+          }
           } catch (apiErr) {
             logger.warn(`API error for ${feedType} feed, using mock data:`, apiErr)
             // APIエラー時はモックデータを使用
@@ -245,7 +245,7 @@ export default function TripFeed({ feedType, initialCursor, layout = 'list' }: T
             }
             return trip
           })
-
+          
           if (append) {
             setTrips((prev) => [...prev, ...tripsWithCreator])
           } else {

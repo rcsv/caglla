@@ -27,3 +27,13 @@ if (typeof global.ReadableStream === 'undefined') {
   }
 }
 
+// setImmediate polyfill for gRPC (required by @grpc/grpc-js)
+if (typeof global.setImmediate === 'undefined') {
+  global.setImmediate = function (callback, ...args) {
+    return setTimeout(callback, 0, ...args)
+  }
+  global.clearImmediate = function (id) {
+    clearTimeout(id)
+  }
+}
+

@@ -1,7 +1,7 @@
 /**
  * SNS機能関連の型定義
  * 
- * v3.0.0: SNS機能（いいね、コメント、フォロー）の型定義
+ * v3.0.0: SNS機能（いいね、コメント、シェア、フォロー）の型定義
  */
 
 import type { FirestoreDate } from './common'
@@ -13,7 +13,7 @@ import type { FirestoreDate } from './common'
 /**
  * Trip のソーシャル統計（集計値）
  * 
- * 注意: これらの値は `trip_likes`, `trip_comments`, `user_follows` の
+ * 注意: これらの値は `trip_likes`, `trip_comments`, `trip_shares`, `user_follows` の
  * Subcollectionから集計された値です。直接更新する場合は `FieldValue.increment()`
  * を使用してください。
  */
@@ -64,6 +64,23 @@ export interface TripComment {
   created_at: FirestoreDate
   updated_at?: FirestoreDate
   deleted: boolean // 論理削除
+}
+
+// ============================================================================
+// シェア
+// ============================================================================
+
+/**
+ * TripShare（シェア）
+ * 
+ * コレクション: `trip_shares`
+ * ドキュメントID: `{userId}_{tripId}` でユニーク保証
+ */
+export interface TripShare {
+  id: string // {userId}_{tripId} でユニーク保証
+  trip_id: string
+  user_id: string
+  created_at: FirestoreDate
 }
 
 // ============================================================================
@@ -151,6 +168,27 @@ export function isTripComment(value: unknown): value is TripComment {
     typeof comment.content === 'string' &&
     typeof comment.deleted === 'boolean' &&
     (typeof comment.created_at === 'string' || comment.created_at instanceof Date)
+  )
+}
+
+/**
+ * TripShare の型ガード
+ * 
+ * @param value チェックする値
+ * @returns TripShare の場合 true
+ */
+export function isTripShare(value: unknown): value is TripShare {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const share = value as Record<string, unknown>
+
+  return (
+    typeof share.id === 'string' &&
+    typeof share.trip_id === 'string' &&
+    typeof share.user_id === 'string' &&
+    (typeof share.created_at === 'string' || share.created_at instanceof Date)
   )
 }
 

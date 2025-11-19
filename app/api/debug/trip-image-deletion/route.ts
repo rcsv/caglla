@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import logger from '@/lib/core/logger'
 import { composeMiddleware } from '@/lib/core/middleware'
-import { authApi, withBodyValidation } from '@/lib/api/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
 import { DebugTripImageDeletionSchema } from '@/lib/schemas/debug'
 import { notFound, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
 
@@ -17,7 +17,7 @@ import { notFound, handleApiError, createForbiddenError } from '@/lib/core/error
  * Body: { tripId: "trip-id" }
  */
 export const POST = composeMiddleware(
-  authApi,
+  withAuth(),
   withBodyValidation(DebugTripImageDeletionSchema)
 )(async (request: NextRequest, ctx) => {
   try {
@@ -42,7 +42,17 @@ export const POST = composeMiddleware(
 
     // 画像削除処理のテスト
     const imageUrl = trip.image_url
-    const debugInfo = {
+    type DebugInfo = {
+      tripId: string
+      hasImageUrl: boolean
+      imageUrl: string | undefined
+      imageUrlType: string
+      imageUrlLength: number
+      deletionAttempted?: boolean
+      deletionResult?: 'success' | 'error'
+      deletionError?: string
+    }
+    const debugInfo: DebugInfo = {
       tripId,
       hasImageUrl: !!imageUrl,
       imageUrl,
@@ -54,12 +64,12 @@ export const POST = composeMiddleware(
       try {
         // deleteTripImageを直接呼び出してテスト
         await (adminTripOperations as any).deleteTripImage(imageUrl, tripId)
-        debugInfo['deletionAttempted'] = true
-        debugInfo['deletionResult'] = 'success'
+        debugInfo.deletionAttempted = true
+        debugInfo.deletionResult = 'success'
       } catch (error: any) {
-        debugInfo['deletionAttempted'] = true
-        debugInfo['deletionResult'] = 'error'
-        debugInfo['deletionError'] = error.message
+        debugInfo.deletionAttempted = true
+        debugInfo.deletionResult = 'error'
+        debugInfo.deletionError = error.message
         logger.error('Debug: Image deletion error:', error)
       }
     }
