@@ -4,6 +4,9 @@ import { storageManagementHelpers } from '@/lib/firebase/storage'
 import { badRequest, parseRequestBody, createForbiddenError } from '@/lib/core/error-handler'
 import { authApi } from '@/lib/api/middleware'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 // GET /api/storage/usage - ユーザーのストレージ使用量を取得
 export const GET = authApi(async (request: NextRequest, ctx) => {
   const { userId } = ctx.auth!
