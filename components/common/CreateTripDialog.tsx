@@ -30,6 +30,8 @@ interface CreateTripDialogProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
+  initialMode?: CreateMode // 初期モードを指定（'trip' または 'template'）
+  hideModeSelector?: boolean // モード選択UIを非表示にする（初期モードで固定）
 }
 
 type CreateMode = 'trip' | 'template'
@@ -58,7 +60,13 @@ type CreateTripFormState = ReturnType<typeof createInitialFormState>
  * @param onSuccess - Called after a trip is successfully created
  * @returns The dialog's rendered React element when open, or `null` when closed
  */
-export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateTripDialogProps) {
+export default function CreateTripDialog({ 
+  isOpen, 
+  onClose, 
+  onSuccess,
+  initialMode = 'trip',
+  hideModeSelector = false
+}: CreateTripDialogProps) {
   const router = useRouter()
   const { userPlanId, tripCount, privateTripCount } = useUserData()
   const { user } = useAuth()
@@ -67,7 +75,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   const currentLanguage = getUserLanguage(user)
   
   const [formData, setFormData] = useState<CreateTripFormState>(createInitialFormState)
-  const [mode, setMode] = useState<CreateMode>('trip')
+  const [mode, setMode] = useState<CreateMode>(initialMode)
   const [submitting, setSubmitting] = useState(false)
   const [dateError, setDateError] = useState('')
   const [dateAutoAdjusted, setDateAutoAdjusted] = useState(false)
@@ -169,6 +177,17 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       isMounted = false
     }
   }, [formData.destinationPlace?.place_id, user])
+
+  // ダイアログが開いた時にフォームをリセット
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(createInitialFormState())
+      setMode(initialMode)
+      setDateError('')
+      setDateAutoAdjusted(false)
+      setSubmitting(false)
+    }
+  }, [isOpen, initialMode])
 
   const isTemplateMode = mode === 'template'
 
@@ -283,15 +302,26 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     }
 
 
+    const normalizeDateInput = (value?: string) => {
+      if (!value) return undefined
+      // 既にISO形式であればそのまま使用
+      if (value.includes('T')) return value
+      // HTML date入力（YYYY-MM-DD）をUTC 00:00:00のISO文字列に変換
+      return new Date(`${value}T00:00:00.000Z`).toISOString()
+    }
+
     setSubmitting(true)
     try {
+      const normalizedStartDate = isTemplateMode ? undefined : normalizeDateInput(formData.startDate)
+      const normalizedEndDate = isTemplateMode ? undefined : normalizeDateInput(formData.endDate)
+
       const trip = await createTrip({
         title: formData.title || formData.destination,
         description: formData.description || undefined,
         destination: formData.destination || undefined,
         destinationPlaceId: formData.destinationPlace?.place_id || undefined,
-        startDate: isTemplateMode ? undefined : formData.startDate || undefined,
-        endDate: isTemplateMode ? undefined : formData.endDate || undefined,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
         imageUrl: formData.imageUrl || undefined,
         defaultCurrency: formData.defaultCurrency,
         isTemplate: isTemplateMode,
@@ -320,6 +350,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
         }
       }
       logger.error('Error creating trip:', error)
+      alert(error instanceof Error ? error.message : 'Failed to create trip')
     } finally {
       setSubmitting(false)
     }
@@ -427,7 +458,11 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
         <div className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${getZIndexClass('FLOAT_MODAL')}`}>
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">{t('trip.create.title')}</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {hideModeSelector && mode === 'template' 
+                ? 'Create a Guide' 
+                : t('trip.create.title')}
+            </h2>
             <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600">
               <IconRenderer iconName="close" className="w-6 h-6" />
             </button>
@@ -436,45 +471,47 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
           {/* Content */}
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-3">
-                  {t('trip.create.mode.label')}
-                </p>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {modeOptions.map(option => {
-                    const isActive = mode === option.id
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => handleModeChange(option.id)}
-                        disabled={option.disabled}
-                        aria-pressed={isActive}
-                        className={`rounded-xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
-                          isActive
-                            ? 'border-emerald-500 bg-emerald-50 shadow-sm'
-                            : 'border-gray-200 bg-white hover:border-emerald-300'
-                        } ${option.disabled ? 'cursor-not-allowed opacity-60' : ''}`}
-                      >
-                        <span className="text-base font-semibold text-gray-900">
-                          {option.label}
-                        </span>
-                        <span className="mt-2 block text-sm text-gray-600">
-                          {option.description}
-                        </span>
-                        {option.disabled && (
-                          <span className="mt-3 inline-block rounded bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">
-                            {t('trip.create.mode.templateUpgradeHint')}
+              {!hideModeSelector && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-3">
+                    {t('trip.create.mode.label')}
+                  </p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {modeOptions.map(option => {
+                      const isActive = mode === option.id
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => handleModeChange(option.id)}
+                          disabled={option.disabled}
+                          aria-pressed={isActive}
+                          className={`rounded-xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
+                            isActive
+                              ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                              : 'border-gray-200 bg-white hover:border-emerald-300'
+                          } ${option.disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+                        >
+                          <span className="text-base font-semibold text-gray-900">
+                            {option.label}
                           </span>
-                        )}
-                      </button>
-                    )
-                  })}
+                          <span className="mt-2 block text-sm text-gray-600">
+                            {option.description}
+                          </span>
+                          {option.disabled && (
+                            <span className="mt-3 inline-block rounded bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">
+                              {t('trip.create.mode.templateUpgradeHint')}
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p className="mt-3 text-xs text-gray-500">
+                    {t('trip.create.visibilityNotice')}
+                  </p>
                 </div>
-                <p className="mt-3 text-xs text-gray-500">
-                  {t('trip.create.visibilityNotice')}
-                </p>
-              </div>
+              )}
 
               {/* 必須項目 */}
               <div>

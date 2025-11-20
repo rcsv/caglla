@@ -12,6 +12,7 @@ import Loading from '@/components/common/Loading'
 import { Icon } from '@iconify/react'
 import Link from 'next/link'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { getUserDisplayName, getPlanDisplayName, getUserAvatarUrl } from '@/lib/utils/user-helpers'
 import {
   filterOngoingTrips,
   filterUpcomingTrips,
@@ -345,9 +346,9 @@ export default function HomeV2Page() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <HomeHeader
-        userName={userData?.name || user?.email || 'User'}
-        planName={planConfig?.name || 'Season Traveler'}
-        avatarUrl={userData?.profile_image_url || user?.photoURL}
+        userName={getUserDisplayName(userData, user)}
+        planName={getPlanDisplayName(planConfig)}
+        avatarUrl={getUserAvatarUrl(userData, user)}
         onLogout={handleLogout}
         onChangePlan={handleChangePlan}
         userSlug={userData?.slug}

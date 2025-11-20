@@ -234,6 +234,16 @@ export type TranslationKey =
   | 'home.dashboard.upcomingTrips.title'
   | 'home.dashboard.upcomingTrips.count'
   | 'home.dashboard.upcomingTrips.viewAll'
+  | 'home.dashboard.upcomingTrips.empty'
+  | 'home.dashboard.upcomingTrips.today'
+  | 'home.dashboard.ongoingTrips.title'
+  | 'home.dashboard.ongoingTrips.subtitle'
+  | 'home.dashboard.ongoingTrips.more'
+  | 'home.dashboard.ongoingTrips.empty'
+  | 'home.dashboard.ongoingTrips.createNew'
+  | 'home.dashboard.ongoingTrips.period'
+  | 'home.dashboard.ongoingTrips.remainingDays'
+  | 'home.dashboard.ongoingTrips.untilToday'
   | 'home.dashboard.countryStats.title'
   | 'home.dashboard.countryStats.summary'
   | 'home.dashboard.countryStats.times'
@@ -1605,9 +1615,19 @@ const en: Dictionary = {
   'home.dashboard.memories.title': 'Memories',
   'home.dashboard.memories.count': '{count} trips',
   'home.dashboard.memories.viewAll': 'View All Memories',
-  'home.dashboard.upcomingTrips.title': 'Upcoming Trips',
+  'home.dashboard.upcomingTrips.title': 'Upcoming',
   'home.dashboard.upcomingTrips.count': '{count} trips',
   'home.dashboard.upcomingTrips.viewAll': 'View All Trip Plans',
+  'home.dashboard.upcomingTrips.empty': 'No upcoming trips',
+  'home.dashboard.upcomingTrips.today': 'Today',
+  'home.dashboard.ongoingTrips.title': 'Ongoing',
+  'home.dashboard.ongoingTrips.subtitle': 'Showing up to 3 trips',
+  'home.dashboard.ongoingTrips.more': 'More',
+  'home.dashboard.ongoingTrips.empty': 'No ongoing trips',
+  'home.dashboard.ongoingTrips.createNew': 'Create New',
+  'home.dashboard.ongoingTrips.period': 'Period',
+  'home.dashboard.ongoingTrips.remainingDays': 'Remaining Days',
+  'home.dashboard.ongoingTrips.untilToday': 'Until today',
   'home.dashboard.countryStats.title': 'Country Statistics',
   'home.dashboard.countryStats.summary': '{totalTrips} trips • {totalCountries} countries',
   'home.dashboard.countryStats.times': 'times',
@@ -2958,9 +2978,19 @@ const ja: Dictionary = {
   'home.dashboard.memories.title': '思い出',
   'home.dashboard.memories.count': '{count}件',
   'home.dashboard.memories.viewAll': 'すべての思い出',
-  'home.dashboard.upcomingTrips.title': '計画中の旅行',
+  'home.dashboard.upcomingTrips.title': '近日',
   'home.dashboard.upcomingTrips.count': '{count}件',
   'home.dashboard.upcomingTrips.viewAll': 'すべての旅行プラン',
+  'home.dashboard.upcomingTrips.empty': '近日の予定はありません',
+  'home.dashboard.upcomingTrips.today': '今日',
+  'home.dashboard.ongoingTrips.title': '進行中',
+  'home.dashboard.ongoingTrips.subtitle': '最大3件まで表示します',
+  'home.dashboard.ongoingTrips.more': 'More',
+  'home.dashboard.ongoingTrips.empty': '進行中のTripはありません',
+  'home.dashboard.ongoingTrips.createNew': '新規作成',
+  'home.dashboard.ongoingTrips.period': '期間',
+  'home.dashboard.ongoingTrips.remainingDays': '残り日数',
+  'home.dashboard.ongoingTrips.untilToday': '今日まで',
   'home.dashboard.countryStats.title': '国別統計',
   'home.dashboard.countryStats.summary': '{totalTrips}回の旅行 • {totalCountries}カ国',
   'home.dashboard.countryStats.times': '回',

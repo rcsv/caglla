@@ -17,7 +17,12 @@ import { createValidationError } from '@/lib/core/error-handler'
  */
 function handleZodError(error: unknown, path?: string): NextResponse {
   if (error instanceof z.ZodError) {
-    const details = error.errors.map(err => ({
+    const issues = Array.isArray((error as any)?.issues)
+      ? (error as any).issues
+      : Array.isArray((error as any)?.errors)
+        ? (error as any).errors
+        : []
+    const details = issues.map(err => ({
       path: err.path.join('.'),
       message: err.message,
       code: err.code

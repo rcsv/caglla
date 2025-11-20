@@ -99,7 +99,17 @@ export async function createTrip(data: CreateTripInput): Promise<Trip> {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Unknown error' }))
-      throw new Error(error.error || `Failed to create trip: ${response.status}`)
+      const detailMessages =
+        Array.isArray(error?.details?.errors)
+          ? error.details.errors
+              .map((err: { path?: string; message?: string }) =>
+                err?.path && err?.message ? `${err.path}: ${err.message}` : err?.message || err?.path
+              )
+              .filter(Boolean)
+              .join('; ')
+          : undefined
+      const message = detailMessages || error.error || `Failed to create trip: ${response.status}`
+      throw new Error(message)
     }
 
     const trip = await response.json()

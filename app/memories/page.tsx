@@ -12,6 +12,7 @@ import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
 import { t } from '@/lib/i18n'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { getUserDisplayName, getPlanDisplayName, getUserAvatarUrl } from '@/lib/utils/user-helpers'
 // 設定モーダルはプロフィールページへ移行
 import type { Trip } from '@/lib/core/types'
 import { groupTripsByYear } from '@/lib/travel/trip-filters'
@@ -48,9 +49,9 @@ export default function MemoriesListPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <HomeHeader
-        userName={userData?.name || user?.email || 'User'}
-        planName={planConfig?.name || 'Season Traveler'}
-        avatarUrl={userData?.profile_image_url || user?.photoURL}
+        userName={getUserDisplayName(userData, user)}
+        planName={getPlanDisplayName(planConfig)}
+        avatarUrl={getUserAvatarUrl(userData, user)}
         onLogout={handleLogout}
         onChangePlan={handleChangePlan}
         userSlug={userData?.slug}
