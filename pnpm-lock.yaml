@@ -33,7 +33,7 @@ importers:
         specifier: ^1.13.2
         version: 1.13.2
       firebase:
-        specifier: 10.14.1
+        specifier: ^10.14.1
         version: 10.14.1
       firebase-admin:
         specifier: ^13.6.0

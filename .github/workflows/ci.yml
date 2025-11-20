@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, refactor/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Unit tests and lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Enable pnpm via corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build (optional)
+        run: pnpm build
