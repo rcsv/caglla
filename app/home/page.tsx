@@ -17,6 +17,7 @@ import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
 import type { Trip } from '@/lib/core/types'
 import OngoingTripCard from '@/components/tripcard/OngoingTripCard'
+import UpcomingTripCard from '@/components/tripcard/UpcomingTripCard'
 
 /**
  * v3.0.0 Home Page - シンプルなレイアウト構造
@@ -182,16 +183,6 @@ export default function HomePage() {
               ) : (
                 <div className="space-y-4">
                   {activeTrips.map((trip, index) => {
-                    const startDate = toDateOrNull(trip.start_date)
-                    const endDate = toDateOrNull(trip.end_date)
-                    const totalDays =
-                      startDate && endDate ? Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / DAY_MS) + 1) : null
-                    const elapsedDays =
-                      startDate && totalDays
-                        ? Math.min(totalDays, Math.max(0, Math.ceil((today.getTime() - startDate.getTime()) / DAY_MS) + 1))
-                        : null
-                    const remainingDays = endDate ? Math.max(0, Math.ceil((endDate.getTime() - today.getTime()) / DAY_MS)) : null
-                    const progress = totalDays && elapsedDays ? Math.round((elapsedDays / totalDays) * 100) : null
                     const coverImage = getCoverImage(trip, index, activeCoverPool)
 
                     return (
@@ -199,8 +190,7 @@ export default function HomePage() {
                         key={trip.id}
                         trip={trip}
                         coverImage={coverImage}
-                        remainingDays={remainingDays}
-                        progress={progress}
+                        today={today}
                       />
                     )
                   })}
@@ -215,15 +205,15 @@ export default function HomePage() {
                   <Icon icon="mdi:calendar-clock" className="h-5 w-5 text-emerald-600" />
                   {t('home.dashboard.upcomingTrips.title')}
                 </h2>
-                <Link
-                  href="/plan"
+                <Link 
+                  href="/plan" 
                   className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
                 >
                   {t('home.dashboard.upcomingTrips.viewAll')}
                   <Icon icon="mdi:chevron-right" className="h-3 w-3" />
                 </Link>
               </div>
-
+              
               {upcomingTrips.length === 0 ? (
                 <div className="text-center py-4 text-gray-500">
                   <Icon icon="mdi:calendar-outline" className="h-8 w-8 mx-auto mb-2 text-gray-400" />
@@ -239,94 +229,36 @@ export default function HomePage() {
                 <div className="space-y-2">
                   {upcomingTrips.map((trip, index) => {
                     const imageUrl = getCoverImage(trip, index, upcomingCoverPool)
-                    const startDate = toDateOrNull(trip.start_date)
-                    const daysUntil = startDate
-                      ? (() => {
-                          const start = new Date(startDate)
-                          start.setHours(0, 0, 0, 0)
-                          const diffMs = start.getTime() - today.getTime()
-                          return Math.floor(diffMs / DAY_MS)
-                        })()
-                      : null
 
                     return (
-                      <Link
+                      <UpcomingTripCard
                         key={trip.id}
-                        href={trip.creator?.slug && trip.slug ? `/${trip.creator.slug}/${trip.slug}` : '/home'}
-                        className="block"
-                      >
-                        <div className="border border-gray-200 rounded overflow-hidden hover:border-emerald-300 hover:shadow-sm transition-all">
-                          <div className="flex gap-3">
-                            <div className="w-20 h-20 flex-shrink-0 bg-gray-100">
-                              <img src={imageUrl} alt={trip.title || 'Upcoming trip cover'} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="py-2 pr-3 flex-1">
-                              <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-1">
-                                {trip.title || 'Untitled Trip'}
-                              </h3>
-                              <p className="text-xs text-gray-600 mb-1 line-clamp-1">
-                                {trip.destination_place?.name || trip.destination || 'No destination'}
-                              </p>
-                              {startDate && trip.end_date ? (
-                                <div className="flex items-center gap-2">
-                                  <p className="text-xs text-gray-500">
-                                    {(() => {
-                                      const start = toDateOrNull(trip.start_date)
-                                      const end = toDateOrNull(trip.end_date)
-                                      if (!start || !end) return t('date.notSet')
-                                      
-                                      const startMonth = start.getMonth() + 1
-                                      const startDay = start.getDate()
-                                      const endMonth = end.getMonth() + 1
-                                      const endDay = end.getDate()
-                                      
-                                      return startMonth === endMonth
-                                        ? `${startMonth}/${startDay} - ${endDay}`
-                                        : `${startMonth}/${startDay} - ${endMonth}/${endDay}`
-                                    })()}
-                                  </p>
-                                  {daysUntil !== null && daysUntil >= 0 && (
-                                    <span
-                                      className={`text-xs px-1.5 py-0.5 rounded-sm ${
-                                        daysUntil <= 7
-                                          ? 'bg-red-100 text-red-700'
-                                          : daysUntil <= 30
-                                          ? 'bg-yellow-100 text-yellow-700'
-                                          : 'bg-gray-100 text-gray-700'
-                                      }`}
-                                    >
-                                      {daysUntil === 0 
-                                        ? t('home.dashboard.upcomingTrips.today')
-                                        : `${daysUntil}${t('date.daysLater')}`
-                                      }
-                                    </span>
-                                  )}
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                          {daysUntil !== null && daysUntil >= 0 && daysUntil <= 7 && (
-                            <div
-                              className="h-1 bg-gray-100"
-                              style={{
-                                background: `linear-gradient(to left, #22c55e ${
-                                  Math.min(100, (daysUntil / 7) * 100)
-                                }%, #e5e7eb ${Math.min(100, (daysUntil / 7) * 100)}%)`,
-                              }}
-                            >
-                              <span className="sr-only">
-                                {daysUntil === 0
-                                  ? t('home.dashboard.upcomingTrips.today')
-                                  : `${daysUntil}${t('date.daysLater')}`}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </Link>
+                        trip={trip}
+                        imageUrl={imageUrl}
+                        today={today}
+                      />
                     )
                   })}
                 </div>
               )}
+            </section>
+
+            {/* Recently Checked（モック枠のみ） */}
+            <section className="bg-white rounded-sm shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <Icon icon="mdi:clock-time-four-outline" className="h-5 w-5 text-purple-500" />
+                  Recently You Checked
+                </h2>
+                <button className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1">
+                  View All
+                  <Icon icon="mdi:chevron-right" className="h-3 w-3" />
+                </button>
+              </div>
+
+              <div className="border border-dashed border-gray-300 rounded-sm p-4 text-center text-xs text-gray-500">
+                This section will show trips you recently viewed.
+              </div>
             </section>
           </div>
         </div>

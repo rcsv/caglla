@@ -11,19 +11,29 @@ import type { Trip } from '@/lib/core/types'
 interface OngoingTripCardProps {
   trip: Trip
   coverImage: string
-  remainingDays: number | null
-  progress: number | null
+  today: Date
 }
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
-export default function OngoingTripCard({ trip, coverImage, remainingDays, progress }: OngoingTripCardProps) {
+export default function OngoingTripCard({ trip, coverImage, today }: OngoingTripCardProps) {
   const getTripUrl = () => {
     if (trip.creator?.slug && trip.slug) {
       return `/${trip.creator.slug}/${trip.slug}`
     }
     return '/home'
   }
+
+  const startDate = toDateOrNull(trip.start_date)
+  const endDate = toDateOrNull(trip.end_date)
+  const totalDays =
+    startDate && endDate ? Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / DAY_MS) + 1) : null
+  const elapsedDays =
+    startDate && totalDays
+      ? Math.min(totalDays, Math.max(0, Math.ceil((today.getTime() - startDate.getTime()) / DAY_MS) + 1))
+      : null
+  const remainingDays = endDate ? Math.max(0, Math.ceil((endDate.getTime() - today.getTime()) / DAY_MS)) : null
+  const progress = totalDays && elapsedDays ? Math.round((elapsedDays / totalDays) * 100) : null
 
   return (
     <Link href={getTripUrl()} className="block">

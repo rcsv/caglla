@@ -472,45 +472,45 @@ export default function CreateTripDialog({
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               {!hideModeSelector && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-3">
-                    {t('trip.create.mode.label')}
-                  </p>
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {modeOptions.map(option => {
-                      const isActive = mode === option.id
-                      return (
-                        <button
-                          key={option.id}
-                          type="button"
-                          onClick={() => handleModeChange(option.id)}
-                          disabled={option.disabled}
-                          aria-pressed={isActive}
-                          className={`rounded-xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
-                            isActive
-                              ? 'border-emerald-500 bg-emerald-50 shadow-sm'
-                              : 'border-gray-200 bg-white hover:border-emerald-300'
-                          } ${option.disabled ? 'cursor-not-allowed opacity-60' : ''}`}
-                        >
-                          <span className="text-base font-semibold text-gray-900">
-                            {option.label}
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-3">
+                  {t('trip.create.mode.label')}
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {modeOptions.map(option => {
+                    const isActive = mode === option.id
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => handleModeChange(option.id)}
+                        disabled={option.disabled}
+                        aria-pressed={isActive}
+                        className={`rounded-xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
+                          isActive
+                            ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                            : 'border-gray-200 bg-white hover:border-emerald-300'
+                        } ${option.disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+                      >
+                        <span className="text-base font-semibold text-gray-900">
+                          {option.label}
+                        </span>
+                        <span className="mt-2 block text-sm text-gray-600">
+                          {option.description}
+                        </span>
+                        {option.disabled && (
+                          <span className="mt-3 inline-block rounded bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">
+                            {t('trip.create.mode.templateUpgradeHint')}
                           </span>
-                          <span className="mt-2 block text-sm text-gray-600">
-                            {option.description}
-                          </span>
-                          {option.disabled && (
-                            <span className="mt-3 inline-block rounded bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">
-                              {t('trip.create.mode.templateUpgradeHint')}
-                            </span>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  <p className="mt-3 text-xs text-gray-500">
-                    {t('trip.create.visibilityNotice')}
-                  </p>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
+                <p className="mt-3 text-xs text-gray-500">
+                  {t('trip.create.visibilityNotice')}
+                </p>
+              </div>
               )}
 
               {/* 必須項目 */}
