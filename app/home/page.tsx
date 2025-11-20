@@ -57,27 +57,28 @@ export default function HomePage() {
   }
 
   const handleTripCreated = async () => {
-    // トリップ作成成功後、プランページに遷移
+    // トリップ作成成功後、最新のデータを取得（遷移はCreateTripDialog側で行う）
     await refreshTrips()
-    router.push('/plan')
   }
 
   const handleGuideCreated = async () => {
-    // Guide作成成功後、プランページに遷移
+    // Guide作成成功後も同様にデータのみリフレッシュ（遷移はCreateTripDialog側で行う）
     await refreshTrips()
-    router.push('/plan')
   }
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
 
   // 進行中のTrip（期間内のものを優先、最大3件）
   const tripsSortedByRecent = sortTripsByUpdatedAt(trips)
   const ongoingTrips = filterOngoingTrips(tripsSortedByRecent)
   const activeTrips = (ongoingTrips.length > 0 ? ongoingTrips : tripsSortedByRecent).slice(0, 3)
 
-  // 近日のTrip（未来のTripのみ、開始日順、最大3件）
-  const upcomingTrips = sortTripsByStartDate(filterUpcomingTrips(trips)).slice(0, 3)
+  // 近日のTrip（「今日より先」のTripのみ、開始日順、最大3件）
+  // start_date > today のものだけを対象にするため、referenceDate に「明日」を渡す
+  const upcomingTrips = sortTripsByStartDate(filterUpcomingTrips(trips, tomorrow)).slice(0, 3)
 
   const activeCoverPool = [
     '1491557345352-5929e343eb89',
@@ -239,7 +240,14 @@ export default function HomePage() {
                   {upcomingTrips.map((trip, index) => {
                     const imageUrl = getCoverImage(trip, index, upcomingCoverPool)
                     const startDate = toDateOrNull(trip.start_date)
-                    const daysUntil = startDate ? Math.ceil((startDate.getTime() - today.getTime()) / DAY_MS) : null
+                    const daysUntil = startDate
+                      ? (() => {
+                          const start = new Date(startDate)
+                          start.setHours(0, 0, 0, 0)
+                          const diffMs = start.getTime() - today.getTime()
+                          return Math.floor(diffMs / DAY_MS)
+                        })()
+                      : null
 
                     return (
                       <Link
@@ -297,6 +305,22 @@ export default function HomePage() {
                               ) : null}
                             </div>
                           </div>
+                          {daysUntil !== null && daysUntil >= 0 && daysUntil <= 7 && (
+                            <div
+                              className="h-1 bg-gray-100"
+                              style={{
+                                background: `linear-gradient(to left, #22c55e ${
+                                  Math.min(100, (daysUntil / 7) * 100)
+                                }%, #e5e7eb ${Math.min(100, (daysUntil / 7) * 100)}%)`,
+                              }}
+                            >
+                              <span className="sr-only">
+                                {daysUntil === 0
+                                  ? t('home.dashboard.upcomingTrips.today')
+                                  : `${daysUntil}${t('date.daysLater')}`}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </Link>
                     )

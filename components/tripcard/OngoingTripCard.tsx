@@ -39,7 +39,7 @@ export default function OngoingTripCard({ trip, coverImage, remainingDays, progr
               </h3>
               <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
                 <Icon icon="mdi:map-marker" className="h-4 w-4 text-indigo-500" />
-                {trip.destination_place?.name || 'No destination'}
+                {trip.destination_place?.name || trip.destination || 'No destination'}
               </p>
             </div>
 

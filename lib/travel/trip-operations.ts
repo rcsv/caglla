@@ -98,17 +98,35 @@ export async function createTrip(data: CreateTripInput): Promise<Trip> {
     })
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+      const raw = await response.json().catch(() => ({ error: { message: 'Unknown error' } }))
+      const apiError = raw?.error ?? raw
+      const details = apiError?.details
+
+      const issues =
+        Array.isArray(details?.errors) ? details.errors :
+        Array.isArray(details) ? details :
+        []
+
       const detailMessages =
-        Array.isArray(error?.details?.errors)
-          ? error.details.errors
-              .map((err: { path?: string; message?: string }) =>
-                err?.path && err?.message ? `${err.path}: ${err.message}` : err?.message || err?.path
-              )
+        issues.length > 0
+          ? issues
+              .map((err: { path?: string | string[]; message?: string }) => {
+                const path =
+                  Array.isArray(err?.path) ? err.path.join('.') :
+                  typeof err?.path === 'string' ? err.path :
+                  ''
+                if (path && err?.message) return `${path}: ${err.message}`
+                return err?.message || path
+              })
               .filter(Boolean)
               .join('; ')
           : undefined
-      const message = detailMessages || error.error || `Failed to create trip: ${response.status}`
+
+      const message =
+        detailMessages ||
+        apiError?.message ||
+        `Failed to create trip: ${response.status}`
+
       throw new Error(message)
     }
 

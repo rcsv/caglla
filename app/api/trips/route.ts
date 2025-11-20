@@ -215,9 +215,13 @@ export const POST = composeMiddleware(
     destination,
     access_level: enforcedAccessLevel,
     is_template: isTemplate,
-    day_count: isTemplate ? normalizedDayCount ?? null : normalizedDayCount,
     likes_count: typeof likesCount === 'number' ? likesCount : 0,
     status: 'PLANNING' as const
+  }
+
+  // day_count はテンプレートのときのみ設定（undefined を Firestore に渡さない）
+  if (isTemplate) {
+    tripData.day_count = normalizedDayCount ?? null
   }
 
   // オプショナルフィールドを条件付きで追加
