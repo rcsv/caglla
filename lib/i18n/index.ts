@@ -291,6 +291,8 @@ export type TranslationKey =
   | 'home.welcome.createTrip'
   | 'home.welcome.quickPlan'
   | 'home.welcome.createGuide'
+  // Home Dashboard main tabs (/home left column)
+  | 'home.mainTabs.shares'
   // Profile page
   | 'profile.back'
   | 'profile.title'
@@ -1681,6 +1683,8 @@ const en: Dictionary = {
   'home.welcome.createTrip': 'Create Trip',
   'home.welcome.quickPlan': 'Quick Plan',
   'home.welcome.createGuide': 'Create a Guide',
+  // Home Dashboard main tabs (/home left column)
+  'home.mainTabs.shares': 'My Shares',
   // Profile page
   'profile.back': '← Back',
   'profile.title': 'Profile',
@@ -3050,6 +3054,8 @@ const ja: Dictionary = {
   'home.welcome.createTrip': '旅行を作成',
   'home.welcome.quickPlan': 'クイックプラン',
   'home.welcome.createGuide': 'ガイドを作成',
+  // Home Dashboard main tabs (/home left column)
+  'home.mainTabs.shares': '自分のシェア',
   // Profile page
   'profile.back': '← 戻る',
   'profile.title': 'プロフィール',

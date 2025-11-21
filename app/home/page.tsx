@@ -13,7 +13,9 @@ import CreateTripDialog from '@/components/common/CreateTripDialog'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { HomeRightColumn } from '@/components/home/HomeRightColumn'
 import { useRecentTrips } from '@/hooks/useRecentTrips'
+import { useMyShares } from '@/hooks/useMyShares'
 import { HomeWelcomeRow } from '@/components/home/HomeWelcomeRow'
+import { HomeMainTabs } from '@/components/home/HomeMainTabs'
 
 /**
  * v3.0.0 Home Page - シンプルなレイアウト構造
@@ -29,6 +31,7 @@ export default function HomePage() {
   const [isCreateTripDialogOpen, setIsCreateTripDialogOpen] = useState(false)
   const [isCreateGuideDialogOpen, setIsCreateGuideDialogOpen] = useState(false)
   const recentTrips = useRecentTrips()
+  const { trips: mySharedTrips, loading: mySharesLoading } = useMyShares()
 
   useEffect(() => {
     if (!loading && !user) {
@@ -89,16 +92,14 @@ export default function HomePage() {
           onOpenCreateGuide={() => setIsCreateGuideDialogOpen(true)}
         />
 
-        {/* コンテンツエリア（今後 /home-v2 の実装を移行予定） */}
+        {/* メインコンテンツエリア（/home-v2 のタブ付きフィードを移植） */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-          <div className="lg:col-span-7">
-            <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
-              <p className="text-gray-500">コンテンツエリア（実装予定）</p>
-            </div>
+          <div className="lg:col-span-7 space-y-6">
+            <HomeMainTabs mySharedTrips={mySharedTrips} mySharesLoading={mySharesLoading} />
           </div>
           <HomeRightColumn
             trips={trips}
-            today={today}
+                        today={today}
             referenceDateForUpcoming={tomorrow}
             recentTrips={recentTrips}
             onOpenCreateTrip={() => setIsCreateTripDialogOpen(true)}

@@ -17,14 +17,23 @@ import { t } from '@/lib/i18n'
 
 type TripCardVariant = 'standard' | 'imageFull' | 'horizontal'
 
+type TripAccent = 'ongoing' | 'upcoming' | 'template' | 'past'
+
 export interface TripCardProps {
   trip: Trip
   isPastTrip?: boolean
   variant?: TripCardVariant
   priority?: boolean // LCP画像用のpriority属性
+  accent?: TripAccent
 }
 
-export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, variant = 'standard', priority = false }) => {
+export const TripCard: React.FC<TripCardProps> = ({
+  trip,
+  isPastTrip = false,
+  variant = 'standard',
+  priority = false,
+  accent,
+}) => {
         const router = useRouter()
         // スラッグベースのURLを生成
         const getTripUrl = () => {
@@ -102,11 +111,24 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
     ? trip.access_level 
     : 'private'
 
+  const accentBorderClass =
+    accent === 'ongoing'
+      ? 'border-l-4 border-l-indigo-400'
+      : accent === 'upcoming'
+      ? 'border-l-4 border-l-emerald-400'
+      : accent === 'template'
+      ? 'border-l-4 border-l-amber-300'
+      : accent === 'past'
+      ? 'border-l-4 border-l-gray-300'
+      : ''
+
   // 横長バリアント（Recommended trips用）
   if (variant === 'horizontal') {
     return (
       <Link href={getTripUrl()} className="block group">
-        <div className="relative overflow-hidden rounded-md shadow-sm hover:shadow-md transition bg-gray-900 h-24 md:h-20">
+        <div
+          className={`relative overflow-hidden rounded-md shadow-sm hover:shadow-md transition bg-gray-900 h-24 md:h-20 ${accentBorderClass}`}
+        >
           {/* Background Image */}
           {trip.image_url && (
             <Image
@@ -213,7 +235,9 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
   if (variant === 'imageFull') {
     return (
       <Link href={getTripUrl()} className="block group">
-        <div className="relative overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition bg-gray-900 h-[28rem]">
+        <div
+          className={`relative overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition bg-gray-900 h-[28rem] ${accentBorderClass}`}
+        >
           {/* Image */}
           {trip.image_url && (
             <Image
@@ -339,7 +363,11 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, isPastTrip = false, va
   // standard
   return (
     <Link href={getTripUrl()} className="block group">
-      <Card interactive padding="md" className="h-full">
+      <Card
+        interactive
+        padding="md"
+        className={`h-full ${accentBorderClass}`}
+      >
         {trip.image_url && (
           <div className="mb-4">
             <div className={`relative w-full h-32 rounded-lg overflow-hidden ${isPastTrip ? 'shadow-inner-burned' : ''}`}>
