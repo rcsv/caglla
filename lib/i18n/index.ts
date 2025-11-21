@@ -285,6 +285,12 @@ export type TranslationKey =
   | 'home.dashboard.storage.details.deleting'
   | 'home.dashboard.storage.details.delete'
   | 'home.dashboard.storage.details.refresh'
+  // Home Dashboard header row (/home welcome section)
+  | 'home.welcome.title'
+  | 'home.welcome.subtitle'
+  | 'home.welcome.createTrip'
+  | 'home.welcome.quickPlan'
+  | 'home.welcome.createGuide'
   // Profile page
   | 'profile.back'
   | 'profile.title'
@@ -1669,6 +1675,12 @@ const en: Dictionary = {
   'home.dashboard.storage.details.deleting': 'Deleting...',
   'home.dashboard.storage.details.delete': 'Delete',
   'home.dashboard.storage.details.refresh': 'Refresh Data',
+  // Home Dashboard header row (/home welcome section)
+  'home.welcome.title': 'Welcome',
+  'home.welcome.subtitle': 'Discover and manage your travels',
+  'home.welcome.createTrip': 'Create Trip',
+  'home.welcome.quickPlan': 'Quick Plan',
+  'home.welcome.createGuide': 'Create a Guide',
   // Profile page
   'profile.back': '← Back',
   'profile.title': 'Profile',
@@ -3032,6 +3044,12 @@ const ja: Dictionary = {
   'home.dashboard.storage.details.deleting': '削除中...',
   'home.dashboard.storage.details.delete': '削除',
   'home.dashboard.storage.details.refresh': 'データを更新',
+  // Home Dashboard header row (/home welcome section)
+  'home.welcome.title': 'おかえりなさい',
+  'home.welcome.subtitle': 'あなたの旅を整理して、次の計画につなげましょう',
+  'home.welcome.createTrip': '旅行を作成',
+  'home.welcome.quickPlan': 'クイックプラン',
+  'home.welcome.createGuide': 'ガイドを作成',
   // Profile page
   'profile.back': '← 戻る',
   'profile.title': 'プロフィール',

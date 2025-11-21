@@ -27,6 +27,7 @@ import { useSubscription } from '@/lib/contexts/subscription'
 import { exportTripToPdf, canExportToPdf } from '@/lib/utils/export-helpers'
 import { canEditTrip } from '@/lib/core/permissions'
 import TemplateReplicaModal from '@/components/modals/TemplateReplicaModal'
+import { addRecentTrip, buildRecentTripEntry } from '@/lib/utils/recent-trips'
 
 export default function SlugBasedTripPage() {
   const { user, loading, logout } = useAuth()
@@ -67,6 +68,7 @@ export default function SlugBasedTripPage() {
   const [replicaLoading, setReplicaLoading] = useState(false)
   const [publishLoading, setPublishLoading] = useState(false)
   const [showReplicaModal, setShowReplicaModal] = useState(false)
+  const recentTripTimerRef = useRef<number | null>(null)
 
   // クエリ: view / day / section を読み取り（デフォルトは summary）
   const currentView = (searchParams.get('view') as 'summary' | 'itinerary' | 'checklist') || 'summary'
@@ -187,6 +189,32 @@ export default function SlugBasedTripPage() {
       </div>
     </div>
   )
+
+  // Recently You Checked への記録
+  useEffect(() => {
+    if (!trip || !trip.id) return
+    if (typeof window === 'undefined') return
+
+    // 一瞬だけ開いたケースを除外するため、少し待ってから記録する
+    const timerId = window.setTimeout(() => {
+      const entry = buildRecentTripEntry({
+        trip,
+        userSlug: userSlug || '',
+        viewedAt: new Date().toISOString(),
+      })
+      if (!entry) return
+      addRecentTrip(entry)
+    }, 700)
+
+    recentTripTimerRef.current = timerId
+
+    return () => {
+      if (recentTripTimerRef.current != null) {
+        window.clearTimeout(recentTripTimerRef.current)
+        recentTripTimerRef.current = null
+      }
+    }
+  }, [tripSlug, trip, userSlug])
 
   // PDF エクスポート
   const handlePdfExport = async () => {
