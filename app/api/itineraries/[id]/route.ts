@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
 import { generateReservationSummary } from '@/lib/utils/reservation-utils'
 import { composeMiddleware } from '@/lib/core/middleware'
 import { withAuth, withParams, withBodyValidation } from '@/lib/api/middleware'
@@ -156,6 +157,8 @@ export async function DELETE(
   try {
     const { id } = await params
     const itineraryRef = adminDb.collection('itineraries').doc(id)
+    const itineraryRef = adminDb.collection('itineraries').doc(id)
+    const itineraryRef = adminDb.collection('itineraries').doc(id)
     
     // 削除前にitineraryの情報を取得（day_idとsort_numberを取得するため）
     const itineraryDoc = await itineraryRef.get()
@@ -167,11 +170,30 @@ export async function DELETE(
     }
     
     const itineraryData = itineraryDoc.data()
-    const dayId = itineraryData?.day_id
+    const dayId = itineraryData?.day_id as string | undefined
     const deletedSortNumber = itineraryData?.sort_number || 0
+    const tripId = itineraryData?.trip_id as string | undefined
     
     // ハードデリート（実際にドキュメントを削除）
     await itineraryRef.delete()
+
+    // Trip.stats.itineraries をデクリメント
+    try {
+      const resolvedTripId = tripId || (await (async () => {
+        if (!dayId) return undefined
+        const dayDoc = await adminDb.collection(COLLECTIONS.DAYS).doc(dayId).get()
+        return dayDoc.data()?.trip_id as string | undefined
+      })())
+
+      if (resolvedTripId) {
+        const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(resolvedTripId)
+        await tripRef.update({
+          'stats.itineraries': adminDb.firestore.FieldValue.increment(-1)
+        } as any)
+      }
+    } catch (e) {
+      logger.warn('Failed to decrement trip.stats.itineraries on delete', { itineraryId: id, error: e })
+    }
 
     logger.info('Itinerary deleted', { itineraryId: id })
 

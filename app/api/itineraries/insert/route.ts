@@ -144,6 +144,21 @@ export const POST = composeMiddleware(
 
   // Firestoreに保存
   const docRef = await itinerariesRef.add(itineraryData)
+
+  // Trip.stats.itineraries をインクリメント
+  try {
+    // day_id から trip_id を解決
+    const dayDoc = await adminDb.collection(COLLECTIONS.DAYS).doc(day_id).get()
+    const tripId = dayDoc.data()?.trip_id as string | undefined
+    if (tripId) {
+      const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
+      await tripRef.update({
+        'stats.itineraries': adminDb.firestore.FieldValue.increment(1)
+      } as any)
+    }
+  } catch (e) {
+    logger.warn('Failed to increment trip.stats.itineraries (insert API)', { day_id, error: e })
+  }
   
   // 保存されたデータを返す
   // place_cache から実体を解決（存在しなければ、リクエストのplace_dataをキャッシュ保存）

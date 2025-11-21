@@ -86,6 +86,16 @@ export const POST = composeMiddleware(
 
   // Firestoreに保存
   const docRef = await itinerariesRef.add(itineraryData)
+
+  // Trip.stats.itineraries をインクリメント（存在しない場合は1として初期化）
+  try {
+    const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
+    await tripRef.update({
+      'stats.itineraries': adminDb.firestore.FieldValue.increment(1)
+    } as any)
+  } catch (e) {
+    logger.warn('Failed to increment trip.stats.itineraries', { tripId, error: e })
+  }
   
   // place_cache から実体を解決（存在しなければ、リクエストのplace_dataをそのまま返す）
   let resolvedPlaceData: PlaceData | null = null

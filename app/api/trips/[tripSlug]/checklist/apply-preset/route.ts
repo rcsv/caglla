@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { adminDb } from '@/lib/firebase/admin'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
 import logger from '@/lib/core/logger'
 import { notFound, createForbiddenError } from '@/lib/core/error-handler'
 import { composeMiddleware } from '@/lib/core/middleware'
@@ -77,12 +78,28 @@ export const POST = composeMiddleware(
     const updatedItems = [...existingItems, ...newItems]
 
     // チェックリストを更新
-    await checklistRef.set({
-      id: tripId,
-      trip_id: tripId,
-      items: updatedItems,
-      updated_at: new Date()
-    }, { merge: true })
+    await checklistRef.set(
+      {
+        id: tripId,
+        trip_id: tripId,
+        items: updatedItems,
+        updated_at: new Date()
+      },
+      { merge: true }
+    )
+
+    // Trip.stats.checklists を updatedItems.length に同期
+    try {
+      const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
+      await tripRef.update({
+        'stats.checklists': updatedItems.length
+      } as any)
+    } catch (e) {
+      logger.warn('Failed to update trip.stats.checklists after preset apply', {
+        tripId,
+        error: e
+      })
+    }
 
     // プリセットの使用回数をインクリメント
     await presetRef.update({

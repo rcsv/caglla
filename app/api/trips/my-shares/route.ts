@@ -1,111 +1,92 @@
-/**
- * My Shared Trips API Route
- * 
- * 自分が公開したTrip一覧を取得するAPIエンドポイント
- * - GET: 自分の公開Trip一覧取得
- */
-
 import { NextRequest, NextResponse } from 'next/server'
+import { authApi } from '@/lib/api/middleware'
+import { adminDb } from '@/lib/firebase/admin'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
+import type { Trip, TripSocialStats } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import { getMySharedTrips } from '@/lib/travel/trip-templates'
-import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
-import type { Firestore } from 'firebase-admin/firestore'
-import { unauthorized, badRequest, handleApiError } from '@/lib/core/error-handler'
 
-/**
- * adminAuthをlazy importします（テスト環境でも動作するように）
- */
-async function getAdminAuth() {
+type MySharedTrip = Trip
+
+type MySharesResponse = {
+  trips: MySharedTrip[]
+  nextCursor?: string
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (Number.isNaN(value)) return min
+  return Math.min(max, Math.max(min, value))
+}
+
+export const GET = authApi(async (request: NextRequest, ctx): Promise<NextResponse<MySharesResponse>> => {
+  const { userId } = ctx.auth!
+
+  const { searchParams } = new URL(request.url)
+  const limitParam = parseInt(searchParams.get('limit') ?? '20', 10)
+  const limit = clamp(limitParam, 1, 50)
+  const cursor = searchParams.get('cursor')
+  const templateFilter = (searchParams.get('template') as 'include' | 'only' | 'exclude' | null) ?? 'exclude'
+
   try {
-    const adminModule = await import('@/lib/firebase/admin')
-    return adminModule.adminAuth
+    const tripsRef = adminDb.collection(COLLECTIONS.TRIPS)
+
+    let query: FirebaseFirestore.Query = tripsRef
+      .where('user_id', '==', userId)
+      .where('access_level', 'in', ['public', 'unlisted'])
+      .orderBy('updated_at', 'desc')
+      .limit(limit)
+
+    if (cursor) {
+      const cursorDoc = await tripsRef.doc(cursor).get()
+      if (cursorDoc.exists) {
+        query = query.startAfter(cursorDoc)
+      } else {
+        logger.warn('my-shares cursor doc not found; ignoring cursor', { cursor, userId })
+      }
+    }
+
+    const snapshot = await query.get()
+    let trips: MySharedTrip[] = snapshot.docs.map((doc): MySharedTrip => {
+      const data = doc.data() as Trip
+      const socialStats: TripSocialStats =
+        data.social_stats ?? {
+          likes_count: 0,
+          comments_count: 0,
+          shares_count: 0,
+          views_count: 0,
+          replicas_count: 0,
+        }
+
+      return {
+        id: doc.id,
+        ...data,
+        social_stats: socialStats,
+      } as Trip
+    })
+
+    // テンプレートフィルタ（デフォルト: exclude）
+    if (templateFilter === 'exclude') {
+      trips = trips.filter((trip) => trip.is_template !== true)
+    } else if (templateFilter === 'only') {
+      trips = trips.filter((trip) => trip.is_template === true)
+    }
+
+    const lastDoc = snapshot.docs[snapshot.docs.length - 1]
+
+    return NextResponse.json(
+      {
+        trips,
+        nextCursor: lastDoc ? lastDoc.id : undefined,
+      },
+      { status: 200 }
+    )
   } catch (error) {
-    throw new Error('Firebase Admin SDK is not available')
-  }
-}
-
-/**
- * モックトークンからユーザーIDを抽出（テスト環境用）
- */
-function extractUserIdFromMockToken(token: string): string | null {
-  if (token.startsWith('mock-token-')) {
-    return token.replace('mock-token-', '')
-  }
-  return null
-}
-
-/**
- * リクエストからユーザーIDを取得します（テスト環境ではモックトークンを処理）
- */
-async function resolveAuthUserId(request: NextRequest): Promise<string | null> {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null
-  }
-
-  const idToken = authHeader.split('Bearer ')[1]
-  if (!idToken) return null
-
-  // テスト環境ではモックトークンを処理
-  if (process.env.FIRESTORE_EMULATOR_HOST) {
-    const mockUserId = extractUserIdFromMockToken(idToken)
-    if (mockUserId) {
-      return mockUserId
-    }
-  }
-
-  try {
-    const adminAuth = await getAdminAuth()
-    const decoded = await adminAuth.verifyIdToken(idToken)
-    return decoded.uid
-  } catch (error) {
-    logger.warn('Failed to verify ID token for my-shares endpoint', error)
-    return null
-  }
-}
-
-/**
- * Firestoreインスタンスを取得します（テスト環境ではエミュレータを使用）
- */
-function getFirestore(): Firestore | undefined {
-  if (process.env.FIRESTORE_EMULATOR_HOST) {
-    return getTestFirestore()
-  }
-  // 本番環境では、Operations内でadminDbを使用
-  return undefined
-}
-
-/**
- * GET /api/trips/my-shares
- * 自分が公開したTrip一覧を取得します
- */
-export async function GET(request: NextRequest) {
-  try {
-    const userId = await resolveAuthUserId(request)
-    if (!userId) {
-      return unauthorized('Authorization header required')
-    }
-
-    const { searchParams } = new URL(request.url)
-    const limitParam = searchParams.get('limit')
-    const cursor = searchParams.get('cursor') || undefined
-
-    const limit = limitParam ? parseInt(limitParam, 10) : 20
-
-    if (isNaN(limit) || limit < 1 || limit > 100) {
-      return badRequest('Invalid limit parameter (1-100)')
-    }
-
-    const db = getFirestore()
-
-    const result = await getMySharedTrips(userId, { limit, cursor }, db)
-
-    return NextResponse.json(result)
-  } catch (error: unknown) {
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      `/api/trips/my-shares`
+    logger.error('Failed to fetch my shared trips', { error, userId })
+    return NextResponse.json(
+      {
+        trips: [],
+      },
+      { status: 500 }
     )
   }
-}
+})
 

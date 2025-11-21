@@ -119,15 +119,28 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
     })
 
     // 保存: trip_checklists/{tripId}
-    const checklistRef = adminDb.collection('trip_checklists').doc(tripId)
-    await checklistRef.set({
-      id: tripId,
-      trip_id: tripId,
-      items,
-      last_generated_at: new Date(),
-      created_at: new Date(),
-      updated_at: new Date()
-    }, { merge: true })
+    const checklistRef = adminDb.collection(COLLECTIONS.TRIP_CHECKLISTS).doc(tripId)
+    await checklistRef.set(
+      {
+        id: tripId,
+        trip_id: tripId,
+        items,
+        last_generated_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      { merge: true }
+    )
+
+    // Trip.stats.checklists を items.length に同期
+    try {
+      const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
+      await tripRef.update({
+        'stats.checklists': items.length
+      } as any)
+    } catch (e) {
+      logger.warn('Failed to update trip.stats.checklists after generate', { tripId, error: e })
+    }
 
   return NextResponse.json({ success: true, items })
 })

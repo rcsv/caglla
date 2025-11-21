@@ -157,6 +157,27 @@ export interface Trip {
   featured?: boolean // 運営ピックアップ
   trending_score?: number // トレンドスコア（アルゴリズム算出）
   social_stats?: TripSocialStats // SNS統計（Subcollection参照用の集計値）
+  /**
+   * 共有開始日時
+   * 
+   * - `undefined`: まだ共有されていない
+   * - `FirestoreDate`: My Shares や公開履歴のソート・グルーピング用
+   */
+  shared_at?: FirestoreDate
+  /**
+   * Trip単位で事前集計された統計情報
+   * 
+   * - days: 日数（テンプレートは day_count、通常旅行は start_date / end_date から算出）
+   * - itineraries: Itinerary アイテム数
+   * - photos: 写真枚数（将来拡張用、現時点では未集計でもよい）
+   * - checklists: チェックリスト項目数（全チェックリストの合計行数）
+   */
+  stats?: {
+    days?: number
+    itineraries?: number
+    photos?: number
+    checklists?: number
+  }
   
   // ============================================================================
   // v3.0.0 プライベート旅行のシェア関連フィールド

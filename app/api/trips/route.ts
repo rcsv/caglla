@@ -219,11 +219,6 @@ export const POST = composeMiddleware(
     status: 'PLANNING' as const
   }
 
-  // day_count はテンプレートのときのみ設定（undefined を Firestore に渡さない）
-  if (isTemplate) {
-    tripData.day_count = normalizedDayCount ?? null
-  }
-
   // オプショナルフィールドを条件付きで追加
   if (description) tripData.description = description
   // place_id 優先で保存（後方互換でオブジェクトも受ける）
@@ -231,6 +226,30 @@ export const POST = composeMiddleware(
   if (resolvedDestPlaceId) tripData.destination_place_id = resolvedDestPlaceId
   if (!isTemplate && startDate) tripData.start_date = new Date(startDate)
   if (!isTemplate && endDate) tripData.end_date = new Date(endDate)
+
+  // day_count / stats.days の設定
+  if (isTemplate) {
+    if (normalizedDayCount) {
+      tripData.day_count = normalizedDayCount
+      tripData.stats = {
+        ...(tripData.stats || {}),
+        days: normalizedDayCount,
+      }
+    }
+  } else if (startDate && endDate) {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    start.setHours(0, 0, 0, 0)
+    end.setHours(0, 0, 0, 0)
+    const diffMs = end.getTime() - start.getTime()
+    if (Number.isFinite(diffMs) && diffMs >= 0) {
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1
+      tripData.stats = {
+        ...(tripData.stats || {}),
+        days,
+      }
+    }
+  }
   if (finalImageUrl) tripData.image_url = finalImageUrl
   if (defaultCurrency) tripData.default_currency = defaultCurrency
 

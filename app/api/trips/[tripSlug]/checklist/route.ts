@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
+import { COLLECTIONS } from '@/lib/firebase/firestore'
 import logger from '@/lib/core/logger'
 import { badRequest, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
 
@@ -42,12 +43,25 @@ export async function PUT(
     }
 
     const ref = adminDb.collection('trip_checklists').doc(tripId)
-    await ref.set({
-      id: tripId,
-      trip_id: tripId,
-      items,
-      updated_at: new Date()
-    }, { merge: true })
+    await ref.set(
+      {
+        id: tripId,
+        trip_id: tripId,
+        items,
+        updated_at: new Date()
+      },
+      { merge: true }
+    )
+
+    // Trip.stats.checklists を items.length に同期（単純に上書き）
+    try {
+      const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
+      await tripRef.update({
+        'stats.checklists': items.length
+      } as any)
+    } catch (e) {
+      logger.warn('Failed to update trip.stats.checklists', { tripId, error: e })
+    }
 
     const updated = await ref.get()
     return NextResponse.json(updated.data())
