@@ -86,7 +86,7 @@ export const POST = composeMiddleware(
 
   // Firestoreに保存
   const docRef = await itinerariesRef.add(itineraryData)
-
+  
   // Trip.stats.itineraries をインクリメント（存在しない場合は1として初期化）
   try {
     const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)

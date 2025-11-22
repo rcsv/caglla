@@ -45,10 +45,10 @@ export async function PUT(
     const ref = adminDb.collection('trip_checklists').doc(tripId)
     await ref.set(
       {
-        id: tripId,
-        trip_id: tripId,
-        items,
-        updated_at: new Date()
+      id: tripId,
+      trip_id: tripId,
+      items,
+      updated_at: new Date()
       },
       { merge: true }
     )

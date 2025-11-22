@@ -122,12 +122,12 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
     const checklistRef = adminDb.collection(COLLECTIONS.TRIP_CHECKLISTS).doc(tripId)
     await checklistRef.set(
       {
-        id: tripId,
-        trip_id: tripId,
-        items,
-        last_generated_at: new Date(),
-        created_at: new Date(),
-        updated_at: new Date()
+      id: tripId,
+      trip_id: tripId,
+      items,
+      last_generated_at: new Date(),
+      created_at: new Date(),
+      updated_at: new Date()
       },
       { merge: true }
     )

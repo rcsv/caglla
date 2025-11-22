@@ -144,7 +144,7 @@ export const POST = composeMiddleware(
 
   // Firestoreに保存
   const docRef = await itinerariesRef.add(itineraryData)
-
+  
   // Trip.stats.itineraries をインクリメント
   try {
     // day_id から trip_id を解決

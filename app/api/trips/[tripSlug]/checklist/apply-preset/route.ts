@@ -80,10 +80,10 @@ export const POST = composeMiddleware(
     // チェックリストを更新
     await checklistRef.set(
       {
-        id: tripId,
-        trip_id: tripId,
-        items: updatedItems,
-        updated_at: new Date()
+      id: tripId,
+      trip_id: tripId,
+      items: updatedItems,
+      updated_at: new Date()
       },
       { merge: true }
     )
