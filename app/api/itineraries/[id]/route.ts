@@ -157,8 +157,6 @@ export async function DELETE(
   try {
     const { id } = await params
     const itineraryRef = adminDb.collection('itineraries').doc(id)
-    const itineraryRef = adminDb.collection('itineraries').doc(id)
-    const itineraryRef = adminDb.collection('itineraries').doc(id)
     
     // 削除前にitineraryの情報を取得（day_idとsort_numberを取得するため）
     const itineraryDoc = await itineraryRef.get()
