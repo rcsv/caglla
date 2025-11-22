@@ -52,22 +52,39 @@ v1 実装段階では、まず `limit` / `cursor` のみをサポートし、他
 
 **ソース（クエリ方針）:**
 
-- v1 から **専用クエリ** を使う:
+**注意**: Firestore の `in` クエリと `orderBy` の組み合わせには複合インデックスが必要なため、
+実装では**クエリ分割方式**を採用しています。
+
+- v1 から **共通クエリヘルパー `getUserTripsWithBackwardCompatibility` を使用**:
 
 ```ts
-const tripsRef = adminDb.collection(COLLECTIONS.TRIPS)
-const baseQuery = tripsRef
-  .where('user_id', '==', userId)
-  .where('access_level', 'in', ['public', 'shared'])
-  .orderBy('updated_at', 'desc')
-  .limit(limit)
+// 実装方式（クエリ分割 + マージ）
+// 1. auth_uid でクエリ実行
+collection('trips')
+  .where('user_id', '==', auth_uid)
+  .limit(limit * 2)
+
+// 2. google_id でクエリ実行（存在する場合）
+collection('trips')
+  .where('user_id', '==', google_id)
+  .limit(limit * 2)
+
+// 3. 結果をマージしてクライアント側でソート
+// 4. access_level でフィルタ（'public' または 'unlisted'）
+// 5. updated_at 降順でソート
+// 6. limit に合わせて切り詰め
 ```
 
-- `cursor` が指定されている場合は `startAfter(lastDoc)` を併用してページネーション。
+- **カーソル処理**:
+  - カーソルはエンコード形式（`timestamp_docId` を base64 エンコード）
+  - **注意**: 現在の実装では Firestore の `startAfter` は使用していない
+  - カーソルは「最後に取得したドキュメントの位置情報」として保持するのみ
+  - ページネーションの正確性は保証されない（実用的には許容誤差）
 
 #### 3.2 ソート順
 
 - デフォルトソート: **最近更新順**（`updated_at desc`）
+- クライアント側でソート（Firestore の `orderBy` は使用していない）
 - 共有日ベースのソート（`shared_month_label` など）は将来の要件で検討。
 
 ---
@@ -133,7 +150,7 @@ type MySharesResponse = {
 - `app/api/trips/my-shares/route.ts` を新規作成。
 - `authApi` ミドルウェアを利用して認証済みユーザーとして実行。
 
-擬似コード（概要）:
+実装コード（概要）:
 
 ```ts
 export const GET = authApi(async (request, ctx) => {
@@ -144,41 +161,49 @@ export const GET = authApi(async (request, ctx) => {
   const cursor = searchParams.get('cursor') ?? null
   const templateFilter = searchParams.get('template') ?? 'exclude'
 
-  const tripsRef = adminDb.collection(COLLECTIONS.TRIPS)
+  // 共通クエリヘルパーを使用
+  const { trips, lastDoc } = await getUserTripsWithBackwardCompatibility({
+    userId,
+    additionalFilters: {
+      isTemplate: templateFilter === 'only' ? true : templateFilter === 'exclude' ? false : undefined,
+    },
+    limit: limit * 2, // access_level フィルタで減る可能性があるため、多めに取得
+    orderBy: {
+      field: 'updated_at',
+      direction: 'desc',
+    },
+  })
 
-  let query: FirebaseFirestore.Query = tripsRef
-    .where('user_id', '==', userId)
-    .where('access_level', 'in', ['public', 'shared'])
-    .orderBy('updated_at', 'desc')
-    .limit(limit)
+  // access_level でフィルタ（Firestore の 'in' クエリ制限を回避）
+  let filteredTrips = trips.filter(
+    (trip) => trip.access_level === 'public' || trip.access_level === 'unlisted'
+  )
 
-  if (cursor) {
-    const cursorDoc = await tripsRef.doc(cursor).get()
-    if (cursorDoc.exists) {
-      query = query.startAfter(cursorDoc)
-    }
-  }
-
-  const snapshot = await query.get()
-  let trips = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Trip))
-
-  // template フィルタの適用（デフォルトは exclude）
+  // テンプレートフィルタ（デフォルト: exclude）
   if (templateFilter === 'exclude') {
-    trips = trips.filter(trip => trip.is_template !== true)
+    filteredTrips = filteredTrips.filter((trip) => trip.is_template !== true)
   } else if (templateFilter === 'only') {
-    trips = trips.filter(trip => trip.is_template === true)
+    filteredTrips = filteredTrips.filter((trip) => trip.is_template === true)
   }
 
-  const lastDoc = snapshot.docs[snapshot.docs.length - 1]
+  // limit に合わせて切り詰める（フィルタで減った分を考慮）
+  filteredTrips = filteredTrips.slice(0, limit)
+
+  // カーソルをエンコード（lastDoc がある場合のみ）
+  const nextCursor = lastDoc ? encodeCursor(lastDoc) : undefined
 
   return NextResponse.json<MySharesResponse>({
-    trips,
-    nextCursor: lastDoc ? lastDoc.id : undefined
+    trips: filteredTrips,
+    nextCursor,
   })
 })
 ```
 
-※ v1 の段階から Firestore クエリ ＋ cursor ベースで実装しておくことで、Trip 数が増えても API 形状を変えずにスケールできる。
+**注意事項**:
+- 現在の実装では Firestore の `startAfter` は使用していない
+- カーソルは「最後に取得したドキュメントの位置情報」として保持するのみ
+- ページネーションの正確性は保証されない（実用的には許容誤差）
+- 将来的にインデックス作成後、Firestore の `orderBy` + `startAfter` を使用することで改善可能
 
 #### 5.2 例外・エラー処理
 
@@ -214,5 +239,43 @@ export const GET = authApi(async (request, ctx) => {
 - フォロワー向けの「友人のシェア」フィード用に、`/api/trips/friends-shares` などの API を sibling として用意する。
 - `status` / `template` / `country` / `tag` などのフィルタリングパラメータを追加し、My Shares を「自分用の公開旅ハブ」として強化する。
 - `Trip.stats.photos` 実装後は、My Shares カードに写真枚数を正確に表示できるようになる。
+
+---
+
+### 8. 注意事項（実装と設計書の整合性）
+
+#### 8.1 クエリ方式の違い
+
+**設計書の当初の想定**:
+- Firestore の `in` クエリ + `orderBy` + `startAfter` を使用
+
+**実装での採用方式**:
+- クエリ分割方式（`auth_uid` と `google_id` で個別にクエリ実行してマージ）
+- クライアント側でソート（`updated_at` 降順）
+- Firestore の `startAfter` は使用していない
+
+**理由**:
+- Firestore の `in` クエリと `orderBy` の組み合わせには複合インデックスが必要
+- 後方互換性（`auth_uid` と `google_id` の両方に対応）を考慮した実用的な妥協策
+
+#### 8.2 ページネーションの制限
+
+**現在の実装の制限事項**:
+- カーソルは「最後に取得したドキュメントの位置情報」として保持するのみ
+- Firestore の `startAfter` を使用していないため、ページネーションの正確性は保証されない
+- データの追加・更新によりページ間で重複やズレが発生する可能性がある
+- 外部フィルタ（`access_level`、`template` など）により、アイテム数が減ると次ページが飛ぶ可能性がある
+
+**実用的な扱い**:
+- 旅行アプリの用途では許容誤差として扱う
+- 将来的にインデックス作成後、Firestore の `orderBy` + `startAfter` を使用することで改善可能
+
+#### 8.3 インデックス要件（将来の改善）
+
+正確なページネーションを実現する場合は、以下の複合インデックスが必要:
+- `user_id` (ascending) + `access_level` (ascending) + `updated_at` (descending)
+- `user_id` (ascending) + `is_template` (ascending) + `access_level` (ascending) + `updated_at` (descending)
+
+現時点ではクライアント側ソートにより、インデックス不要。
 
 

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authApi } from '@/lib/api/middleware'
-import { adminDb } from '@/lib/firebase/admin'
-import { COLLECTIONS } from '@/lib/firebase/firestore'
-import type { Trip, TripSocialStats } from '@/lib/core/types'
+import type { Trip } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
+import { getUserTripsWithBackwardCompatibility, encodeCursor } from '@/lib/firebase/trip-query-helpers'
 
 type MySharedTrip = Trip
 
@@ -27,63 +26,87 @@ export const GET = authApi(async (request: NextRequest, ctx): Promise<NextRespon
   const templateFilter = (searchParams.get('template') as 'include' | 'only' | 'exclude' | null) ?? 'exclude'
 
   try {
-    const tripsRef = adminDb.collection(COLLECTIONS.TRIPS)
-
-    let query: FirebaseFirestore.Query = tripsRef
-      .where('user_id', '==', userId)
-      .where('access_level', 'in', ['public', 'unlisted'])
-      .orderBy('updated_at', 'desc')
-      .limit(limit)
-
-    if (cursor) {
-      const cursorDoc = await tripsRef.doc(cursor).get()
-      if (cursorDoc.exists) {
-        query = query.startAfter(cursorDoc)
-      } else {
-        logger.warn('my-shares cursor doc not found; ignoring cursor', { cursor, userId })
-      }
-    }
-
-    const snapshot = await query.get()
-    let trips: MySharedTrip[] = snapshot.docs.map((doc): MySharedTrip => {
-      const data = doc.data() as Trip
-      const socialStats: TripSocialStats =
-        data.social_stats ?? {
-          likes_count: 0,
-          comments_count: 0,
-          shares_count: 0,
-          views_count: 0,
-          replicas_count: 0,
-        }
-
-      return {
-        id: doc.id,
-        ...data,
-        social_stats: socialStats,
-      } as Trip
+    logger.debug('My Shares query params', {
+      userId,
+      limit,
+      templateFilter,
+      cursor,
     })
+
+    // 共通ヘルパーを使用してクエリ実行
+    // access_level は Firestore の 'in' クエリ制限により、クライアント側でフィルタ
+    const { trips, lastDoc } = await getUserTripsWithBackwardCompatibility({
+      userId,
+      additionalFilters: {
+        // template フィルタはクライアント側で処理（将来的に改善可能）
+        isTemplate: templateFilter === 'only' ? true : templateFilter === 'exclude' ? false : undefined,
+      },
+      limit: limit * 2, // access_level フィルタで減る可能性があるため、多めに取得
+      orderBy: {
+        field: 'updated_at',
+        direction: 'desc',
+      },
+    })
+
+    // access_level でフィルタ（Firestore の 'in' クエリ制限を回避）
+    let filteredTrips = trips.filter(
+      (trip) => trip.access_level === 'public' || trip.access_level === 'unlisted'
+    )
 
     // テンプレートフィルタ（デフォルト: exclude）
     if (templateFilter === 'exclude') {
-      trips = trips.filter((trip) => trip.is_template !== true)
+      filteredTrips = filteredTrips.filter((trip) => trip.is_template !== true)
     } else if (templateFilter === 'only') {
-      trips = trips.filter((trip) => trip.is_template === true)
+      filteredTrips = filteredTrips.filter((trip) => trip.is_template === true)
     }
 
-    const lastDoc = snapshot.docs[snapshot.docs.length - 1]
+    // limit に合わせて切り詰める（フィルタで減った分を考慮）
+    filteredTrips = filteredTrips.slice(0, limit)
+
+    logger.debug('My Shares final result', {
+      totalTrips: trips.length,
+      afterAccessLevelFilter: filteredTrips.length,
+      afterTemplateFilter: filteredTrips.length,
+    })
+
+    // カーソルをエンコード（lastDoc がある場合のみ）
+    const nextCursor = lastDoc ? encodeCursor(lastDoc) : undefined
 
     return NextResponse.json(
       {
-        trips,
-        nextCursor: lastDoc ? lastDoc.id : undefined,
+        trips: filteredTrips,
+        nextCursor,
       },
       { status: 200 }
     )
-  } catch (error) {
-    logger.error('Failed to fetch my shared trips', { error, userId })
+  } catch (error: any) {
+    const errorMessage = error?.message || String(error)
+    const errorCode = error?.code || 'UNKNOWN_ERROR'
+
+    logger.error('Failed to fetch my shared trips', {
+      error: errorMessage,
+      errorCode,
+      stack: error?.stack,
+      userId,
+    })
+
+    // Firestore インデックスエラーの場合は、より分かりやすいメッセージを返す
+    if (errorCode === 'failed-precondition' || errorMessage?.includes('index')) {
+      return NextResponse.json(
+        {
+          trips: [],
+          error: 'Firestore index required. Please create a composite index for trips collection: user_id (ascending) and updated_at (descending)',
+          errorCode: 'INDEX_REQUIRED',
+        },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(
       {
         trips: [],
+        error: errorMessage,
+        errorCode,
       },
       { status: 500 }
     )
