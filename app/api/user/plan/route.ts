@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
 import { PlanId } from '@/lib/subscription/restriction'
-import { authApi, withBodyValidation } from '@/lib/api/middleware'
+import { authApi, withAuth, withBodyValidation } from '@/lib/api/middleware'
 import { notFound, handleApiError } from '@/lib/core/error-handler'
 import { UpdatePlanRequestSchema } from '@/lib/schemas/plan-subscription'
 import { composeMiddleware } from '@/lib/core/middleware'
@@ -66,7 +66,7 @@ export const GET = authApi(async (request: NextRequest, ctx) => {
  * zod スキーマバリデーション + Context ミドルウェアで移行済み
  */
 export const PUT = composeMiddleware(
-  authApi,
+  withAuth(),
   withBodyValidation(UpdatePlanRequestSchema)
 )(async (request: NextRequest, ctx) => {
   try {
