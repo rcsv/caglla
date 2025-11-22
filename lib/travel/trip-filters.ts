@@ -42,6 +42,9 @@ export function filterOngoingTrips(trips: Trip[], referenceDate?: Date): Trip[] 
   today.setHours(0, 0, 0, 0)
 
   return trips.filter((trip) => {
+    // テンプレートは Ongoing に表示しない
+    if (trip.is_template === true) return false
+
     const startDate = toDateOrNull(trip.start_date)
     const endDate = toDateOrNull(trip.end_date)
     if (!startDate || !endDate) return false
@@ -75,6 +78,9 @@ export function filterUpcomingTrips(trips: Trip[], referenceDate?: Date): Trip[]
   today.setHours(0, 0, 0, 0)
 
   return trips.filter((trip) => {
+    // テンプレートは Upcoming に表示しない
+    if (trip.is_template === true) return false
+
     const startDate = toDateOrNull(trip.start_date)
     if (!startDate) return false
 

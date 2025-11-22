@@ -30,7 +30,9 @@ export function HomeRightColumn({
   onOpenCreateTrip,
 }: HomeRightColumnProps) {
   // 進行中のTrip（期間内のものを優先、最大3件）
-  const tripsSortedByRecent = sortTripsByUpdatedAt(trips)
+  // テンプレートは除外
+  const nonTemplateTrips = trips.filter((trip) => trip.is_template !== true)
+  const tripsSortedByRecent = sortTripsByUpdatedAt(nonTemplateTrips)
   const ongoingTrips = filterOngoingTrips(tripsSortedByRecent)
   const activeTrips = (ongoingTrips.length > 0 ? ongoingTrips : tripsSortedByRecent).slice(0, 3)
 
