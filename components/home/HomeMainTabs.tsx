@@ -8,6 +8,7 @@ import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { resolveSocialStats } from '@/lib/social/trip-social-utils'
 import { TripStatsRow } from '@/components/tripcard/TripStatsRow'
 import { TripSocialStatsRow } from '@/components/tripcard/TripSocialStatsRow'
+import TripShareSettingsModal from '@/components/modals/TripShareSettingsModal'
 
 type TabId = 'friends' | 'ideas' | 'shares'
 
@@ -213,9 +214,14 @@ const MY_SHARED_TRIPS = [
 interface HomeMainTabsProps {
   mySharedTrips?: Trip[] | null
   mySharesLoading?: boolean
+  onMySharesRefresh?: () => void
 }
 
-export function HomeMainTabs({ mySharedTrips, mySharesLoading = false }: HomeMainTabsProps) {
+export function HomeMainTabs({ 
+  mySharedTrips, 
+  mySharesLoading = false,
+  onMySharesRefresh,
+}: HomeMainTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>('friends')
 
   const renderTabContent = () => {
@@ -225,7 +231,13 @@ export function HomeMainTabs({ mySharedTrips, mySharesLoading = false }: HomeMai
       case 'ideas':
         return <PlanCatalog />
       case 'shares':
-        return <MyShareManager trips={mySharedTrips} loading={mySharesLoading} />
+        return (
+          <MyShareManager 
+            trips={mySharedTrips} 
+            loading={mySharesLoading}
+            onRefresh={onMySharesRefresh}
+          />
+        )
       default:
         return null
     }
@@ -460,9 +472,12 @@ type MyShareView = {
 }
 
 function mapTripToMyShareView(trip: Trip): MyShareView {
-  const updatedAtDate = toDateOrNull(trip.updated_at as any) || (trip.updated_at as any)
-  const updatedAt =
-    updatedAtDate instanceof Date ? updatedAtDate.toLocaleDateString() : String(trip.updated_at ?? '')
+  const updatedAtDate = toDateOrNull(trip.updated_at as any)
+  const updatedAt = updatedAtDate
+    ? updatedAtDate.toLocaleDateString()
+    : trip.updated_at
+    ? String(trip.updated_at)
+    : ''
 
   const accessLevel = trip.access_level
   let visibility = ''
@@ -499,7 +514,18 @@ function mapTripToMyShareView(trip: Trip): MyShareView {
   }
 }
 
-function MyShareManager({ trips, loading }: { trips?: Trip[] | null; loading: boolean }) {
+function MyShareManager({ 
+  trips, 
+  loading,
+  onRefresh,
+}: { 
+  trips?: Trip[] | null
+  loading: boolean
+  onRefresh?: () => void
+}) {
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   const hasRealTrips = trips && trips.length > 0
 
   const viewTrips: MyShareView[] = hasRealTrips
@@ -515,61 +541,96 @@ function MyShareManager({ trips, loading }: { trips?: Trip[] | null; loading: bo
         stats: trip.stats,
       }))
 
+  const handleOpenModal = (trip: Trip) => {
+    setSelectedTrip(trip)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedTrip(null)
+  }
+
+  const handleSuccess = () => {
+    onRefresh?.()
+  }
+
   return (
-    <section className="space-y-3">
-      {loading && !hasRealTrips && (
-        <div className="space-y-2">
-          <div className="h-16 rounded-sm bg-gray-100 animate-pulse" />
-          <div className="h-16 rounded-sm bg-gray-100 animate-pulse" />
-        </div>
-      )}
-
-      {!loading && !hasRealTrips && (
-        <p className="text-xs text-slate-500">You haven’t shared any trips yet.</p>
-      )}
-
-      {viewTrips.map((trip) => (
-        <article
-          key={trip.id}
-          className="flex items-start justify-between gap-3 rounded-sm border border-slate-200 border-l-4 border-l-gray-300 bg-white p-4 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all"
-        >
-          <div className="flex-1 min-w-0 space-y-1">
-            <h3 className="text-sm font-semibold text-slate-900 truncate">{trip.title}</h3>
-            <p className="text-xs text-gray-600 flex items-center gap-1 mt-0.5 truncate">
-              <Icon icon="mdi:map-marker" className="h-3.5 w-3.5 text-indigo-500 flex-shrink-0" />
-              <span className="truncate">{trip.location}</span>
-            </p>
-            <p className="text-[11px] text-slate-500">
-              {trip.visibility} ・ {trip.expires}
-            </p>
-            <p className="text-[11px] text-slate-400">{trip.updatedAt}</p>
-            {/* 旅行属性: 日数・スポット数・写真枚数・チェックリスト数 */}
-            <TripStatsRow
-              days={trip.attributes?.days}
-              venues={trip.attributes?.venues}
-              photos={trip.attributes?.photos}
-              checklists={trip.attributes?.checklists}
-            />
+    <>
+      <section className="space-y-3">
+        {loading && !hasRealTrips && (
+          <div className="space-y-2">
+            <div className="h-16 rounded-sm bg-gray-100 animate-pulse" />
+            <div className="h-16 rounded-sm bg-gray-100 animate-pulse" />
           </div>
-          <div className="flex flex-col items-end gap-2">
-            {/* SNS的なリアクション・複製数 */}
-            <TripSocialStatsRow
-              stats={{
-                likes: trip.stats.likes,
-                comments: trip.stats.comments,
-                shares: trip.stats.saves,
-                views: 0,
-                replicas: trip.stats.clones,
-              }}
-            />
-            <button className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-700 hover:border-indigo-200 hover:text-indigo-600">
-              <Icon icon="mdi:tune" className="h-3 w-3" />
-              公開設定を編集
-            </button>
-          </div>
-        </article>
-      ))}
-    </section>
+        )}
+
+        {!loading && !hasRealTrips && (
+          <p className="text-xs text-slate-500">You haven't shared any trips yet.</p>
+        )}
+
+        {viewTrips.map((viewTrip) => {
+          // viewTrip から元の Trip オブジェクトを取得
+          const originalTrip = hasRealTrips
+            ? trips!.find((t) => t.id === viewTrip.id)
+            : null
+
+          return (
+            <article
+              key={viewTrip.id}
+              className="flex items-start justify-between gap-3 rounded-sm border border-slate-200 border-l-4 border-l-gray-300 bg-white p-4 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all"
+            >
+              <div className="flex-1 min-w-0 space-y-1">
+                <h3 className="text-sm font-semibold text-slate-900 truncate">{viewTrip.title}</h3>
+                <p className="text-xs text-gray-600 flex items-center gap-1 mt-0.5 truncate">
+                  <Icon icon="mdi:map-marker" className="h-3.5 w-3.5 text-indigo-500 flex-shrink-0" />
+                  <span className="truncate">{viewTrip.location}</span>
+                </p>
+                <p className="text-[11px] text-slate-500">
+                  {viewTrip.visibility} ・ {viewTrip.expires}
+                </p>
+                <p className="text-[11px] text-slate-400">{viewTrip.updatedAt}</p>
+                {/* 旅行属性: 日数・スポット数・写真枚数・チェックリスト数 */}
+                <TripStatsRow
+                  days={viewTrip.attributes?.days}
+                  venues={viewTrip.attributes?.venues}
+                  photos={viewTrip.attributes?.photos}
+                  checklists={viewTrip.attributes?.checklists}
+                />
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                {/* SNS的なリアクション・複製数 */}
+                <TripSocialStatsRow
+                  stats={{
+                    likes: viewTrip.stats.likes,
+                    comments: viewTrip.stats.comments,
+                    shares: viewTrip.stats.saves,
+                    views: 0,
+                    replicas: viewTrip.stats.clones,
+                  }}
+                />
+                {originalTrip && (
+                  <button
+                    onClick={() => handleOpenModal(originalTrip)}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-700 hover:border-indigo-200 hover:text-indigo-600"
+                  >
+                    <Icon icon="mdi:tune" className="h-3 w-3" />
+                    公開設定を編集
+                  </button>
+                )}
+              </div>
+            </article>
+          )
+        })}
+      </section>
+
+      <TripShareSettingsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        trip={selectedTrip}
+        onSuccess={handleSuccess}
+      />
+    </>
   )
 }
 
