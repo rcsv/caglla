@@ -31,11 +31,11 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
   const { t } = require('@/lib/i18n')
   const [open, setOpen] = useState(false)
   const [yourTripsOpen, setYourTripsOpen] = useState(false)
-  const menuRef = useRef<HTMLDivElement | null>(null)
-  const yourTripsRef = useRef<HTMLDivElement | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const yourTripsRef = useRef<HTMLDivElement>(null)
 
-  useClickOutside(menuRef, () => setOpen(false))
-  useClickOutside(yourTripsRef, () => setYourTripsOpen(false))
+  useClickOutside(menuRef as React.RefObject<HTMLElement>, () => setOpen(false))
+  useClickOutside(yourTripsRef as React.RefObject<HTMLElement>, () => setYourTripsOpen(false))
 
   const avatarBorderClass = (() => {
     const n = (planName || '').toLowerCase()
@@ -84,7 +84,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
           <div className="flex items-center gap-6">
             <Link href="/home" className="flex items-center gap-2 text-gray-900">
               <CagllaLogo className="w-8 h-8" />
-              <span className="text-lg sm:text-xl font-bold font-rajdhani whitespace-nowrap leading-none">
+              <span className="text-xl sm:text-2xl font-bold font-rajdhani whitespace-nowrap leading-none">
                 {appName}
               </span>
             </Link>
