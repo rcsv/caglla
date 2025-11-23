@@ -10,7 +10,6 @@ import Loading from '@/components/common/Loading'
 import { getUserDisplayName, getPlanDisplayName, getUserAvatarUrl } from '@/lib/utils/user-helpers'
 import CreateTripDialog from '@/components/common/CreateTripDialog'
 import { GuideCreatorHeader } from '@/components/trip-guide/GuideCreatorHeader'
-import { GuideTabs } from '@/components/trip-guide/GuideTabs'
 import { DraftGuidesSection } from '@/components/trip-guide/DraftGuidesSection'
 import { PublishedGuidesSection } from '@/components/trip-guide/PublishedGuidesSection'
 import { GuideAnalyticsSection } from '@/components/trip-guide/GuideAnalyticsSection'
@@ -32,7 +31,6 @@ export default function TripGuidePage() {
   const { planConfig, userData, userDataLoading } = useUserData()
   const router = useRouter()
   const [isCreateGuideDialogOpen, setIsCreateGuideDialogOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<'draft' | 'published' | 'analytics'>('draft')
 
   // 執筆中ガイドと公開済みガイドのデータ取得
   const { trips: draftGuides, loading: draftLoading, refresh: refreshDraft } = useMyGuides('draft')
@@ -95,39 +93,35 @@ export default function TripGuidePage() {
           onOpenCreateGuide={() => setIsCreateGuideDialogOpen(true)}
         />
 
-        {/* タブセクション */}
-        <GuideTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-
-        {/* メインコンテンツエリア */}
-        <div className="mt-6">
-          {activeTab === 'draft' && (
-            <DraftGuidesSection
-              trips={draftGuides}
-              loading={draftLoading}
-              onRefresh={refreshDraft}
-              onGuideUpdated={handleGuideUpdated}
+        {/* メインコンテンツエリア（左6:右4の2カラムレイアウト） */}
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
+          {/* 左側：メインコンテンツ（6カラム） */}
+          <div className="lg:col-span-6 space-y-6">
+            {/* アナリティクスセクション */}
+            <GuideAnalyticsSection
+              trips={allGuides}
+              loading={allGuidesLoading}
+              onRefresh={refreshAllGuides}
             />
-          )}
 
-          {activeTab === 'published' && (
+            {/* 公開済みガイドセクション */}
             <PublishedGuidesSection
               trips={publishedGuides}
               loading={publishedLoading}
               onRefresh={refreshPublished}
               onGuideUpdated={handleGuideUpdated}
             />
-          )}
+          </div>
 
-          {activeTab === 'analytics' && (
-            <GuideAnalyticsSection
-              trips={allGuides}
-              loading={allGuidesLoading}
-              onRefresh={refreshAllGuides}
+          {/* 右側：ドラフトリスト（4カラム） */}
+          <div className="lg:col-span-4">
+            <DraftGuidesSection
+              trips={draftGuides}
+              loading={draftLoading}
+              onRefresh={refreshDraft}
+              onGuideUpdated={handleGuideUpdated}
             />
-          )}
+          </div>
         </div>
       </main>
 
