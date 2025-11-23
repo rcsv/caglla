@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { Icon } from '@iconify/react'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { useAuth } from '@/lib/contexts/auth'
@@ -40,18 +40,50 @@ export default function LikeButton({
   const [count, setCount] = useState(typeof initialCount === 'number' ? initialCount : Number(initialCount) || 0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [initialized, setInitialized] = useState(false)
 
   // 楽観的UI更新のための前の状態を保存
-  const previousStateRef = useState<{ liked: boolean; count: number }>({
+  const previousStateRef = useRef<{ liked: boolean; count: number }>({
     liked: initialLiked,
     count: typeof initialCount === 'number' ? initialCount : Number(initialCount) || 0,
-  })[0]
+  })
+
+  // 初期状態を取得（認証済みユーザーのみ）
+  useEffect(() => {
+    if (!user || authLoading || initialized || !tripSlug) return
+
+    const fetchLikeState = async () => {
+      try {
+        const response = await makeAuthenticatedRequest(`/api/trip/${tripSlug}/likes`)
+        if (response.ok) {
+          const data = await response.json()
+          setLiked(data.likedByMe ?? false)
+          setCount(typeof data.likesCount === 'number' ? data.likesCount : Number(data.likesCount) || 0)
+          previousStateRef.current.liked = data.likedByMe ?? false
+          previousStateRef.current.count = typeof data.likesCount === 'number' ? data.likesCount : Number(data.likesCount) || 0
+        }
+      } catch (err) {
+        logger.error('Error fetching like state:', err)
+        // エラーが発生しても初期値を使用
+      } finally {
+        setInitialized(true)
+      }
+    }
+
+    void fetchLikeState()
+  }, [user, authLoading, tripSlug, initialized])
 
   const handleToggle = useCallback(async (e?: React.MouseEvent) => {
     // イベントの伝播を防ぐ
     if (e) {
       e.preventDefault()
       e.stopPropagation()
+    }
+
+    // バリデーション
+    if (!tripSlug) {
+      logger.warn('LikeButton: tripSlug is required')
+      return
     }
 
     // 認証チェック
@@ -67,8 +99,8 @@ export default function LikeButton({
     // 楽観的UI更新：即座にUIを更新
     const wasLiked = liked
     const previousCount = typeof count === 'number' ? count : Number(count) || 0
-    previousStateRef.liked = wasLiked
-    previousStateRef.count = previousCount
+    previousStateRef.current.liked = wasLiked
+    previousStateRef.current.count = previousCount
 
     const nextLiked = !wasLiked
     const nextCount = nextLiked ? previousCount + 1 : Math.max(0, previousCount - 1)
@@ -113,15 +145,20 @@ export default function LikeButton({
       logger.error('Error toggling like:', err)
 
       // ロールバック：前の状態に戻す
-      setLiked(previousStateRef.liked)
-      setCount(previousStateRef.count)
-      onToggle?.(previousStateRef.liked, previousStateRef.count)
+      setLiked(previousStateRef.current.liked)
+      setCount(previousStateRef.current.count)
+      onToggle?.(previousStateRef.current.liked, previousStateRef.current.count)
 
       setError(err instanceof Error ? err.message : 'Failed to toggle like')
     } finally {
       setLoading(false)
     }
   }, [tripSlug, liked, count, loading, disabled, authLoading, user, onToggle, previousStateRef])
+
+  // バリデーション
+  if (!tripSlug) {
+    return null
+  }
 
   // 未認証状態
   if (!user && !authLoading) {

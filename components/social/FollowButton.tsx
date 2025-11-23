@@ -40,14 +40,14 @@ export default function FollowButton({
 
   // フォロー状態を取得
   useEffect(() => {
-    if (!user || authLoading || initialFollowing !== undefined) return
+    if (!user || authLoading || initialFollowing !== undefined || !userSlug) return
 
     const fetchFollowState = async () => {
       try {
         const response = await makeAuthenticatedRequest(`/api/users/${userSlug}/follow`)
         if (response.ok) {
           const data = await response.json()
-          setFollowing(data.following)
+          setFollowing(data.isFollowing ?? false)
         }
       } catch (err) {
         logger.error('Error fetching follow state:', err)
@@ -65,6 +65,12 @@ export default function FollowButton({
     if (e) {
       e.preventDefault()
       e.stopPropagation()
+    }
+
+    // バリデーション
+    if (!userSlug) {
+      logger.warn('FollowButton: userSlug is required')
+      return
     }
 
     // 認証チェック
@@ -101,7 +107,7 @@ export default function FollowButton({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Failed to ${nextFollowing ? 'follow' : 'unfollow'} user`)
+        throw new Error(errorData.error?.message || errorData.error || `Failed to ${nextFollowing ? 'follow' : 'unfollow'} user`)
       }
 
       // サーバーからの実際の値を反映
@@ -120,6 +126,11 @@ export default function FollowButton({
       setLoading(false)
     }
   }, [userSlug, following, loading, disabled, authLoading, user, onToggle, previousStateRef])
+
+  // バリデーション
+  if (!userSlug) {
+    return null
+  }
 
   // 未認証状態
   if (!user && !authLoading) {
