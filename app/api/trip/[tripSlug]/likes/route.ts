@@ -17,6 +17,7 @@ import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import type { Firestore } from 'firebase-admin/firestore'
 import { unauthorized, notFound, handleApiError } from '@/lib/core/error-handler'
 import { ToggleTripLikeSchema } from '@/lib/schemas/trip-social'
+import { adminDb } from '@/lib/firebase/admin'
 
 /**
  * adminAuthをlazy importします（テスト環境でも動作するように）
@@ -73,12 +74,15 @@ async function resolveAuthUserId(request: NextRequest): Promise<string | null> {
 /**
  * Firestoreインスタンスを取得します（テスト環境ではエミュレータを使用）
  */
-function getFirestore(): Firestore | undefined {
+function getFirestore(): Firestore {
   if (process.env.FIRESTORE_EMULATOR_HOST) {
     return getTestFirestore()
   }
-  // 本番環境では、Social Operations内でadminDbを使用
-  return undefined
+  // 本番環境では、adminDbを直接使用
+  if (!adminDb) {
+    throw new Error('Firebase Admin SDK is not available')
+  }
+  return adminDb
 }
 
 /**

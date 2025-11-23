@@ -148,6 +148,7 @@ export async function createTripComment(
       created_at: now,
       updated_at: now,
       deleted: false,
+      likes_count: 0, // 初期値として0を設定
     }
 
     // オプションフィールドを条件付きで追加
@@ -344,6 +345,10 @@ export async function getTripComments(
       id: doc.id,
       ...doc.data(),
     }) as TripComment
+    // likes_countが存在しない場合は0として扱う
+    if (data.likes_count === undefined) {
+      data.likes_count = 0
+    }
     return data
   })
 

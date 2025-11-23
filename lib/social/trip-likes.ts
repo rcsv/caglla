@@ -15,6 +15,7 @@ import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import { convertStandardDates } from '@/lib/firebase/timestamp-utils'
+import { adminDb } from '@/lib/firebase/admin'
 
 // テスト環境ではテスト用のFirestoreを使用、本番環境ではadminDbを使用
 function getFirestore(db?: Firestore): Firestore {
@@ -23,13 +24,11 @@ function getFirestore(db?: Firestore): Firestore {
   if (process.env.FIRESTORE_EMULATOR_HOST) {
     return getTestFirestore()
   }
-  // 本番環境の場合（lazy importでadminDbを読み込む）
-  try {
-    const adminModule = require('@/lib/firebase/admin')
-    return adminModule.adminDb
-  } catch (error) {
+  // 本番環境の場合、adminDbを直接使用
+  if (!adminDb) {
     throw new Error('Firebase Admin SDK is not available. Provide a Firestore instance as the last parameter.')
   }
+  return adminDb
 }
 
 /**
