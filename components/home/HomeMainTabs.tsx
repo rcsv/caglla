@@ -11,6 +11,7 @@ import { TripSocialStatsRow } from '@/components/tripcard/TripSocialStatsRow'
 import TripShareSettingsModal from '@/components/modals/TripShareSettingsModal'
 import { useFollowingFeed } from '@/hooks/useFollowingFeed'
 import { useTemplates } from '@/hooks/useTemplates'
+import FollowButton from '@/components/social/FollowButton'
 import Link from 'next/link'
 
 type TabId = 'friends' | 'ideas' | 'shares'
@@ -281,9 +282,16 @@ function FriendsTimeline() {
                   </div>
                   <p className="text-xs text-slate-500">{action}</p>
                 </div>
-                {timestamp && (
-                  <span className="text-xs text-slate-400">{timestamp}</span>
-                )}
+                <div className="flex items-center gap-2">
+                  {userSlug && (
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <FollowButton userSlug={userSlug} variant="icon" size="sm" />
+                    </div>
+                  )}
+                  {timestamp && (
+                    <span className="text-xs text-slate-400">{timestamp}</span>
+                  )}
+                </div>
               </div>
 
               <div className="flex flex-col gap-3 md:flex-row">
@@ -418,6 +426,11 @@ function PlanCatalog() {
                     <div>
                       <p className="text-xs font-semibold text-slate-800">{creatorName}</p>
                     </div>
+                    {trip.creator?.slug && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <FollowButton userSlug={trip.creator.slug} variant="icon" size="sm" />
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={(e) => {
