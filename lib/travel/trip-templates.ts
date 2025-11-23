@@ -10,6 +10,7 @@ import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import { convertStandardDates, toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { adminDb } from '@/lib/firebase/admin'
 
 // テスト環境ではテスト用のFirestoreを使用、本番環境ではadminDbを使用
 function getFirestore(db?: Firestore): Firestore {
@@ -18,13 +19,11 @@ function getFirestore(db?: Firestore): Firestore {
   if (process.env.FIRESTORE_EMULATOR_HOST) {
     return getTestFirestore()
   }
-  // 本番環境の場合（lazy importでadminDbを読み込む）
-  try {
-    const adminModule = require('@/lib/firebase/admin')
-    return adminModule.adminDb
-  } catch (error) {
+  // 本番環境では adminDb を使用
+  if (!adminDb) {
     throw new Error('Firebase Admin SDK is not available. Provide a Firestore instance as the last parameter.')
   }
+  return adminDb as Firestore
 }
 
 /**
@@ -69,7 +68,23 @@ export async function getTemplateTrips(
     }
   }
 
-  const snapshot = await query.get()
+  let snapshot
+  try {
+    snapshot = await query.get()
+  } catch (error: any) {
+    // Firestore のインデックスエラーの場合、より具体的なメッセージをログに記録
+    if (error.code === 9 && error.details?.includes('index')) {
+      logger.error('Firestore index missing for templates query', {
+        error: error.message,
+        details: error.details,
+        query: 'access_level=public, is_template=true, orderBy=created_at',
+      })
+      throw new Error(
+        `Firestore index missing. Please create the required composite index. ${error.details || ''}`
+      )
+    }
+    throw error
+  }
 
   let trips: Trip[] = snapshot.docs
     .slice(0, limit) // +1で取得した分を除外

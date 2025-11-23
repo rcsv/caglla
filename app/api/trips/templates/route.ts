@@ -69,12 +69,15 @@ async function resolveAuthUserId(request: NextRequest): Promise<string | null> {
 /**
  * Firestoreインスタンスを取得します（テスト環境ではエミュレータを使用）
  */
-function getFirestore(): Firestore | undefined {
+function getFirestore(): Firestore {
   if (process.env.FIRESTORE_EMULATOR_HOST) {
     return getTestFirestore()
   }
   // 本番環境では adminDb を使用
-  return adminDb as Firestore | undefined
+  if (!adminDb) {
+    throw new Error('Firebase Admin SDK is not available')
+  }
+  return adminDb as Firestore
 }
 
 /**
