@@ -64,6 +64,20 @@ export interface TripComment {
   created_at: FirestoreDate
   updated_at?: FirestoreDate
   deleted: boolean // 論理削除
+  likes_count?: number // コメントへのいいね数（集計値）
+}
+
+/**
+ * CommentLike（コメントへのいいね）
+ * 
+ * コレクション: `comment_likes`
+ * ドキュメントID: `{userId}_{commentId}` でユニーク保証
+ */
+export interface CommentLike {
+  id: string // {userId}_{commentId} でユニーク保証
+  comment_id: string
+  user_id: string
+  created_at: FirestoreDate
 }
 
 // ============================================================================
@@ -172,6 +186,27 @@ export function isTripComment(value: unknown): value is TripComment {
 }
 
 /**
+ * CommentLike の型ガード
+ * 
+ * @param value チェックする値
+ * @returns CommentLike の場合 true
+ */
+export function isCommentLike(value: unknown): value is CommentLike {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+
+  const like = value as Record<string, unknown>
+
+  return (
+    typeof like.id === 'string' &&
+    typeof like.comment_id === 'string' &&
+    typeof like.user_id === 'string' &&
+    (typeof like.created_at === 'string' || like.created_at instanceof Date)
+  )
+}
+
+/**
  * TripShare の型ガード
  * 
  * @param value チェックする値
@@ -212,4 +247,3 @@ export function isUserFollow(value: unknown): value is UserFollow {
     (typeof follow.created_at === 'string' || follow.created_at instanceof Date)
   )
 }
-

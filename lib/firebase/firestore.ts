@@ -27,6 +27,7 @@ export const COLLECTIONS = {
   TRIP_COMMENTS: 'trip_comments',
   TRIP_SHARES: 'trip_shares',
   USER_FOLLOWS: 'user_follows',
+  COMMENT_LIKES: 'comment_likes',
 } as const
 
 // Re-export types for backward compatibility

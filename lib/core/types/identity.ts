@@ -41,6 +41,13 @@ export type TripId = string & { readonly __brand: 'TripId' }
  */
 export type TripSlug = string & { readonly __brand: 'TripSlug' }
 
+/**
+ * Comment ID（Firestore Document ID）
+ * 
+ * 注意: comment.id に使用される型
+ */
+export type CommentId = string & { readonly __brand: 'CommentId' }
+
 // ============================================================================
 // 型アサーション関数（安全な変換）
 // ============================================================================
@@ -95,6 +102,19 @@ export function asTripId(value: string): TripId {
  */
 export function asTripSlug(value: string): TripSlug {
   return value as TripSlug
+}
+
+/**
+ * 文字列を CommentId に変換
+ * 
+ * 注意: これは型アサーションのみで、実際の値の検証は行いません。
+ * 実際の CommentId であることが保証されている場合にのみ使用してください。
+ * 
+ * @param value 文字列
+ * @returns CommentId
+ */
+export function asCommentId(value: string): CommentId {
+  return value as CommentId
 }
 
 // ============================================================================
