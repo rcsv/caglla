@@ -174,7 +174,7 @@ export const POST = composeMiddleware(
   logger.debug('Resolved user document ID', { authUid: userId, userDocumentId })
 
   logger.debug('Getting existing trips for user', { userDocumentId })
-
+  
   // ユーザーの既存旅行スラッグを取得（後方互換性のため、google_id と users.id の両方で検索）
   const existingTrips = await adminTripOperations.getTripsByUserId(userDocumentId)
   const existingSlugs = existingTrips.map(t => t.slug).filter((slug): slug is string => Boolean(slug))

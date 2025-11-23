@@ -34,8 +34,16 @@ export const GET = authApi(async (request: NextRequest, ctx) => {
   let trips: Trip[] = []
 
   if (includeShared) {
-    // Get trips where user is owner
-    const ownedTrips = await adminTripOperations.getTripsByUserId(userId)
+    // Firebase Auth UID から users コレクションのドキュメントIDを取得
+    const user = await adminUserOperations.getUserByAuthUid(userId)
+    if (!user) {
+      logger.error('User not found', { authUid: userId })
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+    const userDocumentId = user.id
+
+    // Get trips where user is owner（users コレクションのドキュメントIDで検索）
+    const ownedTrips = await adminTripOperations.getTripsByUserId(userDocumentId)
     
     // Get trips where user has access through trip_users
     const sharedTripUsers = await adminTripUserOperations.getTripsByUserId(userId)
@@ -63,8 +71,16 @@ export const GET = authApi(async (request: NextRequest, ctx) => {
     )
     trips = uniqueTrips
   } else {
-    // Only get owned trips
-    trips = await adminTripOperations.getTripsByUserId(userId)
+    // Firebase Auth UID から users コレクションのドキュメントIDを取得
+    const user = await adminUserOperations.getUserByAuthUid(userId)
+    if (!user) {
+      logger.error('User not found', { authUid: userId })
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+    const userDocumentId = user.id
+
+    // Only get owned trips（users コレクションのドキュメントIDで検索）
+    trips = await adminTripOperations.getTripsByUserId(userDocumentId)
   }
 
   // Apply limit if specified

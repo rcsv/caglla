@@ -9,6 +9,7 @@ import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { Trip } from '@/lib/core/types'
 import { notFound, badRequest, createForbiddenError } from '@/lib/core/error-handler'
+import { checkTripOwnership } from './trip-ownership-helpers'
 
 /**
  * Trip所有権チェックの結果型
@@ -56,8 +57,9 @@ export async function validateTripOwnership(
 
   const { id: tripId, trip } = resolved
 
-  // 所有権チェック
-  if (trip.user_id !== userId) {
+  // 所有権チェック（trip.user_id と userId (Firebase Auth UID) の両方をサポート）
+  const hasOwnership = await checkTripOwnership(trip, userId)
+  if (!hasOwnership) {
     throw createForbiddenError('You do not own this trip')
   }
 
@@ -102,10 +104,11 @@ export async function validateDayOwnership(
     return notFound('Trip')
   }
 
-  const tripData = tripDoc.data() as Trip
+  const tripData = { id: tripDoc.id, ...tripDoc.data() } as Trip
 
-  // 所有権チェック
-  if (tripData?.user_id !== userId) {
+  // 所有権チェック（trip.user_id と userId (Firebase Auth UID) の両方をサポート）
+  const hasOwnership = await checkTripOwnership(tripData, userId)
+  if (!hasOwnership) {
     throw createForbiddenError('You do not own this trip')
   }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminTripOperations, adminDayOperations, adminItineraryOperations } from '@/lib/firebase/admin-operation'
+import { adminTripOperations, adminDayOperations, adminItineraryOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { PlacesCache, FirestoreDate, PlaceData, Trip } from '@/lib/core/types'
@@ -55,6 +55,7 @@ export async function GET(
 
     // 認証チェック（認証済みユーザーのIDを取得、認証されていない場合はnull）
     let userId: string | null = null
+    let userDocumentId: string | null = null
     try {
       const authHeader = request.headers.get('authorization')
       if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -63,6 +64,11 @@ export async function GET(
           const decodedToken = await adminAuth.verifyIdToken(idToken).catch(() => null)
           if (decodedToken) {
             userId = decodedToken.uid
+            // Firebase Auth UID から users コレクションのドキュメントIDを取得
+            const user = await adminUserOperations.getUserByAuthUid(userId).catch(() => null)
+            if (user) {
+              userDocumentId = user.id
+            }
           }
         }
       }
@@ -72,7 +78,8 @@ export async function GET(
     }
 
     // 閲覧権限チェック（public な旅行は誰でも閲覧可能、private な旅行は所有者のみ）
-    const userIdTyped = userId ? asUserId(userId) : null
+    // trip.user_id は users コレクションのドキュメントIDなので、userDocumentId と比較する
+    const userIdTyped = userDocumentId ? asUserId(userDocumentId) : null
     if (!canViewTrip(trip, userIdTyped)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

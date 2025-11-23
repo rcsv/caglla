@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authApi } from '@/lib/api/middleware'
-import type { Trip } from '@/lib/core/types'
+import type { Trip, User } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
 import { getUserTripsWithBackwardCompatibility, encodeCursor } from '@/lib/firebase/trip-query-helpers'
+import { adminDb } from '@/lib/firebase/admin'
 
 type MyGuide = Trip
 
@@ -72,12 +73,35 @@ export const GET = authApi(async (request: NextRequest, ctx): Promise<NextRespon
       afterFilter: filteredTrips.length,
     })
 
+    // creator 情報を追加
+    const tripsWithCreator = await Promise.all(
+      filteredTrips.map(async (trip): Promise<Trip & { creator?: User }> => {
+        let creator: User | undefined
+        try {
+          // trip.user_id は users コレクションのドキュメントID
+          const userDoc = await adminDb.collection('users').doc(trip.user_id).get()
+          if (userDoc.exists) {
+            creator = {
+              id: userDoc.id,
+              ...userDoc.data(),
+            } as User
+          }
+        } catch (error) {
+          logger.error('Error fetching creator for trip', error, { tripId: trip.id })
+        }
+        return {
+          ...trip,
+          ...(creator ? { creator } : {}),
+        }
+      })
+    )
+
     // カーソルをエンコード（lastDoc がある場合のみ）
     const nextCursor = lastDoc ? encodeCursor(lastDoc) : undefined
 
     return NextResponse.json(
       {
-        trips: filteredTrips,
+        trips: tripsWithCreator,
         nextCursor,
       },
       { status: 200 }

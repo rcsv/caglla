@@ -26,7 +26,10 @@
     "api-flush": "ts-node scripts/api-flush.ts",
     "setup-secrets": "ts-node scripts/setup-secrets.ts",
     "generate:favicon": "node scripts/generate-favicon.js public/Cg-logo.svg",
-    "recalculate:trip-stats": "ts-node scripts/recalculate-trip-stats.ts"
+    "recalculate:trip-stats": "ts-node scripts/recalculate-trip-stats.ts",
+    "create-test-data": "ts-node scripts/create-test-data.ts",
+    "create-dummy-trips": "ts-node scripts/create-dummy-trips.ts",
+    "migrate-trip-user-ids": "ts-node scripts/migrate-trip-user-ids.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

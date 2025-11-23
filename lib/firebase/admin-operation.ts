@@ -202,13 +202,23 @@ export const adminTripOperations = {
     return adminFirestoreHelpers.docToObject<Trip>(docSnap)
   },
 
+  /**
+   * ユーザーIDで旅行を取得（後方互換性対応）
+   * 
+   * まず users コレクションのドキュメントIDで検索し、
+   * 見つからない場合は google_id で検索（後方互換性）
+   * 
+   * @param userId - users コレクションのドキュメントID または google_id
+   * @returns 旅行の配列
+   */
   async getTripsByUserId(userId: string): Promise<Trip[]> {
-    const querySnapshot = await adminDb.collection(COLLECTIONS.TRIPS)
+    // まず users コレクションのドキュメントIDで検索
+    const byDocumentId = await adminDb.collection(COLLECTIONS.TRIPS)
       .where('user_id', '==', userId)
       .get()
     
-    const trips = querySnapshot.docs.map((doc: any) => adminFirestoreHelpers.docToObject<Trip>(doc))
-    
+    if (!byDocumentId.empty) {
+      const trips = byDocumentId.docs.map((doc: any) => adminFirestoreHelpers.docToObject<Trip>(doc))
     // Sort by created_at on the client side (descending)
     return trips.sort((a: Trip, b: Trip) => {
       const aDate = toDateOrNull(a.created_at) ;
@@ -216,6 +226,30 @@ export const adminTripOperations = {
       if (!aDate || !bDate) return 0 
       return bDate.getTime() - aDate.getTime();
     })
+    }
+    
+    // 後方互換性: google_id で検索（既存データが google_id で保存されている場合）
+    // ユーザーが存在するか確認
+    const user = await adminUserOperations.getUserByAuthUid(userId)
+    if (user && user.id !== userId) {
+      // userId が google_id の場合、users.id で再検索
+      const byUserDocumentId = await adminDb.collection(COLLECTIONS.TRIPS)
+        .where('user_id', '==', user.id)
+        .get()
+      
+      if (!byUserDocumentId.empty) {
+        const trips = byUserDocumentId.docs.map((doc: any) => adminFirestoreHelpers.docToObject<Trip>(doc))
+        return trips.sort((a: Trip, b: Trip) => {
+          const aDate = toDateOrNull(a.created_at) ;
+          const bDate = toDateOrNull(b.created_at) ;
+          if (!aDate || !bDate) return 0 
+          return bDate.getTime() - aDate.getTime();
+        })
+      }
+    }
+    
+    // どちらでも見つからない場合は空配列を返す
+    return []
   },
 
   async getTripById(tripId: string): Promise<Trip | null> {

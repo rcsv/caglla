@@ -9,6 +9,7 @@ import { GuideCard } from './GuideCard'
 import { PublishGuideModal } from './modals/PublishGuideModal'
 import { DeleteGuideModal } from './modals/DeleteGuideModal'
 import { t } from '@/lib/i18n'
+import logger from '@/lib/core/logger'
 
 interface DraftGuidesSectionProps {
   trips?: Trip[] | null
@@ -39,8 +40,13 @@ export function DraftGuidesSection({
 
   const handleEdit = (trip: Trip) => {
     // プランナーページに遷移
+    // trip.creator?.slug が存在する場合はそれを使用、存在しない場合は trip.user_id から取得を試みる
     if (trip.creator?.slug && trip.slug) {
       window.location.href = `/${trip.creator.slug}/${trip.slug}`
+    } else if (trip.slug) {
+      // creator 情報がない場合は、user_id を直接使用（将来的に改善可能）
+      // 現時点では、API側でcreator情報を含めるように修正済みなので、通常はここに到達しない
+      logger.warn('Trip creator information missing', { tripId: trip.id, userId: trip.user_id })
     }
   }
 
