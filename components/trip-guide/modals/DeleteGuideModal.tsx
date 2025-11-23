@@ -38,8 +38,20 @@ export function DeleteGuideModal({ trip, isOpen, onClose, onSuccess }: DeleteGui
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to delete guide' }))
-        throw new Error(errorData.error || `Failed to delete guide: ${response.status}`)
+        let errorMessage = `Failed to delete guide: ${response.status}`
+        try {
+          const errorData = await response.json()
+          if (typeof errorData === 'string') {
+            errorMessage = errorData
+          } else if (errorData?.error) {
+            errorMessage = typeof errorData.error === 'string' ? errorData.error : String(errorData.error)
+          } else if (errorData?.message) {
+            errorMessage = errorData.message
+          }
+        } catch {
+          // JSON解析に失敗した場合はデフォルトメッセージを使用
+        }
+        throw new Error(errorMessage)
       }
 
       logger.info('Guide deleted successfully', { tripId: trip.id })
@@ -47,7 +59,12 @@ export function DeleteGuideModal({ trip, isOpen, onClose, onSuccess }: DeleteGui
       onClose()
     } catch (err: any) {
       logger.error('Error deleting guide', err)
-      setError(err.message || 'Failed to delete guide')
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : typeof err === 'string' 
+          ? err 
+          : err?.message || String(err) || 'Failed to delete guide'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
