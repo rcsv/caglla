@@ -64,6 +64,95 @@ export function GuideCard({
 
   const tripUrl = trip.creator?.slug && trip.slug ? `/${trip.creator.slug}/${trip.slug}` : '#'
 
+  // ドラフトバリアントの場合は横長レイアウト
+  if (variant === 'draft') {
+    return (
+      <div className="relative rounded-sm border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+        <div className="flex">
+          {/* 画像（左側） */}
+          {trip.image_url ? (
+            <div className="relative w-32 h-32 flex-shrink-0">
+              <Image
+                src={trip.image_url}
+                alt={trip.title || ''}
+                fill
+                sizes="128px"
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-32 h-32 flex-shrink-0 bg-gray-100 flex items-center justify-center">
+              <Icon icon="mdi:image-outline" className="h-8 w-8 text-gray-400" />
+            </div>
+          )}
+
+          {/* コンテンツ（右側） */}
+          <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+            <div className="space-y-2">
+              {/* ヘッダー */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <Link href={tripUrl} className="block group">
+                    <h3 className="text-base font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                      {trip.title || trip.destination || t('tripGuide.card.untitled', 'Untitled Guide')}
+                    </h3>
+                  </Link>
+                  {trip.destination && (
+                    <p className="text-sm text-gray-600 flex items-center gap-1 mt-1 truncate">
+                      <Icon icon="mdi:map-marker" className="h-4 w-4 text-indigo-500 flex-shrink-0" />
+                      <span className="truncate">{trip.destination}</span>
+                    </p>
+                  )}
+                </div>
+                <span
+                  className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border flex-shrink-0 ${accessLevelColor}`}
+                >
+                  {accessLevelLabel}
+                </span>
+              </div>
+
+              {/* 更新日時 */}
+              {updatedAt && (
+                <p className="text-xs text-gray-400">
+                  {t('tripGuide.card.updated', '更新')}: {updatedAt}
+                </p>
+              )}
+            </div>
+
+            {/* アクションボタン */}
+            <div className="flex items-center gap-2 pt-2 border-t border-gray-100 mt-2">
+              <button
+                onClick={() => onEdit(trip)}
+                className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-sm hover:bg-gray-50 transition-colors"
+              >
+                <Icon icon="mdi:pencil" className="h-4 w-4" />
+                {t('tripGuide.card.edit', '編集')}
+              </button>
+
+              {onPublish && (
+                <button
+                  onClick={() => onPublish(trip)}
+                  className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium text-white bg-indigo-600 rounded-sm hover:bg-indigo-700 transition-colors"
+                >
+                  <Icon icon="mdi:publish" className="h-4 w-4" />
+                  {t('tripGuide.card.publish', '公開')}
+                </button>
+              )}
+
+              <button
+                onClick={() => onDelete(trip)}
+                className="inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-red-700 bg-white border border-red-300 rounded-sm hover:bg-red-50 transition-colors"
+              >
+                <Icon icon="mdi:delete" className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 公開済みバリアントは従来の縦長レイアウト
   return (
     <div className="relative rounded-sm border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
       {/* 画像 */}

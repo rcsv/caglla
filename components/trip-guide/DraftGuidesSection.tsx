@@ -84,9 +84,9 @@ export function DraftGuidesSection({
         padding="lg"
       >
         {loading && !hasTrips && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-64 rounded-sm bg-gray-100 animate-pulse" />
+              <div key={i} className="h-32 rounded-sm bg-gray-100 animate-pulse" />
             ))}
           </div>
         )}
@@ -104,7 +104,7 @@ export function DraftGuidesSection({
         )}
 
         {!loading && hasTrips && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-4">
             {trips.map((trip) => (
               <GuideCard
                 key={trip.id}

@@ -93,10 +93,10 @@ export default function TripGuidePage() {
           onOpenCreateGuide={() => setIsCreateGuideDialogOpen(true)}
         />
 
-        {/* メインコンテンツエリア（左6:右4の2カラムレイアウト） */}
+        {/* メインコンテンツエリア（左7:右3の2カラムレイアウト） */}
         <div className="mt-6 grid grid-cols-1 lg:grid-cols-10 gap-6">
-          {/* 左側：メインコンテンツ（6カラム） */}
-          <div className="lg:col-span-6 space-y-6">
+          {/* 左側：メインコンテンツ（7カラム） */}
+          <div className="lg:col-span-7 space-y-6">
             {/* アナリティクスセクション */}
             <GuideAnalyticsSection
               trips={allGuides}
@@ -113,8 +113,8 @@ export default function TripGuidePage() {
             />
           </div>
 
-          {/* 右側：ドラフトリスト（4カラム） */}
-          <div className="lg:col-span-4">
+          {/* 右側：ドラフトリスト（3カラム） */}
+          <div className="lg:col-span-3">
             <DraftGuidesSection
               trips={draftGuides}
               loading={draftLoading}
