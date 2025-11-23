@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/contexts/auth'
 import type { TripComment } from '@/lib/core/types/social'
 import logger from '@/lib/core/logger'
 import CommentInput from './CommentInput'
+import CommentLikeButton from './CommentLikeButton'
 // Simple relative time formatter
 const formatRelativeTime = (date: Date): string => {
   const now = new Date()
@@ -27,7 +28,9 @@ interface CommentItemProps {
   comment: TripComment
   tripSlug: string
   onDeleted?: (commentId: string) => void
+  onReplyAdded?: () => void
   replies?: TripComment[]
+  allComments?: TripComment[] // 全コメント（再帰的に返信を取得するため）
 }
 
 /**
@@ -43,7 +46,9 @@ export default function CommentItem({
   comment,
   tripSlug,
   onDeleted,
+  onReplyAdded,
   replies = [],
+  allComments = [],
 }: CommentItemProps) {
   const { user } = useAuth()
   const [isReplying, setIsReplying] = useState(false)
@@ -81,9 +86,10 @@ export default function CommentItem({
     }
   }
 
-  const handleReplyAdded = () => {
+  const handleReplyAdded = async (newReply: TripComment) => {
     setIsReplying(false)
     // 親コンポーネントでコメントを再取得する
+    onReplyAdded?.()
   }
 
   // 削除されたコメントの表示
@@ -139,7 +145,11 @@ export default function CommentItem({
             {user && !isReplying && (
               <button
                 type="button"
-                onClick={() => setIsReplying(true)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setIsReplying(true)
+                }}
                 className="text-sm text-gray-600 hover:text-indigo-600 flex items-center gap-1"
               >
                 <Icon icon="mdi:reply" className="h-4 w-4" />
@@ -147,10 +157,32 @@ export default function CommentItem({
               </button>
             )}
 
+            {tripSlug && comment.id && !isOwner && (
+              <div
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }}
+              >
+                <CommentLikeButton
+                  tripSlug={tripSlug}
+                  commentId={comment.id}
+                  initialLiked={false}
+                  initialCount={comment.likes_count || 0}
+                  size="sm"
+                  showCount={true}
+                />
+              </div>
+            )}
+
             {replies.length > 0 && (
               <button
                 type="button"
-                onClick={() => setShowReplies(!showReplies)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setShowReplies(!showReplies)
+                }}
                 className="text-sm text-gray-600 hover:text-indigo-600 flex items-center gap-1"
               >
                 <Icon
@@ -164,7 +196,11 @@ export default function CommentItem({
             {isOwner && (
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleDelete()
+                }}
                 disabled={isDeleting}
                 className="text-sm text-red-600 hover:text-red-800 flex items-center gap-1 disabled:opacity-50"
               >
@@ -190,14 +226,21 @@ export default function CommentItem({
           {/* 返信表示 */}
           {showReplies && replies.length > 0 && (
             <div className="mt-4 ml-4 space-y-3 border-l-2 border-gray-200 pl-4">
-              {replies.map((reply) => (
-                <CommentItem
-                  key={reply.id}
-                  comment={reply}
-                  tripSlug={tripSlug}
-                  onDeleted={onDeleted}
-                />
-              ))}
+              {replies.map((reply) => {
+                // この返信に対する返信を取得（再帰的）
+                const replyReplies = allComments.filter((c) => c.parent_comment_id === reply.id)
+                return (
+                  <CommentItem
+                    key={reply.id}
+                    comment={reply}
+                    tripSlug={tripSlug}
+                    onDeleted={onDeleted}
+                    onReplyAdded={onReplyAdded}
+                    replies={replyReplies}
+                    allComments={allComments}
+                  />
+                )
+              })}
             </div>
           )}
         </div>
