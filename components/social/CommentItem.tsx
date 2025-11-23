@@ -55,6 +55,7 @@ export default function CommentItem({
   const [isDeleting, setIsDeleting] = useState(false)
   const [showReplies, setShowReplies] = useState(true)
 
+  // comment.user_idはFirebase Auth UIDを保存しているため、user.uidと直接比較
   const isOwner = user?.uid === comment.user_id
   const createdAt = comment.created_at instanceof Date 
     ? comment.created_at 

@@ -6,6 +6,7 @@
  */
 
 import type { User } from '@/lib/core/types'
+import type { User as FirebaseAuthUser } from 'firebase/auth'
 
 /**
  * Firebase Auth UID と User オブジェクトが同じユーザーを指しているかどうかを判定（クライアントサイド用）
@@ -24,6 +25,39 @@ export function isSameUserByAuthUid(authUid: string | null | undefined, user: Us
   
   // auth_uid または google_id と比較
   return user.auth_uid === authUid || user.google_id === authUid
+}
+
+/**
+ * 2つのUserオブジェクトが同じユーザーを指しているかどうかを判定
+ * 
+ * この関数は、2つのUserオブジェクトを比較します。
+ * usersドキュメントID、auth_uid、google_idのすべてを考慮して比較します。
+ * 
+ * @param user1 1つ目のUserオブジェクト
+ * @param user2 2つ目のUserオブジェクト
+ * @returns 同じユーザーの場合 true
+ */
+export function isSameUser(user1: User | null | undefined, user2: User | null | undefined): boolean {
+  if (!user1 || !user2) {
+    return false
+  }
+  
+  // usersドキュメントIDで比較（最も確実）
+  if (user1.id === user2.id) {
+    return true
+  }
+  
+  // auth_uidで比較
+  if (user1.auth_uid && user2.auth_uid && user1.auth_uid === user2.auth_uid) {
+    return true
+  }
+  
+  // google_idで比較（両方存在する場合）
+  if (user1.google_id && user2.google_id && user1.google_id === user2.google_id) {
+    return true
+  }
+  
+  return false
 }
 
 /**

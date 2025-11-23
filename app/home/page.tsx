@@ -96,7 +96,7 @@ export default function HomePage() {
           </div>
           <HomeRightColumn
             trips={trips}
-                        today={today}
+            today={today}
             referenceDateForUpcoming={tomorrow}
             recentTrips={recentTrips}
             onOpenCreateTrip={() => setIsCreateTripDialogOpen(true)}

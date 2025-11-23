@@ -15,6 +15,7 @@ import { useTemplates } from '@/hooks/useTemplates'
 import FollowButton from '@/components/social/FollowButton'
 import LikeButton from '@/components/social/LikeButton'
 import { useUserData } from '@/lib/contexts/user-data'
+import { isSameUser } from '@/lib/auth/client-identity-helpers'
 import Link from 'next/link'
 
 type TabId = 'friends' | 'ideas' | 'shares'
@@ -284,7 +285,6 @@ function FriendsTimeline() {
             key={trip.id}
             className="relative overflow-hidden rounded-sm border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
           >
-            <div className="absolute left-6 top-0 h-full w-px bg-gradient-to-b from-indigo-200/80 via-slate-200 to-transparent" />
             <div className="flex flex-col gap-5 md:flex-row">
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-4">
@@ -296,7 +296,7 @@ function FriendsTimeline() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {userSlug && creator?.id !== userData?.id && (
+                    {userSlug && creator && userData && !isSameUser(creator, userData) && (
                       <div
                         onClick={(e) => {
                           e.preventDefault()
@@ -526,7 +526,7 @@ function PlanCatalog() {
                     <div>
                       <p className="text-xs font-semibold text-slate-800">{creatorName}</p>
                     </div>
-                    {trip.creator?.slug && trip.creator.id !== userData?.id && (
+                    {trip.creator?.slug && trip.creator && userData && !isSameUser(trip.creator, userData) && (
                       <div
                         onClick={(e) => {
                           e.preventDefault()
