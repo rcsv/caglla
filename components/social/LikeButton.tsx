@@ -37,14 +37,14 @@ export default function LikeButton({
 }: LikeButtonProps) {
   const { user, loading: authLoading } = useAuth()
   const [liked, setLiked] = useState(initialLiked)
-  const [count, setCount] = useState(initialCount)
+  const [count, setCount] = useState(typeof initialCount === 'number' ? initialCount : Number(initialCount) || 0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // 楽観的UI更新のための前の状態を保存
   const previousStateRef = useState<{ liked: boolean; count: number }>({
     liked: initialLiked,
-    count: initialCount,
+    count: typeof initialCount === 'number' ? initialCount : Number(initialCount) || 0,
   })[0]
 
   const handleToggle = useCallback(async (e?: React.MouseEvent) => {
@@ -66,7 +66,7 @@ export default function LikeButton({
 
     // 楽観的UI更新：即座にUIを更新
     const wasLiked = liked
-    const previousCount = count
+    const previousCount = typeof count === 'number' ? count : Number(count) || 0
     previousStateRef.liked = wasLiked
     previousStateRef.count = previousCount
 
@@ -102,8 +102,8 @@ export default function LikeButton({
 
       // サーバーからの実際の値を反映
       setLiked(data.likedByMe)
-      setCount(data.likesCount)
-      onToggle?.(data.likedByMe, data.likesCount)
+      setCount(typeof data.likesCount === 'number' ? data.likesCount : Number(data.likesCount) || 0)
+      onToggle?.(data.likedByMe, typeof data.likesCount === 'number' ? data.likesCount : Number(data.likesCount) || 0)
     } catch (err) {
       logger.error('Error toggling like:', err)
 
@@ -135,7 +135,7 @@ export default function LikeButton({
         aria-label="Like this trip"
       >
         <Icon icon="mdi:heart-outline" className="h-5 w-5" />
-        {showCount && count > 0 && <span className="tabular-nums">{count}</span>}
+        {showCount && count > 0 && <span className="tabular-nums">{typeof count === 'number' ? count : Number(count) || 0}</span>}
       </button>
     )
   }
@@ -169,7 +169,7 @@ export default function LikeButton({
         className={`h-5 w-5 transition-transform duration-200 ${liked ? 'scale-110' : ''}`}
       />
       {showCount && count > 0 && (
-        <span className="tabular-nums font-medium">{count}</span>
+        <span className="tabular-nums font-medium">{typeof count === 'number' ? count : Number(count) || 0}</span>
       )}
       {error && (
         <span className="ml-2 text-xs text-red-600" role="alert">
