@@ -95,7 +95,12 @@ export default function LikeButton({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Failed to ${nextLiked ? 'like' : 'unlike'} trip`)
+        // handleApiError は { error: { code, message, details? } } 形式を返す
+        const errorMessage = 
+          typeof errorData.error === 'string'
+            ? errorData.error
+            : errorData.error?.message || errorData.message || `Failed to ${nextLiked ? 'like' : 'unlike'} trip`
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
