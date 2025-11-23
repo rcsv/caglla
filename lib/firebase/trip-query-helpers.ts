@@ -40,14 +40,35 @@ export async function getUserTripsWithBackwardCompatibility(
   const { userId, firestore, additionalFilters, limit = 20, orderBy } = options
   const db = firestore || adminDb
 
-  // ユーザー情報を取得して google_id を確認
+  // ユーザー情報を取得して google_id と users ドキュメントIDを確認
   const user = await adminUserOperations.getUserByAuthUid(userId)
-  const ownerIds = user && user.google_id && user.google_id !== userId 
-    ? [userId, user.google_id] 
-    : [userId]
+  
+  // ownerIds に含めるIDのリスト
+  // 1. users ドキュメントID（優先、trip.user_id はこれを使用）
+  // 2. Firebase Auth UID（後方互換性）
+  // 3. google_id（後方互換性）
+  const ownerIds: string[] = []
+  if (user) {
+    // users ドキュメントIDを優先的に追加
+    if (user.id) {
+      ownerIds.push(user.id)
+    }
+    // Firebase Auth UID が users ドキュメントIDと異なる場合のみ追加
+    if (userId && userId !== user.id) {
+      ownerIds.push(userId)
+    }
+    // google_id が users ドキュメントIDと異なる場合のみ追加
+    if (user.google_id && user.google_id !== user.id && user.google_id !== userId) {
+      ownerIds.push(user.google_id)
+    }
+  } else {
+    // ユーザーが見つからない場合は userId のみを使用
+    ownerIds.push(userId)
+  }
 
   logger.debug('User trip query params', {
     userId,
+    userDocumentId: user?.id,
     userGoogleId: user?.google_id,
     ownerIds,
     additionalFilters,

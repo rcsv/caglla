@@ -34,7 +34,8 @@ export default function HomePage() {
   const [isCreateGuideDialogOpen, setIsCreateGuideDialogOpen] = useState(false)
   const recentTrips = useRecentTrips()
   const { trips: mySharedTrips, loading: mySharesLoading, refresh: refreshMyShares } = useMyShares()
-  const { trips: myGuides, loading: myGuidesLoading, refresh: refreshMyGuides } = useMyGuides('all')
+  // 執筆中の Guide のみを表示するため 'draft' を指定
+  const { trips: myGuides, loading: myGuidesLoading, refresh: refreshMyGuides } = useMyGuides('draft')
 
   useEffect(() => {
     if (!loading && !user) {
