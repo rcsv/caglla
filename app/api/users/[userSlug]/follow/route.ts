@@ -19,6 +19,7 @@ import type { Firestore } from 'firebase-admin/firestore'
 import type { User } from '@/lib/core/types'
 import { convertStandardDates } from '@/lib/firebase/timestamp-utils'
 import { unauthorized, notFound, badRequest, handleApiError } from '@/lib/core/error-handler'
+import { adminDb } from '@/lib/firebase/admin'
 
 /**
  * adminAuthをlazy importします（テスト環境でも動作するように）
@@ -79,36 +80,11 @@ async function resolveUserIdFromSlug(
   userSlug: string,
   db?: Firestore
 ): Promise<string | null> {
-  const firestore = db || getFirestore()
-
-  // テスト環境では、userSlugから推測可能なuserIdを返す
-  if (process.env.FIRESTORE_EMULATOR_HOST && db) {
-    // テスト環境では、userSlugからuserIdを推測（例: user1-slug -> user1）
-    const usersSnapshot = await firestore
-      .collection(COLLECTIONS.USERS)
-      .where('slug', '==', userSlug)
-      .limit(1)
-      .get()
-
-    if (usersSnapshot.empty) {
-      return null
-    }
-
-    const userDoc = usersSnapshot.docs[0]
-    const userData = convertStandardDates({
-      id: userDoc.id,
-      ...userDoc.data(),
-    }) as User
-
-    return userData.google_id || userDoc.id
-  }
-
-  // 本番環境では、Admin SDKを使用
   try {
-    const adminModule = await import('@/lib/firebase/admin')
-    const adminDb = adminModule.adminDb
+    // dbが渡された場合はそれを使用、そうでない場合はgetFirestore()を使用
+    const firestore = db ?? getFirestore()
 
-    const usersSnapshot = await adminDb
+    const usersSnapshot = await firestore
       .collection(COLLECTIONS.USERS)
       .where('slug', '==', userSlug)
       .limit(1)
@@ -134,12 +110,16 @@ async function resolveUserIdFromSlug(
 /**
  * Firestoreインスタンスを取得します（テスト環境ではエミュレータを使用）
  */
-function getFirestore(): Firestore | undefined {
+function getFirestore(): Firestore {
   if (process.env.FIRESTORE_EMULATOR_HOST) {
     return getTestFirestore()
   }
-  // 本番環境では、Social Operations内でadminDbを使用
-  return undefined
+  // 本番環境では、adminDbを直接使用
+  if (!adminDb) {
+    logger.error('getFirestore: adminDb is undefined')
+    throw new Error('Firebase Admin Firestore instance is not available')
+  }
+  return adminDb
 }
 
 /**
