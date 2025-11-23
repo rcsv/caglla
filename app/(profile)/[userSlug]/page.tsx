@@ -26,6 +26,7 @@ import { setLanguageOverrideClient } from '@/lib/i18n/storage'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
 import HomeFooter from '@/components/common/HomeFooter'
+import { isSameUserByAuthUid } from '@/lib/auth/identity-helpers'
 
 export default function UserProfileBySlugPage() {
   const { user, loading } = useAuth()
@@ -83,10 +84,8 @@ export default function UserProfileBySlugPage() {
         
         // 自分自身のプロフィールの場合、非公開の旅行も取得
         // fetchedUserを使用して同期的に判定
-        // 注意: user.uidはFirebase Auth UID、fetchedUser.google_idと比較する必要がある
-        const currentUserId = user?.uid // Firebase Auth UID
-        const viewedUserGoogleId = fetchedUser?.google_id // Firestoreのgoogle_idフィールド
-        const isOwnProfileCheck = currentUserId && viewedUserGoogleId && currentUserId === viewedUserGoogleId
+        // ライブラリ関数を使用して、users コレクションのドキュメントIDとFirebase Auth UIDの両方をサポート
+        const isOwnProfileCheck = isSameUserByAuthUid(user?.uid, fetchedUser)
         
         // デバッグログ（開発環境のみ）
         const isDev =
@@ -95,9 +94,10 @@ export default function UserProfileBySlugPage() {
           process.env?.NODE_ENV === 'development'
         if (isDev) {
           console.log('🔍 Profile trips debug:', {
-            currentUserId,
-            viewedUserId: fetchedUser?.id,
-            viewedUserGoogleId,
+            currentUserId: user?.uid,
+            viewedUserDocumentId: fetchedUser?.id,
+            viewedUserGoogleId: fetchedUser?.google_id,
+            viewedUserAuthUid: fetchedUser?.auth_uid,
             isOwnProfile: isOwnProfileCheck,
             totalTrips: trips.length,
             publicTrips: publicTripsList.length,
@@ -294,8 +294,8 @@ export default function UserProfileBySlugPage() {
   if (!user || !profileUser) return null
 
   // 自分自身のプロフィールかどうか
-  // 注意: user.uidはFirebase Auth UID、profileUser.google_idと比較する必要がある
-  const isOwnProfile = user.uid === profileUser.google_id
+  // ライブラリ関数を使用して、users コレクションのドキュメントIDとFirebase Auth UIDの両方をサポート
+  const isOwnProfile = isSameUserByAuthUid(user?.uid, profileUser)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
