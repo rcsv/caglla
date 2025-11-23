@@ -38,8 +38,20 @@ export function UnpublishGuideModal({ trip, isOpen, onClose, onSuccess }: Unpubl
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to unpublish guide' }))
-        throw new Error(errorData.error || `Failed to unpublish guide: ${response.status}`)
+        let errorMessage = `Failed to unpublish guide: ${response.status}`
+        try {
+          const errorData = await response.json()
+          if (typeof errorData === 'string') {
+            errorMessage = errorData
+          } else if (errorData?.error) {
+            errorMessage = typeof errorData.error === 'string' ? errorData.error : String(errorData.error)
+          } else if (errorData?.message) {
+            errorMessage = errorData.message
+          }
+        } catch {
+          // JSON解析に失敗した場合はデフォルトメッセージを使用
+        }
+        throw new Error(errorMessage)
       }
 
       logger.info('Guide unpublished successfully', { tripId: trip.id })
@@ -47,7 +59,12 @@ export function UnpublishGuideModal({ trip, isOpen, onClose, onSuccess }: Unpubl
       onClose()
     } catch (err: any) {
       logger.error('Error unpublishing guide', err)
-      setError(err.message || 'Failed to unpublish guide')
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : typeof err === 'string' 
+          ? err 
+          : err?.message || String(err) || 'Failed to unpublish guide'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
