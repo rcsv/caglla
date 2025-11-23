@@ -99,24 +99,26 @@ export default function HomePage() {
         {/* メインコンテンツエリア（/home-v2 のタブ付きフィードを移植） */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
           <div className="lg:col-span-7 space-y-6">
-            <MyGuidesSection
-              trips={myGuides}
-              loading={myGuidesLoading}
-              onRefresh={refreshMyGuides}
-            />
             <HomeMainTabs 
               mySharedTrips={mySharedTrips} 
               mySharesLoading={mySharesLoading}
               onMySharesRefresh={refreshMyShares}
             />
           </div>
-          <HomeRightColumn
-            trips={trips}
-                        today={today}
-            referenceDateForUpcoming={tomorrow}
-            recentTrips={recentTrips}
-            onOpenCreateTrip={() => setIsCreateTripDialogOpen(true)}
-          />
+          <div className="lg:col-span-3 space-y-6">
+            <MyGuidesSection
+              trips={myGuides}
+              loading={myGuidesLoading}
+              onRefresh={refreshMyGuides}
+            />
+            <HomeRightColumn
+              trips={trips}
+              today={today}
+              referenceDateForUpcoming={tomorrow}
+              recentTrips={recentTrips}
+              onOpenCreateTrip={() => setIsCreateTripDialogOpen(true)}
+            />
+          </div>
         </div>
       </main>
 

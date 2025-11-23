@@ -64,7 +64,7 @@ export function HomeRightColumn({
   }
 
   return (
-    <div className="lg:col-span-3 space-y-6">
+    <div className="space-y-6">
       {/* 進行中のTrip */}
       <section className="bg-white rounded-sm shadow-sm border border-gray-200 p-4">
         <div className="flex items-center justify-between mb-3">
