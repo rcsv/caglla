@@ -9,6 +9,7 @@ import { resolveSocialStats } from '@/lib/social/trip-social-utils'
 import { TripStatsRow } from '@/components/tripcard/TripStatsRow'
 import { TripSocialStatsRow } from '@/components/tripcard/TripSocialStatsRow'
 import TripShareSettingsModal from '@/components/modals/TripShareSettingsModal'
+import TripCommentModal from '@/components/modals/TripCommentModal'
 import { useFollowingFeed } from '@/hooks/useFollowingFeed'
 import { useTemplates } from '@/hooks/useTemplates'
 import FollowButton from '@/components/social/FollowButton'
@@ -219,6 +220,8 @@ export function HomeMainTabs({
 function FriendsTimeline() {
   const { trips, loading, error } = useFollowingFeed(20)
   const { userData } = useUserData() // 現在のユーザーデータを取得
+  const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null)
+  const [isCommentModalOpen, setIsCommentModalOpen] = useState(false)
 
   if (loading) {
     return (
@@ -246,9 +249,15 @@ function FriendsTimeline() {
     )
   }
 
+  const handleCommentClick = (trip: Trip) => {
+    setSelectedTrip(trip)
+    setIsCommentModalOpen(true)
+  }
+
   return (
-    <section className="space-y-4">
-      {trips.map((trip) => {
+    <>
+      <section className="space-y-6">
+        {trips.map((trip) => {
         const creator = trip.creator
         const userName = creator?.name || 'Unknown User'
         const userSlug = creator?.slug
@@ -264,101 +273,159 @@ function FriendsTimeline() {
         const isActive = isTripActive(trip)
         const socialStats = resolveSocialStats(trip)
         const tripUrl = userSlug && trip.slug ? `/${userSlug}/${trip.slug}` : `/trip/${trip.id}`
+        const typeStyles = trip.is_template
+          ? 'bg-amber-50 text-amber-700 border border-amber-100'
+          : 'bg-sky-50 text-sky-700 border border-sky-100'
+        const typeLabel = trip.is_template ? 'PLAN TEMPLATE' : 'SHARED TRIP'
+        const hashtags = trip.hashtags || []
 
         return (
-          <Link key={trip.id} href={tripUrl}>
-            <article className="rounded-sm border border-slate-200 bg-white p-4 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer">
-              <div className="flex items-center gap-3 mb-3">
-                <img
-                  src={avatar}
-                  alt={userName}
-                  className="h-9 w-9 rounded-full border border-slate-200"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-slate-900 truncate">
-                      {userName}
-                    </p>
-                    {userHandle && (
-                      <span className="text-xs text-slate-400 truncate">{userHandle}</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500">{action}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {userSlug && creator?.id !== userData?.id && (
-                    <div
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                      }}
-                    >
-                      <FollowButton userSlug={userSlug} variant="icon" size="sm" />
+          <article
+            key={trip.id}
+            className="relative overflow-hidden rounded-sm border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+          >
+            <div className="absolute left-6 top-0 h-full w-px bg-gradient-to-b from-indigo-200/80 via-slate-200 to-transparent" />
+            <div className="flex flex-col gap-5 md:flex-row">
+              <div className="flex-1">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <img src={avatar} alt={userName} className="h-12 w-12 rounded-full border border-slate-100 object-cover" />
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{userName}</p>
+                      <p className="text-xs text-slate-500">{action}</p>
                     </div>
-                  )}
-                  {timestamp && (
-                    <span className="text-xs text-slate-400">{timestamp}</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-3 md:flex-row">
-                <div className="md:w-40 md:flex-shrink-0">
-                  <div className="relative h-28 w-full overflow-hidden rounded-sm">
-                    <img
-                      src={cover}
-                      alt={title}
-                      className="h-full w-full object-cover"
-                    />
-                    {isActive && (
-                      <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-red-500/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
-                        <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                        LIVE
-                      </span>
-                    )}
                   </div>
-                </div>
-                <div className="flex-1 min-w-0 space-y-1">
-                  <h3 className="text-sm font-semibold text-slate-900 truncate">{title}</h3>
-                  {location && (
-                    <p className="text-xs text-slate-500 truncate">{location}</p>
-                  )}
-                  {summary && (
-                    <p className="text-xs text-slate-600 line-clamp-2">{summary}</p>
-                  )}
-                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                  <div className="flex items-center gap-2">
+                    {userSlug && creator?.id !== userData?.id && (
                       <div
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
                         }}
                       >
-                        <LikeButton
-                          tripSlug={trip.slug || trip.id}
-                          initialLiked={false}
-                          initialCount={socialStats.likes}
-                          size="sm"
-                          showCount={true}
-                        />
+                        <FollowButton userSlug={userSlug} variant="icon" size="sm" />
                       </div>
-                      <span className="inline-flex items-center gap-1">
-                        <Icon icon="mdi:message-outline" className="h-3 w-3" />
-                        {socialStats.comments}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Icon icon="mdi:share-outline" className="h-3 w-3" />
-                        {socialStats.shares}
-                      </span>
-                    </div>
+                    )}
+                    {timestamp && (
+                      <span className="text-xs text-slate-400">{timestamp}</span>
+                    )}
                   </div>
                 </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${typeStyles}`}>
+                    <Icon icon={trip.is_template ? 'mdi:file-document-outline' : 'mdi:share-variant'} className="h-3.5 w-3.5" />
+                    {typeLabel}
+                  </span>
+                  {userHandle && (
+                    <span className="text-xs text-slate-400">{userHandle}</span>
+                  )}
+                </div>
+
+                <h2 className="mt-4 text-xl font-semibold text-slate-900">{title}</h2>
+                {location && (
+                  <p className="mt-1 text-sm text-slate-500">{location}</p>
+                )}
+                {summary && (
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{summary}</p>
+                )}
+
+                {hashtags.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-500">
+                    {hashtags.map((tag) => (
+                      <span key={`${trip.id}-${tag}`} className="rounded-full bg-slate-100 px-3 py-1">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-500">
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                  >
+                    {trip.slug || trip.id ? (
+                      <LikeButton
+                        tripSlug={trip.slug || trip.id || ''}
+                        initialLiked={false}
+                        initialCount={Number(socialStats.likes) || 0}
+                        size="sm"
+                        showCount={true}
+                      />
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleCommentClick(trip)
+                    }}
+                    className="inline-flex items-center gap-1 text-blue-500 hover:text-blue-600 transition-colors cursor-pointer"
+                  >
+                    <Icon icon="mdi:comment" className="h-4 w-4" />
+                    {socialStats.comments}
+                  </button>
+                  <span className="inline-flex items-center gap-1 text-emerald-500">
+                    <Icon icon="mdi:share" className="h-4 w-4" />
+                    {socialStats.shares}
+                  </span>
+                </div>
               </div>
-            </article>
-          </Link>
+
+              <div className="md:w-64">
+                <Link href={tripUrl}>
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-slate-100">
+                    <img src={cover} alt={title} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
+                    {isActive && (
+                      <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
+                        <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                        LIVE
+                      </span>
+                    )}
+                  </div>
+                </Link>
+                <div className="mt-4 flex gap-2">
+                  <Link
+                    href={tripUrl}
+                    className="flex-1 rounded-sm bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 text-center"
+                  >
+                    旅を見る
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      // TODO: ブックマーク機能を実装
+                    }}
+                    className="rounded-sm border border-slate-200 p-2 text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                  >
+                    <Icon icon="mdi:bookmark-outline" className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
         )
       })}
-    </section>
+      </section>
+
+      {/* コメントモーダル */}
+      {selectedTrip && (
+        <TripCommentModal
+          isOpen={isCommentModalOpen}
+          onClose={() => {
+            setIsCommentModalOpen(false)
+            setSelectedTrip(null)
+          }}
+          trip={selectedTrip}
+        />
+      )}
+    </>
   )
 }
 
@@ -432,13 +499,15 @@ function PlanCatalog() {
                     }}
                     className="flex items-center"
                   >
-                    <LikeButton
-                      tripSlug={trip.slug || trip.id}
-                      initialLiked={false}
-                      initialCount={socialStats.likes}
-                      size="sm"
-                      showCount={true}
-                    />
+                    {trip.slug || trip.id ? (
+                      <LikeButton
+                        tripSlug={trip.slug || trip.id || ''}
+                        initialLiked={false}
+                        initialCount={Number(socialStats.likes) || 0}
+                        size="sm"
+                        showCount={true}
+                      />
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -464,7 +533,7 @@ function PlanCatalog() {
                           e.stopPropagation()
                         }}
                       >
-                        <FollowButton userSlug={trip.creator.slug} variant="icon" size="sm" />
+                        <FollowButton userSlug={trip.creator.slug || ''} variant="icon" size="sm" />
                       </div>
                     )}
                   </div>
