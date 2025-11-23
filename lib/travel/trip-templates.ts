@@ -7,11 +7,10 @@
 import type { Firestore } from 'firebase-admin/firestore'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import logger from '@/lib/core/logger'
-import type { Trip } from '@/lib/core/types'
+import type { Trip, User } from '@/lib/core/types'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import { convertStandardDates, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { adminDb } from '@/lib/firebase/admin'
-import { adminUserOperations } from '@/lib/firebase/admin-operation'
 
 // テスト環境ではテスト用のFirestoreを使用、本番環境ではadminDbを使用
 function getFirestore(db?: Firestore): Firestore {
@@ -103,12 +102,20 @@ export async function getTemplateTrips(
   }
 
   // creator 情報を追加
+  // trip.user_id は users コレクションのドキュメントIDなので、直接取得する
   const tripsWithCreator = await Promise.all(
     trips.map(async (trip) => {
-      let creator
+      let creator: User | undefined
       try {
-        // auth_uid で検索（後方互換性のため google_id もチェック）
-        creator = await adminUserOperations.getUserByAuthUid(trip.user_id) || undefined
+        const firestore = getFirestore(db)
+        const userDoc = await firestore.collection(COLLECTIONS.USERS).doc(trip.user_id).get()
+        if (userDoc.exists) {
+          // adminFirestoreHelpers.docToObject と同じロジック
+          creator = convertStandardDates({
+            id: userDoc.id,
+            ...userDoc.data(),
+          }) as User
+        }
       } catch (error) {
         logger.error('Error fetching creator for template trip', error, { tripId: trip.id, userId: trip.user_id })
       }
