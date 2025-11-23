@@ -159,16 +159,30 @@ export async function resolveTripSlugFromId(tripId: TripId): Promise<TripSlug | 
  * 注意: この関数は実データベースクエリを伴うため、頻繁な呼び出しを避けること。
  * 可能な限り事前に解決しておくことを推奨。
  * 
- * @param userId UserId（Firebase Auth UID）
+ * @param userId UserId（Firebase Auth UID / google_id）
  * @param userSlug UserSlug（URL-safe スラッグ）
  * @returns 同じユーザーの場合 true
  */
 export async function isSameUser(userId: UserId, userSlug: UserSlug): Promise<boolean> {
-  const resolvedUserId = await resolveUserIdFromSlug(userSlug)
-  if (!resolvedUserId) {
+  try {
+    // userSlug から users コレクションのドキュメントを取得
+    const db = getSafeFirestore()
+    const usersRef = db.collection(COLLECTIONS.USERS)
+    const querySnapshot = await usersRef.where('slug', '==', userSlug).limit(1).get()
+    
+    if (querySnapshot.empty) {
+      return false
+    }
+    
+    const userDoc = querySnapshot.docs[0]
+    const userData = userDoc.data() as User
+    
+    // userId (Firebase Auth UID) と userData の auth_uid または google_id を比較
+    return userData.auth_uid === userId || userData.google_id === userId
+  } catch (error) {
+    logger.error('Failed to check isSameUser', { error, userId, userSlug })
     return false
   }
-  return userId === resolvedUserId
 }
 
 /**
@@ -183,6 +197,44 @@ export async function isSameUser(userId: UserId, userSlug: UserSlug): Promise<bo
  */
 export function isSameUserSync(userId1: UserId, userId2: UserId): boolean {
   return userId1 === userId2
+}
+
+/**
+ * Firebase Auth UID と User オブジェクトが同じユーザーを指しているかどうかを判定（クライアントサイド用）
+ * 
+ * この関数は、Firebase Auth UID (user.uid) と User オブジェクトを比較します。
+ * users コレクションのドキュメントIDとFirebase Auth UID (google_id) の両方をサポートします。
+ * 
+ * @param authUid Firebase Auth UID (user.uid)
+ * @param user User オブジェクト
+ * @returns 同じユーザーの場合 true
+ */
+export function isSameUserByAuthUid(authUid: string | null | undefined, user: User | null | undefined): boolean {
+  if (!authUid || !user) {
+    return false
+  }
+  
+  // auth_uid または google_id と比較
+  return user.auth_uid === authUid || user.google_id === authUid
+}
+
+/**
+ * 2つのユーザー識別子が同じユーザーを指しているかどうかを判定（クライアントサイド用、同期版）
+ * 
+ * この関数は、Firebase Auth UID と users コレクションのドキュメントIDまたは google_id を比較します。
+ * 直接比較のみで、データベースクエリは行いません。
+ * 
+ * @param authUid Firebase Auth UID (user.uid)
+ * @param userDocumentIdOrGoogleId users コレクションのドキュメントID または google_id
+ * @returns 直接一致する場合 true（データベースクエリは行わない）
+ */
+export function isSameUserByIdSync(authUid: string | null | undefined, userDocumentIdOrGoogleId: string | null | undefined): boolean {
+  if (!authUid || !userDocumentIdOrGoogleId) {
+    return false
+  }
+  
+  // 直接一致する場合のみ true
+  return authUid === userDocumentIdOrGoogleId
 }
 
 /**
