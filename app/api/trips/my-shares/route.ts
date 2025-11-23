@@ -14,7 +14,7 @@ type MySharesResponse = {
 function clamp(value: number, min: number, max: number): number {
   if (Number.isNaN(value)) return min
   return Math.min(max, Math.max(min, value))
-}
+  }
 
 export const GET = authApi(async (request: NextRequest, ctx): Promise<NextResponse<MySharesResponse>> => {
   const { userId } = ctx.auth!
