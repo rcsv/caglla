@@ -283,7 +283,18 @@ export function validateNumberParam(
 // JSONパースのバリデーション
 export async function parseRequestBody<T>(request: Request): Promise<T> {
   try {
-    const body = await request.json()
+    // リクエストボディが空の場合は空オブジェクトを返す
+    const contentType = request.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      return {} as T
+    }
+    
+    const text = await request.text()
+    if (!text || text.trim() === '') {
+      return {} as T
+    }
+    
+    const body = JSON.parse(text)
     return body as T
   } catch (error) {
     throw createBadRequestError(

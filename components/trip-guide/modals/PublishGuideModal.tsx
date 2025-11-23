@@ -38,11 +38,24 @@ export function PublishGuideModal({ trip, isOpen, onClose, onSuccess }: PublishG
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({}),
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to publish guide' }))
-        throw new Error(errorData.error || `Failed to publish guide: ${response.status}`)
+        let errorMessage = `Failed to publish guide: ${response.status}`
+        try {
+          const errorData = await response.json()
+          if (typeof errorData === 'string') {
+            errorMessage = errorData
+          } else if (errorData?.error) {
+            errorMessage = typeof errorData.error === 'string' ? errorData.error : String(errorData.error)
+          } else if (errorData?.message) {
+            errorMessage = errorData.message
+          }
+        } catch {
+          // JSON解析に失敗した場合はデフォルトメッセージを使用
+        }
+        throw new Error(errorMessage)
       }
 
       logger.info('Guide published successfully', { tripId: trip.id })
@@ -50,7 +63,12 @@ export function PublishGuideModal({ trip, isOpen, onClose, onSuccess }: PublishG
       onClose()
     } catch (err: any) {
       logger.error('Error publishing guide', err)
-      setError(err.message || 'Failed to publish guide')
+      const errorMessage = err instanceof Error 
+        ? err.message 
+        : typeof err === 'string' 
+          ? err 
+          : err?.message || String(err) || 'Failed to publish guide'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
