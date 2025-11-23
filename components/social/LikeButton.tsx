@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { Icon } from '@iconify/react'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import { useAuth } from '@/lib/contexts/auth'
@@ -47,7 +47,13 @@ export default function LikeButton({
     count: initialCount,
   })[0]
 
-  const handleToggle = useCallback(async () => {
+  const handleToggle = useCallback(async (e?: React.MouseEvent) => {
+    // イベントの伝播を防ぐ
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
     // 認証チェック
     if (authLoading) return
     if (!user) {

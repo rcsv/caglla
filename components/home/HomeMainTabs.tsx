@@ -12,6 +12,7 @@ import TripShareSettingsModal from '@/components/modals/TripShareSettingsModal'
 import { useFollowingFeed } from '@/hooks/useFollowingFeed'
 import { useTemplates } from '@/hooks/useTemplates'
 import FollowButton from '@/components/social/FollowButton'
+import LikeButton from '@/components/social/LikeButton'
 import { useUserData } from '@/lib/contexts/user-data'
 import Link from 'next/link'
 
@@ -327,10 +328,20 @@ function FriendsTimeline() {
                   )}
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                      <span className="inline-flex items-center gap-1">
-                        <Icon icon="mdi:heart-outline" className="h-3 w-3" />
-                        {socialStats.likes}
-                      </span>
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                        }}
+                      >
+                        <LikeButton
+                          tripSlug={trip.slug || trip.id}
+                          initialLiked={false}
+                          initialCount={socialStats.likes}
+                          size="sm"
+                          showCount={true}
+                        />
+                      </div>
                       <span className="inline-flex items-center gap-1">
                         <Icon icon="mdi:message-outline" className="h-3 w-3" />
                         {socialStats.comments}
@@ -414,8 +425,20 @@ function PlanCatalog() {
                       <p className="text-xs text-slate-200">{days}</p>
                     )}
                   </div>
-                  <div className="rounded-full bg-slate-900/60 px-2 py-1 text-[10px] text-slate-100">
-                    {socialStats.likes} ♥︎
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                    }}
+                    className="flex items-center"
+                  >
+                    <LikeButton
+                      tripSlug={trip.slug || trip.id}
+                      initialLiked={false}
+                      initialCount={socialStats.likes}
+                      size="sm"
+                      showCount={true}
+                    />
                   </div>
                 </div>
               </div>
