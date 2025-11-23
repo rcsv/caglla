@@ -286,7 +286,12 @@ function FriendsTimeline() {
                 </div>
                 <div className="flex items-center gap-2">
                   {userSlug && creator?.id !== userData?.id && (
-                    <div onClick={(e) => e.stopPropagation()}>
+                    <div
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
+                    >
                       <FollowButton userSlug={userSlug} variant="icon" size="sm" />
                     </div>
                   )}
@@ -430,7 +435,12 @@ function PlanCatalog() {
                       <p className="text-xs font-semibold text-slate-800">{creatorName}</p>
                     </div>
                     {trip.creator?.slug && trip.creator.id !== userData?.id && (
-                      <div onClick={(e) => e.stopPropagation()}>
+                      <div
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                        }}
+                      >
                         <FollowButton userSlug={trip.creator.slug} variant="icon" size="sm" />
                       </div>
                     )}

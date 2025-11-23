@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { Icon } from '@iconify/react'
 import { Button } from '@/components/common/Button'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
@@ -60,7 +60,13 @@ export default function FollowButton({
   // 楽観的UI更新のための前の状態を保存
   const previousStateRef = useRef<boolean>(initialFollowing ?? false)
 
-  const handleToggle = useCallback(async () => {
+  const handleToggle = useCallback(async (e?: React.MouseEvent) => {
+    // イベントの伝播を防ぐ
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
     // 認証チェック
     if (authLoading) return
     if (!user) {
