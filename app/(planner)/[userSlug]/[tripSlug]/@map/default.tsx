@@ -1,61 +1,57 @@
- 'use client'
+'use client'
 
 import TripMap from '@/components/trip/TripMap'
-import type { Trip, Itinerary } from '@/lib/core/types'
-import { useEffect, useMemo, useState } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import POIDialog from '@/components/modals/POIDialog'
+import type { Itinerary } from '@/lib/core/types'
+import { useEffect, useMemo } from 'react'
 import Loading from '@/components/common/Loading'
-import logger from '@/lib/core/logger'
+import { useTrip } from '../TripProvider'
+import { useTripUrlState } from '../useTripUrlState'
+import { POIProvider, usePOI } from '../POIProvider'
+import { dispatchPOIOpen, dispatchPOIClose } from '../poi-events'
 
 /**
  * Map Default Slot (Read-only)
  * 
- * Phase 2-5: Parallel Routes実装（v3.0.0）
+ * Phase 4: POIProviderの実装（v3.0.0）
  * 
- * - URLパラメータからtripSlugを取得し、自前でTripをフェッチ
- * - 読み取り専用として地図を描画（追加・移動などの操作は抑止）
+ * TripProviderからTripデータを取得し、useTripUrlStateでURL状態を管理します。
+ * POIProviderでPOIデータを管理し、CustomEventで@timelineからの通知を受け取ります。
+ * 読み取り専用として地図を描画（追加・移動などの操作は抑止）
  */
-export default function MapDefault() {
-  const params = useParams<{ userSlug: string; tripSlug: string }>()
-  const tripSlug = params?.tripSlug
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [trip, setTrip] = useState<Trip | null>(null)
-  const [selectedItineraryId, setSelectedItineraryId] = useState<string | null>(null)
-  const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+function MapContent() {
+  const { trip } = useTrip()
+  const {
+    selectedDayId,
+    selectedItineraryId,
+    mapFocusMode,
+    setSelectedItineraryId,
+    updateQuery,
+  } = useTripUrlState()
+  const { poiData, setPoiData } = usePOI()
 
+  // @timelineからのCustomEventを受け取る
   useEffect(() => {
-    const init = async () => {
-      try {
-        if (!tripSlug) {
-          setLoading(false)
-          return
-        }
-        const res = await makeAuthenticatedRequest(`/api/trip/${tripSlug}`)
-        if (res.ok) {
-          const data = await res.json()
-          setTrip(data as Trip)
-        } else {
-          setTrip(null)
-        }
-      } catch (e) {
-        logger.error('Failed to load trip for map slot', e)
-      } finally {
-        setLoading(false)
+    const handlePOIOpen = (e: Event) => {
+      const customEvent = e as CustomEvent
+      if (customEvent.detail) {
+        setPoiData(customEvent.detail)
       }
     }
-    void init()
-  }, [tripSlug])
 
-  // URLクエリ（sd, si, mf）から選択状態を反映
-  useEffect(() => {
-    const sd = searchParams?.get('sd') || null
-    const si = searchParams?.get('si') || null
-    setSelectedDayId(sd)
-    setSelectedItineraryId(si)
-  }, [searchParams])
+    const handlePOIClose = () => {
+      setPoiData(null)
+    }
+
+    window.addEventListener('planner:poi-open', handlePOIOpen as EventListener)
+    window.addEventListener('planner:poi-close', handlePOIClose)
+
+    return () => {
+      window.removeEventListener('planner:poi-open', handlePOIOpen as EventListener)
+      window.removeEventListener('planner:poi-close', handlePOIClose)
+    }
+  }, [setPoiData])
+
 
   const itineraries: Itinerary[] = useMemo(() => {
     if (!trip?.days) return []
@@ -66,11 +62,8 @@ export default function MapDefault() {
     return trip.days.flatMap(d => d.itineraries || [])
   }, [trip, selectedDayId])
 
-  if (loading) {
-    return <Loading className="py-6" />
-  }
   if (!trip) {
-    return null
+    return <Loading className="py-6" />
   }
 
   return (
@@ -82,27 +75,54 @@ export default function MapDefault() {
         selectedDayId={selectedDayId}
         onItineraryClick={(id) => {
           setSelectedItineraryId(id)
-          const params = new URLSearchParams(searchParams?.toString() || '')
-          if (id) {
-            params.set('si', id)
-            params.set('mf', 'single')
-          } else {
-            params.delete('si')
-            params.set('mf', 'all')
-          }
-          router.replace(`?${params.toString()}`)
+          updateQuery({ si: id, mf: 'single' })
         }}
-        onPoiDataUpdate={() => {}}
+        onPoiDataUpdate={(data) => {
+          if (data) {
+            setPoiData({
+              placeId: data.placeId,
+              name: data.name,
+              location: data.location,
+              placeData: data.placeData,
+              orderNumber: data.orderNumber,
+            })
+          } else {
+            setPoiData(null)
+          }
+        }}
         // 読み取り専用のため追加操作は無効化
         onAddFromPOI={undefined}
         className="h-full w-full"
-        focusMode={selectedItineraryId ? 'single' : selectedDayId ? 'day' : 'all'}
+        focusMode={mapFocusMode}
         onMapInteractionStart={() => {}}
         scrollSyncEnabled={false}
         onRequestEnableScrollSync={() => {}}
         initialCenter={trip.destination_place?.geometry?.location || undefined}
       />
+      {poiData && (
+        <POIDialog
+          poiData={poiData}
+          onClose={() => {
+            setPoiData(null)
+            dispatchPOIClose()
+          }}
+          onAddToItinerary={undefined} // 読み取り専用のため無効化
+          availableDays={trip.days?.map(d => ({
+            id: d.id,
+            date: d.date?.toISOString() || '',
+            title: d.description,
+          }))}
+        />
+      )}
     </div>
+  )
+}
+
+export default function MapDefault() {
+  return (
+    <POIProvider>
+      <MapContent />
+    </POIProvider>
   )
 }
 
