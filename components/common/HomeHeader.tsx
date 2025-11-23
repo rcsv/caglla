@@ -47,7 +47,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
   const planBadgeClass = (() => {
     const n = (planName || '').toLowerCase()
     const base =
-      'inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold tracking-tight'
+      'inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs sm:text-sm font-semibold tracking-tight'
     if (n.includes('globetrotter')) return `${base} border-purple-200 bg-purple-50 text-purple-600`
     if (n.includes('backpacker')) return `${base} border-blue-200 bg-blue-50 text-blue-600`
     return `${base} border-gray-200 bg-gray-50 text-gray-600`
@@ -88,7 +88,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                 {appName}
               </span>
             </Link>
-            <nav className="hidden md:flex items-center gap-4 text-sm">
+            <nav className="hidden md:flex items-center gap-4 text-base">
               <Link href="/home" className="text-gray-600 hover:text-gray-900">Home</Link>
               <Link href="/feed" className="text-gray-600 hover:text-gray-900">Feed</Link>
               
@@ -96,7 +96,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
               <div className="relative" ref={yourTripsRef}>
                 <button
                   onClick={() => setYourTripsOpen(v => !v)}
-                  className="text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                  className="text-gray-600 hover:text-gray-900 flex items-center gap-1 text-base"
                 >
                   Your Trips
                   <svg
@@ -113,14 +113,14 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                     <Link
                       href="/plan"
                       onClick={() => setYourTripsOpen(false)}
-                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className="block px-3 py-2 text-base text-gray-700 hover:bg-gray-50"
                     >
                       Upcomings
                     </Link>
                     <Link
                       href="/memories"
                       onClick={() => setYourTripsOpen(false)}
-                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className="block px-3 py-2 text-base text-gray-700 hover:bg-gray-50"
                     >
                       Memories
                     </Link>
@@ -135,7 +135,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                 process.env?.NODE_ENV === 'development' && (
                 <Link href="/dev-tools" className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900">
                   {t('devTools')}
-                  <span className="px-1.5 py-0.5 text-xs font-semibold bg-emerald-500 text-white rounded">
+                  <span className="px-1.5 py-0.5 text-sm font-semibold bg-emerald-500 text-white rounded">
                     {t('debug.badge')}
                   </span>
                 </Link>
@@ -148,9 +148,9 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             <button onClick={() => setOpen(v => !v)} className="flex items-center gap-3">
               <div className="text-right leading-tight">
                 <div className="flex items-center gap-1.5 justify-end">
-                  <div className="text-sm font-medium text-gray-900 truncate max-w-[120px] sm:max-w-[160px]">{userName}</div>
+                  <div className="text-base font-medium text-gray-900 truncate max-w-[120px] sm:max-w-[160px]">{userName}</div>
                   <span 
-                    className="text-base leading-none" 
+                    className="text-lg leading-none" 
                     title={LANGUAGE_NAMES[currentLanguage]?.native || currentLanguage}
                     aria-label={`Current language: ${LANGUAGE_NAMES[currentLanguage]?.native || currentLanguage}`}
                   >
@@ -177,10 +177,10 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             {open && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 zidx-popup-menu">
                 {userSlug && (
-                  <Link href={`/${userSlug}`} onClick={() => setOpen(false)} className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">{t('header.profile')}</Link>
+                  <Link href={`/${userSlug}`} onClick={() => setOpen(false)} className="block px-3 py-2 text-base text-gray-700 hover:bg-gray-50">{t('header.profile')}</Link>
                 )}
-                <button onClick={() => { setOpen(false); onChangePlan && onChangePlan() }} className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">{t('header.changePlan')}</button>
-                <button onClick={() => { setOpen(false); onLogout() }} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50">{t('header.logout')}</button>
+                <button onClick={() => { setOpen(false); onChangePlan && onChangePlan() }} className="w-full text-left px-3 py-2 text-base text-gray-700 hover:bg-gray-50">{t('header.changePlan')}</button>
+                <button onClick={() => { setOpen(false); onLogout() }} className="w-full text-left px-3 py-2 text-base text-red-600 hover:bg-gray-50">{t('header.logout')}</button>
               </div>
             )}
           </div>
