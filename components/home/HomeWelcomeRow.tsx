@@ -6,13 +6,11 @@ import { t } from '@/lib/i18n'
 interface HomeWelcomeRowProps {
   onOpenCreateTrip: () => void
   onOpenQuickPlan: () => void
-  onOpenCreateGuide: () => void
 }
 
 export function HomeWelcomeRow({
   onOpenCreateTrip,
   onOpenQuickPlan,
-  onOpenCreateGuide,
 }: HomeWelcomeRowProps) {
   return (
     <div className="mb-8 flex items-center justify-between">
@@ -38,13 +36,6 @@ export function HomeWelcomeRow({
         >
           <Icon icon="mdi:calendar-edit" className="h-5 w-5" />
           {t('home.welcome.quickPlan', 'Quick Plan')}
-        </button>
-        <button
-          onClick={onOpenCreateGuide}
-          className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-sm border border-indigo-200 text-indigo-600 text-sm font-semibold hover:border-indigo-300 transition-colors"
-        >
-          <Icon icon="mdi:book-open-variant" className="h-5 w-5" />
-          {t('home.welcome.createGuide', 'Create a Guide')}
         </button>
       </div>
     </div>

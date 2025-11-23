@@ -14,10 +14,8 @@ import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { HomeRightColumn } from '@/components/home/HomeRightColumn'
 import { useRecentTrips } from '@/hooks/useRecentTrips'
 import { useMyShares } from '@/hooks/useMyShares'
-import { useMyGuides } from '@/hooks/useMyGuides'
 import { HomeWelcomeRow } from '@/components/home/HomeWelcomeRow'
 import { HomeMainTabs } from '@/components/home/HomeMainTabs'
-import { MyGuidesSection } from '@/components/home/MyGuidesSection'
 
 /**
  * v3.0.0 Home Page - シンプルなレイアウト構造
@@ -31,11 +29,8 @@ export default function HomePage() {
   const router = useRouter()
   const [isQuickPlanModalOpen, setIsQuickPlanModalOpen] = useState(false)
   const [isCreateTripDialogOpen, setIsCreateTripDialogOpen] = useState(false)
-  const [isCreateGuideDialogOpen, setIsCreateGuideDialogOpen] = useState(false)
   const recentTrips = useRecentTrips()
   const { trips: mySharedTrips, loading: mySharesLoading, refresh: refreshMyShares } = useMyShares()
-  // 執筆中の Guide のみを表示するため 'draft' を指定
-  const { trips: myGuides, loading: myGuidesLoading, refresh: refreshMyGuides } = useMyGuides('draft')
 
   useEffect(() => {
     if (!loading && !user) {
@@ -66,12 +61,6 @@ export default function HomePage() {
     await refreshTrips()
   }
 
-  const handleGuideCreated = async () => {
-    // Guide作成成功後も同様にデータのみリフレッシュ（遷移はCreateTripDialog側で行う）
-    await refreshTrips()
-    await refreshMyGuides()
-  }
-
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const tomorrow = new Date(today)
@@ -94,7 +83,6 @@ export default function HomePage() {
         <HomeWelcomeRow
           onOpenCreateTrip={() => setIsCreateTripDialogOpen(true)}
           onOpenQuickPlan={() => setIsQuickPlanModalOpen(true)}
-          onOpenCreateGuide={() => setIsCreateGuideDialogOpen(true)}
         />
 
         {/* メインコンテンツエリア（/home-v2 のタブ付きフィードを移植） */}
@@ -106,20 +94,13 @@ export default function HomePage() {
               onMySharesRefresh={refreshMyShares}
             />
           </div>
-          <div className="lg:col-span-3 space-y-6">
-            <MyGuidesSection
-              trips={myGuides}
-              loading={myGuidesLoading}
-              onRefresh={refreshMyGuides}
-            />
-            <HomeRightColumn
-              trips={trips}
-              today={today}
-              referenceDateForUpcoming={tomorrow}
-              recentTrips={recentTrips}
-              onOpenCreateTrip={() => setIsCreateTripDialogOpen(true)}
-            />
-          </div>
+          <HomeRightColumn
+            trips={trips}
+            today={today}
+            referenceDateForUpcoming={tomorrow}
+            recentTrips={recentTrips}
+            onOpenCreateTrip={() => setIsCreateTripDialogOpen(true)}
+          />
         </div>
       </main>
 
@@ -138,15 +119,6 @@ export default function HomePage() {
         onClose={() => setIsCreateTripDialogOpen(false)}
         onSuccess={handleTripCreated}
         initialMode="trip"
-        hideModeSelector={true}
-      />
-
-      {/* Create Guide Dialog (Template作成専用) */}
-      <CreateTripDialog
-        isOpen={isCreateGuideDialogOpen}
-        onClose={() => setIsCreateGuideDialogOpen(false)}
-        onSuccess={handleGuideCreated}
-        initialMode="template"
         hideModeSelector={true}
       />
     </div>
