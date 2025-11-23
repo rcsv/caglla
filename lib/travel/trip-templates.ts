@@ -11,6 +11,7 @@ import type { Trip } from '@/lib/core/types'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import { convertStandardDates, toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { adminDb } from '@/lib/firebase/admin'
+import { adminUserOperations } from '@/lib/firebase/admin-operation'
 
 // テスト環境ではテスト用のFirestoreを使用、本番環境ではadminDbを使用
 function getFirestore(db?: Firestore): Firestore {
@@ -101,6 +102,23 @@ export async function getTemplateTrips(
     trips = trips.filter((trip) => trip.user_id !== excludeUserId)
   }
 
+  // creator 情報を追加
+  const tripsWithCreator = await Promise.all(
+    trips.map(async (trip) => {
+      let creator
+      try {
+        // auth_uid で検索（後方互換性のため google_id もチェック）
+        creator = await adminUserOperations.getUserByAuthUid(trip.user_id) || undefined
+      } catch (error) {
+        logger.error('Error fetching creator for template trip', error, { tripId: trip.id, userId: trip.user_id })
+      }
+      return {
+        ...trip,
+        creator,
+      } as Trip
+    })
+  )
+
   // 次のページがあるか確認
   const hasMore = snapshot.docs.length > limit
   const nextCursor = hasMore && trips.length > 0
@@ -111,13 +129,13 @@ export async function getTemplateTrips(
     : undefined
 
   logger.debug('Template trips fetched', {
-    count: trips.length,
+    count: tripsWithCreator.length,
     hasMore,
     nextCursor: nextCursor ? 'present' : 'none',
   })
 
   return {
-    trips,
+    trips: tripsWithCreator,
     ...(nextCursor && { nextCursor }),
   }
 }
