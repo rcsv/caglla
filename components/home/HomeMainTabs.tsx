@@ -9,6 +9,9 @@ import { resolveSocialStats } from '@/lib/social/trip-social-utils'
 import { TripStatsRow } from '@/components/tripcard/TripStatsRow'
 import { TripSocialStatsRow } from '@/components/tripcard/TripSocialStatsRow'
 import TripShareSettingsModal from '@/components/modals/TripShareSettingsModal'
+import { useFollowingFeed } from '@/hooks/useFollowingFeed'
+import { useTemplates } from '@/hooks/useTemplates'
+import Link from 'next/link'
 
 type TabId = 'friends' | 'ideas' | 'shares'
 
@@ -45,138 +48,42 @@ const FILTER_CHIPS: Record<TabId, string[]> = {
   shares: ['公開中', '期限あり', 'フォロワー限定'],
 }
 
-const FRIEND_ACTIVITIES = [
-  {
-    id: 'activity-okinawa',
-    type: 'shared' as const,
-    status: 'live' as const,
-    userName: '佐藤 美奈',
-    userHandle: '@mina_travel',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mina',
-    action: '沖縄女子旅をシェアしました',
-    timestamp: '45分前',
-    title: '梅雨明けの沖縄3泊4日',
-    location: '沖縄・那覇 / 恩納村',
-    summary: '透明度の高い海とニューオープンのカフェを中心に巡る大人女子旅アルバム。',
-    cover:
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-    tags: ['#女子旅', '#3泊4日', '#ビーチ'],
-    metrics: { likes: 128, comments: 24, shares: 12 },
-  },
-  {
-    id: 'activity-template',
-    type: 'template' as const,
-    status: 'normal' as const,
-    userName: 'NAO PLANNER',
-    userHandle: '@nao_planner',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nao',
-    action: '京都グルメプランを公開',
-    timestamp: '2時間前',
-    title: '京町家に住むように滞在する48時間',
-    location: '京都・五条 / 祇園',
-    summary: '町家ステイと夜の茶会体験を組み合わせた2泊3日プラン。予約リンク付き。',
-    cover:
-      'https://images.unsplash.com/photo-1545569341-9eb8b30979d6?auto=format&fit=crop&w=1200&q=80',
-    tags: ['#グルメ', '#町家ステイ', '#2泊3日'],
-    metrics: { likes: 96, comments: 11, shares: 7 },
-  },
-  {
-    id: 'activity-hokkaido',
-    type: 'shared' as const,
-    status: 'normal' as const,
-    userName: 'Ken Yamamoto',
-    userHandle: '@ken_outdoor',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ken',
-    action: '家族旅行をアルバム公開',
-    timestamp: '昨日',
-    title: '子連れで巡る北海道ドライブ',
-    location: '札幌 / 富良野 / 美瑛',
-    summary:
-      '未就学児2人との北海道ドライブ。動物園やファーム富田を効率的に巡る実例。',
-    cover:
-      'https://images.unsplash.com/photo-1473625247510-8ceb1760943f?auto=format&fit=crop&w=1200&q=80',
-    tags: ['#家族旅', '#ドライブ', '#夏休み'],
-    metrics: { likes: 201, comments: 32, shares: 18 },
-  },
-]
+/**
+ * 相対時間をフォーマット（例: "45分前", "2時間前", "昨日"）
+ */
+function formatRelativeTime(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
 
-const PLAN_IDEAS = [
-  {
-    id: 'idea-helsinki',
-    title: '北欧デザインを巡るヘルシンキ3日間',
-    region: 'ヨーロッパ / フィンランド',
-    days: '3日間',
-    budget: '¥¥',
-    theme: 'デザインとカフェ',
-    tags: ['大人女子', 'アート', '路面電車'],
-    summary: 'マリメッコ本社・デザインディストリクト・サウナ体験を詰め込んだ定番セット。',
-    cover:
-      'https://images.unsplash.com/photo-1500048993953-d23a436266cf?auto=format&fit=crop&w=1200&q=80',
-    creator: {
-      name: 'Lina Planner',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lina',
-      role: 'Travel Creator',
-    },
-    stats: { likes: 86, clones: 14 },
-  },
-  {
-    id: 'idea-fukuoka',
-    title: '福岡と糸島で過ごす48時間ショートトリップ',
-    region: '日本 / 福岡',
-    days: '2泊3日',
-    budget: '¥',
-    theme: '食と自然',
-    tags: ['ひとり旅', 'シーサイド', 'カフェ巡り'],
-    summary:
-      '屋台よりも糸島の静かなカフェとワーケーションスポットを重視した構成。',
-    cover:
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1200&q=80',
-    creator: {
-      name: 'Takuya Nomad',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Takuya',
-      role: 'Nomad Planner',
-    },
-    stats: { likes: 54, clones: 21 },
-  },
-  {
-    id: 'idea-bali',
-    title: 'バリ島ワーク＆ウェルネス リトリート',
-    region: 'アジア / インドネシア',
-    days: '4泊5日',
-    budget: '¥¥¥',
-    theme: 'リモートワーク',
-    tags: ['ウェルネス', 'ヨガ', 'サーフィン'],
-    summary:
-      '朝ヨガと夕方サーフで1日を区切るワークデイ設計。ビザ・SIM情報付き。',
-    cover:
-      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
-    creator: {
-      name: 'Studio Paon',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Paon',
-      role: 'Boutique Planner',
-    },
-    stats: { likes: 112, clones: 33 },
-  },
-  {
-    id: 'idea-sydney',
-    title: '親子で楽しむシドニー体験セット',
-    region: 'オセアニア / オーストラリア',
-    days: '5日間',
-    budget: '¥¥',
-    theme: '親子旅',
-    tags: ['動物体験', '街歩き', '海沿い'],
-    summary:
-      'ライトレールとフェリーで巡る親子旅。タロンガ動物園とボンダイキッズプログラム込み。',
-    cover:
-      'https://images.unsplash.com/photo-1506976785307-8732e854ad03?auto=format&fit=crop&w=1200&q=80',
-    creator: {
-      name: 'Haruka & Co.',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Haruka',
-      role: 'Family Travel Lab',
-    },
-    stats: { likes: 73, clones: 17 },
-  },
-]
+  if (diffMins < 1) {
+    return 'たった今'
+  } else if (diffMins < 60) {
+    return `${diffMins}分前`
+  } else if (diffHours < 24) {
+    return `${diffHours}時間前`
+  } else if (diffDays === 1) {
+    return '昨日'
+  } else if (diffDays < 7) {
+    return `${diffDays}日前`
+  } else {
+    return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })
+  }
+}
+
+/**
+ * Tripが現在進行中かどうかを判定
+ */
+function isTripActive(trip: Trip): boolean {
+  if (!trip.start_date || !trip.end_date) return false
+  const start = toDateOrNull(trip.start_date)
+  const end = toDateOrNull(trip.end_date)
+  if (!start || !end) return false
+  const now = new Date()
+  return start <= now && now <= end
+}
 
 const MY_SHARED_TRIPS = [
   {
@@ -307,145 +214,227 @@ export function HomeMainTabs({
 }
 
 function FriendsTimeline() {
+  const { trips, loading, error } = useFollowingFeed(20)
+
+  if (loading) {
+    return (
+      <section className="space-y-4">
+        <div className="h-32 rounded-sm bg-gray-100 animate-pulse" />
+        <div className="h-32 rounded-sm bg-gray-100 animate-pulse" />
+        <div className="h-32 rounded-sm bg-gray-100 animate-pulse" />
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="space-y-4">
+        <p className="text-sm text-red-600">エラーが発生しました: {error.message}</p>
+      </section>
+    )
+  }
+
+  if (!trips || trips.length === 0) {
+    return (
+      <section className="space-y-4">
+        <p className="text-sm text-slate-500">フォロー中のユーザーの旅行はまだありません。</p>
+      </section>
+    )
+  }
+
   return (
     <section className="space-y-4">
-      {FRIEND_ACTIVITIES.map((activity) => (
-        <article
-          key={activity.id}
-          className="rounded-sm border border-slate-200 bg-white p-4 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all"
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <img
-              src={activity.avatar}
-              alt={activity.userName}
-              className="h-9 w-9 rounded-full border border-slate-200"
-            />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold text-slate-900 truncate">
-                  {activity.userName}
-                </p>
-                <span className="text-xs text-slate-400 truncate">{activity.userHandle}</span>
-              </div>
-              <p className="text-xs text-slate-500">{activity.action}</p>
-            </div>
-            <span className="text-xs text-slate-400">{activity.timestamp}</span>
-          </div>
+      {trips.map((trip) => {
+        const creator = trip.creator
+        const userName = creator?.name || 'Unknown User'
+        const userSlug = creator?.slug
+        const avatar = creator?.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`
+        const userHandle = userSlug ? `@${userSlug}` : ''
+        const action = trip.is_template ? 'テンプレートプランを公開' : '旅行をシェアしました'
+        const createdAt = toDateOrNull(trip.created_at)
+        const timestamp = createdAt ? formatRelativeTime(createdAt) : ''
+        const title = trip.title || trip.destination || 'Untitled Trip'
+        const location = trip.destination_place?.name || trip.destination || ''
+        const summary = trip.description || ''
+        const cover = trip.image_url || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80'
+        const isActive = isTripActive(trip)
+        const socialStats = resolveSocialStats(trip)
+        const tripUrl = userSlug && trip.slug ? `/${userSlug}/${trip.slug}` : `/trip/${trip.id}`
 
-          <div className="flex flex-col gap-3 md:flex-row">
-            <div className="md:w-40 md:flex-shrink-0">
-              <div className="relative h-28 w-full overflow-hidden rounded-sm">
+        return (
+          <Link key={trip.id} href={tripUrl}>
+            <article className="rounded-sm border border-slate-200 bg-white p-4 shadow-sm hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer">
+              <div className="flex items-center gap-3 mb-3">
                 <img
-                  src={activity.cover}
-                  alt={activity.title}
-                  className="h-full w-full object-cover"
+                  src={avatar}
+                  alt={userName}
+                  className="h-9 w-9 rounded-full border border-slate-200"
                 />
-                {activity.status === 'live' && (
-                  <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-red-500/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                    LIVE
-                  </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-slate-900 truncate">
+                      {userName}
+                    </p>
+                    {userHandle && (
+                      <span className="text-xs text-slate-400 truncate">{userHandle}</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500">{action}</p>
+                </div>
+                {timestamp && (
+                  <span className="text-xs text-slate-400">{timestamp}</span>
                 )}
               </div>
-            </div>
-            <div className="flex-1 min-w-0 space-y-1">
-              <h3 className="text-sm font-semibold text-slate-900 truncate">{activity.title}</h3>
-              <p className="text-xs text-slate-500 truncate">{activity.location}</p>
-              <p className="text-xs text-slate-600 line-clamp-2">{activity.summary}</p>
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap gap-1">
-                  {activity.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+
+              <div className="flex flex-col gap-3 md:flex-row">
+                <div className="md:w-40 md:flex-shrink-0">
+                  <div className="relative h-28 w-full overflow-hidden rounded-sm">
+                    <img
+                      src={cover}
+                      alt={title}
+                      className="h-full w-full object-cover"
+                    />
+                    {isActive && (
+                      <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-red-500/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                        <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+                        LIVE
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                  <span className="inline-flex items-center gap-1">
-                    <Icon icon="mdi:heart-outline" className="h-3 w-3" />
-                    {activity.metrics.likes}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Icon icon="mdi:message-outline" className="h-3 w-3" />
-                    {activity.metrics.comments}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <Icon icon="mdi:share-outline" className="h-3 w-3" />
-                    {activity.metrics.shares}
-                  </span>
+                <div className="flex-1 min-w-0 space-y-1">
+                  <h3 className="text-sm font-semibold text-slate-900 truncate">{title}</h3>
+                  {location && (
+                    <p className="text-xs text-slate-500 truncate">{location}</p>
+                  )}
+                  {summary && (
+                    <p className="text-xs text-slate-600 line-clamp-2">{summary}</p>
+                  )}
+                  <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                      <span className="inline-flex items-center gap-1">
+                        <Icon icon="mdi:heart-outline" className="h-3 w-3" />
+                        {socialStats.likes}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Icon icon="mdi:message-outline" className="h-3 w-3" />
+                        {socialStats.comments}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Icon icon="mdi:share-outline" className="h-3 w-3" />
+                        {socialStats.shares}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </article>
-      ))}
+            </article>
+          </Link>
+        )
+      })}
     </section>
   )
 }
 
 function PlanCatalog() {
+  const { trips, loading, error } = useTemplates(20, true) // excludeMyTrips = true
+
+  if (loading) {
+    return (
+      <section className="grid gap-4 md:grid-cols-2">
+        <div className="h-64 rounded-sm bg-gray-100 animate-pulse" />
+        <div className="h-64 rounded-sm bg-gray-100 animate-pulse" />
+        <div className="h-64 rounded-sm bg-gray-100 animate-pulse" />
+        <div className="h-64 rounded-sm bg-gray-100 animate-pulse" />
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="space-y-4">
+        <p className="text-sm text-red-600">エラーが発生しました: {error.message}</p>
+      </section>
+    )
+  }
+
+  if (!trips || trips.length === 0) {
+    return (
+      <section className="space-y-4">
+        <p className="text-sm text-slate-500">公開されているテンプレートはまだありません。</p>
+      </section>
+    )
+  }
+
   return (
     <section className="grid gap-4 md:grid-cols-2">
-      {PLAN_IDEAS.map((idea) => (
-        <article
-          key={idea.id}
-          className="group flex flex-col overflow-hidden rounded-sm border border-slate-200 bg-white shadow-sm hover:border-indigo-200 hover:shadow-md transition-all"
-        >
-          <div className="relative h-40 w-full overflow-hidden">
-            <img
-              src={idea.cover}
-              alt={idea.title}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/0" />
-            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-medium text-slate-100">{idea.region}</p>
-                <p className="text-xs text-slate-200">
-                  {idea.days} ・ {idea.budget} ・ {idea.theme}
-                </p>
-              </div>
-              <div className="rounded-full bg-slate-900/60 px-2 py-1 text-[10px] text-slate-100">
-                {idea.stats.likes} ♥︎
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-1 flex-col gap-3 p-4">
-            <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{idea.title}</h3>
-            <p className="text-xs text-slate-600 line-clamp-2">{idea.summary}</p>
-            <div className="flex flex-wrap gap-1">
-              {idea.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-            <div className="mt-auto flex items-center justify-between pt-2">
-              <div className="flex items-center gap-2">
+      {trips.map((trip) => {
+        const creator = trip.creator
+        const creatorName = creator?.name || 'Unknown Creator'
+        const creatorAvatar = creator?.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${creatorName}`
+        const title = trip.title || trip.destination || 'Untitled Template'
+        const destination = trip.destination_place?.name || trip.destination || ''
+        const region = destination || 'Unknown Region'
+        const days = trip.stats?.days ? `${trip.stats.days}日間` : trip.day_count ? `${trip.day_count}日間` : ''
+        const summary = trip.description || ''
+        const cover = trip.image_url || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80'
+        const socialStats = resolveSocialStats(trip)
+        const tripUrl = creator?.slug && trip.slug ? `/${creator.slug}/${trip.slug}` : `/trip/${trip.id}`
+
+        return (
+          <Link key={trip.id} href={tripUrl}>
+            <article className="group flex flex-col overflow-hidden rounded-sm border border-slate-200 bg-white shadow-sm hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer">
+              <div className="relative h-40 w-full overflow-hidden">
                 <img
-                  src={idea.creator.avatar}
-                  alt={idea.creator.name}
-                  className="h-7 w-7 rounded-full border border-slate-200"
+                  src={cover}
+                  alt={title}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                <div>
-                  <p className="text-xs font-semibold text-slate-800">{idea.creator.name}</p>
-                  <p className="text-[11px] text-slate-500">{idea.creator.role}</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/0" />
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-100">{region}</p>
+                    {days && (
+                      <p className="text-xs text-slate-200">{days}</p>
+                    )}
+                  </div>
+                  <div className="rounded-full bg-slate-900/60 px-2 py-1 text-[10px] text-slate-100">
+                    {socialStats.likes} ♥︎
+                  </div>
                 </div>
               </div>
-              <button className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-700 hover:border-indigo-200 hover:text-indigo-600">
-                <Icon icon="mdi:content-copy" className="h-3 w-3" />
-                プランを複製
-              </button>
-            </div>
-          </div>
-        </article>
-      ))}
+              <div className="flex flex-1 flex-col gap-3 p-4">
+                <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">{title}</h3>
+                {summary && (
+                  <p className="text-xs text-slate-600 line-clamp-2">{summary}</p>
+                )}
+                <div className="mt-auto flex items-center justify-between pt-2">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={creatorAvatar}
+                      alt={creatorName}
+                      className="h-7 w-7 rounded-full border border-slate-200"
+                    />
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800">{creatorName}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      // TODO: プラン複製機能を実装
+                    }}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold text-slate-700 hover:border-indigo-200 hover:text-indigo-600"
+                  >
+                    <Icon icon="mdi:content-copy" className="h-3 w-3" />
+                    プランを複製
+                  </button>
+                </div>
+              </div>
+            </article>
+          </Link>
+        )
+      })}
     </section>
   )
 }
