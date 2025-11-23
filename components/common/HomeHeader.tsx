@@ -30,9 +30,12 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
 }) => {
   const { t } = require('@/lib/i18n')
   const [open, setOpen] = useState(false)
+  const [yourTripsOpen, setYourTripsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const yourTripsRef = useRef<HTMLDivElement | null>(null)
 
   useClickOutside(menuRef, () => setOpen(false))
+  useClickOutside(yourTripsRef, () => setYourTripsOpen(false))
 
   const avatarBorderClass = (() => {
     const n = (planName || '').toLowerCase()
@@ -86,10 +89,47 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
               </span>
             </Link>
             <nav className="hidden md:flex items-center gap-4 text-sm">
-              <Link href="/trip-guide" className="text-gray-600 hover:text-gray-900">{t('tripGuide')}</Link>
+              <Link href="/home" className="text-gray-600 hover:text-gray-900">Home</Link>
               <Link href="/feed" className="text-gray-600 hover:text-gray-900">Feed</Link>
-              <Link href="/plan" className="text-gray-600 hover:text-gray-900">{t('nav.plan')}</Link>
-              <Link href="/memories" className="text-gray-600 hover:text-gray-900">{t('memories')}</Link>
+              
+              {/* Your Trips Dropdown */}
+              <div className="relative" ref={yourTripsRef}>
+                <button
+                  onClick={() => setYourTripsOpen(v => !v)}
+                  className="text-gray-600 hover:text-gray-900 flex items-center gap-1"
+                >
+                  Your Trips
+                  <svg
+                    className={`w-4 h-4 transition-transform ${yourTripsOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {yourTripsOpen && (
+                  <div className="absolute left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 zidx-popup-menu">
+                    <Link
+                      href="/plan"
+                      onClick={() => setYourTripsOpen(false)}
+                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Upcomings
+                    </Link>
+                    <Link
+                      href="/memories"
+                      onClick={() => setYourTripsOpen(false)}
+                      className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Memories
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              <Link href="/trip-guide" className="text-gray-600 hover:text-gray-900">Writes</Link>
+              
               {typeof window !== 'undefined' &&
                 typeof process !== 'undefined' &&
                 process.env?.NODE_ENV === 'development' && (
