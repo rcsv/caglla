@@ -1366,6 +1366,59 @@ export type TranslationKey =
   | 'country.PH'
   | 'country.VN'
   | 'country.IN'
+  // Trip Guide page
+  | 'tripGuide.header.title'
+  | 'tripGuide.header.subtitle'
+  | 'tripGuide.header.createGuide'
+  | 'tripGuide.tabs.draft'
+  | 'tripGuide.tabs.published'
+  | 'tripGuide.tabs.analytics'
+  | 'tripGuide.draft.title'
+  | 'tripGuide.draft.empty'
+  | 'tripGuide.draft.emptySubtitle'
+  | 'tripGuide.published.title'
+  | 'tripGuide.published.empty'
+  | 'tripGuide.published.emptySubtitle'
+  | 'tripGuide.card.public'
+  | 'tripGuide.card.sharedLink'
+  | 'tripGuide.card.draft'
+  | 'tripGuide.card.untitled'
+  | 'tripGuide.card.updated'
+  | 'tripGuide.card.edit'
+  | 'tripGuide.card.publish'
+  | 'tripGuide.card.unpublish'
+  | 'tripGuide.card.analytics'
+  | 'tripGuide.analytics.overview'
+  | 'tripGuide.analytics.totalGuides'
+  | 'tripGuide.analytics.publishedGuides'
+  | 'tripGuide.analytics.draftGuides'
+  | 'tripGuide.analytics.totalViews'
+  | 'tripGuide.analytics.totalLikes'
+  | 'tripGuide.analytics.totalReplicas'
+  | 'tripGuide.analytics.popularGuides'
+  | 'tripGuide.analytics.noPopularGuides'
+  | 'tripGuide.analytics.untitled'
+  | 'tripGuide.analytics.views'
+  | 'tripGuide.analytics.likes'
+  | 'tripGuide.analytics.replicas'
+  | 'tripGuide.modals.publish.title'
+  | 'tripGuide.modals.publish.message'
+  | 'tripGuide.modals.publish.untitled'
+  | 'tripGuide.modals.publish.publishing'
+  | 'tripGuide.modals.publish.confirm'
+  | 'tripGuide.modals.publish.cancel'
+  | 'tripGuide.modals.unpublish.title'
+  | 'tripGuide.modals.unpublish.message'
+  | 'tripGuide.modals.unpublish.untitled'
+  | 'tripGuide.modals.unpublish.unpublishing'
+  | 'tripGuide.modals.unpublish.confirm'
+  | 'tripGuide.modals.unpublish.cancel'
+  | 'tripGuide.modals.delete.title'
+  | 'tripGuide.modals.delete.message'
+  | 'tripGuide.modals.delete.untitled'
+  | 'tripGuide.modals.delete.deleting'
+  | 'tripGuide.modals.delete.confirm'
+  | 'tripGuide.modals.delete.cancel'
 
 type Dictionary = Record<TranslationKey, string>
 
@@ -2716,6 +2769,59 @@ const en: Dictionary = {
   'userSettings.button.saving': 'Saving...',
   'userSettings.theme.light': 'Light',
   'userSettings.theme.dark': 'Dark',
+  // Trip Guide page
+  'tripGuide.header.title': 'Guide Creator Dashboard',
+  'tripGuide.header.subtitle': 'Create, manage, and analyze your guides in one place',
+  'tripGuide.header.createGuide': 'Create New Guide',
+  'tripGuide.tabs.draft': 'Draft',
+  'tripGuide.tabs.published': 'Published',
+  'tripGuide.tabs.analytics': 'Analytics',
+  'tripGuide.draft.title': 'Draft Guides',
+  'tripGuide.draft.empty': 'No draft guides',
+  'tripGuide.draft.emptySubtitle': 'Create a new guide to get started',
+  'tripGuide.published.title': 'Published Guides',
+  'tripGuide.published.empty': 'No published guides',
+  'tripGuide.published.emptySubtitle': 'Publish a draft guide to see it here',
+  'tripGuide.card.public': 'Public',
+  'tripGuide.card.sharedLink': 'Shared link',
+  'tripGuide.card.draft': 'Draft',
+  'tripGuide.card.untitled': 'Untitled Guide',
+  'tripGuide.card.updated': 'Updated',
+  'tripGuide.card.edit': 'Edit',
+  'tripGuide.card.publish': 'Publish',
+  'tripGuide.card.unpublish': 'Unpublish',
+  'tripGuide.card.analytics': 'Analytics',
+  'tripGuide.analytics.overview': 'Overview',
+  'tripGuide.analytics.totalGuides': 'Total Guides',
+  'tripGuide.analytics.publishedGuides': 'Published',
+  'tripGuide.analytics.draftGuides': 'Draft',
+  'tripGuide.analytics.totalViews': 'Total Views',
+  'tripGuide.analytics.totalLikes': 'Total Likes',
+  'tripGuide.analytics.totalReplicas': 'Total Replicas',
+  'tripGuide.analytics.popularGuides': 'Popular Guides Ranking',
+  'tripGuide.analytics.noPopularGuides': 'No published guides',
+  'tripGuide.analytics.untitled': 'Untitled Guide',
+  'tripGuide.analytics.views': 'Views',
+  'tripGuide.analytics.likes': 'Likes',
+  'tripGuide.analytics.replicas': 'Replicas',
+  'tripGuide.modals.publish.title': 'Publish this guide?',
+  'tripGuide.modals.publish.message': 'Publishing this guide will make it visible and replicable by other users.',
+  'tripGuide.modals.publish.untitled': 'Untitled Guide',
+  'tripGuide.modals.publish.publishing': 'Publishing...',
+  'tripGuide.modals.publish.confirm': 'Publish',
+  'tripGuide.modals.publish.cancel': 'Cancel',
+  'tripGuide.modals.unpublish.title': 'Unpublish this guide?',
+  'tripGuide.modals.unpublish.message': 'Unpublishing this guide will make it invisible to other users. Already replicated guides will not be affected.',
+  'tripGuide.modals.unpublish.untitled': 'Untitled Guide',
+  'tripGuide.modals.unpublish.unpublishing': 'Unpublishing...',
+  'tripGuide.modals.unpublish.confirm': 'Unpublish',
+  'tripGuide.modals.unpublish.cancel': 'Cancel',
+  'tripGuide.modals.delete.title': 'Delete this guide?',
+  'tripGuide.modals.delete.message': 'This action cannot be undone. The guide and all its data will be permanently deleted.',
+  'tripGuide.modals.delete.untitled': 'Untitled Guide',
+  'tripGuide.modals.delete.deleting': 'Deleting...',
+  'tripGuide.modals.delete.confirm': 'Delete',
+  'tripGuide.modals.delete.cancel': 'Cancel',
   // Country names (common countries)
   'country.JP': 'Japan',
   'country.US': 'United States',
@@ -4087,6 +4193,59 @@ const ja: Dictionary = {
   'userSettings.button.saving': '保存中...',
   'userSettings.theme.light': 'ライト',
   'userSettings.theme.dark': 'ダーク',
+  // Trip Guide page
+  'tripGuide.header.title': 'ガイド作成者ダッシュボード',
+  'tripGuide.header.subtitle': 'ガイドの作成、管理、統計を一箇所で',
+  'tripGuide.header.createGuide': '新規ガイドを作成',
+  'tripGuide.tabs.draft': '執筆中',
+  'tripGuide.tabs.published': '公開済み',
+  'tripGuide.tabs.analytics': '統計',
+  'tripGuide.draft.title': '執筆中のガイド',
+  'tripGuide.draft.empty': '執筆中のガイドはありません',
+  'tripGuide.draft.emptySubtitle': '新規ガイドを作成しましょう',
+  'tripGuide.published.title': '公開済みガイド',
+  'tripGuide.published.empty': '公開済みのガイドはありません',
+  'tripGuide.published.emptySubtitle': '執筆中のガイドを公開すると、ここに表示されます',
+  'tripGuide.card.public': 'Public',
+  'tripGuide.card.sharedLink': 'Shared link',
+  'tripGuide.card.draft': 'Draft',
+  'tripGuide.card.untitled': 'Untitled Guide',
+  'tripGuide.card.updated': '更新',
+  'tripGuide.card.edit': '編集',
+  'tripGuide.card.publish': '公開',
+  'tripGuide.card.unpublish': '非公開',
+  'tripGuide.card.analytics': '統計',
+  'tripGuide.analytics.overview': '全体統計',
+  'tripGuide.analytics.totalGuides': '総ガイド数',
+  'tripGuide.analytics.publishedGuides': '公開済み',
+  'tripGuide.analytics.draftGuides': '執筆中',
+  'tripGuide.analytics.totalViews': '総閲覧数',
+  'tripGuide.analytics.totalLikes': '総いいね数',
+  'tripGuide.analytics.totalReplicas': '総複製数',
+  'tripGuide.analytics.popularGuides': '人気ガイドランキング',
+  'tripGuide.analytics.noPopularGuides': '公開済みのガイドがありません',
+  'tripGuide.analytics.untitled': 'Untitled Guide',
+  'tripGuide.analytics.views': '閲覧',
+  'tripGuide.analytics.likes': 'いいね',
+  'tripGuide.analytics.replicas': '複製',
+  'tripGuide.modals.publish.title': 'ガイドを公開しますか？',
+  'tripGuide.modals.publish.message': 'このガイドを公開すると、他のユーザーが閲覧・複製できるようになります。',
+  'tripGuide.modals.publish.untitled': 'Untitled Guide',
+  'tripGuide.modals.publish.publishing': '公開中...',
+  'tripGuide.modals.publish.confirm': '公開する',
+  'tripGuide.modals.publish.cancel': 'キャンセル',
+  'tripGuide.modals.unpublish.title': 'ガイドを非公開にしますか？',
+  'tripGuide.modals.unpublish.message': 'このガイドを非公開にすると、他のユーザーが閲覧できなくなります。既に複製されたガイドには影響しません。',
+  'tripGuide.modals.unpublish.untitled': 'Untitled Guide',
+  'tripGuide.modals.unpublish.unpublishing': '非公開中...',
+  'tripGuide.modals.unpublish.confirm': '非公開にする',
+  'tripGuide.modals.unpublish.cancel': 'キャンセル',
+  'tripGuide.modals.delete.title': 'ガイドを削除しますか？',
+  'tripGuide.modals.delete.message': 'この操作は取り消せません。ガイドとそのすべてのデータが永久に削除されます。',
+  'tripGuide.modals.delete.untitled': 'Untitled Guide',
+  'tripGuide.modals.delete.deleting': '削除中...',
+  'tripGuide.modals.delete.confirm': '削除する',
+  'tripGuide.modals.delete.cancel': 'キャンセル',
   // Country names (common countries)
   'country.JP': '日本',
   'country.US': 'アメリカ合衆国',
