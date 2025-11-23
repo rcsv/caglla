@@ -8,9 +8,11 @@
 import type { Firestore } from 'firebase-admin/firestore'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import logger from '@/lib/core/logger'
-import type { Trip } from '@/lib/core/types'
+import type { Trip, User } from '@/lib/core/types'
 import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import { convertStandardDates, toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { adminUserOperations } from '@/lib/firebase/admin-operation'
+import { adminDb } from '@/lib/firebase/admin'
 
 // テスト環境ではテスト用のFirestoreを使用、本番環境ではadminDbを使用
 function getFirestore(db?: Firestore): Firestore {
@@ -19,13 +21,11 @@ function getFirestore(db?: Firestore): Firestore {
   if (process.env.FIRESTORE_EMULATOR_HOST) {
     return getTestFirestore()
   }
-  // 本番環境の場合（lazy importでadminDbを読み込む）
-  try {
-    const adminModule = require('@/lib/firebase/admin')
-    return adminModule.adminDb
-  } catch (error) {
+  // 本番環境の場合、adminDbを直接使用
+  if (!adminDb) {
     throw new Error('Firebase Admin SDK is not available. Provide a Firestore instance as the last parameter.')
   }
+  return adminDb
 }
 
 /**
@@ -237,12 +237,51 @@ export async function getFollowingFeed(
     }
   }
 
-  // 2. フォローしているユーザーの公開トリップを取得
+  // 2. 各フォローしているユーザーのすべての可能なID（users ドキュメントID、google_id、auth_uid）を取得
+  const ownerIdsSet = new Set<string>()
+  
+  for (const followingId of followingIds) {
+    try {
+      const user = await adminUserOperations.getUserByAuthUid(followingId)
+      if (user) {
+        // users ドキュメントIDを優先的に追加
+        if (user.id) {
+          ownerIdsSet.add(user.id)
+        }
+        // Firebase Auth UID が users ドキュメントIDと異なる場合のみ追加
+        if (followingId && followingId !== user.id) {
+          ownerIdsSet.add(followingId)
+        }
+        // google_id が users ドキュメントIDと異なる場合のみ追加
+        if (user.google_id && user.google_id !== user.id && user.google_id !== followingId) {
+          ownerIdsSet.add(user.google_id)
+        }
+      } else {
+        // ユーザーが見つからない場合は followingId のみを使用
+        ownerIdsSet.add(followingId)
+      }
+    } catch (error) {
+      logger.warn('Failed to get user info for following_id', { followingId, error })
+      // エラーの場合も followingId を使用
+      ownerIdsSet.add(followingId)
+    }
+  }
+
+  const ownerIds = Array.from(ownerIdsSet)
+
+  if (ownerIds.length === 0) {
+    return {
+      trips: [],
+      nextCursor: undefined,
+    }
+  }
+
+  // 3. フォローしているユーザーの公開トリップを取得
   // 注意: Firestoreの`in`クエリは最大10件まで
   const allTrips: Trip[] = []
 
-  for (let i = 0; i < followingIds.length; i += 10) {
-    const batch = followingIds.slice(i, i + 10)
+  for (let i = 0; i < ownerIds.length; i += 10) {
+    const batch = ownerIds.slice(i, i + 10)
 
     let query = firestore
       .collection(COLLECTIONS.TRIPS)
@@ -286,7 +325,38 @@ export async function getFollowingFeed(
   // 4. ページネーション（limit適用）
   const trips = allTrips.slice(0, limit)
 
-  // 5. 次のページがあるか確認
+  // 5. creator 情報を追加
+  // trip.user_id は users コレクションのドキュメントIDなので、直接取得する
+  const tripsWithCreator = await Promise.all(
+    trips.map(async (trip) => {
+      let creator: User | undefined
+      try {
+        // trip.user_id が users ドキュメントIDかどうかを確認
+        // まず users ドキュメントIDとして試す
+        const userDoc = await firestore.collection(COLLECTIONS.USERS).doc(trip.user_id).get()
+        if (userDoc.exists) {
+          creator = convertStandardDates({
+            id: userDoc.id,
+            ...userDoc.data(),
+          }) as User
+        } else {
+          // users ドキュメントIDで見つからない場合は、google_id または auth_uid で検索
+          const user = await adminUserOperations.getUserByAuthUid(trip.user_id)
+          if (user) {
+            creator = user
+          }
+        }
+      } catch (error) {
+        logger.error('Error fetching creator for following feed trip', error, { tripId: trip.id, userId: trip.user_id })
+      }
+      return {
+        ...trip,
+        creator,
+      } as Trip
+    })
+  )
+
+  // 6. 次のページがあるか確認
   let nextCursor: string | undefined
   if (allTrips.length > limit) {
     const lastTrip = trips[trips.length - 1]
@@ -300,12 +370,12 @@ export async function getFollowingFeed(
     userId,
     followingCount: followingIds.length,
     limit,
-    returned: trips.length,
+    returned: tripsWithCreator.length,
     hasNext: !!nextCursor,
   })
 
   return {
-    trips,
+    trips: tripsWithCreator,
     nextCursor,
   }
 }
