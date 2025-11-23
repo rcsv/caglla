@@ -104,6 +104,11 @@ export default function CommentList({
   // トップレベルのコメント（親コメントがないコメント）
   const topLevelComments = comments.filter((c) => !c.parent_comment_id)
 
+  // コメントとその返信を再帰的に取得する関数
+  const getRepliesForComment = (commentId: string): TripComment[] => {
+    return comments.filter((c) => c.parent_comment_id === commentId)
+  }
+
   return (
     <div className="space-y-4">
       {/* コメント入力 */}
@@ -124,7 +129,12 @@ export default function CommentList({
               comment={comment}
               tripSlug={tripSlug}
               onDeleted={handleCommentDeleted}
-              replies={comments.filter((c) => c.parent_comment_id === comment.id)}
+              onReplyAdded={async () => {
+                // 返信追加後にコメントを再取得して表示を更新
+                await fetchComments()
+              }}
+              replies={getRepliesForComment(comment.id)}
+              allComments={comments}
             />
           ))}
         </div>
