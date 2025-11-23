@@ -26,7 +26,7 @@ import { setLanguageOverrideClient } from '@/lib/i18n/storage'
 import { Section } from '@/components/common/static/Section'
 import { SolidCard } from '@/components/common/static/SolidCard'
 import HomeFooter from '@/components/common/HomeFooter'
-import { isSameUserByAuthUid } from '@/lib/auth/identity-helpers'
+import { isSameUserByAuthUid } from '@/lib/auth/client-identity-helpers'
 
 export default function UserProfileBySlugPage() {
   const { user, loading } = useAuth()

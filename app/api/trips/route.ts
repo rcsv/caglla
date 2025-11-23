@@ -31,15 +31,23 @@ interface TripWithDestination extends Trip {
 export const GET = authApi(async (request: NextRequest, ctx) => {
   const { userId } = ctx.auth!
 
+  // Firebase Auth UID から users コレクションのドキュメントIDを取得
+  const user = await adminUserOperations.getUserByAuthUid(userId)
+  if (!user) {
+    logger.error('User not found', { authUid: userId })
+    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  }
+  const userDocumentId = user.id
+
   // Get query parameters
   const { searchParams } = new URL(request.url)
   const groupByCountry = searchParams.get('groupByCountry') === 'true'
 
-  const trips = await adminTripOperations.getTripsByUserId(userId)
+  const trips = await adminTripOperations.getTripsByUserId(userDocumentId)
 
   // Get user info to determine language preference（auth_uid で検索、後方互換性のため google_id もチェック）
   // Phase 1-1.5: 認証プロバイダーマルチ対応化
-  const user = await adminUserOperations.getUserByAuthUid(userId)
+  // Note: user は既に35行目で取得済み
   const cookieLang = request.cookies.get(COOKIE_NAME)?.value ?? null
   const userLanguage = getUserLanguage(user ?? undefined, {
     serverOverride: cookieLang,
@@ -153,10 +161,22 @@ export const POST = composeMiddleware(
   // タイトルが空の場合は目的地を使用（zod スキーマで title || destination は必須にされている）
   const finalTitle = title || destination
 
-  logger.debug('Getting existing trips for user', { userId })
-  
-  // ユーザーの既存旅行スラッグを取得
-  const existingTrips = await adminTripOperations.getTripsByUserId(userId)
+  // Firebase Auth UID (google_id) から users コレクションのドキュメントIDを取得
+  // Phase 1-1.5: 認証プロバイダーマルチ対応化
+  const user = await adminUserOperations.getUserByAuthUid(userId)
+  if (!user) {
+    logger.error('User not found', { authUid: userId })
+    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  }
+
+  // trip.user_id には users コレクションのドキュメントIDを使用
+  const userDocumentId = user.id
+  logger.debug('Resolved user document ID', { authUid: userId, userDocumentId })
+
+  logger.debug('Getting existing trips for user', { userDocumentId })
+
+  // ユーザーの既存旅行スラッグを取得（後方互換性のため、google_id と users.id の両方で検索）
+  const existingTrips = await adminTripOperations.getTripsByUserId(userDocumentId)
   const existingSlugs = existingTrips.map(t => t.slug).filter((slug): slug is string => Boolean(slug))
   
   logger.debug('Found existing trips', { 
@@ -209,7 +229,7 @@ export const POST = composeMiddleware(
       : undefined
 
   const tripData: any = {
-    user_id: userId,
+    user_id: userDocumentId, // users コレクションのドキュメントIDを使用
     title: finalTitle,
     slug: tripSlug,
     destination,
@@ -302,17 +322,15 @@ export const POST = composeMiddleware(
     logger.debug('Days created successfully')
   }
 
-  logger.debug('Fetching user data for creator info')
+  logger.debug('Adding creator info to trip')
   
   const cookieLangPost = request.cookies.get(COOKIE_NAME)?.value ?? null
-  // 最新のユーザー情報を取得してcreator情報を追加（auth_uid で検索、後方互換性のため google_id もチェック）
-  // Phase 1-1.5: 認証プロバイダーマルチ対応化
-  const user = await adminUserOperations.getUserByAuthUid(userId)
+  // 既に取得済みのuserオブジェクトを使用
   if (user) {
     trip.creator = user
     logger.debug('Creator info added', { userSlug: user.slug })
   } else {
-    logger.warn('User not found for creator info', { userId })
+    logger.warn('User not found for creator info', { userDocumentId })
   }
 
   // UI利便性のため、destination_place を解決して返す
