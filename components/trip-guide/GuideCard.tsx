@@ -104,11 +104,6 @@ export function GuideCard({
                     </p>
                   )}
                 </div>
-                <span
-                  className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border flex-shrink-0 ${accessLevelColor}`}
-                >
-                  {accessLevelLabel}
-                </span>
               </div>
 
               {/* 更新日時 */}
@@ -184,11 +179,6 @@ export function GuideCard({
               </p>
             )}
           </div>
-          <span
-            className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border flex-shrink-0 ${accessLevelColor}`}
-          >
-            {accessLevelLabel}
-          </span>
         </div>
 
         {/* 更新日時 */}
