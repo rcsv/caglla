@@ -12,6 +12,7 @@ import { getTestFirestore } from '@/lib/__tests__/helpers/test-firestore'
 import type { Firestore } from 'firebase-admin/firestore'
 import { unauthorized, badRequest, handleApiError } from '@/lib/core/error-handler'
 import { authApi } from '@/lib/api/middleware'
+import { adminDb } from '@/lib/firebase/admin'
 
 /**
  * adminAuthをlazy importします（テスト環境でも動作するように）
@@ -72,8 +73,8 @@ function getFirestore(): Firestore | undefined {
   if (process.env.FIRESTORE_EMULATOR_HOST) {
     return getTestFirestore()
   }
-  // 本番環境では、Operations内でadminDbを使用
-  return undefined
+  // 本番環境では adminDb を使用
+  return adminDb as Firestore | undefined
 }
 
 /**
