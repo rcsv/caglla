@@ -122,9 +122,14 @@ export async function createTrip(data: CreateTripInput): Promise<Trip> {
               .join('; ')
           : undefined
 
+      // apiError が文字列の場合はそのまま使用、オブジェクトの場合は message プロパティを確認
+      const errorMessage = typeof apiError === 'string' 
+        ? apiError 
+        : apiError?.message
+
       const message =
         detailMessages ||
-        apiError?.message ||
+        errorMessage ||
         `Failed to create trip: ${response.status}`
 
       throw new Error(message)
