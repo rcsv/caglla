@@ -113,6 +113,8 @@ export interface Trip {
   start_date?: FirestoreDate
   end_date?: FirestoreDate
   image_url?: string
+  /** ハッシュタグ（例: ["#女子旅", "#3泊4日", "#ビーチ"]） */
+  hashtags?: string[]
 
   // ============================================================================
   // 設定・機能（テンプレート、通貨、iCal）
