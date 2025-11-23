@@ -12,6 +12,7 @@ import TripShareSettingsModal from '@/components/modals/TripShareSettingsModal'
 import { useFollowingFeed } from '@/hooks/useFollowingFeed'
 import { useTemplates } from '@/hooks/useTemplates'
 import FollowButton from '@/components/social/FollowButton'
+import { useUserData } from '@/lib/contexts/user-data'
 import Link from 'next/link'
 
 type TabId = 'friends' | 'ideas' | 'shares'
@@ -216,6 +217,7 @@ export function HomeMainTabs({
 
 function FriendsTimeline() {
   const { trips, loading, error } = useFollowingFeed(20)
+  const { userData } = useUserData() // 現在のユーザーデータを取得
 
   if (loading) {
     return (
@@ -283,7 +285,7 @@ function FriendsTimeline() {
                   <p className="text-xs text-slate-500">{action}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {userSlug && (
+                  {userSlug && creator?.id !== userData?.id && (
                     <div onClick={(e) => e.stopPropagation()}>
                       <FollowButton userSlug={userSlug} variant="icon" size="sm" />
                     </div>
@@ -346,6 +348,7 @@ function FriendsTimeline() {
 
 function PlanCatalog() {
   const { trips, loading, error } = useTemplates(20, true) // excludeMyTrips = true
+  const { userData } = useUserData() // 現在のユーザーデータを取得
 
   if (loading) {
     return (
@@ -426,7 +429,7 @@ function PlanCatalog() {
                     <div>
                       <p className="text-xs font-semibold text-slate-800">{creatorName}</p>
                     </div>
-                    {trip.creator?.slug && (
+                    {trip.creator?.slug && trip.creator.id !== userData?.id && (
                       <div onClick={(e) => e.stopPropagation()}>
                         <FollowButton userSlug={trip.creator.slug} variant="icon" size="sm" />
                       </div>
