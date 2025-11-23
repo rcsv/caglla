@@ -1,51 +1,66 @@
 import { ReactNode } from 'react'
+import { getTripServer } from '@/lib/travel/trip-server'
+import { TripClientLayout } from './TripClientLayout'
+import { notFound } from 'next/navigation'
+import type { Trip } from '@/lib/core/types'
 
 /**
  * Trip Detail Page Layout with Parallel Routes
  * 
- * Phase 2-5: Parallel Routes実装（v3.0.0）
+ * Phase 1: データフェッチの共通化（v3.0.0）
  * 
- * Parallel Routes統合レイアウト
- * - @timeline: タイムライン（TripItineraryView）
- * - @map: 地図（TripMap）
- * - @social: SNS機能（いいね・コメント）
- * 
- * Note: 既存の実装は`page.tsx`に残っており、Parallel Routesとの統合は段階的に進めます。
- * 現在は基本的な構造のみを提供します。
+ * Server ComponentとしてTripを一度だけfetchし、TripClientLayout経由で
+ * Parallel Routesの各slot（@timeline, @map, @social）に提供します。
  */
-export default function TripDetailLayout({
+export default async function TripDetailLayout({
   children,
   timeline,
   map,
   social,
+  params,
 }: {
   children: ReactNode
   timeline: ReactNode
   map: ReactNode
   social: ReactNode
+  params: Promise<{ userSlug: string; tripSlug: string }>
 }) {
-  // いったん既存の page.tsx をメイン表示として維持しつつ、
-  // Parallel Routes は map/social を優先的に統合し、timeline は段階移行のため枠のみ保持
+  const { tripSlug } = await params
+  
+  // Server Componentで一度だけTripをfetch
+  // 注意: Server Componentでは認証情報が取得できない場合があるため、
+  // privateなTripの場合はnullが返される可能性がある
+  // その場合、Client Component側（page.tsxまたは@timeline/default.tsx）で再取得を試みる
+  const trip = await getTripServer(tripSlug)
+  
+  // tripがnullの場合でも、一旦レンダリングを試みる
+  // Client Component側（TripProvider）で再取得を試みるため、notFound()は呼ばない
+  // TripProviderはnullを受け取れるように修正済み
+  if (!trip) {
+    // Server Componentでは認証情報が取得できない場合、privateなTripは取得できない
+    // その場合、Client Component側（TripProvider）で再取得を試みる
+    // TripProviderにnullを渡すと、Client Component側で再取得を試みる
+  }
+  
+  // Phase 5: Parallel Routesのみを使用（page.tsxは段階的に削除予定）
+  // childrenは現時点では空（page.tsxが存在する場合は表示されるが、段階的に移行中）
+  // TripWithDestinationをTripに変換（creatorの型を変換）
+  // 注意: TripWithDestinationのcreatorはUser型の一部のプロパティしか持っていないため、
+  // unknownを経由して型アサーションを使用する
+  const tripForClient: Trip | null = trip ? {
+    ...trip,
+    creator: trip.creator ? ({
+      id: trip.creator.id,
+      name: trip.creator.name,
+      email: trip.creator.email,
+      avatar_url: trip.creator.avatar_url || undefined,
+      slug: trip.creator.slug || undefined,
+    } as unknown as Trip['creator']) : undefined,
+  } : null
+  
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Main content with right map slot (desktop) */}
-      <div className="flex flex-col lg:flex-row">
-        <div className="flex-1 relative">
-          {children}
-        </div>
-        {/* Map Panel (Desktop only) */}
-        <div className="hidden lg:block lg:w-1/2 xl:w-2/5 border-l border-gray-200">
-          {map}
-        </div>
-      </div>
-
-      {/* Social Panel (Bottom on mobile, Right on desktop) */}
-      <div className="fixed bottom-0 left-0 right-0 lg:fixed lg:right-0 lg:top-0 lg:bottom-0 lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white zidx-popup-menu">
-        {social}
-      </div>
-
-      {/* timeline は段階移行用に枠だけ保持（現状は非表示） */}
-      <div className="hidden">{timeline}</div>
-    </div>
+    <TripClientLayout trip={tripForClient} timeline={timeline} map={map} social={social}>
+      {children}
+    </TripClientLayout>
   )
 }
