@@ -8,7 +8,7 @@ import AddScheduleModal from '@/components/modals/AddScheduleModal'
 import ExportDataModal from '@/components/modals/ExportDataModal'
 import TemplateReplicaModal from '@/components/modals/TemplateReplicaModal'
 import TripEditor from '@/components/trip/TripEditor'
-import { useCallback, useRef, useState, useMemo } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Loading from '@/components/common/Loading'
 import { useAuth } from '@/lib/contexts/auth'
 import { useUserData } from '@/lib/contexts/user-data'
@@ -891,10 +891,7 @@ export default function TimelineDefault() {
     )
   }
 
-  const templateDayCount = useMemo(() => {
-    if (!trip?.days) return 0
-    return trip.days.length
-  }, [trip?.days])
+  const templateDayCount = trip?.days?.length ?? 0
 
   return (
     <>
