@@ -67,7 +67,7 @@ function MapContent() {
   }
 
   return (
-    <div className="h-full bg-white">
+    <div className="h-full bg-white relative overflow-hidden">
       <TripMap
         itineraries={itineraries}
         trip={trip}
@@ -84,7 +84,6 @@ function MapContent() {
               name: data.name,
               location: data.location,
               placeData: data.placeData,
-              orderNumber: data.orderNumber,
             })
           } else {
             setPoiData(null)
@@ -107,11 +106,7 @@ function MapContent() {
             dispatchPOIClose()
           }}
           onAddToItinerary={undefined} // 読み取り専用のため無効化
-          availableDays={trip.days?.map(d => ({
-            id: d.id,
-            date: d.date?.toISOString() || '',
-            title: d.description,
-          }))}
+          // availableDaysは削除（Structural Fix: POIDialog内でTripProviderから直接取得）
         />
       )}
     </div>

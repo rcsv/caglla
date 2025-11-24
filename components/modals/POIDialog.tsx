@@ -11,6 +11,8 @@ import type { AggregatedVenueData, UnifiedReview } from '@/lib/api/venue-aggrega
 import type { PlaceData } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
+import { useTrip } from '@/app/(planner)/[userSlug]/[tripSlug]/TripProvider'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import ImageGalleryModal from './ImageGalleryModal'
 import { t } from '@/lib/i18n'
 import { parseOpeningHours } from './utils/parse-opening-hours'
@@ -30,13 +32,37 @@ interface POIDialogProps {
   } | null
   onClose: () => void
   onAddToItinerary?: (placeId: string, dayId: string) => void
-  availableDays?: Array<{ id: string; date: string; title?: string }>
+  // availableDaysは削除（Structural Fix: TripProviderから直接取得）
   className?: string
 }
 
-export default function POIDialog({ poiData, onClose, onAddToItinerary, availableDays, className = '' }: POIDialogProps) {
+export default function POIDialog({ poiData, onClose, onAddToItinerary, className = '' }: POIDialogProps) {
   const { user } = useAuth()
   const language = getUserLanguage(user)
+  
+  // Structural Fix: availableDaysをTripProviderから直接取得
+  // tripの変更に依存しないように、daysの構造が変わった場合のみ再生成
+  // このコンポーネントはTripProvider内で使用されることを前提とする
+  const { trip } = useTrip()
+  const availableDays = useMemo(() => {
+    if (!trip?.days) return []
+    // trip.daysの参照が変わっても、内容が同じなら再生成されないようにする
+    // ただし、daysの構造が変わった場合は再生成が必要
+    return trip.days.map(d => {
+      const dayDate = toDateOrNull(d.date)
+      return {
+        id: d.id,
+        date: dayDate ? dayDate.toISOString() : '',
+        title: d.description,
+      }
+    })
+  }, [
+    // trip.daysの参照ではなく、daysの構造（lengthと各dayのid, description, date）で比較
+    // ⚠️ アンチパターン: 将来的にはArchitectural Fixで改善が必要
+    // 現時点では応急処置として実装
+    trip?.days?.length,
+    trip?.days?.map(d => `${d.id}:${d.description}:${d.date}`).join(',')
+  ])
   const [placeDetails, setPlaceDetails] = useState<any>(null)
   const [aggregatedData, setAggregatedData] = useState<AggregatedVenueData | null>(null)
   const [unifiedReviews, setUnifiedReviews] = useState<UnifiedReview[]>([])
@@ -111,27 +137,54 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
     []
   )
 
+  // placeIdだけを抽出してメモ化（poiDataオブジェクトの参照変更を無視）
+  const currentPlaceId = useMemo(() => poiData?.placeId, [poiData?.placeId])
+  const currentPlaceData = useMemo(() => poiData?.placeData, [poiData?.placeId, poiData?.placeData])
+
+  // POIキャッシュ（Immediate Fix: 応急処置）
+  const poiCacheRef = useRef(new Map<string, { 
+    placeDetails: any
+    aggregatedData: AggregatedVenueData | null
+    unifiedReviews: UnifiedReview[]
+    timestamp: number 
+  }>())
+  const CACHE_TTL = 5 * 60 * 1000 // 5分
+
   const fetchPlaceDetails = useCallback(async () => {
-    if (!poiData) return
+    if (!poiData || !currentPlaceId) return
+
+    // キャッシュチェック（Immediate Fix）
+    const cached = poiCacheRef.current.get(currentPlaceId)
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      logger.debug('✅ Using cached POI data', { placeId: currentPlaceId })
+      setPlaceDetails(cached.placeDetails)
+      setAggregatedData(cached.aggregatedData)
+      setUnifiedReviews(cached.unifiedReviews)
+      // キャッシュされた画像も復元
+      if (cached.placeDetails?.photos && cached.placeDetails.photos.length > 0) {
+        await cacheImages(cached.placeDetails.photos)
+      }
+      return
+    }
 
     setLoading(true)
     setError(null)
 
     try {
-      if (poiData.placeData) {
-        if (poiData.placeData.vicinity) {
+      if (currentPlaceData) {
+        if (currentPlaceData.vicinity) {
           logger.debug('✅ Using place_data with vicinity from Itinerary')
-          setPlaceDetails(poiData.placeData)
+          setPlaceDetails(currentPlaceData)
           setLoading(false)
           return
         }
 
         logger.debug('⚠️ place_data missing vicinity, checking PlacesCache...')
-        const cachedData = await getCachedPlace(poiData.placeId)
+        const cachedData = await getCachedPlace(currentPlaceId)
         if (cachedData && cachedData.vicinity) {
           logger.debug('✅ Found vicinity in PlacesCache, merging data')
           setPlaceDetails({
-            ...poiData.placeData,
+            ...currentPlaceData,
             vicinity: cachedData.vicinity,
             business_status: cachedData.business_status,
             url: cachedData.url,
@@ -142,9 +195,9 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
         }
       }
 
-      logger.debug('🔍 Checking PlacesCache for place_id:', poiData.placeId)
+      logger.debug('🔍 Checking PlacesCache for place_id:', currentPlaceId)
 
-      const cachedData = await getCachedPlace(poiData.placeId)
+      const cachedData = await getCachedPlace(currentPlaceId)
       if (cachedData) {
         logger.debug('✅ Found cached data:', cachedData.name)
         setPlaceDetails(cachedData)
@@ -156,11 +209,11 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
 
       const language = getUserLanguage(user)
 
-      const details = await placesApiHelpers.getPlaceDetails(poiData.placeId, language)
+      const details = await placesApiHelpers.getPlaceDetails(currentPlaceId, language)
       setPlaceDetails(details)
 
       logger.debug('💾 Saving to PlacesCache...')
-      await placesCacheManager.fetchAndCachePlace(poiData.placeId, language)
+      await placesCacheManager.fetchAndCachePlace(currentPlaceId, language)
       logger.debug('✅ Data saved to PlacesCache')
 
       if (details?.photos && details.photos.length > 0) {
@@ -168,6 +221,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
       }
 
       logger.debug('🌐 Fetching external venue data via proxy...')
+      let aggregated: AggregatedVenueData | null = null
+      let reviews: UnifiedReview[] = []
       try {
         const response = await fetch('/api/venue/aggregate', {
           method: 'POST',
@@ -189,15 +244,16 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
             reviewCount: responseData.unifiedReviews?.length || 0,
           })
 
-          const { aggregatedData: aggregated, unifiedReviews: reviews } = responseData
+          aggregated = responseData.aggregatedData || null
+          reviews = responseData.unifiedReviews || []
           setAggregatedData(aggregated)
           setUnifiedReviews(reviews)
 
           logger.debug('✅ External venue data loaded', {
-            tripAdvisor: !!aggregated.tripAdvisor?.details,
-            foursquare: !!aggregated.foursquare?.details,
+            tripAdvisor: !!aggregated?.tripAdvisor?.details,
+            foursquare: !!aggregated?.foursquare?.details,
             totalReviews: reviews.length,
-            aggregatedRating: aggregated.aggregatedRating,
+            aggregatedRating: aggregated?.aggregatedRating,
           })
         } else {
           const errorText = await response.text()
@@ -210,6 +266,15 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
       } catch (error) {
         logger.error('❌ Error fetching external venue data:', error)
       }
+
+      // キャッシュに保存（Immediate Fix）
+      poiCacheRef.current.set(currentPlaceId, {
+        placeDetails: details,
+        aggregatedData: aggregated,
+        unifiedReviews: reviews,
+        timestamp: Date.now()
+      })
+      logger.debug('💾 POI data cached', { placeId: currentPlaceId })
     } catch (err) {
       logger.error(t('poi.fetchDetailsError'), err)
       setError(t('poi.fetchError'))
@@ -219,10 +284,10 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
     } finally {
       setLoading(false)
     }
-  }, [cacheImages, onClose, poiData, user])
+  }, [cacheImages, onClose, currentPlaceId, currentPlaceData, user])
 
   useEffect(() => {
-    if (!poiData) return
+    if (!poiData || !currentPlaceId) return
 
     // 新しいPOIを取得する前に旧データをリセット
     setPlaceDetails(null)
@@ -235,7 +300,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
     setError(null)
 
     void fetchPlaceDetails()
-  }, [poiData, fetchPlaceDetails])
+  }, [currentPlaceId, fetchPlaceDetails])
 
   if (!poiData) return null
 
