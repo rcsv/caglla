@@ -37,7 +37,7 @@ jobs:
           cache: 'pnpm'
           # monorepo 等で lockfile が複数ある場合は複数行で指定可能
           cache-dependency-path: |
-            pnpm-lock.yml
+            pnpm-lock.yaml
 
       # 5) 依存関係のインストール
       - name: Install dependencies
