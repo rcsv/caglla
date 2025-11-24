@@ -9,7 +9,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBzEYw-gYSfPHQICFtaRB4gMzMkR5z8EN4",
   authDomain: "caglla-fb.firebaseapp.com",
   projectId: "caglla-fb",
-  storageBucket: "caglla-fb.firebasestorage.app",
+  storageBucket: "caglla-fb.firebasestorage.app", // これはあってるから。appspot.com じゃないからね！
   messagingSenderId: "17375032053",
   appId: "1:17375032053:web:e1f99ead356f5421c1cbbc",
 }

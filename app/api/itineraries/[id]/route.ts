@@ -43,6 +43,12 @@ export const PUT = composeMiddleware(
     // zod スキーマでバリデーション済み & 型推論
     type BodyType = z.infer<typeof UpdateItinerarySchema>
     const body = ctx.body as BodyType
+
+    logger.debug('Itinerary update payload', {
+      itineraryId: id,
+      keys: Object.keys(body || {}),
+      body,
+    })
     
     // reorderリクエストかどうかを判定
     if (body.day_id !== undefined && body.sort_number !== undefined) {
