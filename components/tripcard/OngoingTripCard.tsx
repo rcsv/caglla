@@ -40,7 +40,7 @@ export default function OngoingTripCard({ trip, coverImage, today }: OngoingTrip
       <article className="border border-gray-200 rounded overflow-hidden hover:border-indigo-300 hover:shadow-sm transition-all bg-white flex flex-col h-36 md:h-36">
         <div className="md:flex md:items-stretch flex-1 min-h-0">
           <div className="md:w-1/3 h-full bg-gray-100 flex-shrink-0">
-            <img src={coverImage} alt={trip.title || 'Trip cover'} className="w-full h-full object-cover" />
+            <Image src={coverImage} alt={trip.title || 'Trip cover'} className="w-full h-full object-cover" />
           </div>
           <div className="md:w-2/3 p-3 flex flex-col gap-2">
             <div>

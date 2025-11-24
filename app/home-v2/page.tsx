@@ -19,6 +19,7 @@ import {
   sortTripsByUpdatedAt,
   sortTripsByStartDate,
 } from '@/lib/travel/trip-filters'
+import Image from 'next/image'
 
 type TabId = 'friends' | 'ideas' | 'shares'
 
@@ -484,7 +485,8 @@ export default function HomeV2Page() {
                         <article className="border border-gray-200 rounded-2xl overflow-hidden hover:border-indigo-300 hover:shadow-sm transition-all bg-white">
                           <div className="md:flex">
                             <div className="md:w-1/3 h-48 md:h-full bg-gray-100">
-                              <img src={coverImage} alt={trip.title || 'Trip cover'} className="w-full h-full object-cover" />
+                              <Image
+                                src={coverImage} alt={trip.title || 'Trip cover'} className="w-full h-full object-cover" />
                             </div>
                             <div className="md:w-2/3 p-4 flex flex-col gap-3">
                               <div className="flex items-start justify-between gap-3">
@@ -573,7 +575,7 @@ export default function HomeV2Page() {
                     <div key={mock.id} className="border border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50">
                       <div className="flex gap-3">
                         <div className="w-20 h-20 flex-shrink-0 bg-gray-100">
-                          <img src={mock.imageUrl} alt={mock.title} className="w-full h-full object-cover" />
+                          <Image src={mock.imageUrl} alt={mock.title} className="w-full h-full object-cover" />
                         </div>
                         <div className="py-2 pr-3 flex-1">
                           <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-1">{mock.title}</h3>
@@ -603,7 +605,7 @@ export default function HomeV2Page() {
                         <div className="border border-gray-200 rounded-lg overflow-hidden hover:border-emerald-300 hover:shadow-sm transition-all">
                           <div className="flex gap-3">
                             <div className="w-20 h-20 flex-shrink-0 bg-gray-100">
-                              <img src={imageUrl} alt={trip.title || 'Upcoming trip cover'} className="w-full h-full object-cover" />
+                              <Image src={imageUrl} alt={trip.title || 'Upcoming trip cover'} className="w-full h-full object-cover" />
                             </div>
                             <div className="py-2 pr-3 flex-1">
                               <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-1">{trip.title || 'Untitled Trip'}</h3>
@@ -657,7 +659,7 @@ export default function HomeV2Page() {
                   >
                     <div className="flex gap-3">
                       <div className="w-16 h-16 flex-shrink-0 bg-gray-100">
-                        <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                        <Image src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                       </div>
                       <div className="py-2 pr-3 flex-1">
                         <p className="text-xs text-gray-500 mb-0.5">{item.lastViewed}</p>
@@ -699,7 +701,7 @@ function FriendsTimeline() {
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <img src={activity.avatar} alt={activity.userName} className="h-12 w-12 rounded-full border border-slate-100 object-cover" />
+                    <Image src={activity.avatar} alt={activity.userName} className="h-12 w-12 rounded-full border border-slate-100 object-cover" />
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{activity.userName}</p>
                       <p className="text-xs text-slate-500">{activity.action}</p>
@@ -746,7 +748,7 @@ function FriendsTimeline() {
 
               <div className="md:w-64">
                 <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-slate-100">
-                  <img src={activity.cover} alt={activity.title} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
+                  <Image src={activity.cover} alt={activity.title} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
                   {activity.status === 'live' && (
                     <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
@@ -777,7 +779,7 @@ function PlanCatalog() {
       {PLAN_IDEAS.map((plan) => (
         <article key={plan.id} className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
           <div className="relative h-48 w-full overflow-hidden">
-            <img src={plan.cover} alt={plan.title} className="h-full w-full object-cover" />
+            <Image src={plan.cover} alt={plan.title} className="h-full w-full object-cover" />
             <span className="absolute left-4 top-4 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700">
               {plan.theme}
             </span>
@@ -801,7 +803,7 @@ function PlanCatalog() {
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <img src={plan.creator.avatar} alt={plan.creator.name} className="h-11 w-11 rounded-full border border-white shadow" />
+                <Image src={plan.creator.avatar} alt={plan.creator.name} className="h-11 w-11 rounded-full border border-white shadow" />
                 <div>
                   <p className="text-sm font-semibold text-slate-900">{plan.creator.name}</p>
                   <p className="text-xs text-slate-500">{plan.creator.role}</p>

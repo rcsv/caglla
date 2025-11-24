@@ -10,6 +10,7 @@ import TripHeroSection from '@/components/trip/TripHeroSection'
 import TripSummaryView from '@/components/trip/TripSummaryView'
 import TripItineraryView from '@/components/trip/TripItineraryView'
 import TripRightPane from '@/components/trip/TripRightPane'
+import Image from 'next/image'
 
 type DemoTripType = 'private' | 'shared' | 'template'
 
@@ -452,7 +453,7 @@ export default function TripDetailDemoPage() {
                 key={member.id}
                 className="flex items-center gap-3 border border-gray-100 rounded-xl p-3 hover:border-indigo-200 transition-colors"
               >
-                <img
+                <Image
                   src={
                     member.profile_image_url ||
                     `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.name}`
@@ -613,7 +614,7 @@ export default function TripDetailDemoPage() {
                 {/* アバター */}
                 <div className="flex-shrink-0">
                   {trip.creator.profile_image_url ? (
-                    <img
+                    <Image
                       src={trip.creator.profile_image_url}
                       alt={trip.creator.name}
                       className="h-20 w-20 rounded-full border-2 border-white shadow-md object-cover"
@@ -834,7 +835,7 @@ export default function TripDetailDemoPage() {
                       className="rounded-2xl overflow-hidden border border-gray-100 bg-gray-50"
                     >
                       <div className="relative h-48">
-                        <img
+                        <Image
                           src={photoUrl}
                           alt={itinerary.title}
                           className="w-full h-full object-cover"

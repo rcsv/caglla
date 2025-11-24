@@ -10,6 +10,7 @@ import type { Trip, User, TripSocialStats } from '@/lib/core/types'
 import Loading from '@/components/common/Loading'
 import logger from '@/lib/core/logger'
 import { Icon } from '@iconify/react'
+import Image from 'next/image'
 
 type FeedType = 'public' | 'trending' | 'following'
 
@@ -397,7 +398,7 @@ export default function TripFeed({ feedType, initialCursor, layout = 'list' }: T
             <div className="mt-4 flex items-center justify-between text-sm text-white/85">
               <div className="flex items-center gap-2">
                 {trip.creator?.profile_image_url ? (
-                  <img
+                  <Image
                     src={trip.creator.profile_image_url}
                     alt={trip.creator.name || 'Creator'}
                     className="h-8 w-8 rounded-full border border-white/40 object-cover"

@@ -6,6 +6,7 @@ import { TripCard } from '@/components/tripcard/TripCard'
 import { Icon } from '@iconify/react'
 import type { Trip, User, Day, Itinerary } from '@/lib/core/types'
 import Loading from '@/components/common/Loading'
+import Image from 'next/image'
 
 // ハリボテ用の拡張型定義
 interface ExtendedTrip extends Trip {
@@ -507,7 +508,7 @@ export default function TripTypesDemoPage() {
               {/* オーナー */}
               <div className="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
                 <div className="relative">
-                  <img
+                  <Image
                     src={mockUser.profile_image_url || '/default-avatar.png'}
                     alt={mockUser.name}
                     className="w-10 h-10 rounded-full object-cover border-2 border-indigo-500"
@@ -531,7 +532,7 @@ export default function TripTypesDemoPage() {
               {/* 招待メンバー */}
               {mockSharedMembers.map((member) => (
                 <div key={member.id} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors">
-                  <img
+                  <Image
                     src={member.profile_image_url || '/default-avatar.png'}
                     alt={member.name}
                     className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
@@ -585,7 +586,7 @@ export default function TripTypesDemoPage() {
               <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                 {/* アバター */}
                 <div className="relative">
-                  <img
+                  <Image
                     src={mockUser.profile_image_url || '/default-avatar.png'}
                     alt={mockUser.name}
                     className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
@@ -714,7 +715,7 @@ export default function TripTypesDemoPage() {
                             {/* 写真 */}
                             <div className="md:w-1/3">
                               <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-200 group cursor-pointer">
-                                <img
+                                <Image
                                   src={photoUrl}
                                   alt={itinerary.title}
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

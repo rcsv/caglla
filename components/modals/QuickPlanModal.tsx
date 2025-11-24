@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import type { Trip } from '@/lib/core/types'
 import Loading from '@/components/common/Loading'
 import { t } from '@/lib/i18n'
+import Image from 'next/image'
 
 interface QuickPlanModalProps {
   isOpen: boolean
@@ -206,7 +207,7 @@ export default function QuickPlanModal({ isOpen, onClose }: QuickPlanModalProps)
                       <div className="flex items-start gap-4">
                         {template.image_url && (
                           <div className="w-24 h-24 flex-shrink-0 rounded-sm overflow-hidden bg-gray-100">
-                            <img
+                            <Image
                               src={template.image_url}
                               alt={template.title}
                               className="w-full h-full object-cover"
@@ -262,7 +263,7 @@ export default function QuickPlanModal({ isOpen, onClose }: QuickPlanModalProps)
                 <div className="flex items-start gap-4">
                   {selectedTemplate.image_url && (
                     <div className="w-20 h-20 flex-shrink-0 rounded-sm overflow-hidden bg-gray-100">
-                      <img
+                      <Image
                         src={selectedTemplate.image_url}
                         alt={selectedTemplate.title}
                         className="w-full h-full object-cover"

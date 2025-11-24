@@ -17,6 +17,7 @@ import LikeButton from '@/components/social/LikeButton'
 import { useUserData } from '@/lib/contexts/user-data'
 import { isSameUser } from '@/lib/auth/client-identity-helpers'
 import Link from 'next/link'
+import Image from 'next/image'
 
 type TabId = 'friends' | 'ideas' | 'shares'
 
@@ -289,7 +290,7 @@ function FriendsTimeline() {
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <img src={avatar} alt={userName} className="h-12 w-12 rounded-full border border-slate-100 object-cover" />
+                    <Image src={avatar} alt={userName} className="h-12 w-12 rounded-full border border-slate-100 object-cover" />
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{userName}</p>
                       <p className="text-xs text-slate-500">{action}</p>
@@ -379,7 +380,7 @@ function FriendsTimeline() {
               <div className="md:w-64">
                 <Link href={tripUrl}>
                   <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-slate-100">
-                    <img src={cover} alt={title} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
+                    <Image src={cover} alt={title} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
                     {isActive && (
                       <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
                         <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
@@ -479,7 +480,7 @@ function PlanCatalog() {
           <Link key={trip.id} href={tripUrl}>
             <article className="group flex flex-col overflow-hidden rounded-sm border border-slate-200 bg-white shadow-sm hover:border-indigo-200 hover:shadow-md transition-all cursor-pointer">
               <div className="relative h-40 w-full overflow-hidden">
-                <img
+                <Image
                   src={cover}
                   alt={title}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -518,7 +519,7 @@ function PlanCatalog() {
                 )}
                 <div className="mt-auto flex items-center justify-between pt-2">
                   <div className="flex items-center gap-2">
-                    <img
+                    <Image
                       src={creatorAvatar}
                       alt={creatorName}
                       className="h-7 w-7 rounded-full border border-slate-200"

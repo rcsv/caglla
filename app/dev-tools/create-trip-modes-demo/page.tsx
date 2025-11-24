@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Icon } from '@iconify/react'
 import type { Trip, User } from '@/lib/core/types'
 import Link from 'next/link'
+import Image from 'next/image'
 
 /**
  * Create Trip from Public Trip Demo
@@ -164,7 +165,7 @@ export default function CreateTripModesDemoPage() {
                     >
                       {trip.image_url && (
                         <div className="relative h-32">
-                          <img
+                          <Image
                             src={trip.image_url}
                             alt={trip.title}
                             className="w-full h-full object-cover"

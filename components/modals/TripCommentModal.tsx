@@ -10,6 +10,7 @@ import { getZIndexClass } from '@/lib/core/z-index'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { resolveSocialStats } from '@/lib/social/trip-social-utils'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import Image from 'next/image'
 
 /**
  * 相対時間をフォーマット（例: "45分前", "2時間前", "昨日"）
@@ -160,7 +161,7 @@ export default function TripCommentModal({
               <div className="p-6 space-y-6">
                 {/* カバー画像 */}
                 <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-slate-100">
-                  <img
+                  <Image
                     src={cover}
                     alt={title}
                     className="h-full w-full object-cover"
@@ -169,7 +170,7 @@ export default function TripCommentModal({
 
                 {/* ユーザー情報 */}
                 <div className="flex items-center gap-3">
-                  <img
+                  <Image
                     src={avatar}
                     alt={userName}
                     className="h-12 w-12 rounded-full border border-slate-200 object-cover"
