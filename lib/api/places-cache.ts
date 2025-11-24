@@ -103,8 +103,10 @@ export async function savePlaceToCache(
       access_count: 1
     }
     
+    const sanitizedCacheData = removeUndefinedFields(cacheData)
+    
     // merge: true でレースコンディション対策
-    await docRef.set(cacheData, { merge: true })
+    await docRef.set(sanitizedCacheData, { merge: true })
     
     logger.info('Saved place to cache:', { 
       placeId: placeData.place_id, 
@@ -115,6 +117,27 @@ export async function savePlaceToCache(
     logger.error('Error saving place to cache:', error)
     throw error
   }
+}
+
+/**
+ * Firestoreに保存する前にundefinedフィールドを除去
+ */
+function removeUndefinedFields<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => item !== undefined)
+      .map((item) => removeUndefinedFields(item)) as unknown as T
+  }
+  
+  if (value && typeof value === 'object' && !(value instanceof Date)) {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => [k, removeUndefinedFields(v)])
+    
+    return Object.fromEntries(entries) as T
+  }
+  
+  return value
 }
 
 /**
