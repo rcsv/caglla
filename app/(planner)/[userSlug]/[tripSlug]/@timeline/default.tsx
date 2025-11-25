@@ -908,7 +908,8 @@ export default function TimelineDefault() {
               canPublish={canPublishTrip}
               onPublish={canPublishTrip ? handlePublish : undefined}
               publishLoading={publishLoading}
-              onUpdateTrip={() => setShowEditBaseInfoModal(true)}
+              onUpdateTrip={updateTrip}
+              onEditBaseInfoRequest={() => setShowEditBaseInfoModal(true)}
               onDeleteTrip={() => {
                 removeTrip(trip.id)
                 router.push('/home')
@@ -945,7 +946,8 @@ export default function TimelineDefault() {
             onScheduleDelete={handleScheduleDelete}
         onItineraryClick={onItineraryClickSync}
             onDragEnd={handleDragEnd}
-            onUpdateTrip={() => setShowEditBaseInfoModal(true)}
+            onUpdateTrip={updateTrip}
+            onEditBaseInfoRequest={() => setShowEditBaseInfoModal(true)}
             onReorderItineraries={handleReorderItineraries}
             expandAllDays={expandAllDays}
             collapseAllDays={collapseAllDays}

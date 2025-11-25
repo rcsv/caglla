@@ -2,7 +2,6 @@
 
 import { useCallback } from 'react'
 import { Trip } from '@/lib/core/types'
-import TripEditor from '@/components/trip/TripEditor'
 import { CalendarIcon } from '@/components/common/icons/CalendarIcon'
 import { PinIcon } from '@/components/common/icons/PinIcon'
 import { dateUtils } from '@/lib/utils/date'
@@ -14,9 +13,22 @@ import Loading from '@/components/common/Loading'
 import { Icon } from '@iconify/react'
 import TripLikeButton from './TripLikeButton'
 
+/**
+ * TripHeroSection Props
+ * 
+ * @param onUpdateTrip
+ *   Trip のデータモデルが変わったときに親へ通知する。
+ *   UI を開く/閉じる用途には絶対に使わない。
+ *   例: Like ボタンの状態変更、統計情報の更新など
+ * 
+ * @param onEditBaseInfoRequest
+ *   ユーザーが明示的に編集操作を行ったときに呼ばれる。
+ *   編集モーダルを開くなどの UI 制御に使用する。
+ */
 interface TripHeroSectionProps {
   trip: Trip
   onUpdateTrip: (updatedTrip: Trip) => void
+  onEditBaseInfoRequest?: () => void
   onDeleteTrip: () => void
   canReplica?: boolean
   onReplica?: () => void
@@ -30,6 +42,7 @@ export default function TripHeroSection({
   trip,
   canEdit = true,
   onUpdateTrip,
+  onEditBaseInfoRequest,
   onDeleteTrip,
   canReplica = false,
   onReplica,
@@ -140,15 +153,15 @@ export default function TripHeroSection({
             )}
           </div>
           <div className="flex items-center gap-3">
-            {canEdit && (
-              <TripEditor 
-                trip={trip} 
-                onUpdate={onUpdateTrip} 
-                onDelete={onDeleteTrip}
-                hideEditButton={true}
-                disableDateFields={Boolean(trip.is_template)}
-                disablePublishControls={Boolean(trip.is_template)}
-              />
+            {canEdit && onEditBaseInfoRequest && (
+              <button
+                type="button"
+                onClick={onEditBaseInfoRequest}
+                className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-500"
+              >
+                <Icon icon="mdi:pencil" className="h-4 w-4" aria-hidden="true" />
+                <span>{t('trip.editBaseInfo', '基本情報を編集')}</span>
+              </button>
             )}
           </div>
         </div>
