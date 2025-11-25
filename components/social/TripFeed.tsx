@@ -401,6 +401,8 @@ export default function TripFeed({ feedType, initialCursor, layout = 'list' }: T
                   <Image
                     src={trip.creator.profile_image_url}
                     alt={trip.creator.name || 'Creator'}
+                    width={32}
+                    height={32}
                     className="h-8 w-8 rounded-full border border-white/40 object-cover"
                   />
                 ) : (

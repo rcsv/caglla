@@ -603,8 +603,12 @@ export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Pr
     if (qrDataURL) {
       qrCodeHtml = `
         <div class="cover-qr">
-          <Image src="${qrDataURL}" alt="QR Code" />
-          <div class="cover-qr-label">Trip URL</div>
+          <Image
+            src="${qrDataURL}"
+            alt="QR Code"
+            width={128}
+            height={128}
+          />
         </div>
       `
     }

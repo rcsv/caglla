@@ -290,7 +290,12 @@ function FriendsTimeline() {
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <Image src={avatar} alt={userName} className="h-12 w-12 rounded-full border border-slate-100 object-cover" />
+                    <Image 
+                      src={avatar}
+                      alt={userName}
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 rounded-full border border-slate-100 object-cover" />
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{userName}</p>
                       <p className="text-xs text-slate-500">{action}</p>
@@ -380,7 +385,12 @@ function FriendsTimeline() {
               <div className="md:w-64">
                 <Link href={tripUrl}>
                   <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-slate-100">
-                    <Image src={cover} alt={title} className="h-full w-full object-cover transition duration-500 hover:scale-105" />
+                    <Image
+                      src={cover}
+                      alt={title}
+                      width={256}
+                      height={192}
+                      className="h-full w-full object-cover transition duration-500 hover:scale-105" />
                     {isActive && (
                       <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-rose-500 px-3 py-1 text-xs font-semibold text-white">
                         <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
@@ -483,6 +493,8 @@ function PlanCatalog() {
                 <Image
                   src={cover}
                   alt={title}
+                  width={256}
+                  height={192}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/0" />
@@ -522,6 +534,8 @@ function PlanCatalog() {
                     <Image
                       src={creatorAvatar}
                       alt={creatorName}
+                      width={28}
+                      height={28}
                       className="h-7 w-7 rounded-full border border-slate-200"
                     />
                     <div>

@@ -164,6 +164,8 @@ export default function TripCommentModal({
                   <Image
                     src={cover}
                     alt={title}
+                    width={256}
+                    height={192}
                     className="h-full w-full object-cover"
                   />
                 </div>
@@ -173,6 +175,8 @@ export default function TripCommentModal({
                   <Image
                     src={avatar}
                     alt={userName}
+                    width={48}
+                    height={48}
                     className="h-12 w-12 rounded-full border border-slate-200 object-cover"
                   />
                   <div>

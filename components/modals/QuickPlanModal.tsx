@@ -210,6 +210,8 @@ export default function QuickPlanModal({ isOpen, onClose }: QuickPlanModalProps)
                             <Image
                               src={template.image_url}
                               alt={template.title}
+                              width={96}
+                              height={96}
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -266,6 +268,8 @@ export default function QuickPlanModal({ isOpen, onClose }: QuickPlanModalProps)
                       <Image
                         src={selectedTemplate.image_url}
                         alt={selectedTemplate.title}
+                        width={80}
+                        height={80}
                         className="w-full h-full object-cover"
                       />
                     </div>

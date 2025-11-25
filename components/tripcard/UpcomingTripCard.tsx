@@ -40,7 +40,13 @@ export default function UpcomingTripCard({ trip, imageUrl, today }: UpcomingTrip
       <div className="border border-gray-200 rounded overflow-hidden hover:border-emerald-300 hover:shadow-sm transition-all">
         <div className="flex gap-3">
           <div className="w-20 h-20 flex-shrink-0 bg-gray-100">
-            <Image src={imageUrl} alt={trip.title || 'Upcoming trip cover'} className="w-full h-full object-cover" />
+            <Image
+              src={imageUrl}
+              alt={trip.title || 'Upcoming trip cover'}
+              width={80}
+              height={80}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="py-2 pr-3 flex-1">
             <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-1">
