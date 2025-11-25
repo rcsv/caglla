@@ -106,6 +106,11 @@ export default function TripEditor({
     return ''
   }
 
+  // initialEditingが変更された時にisEditingを更新
+  useEffect(() => {
+    setIsEditing(initialEditing)
+  }, [initialEditing])
+
   // tripが変更された時にformDataを更新（編集モードでない場合のみ）
   useEffect(() => {
     if (!isEditing) {
