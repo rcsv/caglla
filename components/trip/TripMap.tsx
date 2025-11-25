@@ -1,7 +1,7 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { Itinerary, Trip, PlaceData } from '@/lib/core/types'
 import type { PlaceSearchResult } from '@/lib/core/types'
 import { loadGoogleMapsAPI } from '@/lib/api/google/maps-loader'
@@ -133,6 +133,7 @@ export default function TripMap({
   const onPoiDataUpdateRef = useRef(onPoiDataUpdate)
   const onItineraryClickRef = useRef(onItineraryClick)
   const onMapInteractionStartRef = useRef(onMapInteractionStart)
+  const lastResetKeyRef = useRef<string | null>(null)
 
   useEffect(() => {
     onPoiDataUpdateRef.current = onPoiDataUpdate
@@ -145,6 +146,13 @@ export default function TripMap({
   useEffect(() => {
     onMapInteractionStartRef.current = onMapInteractionStart
   }, [onMapInteractionStart])
+
+  // itineraries を正規化して依存配列を安定化（ID と place_data の有無だけを比較）
+  const normalizedItinerariesKey = useMemo(() => {
+    return itineraries
+      .map(it => `${it.id}:${it.place_data?.geometry?.location ? '1' : '0'}`)
+      .join(',')
+  }, [itineraries])
 
   const initialCenterLat =
     typeof initialCenter?.lat === 'function' ? initialCenter.lat() : initialCenter?.lat ?? null
@@ -448,30 +456,22 @@ export default function TripMap({
     markersRef.current = []
 
     // 位置情報がある itineraries をフィルタリング
-    logger.debug('🗺️ TripMap: Filtering itineraries')
-    logger.debug('  Total itineraries:', itineraries.length)
-    
     const validItineraries = itineraries.filter(
-      itinerary => {
-        const isValid = !!itinerary.place_data?.geometry?.location
-        logger.debug(`  Itinerary "${itinerary.title}":`, {
-          hasPlaceData: !!itinerary.place_data,
-          hasGeometry: !!itinerary.place_data?.geometry,
-          hasLocation: !!itinerary.place_data?.geometry?.location,
-          isValid
-        })
-        return isValid
-      }
+      itinerary => !!itinerary.place_data?.geometry?.location
     )
-
-    logger.debug('  Valid itineraries count:', validItineraries.length)
 
     const fallbackCenter = hasInitialCenter
       ? { lat: initialCenterLat!, lng: initialCenterLng! }
       : undefined
 
     if (validItineraries.length === 0) {
-      logger.debug('⚠️ No valid itineraries, resetting map')
+      // リセット処理を1回だけ実行するためのガード
+      const resetKey = `reset-${normalizedItinerariesKey}`
+      if (lastResetKeyRef.current === resetKey) {
+        return // 既に同じ状態でリセット済み
+      }
+      lastResetKeyRef.current = resetKey
+      
       // 行先が無い場合は初期センターへ
       if (fallbackCenter) {
         map.setCenter(fallbackCenter)
@@ -479,6 +479,9 @@ export default function TripMap({
       }
       return
     }
+    
+    // 有効な itineraries がある場合はリセットキーをクリア
+    lastResetKeyRef.current = null
 
     // 日程ごとの番号を計算するためのマップを作成
     const dayNumberMap = new Map<string, number>()
@@ -509,8 +512,6 @@ export default function TripMap({
       const markerNumber = itinerary.sort_number
       labelElement.textContent = markerNumber.toString()
       teardropElement.appendChild(labelElement)
-      
-      logger.debug(`  Creating marker for "${itinerary.title}" with number: ${markerNumber}`)
 
       // AdvancedMarkerElementを作成
       const marker = new window.google.maps.marker.AdvancedMarkerElement({
@@ -633,12 +634,6 @@ export default function TripMap({
           lng: selectedItinerary.place_data!.geometry!.location.lng,
         }
         const zoom = getZoomForPlaceTypes(selectedItinerary.place_data?.types)
-        logger.debug('🎯 TripMap: Marker click focus with types-based zoom', {
-          itineraryTitle: selectedItinerary.title,
-          types: selectedItinerary.place_data?.types,
-          calculatedZoom: zoom,
-          position
-        })
         smoothMoveToLocation(map, position.lat, position.lng, zoom)
       }
       return // 個別フォーカスモードの場合はここで終了
@@ -654,11 +649,6 @@ export default function TripMap({
       // 単一のItineraryの場合
       const only = validItineraries[0]
       const zoom = getZoomForPlaceTypes(only.place_data?.types)
-      logger.debug('🎯 TripMap: Single itinerary view with types-based zoom', {
-        itineraryTitle: only.title,
-        types: only.place_data?.types,
-        calculatedZoom: zoom
-      })
       smoothMoveToLocation(
         map,
         only.place_data!.geometry!.location.lat,
@@ -685,12 +675,16 @@ export default function TripMap({
     map,
     directionsService,
     directionsRenderer,
+    normalizedItinerariesKey,
     itineraries,
     selectedDayId,
     focusMode,
     selectedItineraryId,
     initialCenterKey,
-    scrollSyncEnabled
+    scrollSyncEnabled,
+    hasInitialCenter,
+    initialCenterLat,
+    initialCenterLng
   ])
 
   // POIダイアログ用の一時マーカーを制御

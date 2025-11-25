@@ -99,6 +99,7 @@ export function HomeRightColumn({
                   trip={trip}
                   coverImage={coverImage}
                   today={today}
+                  priority={index === 0}
                 />
               )
             })}
@@ -144,6 +145,7 @@ export function HomeRightColumn({
                   trip={trip}
                   imageUrl={imageUrl}
                   today={today}
+                  priority={index === 0}
                 />
               )
             })}

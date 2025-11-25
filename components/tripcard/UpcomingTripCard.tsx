@@ -12,11 +12,12 @@ interface UpcomingTripCardProps {
   trip: Trip
   imageUrl: string
   today: Date
+  priority?: boolean
 }
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
-export default function UpcomingTripCard({ trip, imageUrl, today }: UpcomingTripCardProps) {
+export default function UpcomingTripCard({ trip, imageUrl, today, priority = false }: UpcomingTripCardProps) {
   const startDate = toDateOrNull(trip.start_date)
 
   const daysUntil = startDate
@@ -45,6 +46,7 @@ export default function UpcomingTripCard({ trip, imageUrl, today }: UpcomingTrip
               alt={trip.title || 'Upcoming trip cover'}
               width={80}
               height={80}
+              priority={priority}
               className="w-full h-full object-cover"
             />
           </div>

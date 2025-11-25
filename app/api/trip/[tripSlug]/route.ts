@@ -121,7 +121,39 @@ export async function GET(
     }
 
     // Get days for this trip
-    const days = await adminDayOperations.getDaysByTripId(tripId)
+    let days = await adminDayOperations.getDaysByTripId(tripId)
+
+    // Template Trip の場合、day_count に基づいて days を生成（存在しない場合のみ）
+    if (trip.is_template && days.length === 0 && trip.day_count && trip.day_count > 0) {
+      logger.debug('Template trip has no days, generating days based on day_count', {
+        tripId,
+        dayCount: trip.day_count
+      })
+      
+      const daysToCreate: Array<Omit<Day, 'id' | 'created_at' | 'updated_at'>> = []
+      for (let dayNumber = 1; dayNumber <= trip.day_count; dayNumber++) {
+        daysToCreate.push({
+          trip_id: tripId,
+          day_number: dayNumber
+          // Template Trip は日付がないため、date フィールドは設定しない
+        })
+      }
+      
+      // すべての days を作成
+      for (const dayData of daysToCreate) {
+        try {
+          const createdDay = await adminDayOperations.createDay(dayData)
+          days.push(createdDay)
+        } catch (error) {
+          logger.error('Failed to create day for template trip', error, { dayNumber: dayData.day_number })
+        }
+      }
+      
+      logger.debug('Generated days for template trip', {
+        tripId,
+        generatedDaysCount: days.length
+      })
+    }
 
     // Get itineraries for each day
     const daysWithItineraries = await Promise.all(

@@ -12,11 +12,12 @@ interface OngoingTripCardProps {
   trip: Trip
   coverImage: string
   today: Date
+  priority?: boolean
 }
 
 const DAY_MS = 1000 * 60 * 60 * 24
 
-export default function OngoingTripCard({ trip, coverImage, today }: OngoingTripCardProps) {
+export default function OngoingTripCard({ trip, coverImage, today, priority = false }: OngoingTripCardProps) {
   const getTripUrl = () => {
     if (trip.creator?.slug && trip.slug) {
       return `/${trip.creator.slug}/${trip.slug}`
@@ -45,6 +46,7 @@ export default function OngoingTripCard({ trip, coverImage, today }: OngoingTrip
               alt={trip.title || 'Trip cover'}
               fill
               sizes="(max-width: 768px) 100vw, 33vw"
+              priority={priority}
               className="object-cover"
             />
           </div>
