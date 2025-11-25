@@ -121,7 +121,7 @@ TOTAL_LINES=0
 FILE_COUNT=0
 
 # ロックファイルと.mdファイルを除外
-FILE_LIST=$(echo "$FILE_LIST" | grep -v lock | grep -v '\.md$' || true)
+FILE_LIST=$(echo "$FILE_LIST" | grep -v lock | grep -v '\.md$' | grep -v '\.jpg$' | grep -v '\.png$' | grep -v '\.jpeg$' || true)
 
 while IFS= read -r file; do
     if [ -f "$file" ]; then
