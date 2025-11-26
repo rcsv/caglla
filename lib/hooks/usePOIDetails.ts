@@ -7,7 +7,7 @@ import type { AggregatedVenueData, UnifiedReview } from '@/lib/api/venue-aggrega
 import type { PlaceData } from '@/lib/core/types'
 import type { SupportedLanguage } from '@/lib/i18n'
 
-const CACHE_TTL = 24 * 60 * 60 * 1000 // 1日（24時間）
+const CACHE_TTL = 7 * 24 * 60 * 60 * 1000 // 1週間（7日）
 
 interface POICache {
   placeDetails: any
