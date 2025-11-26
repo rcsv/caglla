@@ -1,13 +1,10 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import Image from 'next/image'
 import { placesApiHelpers } from '@/lib/api/google/places'
-import { getCachedPlace, placesCacheManager } from '@/lib/travel/places-cache'
 import { Button } from '@/components/common/Button'
-import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
-import type { AggregatedVenueData, UnifiedReview } from '@/lib/api/venue-aggregator'
 import type { PlaceData } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
@@ -18,6 +15,7 @@ import { t } from '@/lib/i18n'
 import { parseOpeningHours } from './utils/parse-opening-hours'
 import { getZoomForPlaceTypes } from '@/lib/travel/map-zoom'
 import { isDevelopment } from '@/lib/core/env-validation'
+import { usePOIDetails } from '@/lib/hooks/usePOIDetails'
 
 interface POIDialogProps {
   poiData: {
@@ -63,16 +61,26 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
     trip?.days?.length,
     trip?.days?.map(d => `${d.id}:${d.description}:${d.date}`).join(',')
   ])
-  const [placeDetails, setPlaceDetails] = useState<any>(null)
-  const [aggregatedData, setAggregatedData] = useState<AggregatedVenueData | null>(null)
-  const [unifiedReviews, setUnifiedReviews] = useState<UnifiedReview[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+
+  // placeIdだけを抽出してメモ化（poiDataオブジェクトの参照変更を無視）
+  const currentPlaceId = useMemo(() => poiData?.placeId, [poiData?.placeId])
+  const currentPlaceData = useMemo(() => poiData?.placeData, [poiData?.placeId, poiData?.placeData])
+
+  // データ取得をカスタムhookに委譲
+  const {
+    placeDetails,
+    aggregatedData,
+    unifiedReviews,
+    cachedImages,
+    loading,
+    error,
+    imageLoading,
+  } = usePOIDetails(currentPlaceId, currentPlaceData, language, onClose)
+
+  // UI状態
   const [showDaySelector, setShowDaySelector] = useState(false)
   const [showAllHours, setShowAllHours] = useState(false)
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
-  const [cachedImages, setCachedImages] = useState<CachedImageInfo[]>([])
-  const [imageLoading, setImageLoading] = useState(false)
   const [popupPosition, setPopupPosition] = useState<'bottom' | 'top'>('bottom')
   const [showAllReviews, setShowAllReviews] = useState(false)
   const [showImageGallery, setShowImageGallery] = useState(false)
@@ -81,7 +89,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
   const popupRef = useRef<HTMLDivElement>(null)
 
   // 集約された価格レベルを計算（メモ化）
-  const getAggregatedPriceLevel = useCallback((data: AggregatedVenueData | null): number | null => {
+  const getAggregatedPriceLevel = (data: typeof aggregatedData): number | null => {
     if (!data) return null
     
     // Google Placesの価格レベル
@@ -100,223 +108,17 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
     }
     
     return null
-  }, [])
+  }
 
   // 価格レベルをメモ化
-  const priceLevel = useMemo(() => getAggregatedPriceLevel(aggregatedData), [aggregatedData, getAggregatedPriceLevel])
+  const priceLevel = useMemo(() => getAggregatedPriceLevel(aggregatedData), [aggregatedData])
 
-  const cacheImages = useCallback(
-    async (photos: any[]) => {
-      if (!photos || photos.length === 0) return
-
-      setImageLoading(true)
-      try {
-        const imagePromises = photos.map(async (photo) => {
-          const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photo.photo_reference, 300)
-          return await getCachedPlaceImage(photo.photo_reference, googlePhotoUrl, {
-            width: 300,
-            height: 300,
-            quality: 80,
-          })
-        })
-
-        const cachedImageResults = await Promise.all(imagePromises)
-        setCachedImages(cachedImageResults)
-
-        logger.debug('POIDialog: 画像キャッシュ完了', {
-          total: cachedImageResults.length,
-          cached: cachedImageResults.filter((img) => img.cached).length,
-          new: cachedImageResults.filter((img) => !img.cached).length,
-        })
-      } catch (error) {
-        logger.error(t('poi.imageCacheError'), error)
-      } finally {
-        setImageLoading(false)
-      }
-    },
-    []
-  )
-
-  // placeIdだけを抽出してメモ化（poiDataオブジェクトの参照変更を無視）
-  const currentPlaceId = useMemo(() => poiData?.placeId, [poiData?.placeId])
-  const currentPlaceData = useMemo(() => poiData?.placeData, [poiData?.placeId, poiData?.placeData])
-
-  // POIキャッシュ（Immediate Fix: 応急処置）
-  const poiCacheRef = useRef(new Map<string, { 
-    placeDetails: any
-    aggregatedData: AggregatedVenueData | null
-    unifiedReviews: UnifiedReview[]
-    timestamp: number 
-  }>())
-  const CACHE_TTL = 5 * 60 * 1000 // 5分
-
-  const fetchPlaceDetails = useCallback(async () => {
-    if (!poiData || !currentPlaceId) return
-
-    // キャッシュチェック（Immediate Fix）
-    const cached = poiCacheRef.current.get(currentPlaceId)
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      logger.debug('✅ Using cached POI data', { placeId: currentPlaceId })
-      setPlaceDetails(cached.placeDetails)
-      setAggregatedData(cached.aggregatedData)
-      setUnifiedReviews(cached.unifiedReviews)
-      // キャッシュされた画像も復元
-      if (cached.placeDetails?.photos && cached.placeDetails.photos.length > 0) {
-        await cacheImages(cached.placeDetails.photos)
-      }
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      if (currentPlaceData) {
-        if (currentPlaceData.vicinity) {
-          logger.debug('✅ Using place_data with vicinity from Itinerary')
-          setPlaceDetails(currentPlaceData)
-          setLoading(false)
-          return
-        }
-
-        logger.debug('⚠️ place_data missing vicinity, checking PlacesCache...')
-        const cachedData = await getCachedPlace(currentPlaceId)
-        if (cachedData && cachedData.vicinity) {
-          logger.debug('✅ Found vicinity in PlacesCache, merging data')
-          setPlaceDetails({
-            ...currentPlaceData,
-            vicinity: cachedData.vicinity,
-            business_status: cachedData.business_status,
-            url: cachedData.url,
-            icon: cachedData.icon,
-          })
-          setLoading(false)
-          return
-        }
-      }
-
-      logger.debug('🔍 Checking PlacesCache for place_id:', currentPlaceId)
-
-      const cachedData = await getCachedPlace(currentPlaceId)
-      if (cachedData) {
-        logger.debug('✅ Found cached data:', cachedData.name)
-        setPlaceDetails(cachedData)
-        setLoading(false)
-        return
-      }
-
-      logger.debug('❌ No cached data found, calling Google Places API...')
-
-      const language = getUserLanguage(user)
-
-      // POIDialogで必要なフィールドを明示的に要求
-      const requiredFields = [
-        'price_level',
-        'rating',
-        'user_ratings_total',
-        'editorial_summary',
-        'reviews',
-        'opening_hours',
-        'website',
-        'formatted_phone_number'
-      ]
-
-      const details = await placesApiHelpers.getPlaceDetails(
-        currentPlaceId, 
-        language,
-        requiredFields
-      )
-      setPlaceDetails(details)
-
-      logger.debug('💾 Saving to PlacesCache...')
-      await placesCacheManager.fetchAndCachePlace(currentPlaceId, language)
-      logger.debug('✅ Data saved to PlacesCache')
-
-      if (details?.photos && details.photos.length > 0) {
-        await cacheImages(details.photos)
-      }
-
-      logger.debug('🌐 Fetching external venue data via proxy...')
-      let aggregated: AggregatedVenueData | null = null
-      let reviews: UnifiedReview[] = []
-      try {
-        const response = await fetch('/api/venue/aggregate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(details),
-        })
-
-        logger.debug('📡 Proxy response status:', response.status, response.statusText)
-
-        if (response.ok) {
-          const responseData = await response.json()
-          logger.debug('📦 Received data from proxy:', {
-            hasAggregatedData: !!responseData.aggregatedData,
-            hasUnifiedReviews: !!responseData.unifiedReviews,
-            tripAdvisorDetails: !!responseData.aggregatedData?.tripAdvisor?.details,
-            foursquareDetails: !!responseData.aggregatedData?.foursquare?.details,
-            reviewCount: responseData.unifiedReviews?.length || 0,
-          })
-
-          aggregated = responseData.aggregatedData || null
-          reviews = responseData.unifiedReviews || []
-          setAggregatedData(aggregated)
-          setUnifiedReviews(reviews)
-
-          logger.debug('✅ External venue data loaded', {
-            tripAdvisor: !!aggregated?.tripAdvisor?.details,
-            foursquare: !!aggregated?.foursquare?.details,
-            totalReviews: reviews.length,
-            aggregatedRating: aggregated?.aggregatedRating,
-          })
-        } else {
-          const errorText = await response.text()
-          logger.warn('⚠️ Failed to fetch external venue data:', {
-            status: response.status,
-            statusText: response.statusText,
-            error: errorText,
-          })
-        }
-      } catch (error) {
-        logger.error('❌ Error fetching external venue data:', error)
-      }
-
-      // キャッシュに保存（Immediate Fix）
-      poiCacheRef.current.set(currentPlaceId, {
-        placeDetails: details,
-        aggregatedData: aggregated,
-        unifiedReviews: reviews,
-        timestamp: Date.now()
-      })
-      logger.debug('💾 POI data cached', { placeId: currentPlaceId })
-    } catch (err) {
-      logger.error(t('poi.fetchDetailsError'), err)
-      setError(t('poi.fetchError'))
-      setTimeout(() => {
-        onClose()
-      }, 100)
-    } finally {
-      setLoading(false)
-    }
-  }, [cacheImages, onClose, currentPlaceId, currentPlaceData, user])
-
+  // placeIdが変わった時にUI状態をリセット
   useEffect(() => {
-    if (!poiData || !currentPlaceId) return
-
-    // 新しいPOIを取得する前に旧データをリセット
-    setPlaceDetails(null)
-    setAggregatedData(null)
-    setUnifiedReviews([])
-    setCachedImages([])
     setCurrentPhotoIndex(0)
     setShowAllReviews(false)
     setShowImageGallery(false)
-    setError(null)
-
-    void fetchPlaceDetails()
-  }, [currentPlaceId, fetchPlaceDetails])
+  }, [currentPlaceId])
 
   if (!poiData) return null
 

@@ -14,10 +14,12 @@ const CACHE_FORMAT_VERSION = '2.0.0'
  * ⚠️ 注意: むやみに増やさない！
  * Googleが頻繁に変更・追加するフィールドは含めない
  * アプリで本当に使う範囲だけを管理する
+ * 
+ * reviewsは除外: フィールドマスクで取得可能なため、永続的な欠損ではない
  */
 export const MISSING_FLAG_TARGETS = [
   'editorial_summary',
-  'reviews',
+  // 'reviews', ← 除外（フィールドマスクで取得可能）
   'opening_hours',
   'website',
   'formatted_phone_number',
@@ -269,9 +271,10 @@ export function checkCacheCompleteness(
   const missingFields: string[] = []
   
   for (const field of requiredFields) {
-    // 永続的な欠損フラグをチェック
+    // 永続的な欠損フラグをチェック（MISSING_FLAG_TARGETSに含まれる場合のみ）
     // 一度APIを呼び出してデータが存在しなかった場合は、再度クエリしない
-    if (cached.missing_data_flags?.[field] === true) {
+    if (MISSING_FLAG_TARGETS.includes(field as MissingFlagTarget) && 
+        cached.missing_data_flags?.[field] === true) {
       // このフィールドは永続的に欠損しているため、不足として扱わない
       continue
     }
@@ -334,6 +337,18 @@ export async function enrichPlaceCache(
   try {
     const existing = await getPlaceFromCache(placeId, language)
     
+    // missing_data_flagsを更新（MISSING_FLAG_TARGETSに含まれないフィールドのフラグを削除）
+    const updatedFlags = updateMissingDataFlags(existing, newData)
+    
+    // MISSING_FLAG_TARGETSに含まれないフィールドのフラグを削除（マイグレーション処理）
+    const cleanedFlags: Record<string, boolean> = {}
+    for (const [key, value] of Object.entries(updatedFlags)) {
+      if (MISSING_FLAG_TARGETS.includes(key as MissingFlagTarget)) {
+        cleanedFlags[key] = value
+      }
+      // MISSING_FLAG_TARGETSに含まれないフィールド（例: reviews）は削除される
+    }
+    
     // 既存のキャッシュと新しいデータをマージ
     const enrichedData: PlacesCacheInput = {
       ...(existing || {}),
@@ -341,7 +356,7 @@ export async function enrichPlaceCache(
       place_id: placeId,
       language: language,
       format_version: CACHE_FORMAT_VERSION,
-      missing_data_flags: updateMissingDataFlags(existing, newData),
+      missing_data_flags: cleanedFlags,
       cached_at: existing?.cached_at ? toDateOrNull(existing.cached_at) || new Date() : new Date(),
       last_accessed: new Date(),
       access_count: (existing?.access_count || 0) + 1
