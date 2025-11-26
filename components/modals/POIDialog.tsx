@@ -291,7 +291,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
             </div>
           ) : placeDetails ? (
             <div className="flex gap-3">
-              {/* メインコンテンツ（8割） */}
+              {/* メインコンテンツ */}
               <div className="flex-1 space-y-3 text-sm">
                 {/* 価格帯と評価 */}
                 <div className="flex items-center flex-wrap gap-3">
@@ -381,6 +381,23 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
                     </span>
                   )}
                 </div>
+
+                {/* タグ（Types） */}
+                {placeDetails.types && placeDetails.types.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {placeDetails.types
+                      .filter((type: string) => type !== 'point_of_interest') // point_of_interestを除外
+                      .slice(0, 5)
+                      .map((type: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
+                      >
+                        {type.replace(/_/g, ' ')}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 {/* 概要（Editorial Summary） */}
                 {placeDetails.editorial_summary?.overview && (
@@ -513,89 +530,23 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
                     ))}
                   </div>
                 )}
-
-                {/* カテゴリ */}
-                {placeDetails.types && placeDetails.types.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {placeDetails.types
-                      .filter((type: string) => type !== 'point_of_interest') // point_of_interestを除外
-                      .slice(0, 5)
-                      .map((type: string, index: number) => (
-                      <span
-                        key={index}
-                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
-                      >
-                        {type.replace(/_/g, ' ')}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* 連絡先 */}
-                <div className="flex flex-wrap gap-3">
-                  {placeDetails.formatted_phone_number && (
-                    <Button
-                      variant="outline"
-                      size="md"
-                      leftIcon={(
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.9.3 1.77.54 2.61a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.47-1.07a2 2 0 012.11-.45c.84.24 1.71.42 2.61.54A2 2 0 0122 16.92z" />
-                        </svg>
-                      )}
-                      onClick={() => window.open(`tel:${placeDetails.formatted_phone_number}`, '_self')}
-                    >
-                      {placeDetails.formatted_phone_number}
-                    </Button>
-                  )}
-                  {placeDetails.website && (
-                    <Button
-                      variant="outline"
-                      size="md"
-                      leftIcon={(
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M2 12h20" />
-                          <path d="M12 2a15.3 15.3 0 010 20" />
-                          <path d="M12 2a15.3 15.3 0 000 20" />
-                        </svg>
-                      )}
-                      onClick={() => window.open(placeDetails.website, '_blank', 'noopener,noreferrer')}
-                      >
-                      {t('poi.website')}
-                    </Button>
-                  )}
-                  {placeDetails.url && (
-                    <Button
-                      variant="outline"
-                      size="md"
-                      leftIcon={(
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
-                          <path d="M8.9 4.4v12.9" />
-                          <path d="M14.1 6.5v12.9" />
-                        </svg>
-                      )}
-                      onClick={() => window.open(placeDetails.url, '_blank', 'noopener,noreferrer')}
-                    >
-                      Google Maps
-                    </Button>
-                  )}
-                </div>
               </div>
 
-              {/* 画像エリア（2割） */}
-              {placeDetails.photos && placeDetails.photos.length > 0 && (
-                <div className="w-32 flex-shrink-0">
-                  <div 
-                    className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group hover:opacity-90 transition-opacity"
-                    onClick={handleOpenImageGallery}
-                  >
+              {/* 画像・連絡先エリア（右サイド） */}
+              <div className="w-36 flex-shrink-0 space-y-2">
+                {/* 画像 */}
+                {placeDetails.photos && placeDetails.photos.length > 0 && (
+                  <>
+                    <div 
+                      className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group hover:opacity-90 transition-opacity"
+                      onClick={handleOpenImageGallery}
+                    >
                     {cachedImages[currentPhotoIndex] ? (
                       <Image
                         src={cachedImages[currentPhotoIndex].url}
                         alt={t('poi.photoOf').replace('{name}', poiData.name)}
-                        width={128}
-                        height={128}
+                        width={144}
+                        height={144}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           // キャッシュされた画像が読み込めない場合は、元のGoogle Photo URLにフォールバック
@@ -611,8 +562,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
                           <Image
                             src={placesApiHelpers.getPhotoUrl(placeDetails.photos[currentPhotoIndex].photo_reference, 300)}
                             alt={t('poi.photoOf').replace('{name}', poiData.name)}
-                            width={128}
-                            height={128}
+                            width={144}
+                            height={144}
                             className="w-full h-full object-cover"
                           />
                         )}
@@ -637,14 +588,69 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
                         </svg>
                       </div>
                     </div>
-                  </div>
-                  {showZoomDebugInfo && (
-                    <div className="mt-2 text-[11px] text-gray-500 leading-snug">
-                      Debug zoom: {debugZoomLevel}
                     </div>
+                    {showZoomDebugInfo && (
+                      <div className="mt-2 text-[11px] text-gray-500 leading-snug">
+                        Debug zoom: {debugZoomLevel}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* 連絡先（画像の下） */}
+                <div className="flex flex-col gap-2">
+                  {placeDetails.formatted_phone_number && (
+                    <button
+                      onClick={() => window.open(`tel:${placeDetails.formatted_phone_number}`, '_self')}
+                      className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      title={placeDetails.formatted_phone_number}
+                    >
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.9.3 1.77.54 2.61a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.47-1.07a2 2 0 012.11-.45c.84.24 1.71.42 2.61.54A2 2 0 0122 16.92z" />
+                      </svg>
+                      <span className="truncate text-gray-700">電話</span>
+                    </button>
+                  )}
+                  {placeDetails.website && (
+                    <button
+                      onClick={() => window.open(placeDetails.website, '_blank', 'noopener,noreferrer')}
+                      className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      title={placeDetails.website}
+                    >
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M2 12h20" />
+                        <path d="M12 2a15.3 15.3 0 010 20" />
+                        <path d="M12 2a15.3 15.3 0 000 20" />
+                      </svg>
+                      <span className="truncate text-gray-700">
+                        {(() => {
+                          try {
+                            const url = new URL(placeDetails.website)
+                            return url.hostname.replace('www.', '')
+                          } catch {
+                            return t('poi.website')
+                          }
+                        })()}
+                      </span>
+                    </button>
+                  )}
+                  {placeDetails.url && (
+                    <button
+                      onClick={() => window.open(placeDetails.url, '_blank', 'noopener,noreferrer')}
+                      className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      title="Google Maps"
+                    >
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
+                        <path d="M8.9 4.4v12.9" />
+                        <path d="M14.1 6.5v12.9" />
+                      </svg>
+                      <span className="truncate text-gray-700">Maps</span>
+                    </button>
                   )}
                 </div>
-              )}
+              </div>
             </div>
           ) : null}
         </div>
