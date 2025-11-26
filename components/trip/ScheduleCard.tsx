@@ -495,7 +495,7 @@ export default function ScheduleCard({
                     reservation={itinerary.reservation}
                     onTimeEdit={canEdit ? handleTimeEditStart : undefined}
                     onCostEdit={canEdit ? handleCostEditStart : undefined}
-                    onReservationEdit={canEdit ? () => setShowReservationModal(true) : undefined}
+                    onReservationEdit={canEdit && !trip.is_template ? () => setShowReservationModal(true) : undefined}
                   />
                 )}
               </div>
@@ -525,7 +525,7 @@ export default function ScheduleCard({
                 onMoveDown={() => onMoveDown?.()}
                 onMoveToDay={(dayId) => onMoveToDay?.(itinerary.id, dayId)}
                 onDuplicateToDay={(dayId) => onDuplicateToDay?.(itinerary.id, dayId)}
-                onReservation={() => setShowReservationModal(true)}
+                onReservation={!trip.is_template ? () => setShowReservationModal(true) : undefined}
                 onDelete={() => onDelete?.(itinerary.id)}
               />
             )}
