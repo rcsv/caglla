@@ -96,8 +96,8 @@ export default function TripHeroSection({
       
       {/* Content Overlay */}
       <div className="relative h-full flex flex-col">
-        {/* Access badge overlay (right top) */}
-        <div className="absolute right-4 top-4 zidx-top-menu-content">
+        {/* Access badge overlay (left top - 左右に分配) */}
+        <div className="absolute left-4 top-4 zidx-top-menu-content">
           <PublicAccessBadge accessLevel={trip.access_level === 'private' ? 'private' : 'public'} />
         </div>
         {/* Top Navigation */}

@@ -67,10 +67,12 @@ export default function TripSummaryView({
               </div>
             )}
 
-            {/* 2. Reservations - 予約情報の確認 */}
-            <div id="reservations" className="anchor-offset">
-              <TripReservationDisplay itineraries={getAllItineraries()} />
-            </div>
+            {/* 2. Reservations - 予約情報の確認（テンプレートモードでは非表示） */}
+            {!trip.is_template && (
+              <div id="reservations" className="anchor-offset">
+                <TripReservationDisplay itineraries={getAllItineraries()} />
+              </div>
+            )}
 
             {/* 3. Budget - 旅行費用の管理 */}
             <div id="budget" className="anchor-offset">

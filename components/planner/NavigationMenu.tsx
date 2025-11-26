@@ -89,13 +89,14 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
           icon: <CloudIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('weather-forecast')
         }] : []),
-        {
+        // 予約：テンプレートモードでは非表示（日付がないため）
+        ...(!trip.is_template ? [{
           id: 'reservation',
           title: t('nav.reservationTitle'),
           subtitle: t('nav.reservation'),
           icon: <BookmarkIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('reservation')
-        },
+        }] : []),
         {
           id: 'budget',
           title: t('nav.budgetTitle'),
