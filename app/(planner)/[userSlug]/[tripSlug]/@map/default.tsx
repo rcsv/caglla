@@ -20,7 +20,7 @@ import { dispatchPOIOpen, dispatchPOIClose } from '../poi-events'
  * 読み取り専用として地図を描画（追加・移動などの操作は抑止）
  */
 function MapContent() {
-  const { trip } = useTrip()
+  const { trip, refreshTrip } = useTrip()
   const {
     selectedDayId,
     selectedItineraryId,
@@ -61,6 +61,47 @@ function MapContent() {
     }
     return trip.days.flatMap(d => d.itineraries || [])
   }, [trip, selectedDayId])
+
+  // POIからItineraryを追加
+  const handleAddToItinerary = async (placeId: string, dayId: string) => {
+    if (!poiData) return
+
+    try {
+      const response = await fetch('/api/itineraries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          day_id: dayId,
+          place_id: placeId,
+          place_data: poiData.placeData || {
+            place_id: placeId,
+            name: poiData.name,
+            geometry: {
+              location: poiData.location
+            }
+          },
+          title: poiData.name,
+          description: poiData.placeData?.formatted_address || '',
+          location: poiData.placeData?.formatted_address || ''
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to add itinerary: ${response.status}`)
+      }
+
+      // 成功したらtripデータを再取得
+      await refreshTrip?.()
+      
+      // POIDialogを閉じる
+      setPoiData(null)
+      dispatchPOIClose()
+    } catch (error) {
+      console.error('Failed to add itinerary:', error)
+    }
+  }
 
   if (!trip) {
     return <Loading className="py-6" />
@@ -105,7 +146,7 @@ function MapContent() {
             setPoiData(null)
             dispatchPOIClose()
           }}
-          onAddToItinerary={undefined} // 読み取り専用のため無効化
+          onAddToItinerary={handleAddToItinerary}
           // availableDaysは削除（Structural Fix: POIDialog内でTripProviderから直接取得）
         />
       )}

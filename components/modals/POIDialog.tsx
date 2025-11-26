@@ -9,7 +9,6 @@ import type { PlaceData } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
 import { useTrip } from '@/app/(planner)/[userSlug]/[tripSlug]/TripProvider'
-import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import ImageGalleryModal from './ImageGalleryModal'
 import { t } from '@/lib/i18n'
 import { parseOpeningHours } from './utils/parse-opening-hours'
@@ -38,29 +37,9 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
   const { user } = useAuth()
   const language = getUserLanguage(user)
   
-  // Structural Fix: availableDaysをTripProviderから直接取得
-  // tripの変更に依存しないように、daysの構造が変わった場合のみ再生成
-  // このコンポーネントはTripProvider内で使用されることを前提とする
-  const { trip } = useTrip()
-  const availableDays = useMemo(() => {
-    if (!trip?.days) return []
-    // trip.daysの参照が変わっても、内容が同じなら再生成されないようにする
-    // ただし、daysの構造が変わった場合は再生成が必要
-    return trip.days.map(d => {
-      const dayDate = toDateOrNull(d.date)
-      return {
-        id: d.id,
-        date: dayDate ? dayDate.toISOString() : '',
-        title: d.description,
-      }
-    })
-  }, [
-    // trip.daysの参照ではなく、daysの構造（lengthと各dayのid, description, date）で比較
-    // ⚠️ アンチパターン: 将来的にはArchitectural Fixで改善が必要
-    // 現時点では応急処置として実装
-    trip?.days?.length,
-    trip?.days?.map(d => `${d.id}:${d.description}:${d.date}`).join(',')
-  ])
+  // Structural Fix: availableDaysをTripProviderから取得（中央集約）
+  // テンプレートモード対応済み（日付がない場合は "Day 1", "Day 2" 形式）
+  const { availableDays } = useTrip()
 
   // placeIdだけを抽出してメモ化（poiDataオブジェクトの参照変更を無視）
   const currentPlaceId = useMemo(() => poiData?.placeId, [poiData?.placeId])

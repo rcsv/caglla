@@ -1,11 +1,18 @@
 'use client'
 
-import { createContext, useContext, ReactNode, useState, useCallback, useEffect } from 'react'
+import { createContext, useContext, ReactNode, useState, useCallback, useEffect, useMemo } from 'react'
 import type { Trip } from '@/lib/core/types'
 import { useRouter, useParams } from 'next/navigation'
 import { makeAuthenticatedRequest, getIdToken } from '@/lib/api/helpers'
 import { useAuth } from '@/lib/contexts/auth'
 import logger from '@/lib/core/logger'
+import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
+
+export interface AvailableDay {
+  id: string
+  date: string // ISO string or display string (e.g. "Day 1")
+  title: string
+}
 
 interface TripContextValue {
   trip: Trip | null
@@ -13,6 +20,7 @@ interface TripContextValue {
   error: 'not-found' | 'forbidden' | 'unknown' | null
   updateTrip: (updates: Partial<Trip> | ((prev: Trip) => Trip)) => void
   refreshTrip: () => Promise<void>
+  availableDays: AvailableDay[]
 }
 
 const TripContext = createContext<TripContextValue | undefined>(undefined)
@@ -120,8 +128,28 @@ export function TripProvider({ trip: initialTrip, children }: TripProviderProps)
     router.refresh()
   }, [router])
 
+  // availableDaysを中央集約的に生成（POIDialog、左メニューなどで共有）
+  const availableDays = useMemo<AvailableDay[]>(() => {
+    if (!trip?.days) return []
+    
+    return trip.days.map((d, index) => {
+      const dayDate = toDateOrNull(d.date)
+      
+      // テンプレートモードの場合は日付が存在しないので、"Day 1", "Day 2" 形式を使用
+      const dateDisplay = dayDate 
+        ? dayDate.toISOString() 
+        : `Day ${index + 1}`
+      
+      return {
+        id: d.id,
+        date: dateDisplay,
+        title: d.description || '',
+      }
+    })
+  }, [trip?.days])
+
   return (
-    <TripContext.Provider value={{ trip, loading, error, updateTrip, refreshTrip }}>
+    <TripContext.Provider value={{ trip, loading, error, updateTrip, refreshTrip, availableDays }}>
       {children}
     </TripContext.Provider>
   )
