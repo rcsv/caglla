@@ -257,11 +257,22 @@ export default function TripMap({
         })
         // クリックでPOIDialogを開く
         mk.addListener('click', () => {
+          console.log('🟠 [SEARCH RESULT] Marker clicked')
+          console.log('🟠 Place ID:', r.place_id)
+          console.log('🟠 Name:', r.name)
+          
+          logger.debug('🟠 Search result marker clicked:', {
+            placeId: r.place_id,
+            name: r.name
+          })
+          
           const newPoiData = {
             placeId: r.place_id,
             name: r.name,
             location: { lat: pos.lat, lng: pos.lng },
           }
+          console.log('🟢 [SEARCH RESULT] Setting POI data:', newPoiData)
+          logger.debug('🟢 Setting POI data from search result:', newPoiData)
           setInternalPoiData(newPoiData)
           onPoiDataUpdateRef.current?.(newPoiData)
         })
@@ -282,12 +293,14 @@ export default function TripMap({
     }
 
     const initializeMap = async () => {
+      console.log('🗺️ [MAP INIT] Initializing map...')
       try {
         setLoading(true)
         setError(null)
 
         const language = getUserLanguage(user)
         await loadGoogleMapsAPI(language)
+        console.log('✅ [MAP INIT] Google Maps API loaded')
 
         if (!mapRef.current || !window.google) {
           throw new Error(t('tripMap.loadFailed'))
@@ -328,61 +341,116 @@ export default function TripMap({
         createdDirectionsRenderer = newDirectionsRenderer
 
         newMap.addListener('click', async (event: any) => {
+          console.log('⚪ [MAP CLICK] Click event fired')
+          console.log('⚪ Event object:', event)
+          console.log('⚪ Has placeId:', event.placeId)
+          console.log('⚪ Location:', {
+            lat: event.latLng?.lat(),
+            lng: event.latLng?.lng()
+          })
+          
           onMapInteractionStartRef.current?.()
+          
+          // InfoWindowを閉じる
           const infoWindows = newMap.get('infoWindows') || []
           infoWindows.forEach((infoWindow: any) => {
             infoWindow.close()
           })
 
-          const clickLatLng = event.latLng
-
-          try {
-            const response = await fetch('/api/places/nearby', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                location: {
-                  lat: clickLatLng.lat(),
-                  lng: clickLatLng.lng(),
+          // ✅ Google標準POIマーカーをクリックした場合の処理
+          // poi_clickイベントが発火しない場合のフォールバック
+          if (event.placeId) {
+            console.log('🟡 [MAP CLICK → POI] Google POI detected via click event')
+            console.log('🟡 Place ID:', event.placeId)
+            
+            // Place Details APIから名前を含む詳細情報を取得
+            try {
+              const language = getUserLanguage(user)
+              const response = await fetch('/api/places/details', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
                 },
-                radius: 200,
-              }),
-            })
-
-            if (!response.ok) {
-              throw new Error(`Nearby search failed: ${response.status}`)
-            }
-
-            const data = await response.json()
-
-            if (data.status === 'OK' && data.results && data.results.length > 0) {
-              const nearestPOI = data.results[0]
+                body: JSON.stringify({
+                  placeId: event.placeId,
+                  language: language
+                })
+              })
+              
+              if (response.ok) {
+                const data = await response.json()
+                if (data.status === 'OK' && data.result) {
+                  const newPoiData = {
+                    placeId: event.placeId,
+                    name: data.result.name || 'POI',
+                    location: {
+                      lat: event.latLng.lat(),
+                      lng: event.latLng.lng(),
+                    },
+                    placeData: data.result
+                  }
+                  console.log('🟢 [MAP CLICK → POI] Setting POI data with name:', newPoiData)
+                  logger.debug('🟡 Google POI marker clicked via click event:', newPoiData)
+                  setInternalPoiData(newPoiData)
+                  onPoiDataUpdateRef.current?.(newPoiData)
+                } else {
+                  // Place Details取得失敗時のフォールバック
+                  const newPoiData = {
+                    placeId: event.placeId,
+                    name: 'POI',
+                    location: {
+                      lat: event.latLng.lat(),
+                      lng: event.latLng.lng(),
+                    },
+                  }
+                  console.warn('⚠️ [MAP CLICK → POI] Failed to get place details, using fallback')
+                  setInternalPoiData(newPoiData)
+                  onPoiDataUpdateRef.current?.(newPoiData)
+                }
+              }
+            } catch (error) {
+              console.error('❌ [MAP CLICK → POI] Error fetching place details:', error)
+              // エラー時のフォールバック
               const newPoiData = {
-                placeId: nearestPOI.place_id,
-                name: nearestPOI.name,
+                placeId: event.placeId,
+                name: 'POI',
                 location: {
-                  lat: nearestPOI.geometry.location.lat,
-                  lng: nearestPOI.geometry.location.lng,
+                  lat: event.latLng.lat(),
+                  lng: event.latLng.lng(),
                 },
               }
               setInternalPoiData(newPoiData)
               onPoiDataUpdateRef.current?.(newPoiData)
-            } else {
-              logger.debug('No POI found at clicked location, not showing dialog')
-              setInternalPoiData(null)
-              onPoiDataUpdateRef.current?.(null)
             }
-          } catch (error) {
-            logger.warn('Places API search failed:', error)
-            logger.debug('Places API failed, not showing dialog')
-            setInternalPoiData(null)
-            onPoiDataUpdateRef.current?.(null)
+            return
           }
+
+          // マップ空白部分をクリックした場合
+          console.log('⚪ [MAP CLICK] Blank area clicked (no POI search)')
+          logger.debug('⚪ Map blank area clicked (no POI search)', {
+            lat: event.latLng?.lat(),
+            lng: event.latLng?.lng()
+          })
+          
+          // POI検索は実行しない
+          // POIDialogは、以下の場合のみ表示：
+          // 1. Itineraryマーカー（ティアドロップ）をクリック
+          // 2. Google標準POIマーカーをクリック（event.placeIdが存在）
+          // 3. 検索結果マーカーをクリック
         })
 
-        newMap.addListener('poi_click', (event: any) => {
+        // Google標準POIマーカーのクリックイベント
+        const poiClickListener = newMap.addListener('poi_click', (event: any) => {
+          console.log('🟡 [POI_CLICK EVENT] Google POI marker clicked')
+          console.log('🟡 Event details:', event)
+          console.log('🟡 Place ID:', event.placeId)
+          console.log('🟡 Display Name:', event.displayName)
+          
+          logger.debug('🟡 Google POI marker clicked:', {
+            placeId: event.placeId,
+            name: event.displayName
+          })
+          
           onMapInteractionStartRef.current?.()
           event.stop()
 
@@ -395,10 +463,16 @@ export default function TripMap({
                 lng: event.latLng.lng(),
               },
             }
+            console.log('🟢 [POI_CLICK] Setting POI data:', newPoiData)
+            logger.debug('🟢 Setting POI data from Google POI:', newPoiData)
             setInternalPoiData(newPoiData)
             onPoiDataUpdateRef.current?.(newPoiData)
+          } else {
+            console.warn('⚠️ [POI_CLICK] No placeId in event')
           }
         })
+        
+        console.log('✅ POI click listener registered:', poiClickListener)
 
         newMap.addListener('dragstart', () => onMapInteractionStartRef.current?.())
         newMap.addListener('zoom_changed', () => onMapInteractionStartRef.current?.())
@@ -412,6 +486,9 @@ export default function TripMap({
           return
         }
 
+        console.log('✅ [MAP INIT] Map initialization complete')
+        console.log('✅ [MAP INIT] Event listeners registered')
+        
         setMap(newMap)
         setDirectionsService(newDirectionsService)
         setDirectionsRenderer(newDirectionsRenderer)
@@ -534,6 +611,19 @@ export default function TripMap({
       // })
 
       marker.addListener('click', () => {
+        console.log('🔵 [ITINERARY MARKER] Marker clicked')
+        console.log('🔵 Itinerary ID:', itinerary.id)
+        console.log('🔵 Title:', itinerary.title)
+        console.log('🔵 Has place_id:', !!itinerary.place_data?.place_id)
+        console.log('🔵 Place ID:', itinerary.place_data?.place_id)
+        
+        logger.debug('🔵 Itinerary marker clicked:', {
+          itineraryId: itinerary.id,
+          title: itinerary.title,
+          hasPlaceId: !!itinerary.place_data?.place_id,
+          placeId: itinerary.place_data?.place_id
+        })
+        
         // 通常のInfoWindowは非表示（カスタムPOIダイアログのみ表示）
         // infoWindow.open(map, marker)
         
@@ -548,12 +638,17 @@ export default function TripMap({
             },
             placeData: itinerary.place_data // Itinerariesに保存されているplace_dataを渡す
           }
+          console.log('🟢 [ITINERARY MARKER] Setting POI data:', newPoiData)
+          logger.debug('🟢 Setting POI data:', newPoiData)
           setInternalPoiData(newPoiData)
-        onPoiDataUpdateRef.current?.(newPoiData)
+          onPoiDataUpdateRef.current?.(newPoiData)
+        } else {
+          console.warn('⚠️ [ITINERARY MARKER] No place_id found:', itinerary.title)
+          logger.warn('⚠️ Itinerary marker clicked but no place_id found:', itinerary.title)
         }
         
         // 左ペインのItineraryにスクロールするためのコールバック
-      onItineraryClickRef.current?.(itinerary.id)
+        onItineraryClickRef.current?.(itinerary.id)
         
         // 個別フォーカスモードの場合、選択された場所にフォーカス
         if (focusMode === 'single') {

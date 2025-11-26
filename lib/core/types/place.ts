@@ -125,6 +125,8 @@ export interface PlacesCache {
   cached_at: FirestoreDate
   last_accessed: FirestoreDate
   access_count: number
+  // 永続的な欠損フラグ（本当に使う7個のフィールドのみ対象）
+  missing_data_flags?: Record<string, boolean>
 }
 
 /**

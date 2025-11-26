@@ -29,7 +29,9 @@
     "recalculate:trip-stats": "ts-node scripts/recalculate-trip-stats.ts",
     "create-test-data": "ts-node scripts/create-test-data.ts",
     "create-dummy-trips": "ts-node scripts/create-dummy-trips.ts",
-    "migrate-trip-user-ids": "ts-node scripts/migrate-trip-user-ids.ts"
+    "migrate-trip-user-ids": "ts-node scripts/migrate-trip-user-ids.ts",
+    "analyze:price-level": "ts-node scripts/analyze-price-level-cache.ts",
+    "refresh:price-level": "ts-node scripts/refresh-price-level-cache.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -103,7 +103,8 @@ export const POST = composeMiddleware(
         types: place.types || [],
         rating: place.rating,
         price_level: place.priceLevel ? (() => {
-          const priceLevels = ['FREE', 'INEXPENSIVE', 'MODERATE', 'EXPENSIVE', 'VERY_EXPENSIVE']
+          // Google Places API v1 returns 'PRICE_LEVEL_*' format
+          const priceLevels = ['PRICE_LEVEL_FREE', 'PRICE_LEVEL_INEXPENSIVE', 'PRICE_LEVEL_MODERATE', 'PRICE_LEVEL_EXPENSIVE', 'PRICE_LEVEL_VERY_EXPENSIVE']
           const index = priceLevels.indexOf(place.priceLevel)
           return index >= 0 ? index : undefined
         })() : undefined,

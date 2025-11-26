@@ -50,10 +50,12 @@ export const PlaceSearchSchema = z.object({
  * 
  * After:
  * - zod の `.min()` で placeId を必須に
+ * - requiredFields: クライアントが必要とするフィールドのリスト（キャッシュ完全性チェック用）
  */
 export const PlaceDetailsSchema = z.object({
   placeId: z.string().min(1, 'Place ID is required'),
-  language: SupportedLanguageSchema.optional()
+  language: SupportedLanguageSchema.optional(),
+  requiredFields: z.array(z.string()).optional().default([])
 })
 
 /**

@@ -3,6 +3,7 @@ import logger from '@/lib/core/logger'
 import { t } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { placesApiHelpers, PlaceSearchResult } from '@/lib/api/google/places'
 import { CloseIcon } from '@/components/common/icons/CloseIcon'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
@@ -154,9 +155,9 @@ export default function AddScheduleModal({
 
   if (!isOpen) return null
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center zidx-float-modal">
-      <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md mx-4">
+      <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md mx-4 zidx-float-modal-content">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-900">
             {t('addScheduleModal.title')}
@@ -235,4 +236,11 @@ export default function AddScheduleModal({
       </div>
     </div>
   )
+
+  // createPortalでbody直下にレンダリングしてz-indexの問題を解決
+  if (typeof window !== 'undefined') {
+    return createPortal(modalContent, document.body)
+  }
+  
+  return null
 }

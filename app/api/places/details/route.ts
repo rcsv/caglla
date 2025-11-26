@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import logger from '@/lib/core/logger'
 import { isSupportedLanguage, DEFAULT_LANGUAGE } from '@/lib/utils/language'
-import { getPlaceFromCache, savePlaceToCache, isCacheStale } from '@/lib/api/places-cache'
+import { 
+  getPlaceFromCache, 
+  savePlaceToCache, 
+  isCacheStale,
+  checkCacheCompleteness,
+  enrichPlaceCache
+} from '@/lib/api/places-cache'
 import type { SupportedLanguage, PlaceDetailsResult } from '@/lib/core/types'
 import { composeMiddleware } from '@/lib/core/middleware'
 import { withBodyValidation, withGooglePlacesKey } from '@/lib/api/middleware'
@@ -47,63 +53,102 @@ export const POST = composeMiddleware(
     // zod スキーマでバリデーション済み & 型推論
     type BodyType = z.infer<typeof PlaceDetailsSchema>
     const body = ctx.body as BodyType
-    const { placeId, language } = body
+    const { placeId, language, requiredFields = [] } = body
 
     // 言語バリデーション（zod スキーマでデフォルト値が設定済み）
     const validLanguage: SupportedLanguage = language && isSupportedLanguage(language) 
       ? language 
       : DEFAULT_LANGUAGE
 
-    logger.debug('Getting place details', { placeId, language: validLanguage })
+    logger.debug('Getting place details', { placeId, language: validLanguage, requiredFields })
 
     // 1. キャッシュを確認
     const cached = await getPlaceFromCache(placeId, validLanguage)
     
     if (cached) {
-      // キャッシュヒット
-      const isStale = isCacheStale(cached, SOFT_TTL_MS)
-      
-      if (isStale) {
-        // Soft TTL: 古いキャッシュだが即座に返し、バックグラウンドで更新
-        logger.info('Cache hit but stale, returning cached data and refreshing in background', {
-          placeId,
-          language: validLanguage
+      // 2. キャッシュ完全性チェック
+      if (requiredFields.length > 0) {
+        const missingFields = checkCacheCompleteness(cached, requiredFields)
+        
+        if (missingFields.length === 0) {
+          // 必要な情報が揃っている
+          logger.info('Cache hit (complete)', { placeId, language: validLanguage })
+          return NextResponse.json({ status: 'OK', result: cached })
+        }
+        
+        // 3. 不足しているフィールドのみをAPIに要求
+        logger.info('Cache incomplete, enriching with missing fields', { 
+          placeId, 
+          language: validLanguage,
+          missingFields 
         })
         
-        // バックグラウンド更新（非同期、結果を待たない）
-        refreshPlaceInBackground(placeId, validLanguage, GOOGLE_PLACES_API_KEY).catch(err => {
-          logger.warn('Background refresh failed:', err)
+        // 不足しているフィールドをGoogle Places APIのフィールド名に変換
+        const fieldsToFetch = missingFields.map(field => {
+          const fieldMap: Record<string, string> = {
+            'price_level': 'priceLevel',
+            'rating': 'rating',
+            'user_ratings_total': 'userRatingCount',
+            'editorial_summary': 'editorialSummary',
+            'reviews': 'reviews',
+            'opening_hours': 'regularOpeningHours',
+            'website': 'websiteUri',
+            'formatted_phone_number': 'nationalPhoneNumber'
+          }
+          return fieldMap[field] || field
         })
+        
+        // 基本フィールドも含める（place_id, name等は常に必要）
+        const allFields = ['id', 'displayName', 'formattedAddress', 'location', ...fieldsToFetch]
+        
+        const placeData = await fetchPlaceDetailsFromAPI(
+          placeId, 
+          validLanguage, 
+          GOOGLE_PLACES_API_KEY, 
+          allFields
+        )
+        
+        // 4. キャッシュの統合更新（エンリッチメント）
+        await enrichPlaceCache(placeId, validLanguage, placeData)
+        
+        // エンリッチメント後のキャッシュを取得して返す
+        const enrichedCache = await getPlaceFromCache(placeId, validLanguage)
+        return NextResponse.json({ status: 'OK', result: enrichedCache })
       } else {
-        logger.info('Cache hit (fresh)', { placeId, language: validLanguage })
+        // requiredFieldsが指定されていない場合は既存のロジック
+        const isStale = isCacheStale(cached, SOFT_TTL_MS)
+        
+        if (isStale) {
+          // Soft TTL: 古いキャッシュだが即座に返し、バックグラウンドで更新
+          logger.info('Cache hit but stale, returning cached data and refreshing in background', {
+            placeId,
+            language: validLanguage
+          })
+          
+          // バックグラウンド更新（非同期、結果を待たない）
+          refreshPlaceInBackground(placeId, validLanguage, GOOGLE_PLACES_API_KEY).catch(err => {
+            logger.warn('Background refresh failed:', err)
+          })
+        } else {
+          logger.info('Cache hit (fresh)', { placeId, language: validLanguage })
+        }
+        
+        return NextResponse.json({ status: 'OK', result: cached })
       }
-      
-      // 旧API形式に変換して返却
-      return NextResponse.json({
-        status: 'OK',
-        result: cached
-      })
     }
 
-    // 2. キャッシュミス：APIから取得
+    // キャッシュミス: APIから取得
     logger.info('Cache miss, fetching from API', { placeId, language: validLanguage })
     const placeData = await fetchPlaceDetailsFromAPI(placeId, validLanguage, GOOGLE_PLACES_API_KEY)
     
-    // 3. キャッシュに保存
     try {
       await savePlaceToCache(placeData, validLanguage)
     } catch (cacheError) {
-      // キャッシュ保存失敗は致命的ではない
       logger.warn('Failed to save to cache:', cacheError)
     }
     
-    return NextResponse.json({
-      status: 'OK',
-      result: placeData
-    })
+    return NextResponse.json({ status: 'OK', result: placeData })
   } catch (error) {
-    // エラーハンドリングは composeMiddleware 側で自動的に適用される
-    // ただし、このエンドポイントは外部API呼び出しを含むため、詳細なエラーハンドリングが必要
     const errorMessage = error instanceof Error ? error.message : String(error)
     logger.error('Error in places/details:', error)
     return NextResponse.json(
@@ -114,18 +159,25 @@ export const POST = composeMiddleware(
 })
 
 /**
- * Google Places APIから場所詳細を取得
+ * Google Places APIから場所詳細を取得（フィールドマスキング対応）
+ * 
+ * @param placeId - Google Places API の place_id
+ * @param language - 言語コード
+ * @param apiKey - Google Places API Key
+ * @param fields - 取得するフィールドのリスト（空配列の場合は全フィールド）
  */
 async function fetchPlaceDetailsFromAPI(
   placeId: string,
   language: SupportedLanguage,
-  apiKey: string
+  apiKey: string,
+  fields: string[] = []
 ): Promise<PlaceDetailsResult> {
+  // フィールドマスクを構築（fieldsが指定されていない場合は全フィールド）
   // 新Places API (v1) フィールドマスク定義
   // Basic Data（無料）: id, displayName, formattedAddress, location, viewport, addressComponents, types, businessStatus, photos, googleMapsUri, iconBackgroundColor
   // Contact Data（$3.00/1,000件）: nationalPhoneNumber, internationalPhoneNumber, websiteUri, regularOpeningHours
   // Atmosphere Data（$5.00/1,000件）: rating, userRatingCount, priceLevel, editorialSummary, reviews
-  const fieldMask = [
+  const defaultFields = [
     // Basic Data（無料）
     'id',
     'displayName',
@@ -148,7 +200,10 @@ async function fetchPlaceDetailsFromAPI(
     'priceLevel',
     'editorialSummary',
     'reviews'
-  ].join(',')
+  ]
+  
+  const fieldsToFetch = fields.length > 0 ? fields : defaultFields
+  const fieldMask = fieldsToFetch.join(',')
 
   // 新Places API (v1) を呼び出し（エラーハンドリング付き）
   const data = await withExternalApiErrorHandler(
@@ -230,7 +285,8 @@ async function fetchPlaceDetailsFromAPI(
         rating: data.rating,
         user_ratings_total: data.userRatingCount,
         price_level: data.priceLevel ? (() => {
-          const priceLevels = ['FREE', 'INEXPENSIVE', 'MODERATE', 'EXPENSIVE', 'VERY_EXPENSIVE']
+          // Google Places API v1 returns 'PRICE_LEVEL_*' format
+          const priceLevels = ['PRICE_LEVEL_FREE', 'PRICE_LEVEL_INEXPENSIVE', 'PRICE_LEVEL_MODERATE', 'PRICE_LEVEL_EXPENSIVE', 'PRICE_LEVEL_VERY_EXPENSIVE']
           const index = priceLevels.indexOf(data.priceLevel)
           return index >= 0 ? index : undefined
         })() : undefined,

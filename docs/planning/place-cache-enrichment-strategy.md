@@ -660,33 +660,284 @@ export async function enrichPlaceCacheToLevel(
 
 ## まとめ
 
-### 最終的な推奨実装
+### 最終的な推奨実装（改訂版）
 
-- **案1 + 案3 + コスト最適化のハイブリッド**: 情報完全性チェック + リクエストベースのフィールド要求 + フィールドマスキングの最適化
-- **永続的な欠損フラグ**: `is_complete`と`missing_data_flags`を導入し、意図的な欠損を記録
-- **段階的なエンリッチメント**: 不足しているフィールドのみをAPIに要求し、キャッシュを統合更新
+**🎯 方針: 案1 + 案3のシンプル化版**
+
+- **情報完全性チェック**: 必要なフィールドのみをチェック（PlacesCache全体ではない）
+- **リクエストベースのフィールド要求**: クライアントから`requiredFields`を明示的に渡す
+- **永続的な欠損フラグ**: **本当に使う7個だけ**に限定（全フィールドには適用しない）
+- **フィールドマスキングの最適化**: 不足しているフィールドのみをAPIに要求
+
+### ⚠️ 重要な設計原則
+
+1. **missing_data_flagsは限定的に使う**
+   - 対象フィールドは「本当に使うものだけ」の7個に固定
+   - むやみに増やさない（Googleのフィールド変更に対する耐性を保つ）
+
+2. **完全性チェックは必要なフィールドのみ**
+   - `requiredFields`だけをチェック
+   - PlacesCache全体の完全性は要求しない
+
+3. **案2（information_level）は不要**
+   - 段階的エンリッチメントで十分
+   - 複雑化を避ける
 
 ### 実装の優先順位
 
-1. **Phase 1（即座に実装可能）**:
-   - `requiredFields`をリクエストボディで受け取る
-   - `checkCacheCompleteness()`の実装（永続的な欠損フラグを考慮）
-   - `fetchPlaceDetailsFromAPI()`に`fields`パラメータを追加
+**Phase 1（即座に実装）**:
+- `requiredFields`をリクエストボディで受け取る
+- `checkCacheCompleteness()`の実装（7個のフィールドのみ対象）
+- `fetchPlaceDetailsFromAPI()`に`fields`パラメータを追加
+- `enrichPlaceCache()`の実装（キャッシュの統合更新）
 
-2. **Phase 2（短期）**:
-   - `missing_data_flags`フィールドの追加
-   - `enrichPlaceCache()`の実装（キャッシュの統合更新）
-   - `updateMissingDataFlags()`の実装
-
-3. **Phase 3（将来的）**:
-   - `information_level`フィールドを追加
-   - 段階的エンリッチメントの完全実装
+**Phase 2（将来的に検討）**:
+- 使用頻度の分析に基づいてフィールド対象の調整
+- キャッシュヒット率のモニタリング
 
 ### 期待される効果
 
-- **APIコスト削減**: 不足しているフィールドのみを要求することで、無駄なAPIコールを削減
-- **UX向上**: POIDialogで必要な情報が確実に表示される
-- **キャッシュ効率化**: 段階的にキャッシュを充実させ、再利用性を向上
+| カテゴリ | 効果 |
+| :--- | :--- |
+| **UX** | POIDialogで必要な情報が確実に表示される |
+| **APIコスト** | 不足フィールドのみ要求 + レビュー0件の再問い合わせ防止 |
+| **キャッシュ** | 徐々にエンリッチされる「学習するキャッシュ」 |
+| **コード管理** | シンプルで保守しやすい設計 |
 
 この戦略により、Google Places APIのコストと情報不足という**トレードオフを適切に解決**し、コスト効率とUX向上の両面で最善策を実現できます。
+
+---
+
+## 実装詳細
+
+### 対象フィールドの定数定義
+
+```typescript
+// lib/api/places-cache.ts
+
+/**
+ * 永続的な欠損フラグを管理する対象フィールド
+ * 
+ * ⚠️ 注意: むやみに増やさない！
+ * Googleが頻繁に変更・追加するフィールドは含めない
+ */
+export const MISSING_FLAG_TARGETS = [
+  'editorial_summary',
+  'reviews',
+  'opening_hours',
+  'website',
+  'formatted_phone_number',
+  'rating',
+  'price_level'
+] as const
+
+export type MissingFlagTarget = typeof MISSING_FLAG_TARGETS[number]
+```
+
+### 型定義の追加
+
+```typescript
+// lib/core/types/place.ts
+
+export interface PlacesCache {
+  // ... 既存フィールド ...
+  
+  // 永続的な欠損フラグ（7個のフィールドのみ対象）
+  missing_data_flags?: Record<string, boolean>
+}
+```
+
+---
+
+## 実装完了
+
+### ✅ 実装済みファイル
+
+以下のファイルが更新され、Place Cacheエンリッチメント戦略が実装されました：
+
+1. **`lib/core/types/place.ts`** - `missing_data_flags`フィールドの追加
+2. **`lib/api/places-cache.ts`** - 完全性チェックとエンリッチメント関数の追加
+   - `MISSING_FLAG_TARGETS`: 対象フィールドの定義（7個）
+   - `checkCacheCompleteness()`: キャッシュ完全性チェック
+   - `updateMissingDataFlags()`: 永続的な欠損フラグの更新
+   - `enrichPlaceCache()`: キャッシュの統合更新（エンリッチメント）
+
+3. **`lib/schemas/place.ts`** - `PlaceDetailsSchema`に`requiredFields`パラメータを追加
+4. **`app/api/places/details/route.ts`** - プロキシサーバーの更新
+   - `requiredFields`の受け取り
+   - キャッシュ完全性チェック
+   - 不足フィールドのみをAPIに要求
+   - フィールドマスキングの最適化
+   - キャッシュの統合更新
+
+5. **`lib/api/google/places.ts`** - `getPlaceDetails()`に`requiredFields`パラメータを追加
+6. **`components/modals/POIDialog.tsx`** - POIDialogで必要なフィールドを明示的に要求
+
+### 使用例
+
+#### クライアント側（POIDialog）
+
+```typescript
+// POIDialogで必要なフィールドを明示的に要求
+const requiredFields = [
+  'price_level',
+  'rating',
+  'user_ratings_total',
+  'editorial_summary',
+  'reviews',
+  'opening_hours',
+  'website',
+  'formatted_phone_number'
+]
+
+const details = await placesApiHelpers.getPlaceDetails(
+  currentPlaceId, 
+  language,
+  requiredFields
+)
+```
+
+#### プロキシサーバー（`app/api/places/details/route.ts`）
+
+```typescript
+// 1. キャッシュを確認
+const cached = await getPlaceFromCache(placeId, validLanguage)
+
+if (cached) {
+  // 2. キャッシュ完全性チェック
+  if (requiredFields.length > 0) {
+    const missingFields = checkCacheCompleteness(cached, requiredFields)
+    
+    if (missingFields.length === 0) {
+      // 必要な情報が揃っている
+      return NextResponse.json({ status: 'OK', result: cached })
+    }
+    
+    // 3. 不足しているフィールドのみをAPIに要求
+    const placeData = await fetchPlaceDetailsFromAPI(
+      placeId, 
+      validLanguage, 
+      GOOGLE_PLACES_API_KEY, 
+      allFields
+    )
+    
+    // 4. キャッシュの統合更新（エンリッチメント）
+    await enrichPlaceCache(placeId, validLanguage, placeData)
+    
+    // エンリッチメント後のキャッシュを取得して返す
+    const enrichedCache = await getPlaceFromCache(placeId, validLanguage)
+    return NextResponse.json({ status: 'OK', result: enrichedCache })
+  }
+}
+```
+
+### テスト方法
+
+1. **POIDialogを開く**
+   - マップ上のマーカーをクリックしてPOIDialogを開く
+   - 初回表示時はAPIが呼び出される
+
+2. **キャッシュヒット**
+   - 同じ場所を再度開くと、キャッシュがヒットする
+   - ログに「Cache hit (complete)」が表示される
+
+3. **キャッシュエンリッチメント**
+   - 不完全なキャッシュがある場合、不足フィールドのみがAPIに要求される
+   - ログに「Cache incomplete, enriching with missing fields」が表示される
+   - エンリッチメント後のキャッシュが返却される
+
+4. **永続的な欠損**
+   - レビュー0件の場所を開く
+   - 2回目以降は`reviews`フィールドが永続的に欠損としてマークされる
+   - ログに「missing_data_flags」が記録される
+
+### ログの確認方法
+
+```bash
+# 開発環境でログを確認
+pnpm dev
+
+# ブラウザのコンソールでログを確認
+# "Cache hit (complete)" - 完全なキャッシュヒット
+# "Cache incomplete, enriching with missing fields" - エンリッチメント
+# "Cache miss, fetching from API" - キャッシュミス
+```
+
+### 期待される効果
+
+| カテゴリ | 効果 | 実装状況 |
+| :--- | :--- | :--- |
+| **UX** | POIDialogで必要な情報が確実に表示される | ✅ 完了 |
+| **APIコスト** | 不足フィールドのみ要求 + レビュー0件の再問い合わせ防止 | ✅ 完了 |
+| **キャッシュ** | 徐々にエンリッチされる「学習するキャッシュ」 | ✅ 完了 |
+| **コード管理** | シンプルで保守しやすい設計 | ✅ 完了 |
+
+### 今後の拡張
+
+- キャッシュヒット率のモニタリング
+- 使用頻度の分析に基づいてフィールド対象の調整
+- UI側のフォールバック戦略（「レビューがありません」表示）
+
+---
+
+## UI側のフォールバック戦略（将来の実装）
+
+### 「レビューがありません」の表示例
+
+```typescript
+// components/modals/POIDialog.tsx
+
+// レビューの表示
+{placeDetails.reviews && placeDetails.reviews.length > 0 ? (
+  <div className="reviews-section">
+    {/* レビュー表示 */}
+  </div>
+) : (
+  <div className="no-reviews">
+    <p className="text-sm text-gray-500">
+      {t('poi.noReviews')} {/* 「レビューがありません」 */}
+    </p>
+  </div>
+)}
+
+// 営業時間の表示
+{placeDetails.opening_hours ? (
+  <div className="opening-hours-section">
+    {/* 営業時間表示 */}
+  </div>
+) : (
+  <div className="no-opening-hours">
+    <p className="text-sm text-gray-500">
+      {t('poi.noOpeningHours')} {/* 「営業時間情報がありません」 */}
+    </p>
+  </div>
+)}
+```
+
+### 価格レベルの表示例
+
+```typescript
+// 価格レベルの表示（永続的な欠損を考慮）
+{placeDetails.price_level !== undefined ? (
+  <div className="price-level-section">
+    <span className="price-level">
+      {'$'.repeat(placeDetails.price_level + 1)}
+    </span>
+  </div>
+) : placeDetails.missing_data_flags?.price_level ? (
+  <div className="no-price-info">
+    <p className="text-sm text-gray-500">
+      {t('poi.noPriceInfo')} {/* 「価格情報がありません」 */}
+    </p>
+  </div>
+) : (
+  <div className="loading-price-info">
+    <p className="text-sm text-gray-400">
+      {t('poi.loadingPriceInfo')} {/* 「価格情報を読み込み中...」 */}
+    </p>
+  </div>
+)}
+```
+
+この実装により、Google Places APIのコストと情報不足という**トレードオフを適切に解決**し、コスト効率とUX向上の両面で最善策を実現できます。
 

@@ -209,7 +209,23 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
 
       const language = getUserLanguage(user)
 
-      const details = await placesApiHelpers.getPlaceDetails(currentPlaceId, language)
+      // POIDialogで必要なフィールドを明示的に要求
+      const requiredFields = [
+        'price_level',
+        'rating',
+        'user_ratings_total',
+        'editorial_summary',
+        'reviews',
+        'opening_hours',
+        'website',
+        'formatted_phone_number'
+      ]
+
+      const details = await placesApiHelpers.getPlaceDetails(
+        currentPlaceId, 
+        language,
+        requiredFields
+      )
       setPlaceDetails(details)
 
       logger.debug('💾 Saving to PlacesCache...')
