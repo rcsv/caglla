@@ -755,6 +755,7 @@ export type TranslationKey =
   | 'poi.daySelector.title'
   | 'poi.openingHours.open'
   | 'poi.openingHours.closed'
+  | 'poi.openingHours.openingSoon'
   | 'poi.openingHours.open24h'
   | 'poi.openingHours.closedDay'
   | 'poi.businessStatus.temporarilyClosed'
@@ -1884,6 +1885,7 @@ const en: Dictionary = {
   'poi.daySelector.title': 'Select day to add',
   'poi.openingHours.open': 'Open',
   'poi.openingHours.closed': 'Closed',
+  'poi.openingHours.openingSoon': 'Opening soon',
   'poi.openingHours.open24h': 'Open 24 hours',
   'poi.openingHours.closedDay': 'Closed',
   'poi.businessStatus.temporarilyClosed': 'Temporarily closed',
@@ -3308,6 +3310,7 @@ const ja: Dictionary = {
   'poi.daySelector.title': '追加する日を選択',
   'poi.openingHours.open': '営業中',
   'poi.openingHours.closed': '営業時間外',
+  'poi.openingHours.openingSoon': 'もうすぐ開店',
   'poi.openingHours.open24h': '24時間営業',
   'poi.openingHours.closedDay': '定休日',
   'poi.businessStatus.temporarilyClosed': '一時休業中',

@@ -397,8 +397,19 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
                       onMouseEnter={() => setShowAllHours(true)}
                       onMouseLeave={() => setShowAllHours(false)}
                     >
-                      <span className={openingHoursInfo.isOpen ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                        {openingHoursInfo.isOpen ? t('poi.openingHours.open', language) : t('poi.openingHours.closed', language)}
+                      <span className={
+                        openingHoursInfo.isOpen 
+                          ? 'text-green-600 font-medium' 
+                          : openingHoursInfo.openingSoon 
+                            ? 'text-orange-600 font-medium' 
+                            : 'text-red-600 font-medium'
+                      }>
+                        {openingHoursInfo.isOpen 
+                          ? t('poi.openingHours.open', language)
+                          : openingHoursInfo.openingSoon
+                            ? t('poi.openingHours.openingSoon', language)
+                            : t('poi.openingHours.closed', language)
+                        }
                       </span>
                       {openingHoursInfo.currentHours && (
                         <span className="text-gray-600">{openingHoursInfo.currentHours}</span>
