@@ -150,10 +150,12 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
     setShowImageGallery(false)
   }
 
-  // 営業時間の解析（言語設定を渡す）
+  // 営業時間の解析（言語設定とタイムゾーンを渡す）
   const openingHoursInfo = parseOpeningHours(
     placeDetails?.opening_hours?.weekday_text, 
-    language === 'ja' ? 'ja' : 'en'
+    language === 'ja' ? 'ja' : 'en',
+    new Date(),
+    placeDetails?.utc_offset_minutes
   )
   
   // 曜日ラベル（i18n対応、等幅フォント用の短縮形）

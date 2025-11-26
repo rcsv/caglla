@@ -93,7 +93,8 @@ export const POST = composeMiddleware(
             'reviews': 'reviews',
             'opening_hours': 'regularOpeningHours',
             'website': 'websiteUri',
-            'formatted_phone_number': 'nationalPhoneNumber'
+            'formatted_phone_number': 'nationalPhoneNumber',
+            'utc_offset_minutes': 'utcOffsetMinutes'
           }
           return fieldMap[field] || field
         })
@@ -189,6 +190,7 @@ async function fetchPlaceDetailsFromAPI(
     'photos',
     'googleMapsUri',
     'shortFormattedAddress', // vicinity の代わり
+    'utcOffsetMinutes', // タイムゾーン情報（営業時間判定に必要）
     // Contact Data（$3.00/1,000件）
     'nationalPhoneNumber',
     'internationalPhoneNumber',
@@ -260,6 +262,7 @@ async function fetchPlaceDetailsFromAPI(
         types: data.types,
         url: data.googleMapsUri,
         icon: `https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/geocode-71.png`, // デフォルトアイコン
+        utc_offset_minutes: data.utcOffsetMinutes,
         // addressComponents変換
         address_components: data.addressComponents?.map((comp: any) => ({
           long_name: comp.longText,

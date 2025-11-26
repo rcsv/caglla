@@ -4,14 +4,24 @@ import { t } from '@/lib/i18n'
 export function parseOpeningHours(
   weekdayText: string[] | undefined,
   language: 'ja' | 'en' = 'ja',
-  now: Date = new Date()
+  now: Date = new Date(),
+  utcOffsetMinutes?: number // 場所のタイムゾーンオフセット（分単位、例: JST = 540）
 ) {
   if (!weekdayText || weekdayText.length === 0) {
     return null
   }
 
-  const today = now.getDay() // 0=日曜日, 1=月曜日, ..., 6=土曜日
-  const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+  // 場所のローカル時刻を計算
+  // 1. 現在のUTC時刻を取得
+  const utcTime = new Date(now.getTime() + now.getTimezoneOffset() * 60000)
+  
+  // 2. 場所のタイムゾーンオフセットを適用（指定されていない場合はユーザーのローカル時刻を使用）
+  const localTime = utcOffsetMinutes !== undefined
+    ? new Date(utcTime.getTime() + utcOffsetMinutes * 60000)
+    : now
+
+  const today = localTime.getDay() // 0=日曜日, 1=月曜日, ..., 6=土曜日
+  const currentTime = `${localTime.getHours().toString().padStart(2, '0')}:${localTime.getMinutes().toString().padStart(2, '0')}`
 
   // 曜日のマッピング（Google APIは月曜始まり）
   const dayIndexMap = [6, 0, 1, 2, 3, 4, 5] // [日, 月, 火, 水, 木, 金, 土]
