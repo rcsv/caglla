@@ -81,13 +81,14 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       isExpandable: true,
       isExpanded: expandedSections.has('summary'),
       children: [
-        {
+        // 天気予報：テンプレートモードでは非表示（日付がないため）
+        ...(!trip.is_template ? [{
           id: 'weather-forecast',
           title: t('nav.weatherForecast'),
           subtitle: t('nav.weatherForecast'),
           icon: <CloudIcon className="w-4 h-4" />,
           onClick: () => onNavigateToSection('weather-forecast')
-        },
+        }] : []),
         {
           id: 'reservation',
           title: t('nav.reservationTitle'),
