@@ -221,13 +221,34 @@ export default function TimelineDefault() {
   }
 
   const handleDayDelete = async (dayId: string) => {
-    // 楽観的UI更新: すぐに画面から削除
-    updateTrip(prevTrip => ({
-      ...prevTrip,
-      days: prevTrip.days?.filter(d => d.id !== dayId) || []
-    }))
+    // 楽観的UI更新: すぐに画面から削除 + day_numberを振り直し
+    updateTrip(prevTrip => {
+      if (!prevTrip.days) return prevTrip
+      
+      // 削除されるdayのday_numberを取得
+      const deletedDay = prevTrip.days.find(d => d.id === dayId)
+      if (!deletedDay) return prevTrip
+      
+      const deletedDayNumber = deletedDay.day_number
+      
+      // 削除 + 番号振り直し
+      const updatedDays = prevTrip.days
+        .filter(d => d.id !== dayId) // 削除
+        .map(d => {
+          // 削除されたdayより後のday_numberを-1
+          if (d.day_number > deletedDayNumber) {
+            return { ...d, day_number: d.day_number - 1 }
+          }
+          return d
+        })
+      
+      return {
+        ...prevTrip,
+        days: updatedDays
+      }
+    })
     
-    // サーバーからの削除完了後、最新データを取得（day_numberの振り直しを反映）
+    // サーバーからの削除完了後、最新データを取得（確認用）
     try {
       await refreshTrip()
     } catch (error) {
