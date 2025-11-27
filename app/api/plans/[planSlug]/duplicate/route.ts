@@ -1,28 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
-import { adminAuth } from '@/lib/firebase/admin'
 import { planSaveOperations } from '@/lib/travel/plan-save'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withParams, withBodyValidation } from '@/lib/api/middleware'
+import { DuplicatePlanSchema } from '@/lib/schemas/plan-operations'
 
 /**
  * プランを複製する
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ newTitle?: string }>(request)
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * ```
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ planSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const { planSlug: sourceTripId } = await params
-    const { newTitle }: { newTitle?: string } = await request.json()
+export const POST = composeMiddleware(
+  withAuth(),
+  withParams(),
+  withBodyValidation(DuplicatePlanSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params, ctx.body が保証されている（型推論が効く）
+  const { userId } = ctx.auth!
+  const { planSlug: sourceTripId } = ctx.params!
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof DuplicatePlanSchema>
+  const body = ctx.body as BodyType
+  const { newTitle } = body
     
     // プランを複製
     const result = await planSaveOperations.duplicatePlan(sourceTripId, userId, newTitle)
@@ -31,11 +42,4 @@ export async function POST(
       success: true,
       data: result
     })
-  } catch (error) {
-    logger.error('Error duplicating plan:', error)
-    return NextResponse.json(
-      { error: 'プランの複製に失敗しました' },
-      { status: 500 }
-    )
-  }
-}
+})

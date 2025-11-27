@@ -7,7 +7,6 @@ const config: Config = {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   safelist: [
-    // z-index を集中管理ユーティリティから動的生成するためのセーフリスト（必要値を明示列挙）
     'z-[0]',
     'z-[100]',
     'z-[101]',
@@ -27,8 +26,8 @@ const config: Config = {
         rajdhani: ['var(--font-rajdhani)', 'Rajdhani', 'sans-serif'],
       },
       screens: {
-        '3xl': '1536px', // 1520px前後での調整用
-        '4xl': '1920px', // より大きな画面用
+        '3xl': '1536px',
+        '4xl': '1920px',
       },
     },
   },

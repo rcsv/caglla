@@ -1,21 +1,20 @@
 'use client'
 import logger from '@/lib/core/logger'
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import Image from 'next/image'
 import { placesApiHelpers } from '@/lib/api/google/places'
-import { getCachedPlace, placesCacheManager } from '@/lib/travel/places-cache'
 import { Button } from '@/components/common/Button'
-import { getCachedPlaceImage, CachedImageInfo } from '@/lib/storage/image-cache'
-import type { AggregatedVenueData, UnifiedReview } from '@/lib/api/venue-aggregator'
 import type { PlaceData } from '@/lib/core/types'
 import { useAuth } from '@/lib/contexts/auth'
 import { getUserLanguage } from '@/lib/utils/language'
+import { useTrip } from '@/app/(planner)/[userSlug]/[tripSlug]/TripProvider'
 import ImageGalleryModal from './ImageGalleryModal'
 import { t } from '@/lib/i18n'
 import { parseOpeningHours } from './utils/parse-opening-hours'
 import { getZoomForPlaceTypes } from '@/lib/travel/map-zoom'
 import { isDevelopment } from '@/lib/core/env-validation'
+import { usePOIDetails } from '@/lib/hooks/usePOIDetails'
 
 interface POIDialogProps {
   poiData: {
@@ -30,23 +29,37 @@ interface POIDialogProps {
   } | null
   onClose: () => void
   onAddToItinerary?: (placeId: string, dayId: string) => void
-  availableDays?: Array<{ id: string; date: string; title?: string }>
+  // availableDaysは削除（Structural Fix: TripProviderから直接取得）
   className?: string
 }
 
-export default function POIDialog({ poiData, onClose, onAddToItinerary, availableDays, className = '' }: POIDialogProps) {
+export default function POIDialog({ poiData, onClose, onAddToItinerary, className = '' }: POIDialogProps) {
   const { user } = useAuth()
   const language = getUserLanguage(user)
-  const [placeDetails, setPlaceDetails] = useState<any>(null)
-  const [aggregatedData, setAggregatedData] = useState<AggregatedVenueData | null>(null)
-  const [unifiedReviews, setUnifiedReviews] = useState<UnifiedReview[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  
+  // Structural Fix: availableDaysをTripProviderから取得（中央集約）
+  // テンプレートモード対応済み（日付がない場合は "Day 1", "Day 2" 形式）
+  const { availableDays } = useTrip()
+
+  // placeIdだけを抽出してメモ化（poiDataオブジェクトの参照変更を無視）
+  const currentPlaceId = useMemo(() => poiData?.placeId, [poiData?.placeId])
+  const currentPlaceData = useMemo(() => poiData?.placeData, [poiData?.placeId, poiData?.placeData])
+
+  // データ取得をカスタムhookに委譲
+  const {
+    placeDetails,
+    aggregatedData,
+    unifiedReviews,
+    cachedImages,
+    loading,
+    error,
+    imageLoading,
+  } = usePOIDetails(currentPlaceId, currentPlaceData, language, onClose)
+
+  // UI状態
   const [showDaySelector, setShowDaySelector] = useState(false)
   const [showAllHours, setShowAllHours] = useState(false)
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
-  const [cachedImages, setCachedImages] = useState<CachedImageInfo[]>([])
-  const [imageLoading, setImageLoading] = useState(false)
   const [popupPosition, setPopupPosition] = useState<'bottom' | 'top'>('bottom')
   const [showAllReviews, setShowAllReviews] = useState(false)
   const [showImageGallery, setShowImageGallery] = useState(false)
@@ -55,7 +68,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
   const popupRef = useRef<HTMLDivElement>(null)
 
   // 集約された価格レベルを計算（メモ化）
-  const getAggregatedPriceLevel = useCallback((data: AggregatedVenueData | null): number | null => {
+  const getAggregatedPriceLevel = (data: typeof aggregatedData): number | null => {
     if (!data) return null
     
     // Google Placesの価格レベル
@@ -74,168 +87,17 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
     }
     
     return null
-  }, [])
+  }
 
   // 価格レベルをメモ化
-  const priceLevel = useMemo(() => getAggregatedPriceLevel(aggregatedData), [aggregatedData, getAggregatedPriceLevel])
+  const priceLevel = useMemo(() => getAggregatedPriceLevel(aggregatedData), [aggregatedData])
 
-  const cacheImages = useCallback(
-    async (photos: any[]) => {
-      if (!photos || photos.length === 0) return
-
-      setImageLoading(true)
-      try {
-        const imagePromises = photos.map(async (photo) => {
-          const googlePhotoUrl = placesApiHelpers.getPhotoUrl(photo.photo_reference, 300)
-          return await getCachedPlaceImage(photo.photo_reference, googlePhotoUrl, {
-            width: 300,
-            height: 300,
-            quality: 80,
-          })
-        })
-
-        const cachedImageResults = await Promise.all(imagePromises)
-        setCachedImages(cachedImageResults)
-
-        logger.debug('POIDialog: 画像キャッシュ完了', {
-          total: cachedImageResults.length,
-          cached: cachedImageResults.filter((img) => img.cached).length,
-          new: cachedImageResults.filter((img) => !img.cached).length,
-        })
-      } catch (error) {
-        logger.error(t('poi.imageCacheError'), error)
-      } finally {
-        setImageLoading(false)
-      }
-    },
-    []
-  )
-
-  const fetchPlaceDetails = useCallback(async () => {
-    if (!poiData) return
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      if (poiData.placeData) {
-        if (poiData.placeData.vicinity) {
-          logger.debug('✅ Using place_data with vicinity from Itinerary')
-          setPlaceDetails(poiData.placeData)
-          setLoading(false)
-          return
-        }
-
-        logger.debug('⚠️ place_data missing vicinity, checking PlacesCache...')
-        const cachedData = await getCachedPlace(poiData.placeId)
-        if (cachedData && cachedData.vicinity) {
-          logger.debug('✅ Found vicinity in PlacesCache, merging data')
-          setPlaceDetails({
-            ...poiData.placeData,
-            vicinity: cachedData.vicinity,
-            business_status: cachedData.business_status,
-            url: cachedData.url,
-            icon: cachedData.icon,
-          })
-          setLoading(false)
-          return
-        }
-      }
-
-      logger.debug('🔍 Checking PlacesCache for place_id:', poiData.placeId)
-
-      const cachedData = await getCachedPlace(poiData.placeId)
-      if (cachedData) {
-        logger.debug('✅ Found cached data:', cachedData.name)
-        setPlaceDetails(cachedData)
-        setLoading(false)
-        return
-      }
-
-      logger.debug('❌ No cached data found, calling Google Places API...')
-
-      const language = getUserLanguage(user)
-
-      const details = await placesApiHelpers.getPlaceDetails(poiData.placeId, language)
-      setPlaceDetails(details)
-
-      logger.debug('💾 Saving to PlacesCache...')
-      await placesCacheManager.fetchAndCachePlace(poiData.placeId, language)
-      logger.debug('✅ Data saved to PlacesCache')
-
-      if (details?.photos && details.photos.length > 0) {
-        await cacheImages(details.photos)
-      }
-
-      logger.debug('🌐 Fetching external venue data via proxy...')
-      try {
-        const response = await fetch('/api/venue/aggregate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(details),
-        })
-
-        logger.debug('📡 Proxy response status:', response.status, response.statusText)
-
-        if (response.ok) {
-          const responseData = await response.json()
-          logger.debug('📦 Received data from proxy:', {
-            hasAggregatedData: !!responseData.aggregatedData,
-            hasUnifiedReviews: !!responseData.unifiedReviews,
-            tripAdvisorDetails: !!responseData.aggregatedData?.tripAdvisor?.details,
-            foursquareDetails: !!responseData.aggregatedData?.foursquare?.details,
-            reviewCount: responseData.unifiedReviews?.length || 0,
-          })
-
-          const { aggregatedData: aggregated, unifiedReviews: reviews } = responseData
-          setAggregatedData(aggregated)
-          setUnifiedReviews(reviews)
-
-          logger.debug('✅ External venue data loaded', {
-            tripAdvisor: !!aggregated.tripAdvisor?.details,
-            foursquare: !!aggregated.foursquare?.details,
-            totalReviews: reviews.length,
-            aggregatedRating: aggregated.aggregatedRating,
-          })
-        } else {
-          const errorText = await response.text()
-          logger.warn('⚠️ Failed to fetch external venue data:', {
-            status: response.status,
-            statusText: response.statusText,
-            error: errorText,
-          })
-        }
-      } catch (error) {
-        logger.error('❌ Error fetching external venue data:', error)
-      }
-    } catch (err) {
-      logger.error(t('poi.fetchDetailsError'), err)
-      setError(t('poi.fetchError'))
-      setTimeout(() => {
-        onClose()
-      }, 100)
-    } finally {
-      setLoading(false)
-    }
-  }, [cacheImages, onClose, poiData, user])
-
+  // placeIdが変わった時にUI状態をリセット
   useEffect(() => {
-    if (!poiData) return
-
-    // 新しいPOIを取得する前に旧データをリセット
-    setPlaceDetails(null)
-    setAggregatedData(null)
-    setUnifiedReviews([])
-    setCachedImages([])
     setCurrentPhotoIndex(0)
     setShowAllReviews(false)
     setShowImageGallery(false)
-    setError(null)
-
-    void fetchPlaceDetails()
-  }, [poiData, fetchPlaceDetails])
+  }, [currentPlaceId])
 
   if (!poiData) return null
 
@@ -288,10 +150,12 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
     setShowImageGallery(false)
   }
 
-  // 営業時間の解析（言語設定を渡す）
+  // 営業時間の解析（言語設定とタイムゾーンを渡す）
   const openingHoursInfo = parseOpeningHours(
     placeDetails?.opening_hours?.weekday_text, 
-    language === 'ja' ? 'ja' : 'en'
+    language === 'ja' ? 'ja' : 'en',
+    new Date(),
+    placeDetails?.utc_offset_minutes
   )
   
   // 曜日ラベル（i18n対応、等幅フォント用の短縮形）
@@ -338,7 +202,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
     <div className={`absolute bottom-4 left-4 right-4 zidx-float-modal ${className}`}>
       <div className="bg-white border-t border-gray-200 shadow-lg rounded-t-lg w-full">
         {/* ヘッダー */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             <div className="flex-shrink-0">
               <TeardropMarker number={poiData.orderNumber} />
@@ -362,13 +226,13 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                 <button
                   ref={buttonRef}
                   onClick={handleToggleDaySelector}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
                   aria-label={t('poi.addToItinerary')}
-                  title={t('poi.addToItinerary')}
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                   </svg>
+                  <span>{t('poi.addToItinerary')}</span>
                 </button>
                 {showDaySelector && (
                   <div 
@@ -415,7 +279,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
         </div>
 
         {/* コンテンツ */}
-        <div className="p-3 max-h-80 overflow-y-auto scrollbar-hide rounded-b-lg">
+        <div className="p-5 max-h-80 overflow-y-auto scrollbar-hide rounded-b-lg">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
@@ -426,11 +290,11 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
               <div className="text-red-500 text-sm">{t('poi.errorMessage')}</div>
             </div>
           ) : placeDetails ? (
-            <div className="flex gap-3">
-              {/* メインコンテンツ（8割） */}
-              <div className="flex-1 space-y-3 text-sm">
+            <div className="flex gap-4">
+              {/* メインコンテンツ */}
+              <div className="flex-1 space-y-4 text-sm">
                 {/* 価格帯と評価 */}
-                <div className="flex items-center flex-wrap gap-3">
+                <div className="flex items-center flex-wrap gap-4">
                   {/* 統合された評価情報 */}
                   {aggregatedData?.aggregatedRating ? (
                     <div className="flex items-center space-x-1.5">
@@ -518,6 +382,23 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                   )}
                 </div>
 
+                {/* タグ（Types） */}
+                {placeDetails.types && placeDetails.types.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {placeDetails.types
+                      .filter((type: string) => type !== 'point_of_interest') // point_of_interestを除外
+                      .slice(0, 5)
+                      .map((type: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
+                      >
+                        {type.replace(/_/g, ' ')}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 {/* 概要（Editorial Summary） */}
                 {placeDetails.editorial_summary?.overview && (
                   <p className="text-gray-700 leading-relaxed">
@@ -533,8 +414,19 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                       onMouseEnter={() => setShowAllHours(true)}
                       onMouseLeave={() => setShowAllHours(false)}
                     >
-                      <span className={openingHoursInfo.isOpen ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                        {openingHoursInfo.isOpen ? t('poi.openingHours.open', language) : t('poi.openingHours.closed', language)}
+                      <span className={
+                        openingHoursInfo.isOpen 
+                          ? 'text-green-600 font-medium' 
+                          : openingHoursInfo.openingSoon 
+                            ? 'text-orange-600 font-medium' 
+                            : 'text-red-600 font-medium'
+                      }>
+                        {openingHoursInfo.isOpen 
+                          ? t('poi.openingHours.open', language)
+                          : openingHoursInfo.openingSoon
+                            ? t('poi.openingHours.openingSoon', language)
+                            : t('poi.openingHours.closed', language)
+                        }
                       </span>
                       {openingHoursInfo.currentHours && (
                         <span className="text-gray-600">{openingHoursInfo.currentHours}</span>
@@ -585,7 +477,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
 
                 {/* 統合レビュー（Google + TripAdvisor + Foursquare） */}
                 {unifiedReviews.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-semibold text-gray-700">{t('poi.reviewsAndTips')}</h4>
                       {unifiedReviews.length > 3 && (
@@ -598,8 +490,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                       )}
                     </div>
                     {(showAllReviews ? unifiedReviews : unifiedReviews.slice(0, 3)).map((review) => (
-                      <div key={review.id} className="text-xs border-l-2 border-gray-200 pl-2">
-                        <div className="flex items-center justify-between mb-1">
+                      <div key={review.id} className="text-xs border-l-2 border-gray-200 pl-3 py-1">
+                        <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium text-gray-900">{review.author}</span>
                             <span className="text-xs text-gray-400">
@@ -638,79 +530,13 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                     ))}
                   </div>
                 )}
-
-                {/* カテゴリ */}
-                {placeDetails.types && placeDetails.types.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {placeDetails.types
-                      .filter((type: string) => type !== 'point_of_interest') // point_of_interestを除外
-                      .slice(0, 5)
-                      .map((type: string, index: number) => (
-                      <span
-                        key={index}
-                        className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
-                      >
-                        {type.replace(/_/g, ' ')}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* 連絡先 */}
-                <div className="flex flex-wrap gap-3">
-                  {placeDetails.formatted_phone_number && (
-                    <Button
-                      variant="outline"
-                      size="md"
-                      leftIcon={(
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.9.3 1.77.54 2.61a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.47-1.07a2 2 0 012.11-.45c.84.24 1.71.42 2.61.54A2 2 0 0122 16.92z" />
-                        </svg>
-                      )}
-                      onClick={() => window.open(`tel:${placeDetails.formatted_phone_number}`, '_self')}
-                    >
-                      {placeDetails.formatted_phone_number}
-                    </Button>
-                  )}
-                  {placeDetails.website && (
-                    <Button
-                      variant="outline"
-                      size="md"
-                      leftIcon={(
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M2 12h20" />
-                          <path d="M12 2a15.3 15.3 0 010 20" />
-                          <path d="M12 2a15.3 15.3 0 000 20" />
-                        </svg>
-                      )}
-                      onClick={() => window.open(placeDetails.website, '_blank', 'noopener,noreferrer')}
-                      >
-                      {t('poi.website')}
-                    </Button>
-                  )}
-                  {placeDetails.url && (
-                    <Button
-                      variant="outline"
-                      size="md"
-                      leftIcon={(
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
-                          <path d="M8.9 4.4v12.9" />
-                          <path d="M14.1 6.5v12.9" />
-                        </svg>
-                      )}
-                      onClick={() => window.open(placeDetails.url, '_blank', 'noopener,noreferrer')}
-                    >
-                      Google Maps
-                    </Button>
-                  )}
-                </div>
               </div>
 
-              {/* 画像エリア（2割） */}
+              {/* 画像・連絡先エリア（右サイド） */}
+              <div className="w-36 flex-shrink-0 space-y-3">
+                {/* 画像 */}
               {placeDetails.photos && placeDetails.photos.length > 0 && (
-                <div className="w-32 flex-shrink-0">
+                  <>
                   <div 
                     className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group hover:opacity-90 transition-opacity"
                     onClick={handleOpenImageGallery}
@@ -719,8 +545,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                       <Image
                         src={cachedImages[currentPhotoIndex].url}
                         alt={t('poi.photoOf').replace('{name}', poiData.name)}
-                        width={128}
-                        height={128}
+                        width={144}
+                        height={144}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           // キャッシュされた画像が読み込めない場合は、元のGoogle Photo URLにフォールバック
@@ -736,8 +562,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                           <Image
                             src={placesApiHelpers.getPhotoUrl(placeDetails.photos[currentPhotoIndex].photo_reference, 300)}
                             alt={t('poi.photoOf').replace('{name}', poiData.name)}
-                            width={128}
-                            height={128}
+                            width={144}
+                            height={144}
                             className="w-full h-full object-cover"
                           />
                         )}
@@ -767,9 +593,64 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, availabl
                     <div className="mt-2 text-[11px] text-gray-500 leading-snug">
                       Debug zoom: {debugZoomLevel}
                     </div>
+                    )}
+                  </>
+                )}
+
+                {/* 連絡先（画像の下） */}
+                <div className="flex flex-col gap-2">
+                  {placeDetails.formatted_phone_number && (
+                    <button
+                      onClick={() => window.open(`tel:${placeDetails.formatted_phone_number}`, '_self')}
+                      className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      title={placeDetails.formatted_phone_number}
+                    >
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.9.3 1.77.54 2.61a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.47-1.07a2 2 0 012.11-.45c.84.24 1.71.42 2.61.54A2 2 0 0122 16.92z" />
+                      </svg>
+                      <span className="truncate text-gray-700">{placeDetails.formatted_phone_number}</span>
+                    </button>
+                  )}
+                  {placeDetails.website && (
+                    <button
+                      onClick={() => window.open(placeDetails.website, '_blank', 'noopener,noreferrer')}
+                      className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      title={placeDetails.website}
+                    >
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M2 12h20" />
+                        <path d="M12 2a15.3 15.3 0 010 20" />
+                        <path d="M12 2a15.3 15.3 0 000 20" />
+                      </svg>
+                      <span className="truncate text-gray-700">
+                        {(() => {
+                          try {
+                            const url = new URL(placeDetails.website)
+                            return url.hostname.replace('www.', '')
+                          } catch {
+                            return t('poi.website')
+                          }
+                        })()}
+                      </span>
+                    </button>
+                  )}
+                  {placeDetails.url && (
+                    <button
+                      onClick={() => window.open(placeDetails.url, '_blank', 'noopener,noreferrer')}
+                      className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      title="Google Maps"
+                    >
+                      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
+                        <path d="M8.9 4.4v12.9" />
+                        <path d="M14.1 6.5v12.9" />
+                      </svg>
+                      <span className="truncate text-gray-700">Maps</span>
+                    </button>
                   )}
                 </div>
-              )}
+              </div>
             </div>
           ) : null}
         </div>

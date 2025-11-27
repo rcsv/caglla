@@ -38,6 +38,7 @@ export interface PlaceData {
   }>
   url?: string // Google MapsのURL
   icon?: string // アイコンURL
+  utc_offset_minutes?: number // タイムゾーンオフセット（分単位、例: JST = 540）
   // Contact Data（$3.00/1,000件）
   formatted_phone_number?: string
   international_phone_number?: string
@@ -99,6 +100,7 @@ export interface PlacesCache {
   }>
   url?: string
   icon?: string
+  utc_offset_minutes?: number // タイムゾーンオフセット（分単位、例: JST = 540）
   // Contact Data（$3.00/1,000件）
   formatted_phone_number?: string
   international_phone_number?: string
@@ -125,6 +127,8 @@ export interface PlacesCache {
   cached_at: FirestoreDate
   last_accessed: FirestoreDate
   access_count: number
+  // 永続的な欠損フラグ（本当に使う7個のフィールドのみ対象）
+  missing_data_flags?: Record<string, boolean>
 }
 
 /**

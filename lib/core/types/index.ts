@@ -56,3 +56,9 @@ export * from './unsplash'
 // 環境変数
 export * from './env'
 
+// 識別子型（型安全性による混同防止）
+export * from './identity'
+
+// SNS機能関連（v3.0.0）
+export * from './social'
+

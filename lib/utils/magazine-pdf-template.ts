@@ -13,6 +13,7 @@ import type { Trip, Day, Itinerary } from '@/lib/core/types'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { dateUtils } from '@/lib/utils/date'
 import QRCode from 'qrcode'
+import Image from 'next/image'
 
 export interface TripPdfData {
   trip: Trip
@@ -602,8 +603,12 @@ export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Pr
     if (qrDataURL) {
       qrCodeHtml = `
         <div class="cover-qr">
-          <img src="${qrDataURL}" alt="QR Code" />
-          <div class="cover-qr-label">Trip URL</div>
+          <Image
+            src="${qrDataURL}"
+            alt="QR Code"
+            width={128}
+            height={128}
+          />
         </div>
       `
     }

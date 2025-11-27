@@ -1,38 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
-import { adminAuth } from '@/lib/firebase/admin'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import { adminDayOperations, adminTripOperations } from '@/lib/firebase/admin-operation'
+import { badRequest } from '@/lib/core/error-handler'
+import { tripApi } from '@/lib/api/middleware'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { tripSlug: string } }
-) {
-  try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    
-    // Verify the ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const { tripSlug } = params
-
-    const resolvedTrip = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolvedTrip) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
-    }
-
-    const { id: tripId, trip } = resolvedTrip
-
-    if (trip.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+export const POST = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
     // 既存の日程を取得して次のday_numberを決定
     const existingDays = await adminDayOperations.getDaysByTripId(tripId)
@@ -52,10 +29,7 @@ export async function POST(
       if (lastDay?.date) {
         const lastDate = toDateOrNull(lastDay.date)
         if (!lastDate) {
-          return NextResponse.json(
-            { error: '最後の日程の日付が無効です' },
-            { status: 400 }
-          )
+          return badRequest('Invalid date for the last day')
         }
         newDate = new Date(lastDate)
         newDate.setDate(newDate.getDate() + 1)
@@ -95,12 +69,63 @@ export async function POST(
       })
     }
 
-    return NextResponse.json(newDay)
-  } catch (error) {
-    logger.error('Error creating day:', error)
-    return NextResponse.json(
-      { error: 'Failed to create day' },
-      { status: 500 }
-    )
+  return NextResponse.json(newDay)
+})
+
+export const PUT = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip が保証されている
+  const { tripId } = ctx.trip!
+  
+  const body = await request.json()
+  const { dayId, updates } = body
+  
+  if (!dayId || typeof dayId !== 'string') {
+    return badRequest('dayId is required')
   }
-}
+  
+  if (!updates || typeof updates !== 'object') {
+    return badRequest('updates is required')
+  }
+  
+  // Day が指定された Trip に属していることを確認
+  const day = await adminDayOperations.getDay(dayId)
+  if (!day) {
+    return NextResponse.json({ error: 'Day not found' }, { status: 404 })
+  }
+  
+  if (day.trip_id !== tripId) {
+    return NextResponse.json({ error: 'Day does not belong to this trip' }, { status: 403 })
+  }
+  
+  // Day を更新
+  const updatedDay = await adminDayOperations.updateDay(dayId, updates)
+  
+  return NextResponse.json(updatedDay)
+})
+
+export const DELETE = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip が保証されている
+  const { tripId } = ctx.trip!
+  
+  const { searchParams } = new URL(request.url)
+  const dayId = searchParams.get('dayId')
+  
+  if (!dayId || typeof dayId !== 'string') {
+    return badRequest('dayId is required')
+  }
+  
+  // Day が指定された Trip に属していることを確認
+  const day = await adminDayOperations.getDay(dayId)
+  if (!day) {
+    return NextResponse.json({ error: 'Day not found' }, { status: 404 })
+  }
+  
+  if (day.trip_id !== tripId) {
+    return NextResponse.json({ error: 'Day does not belong to this trip' }, { status: 403 })
+  }
+  
+  // Day を削除（関連する itineraries も削除される）
+  await adminDayOperations.deleteDay(dayId)
+  
+  return NextResponse.json({ success: true })
+})

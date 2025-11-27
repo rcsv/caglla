@@ -2,18 +2,24 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Users collection rules
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化（v3.0.0）
+    // auth_uid または google_id の両方をチェック（後方互換性）
     match /users/{userId} {
       // Public read: allow reading user profiles (e.g., slug, name) for routing and cards
       allow read: if true;
 
       // Write restricted to the owner
+      // auth_uid を優先的にチェック、なければ google_id をチェック（後方互換性）
       allow write: if request.auth != null &&
-        (request.auth.uid == resource.data.google_id ||
+        (request.auth.uid == resource.data.auth_uid ||
+         request.auth.uid == resource.data.google_id ||
          request.auth.uid == userId);
 
       // Allow creation for new users
+      // auth_uid を優先的にチェック、なければ google_id をチェック（後方互換性）
       allow create: if request.auth != null &&
-        (request.auth.uid == request.resource.data.google_id ||
+        (request.auth.uid == request.resource.data.auth_uid ||
+         request.auth.uid == request.resource.data.google_id ||
          request.auth.uid == userId);
     }
     
@@ -112,6 +118,71 @@ service cloud.firestore {
       
       // Allow creation for authenticated users
       allow create: if request.auth != null && request.auth.uid == request.resource.data.user_id;
+    }
+    
+    // ============================================================================
+    // v3.0.0 SNS機能コレクション
+    // ============================================================================
+    
+    // Trip likes collection rules
+    match /trip_likes/{likeId} {
+      // 公開トリップのいいねは誰でも読める（認証不要）
+      allow read: if request.auth != null &&
+        exists(/databases/$(database)/documents/trips/$(resource.data.trip_id)) &&
+        get(/databases/$(database)/documents/trips/$(resource.data.trip_id)).data.access_level == 'public';
+      
+      // 書き込みはサーバー管理のみ（クライアントからの直接書き込みは禁止）
+      // 注意: 実際のいいね処理はAPIルート経由でトランザクションで行う
+      allow write: if false;
+    }
+    
+    // Trip comments collection rules
+    match /trip_comments/{commentId} {
+      // 公開トリップのコメントは誰でも読める（認証不要）
+      allow read: if request.auth != null &&
+        exists(/databases/$(database)/documents/trips/$(resource.data.trip_id)) &&
+        get(/databases/$(database)/documents/trips/$(resource.data.trip_id)).data.access_level == 'public' &&
+        resource.data.deleted == false; // 論理削除されたコメントは読めない
+      
+      // 認証済みユーザーは公開トリップにコメントを作成可能
+      allow create: if request.auth != null &&
+        exists(/databases/$(database)/documents/trips/$(request.resource.data.trip_id)) &&
+        get(/databases/$(database)/documents/trips/$(request.resource.data.trip_id)).data.access_level == 'public' &&
+        request.resource.data.user_id == request.auth.uid &&
+        request.resource.data.deleted == false;
+      
+      // コメントの作成者のみ更新・削除可能（論理削除）
+      allow update: if request.auth != null &&
+        resource.data.user_id == request.auth.uid &&
+        request.resource.data.user_id == resource.data.user_id &&
+        request.resource.data.trip_id == resource.data.trip_id;
+      
+      // 物理削除は禁止（論理削除のみ）
+      allow delete: if false;
+    }
+    
+    // User follows collection rules
+    match /user_follows/{followId} {
+      // ユーザーは自分のフォロー関係を読める（存在する場合）
+      allow read: if request.auth != null &&
+        (resource == null ||
+         resource.data.follower_id == request.auth.uid ||
+         resource.data.following_id == request.auth.uid);
+      
+      // 認証済みユーザーは他のユーザーをフォロー可能（自分自身は除く）
+      // 注意: set()はcreateとupdateの両方をチェックするため、createのみ許可
+      allow create: if request.auth != null &&
+        request.resource.data.follower_id == request.auth.uid &&
+        request.resource.data.following_id != request.auth.uid;
+      
+      // 既存ドキュメントの更新は禁止（フォロー/アンフォローのみ）
+      // 注意: set()で既存ドキュメントを更新しようとした場合は拒否
+      allow update: if false;
+      
+      // フォロー解除（削除）はフォローした人のみ可能
+      allow delete: if request.auth != null &&
+        resource != null &&
+        resource.data.follower_id == request.auth.uid;
     }
   }
 }

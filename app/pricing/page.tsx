@@ -8,9 +8,9 @@ import { SolidCard } from '@/components/common/static/SolidCard'
 import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
 import { RocketIcon } from '@/components/common/icons/RocketIcon'
 import { PlannerIcon } from '@/components/common/icons/PlannerIcon'
+import { t } from '@/lib/i18n'
 
 export default function PricingPage() {
-  const { t } = require('@/lib/i18n')
   return (
     <StaticPageLayout>
       {/* Hero */}

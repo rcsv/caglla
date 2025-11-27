@@ -1,48 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyIdToken } from '@/lib/firebase/admin'
+import { z } from 'zod'
 import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import logger from '@/lib/core/logger'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { DebugTripImageDeletionSchema } from '@/lib/schemas/debug'
+import { notFound, handleApiError, createForbiddenError } from '@/lib/core/error-handler'
 
 /**
  * DEBUG: Trip画像削除処理のテスト用エンドポイント
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
  * 
  * 使用方法:
  * POST /api/debug/trip-image-deletion
  * Body: { tripId: "trip-id" }
  */
-export async function POST(request: NextRequest) {
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(DebugTripImageDeletionSchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const body = await request.json()
+    // ctx.auth, ctx.body が保証されている（型推論が効く）
+    const { userId } = ctx.auth!
+    
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof DebugTripImageDeletionSchema>
+    const body = ctx.body as BodyType
     const { tripId } = body
-
-    if (!tripId) {
-      return NextResponse.json({ error: 'tripId is required' }, { status: 400 })
-    }
 
     // Trip情報を取得
     const trip = await adminTripOperations.getTripById(tripId)
     if (!trip) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      return notFound('Trip')
     }
 
     // 所有権確認
     if (trip.user_id !== userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+      throw createForbiddenError('You do not own this trip')
     }
 
     // 画像削除処理のテスト
     const imageUrl = trip.image_url
-    const debugInfo = {
+    type DebugInfo = {
+      tripId: string
+      hasImageUrl: boolean
+      imageUrl: string | undefined
+      imageUrlType: string
+      imageUrlLength: number
+      deletionAttempted?: boolean
+      deletionResult?: 'success' | 'error'
+      deletionError?: string
+    }
+    const debugInfo: DebugInfo = {
       tripId,
       hasImageUrl: !!imageUrl,
       imageUrl,
@@ -54,12 +64,12 @@ export async function POST(request: NextRequest) {
       try {
         // deleteTripImageを直接呼び出してテスト
         await (adminTripOperations as any).deleteTripImage(imageUrl, tripId)
-        debugInfo['deletionAttempted'] = true
-        debugInfo['deletionResult'] = 'success'
+        debugInfo.deletionAttempted = true
+        debugInfo.deletionResult = 'success'
       } catch (error: any) {
-        debugInfo['deletionAttempted'] = true
-        debugInfo['deletionResult'] = 'error'
-        debugInfo['deletionError'] = error.message
+        debugInfo.deletionAttempted = true
+        debugInfo.deletionResult = 'error'
+        debugInfo.deletionError = error.message
         logger.error('Debug: Image deletion error:', error)
       }
     }
@@ -69,11 +79,10 @@ export async function POST(request: NextRequest) {
       debug: debugInfo,
     })
   } catch (error) {
-    logger.error('Debug endpoint error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/debug/trip-image-deletion`
     )
   }
-}
+})
 

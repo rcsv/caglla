@@ -1,48 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
-import { adminAuth } from '@/lib/firebase/admin'
 import { planSaveOperations } from '@/lib/travel/plan-save'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withParams, withBodyValidation } from '@/lib/api/middleware'
+import { SavePlanAsTemplateSchema } from '@/lib/schemas/plan-operations'
 
 /**
  * プランをテンプレートとして保存する
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ templateName?: string }>(request)
+ * if (!templateName) {
+ *   return badRequest('テンプレート名は必須です')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ planSlug: string }> }
-) {
-  try {
-    // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const { planSlug: tripId } = await params
-    const { templateName }: { templateName: string } = await request.json()
-    
-    if (!templateName) {
-      return NextResponse.json(
-        { error: 'テンプレート名は必須です' },
-        { status: 400 }
-      )
-    }
+export const POST = composeMiddleware(
+  withAuth(),
+  withParams(),
+  withBodyValidation(SavePlanAsTemplateSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params, ctx.body が保証されている（型推論が効く）
+  const { planSlug: tripId } = ctx.params!
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof SavePlanAsTemplateSchema>
+  const body = ctx.body as BodyType
+  const { templateName } = body
 
     // テンプレートとして保存
     await planSaveOperations.saveAsTemplate(tripId, templateName)
     
-    return NextResponse.json({
-      success: true,
-      message: 'テンプレートとして保存しました'
-    })
-  } catch (error) {
-    logger.error('Error saving as template:', error)
-    return NextResponse.json(
-      { error: 'テンプレートの保存に失敗しました' },
-      { status: 500 }
-    )
-  }
-}
+  return NextResponse.json({
+    success: true,
+    message: 'テンプレートとして保存しました'
+  })
+})

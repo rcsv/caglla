@@ -14,13 +14,14 @@ import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
 import { ClockIcon } from '@/components/common/icons/ClockIcon'
 import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
 import { LocationIcon } from '@/components/common/icons/LocationIcon'
+import { CagllaLogo } from '@/components/common/icons/CagllaLogo'
+import { UserMenu } from '@/components/common/UserMenu'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
 import { toDate } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
 import { getUserLanguage } from '@/lib/utils/language'
 import PremiumButton from '@/components/ui/PremiumButton'
-import { Icon } from '@iconify/react'
 
 interface NavigationMenuProps {
   trip: Trip
@@ -28,14 +29,6 @@ interface NavigationMenuProps {
   onDayClick?: (dayId: string) => void
   isCollapsed?: boolean
   onToggleCollapse?: () => void
-  onLogout?: () => void
-  extraControlsMenuItems?: Array<{
-    id: string
-    label: string
-    icon?: React.ReactNode | string
-    onClick: () => void
-    disabled?: boolean
-  }>
 }
 
 interface MenuSection {
@@ -56,11 +49,10 @@ interface MenuItem {
   onClick: () => void
 }
 
-export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, isCollapsed = false, onToggleCollapse, onLogout, extraControlsMenuItems = [] }: NavigationMenuProps) {
+export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, isCollapsed = false, onToggleCollapse }: NavigationMenuProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['itinerary']))
-  const [showExtraControls, setShowExtraControls] = useState(false)
   const templateWithoutDates = Boolean(trip.is_template && (!trip.start_date || !trip.end_date))
 
   const updateQuery = (updates: Record<string, string | null>) => {
@@ -81,40 +73,57 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
       isExpandable: true,
       isExpanded: expandedSections.has('summary'),
       children: [
-        {
+        // 天気予報：テンプレートモードでは非表示（日付がないため）
+        ...(!trip.is_template ? [{
           id: 'weather-forecast',
           title: t('nav.weatherForecast'),
           subtitle: t('nav.weatherForecast'),
           icon: <CloudIcon className="w-4 h-4" />,
-          onClick: () => onNavigateToSection('weather-forecast')
-        },
-        {
+          onClick: () => {
+            updateQuery({ view: 'summary', day: null })
+            onNavigateToSection('weather-forecast')
+          }
+        }] : []),
+        // 予約：テンプレートモードでは非表示（日付がないため）
+        ...(!trip.is_template ? [{
           id: 'reservation',
           title: t('nav.reservationTitle'),
           subtitle: t('nav.reservation'),
           icon: <BookmarkIcon className="w-4 h-4" />,
-          onClick: () => onNavigateToSection('reservation')
-        },
+          onClick: () => {
+            updateQuery({ view: 'summary', day: null })
+            onNavigateToSection('reservation')
+          }
+        }] : []),
         {
           id: 'budget',
           title: t('nav.budgetTitle'),
           subtitle: t('nav.travelCost'),
           icon: <MoneyIcon className="w-4 h-4" />,
-          onClick: () => onNavigateToSection('budget')
+          onClick: () => {
+            updateQuery({ view: 'summary', day: null })
+            onNavigateToSection('budget')
+          }
         },
         {
           id: 'activity-statistics',
           title: t('nav.activityStatisticsTitle'),
           subtitle: t('nav.activityStats'),
           icon: <PieChartIcon className="w-4 h-4" />,
-          onClick: () => onNavigateToSection('activity-statistics')
+          onClick: () => {
+            updateQuery({ view: 'summary', day: null })
+            onNavigateToSection('activity-statistics')
+          }
         },
         {
           id: 'distance-summary',
           title: t('nav.distancesTitle'),
           subtitle: t('nav.totalDistance'),
           icon: <LocationIcon className="w-4 h-4" />,
-          onClick: () => onNavigateToSection('distance-summary')
+          onClick: () => {
+            updateQuery({ view: 'summary', day: null })
+            onNavigateToSection('distance-summary')
+          }
         }
       ]
     },
@@ -173,35 +182,6 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     }
   ]
 
-  // 下付きメニューアイテムの定義
-  const bottomMenuItems = [
-    ...(extraControlsMenuItems.length > 0 ? [{
-      id: 'extra-controls',
-      title: 'Extra Controls >',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
-        </svg>
-      ),
-      onClick: () => setShowExtraControls(v => !v)
-    }] : []),
-    {
-      id: 'logout',
-      title: t('nav.logout'),
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-      ),
-      onClick: () => {
-        if (onLogout) {
-          onLogout()
-        } else {
-          onNavigateToSection('settings')
-        }
-      }
-    }
-  ]
 
   // 日付のタイトルを生成（簡潔版）
   function getDayTitle(day: Day): string {
@@ -317,69 +297,79 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     })
   }
 
-  const closeMenuIfMobile = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      onToggleCollapse?.()
-    }
-  }
-
-  const renderIcon = (icon?: React.ReactNode | string) => {
-    if (!icon) return null
-    return typeof icon === 'string' ? <Icon icon={icon} className="w-4 h-4" /> : icon
-  }
 
   return (
     <div className={`bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-200 relative z-30 left-nav-shadow ${
       isCollapsed ? 'w-12' : 'w-[188px]'
     }`} style={{ maxWidth: isCollapsed ? '48px' : '188px' }}>
-      {/* メニューヘッダー（ロゴ + Caglla → /home リンク） */}
+      {/* メニューヘッダー（Caglla ロゴ + 折りたたみ/展開ボタン） */}
       <div className={`border-b border-gray-200 ${isCollapsed ? 'p-2' : 'p-3'}`}>
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
+        {isCollapsed ? (
+          // 折りたたみ時: ロゴと展開ボタンを縦に配置
+          <div className="flex flex-col items-center gap-2">
+            {/* ロゴ部分 */}
+            <Link
+              href="/home"
+              className="text-gray-900 hover:opacity-80 transition-opacity"
+              title="Go to home"
+              aria-label="Go to home"
+            >
+              <CagllaLogo className="w-6 h-6" />
+            </Link>
+            
+            {/* 展開ボタン */}
+            {onToggleCollapse && (
+              <button
+                onClick={onToggleCollapse}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                title="Expand sidebar"
+                aria-label="Expand sidebar"
+              >
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+          </div>
+        ) : (
+          // 展開時: ロゴと折りたたみボタンを横に配置
+          <div className="flex items-center justify-between">
+            {/* ロゴ部分 */}
           <Link
             href="/home"
-            className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} text-gray-900`}
-            title="Back to home"
+              className="flex items-center gap-2 text-gray-900 hover:opacity-80 transition-opacity"
+              title="Go to home"
             aria-label="Go to home"
             onClick={() => {
-              if (!isCollapsed && typeof window !== 'undefined' && window.innerWidth < 768) {
+                if (typeof window !== 'undefined' && window.innerWidth < 768) {
                 onToggleCollapse?.()
               }
             }}
           >
-            {isCollapsed ? (
-              <span className="text-xl font-semibold">←</span>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <CagllaLogo className="w-8 h-8" />
+              <span className="text-xl font-bold font-rajdhani">Caglla</span>
+            </Link>
+            
+            {/* 折りたたみボタン */}
+            {onToggleCollapse && (
+              <button
+                onClick={onToggleCollapse}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                title="Collapse sidebar"
+                aria-label="Collapse sidebar"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span className="text-sm font-semibold tracking-tight">Back to Home</span>
-              </>
+              </button>
             )}
-          </Link>
         </div>
+        )}
       </div>
 
       {/* メニューコンテンツ */}
       <div className="flex-1 flex flex-col min-h-0">
         <nav className="p-2 flex-1 flex flex-col min-h-0">
-          {/* ハンバーガー + Menu トグル */}
-          <button
-            onClick={() => onToggleCollapse && onToggleCollapse()}
-            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-2 text-left hover:bg-gray-50 rounded-lg transition-colors mb-2`}
-            title="Toggle menu width"
-          >
-            <div className={`flex items-center ${!isCollapsed ? 'gap-2' : ''}`}>
-              <span className="text-gray-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </span>
-              {!isCollapsed && (
-                <span className="font-medium text-gray-900">Menu</span>
-              )}
-            </div>
-          </button>
           {menuSections.map((section) => (
             <div
               key={section.id}
@@ -409,7 +399,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                 <div className={`flex items-center ${!isCollapsed ? 'gap-2' : ''}`}>
                   <span className="text-gray-600 flex items-center justify-center w-6 h-6">{section.icon}</span>
                   {!isCollapsed && (
-                    <span className="font-medium text-gray-900">{section.title}</span>
+                    <span className="font-semibold text-gray-900">{section.title}</span>
                   )}
                 </div>
                 {!isCollapsed && section.isExpandable && (
@@ -428,7 +418,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
 
               {/* セクションの子項目 */}
               {section.isExpandable && section.isExpanded && section.children && (
-                <div className={`${isCollapsed ? '' : 'ml-2 mt-1'} space-y-1 ${
+                <div className={`${isCollapsed ? '' : 'mt-1'} space-y-1 ${
                   section.id === 'itinerary' ? 'flex-1 overflow-y-auto min-h-0 scrollbar-hide bg-white' : ''
                 }`}>
                   {section.children.map((item) => (
@@ -466,14 +456,17 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                       ) : (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
-                            {item.icon && (
+                            {/* アイコン or スペーサー（親のアイコンと位置を揃える） */}
+                            {item.icon ? (
                               <span className="text-gray-600 flex-shrink-0">
                                 {item.icon}
                               </span>
+                            ) : (
+                              <span className="w-6 h-6 flex-shrink-0" />
                             )}
                             <div className="flex-1 min-w-0">
-                              <div className={`text-sm font-medium truncate ${
-                                item.id.startsWith('day-') ? getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day) : 'text-gray-900'
+                              <div className={`text-sm font-normal truncate ${
+                                item.id.startsWith('day-') ? getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day) : 'text-gray-600'
                               }`}>
                                 {item.title}
                               </div>
@@ -500,46 +493,9 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
         </nav>
       </div>
 
-      {/* 下付きメニュー（Checklist & Settings） */}
-      <div className={`border-t border-gray-200 space-y-1 ${isCollapsed ? 'p-1' : 'p-2'} relative zidx-left-panel-content bg-white`}>
-        {bottomMenuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={item.onClick}
-            className={`w-full flex items-center text-left hover:bg-gray-50 rounded-lg transition-colors ${
-              isCollapsed ? 'justify-center p-1' : 'gap-2 p-2'
-            }`}
-            title={isCollapsed ? item.title : undefined}
-          >
-            <span className="text-gray-600">{renderIcon(item.icon)}</span>
-            {!isCollapsed && (
-              <span className="font-medium text-gray-900">{item.title}</span>
-            )}
-          </button>
-        ))}
-        {showExtraControls && extraControlsMenuItems.length > 0 && (
-          <div className="absolute left-2 right-2 bottom-14 bg-white border border-gray-200 rounded-md shadow-lg p-1 zidx-left-panel">
-            {extraControlsMenuItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (!item.disabled) {
-                    item.onClick()
-                    setShowExtraControls(false)
-                    closeMenuIfMobile()
-                  }
-                }}
-                disabled={item.disabled}
-                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 rounded ${
-                  item.disabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {renderIcon(item.icon)}
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
+      {/* 下付きメニュー（UserMenu） */}
+      <div className={`border-t border-gray-200 ${isCollapsed ? 'p-1' : 'p-2'} relative zidx-left-panel-content bg-white`}>
+        <UserMenu isCollapsed={isCollapsed} />
       </div>
     </div>
   )

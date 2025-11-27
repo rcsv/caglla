@@ -10,6 +10,12 @@ import { useUserData } from '@/lib/contexts/user-data'
 import { getUserUnitSystem } from '@/lib/utils/unit-system'
 import { convertTemperature, convertWindSpeed, convertPrecipitation, getTemperatureSymbol } from '@/lib/utils/unit-conversion'
 
+const WEATHER_MESSAGES = {
+  invalidDates: 'Unable to determine trip dates.',
+  invalidRange: 'Trip start date must be before the end date.',
+  pastTrip: 'Weather forecast is not available for past dates.',
+}
+
 interface TripWeatherDisplayProps {
   destination?: string
   startDate?: string
@@ -30,27 +36,80 @@ export default function TripWeatherDisplay({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+
     const fetchWeather = async () => {
       if (!destination || !startDate || !endDate) {
-        setWeatherData(null)
+        if (!cancelled) {
+          setWeatherData(null)
+          setError(null)
+          setIsLoading(false)
+        }
         return
       }
 
-      setIsLoading(true)
-      setError(null)
+      const startDateObj = new Date(startDate)
+      const endDateObj = new Date(endDate)
+
+      if (Number.isNaN(startDateObj.getTime()) || Number.isNaN(endDateObj.getTime())) {
+        if (!cancelled) {
+          setWeatherData(null)
+          setError(WEATHER_MESSAGES.invalidDates)
+          setIsLoading(false)
+        }
+        return
+      }
+
+      if (startDateObj > endDateObj) {
+        if (!cancelled) {
+          setWeatherData(null)
+          setError(WEATHER_MESSAGES.invalidRange)
+          setIsLoading(false)
+        }
+        return
+      }
+
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (endDateObj < today) {
+        if (!cancelled) {
+          setWeatherData(null)
+          setError(WEATHER_MESSAGES.pastTrip)
+          setIsLoading(false)
+        }
+        return
+      }
+
+      if (!cancelled) {
+        setIsLoading(true)
+        setError(null)
+      }
 
       try {
         const weather = await WeatherApiHelpers.getTripWeather(destination, startDate, endDate)
-        setWeatherData(weather)
+        if (!cancelled) {
+          setWeatherData(weather)
+        }
       } catch (err) {
+        if (cancelled) return
         logger.error('Error fetching weather:', err)
-        setError(t('weather.error.fetchFailed'))
+        if (err instanceof Error && err.message.includes('Weather forecast is not available for past dates')) {
+          setError(WEATHER_MESSAGES.pastTrip)
+        } else {
+          setError(t('weather.error.fetchFailed'))
+        }
       } finally {
-        setIsLoading(false)
+        if (!cancelled) {
+          setIsLoading(false)
+        }
       }
     }
 
     fetchWeather()
+
+    return () => {
+      cancelled = true
+    }
   }, [destination, startDate, endDate])
 
   if (isLoading) {

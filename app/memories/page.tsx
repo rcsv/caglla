@@ -12,8 +12,10 @@ import HomeHeader from '@/components/common/HomeHeader'
 import HomeFooter from '@/components/common/HomeFooter'
 import { t } from '@/lib/i18n'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { getUserDisplayName, getPlanDisplayName, getUserAvatarUrl } from '@/lib/utils/user-helpers'
 // 設定モーダルはプロフィールページへ移行
 import type { Trip } from '@/lib/core/types'
+import { groupTripsByYear } from '@/lib/travel/trip-filters'
 
 export default function MemoriesListPage() {
   const { user, loading, logout } = useAuth()
@@ -29,15 +31,7 @@ export default function MemoriesListPage() {
   const { pastTrips } = dateUtils.sortTripsByDate(trips)
 
   // 過去の旅行を年別にグループ化
-  const tripsByYear = pastTrips.reduce((acc, trip) => {
-    const startDate = trip.start_date ? toDateOrNull(trip.start_date) : null
-    const year = startDate ? startDate.getFullYear() : new Date().getFullYear()
-    if (!acc[year]) {
-      acc[year] = []
-    }
-    acc[year].push(trip)
-    return acc
-  }, {} as Record<number, Trip[]>)
+  const tripsByYear = groupTripsByYear(pastTrips)
 
   // 年を降順でソート（新しい年が上）
   const sortedYears = Object.keys(tripsByYear).map(Number).sort((a, b) => b - a)
@@ -55,9 +49,9 @@ export default function MemoriesListPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <HomeHeader
-        userName={userData?.name || user?.email || 'User'}
-        planName={planConfig?.name || 'Season Traveler'}
-        avatarUrl={userData?.profile_image_url || user?.photoURL}
+        userName={getUserDisplayName(userData, user)}
+        planName={getPlanDisplayName(planConfig)}
+        avatarUrl={getUserAvatarUrl(userData, user)}
         onLogout={handleLogout}
         onChangePlan={handleChangePlan}
         userSlug={userData?.slug}

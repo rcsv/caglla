@@ -1,0 +1,61 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ main, refactor/** ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Unit tests and lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1) リポジトリのチェックアウト。この@4って何なんだろ判ってないんだよね 
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2) Node.js をセットアップ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 3) pnpm をインストール。run_install: false にして、この後の install を自分で制御します
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+          run_install: false
+      # 4) setup-node の pnpm キャッシュを有効化
+      #    ここでは pnpm が既に PATH にあるので、エラーにならない。
+      - name: Enable pnpm
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          # monorepo 等で lockfile が複数ある場合は複数行で指定可能
+          cache-dependency-path: |
+            pnpm-lock.yaml
+
+      # 5) 依存関係のインストール
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      # 6) Lint 必要に応じて
+      - name: Lint
+        run: pnpm lint
+        continue-on-error: false
+
+      # 7) ビルドの実行
+      - name: Build (optional)
+        run: pnpm build
+
+      # 8) テストの実行
+      - name: Run tests
+        run: pnpm test
+

@@ -116,7 +116,8 @@ export function ScheduleInfoDisplay({
         )}
       </div>
 
-      {/* 予約要素 */}
+      {/* 予約要素 - テンプレートモードでは非表示 */}
+      {canEditReservation && (
       <div className="flex items-center space-x-1">
         {hasReservation ? (
           <IconRenderer iconName="reservation" className="w-4 h-4" color="#10B981" />
@@ -139,6 +140,7 @@ export function ScheduleInfoDisplay({
           )}
         </span>
       </div>
+      )}
     </div>
   )
 }

@@ -1,8 +1,9 @@
 // API エラーハンドリングユーティリティ
 // 本番環境での情報漏洩を防ぎ、統一されたエラーレスポンスを提供
 
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
+import { requireAuth, type AuthResult } from '@/lib/api/auth-helpers'
 // エラーコードの定義
 export enum ApiErrorCode {
   // 400系エラー
@@ -177,7 +178,7 @@ export function createNotFoundError(message: string, details?: any): ApiError {
 }
 
 export function createValidationError(message: string, details?: any): ApiError {
-  return new ApiError(message, 422, ApiErrorCode.VALIDATION_ERROR, details)
+  return new ApiError(message, 400, ApiErrorCode.VALIDATION_ERROR, details)
 }
 
 export function createInternalError(message: string = 'Internal server error'): ApiError {
@@ -282,13 +283,124 @@ export function validateNumberParam(
 // JSONパースのバリデーション
 export async function parseRequestBody<T>(request: Request): Promise<T> {
   try {
-    const body = await request.json()
+    // リクエストボディが空の場合は空オブジェクトを返す
+    const contentType = request.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      return {} as T
+    }
+    
+    const text = await request.text()
+    if (!text || text.trim() === '') {
+      return {} as T
+    }
+    
+    const body = JSON.parse(text)
     return body as T
   } catch (error) {
     throw createBadRequestError(
       'Invalid JSON in request body',
       { error: error instanceof Error ? error.message : String(error) }
     )
+  }
+}
+
+// よく使うエラーレスポンスのショートカット関数
+// 
+// Phase 6: エラー統一 - 統一されたエラーレスポンス形式を使用
+// 
+// Before:
+// ```typescript
+// export function badRequest(message: string): NextResponse {
+//   return NextResponse.json({ error: message }, { status: 400 })
+// }
+// ```
+// 
+// After:
+// ```typescript
+// // ApiError と handleApiError を使用した統一された形式
+// // エラーメッセージの国際化対応も可能
+// ```
+export function unauthorized(message = 'Authorization header required'): NextResponse {
+  return handleApiError(
+    createUnauthorizedError(message),
+    undefined
+  )
+}
+
+export function notFound(resource = 'Resource'): NextResponse {
+  return handleApiError(
+    createNotFoundError(`${resource} not found`),
+    undefined
+  )
+}
+
+/**
+ * 400 Bad Request エラーを返す（統一されたエラーレスポンス形式）
+ * 
+ * Phase 6: badRequest の乱立を zod エラーに統一
+ * 
+ * Before:
+ * ```typescript
+ * export function badRequest(message: string): NextResponse {
+ *   return NextResponse.json({ error: message }, { status: 400 })
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ApiError と handleApiError を使用した統一された形式
+ * // エラーメッセージの国際化対応も可能
+ * ```
+ */
+export function badRequest(message: string, details?: any): NextResponse {
+  return handleApiError(
+    createBadRequestError(message, details),
+    undefined
+  )
+}
+
+export function internalError(message = 'Internal server error'): NextResponse {
+  return handleApiError(
+    createInternalError(message),
+    undefined
+  )
+}
+
+// 認証付きAPIルートハンドラーのラッパー関数
+/**
+ * 認証チェックを含むAPIルートハンドラーのラッパー関数
+ * 認証チェックとエラーハンドリングを自動化
+ * 
+ * @param handler - 認証済みリクエストを処理するハンドラー関数
+ * @returns Next.js Route Handler関数
+ * 
+ * @example
+ * ```typescript
+ * export const POST = withAuth(async (request: NextRequest, auth) => {
+ *   const { userId } = auth
+ *   // ビジネスロジック
+ *   const result = await doSomething(userId)
+ *   return NextResponse.json({ result })
+ * })
+ * ```
+ */
+export function withAuth<T>(
+  handler: (request: NextRequest, auth: AuthResult) => Promise<NextResponse<T>>
+) {
+  return async (request: NextRequest): Promise<NextResponse> => {
+    try {
+      const auth = await requireAuth(request)
+      if (auth instanceof NextResponse) {
+        return auth // 認証エラーをそのまま返す
+      }
+      return await handler(request, auth)
+    } catch (error) {
+      const path = new URL(request.url).pathname
+      return handleApiError(
+        error instanceof Error ? error : new Error(String(error)),
+        path
+      )
+    }
   }
 }
 

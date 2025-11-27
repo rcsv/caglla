@@ -89,7 +89,8 @@ export const placesApiHelpers = {
   // 場所の詳細情報を取得する
   async getPlaceDetails(
     placeId: string, 
-    language: SupportedLanguage = DEFAULT_LANGUAGE
+    language: SupportedLanguage = DEFAULT_LANGUAGE,
+    requiredFields?: string[]
   ): Promise<PlaceDetailsResult> {
     const GOOGLE_PLACES_API_KEY = getApiKey()
     if (!GOOGLE_PLACES_API_KEY) {
@@ -103,7 +104,11 @@ export const placesApiHelpers = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ placeId, language })
+        body: JSON.stringify({ 
+          placeId, 
+          language,
+          requiredFields: requiredFields || []
+        })
       })
 
       if (!response.ok) {

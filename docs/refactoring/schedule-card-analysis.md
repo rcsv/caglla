@@ -239,7 +239,7 @@ return (
 <div className="flex-shrink-0 w-32 h-18 relative">
   {photoUrl ? (
     <>
-      <img src={photoUrl} alt={itinerary.title} ... />
+      <Image src={photoUrl} alt={itinerary.title} ... />
       {/* キャッシュインジケーター */}
       {/* ローディングインジケーター */}
     </>

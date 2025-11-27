@@ -42,10 +42,15 @@ export type PlanId = 'season_traveler' | 'backpacker' | 'globetrotter' | 'planne
 
 /**
  * ユーザー
+ * 
+ * Phase 1-1.5: 認証プロバイダーマルチ対応化（v3.0.0）
+ * - auth_uid: Firebase Auth UID（必須、マルチプロバイダー対応）
+ * - google_id: Google認証プロバイダー用（後方互換性のためオプショナル）
  */
 export interface User {
   id: string
-  google_id: string
+  auth_uid: string // Firebase Auth UID（新規、必須）
+  google_id?: string // Google ID（後方互換性のためオプショナル）
   name: string
   email: string
   slug?: string // URL-safe スラッグ

@@ -36,6 +36,15 @@ export function toDate(timestamp: FirestoreDate | undefined | null): Date {
     }
   }
 
+  // Firestore Timestamp の JSON シリアライズ形式（{_seconds, _nanoseconds}）
+  if (timestamp && typeof timestamp === 'object' && '_seconds' in timestamp) {
+    const seconds = (timestamp as any)._seconds
+    const nanoseconds = (timestamp as any)._nanoseconds || 0
+    if (typeof seconds === 'number' && !isNaN(seconds)) {
+      return new Date(seconds * 1000 + nanoseconds / 1000000)
+    }
+  }
+
   throw new Error(`Unsupported timestamp type: ${typeof timestamp}`)
 }
 

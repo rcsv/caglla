@@ -1,48 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withBodyValidation, withGoogleGeocodingKey } from '@/lib/api/middleware'
+import { ReverseGeocodeSchema } from '@/lib/schemas/geocoding'
+import { withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
-const GOOGLE_GEOCODING_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode'
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/geocoding/reverse - 座標→住所変換
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{...}>(request)
+ * if (lat === undefined || lng === undefined) {
+ *   return badRequest('Latitude and longitude are required')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const POST = composeMiddleware(
+  withGoogleGeocodingKey(),
+  withBodyValidation(ReverseGeocodeSchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    if (!GOOGLE_GEOCODING_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Geocoding API key is not configured' },
-        { status: 500 }
-      )
-    }
-
-    const { lat, lng } = await request.json()
+    // ctx.apiKeys, ctx.body が保証されている（型推論が効く）
+    const GOOGLE_GEOCODING_API_KEY = ctx.apiKeys!.GOOGLE_GEOCODING!
     
-    if (lat === undefined || lng === undefined) {
-      return NextResponse.json(
-        { error: 'Latitude and longitude are required' },
-        { status: 400 }
-      )
-    }
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof ReverseGeocodeSchema>
+    const body = ctx.body as BodyType
+    const { lat, lng } = body
 
     // Google Geocoding APIを呼び出し
-    const response = await fetch(
-      `${GOOGLE_GEOCODING_API_URL}/json?latlng=${lat},${lng}&key=${GOOGLE_GEOCODING_API_KEY}&language=en&region=jp`
+    const data = await withExternalApiErrorHandler(
+      async () => {
+        const response = await fetch(
+          `${GOOGLE_GEOCODING_API_URL}/json?latlng=${lat},${lng}&key=${GOOGLE_GEOCODING_API_KEY}&language=en&region=jp`
+        )
+
+        if (!response.ok) {
+          throw new Error(`Google Geocoding API error: ${response.status}`)
+        }
+
+        const result = await response.json()
+        
+        if (result.status !== 'OK' && result.status !== 'ZERO_RESULTS') {
+          throw new Error(`Google Geocoding API error: ${result.status}`)
+        }
+
+        return result
+      },
+      'Google Geocoding API',
+      '/api/geocoding/reverse'
     )
 
-    if (!response.ok) {
-      throw new Error(`Google Geocoding API error: ${response.status}`)
-    }
-
-    const data = await response.json()
-    
-    if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-      throw new Error(`Google Geocoding API error: ${data.status}`)
+    if (data instanceof NextResponse) {
+      return data
     }
 
     return NextResponse.json(data)
   } catch (error) {
-    logger.error('Error in reverse geocoding proxy:', error)
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは外部API呼び出しを含むため、詳細なエラーハンドリングが必要
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error('Error in geocoding/reverse:', error)
     return NextResponse.json(
-      { error: 'Failed to reverse geocode coordinates' },
+      { error: 'Failed to reverse geocode coordinates', details: errorMessage },
       { status: 500 }
     )
   }
-}
+})

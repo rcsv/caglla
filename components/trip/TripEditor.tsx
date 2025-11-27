@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { IconRenderer } from '@/components/common/icons/IconRenderer'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { updateTrip, getTrip, deleteTrip } from '@/lib/travel/trip-operations'
 import { dateUtils } from '@/lib/utils/date'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { imageUploadHelpers } from '@/lib/storage/image-upload'
@@ -105,6 +106,11 @@ export default function TripEditor({
     return ''
   }
 
+  // initialEditingが変更された時にisEditingを更新
+  useEffect(() => {
+    setIsEditing(initialEditing)
+  }, [initialEditing])
+
   // tripが変更された時にformDataを更新（編集モードでない場合のみ）
   useEffect(() => {
     if (!isEditing) {
@@ -147,83 +153,73 @@ export default function TripEditor({
     setShowLoadingOverlay(true)
     
     try {
-      const response = await makeAuthenticatedRequest(`/api/trip/${trip.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          title: formData.title,
-          description: formData.description,
-          destination: formData.destination,
-          destinationPlaceId: formData.destinationPlace?.place_id,
-          startDate: isTemplateMode ? null : formData.startDate || null,
-          endDate: isTemplateMode ? null : formData.endDate || null,
-          accessLevel: formData.accessLevel,
-          imageUrl: formData.imageUrl || null,
-          isTemplate: isTemplateMode,
-          dayCount: isTemplateMode ? formData.dayCount : undefined,
-          default_currency: formData.defaultCurrency,
-        }),
+      await updateTrip(trip.id, {
+        title: formData.title,
+        description: formData.description,
+        destination: formData.destination,
+        destinationPlaceId: formData.destinationPlace?.place_id,
+        startDate: isTemplateMode ? undefined : formData.startDate || undefined,
+        endDate: isTemplateMode ? undefined : formData.endDate || undefined,
+        accessLevel: formData.accessLevel,
+        imageUrl: formData.imageUrl || undefined,
+        isTemplate: isTemplateMode,
+        defaultCurrency: formData.defaultCurrency,
       })
 
-      if (response.ok) {
-        // 古い画像を削除（新しい画像がアップロードされた場合）
-        if (originalImageUrl && originalImageUrl !== formData.imageUrl) {
-          logger.info('Attempting to delete old image:', {
+      // 古い画像を削除（新しい画像がアップロードされた場合）
+      if (originalImageUrl && originalImageUrl !== formData.imageUrl) {
+        logger.info('Attempting to delete old image:', {
+          originalImageUrl,
+          newImageUrl: formData.imageUrl,
+          tripId: trip.id
+        })
+        try {
+          await imageUploadHelpers.deleteImage(originalImageUrl)
+          logger.info('Successfully deleted old image:', originalImageUrl)
+        } catch (error) {
+          logger.error('Failed to delete old image:', {
+            error,
             originalImageUrl,
             newImageUrl: formData.imageUrl,
             tripId: trip.id
           })
-          try {
-            await imageUploadHelpers.deleteImage(originalImageUrl)
-            logger.info('Successfully deleted old image:', originalImageUrl)
-          } catch (error) {
-            logger.error('Failed to delete old image:', {
-              error,
-              originalImageUrl,
-              newImageUrl: formData.imageUrl,
-              tripId: trip.id
-            })
-            // エラーが発生しても処理は続行（新規画像のアップロードは成功しているため）
-          }
-        } else {
-          logger.debug('No old image to delete:', {
-            originalImageUrl,
-            newImageUrl: formData.imageUrl,
-            urlsMatch: originalImageUrl === formData.imageUrl
-          })
+          // エラーが発生しても処理は続行（新規画像のアップロードは成功しているため）
         }
-
-        // 最新のtripデータを取得
-        const tripResponse = await makeAuthenticatedRequest(`/api/trip/${trip.id}`)
-        if (tripResponse.ok) {
-          const latestTripData = await tripResponse.json()
-          
-          // 最新データで一括更新
-          onUpdate(latestTripData)
-          setOriginalImageUrl(formData.imageUrl)
-        } else {
-          // フォールバック: ローカルデータで更新
-          const updatedTrip = {
-            ...trip,
-            title: formData.title,
-            description: formData.description,
-            destination: formData.destination,
-            start_date: isTemplateMode ? undefined : formData.startDate,
-            end_date: isTemplateMode ? undefined : formData.endDate,
-            access_level: formData.accessLevel,
-            image_url: formData.imageUrl,
-            is_template: isTemplateMode,
-            day_count: isTemplateMode ? formData.dayCount : formData.dayCount || undefined,
-            updated_at: new Date().toISOString()
-          }
-          onUpdate(updatedTrip)
-        }
-        
-        // 編集モードを終了
-        setIsEditing(false)
-        onClose?.()
       } else {
-        logger.error('Failed to update trip')
+        logger.debug('No old image to delete:', {
+          originalImageUrl,
+          newImageUrl: formData.imageUrl,
+          urlsMatch: originalImageUrl === formData.imageUrl
+        })
       }
+
+      // 最新のtripデータを取得
+      const latestTripData = await getTrip(trip.id)
+      if (latestTripData) {
+        // 最新データで一括更新
+        onUpdate(latestTripData)
+        setOriginalImageUrl(formData.imageUrl)
+      } else {
+        // フォールバック: ローカルデータで更新
+        const updatedTrip = {
+          ...trip,
+          title: formData.title,
+          description: formData.description,
+          destination: formData.destination,
+          start_date: isTemplateMode ? undefined : formData.startDate,
+          end_date: isTemplateMode ? undefined : formData.endDate,
+          access_level: formData.accessLevel,
+          image_url: formData.imageUrl,
+          is_template: isTemplateMode,
+          day_count: isTemplateMode ? formData.dayCount : formData.dayCount || undefined,
+          updated_at: new Date().toISOString()
+        }
+        onUpdate(updatedTrip)
+      }
+      
+      // 編集モードを終了
+      setIsEditing(false)
+      onClose?.()
     } catch (error) {
       logger.error('Error updating trip:', error)
     } finally {
@@ -263,19 +259,11 @@ export default function TripEditor({
     
     setDeleting(true)
     try {
-      const response = await makeAuthenticatedRequest(`/api/trip/${trip.id}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        onDelete()
-      } else {
-        logger.error('Failed to delete trip')
-        alert(t('common.deleteFailed'))
-      }
+      await deleteTrip(trip.id)
+      onDelete()
     } catch (error) {
       logger.error('Error deleting trip:', error)
-      alert(t('common.deleteError'))
+      alert(t('common.deleteFailed'))
     } finally {
       setDeleting(false)
       setShowDeleteConfirm(false)
@@ -480,6 +468,8 @@ export default function TripEditor({
             </>
           )}
 
+          {/* Publish Status/Access Level: テンプレートの時は非表示（Draftバッジで操作） */}
+          {!isTemplateMode && (
           <div>
             <label htmlFor="accessLevel" className="block text-sm font-medium text-gray-700 mb-2">
               {t('tripEditor.field.accessLevel')}
@@ -517,6 +507,7 @@ export default function TripEditor({
               </div>
             )}
           </div>
+          )}
 
           {isTemplateMode && (
             <div>

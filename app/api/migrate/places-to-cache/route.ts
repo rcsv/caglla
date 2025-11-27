@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import logger from '@/lib/core/logger'
-import { adminDb, adminAuth } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
+import { adminApi } from '@/lib/api/middleware'
+import { handleApiError } from '@/lib/core/error-handler'
 
 // 管理者専用: 既存の trips.destination_place と itineraries.place_data を
 /**
@@ -16,18 +18,14 @@ import { COLLECTIONS } from '@/lib/firebase/firestore'
  *          Returns a 401 JSON error if authorization is missing/invalid, 403 if the caller is not an admin,
  *          or 500 with `{ error: 'Migration failed' }` on unexpected failures.
  */
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/migrate/places-to-cache - Places キャッシュ移行（管理者専用）
+ * 
+ * adminApi ミドルウェアで移行済み（認証 + 管理者権限チェック）
+ */
+export const POST = adminApi(async (request: NextRequest, ctx) => {
   try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization required' }, { status: 401 })
-    }
-    const idToken = authHeader.split('Bearer ')[1]
-    const decoded = await adminAuth.verifyIdToken(idToken)
-    const isAdmin = (decoded as any).admin === true || (decoded as any)['https://hasura.io/jwt/claims']?.['x-hasura-default-role'] === 'admin'
-    if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    // ctx.auth が保証されている（adminApi プリセットが認証 + 管理者権限チェックを実行）
 
     const stats = {
       tripsProcessed: 0,
@@ -110,7 +108,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, stats })
   } catch (error) {
-    logger.error('Migration failed:', error)
-    return NextResponse.json({ error: 'Migration failed' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/migrate/places-to-cache`
+    )
   }
-}
+})

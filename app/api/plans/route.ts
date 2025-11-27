@@ -1,85 +1,86 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
-import { adminAuth } from '@/lib/firebase/admin'
-import { planSaveOperations, PlanSaveData } from '@/lib/travel/plan-save'
+import { planSaveOperations } from '@/lib/travel/plan-save'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { PlanSaveDataSchema, UpdatePlanRequestSchema } from '@/lib/schemas/plan'
 
 /**
  * 完全なプランを一括で保存する
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const planData = await parseRequestBody<PlanSaveData>(request)
+ * if (!planData.trip || !planData.trip.title) {
+ *   return badRequest('プランのタイトルは必須です')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
  */
-export async function POST(request: NextRequest) {
-  try {
-    // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(PlanSaveDataSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.body が保証されている（型推論が効く）
+  const { userId } = ctx.auth!
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof PlanSaveDataSchema>
+  const planData = ctx.body as BodyType
 
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const planData: PlanSaveData = await request.json()
-    
-    // バリデーション
-    if (!planData.trip || !planData.trip.title) {
-      return NextResponse.json(
-        { error: 'プランのタイトルは必須です' },
-        { status: 400 }
-      )
-    }
-
-    // プランを保存
-    const result = await planSaveOperations.saveCompletePlan(userId, planData)
-    
-    return NextResponse.json({
-      success: true,
-      data: result
-    })
-  } catch (error) {
-    logger.error('Error saving plan:', error)
-    return NextResponse.json(
-      { error: 'プランの保存に失敗しました' },
-      { status: 500 }
-    )
-  }
-}
+  // プランを保存
+  const result = await planSaveOperations.saveCompletePlan(userId, planData)
+  
+  return NextResponse.json({
+    success: true,
+    data: result
+  })
+})
 
 /**
  * 既存のプランを更新する
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ tripId?: string; planData?: PlanSaveData }>(request)
+ * if (!tripId || !planData) {
+ *   return badRequest('旅行IDとプランデータは必須です')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
  */
-export async function PUT(request: NextRequest) {
-  try {
-    // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
+export const PUT = composeMiddleware(
+  withAuth(),
+  withBodyValidation(UpdatePlanRequestSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.body が保証されている（型推論が効く）
+  const { userId } = ctx.auth!
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof UpdatePlanRequestSchema>
+  const body = ctx.body as BodyType
+  const { tripId, planData } = body
 
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const { tripId, planData }: { tripId: string; planData: PlanSaveData } = await request.json()
-    
-    if (!tripId) {
-      return NextResponse.json(
-        { error: '旅行IDは必須です' },
-        { status: 400 }
-      )
-    }
-
-    // プランを更新
-    const result = await planSaveOperations.updateCompletePlan(tripId, planData)
-    
-    return NextResponse.json({
-      success: true,
-      data: result
-    })
-  } catch (error) {
-    logger.error('Error updating plan:', error)
-    return NextResponse.json(
-      { error: 'プランの更新に失敗しました' },
-      { status: 500 }
-    )
-  }
-}
+  // プランを更新
+  const result = await planSaveOperations.updateCompletePlan(tripId, planData)
+  
+  return NextResponse.json({
+    success: true,
+    data: result
+  })
+})

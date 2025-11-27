@@ -1,26 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withBodyValidation, withGooglePlacesKey } from '@/lib/api/middleware'
+import { BatchDistanceSchema } from '@/lib/schemas/distance'
+import type { PlaceData } from '@/lib/core/types'
+import { withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
 
-const GOOGLE_PLACES_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 const GOOGLE_DISTANCE_MATRIX_API_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json'
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/distance/batch - 複数地点間の連続した距離計算
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ */
+export const POST = composeMiddleware(
+  withGooglePlacesKey(),
+  withBodyValidation(BatchDistanceSchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    if (!GOOGLE_PLACES_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Places API key is not configured' },
-        { status: 500 }
-      )
-    }
-
-    const { places, mode = 'driving' } = await request.json()
+    // ctx.apiKeys, ctx.body が保証されている（型推論が効く）
+    const GOOGLE_PLACES_API_KEY = ctx.apiKeys!.GOOGLE_PLACES!
     
-    if (!places || places.length < 2) {
-      return NextResponse.json(
-        { error: 'At least 2 places are required' },
-        { status: 400 }
-      )
-    }
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof BatchDistanceSchema>
+    const body = ctx.body as BodyType
+    const { places, mode = 'driving' } = body
 
     // 連続する地点間の距離を計算
     const origins: string[] = []
@@ -37,34 +42,47 @@ export async function POST(request: NextRequest) {
     }
 
     if (origins.length === 0) {
-      return NextResponse.json(
-        { error: 'No valid place coordinates found' },
-        { status: 400 }
+      const { createBadRequestError, handleApiError } = await import('@/lib/core/error-handler')
+      return handleApiError(
+        createBadRequestError('No valid place coordinates found'),
+        '/api/distance/batch'
       )
     }
 
-    // Distance Matrix APIを呼び出し
-    const params = new URLSearchParams({
-      origins: origins.join('|'),
-      destinations: destinations.join('|'),
-      mode: mode,
-      language: 'ja',
-      region: 'jp',
-      key: GOOGLE_PLACES_API_KEY
-    })
+    // Distance Matrix APIを呼び出し（エラーハンドリング付き）
+    const data = await withExternalApiErrorHandler(
+      async () => {
+        const params = new URLSearchParams({
+          origins: origins.join('|'),
+          destinations: destinations.join('|'),
+          mode: mode,
+          language: 'ja',
+          region: 'jp',
+          key: GOOGLE_PLACES_API_KEY
+        })
 
-    const response = await fetch(`${GOOGLE_DISTANCE_MATRIX_API_URL}?${params}`, {
-      signal: AbortSignal.timeout(15000) // 15秒でタイムアウト（バッチ処理は時間がかかるため）
-    })
+        const response = await fetch(`${GOOGLE_DISTANCE_MATRIX_API_URL}?${params}`, {
+          signal: AbortSignal.timeout(15000) // 15秒でタイムアウト（バッチ処理は時間がかかるため）
+        })
 
-    if (!response.ok) {
-      throw new Error(`Google Distance Matrix API error: ${response.status}`)
-    }
+        if (!response.ok) {
+          throw new Error(`Google Distance Matrix API error: ${response.status}`)
+        }
 
-    const data = await response.json()
-    
-    if (data.status !== 'OK') {
-      throw new Error(`Google Distance Matrix API error: ${data.status}`)
+        const result = await response.json()
+        
+        if (result.status !== 'OK') {
+          throw new Error(`Google Distance Matrix API error: ${result.status}`)
+        }
+
+        return result
+      },
+      'Google Distance Matrix API (Batch)',
+      '/api/distance/batch'
+    )
+
+    if (data instanceof NextResponse) {
+      return data
     }
 
     // 結果を処理して総距離と総時間を計算
@@ -143,9 +161,10 @@ export async function POST(request: NextRequest) {
 
     // 成功した区間がない場合はエラーを返す
     if (segments.length === 0) {
-      return NextResponse.json(
-        { error: 'All distance calculations failed' },
-        { status: 400 }
+      const { createBadRequestError, handleApiError } = await import('@/lib/core/error-handler')
+      return handleApiError(
+        createBadRequestError('All distance calculations failed'),
+        '/api/distance/batch'
       )
     }
 
@@ -165,13 +184,17 @@ export async function POST(request: NextRequest) {
       segmentCount: segments.length
     })
   } catch (error) {
-    logger.error('Error in batch distance calculation', error)
-    return NextResponse.json(
-      { error: 'Failed to calculate total distance' },
-      { status: 500 }
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは外部API呼び出しを含むため、詳細なエラーハンドリングが必要
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error('Error in distance/batch:', error)
+    const { handleApiError } = await import('@/lib/core/error-handler')
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/distance/batch'
     )
   }
-}
+})
 
 // 時間をフォーマットする関数（サーバー側は英語表記で統一）
 function formatDuration(seconds: number): string {

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminTripOperations, adminDayOperations, adminItineraryOperations } from '@/lib/firebase/admin-operation'
+import { adminTripOperations, adminDayOperations, adminItineraryOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
-import type { PlacesCache, FirestoreDate, PlaceData, Trip } from '@/lib/core/types'
+import type { PlacesCache, FirestoreDate, PlaceData, Trip, Day } from '@/lib/core/types'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
 import logger from '@/lib/core/logger'
+import { canViewTrip } from '@/lib/core/permissions'
+import { asUserId } from '@/lib/core/types/identity'
+import { notFound, badRequest, createForbiddenError, parseRequestBody, handleApiError } from '@/lib/core/error-handler'
+import { tripApi } from '@/lib/api/middleware'
 
 // API応答用の拡張型（destination_placeを含む）
 interface TripWithDestination extends Trip {
@@ -49,6 +53,37 @@ export async function GET(
     
     const { id: tripId, trip } = resolved
 
+    // 認証チェック（認証済みユーザーのIDを取得、認証されていない場合はnull）
+    let userId: string | null = null
+    let userDocumentId: string | null = null
+    try {
+      const authHeader = request.headers.get('authorization')
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const idToken = authHeader.split('Bearer ')[1]
+        if (idToken) {
+          const decodedToken = await adminAuth.verifyIdToken(idToken).catch(() => null)
+          if (decodedToken) {
+            userId = decodedToken.uid
+            // Firebase Auth UID から users コレクションのドキュメントIDを取得
+            const user = await adminUserOperations.getUserByAuthUid(userId).catch(() => null)
+            if (user) {
+              userDocumentId = user.id
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // 認証エラーは無視（未認証ユーザーとして扱う）
+      logger.debug('Failed to verify ID token for trip GET endpoint', error)
+    }
+
+    // 閲覧権限チェック（public な旅行は誰でも閲覧可能、private な旅行は所有者のみ）
+    // trip.user_id は users コレクションのドキュメントIDなので、userDocumentId と比較する
+    const userIdTyped = userDocumentId ? asUserId(userDocumentId) : null
+    if (!canViewTrip(trip, userIdTyped)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     // destination_place を places_cache から解決
     let tripWithDest: TripWithDestination = trip
     try {
@@ -86,7 +121,39 @@ export async function GET(
     }
 
     // Get days for this trip
-    const days = await adminDayOperations.getDaysByTripId(tripId)
+    let days = await adminDayOperations.getDaysByTripId(tripId)
+
+    // Template Trip の場合、day_count に基づいて days を生成（存在しない場合のみ）
+    if (trip.is_template && days.length === 0 && trip.day_count && trip.day_count > 0) {
+      logger.debug('Template trip has no days, generating days based on day_count', {
+        tripId,
+        dayCount: trip.day_count
+      })
+      
+      const daysToCreate: Array<Omit<Day, 'id' | 'created_at' | 'updated_at'>> = []
+      for (let dayNumber = 1; dayNumber <= trip.day_count; dayNumber++) {
+        daysToCreate.push({
+          trip_id: tripId,
+          day_number: dayNumber
+          // Template Trip は日付がないため、date フィールドは設定しない
+        })
+      }
+      
+      // すべての days を作成
+      for (const dayData of daysToCreate) {
+        try {
+          const createdDay = await adminDayOperations.createDay(dayData)
+          days.push(createdDay)
+        } catch (error) {
+          logger.error('Failed to create day for template trip', error, { dayNumber: dayData.day_number })
+        }
+      }
+      
+      logger.debug('Generated days for template trip', {
+        tripId,
+        generatedDaysCount: days.length
+      })
+    }
 
     // Get itineraries for each day
     const daysWithItineraries = await Promise.all(
@@ -236,25 +303,27 @@ export async function GET(
  * @param params - An object whose `id` property (resolved from the route) is the target trip ID.
  * @returns A NextResponse with `{ success: true }` on successful update. On error returns JSON with an `error` message and an appropriate HTTP status (401, 403, 400, or 500).
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
+export const PUT = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
-    const idToken = authHeader.split('Bearer ')[1]
-    
-    // Verify the ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const { tripSlug } = await params
-    const body = await request.json()
+    const body = await parseRequestBody<{
+      title?: string
+      description?: string
+      destination?: string
+      destinationPlace?: PlaceData
+      destinationPlaceId?: string
+      startDate?: string
+      endDate?: string
+      accessLevel?: string
+      imageUrl?: string
+      isTemplate?: boolean
+      is_template?: boolean
+      dayCount?: number
+      day_count?: number
+    }>(request)
     
     const {
       title,
@@ -288,19 +357,6 @@ export async function PUT(
         : typeof snakeIsTemplate === 'boolean'
           ? snakeIsTemplate
           : Boolean(trip.is_template)
-
-    // Resolve trip by slug or id
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolved) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
-    }
-    
-    const { id: tripId, trip } = resolved
-
-    // Verify user owns this trip
-    if (trip.user_id !== userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
 
     // 日程が変更されたかチェック
     const originalStartDate = trip?.start_date
@@ -359,7 +415,7 @@ export async function PUT(
       // 開始日が終了日より後の場合はエラー      
       if (start > end) {
         logger.error('Start date is after end date', { start, end })
-        return NextResponse.json({ error: '開始日は終了日より前である必要があります' }, { status: 400 })
+        return badRequest('Start date must be before end date')
       }
       
       try {
@@ -497,7 +553,10 @@ export async function PUT(
         
       } catch (error) {
         logger.error('Error during trip dates update', error)
-        return NextResponse.json({ error: '日程の更新に失敗しました' }, { status: 500 })
+        return handleApiError(
+          error instanceof Error ? error : new Error(String(error)),
+          `/api/trip/${tripSlug}`
+        )
       }
     } else {
       logger.debug('No changes to trip dates, skipping days update')
@@ -530,59 +589,19 @@ export async function PUT(
       }
     }
 
-    await adminTripOperations.updateTrip(tripId, tripUpdatePayload)
+  await adminTripOperations.updateTrip(tripId, tripUpdatePayload)
 
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    logger.error('Error updating trip', error)
-    return NextResponse.json(
-      { error: 'Failed to update trip' },
-      { status: 500 }
-    )
-  }
-}
+  return NextResponse.json({ success: true })
+})
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
+export const DELETE = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
-    const idToken = authHeader.split('Bearer ')[1]
-    
-    // Verify the ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
+  // Delete trip (this will also delete related days and itineraries)
+  await adminTripOperations.deleteTrip(tripId)
 
-    const { tripSlug } = await params
-
-    // Resolve trip by slug or id
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolved) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
-    }
-    
-    const { id: tripId, trip } = resolved
-
-    // Verify user owns this trip
-    if (trip.user_id !== userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
-
-    // Delete trip (this will also delete related days and itineraries)
-    await adminTripOperations.deleteTrip(tripId)
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    logger.error('Error deleting trip', error)
-    return NextResponse.json(
-      { error: 'Failed to delete trip' },
-      { status: 500 }
-    )
-  }
-}
+  return NextResponse.json({ success: true })
+})

@@ -27,8 +27,8 @@
   --z-index-top-menu-content:        450 ;   /* トップメニュー詳細 */
   --z-index-popup-menu:              500 ;   /* ポップアップメニュー */
   --z-index-popup-menu-content:      550 ;   /* ポップアップメニュー詳細 */
-  --z-index-float-modal:             600 ;   /* モーダルダイアログ */
-  --z-index-float-modal-content:     650 ;   /* モーダルダイアログ詳細 */
+  --z-index-float-modal:             900 ;   /* モーダルダイアログ */
+  --z-index-float-modal-content:     950 ;   /* モーダルダイアログ詳細 */
   --z-index-dialog-popup:            700 ;   /* ダイアログ内ポップアップ */
   --z-index-dialog-overlay:          750 ;   /* ダイアログ内オーバーレイ */
   --z-index-user-settings:           800 ;   /* ユーザー設定ダイアログ */
@@ -202,9 +202,11 @@ body {
   }
 }
 
-/* メインコンテンツエリアの最大幅制限 */
+/* メインコンテンツエリアの幅制御
+ * Note: デスクトップ（lg以上）の幅は Tailwind (lg:w-[740px]) で管理
+ * モバイル・タブレットサイズでの最小幅のみ CSS で保証
+ */
 .main-content-scrollable {
-  max-width: 740px;
   min-width: 400px;
 }
 

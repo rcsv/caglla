@@ -4,6 +4,7 @@ import logger from '@/lib/core/logger'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { createTrip } from '@/lib/travel/trip-operations'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { imageUploadHelpers } from '@/lib/storage/image-upload'
 import PlaceSearchInput from '@/components/common/PlaceSearchInput'
@@ -29,6 +30,8 @@ interface CreateTripDialogProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
+  initialMode?: CreateMode // 初期モードを指定（'trip' または 'template'）
+  hideModeSelector?: boolean // モード選択UIを非表示にする（初期モードで固定）
 }
 
 type CreateMode = 'trip' | 'template'
@@ -57,7 +60,13 @@ type CreateTripFormState = ReturnType<typeof createInitialFormState>
  * @param onSuccess - Called after a trip is successfully created
  * @returns The dialog's rendered React element when open, or `null` when closed
  */
-export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateTripDialogProps) {
+export default function CreateTripDialog({ 
+  isOpen, 
+  onClose, 
+  onSuccess,
+  initialMode = 'trip',
+  hideModeSelector = false
+}: CreateTripDialogProps) {
   const router = useRouter()
   const { userPlanId, tripCount, privateTripCount } = useUserData()
   const { user } = useAuth()
@@ -66,7 +75,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
   const currentLanguage = getUserLanguage(user)
   
   const [formData, setFormData] = useState<CreateTripFormState>(createInitialFormState)
-  const [mode, setMode] = useState<CreateMode>('trip')
+  const [mode, setMode] = useState<CreateMode>(initialMode)
   const [submitting, setSubmitting] = useState(false)
   const [dateError, setDateError] = useState('')
   const [dateAutoAdjusted, setDateAutoAdjusted] = useState(false)
@@ -168,6 +177,17 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
       isMounted = false
     }
   }, [formData.destinationPlace?.place_id, user])
+
+  // ダイアログが開いた時にフォームをリセット
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(createInitialFormState())
+      setMode(initialMode)
+      setDateError('')
+      setDateAutoAdjusted(false)
+      setSubmitting(false)
+    }
+  }, [isOpen, initialMode])
 
   const isTemplateMode = mode === 'template'
 
@@ -282,51 +302,42 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
     }
 
 
+    const normalizeDateInput = (value?: string) => {
+      if (!value) return undefined
+      // 既にISO形式であればそのまま使用
+      if (value.includes('T')) return value
+      // HTML date入力（YYYY-MM-DD）をUTC 00:00:00のISO文字列に変換
+      return new Date(`${value}T00:00:00.000Z`).toISOString()
+    }
+
     setSubmitting(true)
     try {
-      const payload = {
+      const normalizedStartDate = isTemplateMode ? undefined : normalizeDateInput(formData.startDate)
+      const normalizedEndDate = isTemplateMode ? undefined : normalizeDateInput(formData.endDate)
+
+      const trip = await createTrip({
         title: formData.title || formData.destination,
-        description: formData.description,
-        destination: formData.destination,
-        destinationPlaceId: formData.destinationPlace?.place_id,
-        destinationPlace: formData.destinationPlace,
-        startDate: isTemplateMode ? undefined : formData.startDate,
-        endDate: isTemplateMode ? undefined : formData.endDate,
-        imageUrl: formData.imageUrl || null,
+        description: formData.description || undefined,
+        destination: formData.destination || undefined,
+        destinationPlaceId: formData.destinationPlace?.place_id || undefined,
+        startDate: normalizedStartDate,
+        endDate: normalizedEndDate,
+        imageUrl: formData.imageUrl || undefined,
         defaultCurrency: formData.defaultCurrency,
         isTemplate: isTemplateMode,
-        dayCount: isTemplateMode ? formData.dayCount : undefined
-      }
-
-      const response = await makeAuthenticatedRequest('/api/trips', {
-        method: 'POST',
-        body: JSON.stringify(payload),
+        dayCount: isTemplateMode ? formData.dayCount : undefined,
       })
 
-      if (response.ok) {
-        const trip = await response.json()
-        onSuccess()
-        onClose()
-        // スラッグベースのURLにリダイレクト
-        if (trip.creator?.slug && trip.slug) {
-          router.push(`/${trip.creator.slug}/${trip.slug}`)
-        } else {
-          // スラッグが生成されていない場合はエラー（通常は発生しない）
-          logger.error('Trip created but slugs are missing', { tripId: trip.id })
-          alert('旅行の作成に成功しましたが、URLの生成に失敗しました。')
-          router.push('/home')
-        }
+      onSuccess()
+      onClose()
+      // スラッグベースのURLにリダイレクト
+      if (trip.creator?.slug && trip.slug) {
+        router.push(`/${trip.creator.slug}/${trip.slug}`)
       } else {
-        // 作成に失敗した場合、アップロードした画像を削除
-        if (formData.imageUrl) {
-          try {
-            await imageUploadHelpers.deleteImage(formData.imageUrl)
-            logger.debug('Failed creation image deleted:', formData.imageUrl)
-          } catch (error) {
-            logger.error('Failed to delete image after creation failure:', error)
-          }
-        }
-        logger.error('Failed to create trip')
+        // スラッグが生成されていない場合はエラー（通常は発生しない）
+        logger.error('Trip created but slugs are missing', { tripId: trip.id })
+        alert('旅行の作成に成功しましたが、URLの生成に失敗しました。')
+        router.push('/home')
       }
     } catch (error) {
       // エラーが発生した場合、アップロードした画像を削除
@@ -339,6 +350,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
         }
       }
       logger.error('Error creating trip:', error)
+      alert(error instanceof Error ? error.message : 'Failed to create trip')
     } finally {
       setSubmitting(false)
     }
@@ -446,7 +458,11 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
         <div className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${getZIndexClass('FLOAT_MODAL')}`}>
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">{t('trip.create.title')}</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {hideModeSelector && mode === 'template' 
+                ? 'Create a Guide' 
+                : t('trip.create.title')}
+            </h2>
             <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600">
               <IconRenderer iconName="close" className="w-6 h-6" />
             </button>
@@ -455,6 +471,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
           {/* Content */}
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {!hideModeSelector && (
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-3">
                   {t('trip.create.mode.label')}
@@ -494,6 +511,7 @@ export default function CreateTripDialog({ isOpen, onClose, onSuccess }: CreateT
                   {t('trip.create.visibilityNotice')}
                 </p>
               </div>
+              )}
 
               {/* 必須項目 */}
               <div>

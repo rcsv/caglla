@@ -9,6 +9,27 @@ const PLACES_CACHE_COLLECTION = 'places_cache'
 const CACHE_FORMAT_VERSION = '2.0.0'
 
 /**
+ * 永続的な欠損フラグを管理する対象フィールド
+ * 
+ * ⚠️ 注意: むやみに増やさない！
+ * Googleが頻繁に変更・追加するフィールドは含めない
+ * アプリで本当に使う範囲だけを管理する
+ * 
+ * reviewsは除外: フィールドマスクで取得可能なため、永続的な欠損ではない
+ */
+export const MISSING_FLAG_TARGETS = [
+  'editorial_summary',
+  // 'reviews', ← 除外（フィールドマスクで取得可能）
+  'opening_hours',
+  'website',
+  'formatted_phone_number',
+  'rating',
+  'price_level'
+] as const
+
+export type MissingFlagTarget = typeof MISSING_FLAG_TARGETS[number]
+
+/**
  * キャッシュから場所データを取得
  * 
  * @param placeId - Google Places API の place_id
@@ -103,8 +124,10 @@ export async function savePlaceToCache(
       access_count: 1
     }
     
+    const sanitizedCacheData = removeUndefinedFields(cacheData)
+    
     // merge: true でレースコンディション対策
-    await docRef.set(cacheData, { merge: true })
+    await docRef.set(sanitizedCacheData, { merge: true })
     
     logger.info('Saved place to cache:', { 
       placeId: placeData.place_id, 
@@ -115,6 +138,27 @@ export async function savePlaceToCache(
     logger.error('Error saving place to cache:', error)
     throw error
   }
+}
+
+/**
+ * Firestoreに保存する前にundefinedフィールドを除去
+ */
+function removeUndefinedFields<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item) => item !== undefined)
+      .map((item) => removeUndefinedFields(item)) as unknown as T
+  }
+  
+  if (value && typeof value === 'object' && !(value instanceof Date)) {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => [k, removeUndefinedFields(v)])
+    
+    return Object.fromEntries(entries) as T
+  }
+  
+  return value
 }
 
 /**
@@ -211,6 +255,126 @@ export function isCacheStale(cached: PlacesCache, maxAgeMs: number = 14 * 24 * 6
   
   const age = Date.now() - cachedTime
   return age > maxAgeMs
+}
+
+/**
+ * キャッシュの情報完全性をチェック（永続的な欠損を考慮）
+ * 
+ * @param cached - キャッシュデータ
+ * @param requiredFields - 必須フィールドのリスト
+ * @returns 不足しているフィールドのリスト（永続的な欠損は除外）
+ */
+export function checkCacheCompleteness(
+  cached: PlacesCache,
+  requiredFields: string[]
+): string[] {
+  const missingFields: string[] = []
+  
+  for (const field of requiredFields) {
+    // 永続的な欠損フラグをチェック（MISSING_FLAG_TARGETSに含まれる場合のみ）
+    // 一度APIを呼び出してデータが存在しなかった場合は、再度クエリしない
+    if (MISSING_FLAG_TARGETS.includes(field as MissingFlagTarget) && 
+        cached.missing_data_flags?.[field] === true) {
+      // このフィールドは永続的に欠損しているため、不足として扱わない
+      continue
+    }
+    
+    const value = (cached as any)[field]
+    
+    // undefined、null、空配列、空文字列を「不足」とみなす
+    if (value === undefined || value === null || 
+        (Array.isArray(value) && value.length === 0) ||
+        (typeof value === 'string' && value === '')) {
+      missingFields.push(field)
+    }
+  }
+  
+  return missingFields
+}
+
+/**
+ * APIレスポンスから永続的な欠損フラグを更新
+ * 
+ * @param cached - 既存のキャッシュデータ
+ * @param apiResponse - APIレスポンス
+ * @returns 更新された欠損フラグ
+ */
+export function updateMissingDataFlags(
+  cached: PlacesCache | null,
+  apiResponse: PlaceDetailsResult
+): Record<string, boolean> {
+  const missingFlags: Record<string, boolean> = { ...(cached?.missing_data_flags || {}) }
+  
+  // APIレスポンスで欠損しているフィールドを記録
+  for (const field of MISSING_FLAG_TARGETS) {
+    const value = (apiResponse as any)[field]
+    if (value === undefined || value === null ||
+        (Array.isArray(value) && value.length === 0) ||
+        (typeof value === 'string' && value === '')) {
+      // APIレスポンスに含まれていない = データが存在しない
+      missingFlags[field as string] = true
+    } else {
+      // データが存在する場合は、欠損フラグを削除
+      delete missingFlags[field as string]
+    }
+  }
+  
+  return missingFlags
+}
+
+/**
+ * キャッシュをエンリッチメント（既存データとマージ）
+ * 
+ * @param placeId - Google Places API の place_id
+ * @param language - 言語コード
+ * @param newData - APIから取得した新しいデータ
+ */
+export async function enrichPlaceCache(
+  placeId: string,
+  language: SupportedLanguage,
+  newData: PlaceDetailsResult
+): Promise<void> {
+  try {
+    const existing = await getPlaceFromCache(placeId, language)
+    
+    // missing_data_flagsを更新（MISSING_FLAG_TARGETSに含まれないフィールドのフラグを削除）
+    const updatedFlags = updateMissingDataFlags(existing, newData)
+    
+    // MISSING_FLAG_TARGETSに含まれないフィールドのフラグを削除（マイグレーション処理）
+    const cleanedFlags: Record<string, boolean> = {}
+    for (const [key, value] of Object.entries(updatedFlags)) {
+      if (MISSING_FLAG_TARGETS.includes(key as MissingFlagTarget)) {
+        cleanedFlags[key] = value
+      }
+      // MISSING_FLAG_TARGETSに含まれないフィールド（例: reviews）は削除される
+    }
+    
+    // 既存のキャッシュと新しいデータをマージ
+    const enrichedData: PlacesCacheInput = {
+      ...(existing || {}),
+      ...newData,
+      place_id: placeId,
+      language: language,
+      format_version: CACHE_FORMAT_VERSION,
+      missing_data_flags: cleanedFlags,
+      cached_at: existing?.cached_at ? toDateOrNull(existing.cached_at) || new Date() : new Date(),
+      last_accessed: new Date(),
+      access_count: (existing?.access_count || 0) + 1
+    }
+    
+    const sanitizedData = removeUndefinedFields(enrichedData)
+    
+    const cacheKey = getCacheKey(placeId, language)
+    const docRef = adminDb.collection(PLACES_CACHE_COLLECTION).doc(cacheKey)
+    
+    // merge: true でレースコンディション対策
+    await docRef.set(sanitizedData, { merge: true })
+    
+    logger.info('Enriched place cache:', { placeId, language, cacheKey })
+  } catch (error) {
+    logger.error('Error enriching place cache:', error)
+    throw error
+  }
 }
 
 /**

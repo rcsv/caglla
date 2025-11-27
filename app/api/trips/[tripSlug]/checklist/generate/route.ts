@@ -2,33 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { checklistGenerator } from '@/lib/checklist-generator'
 import logger from '@/lib/core/logger'
-import { adminAuth } from '@/lib/firebase/admin'
 import { PlacesCache, Trip, Day, Itinerary } from '@/lib/core/types'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import { adminTripOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
+import { notFound } from '@/lib/core/error-handler'
+import { authApi } from '@/lib/api/middleware'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    const { tripSlug } = await params
+export const POST = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+  const { tripSlug } = ctx.params!
+  const { userId: googleId } = ctx.auth!
 
-    // 認証チェック
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    
-    const token = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(token)
-    const googleId = decodedToken.uid
-
-    // ユーザー情報取得（google_idで検索）
-    const user = await adminUserOperations.getUserByGoogleId(googleId)
+    // ユーザー情報取得（auth_uid で検索、後方互換性のため google_id もチェック）
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化
+    const user = await adminUserOperations.getUserByAuthUid(googleId)
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     // ユーザーの居住国コードを place_cache から解決（home_place_id 優先）
@@ -54,7 +44,7 @@ export async function POST(
     // tripSlugからtripIdとtripを解決
     const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
     if (!resolved) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+      return notFound('Trip')
     }
     const { id: tripId, trip: tripData } = resolved
 
@@ -129,21 +119,30 @@ export async function POST(
     })
 
     // 保存: trip_checklists/{tripId}
-    const checklistRef = adminDb.collection('trip_checklists').doc(tripId)
-    await checklistRef.set({
+    const checklistRef = adminDb.collection(COLLECTIONS.TRIP_CHECKLISTS).doc(tripId)
+    await checklistRef.set(
+      {
       id: tripId,
       trip_id: tripId,
       items,
       last_generated_at: new Date(),
       created_at: new Date(),
       updated_at: new Date()
-    }, { merge: true })
+      },
+      { merge: true }
+    )
 
-    return NextResponse.json({ success: true, items })
-  } catch (error) {
-    logger.error('Failed to generate checklist', error)
-    return NextResponse.json({ error: 'Failed to generate checklist' }, { status: 500 })
-  }
-}
+    // Trip.stats.checklists を items.length に同期
+    try {
+      const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
+      await tripRef.update({
+        'stats.checklists': items.length
+      } as any)
+    } catch (e) {
+      logger.warn('Failed to update trip.stats.checklists after generate', { tripId, error: e })
+    }
+
+  return NextResponse.json({ success: true, items })
+})
 
 

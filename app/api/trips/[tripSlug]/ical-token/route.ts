@@ -3,7 +3,7 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { getAuth } from 'firebase-admin/auth'
 
 import { generateICalToken } from '@/lib/utils/ical-token'
-import { verifyAuthToken } from '@/lib/api/auth-helpers'
+import { tripApi } from '@/lib/api/middleware'
 
 // Firebase Admin初期化
 const db = getFirestore()
@@ -18,36 +18,11 @@ const auth = getAuth()
 /**
  * POST: iCal公開トークンを生成して有効化
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    const { tripSlug } = await params
-    // 1. 認証チェック
-    const user = await verifyAuthToken(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const userId = user.uid
-
-    // 2. Trip取得（id/slug 両対応の解決ヘルパー）
-    const { adminTripOperations } = await import('@/lib/firebase/admin-operation')
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    const resolvedTripId = resolved?.id || null
-
-    if (!resolvedTripId) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
-    }
-
-    const tripDoc = await db.collection('trips').doc(resolvedTripId).get()
-    const trip = tripDoc.data()
-    
-    // 3. 所有権確認
-    if (trip?.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+export const POST = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId: resolvedTripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
     // 4. ユーザープラン確認（Backpacker以上）
     // usersコレクションはgoogle_idで管理しているため、uidで検索する
@@ -86,69 +61,24 @@ export async function POST(
     const icalUrl = `${baseUrl}/api/trips/${resolvedTripId}/ical?token=${token}&type=trip`
     const reservationsUrl = `${baseUrl}/api/trips/${resolvedTripId}/ical?token=${token}&type=reservations`
 
-    return NextResponse.json({
-      success: true,
-      token,
-      urls: {
-        trip: icalUrl,
-        reservations: reservationsUrl,
-      },
-    })
-  } catch (error) {
-    console.error('iCal token generation error:', error)
-    return NextResponse.json({ 
-      error: 'Internal Server Error' 
-    }, { status: 500 })
-  }
-}
+  return NextResponse.json({
+    success: true,
+    token,
+    urls: {
+      trip: icalUrl,
+      reservations: reservationsUrl,
+    },
+  })
+})
 
 /**
  * DELETE: iCal公開を無効化
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ tripSlug: string }> }
-) {
-  try {
-    const { tripSlug } = await params
-    // 1. 認証チェック
-    const user = await verifyAuthToken(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const userId = user.uid
-
-    // 2. Trip取得（tripSlugからtripIdへの解決）
-    const resolvedTripId = await (async () => {
-      // まずはドキュメントIDとして試す
-      const byId = await db.collection('trips').doc(tripSlug).get()
-      if (byId.exists) {
-        return byId.id
-      }
-      // 見つからなければ slug で検索
-      const bySlugSnap = await db
-        .collection('trips')
-        .where('slug', '==', tripSlug)
-        .limit(1)
-        .get()
-      if (!bySlugSnap.empty) {
-        return bySlugSnap.docs[0].id
-      }
-      return null
-    })()
-
-    if (!resolvedTripId) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
-    }
-
-    const tripDoc = await db.collection('trips').doc(resolvedTripId).get()
-    const trip = tripDoc.data()
-    
-    // 3. 所有権確認
-    if (trip?.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+export const DELETE = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId: resolvedTripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
 
     // 4. Tripを更新（無効化）
     await db.collection('trips').doc(resolvedTripId).update({
@@ -156,15 +86,9 @@ export async function DELETE(
       updated_at: new Date(),
     })
 
-    return NextResponse.json({
-      success: true,
-      message: 'iCal publishing disabled',
-    })
-  } catch (error) {
-    console.error('iCal token deletion error:', error)
-    return NextResponse.json({ 
-      error: 'Internal Server Error' 
-    }, { status: 500 })
-  }
-}
+  return NextResponse.json({
+    success: true,
+    message: 'iCal publishing disabled',
+  })
+})
 

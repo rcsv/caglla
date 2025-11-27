@@ -1,42 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth } from '@/lib/firebase/admin'
 import { adminTripOperations } from '@/lib/firebase/admin-operation'
 import { generateUniqueSlug, generateSlug } from '@/lib/utils/slug'
 import logger from '@/lib/core/logger'
 import type { Trip } from '@/lib/core/types'
+import { badRequest, parseRequestBody } from '@/lib/core/error-handler'
+import { tripApi } from '@/lib/api/middleware'
 
 type PublishRequestBody = {
   slug?: string | null
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { tripSlug: string } }
-) {
-  try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
+/**
+ * DELETE: トリップ公開停止（unpublish）
+ * 
+ * 公開中のトリップを非公開（private）に戻します。
+ * 所有者のみが実行可能です。
+ */
+export const DELETE = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId: resolvedTripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
+
+    // 既に private の場合はエラーを返す（冪等性のため）
+    if (trip.access_level === 'private') {
+      return badRequest('Trip is already private')
     }
 
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    const { tripSlug } = params
-
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolved) {
-      return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+    const updatePayload: Record<string, unknown> = {
+      access_level: 'private' as const
     }
 
-    const { id: resolvedTripId, trip } = resolved
+    await adminTripOperations.updateTrip(resolvedTripId, updatePayload)
 
-    if (trip.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
+    const updatedTrip = await adminTripOperations.getTripById(resolvedTripId)
 
-    const body: PublishRequestBody = await request.json().catch(() => ({} as PublishRequestBody))
+    logger.info('Trip unpublished', {
+      tripId: resolvedTripId,
+      slug: trip.slug,
+      isTemplate: Boolean(trip.is_template)
+    })
+
+  return NextResponse.json({
+    success: true,
+    trip: updatedTrip ?? { ...trip, access_level: 'private' as const }
+  })
+})
+
+export const POST = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+  const { userId } = ctx.auth!
+  const { tripId: resolvedTripId, trip } = ctx.trip!
+  const { tripSlug } = ctx.params!
+
+    const body = await parseRequestBody<PublishRequestBody>(request)
 
     const requestedSlug = body.slug?.trim()
     let finalSlug = trip.slug?.trim() || ''
@@ -53,7 +70,7 @@ export async function POST(
       // サーバー側でslug形式をバリデーション・正規化（防御的実装）
       const normalizedSlug = generateSlug(requestedSlug)
       if (normalizedSlug !== requestedSlug) {
-        return NextResponse.json({ error: 'Invalid slug format' }, { status: 400 })
+        return badRequest('Invalid slug format')
       }
 
       const userTrips = await getUserTrips()
@@ -63,6 +80,7 @@ export async function POST(
         .filter((value): value is string => Boolean(value))
 
       if (existingSlugs.includes(normalizedSlug)) {
+        // 409 Conflict は標準的なエラーレスポンスなので、そのまま返す
         return NextResponse.json({ error: 'Slug already in use' }, { status: 409 })
       }
 
@@ -98,13 +116,9 @@ export async function POST(
       isTemplate: Boolean(trip.is_template)
     })
 
-    return NextResponse.json({
-      success: true,
-      trip: updatedTrip ?? { ...trip, slug: finalSlug, access_level: 'public' as const }
-    })
-  } catch (error) {
-    logger.error('Error publishing trip', error)
-    return NextResponse.json({ error: 'Failed to publish trip' }, { status: 500 })
-  }
-}
+  return NextResponse.json({
+    success: true,
+    trip: updatedTrip ?? { ...trip, slug: finalSlug, access_level: 'public' as const }
+  })
+})
 

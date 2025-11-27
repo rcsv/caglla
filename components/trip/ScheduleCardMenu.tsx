@@ -281,6 +281,8 @@ export function ScheduleCardMenu({
                 )}
               </div>
               <hr className="my-1" />
+              {/* 予約ボタン - テンプレートモードでは非表示 */}
+              {onReservation && (
               <button
                 onClick={() => handleMenuAction('reservation')}
                 role="menuitem"
@@ -296,6 +298,7 @@ export function ScheduleCardMenu({
                   </span>
                 )}
               </button>
+              )}
               <button
                 onClick={() => handleMenuAction('delete')}
                 role="menuitem"

@@ -31,12 +31,14 @@ export function TripLikeButton({
   const [initialized, setInitialized] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
-  const updateExternalState = useCallback(
-    (state: { likesCount: number; likedByMe: boolean }) => {
-      onStateChange?.(state)
-    },
-    [onStateChange]
-  )
+  const externalStateRef = useRef(onStateChange)
+  useEffect(() => {
+    externalStateRef.current = onStateChange
+  }, [onStateChange])
+
+  const emitExternalState = useCallback((state: { likesCount: number; likedByMe: boolean }) => {
+    externalStateRef.current?.(state)
+  }, [])
 
   const fetchLikeStatus = useCallback(async () => {
     abortRef.current?.abort()
@@ -70,7 +72,7 @@ export function TripLikeButton({
 
       setLikesCount(serverCount)
       setLikedByMe(serverLiked)
-      updateExternalState({ likesCount: serverCount, likedByMe: serverLiked })
+      emitExternalState({ likesCount: serverCount, likedByMe: serverLiked })
     } catch (error) {
       if ((error as Error).name !== 'AbortError') {
         logger.warn('Unable to load like status', error)
@@ -78,7 +80,7 @@ export function TripLikeButton({
     } finally {
       setInitialized(true)
     }
-  }, [tripSlug, updateExternalState, user])
+  }, [emitExternalState, tripSlug, user])
 
   useEffect(() => {
     void fetchLikeStatus()
@@ -112,7 +114,7 @@ export function TripLikeButton({
 
     setLikedByMe(nextLiked)
     setLikesCount(optimisticCount)
-    updateExternalState({ likesCount: optimisticCount, likedByMe: nextLiked })
+    emitExternalState({ likesCount: optimisticCount, likedByMe: nextLiked })
 
     setPending(true)
     try {
@@ -140,17 +142,17 @@ export function TripLikeButton({
 
       setLikedByMe(serverLiked)
       setLikesCount(serverCount)
-      updateExternalState({ likesCount: serverCount, likedByMe: serverLiked })
+      emitExternalState({ likesCount: serverCount, likedByMe: serverLiked })
     } catch (error) {
       logger.error('Failed to toggle like', error)
       setLikedByMe(previousLiked)
       setLikesCount(previousCount)
-      updateExternalState({ likesCount: previousCount, likedByMe: previousLiked })
+      emitExternalState({ likesCount: previousCount, likedByMe: previousLiked })
       alert(t('trip.likes.error'))
     } finally {
       setPending(false)
     }
-  }, [disabled, likedByMe, likesCount, pending, tripSlug, updateExternalState, user])
+  }, [disabled, emitExternalState, likedByMe, likesCount, pending, tripSlug, user])
 
   const buttonLabel = useMemo(() => {
     if (!initialized && !disabled) {

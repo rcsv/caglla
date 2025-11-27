@@ -11,7 +11,8 @@ import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useEffect, useRef, useCallback } from 'react'
 import { toDate } from '@/lib/firebase/timestamp-utils'
-import { t, getUserLanguage } from '@/lib/i18n'
+import { t } from '@/lib/i18n'
+import { getUserLanguage } from '@/lib/utils/language'
 import Loading from '@/components/common/Loading'
 import logger from '@/lib/core/logger'
 
@@ -27,6 +28,7 @@ interface TripItineraryViewProps {
   onAddSchedule: (dayId: string) => void
   onInsertSchedule: (dayId: string, afterIndex: number) => void
   onAddDay: () => void
+  onDayDelete?: (dayId: string) => void
   onScheduleUpdated: (updatedItinerary: Itinerary) => void
   onMoveUp: (itineraryId: string, dayId: string) => void
   onMoveDown: (itineraryId: string, dayId: string) => void
@@ -57,6 +59,7 @@ export default function TripItineraryView({
   onAddSchedule,
   onInsertSchedule,
   onAddDay,
+  onDayDelete,
   onScheduleUpdated,
   onMoveUp,
   onMoveDown,
@@ -302,6 +305,14 @@ export default function TripItineraryView({
                               }
                             }
 
+                            // Shared Private Tripの場合、shared_month_labelがあればそれを表示
+                            if (trip.shared_month_label) {
+                              return {
+                                text: trip.shared_month_label,
+                                className: 'text-gray-900'
+                              }
+                            }
+
                             if (templateWithoutDates) {
                               return { text: null, className: '' }
                             }
@@ -371,6 +382,7 @@ export default function TripItineraryView({
                           ) || []
                         })
                       }} 
+                      onDelete={onDayDelete}
                       onReorderItineraries={onReorderItineraries}
                     />
 

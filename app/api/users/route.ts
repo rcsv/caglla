@@ -1,26 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { adminUserOperations } from '@/lib/firebase/admin-operation'
-import { adminAuth } from '@/lib/firebase/admin'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import type { User } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
+import { notFound, withAuth as withAuthLegacy } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { CreateUserSchema } from '@/lib/schemas/user'
+import { authApi } from '@/lib/api/middleware'
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/users - ユーザー作成・更新
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{...}>(request)
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * ```
+ */
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(CreateUserSchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
-
-    const idToken = authHeader.split('Bearer ')[1]
+    // ctx.auth, ctx.body が保証されている（型推論が効く）
+    const { userId, decodedToken } = ctx.auth!
     
-    // Verify the ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    // Parse request body
-    const body = await request.json()
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof CreateUserSchema>
+    const body = ctx.body as BodyType
     const { 
       name, 
       email, 
@@ -30,8 +45,9 @@ export async function POST(request: NextRequest) {
       preferences 
     } = body
 
-    // 既存ユーザーをチェック
-    const existingUser = await adminUserOperations.getUserByGoogleId(userId)
+    // 既存ユーザーをチェック（auth_uid で検索、後方互換性のため google_id もチェック）
+    // Phase 1-1.5: 認証プロバイダーマルチ対応化
+    const existingUser = await adminUserOperations.getUserByAuthUid(userId)
     
     let userData: Omit<User, 'id' | 'created_at' | 'updated_at'>
     
@@ -58,7 +74,8 @@ export async function POST(request: NextRequest) {
       }
       
       userData = {
-        google_id: userId,
+        auth_uid: userId, // Firebase Auth UID（必須）
+        google_id: userId, // 後方互換性のため保持（Google認証の場合）
         name: userName,
         slug: userSlug,
         email: existingUser.email, // 既存のemailを保持
@@ -79,7 +96,8 @@ export async function POST(request: NextRequest) {
       })
       
       userData = {
-        google_id: userId,
+        auth_uid: userId, // Firebase Auth UID（必須）
+        google_id: userId, // 後方互換性のため保持（Google認証の場合）
         name: userName,
         slug: userSlug,
         email: email || decodedToken.email || '',
@@ -100,42 +118,46 @@ export async function POST(request: NextRequest) {
     })
     
     return NextResponse.json({ user })
-  } catch (error) {
-    logger.error('Error creating/updating user', error)
-    return NextResponse.json(
-      { error: 'Failed to create/update user' },
-      { status: 500 }
-    )
+  } catch (error: any) {
+    logger.error('POST /api/users failed', {
+      message: error?.message,
+      stack: error?.stack
+    })
+    return NextResponse.json({ error: 'Failed to save user' }, { status: 500 })
   }
-}
+})
 
-export async function GET(request: NextRequest) {
-  try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
+/**
+ * 実験: Context 累積型ミドルウェアパターンへの移行
+ * 
+ * Before (旧方式):
+ * ```typescript
+ * export const GET = withAuth(async (request: NextRequest, auth) => {
+ *   const { userId } = auth
+ *   // ...
+ * })
+ * ```
+ * 
+ * After (新方式 - 標準プリセット使用):
+ * ```typescript
+ * export const GET = authApi(async (request, ctx) => {
+ *   // ctx.auth が保証されている
+ *   const { userId } = ctx.auth!
+ *   // ...
+ * })
+ * ```
+ */
+export const GET = authApi(async (request: NextRequest, ctx) => {
+  // ctx.auth が保証されている（authApi プリセットが認証チェックを実行）
+  const { userId } = ctx.auth!
 
-    const idToken = authHeader.split('Bearer ')[1]
-    
-    // Verify the ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
-
-    // Get user data
-    const user = await adminUserOperations.getUserByGoogleId(userId)
-    
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-    
-    return NextResponse.json({ user })
-  } catch (error) {
-    logger.error('Error fetching user', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch user' },
-      { status: 500 }
-    )
+  // Get user data（auth_uid で検索、後方互換性のため google_id もチェック）
+  // Phase 1-1.5: 認証プロバイダーマルチ対応化
+  const user = await adminUserOperations.getUserByAuthUid(userId)
+  
+  if (!user) {
+    return notFound('User')
   }
-}
+  
+  return NextResponse.json({ user })
+})

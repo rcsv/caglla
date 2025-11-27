@@ -27,14 +27,15 @@ function sizeClass(size: LoadingSize | undefined) {
 }
 
 function colorClass(color: 'emerald' | 'blue' | 'gray' | undefined) {
+  // スピナーは上部のボーダーのみに色をつけ、他は透明にする
   switch (color) {
     case 'blue':
-      return 'border-blue-500'
+      return 'border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent'
     case 'gray':
-      return 'border-gray-400'
+      return 'border-t-gray-400 border-r-transparent border-b-transparent border-l-transparent'
     case 'emerald':
     default:
-      return 'border-emerald-500'
+      return 'border-t-emerald-500 border-r-transparent border-b-transparent border-l-transparent'
   }
 }
 
@@ -96,7 +97,7 @@ export const Loading: React.FC<LoadingProps> = ({
   if (inline) {
     return (
       <span className={containerClass} {...rest}>
-        <div className={`animate-spin rounded-full ${borderColorClass} border-gray-200 ${inlineSizeClass(size)}`}></div>
+        <div className={`animate-spin rounded-full ${borderColorClass} ${inlineSizeClass(size)}`}></div>
         {finalMessage && <span className="text-sm text-gray-600">{finalMessage}</span>}
       </span>
     )
@@ -106,7 +107,7 @@ export const Loading: React.FC<LoadingProps> = ({
   return (
     <div className={containerClass} {...rest}>
       <div className="text-center">
-        <div className={`animate-spin rounded-full mx-auto ${borderColorClass} border-gray-200 ${sizeClass(size)}`}></div>
+        <div className={`animate-spin rounded-full mx-auto ${borderColorClass} ${sizeClass(size)}`}></div>
         {finalMessage && <p className="mt-4 text-gray-600">{finalMessage}</p>}
       </div>
     </div>

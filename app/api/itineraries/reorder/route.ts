@@ -1,19 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { ReorderItinerariesSchema } from '@/lib/schemas/itinerary-operations'
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/itineraries/reorder - 旅程並び替え
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ dayId?: string; itineraryIds?: string[] }>(request)
+ * if (!dayId || !itineraryIds || !Array.isArray(itineraryIds)) {
+ *   return badRequest('Day ID and itinerary IDs array are required')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const POST = composeMiddleware(
+  withAuth(),
+  withBodyValidation(ReorderItinerariesSchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    const { dayId, itineraryIds } = await request.json()
+    // ctx.auth, ctx.body が保証されている（型推論が効く）
     
-    logger.debug('Reorder API called', { dayId, itineraryCount: itineraryIds?.length })
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof ReorderItinerariesSchema>
+    const body = ctx.body as BodyType
+    const { dayId, itineraryIds } = body
     
-    if (!dayId || !itineraryIds || !Array.isArray(itineraryIds)) {
-      return NextResponse.json(
-        { error: 'Day ID and itinerary IDs array are required' },
-        { status: 400 }
-      )
-    }
+    logger.debug('Reorder API called', { dayId, itineraryCount: itineraryIds.length })
 
     // Firebase Admin SDKが利用できない場合は、クライアントサイドの更新のみ実行
     if (!adminDb) {
@@ -50,10 +74,12 @@ export async function POST(request: NextRequest) {
       reorderedCount: itineraryIds.length
     })
   } catch (error) {
+    // エラーハンドリングは composeMiddleware 側で自動的に適用される
+    // ただし、このエンドポイントは詳細なエラーハンドリングが必要
     logger.error('Error reordering itineraries', error)
     return NextResponse.json(
-      { error: `Failed to reorder itineraries: ${error instanceof Error ? error.message : 'Unknown error'}` },
+      { error: 'Failed to reorder itineraries' },
       { status: 500 }
     )
   }
-}
+})

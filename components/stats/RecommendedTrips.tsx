@@ -3,7 +3,7 @@ import logger from '@/lib/core/logger'
 import { t } from '@/lib/i18n'
 
 import React, { useEffect, useState } from 'react'
-import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import { getRecommendedTrips } from '@/lib/travel/trip-search'
 import { useAuth } from '@/lib/contexts/auth'
 import TripCard from '@/components/tripcard/TripCard'
 import Loading from '@/components/common/Loading'
@@ -37,16 +37,9 @@ export const RecommendedTrips: React.FC<RecommendedTripsProps> = ({ limit = 6, c
 
       try {
         logger.debug('🔍 RecommendedTrips: Fetching recommendations for user:', user.uid)
-        const resp = await makeAuthenticatedRequest(`/api/trips/recommended?limit=${limit}`)
-        
-        if (resp.ok) {
-          const data = await resp.json()
-          logger.debug('✅ RecommendedTrips: Got trips:', data.trips?.length || 0)
-          setTrips(data.trips || [])
-        } else {
-          const errorData = await resp.json()
-          logger.error('❌ RecommendedTrips: API error:', errorData)
-        }
+        const result = await getRecommendedTrips(limit)
+        logger.debug('✅ RecommendedTrips: Got trips:', result.trips?.length || 0)
+        setTrips(result.trips || [])
       } catch (e) {
         logger.error('❌ RecommendedTrips: Fetch error:', e)
       } finally {

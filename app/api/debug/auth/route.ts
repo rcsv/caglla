@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
+import { adminAuth } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
+import { handleApiError } from '@/lib/core/error-handler'
 
 // 動的レンダリングを強制（request.headersを使用するため）
 export const dynamic = 'force-dynamic'
@@ -64,10 +66,9 @@ export async function GET(request: NextRequest) {
       }, { status: 401 })
     }
   } catch (error) {
-    logger.error('Auth debug error', error)
-    return NextResponse.json(
-      { error: 'Auth debug failed', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      `/api/debug/auth`
     )
   }
 }

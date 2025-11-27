@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import logger from '@/lib/core/logger'
 import { PlanId } from '@/lib/subscription/restriction'
+import { authApi, withAuth, withBodyValidation } from '@/lib/api/middleware'
+import { notFound, handleApiError } from '@/lib/core/error-handler'
+import { UpdatePlanRequestSchema } from '@/lib/schemas/plan-subscription'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { z } from 'zod'
 
 // 動的レンダリングを強制（request.headersを使用するため）
 export const dynamic = 'force-dynamic'
@@ -9,8 +14,10 @@ export const dynamic = 'force-dynamic'
 // 開発環境用のフォールバック（Firebase Admin SDKが利用できない場合）
 const DEV_USER_PLANS: Record<string, PlanId> = {}
 
-export async function GET(request: NextRequest) {
+export const GET = authApi(async (request: NextRequest, ctx) => {
   try {
+    // ctx.auth が保証されている（authApi プリセットが認証チェックを実行）
+    
     // Firebase Admin SDKの初期化チェック
     if (!adminDb || !adminAuth) {
       logger.warn('Firebase Admin SDK not available, using development fallback')
@@ -26,17 +33,7 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Authorizationヘッダーからトークンを取得
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const token = authHeader.split('Bearer ')[1]
-    
-    // Firebase Admin SDKでトークンを検証
-    const decodedToken = await adminAuth.verifyIdToken(token)
-    const uid = decodedToken.uid
+    const { userId: uid } = ctx.auth!
 
     // ユーザー情報を取得（google_idでクエリ）
     const userQuery = await adminDb.collection('users')
@@ -45,7 +42,7 @@ export async function GET(request: NextRequest) {
       .get()
     
     if (userQuery.empty) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     const userDoc = userQuery.docs[0]
@@ -56,25 +53,36 @@ export async function GET(request: NextRequest) {
       userId: userDoc.id
     })
   } catch (error) {
-    logger.error('Error fetching user plan', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/user/plan'
+    )
   }
-}
+})
 
-export async function PUT(request: NextRequest) {
+/**
+ * PUT /api/user/plan - ユーザープラン更新
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ */
+export const PUT = composeMiddleware(
+  withAuth(),
+  withBodyValidation(UpdatePlanRequestSchema)
+)(async (request: NextRequest, ctx) => {
   try {
+    // ctx.auth, ctx.body が保証されている（型推論が効く）
+    const { userId: uid } = ctx.auth!
+    
+    // zod スキーマでバリデーション済み & 型推論
+    type BodyType = z.infer<typeof UpdatePlanRequestSchema>
+    const body = ctx.body as BodyType
+    const { planId } = body
+    
     // Firebase Admin SDKの初期化チェック
     if (!adminDb || !adminAuth) {
       logger.warn('Firebase Admin SDK not available, using development fallback')
       
       // 開発環境用のフォールバック
-      const { planId } = await request.json()
-      
-      // プランIDのバリデーション
-      if (!Object.values(PlanId).includes(planId)) {
-        return NextResponse.json({ error: 'Invalid plan ID' }, { status: 400 })
-      }
-      
       const mockUserId = 'dev-user-123'
       DEV_USER_PLANS[mockUserId] = planId
       
@@ -87,25 +95,6 @@ export async function PUT(request: NextRequest) {
       })
     }
 
-    // Authorizationヘッダーからトークンを取得
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const token = authHeader.split('Bearer ')[1]
-    
-    // Firebase Admin SDKでトークンを検証
-    const decodedToken = await adminAuth.verifyIdToken(token)
-    const uid = decodedToken.uid
-
-    const { planId } = await request.json()
-    
-    // プランIDのバリデーション
-    if (!Object.values(PlanId).includes(planId)) {
-      return NextResponse.json({ error: 'Invalid plan ID' }, { status: 400 })
-    }
-
     // ユーザー情報を取得（google_idでクエリ）
     const userQuery = await adminDb.collection('users')
       .where('google_id', '==', uid)
@@ -113,7 +102,7 @@ export async function PUT(request: NextRequest) {
       .get()
     
     if (userQuery.empty) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return notFound('User')
     }
 
     const userDoc = userQuery.docs[0]
@@ -130,7 +119,9 @@ export async function PUT(request: NextRequest) {
       message: 'Plan updated successfully'
     })
   } catch (error) {
-    logger.error('Error updating user plan', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      '/api/user/plan'
+    )
   }
-}
+})

@@ -1,51 +1,73 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import logger from '@/lib/core/logger'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
-import { adminTripOperations, adminDayOperations } from '@/lib/firebase/admin-operation'
+import { adminDb } from '@/lib/firebase/admin'
+import { adminTripOperations, adminDayOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { planSaveOperations } from '@/lib/travel/plan-save'
-//import { generateUniqueSlug } from '@/lib/slug-utils'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
+import { notFound, badRequest, createForbiddenError } from '@/lib/core/error-handler'
+import { composeMiddleware } from '@/lib/core/middleware'
+import { withAuth, withParams, withBodyValidation } from '@/lib/api/middleware'
+import { CreateReplicaFromTemplateSchema } from '@/lib/schemas/plan-operations'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { tripSlug: string } }
-) {
-  try {
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Authorization header required' }, { status: 401 })
-    }
+/**
+ * POST /api/trip/[tripSlug]/replica - テンプレートからレプリカ作成
+ * 
+ * zod スキーマバリデーション + Context ミドルウェアで移行済み
+ * 
+ * Before:
+ * ```typescript
+ * const body = await parseRequestBody<{ startDate?: string }>(request)
+ * const startDateRaw = typeof body.startDate === 'string' ? body.startDate : ''
+ * const startDate = startDateRaw ? new Date(startDateRaw) : null
+ * if (startDate && Number.isNaN(startDate.getTime())) {
+ *   return badRequest('Invalid start date')
+ * }
+ * ```
+ * 
+ * After:
+ * ```typescript
+ * // ctx.body が型安全 & バリデ済み
+ * // すべての if 文バリデーションが消える
+ * ```
+ */
+export const POST = composeMiddleware(
+  withAuth(),
+  withParams(),
+  withBodyValidation(CreateReplicaFromTemplateSchema)
+)(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.params, ctx.body が保証されている（型推論が効く）
+  const { userId: authUid } = ctx.auth!  // Firebase Auth UID
+  const { tripSlug } = ctx.params!
+  
+  // Firebase Auth UID を users コレクションのドキュメントIDに変換
+  const user = await adminUserOperations.getUserByAuthUid(authUid)
+  if (!user) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  }
+  const userId = user.id  // users コレクションのドキュメントID
+  
+  // zod スキーマでバリデーション済み & 型推論
+  type BodyType = z.infer<typeof CreateReplicaFromTemplateSchema>
+  const body = ctx.body as BodyType
+  const startDateRaw = body.startDate || ''
+  const startDate = startDateRaw ? new Date(startDateRaw) : null
 
-    const idToken = authHeader.split('Bearer ')[1]
-    const decodedToken = await adminAuth.verifyIdToken(idToken)
-    const userId = decodedToken.uid
+  const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
+  if (!resolved) {
+    return notFound('Template trip')
+  }
 
-    const { tripSlug } = params
+  const { id: templateTripId, trip: templateTrip } = resolved
 
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolved) {
-      return NextResponse.json({ error: 'Template trip not found' }, { status: 404 })
-    }
+  if (!templateTrip.is_template) {
+    return badRequest('Trip is not marked as template')
+  }
 
-    const { id: templateTripId, trip: templateTrip } = resolved
-
-    if (!templateTrip.is_template) {
-      return NextResponse.json({ error: 'Trip is not marked as template' }, { status: 400 })
-    }
-
-    if (templateTrip.access_level !== 'public' && templateTrip.user_id !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    // バリデーションを先に実行（replica作成前に）
-    const body = await request.json().catch(() => ({}))
-    const startDateRaw = typeof body.startDate === 'string' ? body.startDate : ''
-    const startDate = startDateRaw ? new Date(startDateRaw) : null
-
-    if (startDate && Number.isNaN(startDate.getTime())) {
-      return NextResponse.json({ error: 'Invalid start date' }, { status: 400 })
-    }
+  if (templateTrip.access_level !== 'public' && templateTrip.user_id !== userId) {
+    throw createForbiddenError('You do not have permission to access this template')
+  }
 
     // テンプレートのday_countを確認して、startDateの必要性を検証
     const templateDays = await adminDayOperations.getDaysByTripId(templateTripId)
@@ -55,15 +77,16 @@ export async function POST(
         : templateDays.length
 
     if (derivedDayCount > 0 && !startDate) {
-      return NextResponse.json({ error: 'Start date is required for this template' }, { status: 400 })
+      return badRequest('Start date is required for this template')
     }
 
     // バリデーション通過後にreplicaを作成
     const replicaResult = await planSaveOperations.createReplicaFromTripTemplate(templateTripId, userId)
 
-    const userTrips = await adminTripOperations.getTripsByUserId(userId)
-    const existingSlugs = userTrips
-      .map((trip) => trip.slug)
+    // グローバルにユニークな slug を生成するため、全トリップの slug を取得
+    const allTripsSnapshot = await adminDb.collection(COLLECTIONS.TRIPS).select('slug').get()
+    const existingSlugs = allTripsSnapshot.docs
+      .map((doc) => doc.data().slug as string | undefined)
       .filter((slug): slug is string => Boolean(slug))
 
     const newSlug = generateUniqueSlug(replicaResult.trip.title, existingSlugs)
@@ -150,9 +173,5 @@ export async function POST(
         end_date: endDate ?? null
       },
     })
-  } catch (error) {
-    logger.error('Error creating replica trip:', error)
-    return NextResponse.json({ error: 'Failed to create replica trip' }, { status: 500 })
-  }
-}
+})
 
