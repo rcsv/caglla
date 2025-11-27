@@ -79,7 +79,10 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
           title: t('nav.weatherForecast'),
           subtitle: t('nav.weatherForecast'),
           icon: <CloudIcon className="w-4 h-4" />,
-          onClick: () => onNavigateToSection('weather-forecast')
+          onClick: () => {
+            updateQuery({ view: 'summary', day: null })
+            onNavigateToSection('weather-forecast')
+          }
         }] : []),
         // 予約：テンプレートモードでは非表示（日付がないため）
         ...(!trip.is_template ? [{
@@ -87,28 +90,40 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
           title: t('nav.reservationTitle'),
           subtitle: t('nav.reservation'),
           icon: <BookmarkIcon className="w-4 h-4" />,
-          onClick: () => onNavigateToSection('reservation')
+          onClick: () => {
+            updateQuery({ view: 'summary', day: null })
+            onNavigateToSection('reservation')
+          }
         }] : []),
         {
           id: 'budget',
           title: t('nav.budgetTitle'),
           subtitle: t('nav.travelCost'),
           icon: <MoneyIcon className="w-4 h-4" />,
-          onClick: () => onNavigateToSection('budget')
+          onClick: () => {
+            updateQuery({ view: 'summary', day: null })
+            onNavigateToSection('budget')
+          }
         },
         {
           id: 'activity-statistics',
           title: t('nav.activityStatisticsTitle'),
           subtitle: t('nav.activityStats'),
           icon: <PieChartIcon className="w-4 h-4" />,
-          onClick: () => onNavigateToSection('activity-statistics')
+          onClick: () => {
+            updateQuery({ view: 'summary', day: null })
+            onNavigateToSection('activity-statistics')
+          }
         },
         {
           id: 'distance-summary',
           title: t('nav.distancesTitle'),
           subtitle: t('nav.totalDistance'),
           icon: <LocationIcon className="w-4 h-4" />,
-          onClick: () => onNavigateToSection('distance-summary')
+          onClick: () => {
+            updateQuery({ view: 'summary', day: null })
+            onNavigateToSection('distance-summary')
+          }
         }
       ]
     },
