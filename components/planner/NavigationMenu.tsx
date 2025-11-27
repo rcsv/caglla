@@ -289,47 +289,67 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     }`} style={{ maxWidth: isCollapsed ? '48px' : '188px' }}>
       {/* メニューヘッダー（Caglla ロゴ + 折りたたみ/展開ボタン） */}
       <div className={`border-b border-gray-200 ${isCollapsed ? 'p-2' : 'p-3'}`}>
-        <div className="flex items-center justify-between">
-          {/* ロゴ部分 */}
-          <Link
-            href="/home"
-            className="flex items-center gap-2 text-gray-900 hover:opacity-80 transition-opacity"
-            title="Go to home"
-            aria-label="Go to home"
-            onClick={() => {
-              if (!isCollapsed && typeof window !== 'undefined' && window.innerWidth < 768) {
-                onToggleCollapse?.()
-              }
-            }}
-          >
-            <CagllaLogo className={isCollapsed ? "w-6 h-6" : "w-8 h-8"} />
-            {!isCollapsed && (
-              <span className="text-xl font-bold font-rajdhani">Caglla</span>
-            )}
-          </Link>
-          
-          {/* 折りたたみ/展開ボタン */}
-          {onToggleCollapse && (
-            <button
-              onClick={onToggleCollapse}
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
-              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        {isCollapsed ? (
+          // 折りたたみ時: ロゴと展開ボタンを縦に配置
+          <div className="flex flex-col items-center gap-2">
+            {/* ロゴ部分 */}
+            <Link
+              href="/home"
+              className="text-gray-900 hover:opacity-80 transition-opacity"
+              title="Go to home"
+              aria-label="Go to home"
             >
-              {isCollapsed ? (
-                // 展開ボタン（右矢印）
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <CagllaLogo className="w-6 h-6" />
+            </Link>
+            
+            {/* 展開ボタン */}
+            {onToggleCollapse && (
+              <button
+                onClick={onToggleCollapse}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                title="Expand sidebar"
+                aria-label="Expand sidebar"
+              >
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              ) : (
-                // 折りたたみボタン（左矢印）
+              </button>
+            )}
+          </div>
+        ) : (
+          // 展開時: ロゴと折りたたみボタンを横に配置
+          <div className="flex items-center justify-between">
+            {/* ロゴ部分 */}
+            <Link
+              href="/home"
+              className="flex items-center gap-2 text-gray-900 hover:opacity-80 transition-opacity"
+              title="Go to home"
+              aria-label="Go to home"
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                  onToggleCollapse?.()
+                }
+              }}
+            >
+              <CagllaLogo className="w-8 h-8" />
+              <span className="text-xl font-bold font-rajdhani">Caglla</span>
+            </Link>
+            
+            {/* 折りたたみボタン */}
+            {onToggleCollapse && (
+              <button
+                onClick={onToggleCollapse}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                title="Collapse sidebar"
+                aria-label="Collapse sidebar"
+              >
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-              )}
-            </button>
-          )}
-        </div>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* メニューコンテンツ */}
