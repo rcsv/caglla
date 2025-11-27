@@ -86,6 +86,7 @@ export class PlanSaveOperations {
         access_level: 'private',
         image_url: templateTrip.image_url,
         destination: templateTrip.destination,
+        destination_place_id: templateTrip.destination_place_id,
         is_template: false,
         day_count: inferredDayCount
       }
@@ -359,6 +360,11 @@ export class PlanSaveOperations {
     }
     if (tripData.end_date) {
       baseData.end_date = new Date(tripData.end_date)
+    }
+    
+    // destination_place_id: undefined を避けるため、値がある場合のみ追加
+    if (tripData.destination_place_id) {
+      baseData.destination_place_id = tripData.destination_place_id
     }
 
     if (!isTemplate) {

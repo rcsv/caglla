@@ -75,6 +75,7 @@ export interface TripFormData {
   access_level: AccessLevel | 'private' | 'public'  // 後方互換性のため両方許可
   image_url?: string
   destination?: string
+  destination_place_id?: string
   is_template?: boolean
   day_count?: number
   likes_count?: number
