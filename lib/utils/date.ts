@@ -289,6 +289,17 @@ export const dateUtils = {
     if (startYear === endYear) {
       // Same month
       if (startMonth === endMonth) {
+        // Same day (1-day trip)
+        if (startDay === endDay) {
+          if (language === 'ja') {
+            return `${startYear}年${startMonth}月${startDay}日 (${startWeekday})`
+          } else {
+            // English format: "Nov 8 (Sat)"
+            const startDateStr = start.toLocaleDateString(locale, { month: 'short', day: 'numeric' })
+            return `${startDateStr} (${startWeekday})`
+          }
+        }
+        // Different days in same month
         if (language === 'ja') {
           return `${startYear}年${startMonth}月${startDay}日 (${startWeekday}) - ${endDay} (${endWeekday})`
         } else {
