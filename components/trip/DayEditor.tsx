@@ -6,6 +6,7 @@ import { Day, Itinerary } from '@/lib/core/types'
 import { t } from '@/lib/i18n'
 import DailyRouteOptimizer from './DailyRouteOptimizer'
 import { useTrip } from '@/app/(planner)/[userSlug]/[tripSlug]/TripProvider'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 
 interface DayEditorProps {
   day: Day
@@ -34,12 +35,9 @@ export default function DayEditor({
     
     setIsLoading(true)
     try {
-      // API経由でDayを更新
-      const response = await fetch(`/api/trip/${trip.slug}/day`, {
+      // API経由でDayを更新（認証付き）
+      const response = await makeAuthenticatedRequest(`/api/trip/${trip.slug}/day`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           dayId: day.id,
           updates: { description }
