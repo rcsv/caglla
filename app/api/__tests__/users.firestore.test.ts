@@ -33,11 +33,11 @@ async function handlePostUsers(request: NextRequest): Promise<Response> {
 }
 
 async function handleGetUserBySlug(request: NextRequest, userSlug: string): Promise<Response> {
-  return await getUserBySlug(request, { params: { userSlug } })
+  return await getUserBySlug(request, { params: Promise.resolve({ userSlug }) })
 }
 
 async function handlePutUserBySlug(request: NextRequest, userSlug: string): Promise<Response> {
-  return await putUserBySlug(request, { params: { userSlug } })
+  return await putUserBySlug(request, { params: Promise.resolve({ userSlug }) })
 }
 
 async function handleCheckSlug(request: NextRequest): Promise<Response> {

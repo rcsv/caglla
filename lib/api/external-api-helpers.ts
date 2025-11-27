@@ -84,6 +84,13 @@ export async function withExternalApiErrorHandler<T>(
     // エラーの詳細をログに記録
     if (error instanceof Error) {
       logger.error(`Error details: ${error.message}`, { endpoint, apiName })
+      
+      // "No photos found"エラーの場合はカスタムヘッダーを設定
+      if (error.message.includes('No photos found')) {
+        const errorResponse = handleApiError(error, endpoint)
+        errorResponse.headers.set('X-Error-Code', 'NO_PHOTOS_FOUND')
+        return errorResponse
+      }
     }
     
     return handleApiError(

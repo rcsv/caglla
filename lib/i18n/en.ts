@@ -528,6 +528,8 @@ const en: Dictionary = {
   'common.close': 'Close',
   'common.deleteFailed': 'Failed to delete',
   'common.deleteError': 'An error occurred while deleting',
+  'common.updateFailed': 'Failed to update',
+  'common.duplicate': '(Duplicate)',
   'common.cancel': 'Cancel',
   'common.save': 'Save',
   'common.saving': 'Saving...',

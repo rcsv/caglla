@@ -19,9 +19,11 @@ export function useTripViewState() {
   } = useTripUrlState()
 
   const setView = useCallback((view: TripViewMode) => {
-    // updateQuery に mf (mode fragment) として渡す形に統一
-    // これにより URL と view の一貫性が担保される
-    updateQuery({ mf: view === 'summary' ? 'all' : view === 'itinerary' ? 'day' : 'all' })
+    // view と mf (mode fragment) の両方を更新して、URL と view の一貫性を担保
+    updateQuery({
+      view,
+      mf: view === 'summary' ? 'all' : view === 'itinerary' ? 'day' : 'all'
+    })
   }, [updateQuery])
 
   const selectDay = useCallback((dayId: string | null) => {

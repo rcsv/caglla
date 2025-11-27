@@ -433,6 +433,8 @@ export type TranslationKey =
   | 'common.close'
   | 'common.deleteFailed'
   | 'common.deleteError'
+  | 'common.updateFailed'
+  | 'common.duplicate'
   | 'common.cancel'
   | 'common.save'
   | 'common.saving'

@@ -43,7 +43,8 @@ export const GET = composeMiddleware(
       )
 
       if (photoUrl instanceof NextResponse) {
-        if (photoUrl.status === 500 && (await photoUrl.json()).error.includes('No photos found')) {
+        // カスタムヘッダーで"No photos found"エラーを判定（レスポンスボディを消費しない）
+        if (photoUrl.headers.get('X-Error-Code') === 'NO_PHOTOS_FOUND') {
           return notFound('No photos found for the destination')
         }
         return photoUrl
@@ -72,7 +73,8 @@ export const GET = composeMiddleware(
     )
 
     if (photoOptions instanceof NextResponse) {
-      if (photoOptions.status === 500 && (await photoOptions.json()).error.includes('No photos found')) {
+      // カスタムヘッダーで"No photos found"エラーを判定（レスポンスボディを消費しない）
+      if (photoOptions.headers.get('X-Error-Code') === 'NO_PHOTOS_FOUND') {
         return notFound('No photos found for the destination')
       }
       return photoOptions
@@ -124,7 +126,8 @@ export const POST = composeMiddleware(
       )
 
       if (photoUrl instanceof NextResponse) {
-        if (photoUrl.status === 500 && (await photoUrl.json()).error.includes('No photos found')) {
+        // カスタムヘッダーで"No photos found"エラーを判定（レスポンスボディを消費しない）
+        if (photoUrl.headers.get('X-Error-Code') === 'NO_PHOTOS_FOUND') {
           return notFound('No photos found for the destination')
         }
         return photoUrl
@@ -153,7 +156,8 @@ export const POST = composeMiddleware(
     )
 
     if (photoOptions instanceof NextResponse) {
-      if (photoOptions.status === 500 && (await photoOptions.json()).error.includes('No photos found')) {
+      // カスタムヘッダーで"No photos found"エラーを判定（レスポンスボディを消費しない）
+      if (photoOptions.headers.get('X-Error-Code') === 'NO_PHOTOS_FOUND') {
         return notFound('No photos found for the destination')
       }
       return photoOptions

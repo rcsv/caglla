@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, Suspense } from 'react'
 import { getTripServer } from '@/lib/travel/trip-server'
 import { TripClientLayout } from './TripClientLayout'
 import { notFound } from 'next/navigation'
@@ -59,8 +59,10 @@ export default async function TripDetailLayout({
   } : null
   
   return (
-    <TripClientLayout trip={tripForClient} timeline={timeline} map={map} social={social}>
-      {children}
-    </TripClientLayout>
+    <Suspense fallback={null}>
+      <TripClientLayout trip={tripForClient} timeline={timeline} map={map} social={social}>
+        {children}
+      </TripClientLayout>
+    </Suspense>
   )
 }

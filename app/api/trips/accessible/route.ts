@@ -94,10 +94,15 @@ export const GET = authApi(async (request: NextRequest, ctx) => {
       let creator: User | undefined
       let destinationPlace: PlaceData | undefined = undefined
 
-      // creator 情報（auth_uid で検索、後方互換性のため google_id もチェック）
-      // Phase 1-1.5: 認証プロバイダーマルチ対応化
+      // creator 情報（trip.user_id は Firestore User ドキュメントID）
       try {
-        creator = await adminUserOperations.getUserByAuthUid(trip.user_id) || undefined
+        const userDoc = await adminDb.collection(COLLECTIONS.USERS).doc(trip.user_id).get()
+        if (userDoc.exists) {
+          creator = {
+            id: userDoc.id,
+            ...userDoc.data()
+          } as User
+        }
       } catch (error) {
         logger.error('Error fetching creator for trip', error, { tripId: trip.id })
       }

@@ -528,6 +528,8 @@ const ja: Dictionary = {
   'common.close': '閉じる',
   'common.deleteFailed': '削除に失敗しました',
   'common.deleteError': '削除中にエラーが発生しました',
+  'common.updateFailed': '更新に失敗しました',
+  'common.duplicate': '(複製)',
   'common.cancel': 'キャンセル',
   'common.save': '保存',
   'common.saving': '保存中...',

@@ -270,36 +270,58 @@ export default function useItineraryActions({
     const itineraryToMove = sourceDay.itineraries?.find(item => item.id === itineraryId)
     if (!itineraryToMove) return
 
-    updateTrip(prevTrip => {
-      if (!prevTrip) return prevTrip
-      return {
-        ...prevTrip,
-        days: prevTrip.days?.map(d => {
-          if (d.id === sourceDay.id) {
-            return {
-              ...d,
-              itineraries: d.itineraries?.filter(item => item.id !== itineraryId) || [],
-            }
-          }
-          if (d.id === targetDayId) {
-            const maxSortNumber = d.itineraries?.reduce((max, item) => Math.max(max, item.sort_number), 0) || 0
-            return {
-              ...d,
-              itineraries: [
-                ...(d.itineraries || []),
-                {
-                  ...itineraryToMove,
-                  day_id: targetDayId,
-                  sort_number: maxSortNumber + 1,
-                },
-              ],
-            }
-          }
-          return d
-        }) || [],
+    try {
+      // サーバーに移動を永続化
+      const response = await makeAuthenticatedRequest('/api/itineraries/move-to-day', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itinerary_id: itineraryId,
+          target_day_id: targetDayId,
+        }),
+      })
+
+      if (!response.ok) {
+        logger.error('Failed to move itinerary to day')
+        alert(t('common.updateFailed'))
+        return
       }
-    })
-    await refreshTrip()
+
+      // ローカル状態を更新
+      updateTrip(prevTrip => {
+        if (!prevTrip) return prevTrip
+        return {
+          ...prevTrip,
+          days: prevTrip.days?.map(d => {
+            if (d.id === sourceDay.id) {
+              return {
+                ...d,
+                itineraries: d.itineraries?.filter(item => item.id !== itineraryId) || [],
+              }
+            }
+            if (d.id === targetDayId) {
+              const maxSortNumber = d.itineraries?.reduce((max, item) => Math.max(max, item.sort_number), 0) || 0
+              return {
+                ...d,
+                itineraries: [
+                  ...(d.itineraries || []),
+                  {
+                    ...itineraryToMove,
+                    day_id: targetDayId,
+                    sort_number: maxSortNumber + 1,
+                  },
+                ],
+              }
+            }
+            return d
+          }) || [],
+        }
+      })
+      await refreshTrip()
+    } catch (error) {
+      logger.error('Error moving itinerary:', error)
+      alert(t('common.updateFailed'))
+    }
   }, [trip, updateTrip, refreshTrip])
 
   const handleDuplicateToDay = useCallback(async (itineraryId: string, targetDayId: string) => {
@@ -312,34 +334,53 @@ export default function useItineraryActions({
     const originalItinerary = sourceDay.itineraries?.find(item => item.id === itineraryId)
     if (!originalItinerary) return
 
-    updateTrip(prevTrip => {
-      if (!prevTrip) return prevTrip
-      return {
-        ...prevTrip,
-        days: prevTrip.days?.map(d => {
-          if (d.id === targetDayId) {
-            const maxSortNumber = d.itineraries?.reduce((max, item) => Math.max(max, item.sort_number), 0) || 0
-            return {
-              ...d,
-              itineraries: [
-                ...(d.itineraries || []),
-                {
-                  ...originalItinerary,
-                  id: `temp-${Date.now()}`,
-                  day_id: targetDayId,
-                  sort_number: maxSortNumber + 1,
-                  title: `${originalItinerary.title} (複製)`,
-                  created_at: new Date(),
-                  updated_at: new Date(),
-                },
-              ],
-            }
-          }
-          return d
-        }) || [],
+    try {
+      // サーバーに重複を永続化
+      const response = await makeAuthenticatedRequest('/api/itineraries/duplicate-to-day', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itinerary_id: itineraryId,
+          target_day_id: targetDayId,
+        }),
+      })
+
+      if (!response.ok) {
+        logger.error('Failed to duplicate itinerary to day')
+        alert(t('common.updateFailed'))
+        return
       }
-    })
-    await refreshTrip()
+
+      // サーバーから返された重複されたitineraryを取得
+      const duplicatedItinerary = await response.json()
+
+      // ローカル状態を更新
+      updateTrip(prevTrip => {
+        if (!prevTrip) return prevTrip
+        return {
+          ...prevTrip,
+          days: prevTrip.days?.map(d => {
+            if (d.id === targetDayId) {
+              return {
+                ...d,
+                itineraries: [
+                  ...(d.itineraries || []),
+                  {
+                    ...duplicatedItinerary,
+                    // サーバーから返されたデータを使用
+                  },
+                ],
+              }
+            }
+            return d
+          }) || [],
+        }
+      })
+      await refreshTrip()
+    } catch (error) {
+      logger.error('Error duplicating itinerary:', error)
+      alert(t('common.updateFailed'))
+    }
   }, [trip, updateTrip, refreshTrip])
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {

@@ -8,7 +8,7 @@ import { generateUniqueSlug } from '@/lib/utils/slug'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
 import type { User } from '@/lib/core/types'
 import logger from '@/lib/core/logger'
-import { notFound, badRequest, createForbiddenError } from '@/lib/core/error-handler'
+import { notFound, badRequest, createForbiddenError, handleApiError } from '@/lib/core/error-handler'
 import { composeMiddleware } from '@/lib/core/middleware'
 import { withAuth, withParams, withBodyValidation } from '@/lib/api/middleware'
 import { UpdateUserSchema } from '@/lib/schemas/user'
@@ -22,10 +22,10 @@ import { authApi } from '@/lib/api/middleware'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userSlug: string } }
+  { params }: { params: Promise<{ userSlug: string }> }
 ) {
   try {
-    const { userSlug } = params
+    const { userSlug } = await params
 
     if (!userSlug) {
       return badRequest('User slug is required')
