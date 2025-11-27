@@ -28,6 +28,7 @@ interface TripItineraryViewProps {
   onAddSchedule: (dayId: string) => void
   onInsertSchedule: (dayId: string, afterIndex: number) => void
   onAddDay: () => void
+  onDayDelete?: (dayId: string) => void
   onScheduleUpdated: (updatedItinerary: Itinerary) => void
   onMoveUp: (itineraryId: string, dayId: string) => void
   onMoveDown: (itineraryId: string, dayId: string) => void
@@ -58,6 +59,7 @@ export default function TripItineraryView({
   onAddSchedule,
   onInsertSchedule,
   onAddDay,
+  onDayDelete,
   onScheduleUpdated,
   onMoveUp,
   onMoveDown,
@@ -379,7 +381,8 @@ export default function TripItineraryView({
                             d.id === updatedDay.id ? updatedDay : d
                           ) || []
                         })
-                      }} 
+                      }}
+                      onDelete={onDayDelete}
                       onReorderItineraries={onReorderItineraries}
                     />
 

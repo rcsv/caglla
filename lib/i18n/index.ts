@@ -408,6 +408,10 @@ export type TranslationKey =
   | 'dayEditor.editHint'
   | 'dayEditor.clickToEdit'
   | 'dayEditor.updateError'
+  | 'dayEditor.deleteDay'
+  | 'dayEditor.deleteConfirm'
+  | 'dayEditor.deleteConfirmWithItineraries'
+  | 'dayEditor.deleteError'
   // Navigation Menu
   | 'nav.weatherForecast'
   | 'nav.reservation'
@@ -1855,6 +1859,10 @@ const en: Dictionary = {
   'dayEditor.clickToEdit': 'Click to edit',
   'dayEditor.updateError': 'Failed to update day description',
   'dayEditor.noDescription': 'No description',
+  'dayEditor.deleteDay': 'Delete this day',
+  'dayEditor.deleteConfirm': 'Are you sure you want to delete this day?',
+  'dayEditor.deleteConfirmWithItineraries': 'This day has itineraries. Deleting will also remove all associated itineraries. Are you sure?',
+  'dayEditor.deleteError': 'Failed to delete day',
   // Navigation Menu
   'nav.weatherForecast': 'Weather Forecast',
   'nav.reservation': 'Reservation',
@@ -3280,6 +3288,10 @@ const ja: Dictionary = {
   'dayEditor.clickToEdit': 'クリックして編集',
   'dayEditor.updateError': '日程の更新に失敗しました',
   'dayEditor.noDescription': '説明がありません',
+  'dayEditor.deleteDay': 'この日を削除',
+  'dayEditor.deleteConfirm': 'この日を削除してもよろしいですか？',
+  'dayEditor.deleteConfirmWithItineraries': 'この日には予定が含まれています。削除するとすべての予定も削除されます。よろしいですか？',
+  'dayEditor.deleteError': '日程の削除に失敗しました',
   // Navigation Menu
   'nav.weatherForecast': '天気予報',
   'nav.reservation': '予約情報',

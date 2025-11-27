@@ -102,3 +102,30 @@ export const PUT = tripApi(async (request: NextRequest, ctx) => {
   
   return NextResponse.json(updatedDay)
 })
+
+export const DELETE = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip が保証されている
+  const { tripId } = ctx.trip!
+  
+  const { searchParams } = new URL(request.url)
+  const dayId = searchParams.get('dayId')
+  
+  if (!dayId || typeof dayId !== 'string') {
+    return badRequest('dayId is required')
+  }
+  
+  // Day が指定された Trip に属していることを確認
+  const day = await adminDayOperations.getDay(dayId)
+  if (!day) {
+    return NextResponse.json({ error: 'Day not found' }, { status: 404 })
+  }
+  
+  if (day.trip_id !== tripId) {
+    return NextResponse.json({ error: 'Day does not belong to this trip' }, { status: 403 })
+  }
+  
+  // Day を削除（関連する itineraries も削除される）
+  await adminDayOperations.deleteDay(dayId)
+  
+  return NextResponse.json({ success: true })
+})

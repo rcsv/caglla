@@ -220,6 +220,15 @@ export default function TimelineDefault() {
     }
   }
 
+  const handleDayDelete = async (dayId: string) => {
+    // 削除後、tripデータを再取得
+    try {
+      await refreshTrip()
+    } catch (error) {
+      logger.error('Failed to refresh trip after day deletion:', error)
+    }
+  }
+
   const expandAllDays = () => {
     setCollapsedDays(new Set())
   }
@@ -317,6 +326,7 @@ export default function TimelineDefault() {
             onAddSchedule={handleAddSchedule}
             onInsertSchedule={handleInsertSchedule}
             onAddDay={handleAddDay}
+            onDayDelete={handleDayDelete}
             onScheduleUpdated={handleScheduleUpdated}
             onMoveUp={handleMoveUp}
             onMoveDown={handleMoveDown}
