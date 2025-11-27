@@ -9,6 +9,8 @@ import { useAuth } from '@/lib/contexts/auth'
 import { useUserData } from '@/lib/contexts/user-data'
 import { useRouter } from 'next/navigation'
 import { useTripActions } from './useTripActions'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
+import logger from '@/lib/core/logger'
 import { t } from '@/lib/i18n'
 import type { Trip } from '@/lib/core/types'
 
@@ -120,11 +122,44 @@ function TripClientLayoutContent({
     alert('iCal export feature coming soon!')
   }
 
+  const [unpublishLoading, setUnpublishLoading] = useState(false)
+
+  const handleTogglePublish = async () => {
+    if (!trip || publishLoading || unpublishLoading) return
+    
+    // Public → Private (Unpublish)
+    if (trip.access_level === 'public') {
+      if (!confirm('この旅行を非公開にしますか？')) return
+      
+      try {
+        setUnpublishLoading(true)
+        const response = await makeAuthenticatedRequest(`/api/trip/${trip.slug || trip.id}/unpublish`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          alert(errorData.error || 'Failed to unpublish')
+          return
+        }
+        
+        await refreshTrip()
+        alert('旅行を非公開にしました')
+      } catch (err) {
+        logger.error('Unpublish failed:', err)
+        alert('Failed to unpublish')
+      } finally {
+        setUnpublishLoading(false)
+      }
+    } else {
+      // Private → Public (Publish)
+      await publish()
+    }
+  }
+
   // 編集権限の確認
   const canEdit = user && trip && (trip.user_id === userData?.id || trip.user_id === user.uid)
-  
-  // Publish権限: 編集可能でPrivateの場合
-  const canPublish = canEdit && trip?.access_level === 'private'
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -197,20 +232,26 @@ function TripClientLayoutContent({
               actions={
                 canEdit ? (
                   <div className="flex items-center gap-2">
-                    {/* Publish/Unpublish Button */}
-                    {canPublish && (
-                      <button
-                        onClick={publish}
-                        disabled={publishLoading}
-                        className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-md transition-colors flex items-center gap-1.5"
-                        title={trip.is_template ? t('trip.publish.templateButton') : t('trip.publish.button')}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        {publishLoading ? t('trip.publish.publishing') : (trip.is_template ? t('trip.publish.templateButton') : 'Publish')}
-                      </button>
-                    )}
+                    {/* Publish Toggle Switch */}
+                    <button
+                      onClick={handleTogglePublish}
+                      disabled={publishLoading || unpublishLoading}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 border border-gray-300 rounded-md transition-colors"
+                      title={trip?.access_level === 'public' ? 'Click to unpublish' : 'Click to publish'}
+                    >
+                      {/* Toggle Switch */}
+                      <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        (publishLoading || unpublishLoading) ? 'bg-gray-300' : (trip?.access_level === 'public' ? 'bg-blue-600' : 'bg-gray-300')
+                      }`}>
+                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                          trip?.access_level === 'public' ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                        }`} />
+                      </div>
+                      {/* Label */}
+                      <span>
+                        {publishLoading ? t('trip.publish.publishing') : unpublishLoading ? 'Unpublishing...' : 'Publish'}
+                      </span>
+                    </button>
                     
                     {/* PDF Export Button */}
                     <button
