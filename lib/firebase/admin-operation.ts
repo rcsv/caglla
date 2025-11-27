@@ -552,12 +552,39 @@ export const adminDayOperations = {
   },
 
   async deleteDay(dayId: string): Promise<void> {
+    // 削除するDayの情報を取得
+    const dayToDelete = await this.getDay(dayId)
+    if (!dayToDelete) {
+      throw new Error('Day not found')
+    }
+    
+    const tripId = dayToDelete.trip_id
+    const deletedDayNumber = dayToDelete.day_number
+    
     // Delete related itineraries first
     await adminItineraryOperations.deleteItinerariesByDayId(dayId)
     
     // Delete day
     const dayRef = adminDb.collection(COLLECTIONS.DAYS).doc(dayId)
     await dayRef.delete()
+    
+    // 削除したDay以降のDayのday_numberを1つずつ減らして連番を保つ
+    const remainingDays = await this.getDaysByTripId(tripId)
+    const daysToRenumber = remainingDays.filter(day => day.day_number > deletedDayNumber)
+    
+    // Batch update for efficiency
+    const batch = adminDb.batch()
+    for (const day of daysToRenumber) {
+      const dayRef = adminDb.collection(COLLECTIONS.DAYS).doc(day.id)
+      batch.update(dayRef, {
+        day_number: day.day_number - 1,
+        updated_at: new Date()
+      })
+    }
+    
+    if (daysToRenumber.length > 0) {
+      await batch.commit()
+    }
   },
 
   async deleteDaysByTripId(tripId: string): Promise<void> {
