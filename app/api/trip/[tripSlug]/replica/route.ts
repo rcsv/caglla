@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import logger from '@/lib/core/logger'
 import { adminDb } from '@/lib/firebase/admin'
-import { adminTripOperations, adminDayOperations } from '@/lib/firebase/admin-operation'
+import { adminTripOperations, adminDayOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
 import { planSaveOperations } from '@/lib/travel/plan-save'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import { COLLECTIONS } from '@/lib/firebase/firestore'
@@ -38,8 +38,15 @@ export const POST = composeMiddleware(
   withBodyValidation(CreateReplicaFromTemplateSchema)
 )(async (request: NextRequest, ctx) => {
   // ctx.auth, ctx.params, ctx.body が保証されている（型推論が効く）
-  const { userId } = ctx.auth!
+  const { userId: authUid } = ctx.auth!  // Firebase Auth UID
   const { tripSlug } = ctx.params!
+  
+  // Firebase Auth UID を users コレクションのドキュメントIDに変換
+  const user = await adminUserOperations.getUserByAuthUid(authUid)
+  if (!user) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  }
+  const userId = user.id  // users コレクションのドキュメントID
   
   // zod スキーマでバリデーション済み & 型推論
   type BodyType = z.infer<typeof CreateReplicaFromTemplateSchema>
@@ -76,9 +83,10 @@ export const POST = composeMiddleware(
     // バリデーション通過後にreplicaを作成
     const replicaResult = await planSaveOperations.createReplicaFromTripTemplate(templateTripId, userId)
 
-    const userTrips = await adminTripOperations.getTripsByUserId(userId)
-    const existingSlugs = userTrips
-      .map((trip) => trip.slug)
+    // グローバルにユニークな slug を生成するため、全トリップの slug を取得
+    const allTripsSnapshot = await adminDb.collection(COLLECTIONS.TRIPS).select('slug').get()
+    const existingSlugs = allTripsSnapshot.docs
+      .map((doc) => doc.data().slug as string | undefined)
       .filter((slug): slug is string => Boolean(slug))
 
     const newSlug = generateUniqueSlug(replicaResult.trip.title, existingSlugs)
