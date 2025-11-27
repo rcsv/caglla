@@ -202,7 +202,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
     <div className={`absolute bottom-4 left-4 right-4 zidx-float-modal ${className}`}>
       <div className="bg-white border-t border-gray-200 shadow-lg rounded-t-lg w-full">
         {/* ヘッダー */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             <div className="flex-shrink-0">
               <TeardropMarker number={poiData.orderNumber} />
@@ -279,7 +279,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
         </div>
 
         {/* コンテンツ */}
-        <div className="p-3 max-h-80 overflow-y-auto scrollbar-hide rounded-b-lg">
+        <div className="p-5 max-h-80 overflow-y-auto scrollbar-hide rounded-b-lg">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
@@ -290,11 +290,11 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
               <div className="text-red-500 text-sm">{t('poi.errorMessage')}</div>
             </div>
           ) : placeDetails ? (
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               {/* メインコンテンツ */}
-              <div className="flex-1 space-y-3 text-sm">
+              <div className="flex-1 space-y-4 text-sm">
                 {/* 価格帯と評価 */}
-                <div className="flex items-center flex-wrap gap-3">
+                <div className="flex items-center flex-wrap gap-4">
                   {/* 統合された評価情報 */}
                   {aggregatedData?.aggregatedRating ? (
                     <div className="flex items-center space-x-1.5">
@@ -384,7 +384,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
 
                 {/* タグ（Types） */}
                 {placeDetails.types && placeDetails.types.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {placeDetails.types
                       .filter((type: string) => type !== 'point_of_interest') // point_of_interestを除外
                       .slice(0, 5)
@@ -477,7 +477,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
 
                 {/* 統合レビュー（Google + TripAdvisor + Foursquare） */}
                 {unifiedReviews.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-semibold text-gray-700">{t('poi.reviewsAndTips')}</h4>
                       {unifiedReviews.length > 3 && (
@@ -490,8 +490,8 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
                       )}
                     </div>
                     {(showAllReviews ? unifiedReviews : unifiedReviews.slice(0, 3)).map((review) => (
-                      <div key={review.id} className="text-xs border-l-2 border-gray-200 pl-2">
-                        <div className="flex items-center justify-between mb-1">
+                      <div key={review.id} className="text-xs border-l-2 border-gray-200 pl-3 py-1">
+                        <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-1.5">
                             <span className="font-medium text-gray-900">{review.author}</span>
                             <span className="text-xs text-gray-400">
@@ -533,7 +533,7 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
               </div>
 
               {/* 画像・連絡先エリア（右サイド） */}
-              <div className="w-36 flex-shrink-0 space-y-2">
+              <div className="w-36 flex-shrink-0 space-y-3">
                 {/* 画像 */}
                 {placeDetails.photos && placeDetails.photos.length > 0 && (
                   <>
