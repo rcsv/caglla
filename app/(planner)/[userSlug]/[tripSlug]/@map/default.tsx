@@ -9,6 +9,7 @@ import { useTrip } from '../TripProvider'
 import { useTripUrlState } from '../useTripUrlState'
 import { POIProvider, usePOI } from '../POIProvider'
 import { dispatchPOIOpen, dispatchPOIClose } from '../poi-events'
+import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 
 /**
  * Map Default Slot (Read-only)
@@ -67,11 +68,8 @@ function MapContent() {
     if (!poiData) return
 
     try {
-      const response = await fetch('/api/itineraries', {
+      const response = await makeAuthenticatedRequest('/api/itineraries', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           day_id: dayId,
           place_id: placeId,
@@ -92,8 +90,17 @@ function MapContent() {
         throw new Error(`Failed to add itinerary: ${response.status}`)
       }
 
+      // レスポンスから追加されたItineraryのIDを取得
+      const newItinerary = await response.json()
+      
       // 成功したらtripデータを再取得
       await refreshTrip?.()
+      
+      // 追加されたItineraryにフォーカス（自動ズーム）
+      if (newItinerary.id) {
+        setSelectedItineraryId(newItinerary.id)
+        updateQuery({ si: newItinerary.id, mf: 'single' })
+      }
       
       // POIDialogを閉じる
       setPoiData(null)
