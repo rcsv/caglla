@@ -14,6 +14,7 @@ import { MoneyIcon } from '@/components/common/icons/MoneyIcon'
 import { ClockIcon } from '@/components/common/icons/ClockIcon'
 import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
 import { LocationIcon } from '@/components/common/icons/LocationIcon'
+import { CagllaLogo } from '@/components/common/icons/CagllaLogo'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
 import { toDate } from '@/lib/firebase/timestamp-utils'
@@ -334,13 +335,14 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     <div className={`bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-200 relative z-30 left-nav-shadow ${
       isCollapsed ? 'w-12' : 'w-[188px]'
     }`} style={{ maxWidth: isCollapsed ? '48px' : '188px' }}>
-      {/* メニューヘッダー（ロゴ + Caglla → /home リンク） */}
+      {/* メニューヘッダー（Caglla ロゴ + 折りたたみボタン） */}
       <div className={`border-b border-gray-200 ${isCollapsed ? 'p-2' : 'p-3'}`}>
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
+        <div className="flex items-center justify-between">
+          {/* ロゴ部分 */}
           <Link
             href="/home"
-            className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} text-gray-900`}
-            title="Back to home"
+            className="flex items-center gap-2 text-gray-900 hover:opacity-80 transition-opacity"
+            title="Go to home"
             aria-label="Go to home"
             onClick={() => {
               if (!isCollapsed && typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -348,40 +350,31 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
               }
             }}
           >
-            {isCollapsed ? (
-              <span className="text-xl font-semibold">←</span>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span className="text-sm font-semibold tracking-tight">Back to Home</span>
-              </>
+            <CagllaLogo className={isCollapsed ? "w-6 h-6" : "w-8 h-8"} />
+            {!isCollapsed && (
+              <span className="text-xl font-bold font-rajdhani">Caglla</span>
             )}
           </Link>
+          
+          {/* 折りたたみボタン */}
+          {!isCollapsed && onToggleCollapse && (
+            <button
+              onClick={onToggleCollapse}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
       {/* メニューコンテンツ */}
       <div className="flex-1 flex flex-col min-h-0">
         <nav className="p-2 flex-1 flex flex-col min-h-0">
-          {/* ハンバーガー + Menu トグル */}
-          <button
-            onClick={() => onToggleCollapse && onToggleCollapse()}
-            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} p-2 text-left hover:bg-gray-50 rounded-lg transition-colors mb-2`}
-            title="Toggle menu width"
-          >
-            <div className={`flex items-center ${!isCollapsed ? 'gap-2' : ''}`}>
-              <span className="text-gray-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </span>
-              {!isCollapsed && (
-                <span className="font-medium text-gray-900">Menu</span>
-              )}
-            </div>
-          </button>
           {menuSections.map((section) => (
             <div
               key={section.id}
