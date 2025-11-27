@@ -228,25 +228,19 @@ export default function TimelineDefault() {
     // アニメーション完了を待つ（300ms）
     await new Promise(resolve => setTimeout(resolve, 300))
     
-    // ローカルのtripデータから削除されたDayを除外
-    updateTrip(prevTrip => ({
-      ...prevTrip,
-      days: (prevTrip.days || []).filter(d => d.id !== dayId)
-    }))
-    
-    // 削除アニメーション状態をクリア
-    setDeletingDayIds(prev => {
-      const next = new Set(prev)
-      next.delete(dayId)
-      return next
-    })
-    
-    // サーバーから最新データを取得（day_numberの振り直しを反映）
+    // サーバーから最新データを取得（day_numberの振り直し + 削除されたDayを除外）
     try {
       await refreshTrip()
     } catch (error) {
       logger.error('Failed to refresh trip after day deletion:', error)
     }
+    
+    // 削除アニメーション状態をクリア（refreshTrip完了後）
+    setDeletingDayIds(prev => {
+      const next = new Set(prev)
+      next.delete(dayId)
+      return next
+    })
   }
 
   const expandAllDays = () => {
