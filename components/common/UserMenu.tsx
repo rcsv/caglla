@@ -4,7 +4,6 @@ import { useState, useRef } from 'react'
 import { useAuth } from '@/lib/contexts/auth'
 import { useUserData } from '@/lib/contexts/user-data'
 import { useClickOutside } from '@/hooks/useClickOutside'
-import { getZIndexClass } from '@/lib/core/z-index'
 import Image from 'next/image'
 import Link from 'next/link'
 import { t } from '@/lib/i18n'
@@ -50,7 +49,7 @@ export function UserMenu({ isCollapsed = false }: UserMenuProps) {
         
         {menuOpen && (
           <div 
-            className={`fixed left-14 bottom-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 zidx-popup-menu`}
+            className={`fixed left-14 bottom-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 zidx-float-modal-content`}
             role="menu"
             aria-orientation="vertical"
           >
@@ -113,7 +112,7 @@ export function UserMenu({ isCollapsed = false }: UserMenuProps) {
       
       {menuOpen && (
         <div 
-          className={`absolute left-0 right-0 bottom-full mb-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 zidx-popup-menu`}
+          className={`absolute left-0 right-0 bottom-full mb-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 zidx-float-modal-content`}
           role="menu"
           aria-orientation="vertical"
         >
