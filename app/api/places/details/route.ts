@@ -117,23 +117,23 @@ export const POST = composeMiddleware(
         return NextResponse.json({ status: 'OK', result: enrichedCache })
       } else {
         // requiredFieldsが指定されていない場合は既存のロジック
-        const isStale = isCacheStale(cached, SOFT_TTL_MS)
+      const isStale = isCacheStale(cached, SOFT_TTL_MS)
+      
+      if (isStale) {
+        // Soft TTL: 古いキャッシュだが即座に返し、バックグラウンドで更新
+        logger.info('Cache hit but stale, returning cached data and refreshing in background', {
+          placeId,
+          language: validLanguage
+        })
         
-        if (isStale) {
-          // Soft TTL: 古いキャッシュだが即座に返し、バックグラウンドで更新
-          logger.info('Cache hit but stale, returning cached data and refreshing in background', {
-            placeId,
-            language: validLanguage
-          })
-          
-          // バックグラウンド更新（非同期、結果を待たない）
-          refreshPlaceInBackground(placeId, validLanguage, GOOGLE_PLACES_API_KEY).catch(err => {
-            logger.warn('Background refresh failed:', err)
-          })
-        } else {
-          logger.info('Cache hit (fresh)', { placeId, language: validLanguage })
-        }
-        
+        // バックグラウンド更新（非同期、結果を待たない）
+        refreshPlaceInBackground(placeId, validLanguage, GOOGLE_PLACES_API_KEY).catch(err => {
+          logger.warn('Background refresh failed:', err)
+        })
+      } else {
+        logger.info('Cache hit (fresh)', { placeId, language: validLanguage })
+      }
+      
         return NextResponse.json({ status: 'OK', result: cached })
       }
     }

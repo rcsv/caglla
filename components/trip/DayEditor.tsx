@@ -11,7 +11,6 @@ import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 interface DayEditorProps {
   day: Day
   canEdit?: boolean
-  totalDays?: number
   onUpdate: (updatedDay: Day) => void
   onDelete?: (dayId: string) => void
   itinerarySummary?: string
@@ -22,8 +21,7 @@ interface DayEditorProps {
 export default function DayEditor({ 
   day, 
   canEdit = true,
-  totalDays = 0,
-  onUpdate,
+  onUpdate, 
   onDelete,
   itinerarySummary, 
   itineraries = [], 
@@ -96,6 +94,10 @@ export default function DayEditor({
     }
     
     setIsDeleting(true)
+    
+    // 楽観的UI更新: 削除ボタンを押したらすぐに親に通知
+    onDelete(day.id)
+    
     try {
       const response = await makeAuthenticatedRequest(`/api/trip/${trip.slug}/day?dayId=${day.id}`, {
         method: 'DELETE'
@@ -106,10 +108,11 @@ export default function DayEditor({
         throw new Error(errorData.error || 'Failed to delete day')
       }
       
-      onDelete(day.id)
+      // 成功したので何もしない（すでにUIから削除済み）
     } catch (error) {
       logger.error('日程の削除に失敗しました:', error)
       alert(t('dayEditor.deleteError'))
+      // エラーの場合、親コンポーネントでrefreshTripが呼ばれて元に戻る
     } finally {
       setIsDeleting(false)
     }
@@ -144,32 +147,32 @@ export default function DayEditor({
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
-            {day.description ? (
-              <div 
-                className={canEdit ? "group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors" : "p-2"}
-                onClick={canEdit ? () => setIsEditing(true) : undefined}
-              >
-                <p className="text-gray-600 whitespace-pre-wrap">{day.description}</p>
-                {canEdit && (
-                  <p className="mt-1 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {t('dayEditor.clickToEdit')}
-                  </p>
-                )}
-              </div>
-            ) : canEdit ? (
-              <div 
-                className="cursor-pointer hover:bg-gray-50 p-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors"
-                onClick={() => setIsEditing(true)}
-              >
-                <p className="text-gray-400 italic">{itinerarySummary || t('dayEditor.placeholder')}</p>
-              </div>
-            ) : (
-              <div className="p-3">
-                <p className="text-gray-400 italic">{itinerarySummary || t('dayEditor.noDescription')}</p>
-              </div>
+        {day.description ? (
+          <div 
+            className={canEdit ? "group cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors" : "p-2"}
+            onClick={canEdit ? () => setIsEditing(true) : undefined}
+          >
+            <p className="text-gray-600 whitespace-pre-wrap">{day.description}</p>
+            {canEdit && (
+              <p className="mt-1 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                {t('dayEditor.clickToEdit')}
+              </p>
             )}
           </div>
-          {canEdit && onDelete && totalDays > 1 && (
+        ) : canEdit ? (
+          <div 
+            className="cursor-pointer hover:bg-gray-50 p-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors"
+            onClick={() => setIsEditing(true)}
+          >
+            <p className="text-gray-400 italic">{itinerarySummary || t('dayEditor.placeholder')}</p>
+          </div>
+        ) : (
+          <div className="p-3">
+            <p className="text-gray-400 italic">{itinerarySummary || t('dayEditor.noDescription')}</p>
+          </div>
+        )}
+          </div>
+          {canEdit && onDelete && (
             <button
               onClick={handleDelete}
               disabled={isDeleting}

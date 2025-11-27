@@ -23,7 +23,6 @@ interface TripItineraryViewProps {
   selectedDayId: string | null
   selectedItineraryId: string | null
   loadingDayIds?: Set<string>
-  deletingDayIds?: Set<string>
   onToggleDayCollapse: (dayId: string) => void
   onDayClick: (dayId: string) => void
   onAddSchedule: (dayId: string) => void
@@ -55,7 +54,6 @@ export default function TripItineraryView({
   selectedDayId,
   selectedItineraryId,
   loadingDayIds = new Set(),
-  deletingDayIds = new Set(),
   onToggleDayCollapse,
   onDayClick,
   onAddSchedule,
@@ -246,7 +244,6 @@ export default function TripItineraryView({
         {trip.days && trip.days.length > 0 ? (
           trip.days.map((day) => {
             const isCollapsed = collapsedDays.has(day.id)
-            const isDeleting = deletingDayIds.has(day.id)
             const itinerarySummary = generateItinerarySummary(day)
             // 表示は常に sort_number 昇順で固定
             const sortedItineraries = [...(day.itineraries || [])].sort((a, b) => a.sort_number - b.sort_number)
@@ -255,7 +252,7 @@ export default function TripItineraryView({
               <div
                 key={day.id}
                 id={`day-${day.id}`}
-                className={`bg-white rounded-lg shadow-sm border border-gray-200 anchor-offset ${isDeleting ? 'animate-fade-out' : 'animate-fade-in'}`}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 anchor-offset"
               >
                 {/* ヘッダー部分 - 常に表示 */}
                 <div 
@@ -375,7 +372,6 @@ export default function TripItineraryView({
                     <DayEditor 
                       day={day} 
                       canEdit={canEdit}
-                      totalDays={trip.days?.length || 0}
                       itinerarySummary={itinerarySummary}
                       itineraries={sortedItineraries}
                       onUpdate={(updatedDay: Day) => {
@@ -385,7 +381,7 @@ export default function TripItineraryView({
                             d.id === updatedDay.id ? updatedDay : d
                           ) || []
                         })
-                      }}
+                      }} 
                       onDelete={onDayDelete}
                       onReorderItineraries={onReorderItineraries}
                     />

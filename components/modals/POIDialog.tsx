@@ -535,12 +535,12 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
               {/* 画像・連絡先エリア（右サイド） */}
               <div className="w-36 flex-shrink-0 space-y-3">
                 {/* 画像 */}
-                {placeDetails.photos && placeDetails.photos.length > 0 && (
+              {placeDetails.photos && placeDetails.photos.length > 0 && (
                   <>
-                    <div 
-                      className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group hover:opacity-90 transition-opacity"
-                      onClick={handleOpenImageGallery}
-                    >
+                  <div 
+                    className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group hover:opacity-90 transition-opacity"
+                    onClick={handleOpenImageGallery}
+                  >
                     {cachedImages[currentPhotoIndex] ? (
                       <Image
                         src={cachedImages[currentPhotoIndex].url}
@@ -588,11 +588,11 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
                         </svg>
                       </div>
                     </div>
+                  </div>
+                  {showZoomDebugInfo && (
+                    <div className="mt-2 text-[11px] text-gray-500 leading-snug">
+                      Debug zoom: {debugZoomLevel}
                     </div>
-                    {showZoomDebugInfo && (
-                      <div className="mt-2 text-[11px] text-gray-500 leading-snug">
-                        Debug zoom: {debugZoomLevel}
-                      </div>
                     )}
                   </>
                 )}

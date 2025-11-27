@@ -367,33 +367,33 @@ export default function TripMap({
             try {
               const language = getUserLanguage(user)
               const response = await fetch('/api/places/details', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
                   placeId: event.placeId,
                   language: language
                 })
-              })
-              
+            })
+
               if (response.ok) {
-                const data = await response.json()
+            const data = await response.json()
                 if (data.status === 'OK' && data.result) {
-                  const newPoiData = {
+              const newPoiData = {
                     placeId: event.placeId,
                     name: data.result.name || 'POI',
-                    location: {
+                location: {
                       lat: event.latLng.lat(),
                       lng: event.latLng.lng(),
-                    },
+                },
                     placeData: data.result
-                  }
+              }
                   console.log('🟢 [MAP CLICK → POI] Setting POI data with name:', newPoiData)
                   logger.debug('🟡 Google POI marker clicked via click event:', newPoiData)
-                  setInternalPoiData(newPoiData)
-                  onPoiDataUpdateRef.current?.(newPoiData)
-                } else {
+              setInternalPoiData(newPoiData)
+              onPoiDataUpdateRef.current?.(newPoiData)
+            } else {
                   // Place Details取得失敗時のフォールバック
                   const newPoiData = {
                     placeId: event.placeId,
@@ -407,8 +407,8 @@ export default function TripMap({
                   setInternalPoiData(newPoiData)
                   onPoiDataUpdateRef.current?.(newPoiData)
                 }
-              }
-            } catch (error) {
+            }
+          } catch (error) {
               console.error('❌ [MAP CLICK → POI] Error fetching place details:', error)
               // エラー時のフォールバック
               const newPoiData = {
@@ -488,7 +488,7 @@ export default function TripMap({
 
         console.log('✅ [MAP INIT] Map initialization complete')
         console.log('✅ [MAP INIT] Event listeners registered')
-        
+
         setMap(newMap)
         setDirectionsService(newDirectionsService)
         setDirectionsRenderer(newDirectionsRenderer)
@@ -641,14 +641,14 @@ export default function TripMap({
           console.log('🟢 [ITINERARY MARKER] Setting POI data:', newPoiData)
           logger.debug('🟢 Setting POI data:', newPoiData)
           setInternalPoiData(newPoiData)
-          onPoiDataUpdateRef.current?.(newPoiData)
+        onPoiDataUpdateRef.current?.(newPoiData)
         } else {
           console.warn('⚠️ [ITINERARY MARKER] No place_id found:', itinerary.title)
           logger.warn('⚠️ Itinerary marker clicked but no place_id found:', itinerary.title)
         }
         
         // 左ペインのItineraryにスクロールするためのコールバック
-        onItineraryClickRef.current?.(itinerary.id)
+      onItineraryClickRef.current?.(itinerary.id)
         
         // 個別フォーカスモードの場合、選択された場所にフォーカス
         if (focusMode === 'single') {

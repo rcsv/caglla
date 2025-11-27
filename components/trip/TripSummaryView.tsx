@@ -57,21 +57,21 @@ export default function TripSummaryView({
 
             {/* 1. Weather Forecast - 旅行直前に最も確認する情報（テンプレートモードでは非表示） */}
             {!trip.is_template && (
-              <div id="weather-forecast" className="anchor-offset">
-                <h3 className="text-lg font-medium text-gray-700 mb-4">Weather Forecast</h3>
-                <TripWeatherDisplay 
-                  destination={trip.destination}
-                  startDate={trip.start_date ? dateUtils.toUrlDateString(trip.start_date) : undefined}
-                  endDate={trip.end_date ? dateUtils.toUrlDateString(trip.end_date) : undefined}
-                />
-              </div>
+            <div id="weather-forecast" className="anchor-offset">
+              <h3 className="text-lg font-medium text-gray-700 mb-4">Weather Forecast</h3>
+              <TripWeatherDisplay 
+                destination={trip.destination}
+                startDate={trip.start_date ? dateUtils.toUrlDateString(trip.start_date) : undefined}
+                endDate={trip.end_date ? dateUtils.toUrlDateString(trip.end_date) : undefined}
+              />
+            </div>
             )}
 
             {/* 2. Reservations - 予約情報の確認（テンプレートモードでは非表示） */}
             {!trip.is_template && (
-              <div id="reservations" className="anchor-offset">
-                <TripReservationDisplay itineraries={getAllItineraries()} />
-              </div>
+            <div id="reservations" className="anchor-offset">
+              <TripReservationDisplay itineraries={getAllItineraries()} />
+            </div>
             )}
 
             {/* 3. Budget - 旅行費用の管理 */}

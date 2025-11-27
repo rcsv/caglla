@@ -686,10 +686,10 @@ export async function enrichPlaceCacheToLevel(
 ### 実装の優先順位
 
 **Phase 1（即座に実装）**:
-- `requiredFields`をリクエストボディで受け取る
+   - `requiredFields`をリクエストボディで受け取る
 - `checkCacheCompleteness()`の実装（7個のフィールドのみ対象）
-- `fetchPlaceDetailsFromAPI()`に`fields`パラメータを追加
-- `enrichPlaceCache()`の実装（キャッシュの統合更新）
+   - `fetchPlaceDetailsFromAPI()`に`fields`パラメータを追加
+   - `enrichPlaceCache()`の実装（キャッシュの統合更新）
 
 **Phase 2（将来的に検討）**:
 - 使用頻度の分析に基づいてフィールド対象の調整

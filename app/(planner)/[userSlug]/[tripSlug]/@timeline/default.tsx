@@ -56,7 +56,6 @@ export default function TimelineDefault() {
 
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set())
   const [loadingDayIds, setLoadingDayIds] = useState<Set<string>>(new Set())
-  const [deletingDayIds, setDeletingDayIds] = useState<Set<string>>(new Set())
   const [summaryCollapsed, setSummaryCollapsed] = useState(false)
   const isProgrammaticScrollRef = useRef(false)
   const scrollToItineraryRef = useRef<((itineraryId: string) => void) | null>(null)
@@ -222,28 +221,24 @@ export default function TimelineDefault() {
   }
 
   const handleDayDelete = async (dayId: string) => {
-    // 削除アニメーション開始
-    setDeletingDayIds(prev => new Set(prev).add(dayId))
+    // 楽観的UI更新: すぐに画面から削除
+    updateTrip(prevTrip => ({
+      ...prevTrip,
+      days: prevTrip.days?.filter(d => d.id !== dayId) || []
+    }))
     
-    // アニメーション完了を待つ（300ms）
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    // Firestore削除処理の完了を待つ（追加で200ms）
-    await new Promise(resolve => setTimeout(resolve, 200))
-    
-    // サーバーから最新データを取得（day_numberの振り直し + 削除されたDayを除外）
+    // サーバーからの削除完了後、最新データを取得（day_numberの振り直しを反映）
     try {
       await refreshTrip()
     } catch (error) {
       logger.error('Failed to refresh trip after day deletion:', error)
+      // エラーの場合、再度refreshして元の状態に戻す
+      try {
+        await refreshTrip()
+      } catch (retryError) {
+        logger.error('Failed to refresh trip on retry:', retryError)
+      }
     }
-    
-    // 削除アニメーション状態をクリア（refreshTrip完了後）
-    setDeletingDayIds(prev => {
-      const next = new Set(prev)
-      next.delete(dayId)
-      return next
-    })
   }
 
   const expandAllDays = () => {
@@ -338,7 +333,6 @@ export default function TimelineDefault() {
         selectedDayId={selectedDayId}
         selectedItineraryId={selectedItineraryId}
         loadingDayIds={loadingDayIds}
-        deletingDayIds={deletingDayIds}
         onToggleDayCollapse={onToggleDayCollapse}
         onDayClick={onDayClick}
             onAddSchedule={handleAddSchedule}

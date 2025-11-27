@@ -118,28 +118,28 @@ export function ScheduleInfoDisplay({
 
       {/* 予約要素 - テンプレートモードでは非表示 */}
       {canEditReservation && (
-        <div className="flex items-center space-x-1">
-          {hasReservation ? (
-            <IconRenderer iconName="reservation" className="w-4 h-4" color="#10B981" />
+      <div className="flex items-center space-x-1">
+        {hasReservation ? (
+          <IconRenderer iconName="reservation" className="w-4 h-4" color="#10B981" />
+        ) : (
+          <IconRenderer iconName="reservation" className="w-4 h-4" color="#8B5CF6" />
+        )}
+        <span 
+          className={reservationClass}
+          onClick={handleReservationClick}
+          title={confirmationNumber ? `Confirmation: ${confirmationNumber}` : undefined}
+        >
+          {hasReservation && confirmationNumber ? (
+            <span className="text-xs font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
+              {confirmationNumber.length > 8 ? `${confirmationNumber.substring(0, 8)}...` : confirmationNumber}
+            </span>
+          ) : hasReservation ? (
+            t('trip.schedule.reservation')
           ) : (
-            <IconRenderer iconName="reservation" className="w-4 h-4" color="#8B5CF6" />
+            t('trip.schedule.reservation')
           )}
-          <span 
-            className={reservationClass}
-            onClick={handleReservationClick}
-            title={confirmationNumber ? `Confirmation: ${confirmationNumber}` : undefined}
-          >
-            {hasReservation && confirmationNumber ? (
-              <span className="text-xs font-mono bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
-                {confirmationNumber.length > 8 ? `${confirmationNumber.substring(0, 8)}...` : confirmationNumber}
-              </span>
-            ) : hasReservation ? (
-              t('trip.schedule.reservation')
-            ) : (
-              t('trip.schedule.reservation')
-            )}
-          </span>
-        </div>
+        </span>
+      </div>
       )}
     </div>
   )
