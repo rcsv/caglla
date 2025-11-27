@@ -256,6 +256,7 @@ export const TripCard: React.FC<TripCardProps> = ({
               accessLevel={accessLevel} 
               size="sm"
               className="drop-shadow-md"
+              isTemplate={trip.is_template}
             />
           </div>
           <div className="absolute top-3 left-3 z-10">
@@ -392,7 +393,7 @@ export const TripCard: React.FC<TripCardProps> = ({
         <div className="flex justify-between items-start mb-3">
           <h3 className="text-xl md:text-2xl font-bold text-gray-900 line-clamp-2">{trip.title}</h3>
           <div className="flex items-center gap-2">
-            <PublicAccessBadge accessLevel={accessLevel} size="sm" />
+            <PublicAccessBadge accessLevel={accessLevel} size="sm" isTemplate={trip.is_template} />
           </div>
         </div>
 

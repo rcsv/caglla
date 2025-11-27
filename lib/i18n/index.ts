@@ -509,6 +509,9 @@ export type TranslationKey =
   | 'tripEditor.destinationReSelectHint'
   | 'tripEditor.accessLevel.private'
   | 'tripEditor.accessLevel.public'
+  | 'tripEditor.field.publishStatus'
+  | 'tripEditor.publishStatus.draft'
+  | 'tripEditor.publishStatus.published'
   | 'tripEditor.field.title'
   | 'tripEditor.field.description'
   | 'tripEditor.field.startDate'
@@ -2030,6 +2033,9 @@ const en: Dictionary = {
   'tripEditor.destinationReSelectHint': 'Please re-select the destination from Google Places for accurate country information',
   'tripEditor.accessLevel.private': 'Private — personal plan shared only with invited buddies',
   'tripEditor.accessLevel.public': 'Public — showcase for anyone to explore',
+  'tripEditor.field.publishStatus': 'Publish Status',
+  'tripEditor.publishStatus.draft': 'Draft — work in progress',
+  'tripEditor.publishStatus.published': 'Published — visible to everyone',
   'tripEditor.field.title': 'Trip Title *',
   'tripEditor.field.description': 'Description',
   'tripEditor.field.startDate': 'Departure Date',
@@ -3459,6 +3465,9 @@ const ja: Dictionary = {
   'tripEditor.destinationReSelectHint': '正確な国情報のため、Google Placesから目的地を再選択してください',
   'tripEditor.accessLevel.private': 'プライベート — 自分と招待した友人だけに共有',
   'tripEditor.accessLevel.public': 'パブリック — 誰でも閲覧できる紹介用',
+  'tripEditor.field.publishStatus': '公開ステータス',
+  'tripEditor.publishStatus.draft': '下書き — 作業中',
+  'tripEditor.publishStatus.published': '公開済み — 誰でも閲覧可能',
   'tripEditor.field.title': '旅行のタイトル *',
   'tripEditor.field.description': '説明',
   'tripEditor.field.startDate': '出発日',

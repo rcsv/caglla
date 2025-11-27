@@ -98,7 +98,10 @@ export default function TripHeroSection({
       <div className="relative h-full flex flex-col">
         {/* Access badge overlay (left top - 左右に分配) */}
         <div className="absolute left-4 top-4 zidx-top-menu-content">
-          <PublicAccessBadge accessLevel={trip.access_level === 'private' ? 'private' : 'public'} />
+          <PublicAccessBadge 
+            accessLevel={trip.access_level === 'private' ? 'private' : 'public'} 
+            isTemplate={trip.is_template}
+          />
         </div>
         {/* Top Navigation */}
         <div className="flex justify-between items-start p-6">
