@@ -340,6 +340,11 @@ export default function TripMap({
         createdMap = newMap
         createdDirectionsRenderer = newDirectionsRenderer
 
+        if (isMounted) {
+          setDirectionsService(newDirectionsService)
+          setDirectionsRenderer(newDirectionsRenderer)
+        }
+
         newMap.addListener('click', async (event: any) => {
           console.log('⚪ [MAP CLICK] Click event fired')
           console.log('⚪ Event object:', event)
@@ -911,11 +916,6 @@ export default function TripMap({
     }
 
     // 選択されたVenueにズーム・フォーカス
-    // DirectionsRendererを一時的に非表示にして、ズームが正常に動作するようにする
-    if (directionsRenderer) {
-      directionsRenderer.setMap(null)
-    }
-    
     const zoom = getZoomForPlaceTypes(selectedItinerary.place_data?.types)
     logger.debug('🎯 TripMap: Focusing on selected itinerary with types-based zoom', {
       itineraryTitle: selectedItinerary.title,
@@ -935,7 +935,81 @@ export default function TripMap({
         markerData.element.className = 'teardrop-marker'
       }
     })
-  }, [selectedItineraryId, map, itineraries, directionsRenderer, focusMode, scrollSyncEnabled, poiData])
+  }, [selectedItineraryId, map, itineraries, focusMode, scrollSyncEnabled, poiData])
+
+  // 選択されたItineraryから次のItineraryへのルートを表示
+  useEffect(() => {
+    if (!map || !directionsService || !directionsRenderer) return
+
+    // selectedItineraryIdがnullの場合、ルートをクリア
+    if (!selectedItineraryId) {
+      directionsRenderer.setMap(null)
+      return
+    }
+
+    // 選択されたitineraryを見つける
+    const selectedIndex = itineraries.findIndex(it => it.id === selectedItineraryId)
+    if (selectedIndex === -1) {
+      directionsRenderer.setMap(null)
+      return
+    }
+
+    const selectedItinerary = itineraries[selectedIndex]
+    const nextItinerary = itineraries[selectedIndex + 1]
+
+    // 次のitineraryが存在しない、または座標がない場合はルートをクリア
+    if (!nextItinerary || 
+        !selectedItinerary.place_data?.geometry?.location ||
+        !nextItinerary.place_data?.geometry?.location) {
+      directionsRenderer.setMap(null)
+      return
+    }
+
+    const origin = {
+      lat: selectedItinerary.place_data.geometry.location.lat,
+      lng: selectedItinerary.place_data.geometry.location.lng,
+    }
+    const destination = {
+      lat: nextItinerary.place_data.geometry.location.lat,
+      lng: nextItinerary.place_data.geometry.location.lng,
+    }
+
+    // Directions APIを呼び出してルートを取得
+    logger.debug('🛣️ TripMap: Requesting route', {
+      from: selectedItinerary.title,
+      to: nextItinerary.title,
+      origin,
+      destination
+    })
+
+    directionsService.route(
+      {
+        origin,
+        destination,
+        travelMode: window.google.maps.TravelMode.WALKING, // 徒歩ルート
+      },
+      (result: any, status: any) => {
+        if (status === 'OK' && result) {
+          logger.debug('✅ TripMap: Route found', {
+            from: selectedItinerary.title,
+            to: nextItinerary.title,
+            distance: result.routes[0]?.legs[0]?.distance?.text,
+            duration: result.routes[0]?.legs[0]?.duration?.text
+          })
+          directionsRenderer.setMap(map)
+          directionsRenderer.setDirections(result)
+        } else {
+          // エラーの場合は無視（道路が繋がっていない場合など）
+          logger.debug('⚠️ TripMap: Route not found (ignored)', {
+            from: selectedItinerary.title,
+            to: nextItinerary.title,
+            status
+          })
+          directionsRenderer.setMap(null)
+        }
+      }
+    )
+  }, [selectedItineraryId, map, directionsService, directionsRenderer, itineraries])
 
   return (
     <div className={`relative ${className}`}>
