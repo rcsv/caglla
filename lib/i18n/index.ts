@@ -4306,10 +4306,33 @@ const dictionaries: Record<SupportedLanguage, Dictionary> = {
   pt: en,
 }
 
-export function t(key: TranslationKey, lang?: SupportedLanguage): string {
-  const language = lang || (typeof window !== 'undefined' ? getUserLanguage() : 'en')
-  const dict = dictionaries[language] || en
-  return dict[key]
+export function t(key: TranslationKey, variables?: Record<string, string | number> | SupportedLanguage, lang?: SupportedLanguage): string {
+  // 後方互換性: 2番目の引数がlanguageの場合
+  let actualLang: SupportedLanguage
+  let actualVariables: Record<string, string | number> | undefined
+  
+  if (typeof variables === 'string') {
+    // t(key, 'ja') の形式
+    actualLang = variables
+    actualVariables = undefined
+  } else {
+    // t(key, { dayCount: 3 }) または t(key, { dayCount: 3 }, 'ja') の形式
+    actualVariables = variables
+    actualLang = lang || (typeof window !== 'undefined' ? getUserLanguage() : 'en')
+  }
+  
+  const dict = dictionaries[actualLang] || en
+  let translation = dict[key]
+  
+  // 変数置換: {{variable}} を実際の値に置換
+  if (actualVariables) {
+    Object.entries(actualVariables).forEach(([varKey, varValue]) => {
+      const placeholder = `{{${varKey}}}`
+      translation = translation.replace(new RegExp(placeholder, 'g'), String(varValue))
+    })
+  }
+  
+  return translation
 }
 
 export function getDictionary(lang: SupportedLanguage): Dictionary {
