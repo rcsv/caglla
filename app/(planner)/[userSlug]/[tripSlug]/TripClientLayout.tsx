@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
+import { ReactNode, useState, Fragment } from 'react'
 import { TripProvider, useTrip } from './TripProvider'
 import NavigationMenu from '@/components/planner/NavigationMenu'
 import FloatingTitleBar from '@/components/planner/FloatingTitleBar'
@@ -175,10 +175,9 @@ function TripClientLayoutContent({
 
           {/* Timeline Slot */}
           <div className="flex-1 overflow-y-auto relative scrollbar-hide main-content-shadow">
-            {timeline}
-            {children}
-            {social}
-          </div>
+            <Fragment key="timeline-slot">{timeline}</Fragment>
+            <Fragment key="children-slot">{children}</Fragment>
+            <Fragment key="social-slot">{social}</Fragment>
         </div>
 
         {/* Map Panel (Desktop only) - Takes remaining space */}
