@@ -228,6 +228,9 @@ export default function TimelineDefault() {
     // アニメーション完了を待つ（300ms）
     await new Promise(resolve => setTimeout(resolve, 300))
     
+    // Firestore削除処理の完了を待つ（追加で200ms）
+    await new Promise(resolve => setTimeout(resolve, 200))
+    
     // サーバーから最新データを取得（day_numberの振り直し + 削除されたDayを除外）
     try {
       await refreshTrip()

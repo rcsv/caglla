@@ -375,6 +375,7 @@ export default function TripItineraryView({
                     <DayEditor 
                       day={day} 
                       canEdit={canEdit}
+                      totalDays={trip.days?.length || 0}
                       itinerarySummary={itinerarySummary}
                       itineraries={sortedItineraries}
                       onUpdate={(updatedDay: Day) => {

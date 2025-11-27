@@ -11,6 +11,7 @@ import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 interface DayEditorProps {
   day: Day
   canEdit?: boolean
+  totalDays?: number
   onUpdate: (updatedDay: Day) => void
   onDelete?: (dayId: string) => void
   itinerarySummary?: string
@@ -21,6 +22,7 @@ interface DayEditorProps {
 export default function DayEditor({ 
   day, 
   canEdit = true,
+  totalDays = 0,
   onUpdate,
   onDelete,
   itinerarySummary, 
@@ -167,7 +169,7 @@ export default function DayEditor({
               </div>
             )}
           </div>
-          {canEdit && onDelete && (
+          {canEdit && onDelete && totalDays > 1 && (
             <button
               onClick={handleDelete}
               disabled={isDeleting}
