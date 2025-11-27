@@ -431,23 +431,37 @@ export class PlanSaveOperations {
     
     const nextSortNumber = existingItineraries.empty ? 1 : existingItineraries.docs[0].data().sort_number + 1
     
-    const itineraryDoc = await adminDb.collection(COLLECTIONS.ITINERARIES).add({
+    const baseData: Record<string, unknown> = {
       day_id: dayId,
       sort_number: nextSortNumber,
       title: itineraryData.title,
       description: itineraryData.description,
       location: itineraryData.location,
       place_id: itineraryData.place_id || itineraryData.place_data?.place_id || null,
-      start_time: itineraryData.start_time,
-      end_time: itineraryData.end_time,
-      timezone: itineraryData.timezone,
-      cost_amount: itineraryData.cost_amount,
-      cost_currency: itineraryData.cost_currency,
       activity_tag: itineraryData.activity_tag || null,
       place_data: itineraryData.place_data || null,
       created_at: new Date(),
       updated_at: new Date()
-    })
+    }
+
+    // start_time / end_time / timezone / cost_amount / cost_currency: undefined を避けるため、値がある場合のみ追加
+    if (itineraryData.start_time !== undefined) {
+      baseData.start_time = itineraryData.start_time
+    }
+    if (itineraryData.end_time !== undefined) {
+      baseData.end_time = itineraryData.end_time
+    }
+    if (itineraryData.timezone !== undefined) {
+      baseData.timezone = itineraryData.timezone
+    }
+    if (itineraryData.cost_amount !== undefined) {
+      baseData.cost_amount = itineraryData.cost_amount
+    }
+    if (itineraryData.cost_currency !== undefined) {
+      baseData.cost_currency = itineraryData.cost_currency
+    }
+
+    const itineraryDoc = await adminDb.collection(COLLECTIONS.ITINERARIES).add(baseData)
     
     const itinerarySnap = await itineraryDoc.get()
     return {
