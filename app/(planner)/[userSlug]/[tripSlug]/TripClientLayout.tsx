@@ -232,27 +232,6 @@ function TripClientLayoutContent({
               actions={
                 canEdit ? (
                   <div className="flex items-center gap-2">
-                    {/* Publish Toggle Switch */}
-                    <button
-                      onClick={handleTogglePublish}
-                      disabled={publishLoading || unpublishLoading}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 border border-gray-300 rounded-md transition-colors"
-                      title={trip?.access_level === 'public' ? 'Click to unpublish' : 'Click to publish'}
-                    >
-                      {/* Toggle Switch */}
-                      <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                        (publishLoading || unpublishLoading) ? 'bg-gray-300' : (trip?.access_level === 'public' ? 'bg-blue-600' : 'bg-gray-300')
-                      }`}>
-                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                          trip?.access_level === 'public' ? 'translate-x-[18px]' : 'translate-x-[3px]'
-                        }`} />
-                      </div>
-                      {/* Label */}
-                      <span>
-                        {publishLoading ? t('trip.publish.publishing') : unpublishLoading ? 'Unpublishing...' : 'Publish'}
-                      </span>
-                    </button>
-                    
                     {/* PDF Export Button */}
                     <button
                       onClick={exportPdf}
@@ -269,13 +248,37 @@ function TripClientLayoutContent({
                     {/* iCal Export Button */}
                     <button
                       onClick={handleICalExport}
-                      className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-md transition-colors flex items-center gap-1.5"
-                      title="Export to iCal"
+                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                        trip?.ical_enabled
+                          ? 'text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-300'
+                          : 'text-gray-700 bg-white hover:bg-gray-50 border border-gray-300'
+                      }`}
+                      title={trip?.ical_enabled ? 'iCal sharing enabled' : 'Enable iCal sharing'}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       iCal
+                    </button>
+                    
+                    {/* Publish Toggle Switch */}
+                    <button
+                      onClick={handleTogglePublish}
+                      disabled={publishLoading || unpublishLoading}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 border border-gray-300 rounded-md transition-colors"
+                      title={trip?.access_level === 'public' ? 'Click to unpublish (make private)' : 'Click to publish (make public)'}
+                    >
+                      <span>
+                        {publishLoading ? t('trip.publish.publishing') : unpublishLoading ? 'Unpublishing...' : 'Publish'}
+                      </span>
+                      {/* Toggle Switch: [o   ] OFF, [   o] ON */}
+                      <div className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                        (publishLoading || unpublishLoading) ? 'bg-gray-300' : (trip?.access_level === 'public' ? 'bg-blue-600' : 'bg-gray-300')
+                      }`}>
+                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                          trip?.access_level === 'public' ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                        }`} />
+                      </div>
                     </button>
                   </div>
                 ) : null
