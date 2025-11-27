@@ -48,6 +48,13 @@ export type {
 
 // Update day function
 export async function updateDay(dayId: string, updates: Partial<Day>): Promise<Day> {
+  // DayEditorから呼び出される際に tripSlug が必要
+  // Day オブジェクトから trip_id を取得できる必要があるが、ここでは持っていない
+  // そのため、updates に trip_slug を含める必要がある
+  // または、呼び出し元で trip_slug を取得して API 経由で更新する
+  
+  // 一時的な実装: クライアント側から直接更新を試みる
+  // 注意: これは Firestore セキュリティルールで拒否される可能性がある
   const db = getFirestore()
   const dayRef = doc(db, COLLECTIONS.DAYS, dayId)
   

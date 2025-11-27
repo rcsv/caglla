@@ -516,6 +516,15 @@ export const adminDayOperations = {
     return adminFirestoreHelpers.docToObject<Day>(docSnap)
   },
 
+  async getDay(dayId: string): Promise<Day | null> {
+    const dayRef = adminDb.collection(COLLECTIONS.DAYS).doc(dayId)
+    const docSnap = await dayRef.get()
+    if (!docSnap.exists) {
+      return null
+    }
+    return adminFirestoreHelpers.docToObject<Day>(docSnap)
+  },
+
   async getDaysByTripId(tripId: string): Promise<Day[]> {
     const querySnapshot = await adminDb.collection(COLLECTIONS.DAYS)
       .where('trip_id', '==', tripId)
@@ -527,12 +536,19 @@ export const adminDayOperations = {
     return days.sort((a: Day, b: Day) => a.day_number - b.day_number)
   },
 
-  async updateDay(dayId: string, dayData: Partial<Day>): Promise<void> {
+  async updateDay(dayId: string, dayData: Partial<Day>): Promise<Day> {
     const dayRef = adminDb.collection(COLLECTIONS.DAYS).doc(dayId)
     await dayRef.update({
       ...dayData,
       updated_at: new Date()
     })
+    
+    // 更新されたドキュメントを取得して返す
+    const updatedDoc = await dayRef.get()
+    if (!updatedDoc.exists) {
+      throw new Error('Day not found after update')
+    }
+    return adminFirestoreHelpers.docToObject<Day>(updatedDoc)
   },
 
   async deleteDay(dayId: string): Promise<void> {

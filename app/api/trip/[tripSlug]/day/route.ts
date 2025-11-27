@@ -71,3 +71,34 @@ export const POST = tripApi(async (request: NextRequest, ctx) => {
 
   return NextResponse.json(newDay)
 })
+
+export const PUT = tripApi(async (request: NextRequest, ctx) => {
+  // ctx.auth, ctx.trip が保証されている
+  const { tripId } = ctx.trip!
+  
+  const body = await request.json()
+  const { dayId, updates } = body
+  
+  if (!dayId || typeof dayId !== 'string') {
+    return badRequest('dayId is required')
+  }
+  
+  if (!updates || typeof updates !== 'object') {
+    return badRequest('updates is required')
+  }
+  
+  // Day が指定された Trip に属していることを確認
+  const day = await adminDayOperations.getDay(dayId)
+  if (!day) {
+    return NextResponse.json({ error: 'Day not found' }, { status: 404 })
+  }
+  
+  if (day.trip_id !== tripId) {
+    return NextResponse.json({ error: 'Day does not belong to this trip' }, { status: 403 })
+  }
+  
+  // Day を更新
+  const updatedDay = await adminDayOperations.updateDay(dayId, updates)
+  
+  return NextResponse.json(updatedDay)
+})

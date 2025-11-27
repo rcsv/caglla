@@ -3,9 +3,9 @@ import logger from '@/lib/core/logger'
 
 import { useState } from 'react'
 import { Day, Itinerary } from '@/lib/core/types'
-import { updateDay } from '@/lib/firebase/firestore'
 import { t } from '@/lib/i18n'
 import DailyRouteOptimizer from './DailyRouteOptimizer'
+import { useTrip } from '@/app/(planner)/[userSlug]/[tripSlug]/TripProvider'
 
 interface DayEditorProps {
   day: Day
@@ -27,13 +27,31 @@ export default function DayEditor({
   const [isEditing, setIsEditing] = useState(false)
   const [description, setDescription] = useState(day.description || '')
   const [isLoading, setIsLoading] = useState(false)
+  const { trip } = useTrip()
 
   const handleSave = async () => {
-    if (isLoading) return
+    if (isLoading || !trip) return
     
     setIsLoading(true)
     try {
-      const updatedDay = await updateDay(day.id, { description })
+      // API経由でDayを更新
+      const response = await fetch(`/api/trip/${trip.slug}/day`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dayId: day.id,
+          updates: { description }
+        })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update day')
+      }
+      
+      const updatedDay = await response.json()
       onUpdate(updatedDay)
       setIsEditing(false)
     } catch (error) {
