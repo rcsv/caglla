@@ -178,7 +178,7 @@ function TripClientLayoutContent({
             <Fragment key="timeline-slot">{timeline}</Fragment>
             <Fragment key="children-slot">{children}</Fragment>
             <Fragment key="social-slot">{social}</Fragment>
-        </div>
+          </div>
 
         {/* Map Panel (Desktop only) - Takes remaining space */}
         <div className="hidden lg:block lg:flex-1 border-l border-gray-200 h-full overflow-hidden">
