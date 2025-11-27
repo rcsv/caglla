@@ -226,13 +226,13 @@ export default function POIDialog({ poiData, onClose, onAddToItinerary, classNam
                 <button
                   ref={buttonRef}
                   onClick={handleToggleDaySelector}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
                   aria-label={t('poi.addToItinerary')}
-                  title={t('poi.addToItinerary')}
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                   </svg>
+                  <span>{t('poi.addToItinerary')}</span>
                 </button>
                 {showDaySelector && (
                   <div 
