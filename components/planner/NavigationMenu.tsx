@@ -403,7 +403,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
 
               {/* セクションの子項目 */}
               {section.isExpandable && section.isExpanded && section.children && (
-                <div className={`${isCollapsed ? '' : 'ml-2 mt-1'} space-y-1 ${
+                <div className={`${isCollapsed ? '' : 'mt-1'} space-y-1 ${
                   section.id === 'itinerary' ? 'flex-1 overflow-y-auto min-h-0 scrollbar-hide bg-white' : ''
                 }`}>
                   {section.children.map((item) => (
@@ -441,10 +441,13 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                       ) : (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
-                            {item.icon && (
+                            {/* アイコン or スペーサー（親のアイコンと位置を揃える） */}
+                            {item.icon ? (
                               <span className="text-gray-600 flex-shrink-0">
                                 {item.icon}
                               </span>
+                            ) : (
+                              <span className="w-6 h-6 flex-shrink-0" />
                             )}
                             <div className="flex-1 min-w-0">
                               <div className={`text-sm font-normal truncate ${
