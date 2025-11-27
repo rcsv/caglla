@@ -1,0 +1,41 @@
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+
+# Node / package manager files
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lockb
+
+# Next.js build output
+.next/
+
+# Firebase emulator files
+.emulators/
+
+# OS / Editor junks
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+!.env.local
+!.env.development.local
+!.env.test.local
+!.env.production.local
+
+# Build output
+dist/
+build/
+.out/
+.next/
+.cache/
+.vercel/
+tmp/
+temp/
+
+*.xlsx
+*.pptx
