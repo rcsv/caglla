@@ -302,8 +302,9 @@ export default function TimelineDefault() {
     userData?.id && trip?.user_id && userData.id === trip.user_id
   ) || Boolean(user && canEditTrip(user, trip))
   const isTemplateTrip = trip?.is_template
-  // Publish可能な条件: 編集可能 かつ (通常の旅行 または テンプレート) かつ Private状態
-  const canPublishTrip = canEdit && trip?.access_level !== 'public'
+  // Publish可能な条件: 編集可能 かつ Private状態
+  // テンプレートのDraftバッジクリックとPublishボタン両方で使用
+  const canPublishTrip = canEdit && trip?.access_level === 'private'
   
   if (trip.access_level !== 'public' && !isOwner) {
     return (

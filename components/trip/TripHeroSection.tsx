@@ -117,7 +117,7 @@ export default function TripHeroSection({
                 type="button"
                 onClick={onReplica}
                 disabled={replicaLoading}
-                className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/85 px-4 py-2 text-sm font-semibold text-emerald-700 backdrop-blur-sm transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-500 disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/85 px-4 py-2 text-sm font-semibold text-emerald-700 backdrop-blur-sm transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-500 disabled:cursor-not-allowed disabled:opacity-70 mt-8"
               >
                 {replicaLoading ? (
                   <>
