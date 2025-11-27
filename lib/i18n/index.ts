@@ -427,6 +427,7 @@ export type TranslationKey =
   | 'nav.itinerary'
   | 'nav.checklist'
   | 'nav.plan'
+  | 'nav.profile'
   | 'nav.logout'
   | 'nav.dayPrefix'
   | 'nav.dayAbbr'
@@ -1951,6 +1952,7 @@ const en: Dictionary = {
   'nav.itinerary': 'Itinerary',
   'nav.checklist': 'Checklist',
   'nav.plan': 'Plan',
+  'nav.profile': 'Profile',
   'nav.logout': 'Logout',
   'nav.dayPrefix': 'Day',
   'nav.dayAbbr': 'DAY',
@@ -3383,6 +3385,7 @@ const ja: Dictionary = {
   'nav.itinerary': '日程',
   'nav.checklist': 'チェックリスト',
   'nav.plan': 'プラン',
+  'nav.profile': 'プロフィール',
   'nav.logout': 'ログアウト',
   'nav.dayPrefix': 'Day',
   'nav.dayAbbr': 'DAY',
