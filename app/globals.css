@@ -202,9 +202,11 @@ body {
   }
 }
 
-/* メインコンテンツエリアの最大幅制限 */
+/* メインコンテンツエリアの幅制御
+ * Note: デスクトップ（lg以上）の幅は Tailwind (lg:w-[740px]) で管理
+ * モバイル・タブレットサイズでの最小幅のみ CSS で保証
+ */
 .main-content-scrollable {
-  max-width: 740px;
   min-width: 400px;
 }
 
