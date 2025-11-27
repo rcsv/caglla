@@ -123,10 +123,41 @@ export function TripProvider({ trip: initialTrip, children }: TripProviderProps)
     })
   }, [])
 
-  // サーバーから再取得（router.refreshを使用）
+  // サーバーから再取得（API経由で直接取得してstateを更新）
   const refreshTrip = useCallback(async () => {
-    router.refresh()
-  }, [router])
+    if (!params?.tripSlug) {
+      logger.warn('TripProvider: Cannot refresh trip without tripSlug')
+      return
+    }
+
+    try {
+      logger.debug('TripProvider: Refreshing trip data', { tripSlug: params.tripSlug })
+      
+      // 認証されている場合は認証付きリクエスト、そうでない場合は通常のfetch
+      let response: Response
+      if (user) {
+        try {
+          response = await makeAuthenticatedRequest(`/api/trip/${params.tripSlug}`)
+        } catch (authErr: any) {
+          logger.debug('TripProvider: Auth failed during refresh, falling back to unauthenticated request', authErr)
+          response = await fetch(`/api/trip/${params.tripSlug}`)
+        }
+      } else {
+        response = await fetch(`/api/trip/${params.tripSlug}`)
+      }
+      
+      if (response.ok) {
+        const tripData = await response.json()
+        logger.debug('TripProvider: Trip refreshed successfully', { tripId: tripData.id })
+        setTrip(tripData)
+        setError(null)
+      } else {
+        logger.error('TripProvider: Failed to refresh trip', { status: response.status })
+      }
+    } catch (err) {
+      logger.error('TripProvider: Error refreshing trip', err)
+    }
+  }, [params?.tripSlug, user])
 
   // availableDaysを中央集約的に生成（POIDialog、左メニューなどで共有）
   const availableDays = useMemo<AvailableDay[]>(() => {
