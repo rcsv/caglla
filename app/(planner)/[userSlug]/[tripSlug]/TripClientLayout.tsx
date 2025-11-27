@@ -4,6 +4,7 @@ import { ReactNode, useState, Fragment } from 'react'
 import { TripProvider, useTrip } from './TripProvider'
 import NavigationMenu from '@/components/planner/NavigationMenu'
 import FloatingTitleBar from '@/components/planner/FloatingTitleBar'
+import ICalPublishModal from '@/components/modals/ICalPublishModal'
 import { useTripUrlState } from './useTripUrlState'
 import { useAuth } from '@/lib/contexts/auth'
 import { useUserData } from '@/lib/contexts/user-data'
@@ -46,6 +47,7 @@ function TripClientLayoutContent({
   
   const [leftNavExpanded, setLeftNavExpanded] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [icalModalOpen, setIcalModalOpen] = useState(false)
   
   // Trip actions (Publish, PDF, iCal)
   const { publish, exportPdf, publishLoading, pdfExporting } = useTripActions({
@@ -118,8 +120,7 @@ function TripClientLayoutContent({
   }
 
   const handleICalExport = () => {
-    // TODO: iCal export implementation
-    alert('iCal export feature coming soon!')
+    setIcalModalOpen(true)
   }
 
   const [unpublishLoading, setUnpublishLoading] = useState(false)
@@ -299,6 +300,19 @@ function TripClientLayoutContent({
           {map}
         </div>
       </div>
+
+      {/* iCal Publish Modal */}
+      {trip && (
+        <ICalPublishModal
+          isOpen={icalModalOpen}
+          onClose={() => setIcalModalOpen(false)}
+          trip={trip}
+          onUpdate={async (updatedTrip) => {
+            updateTrip(updatedTrip)
+            await refreshTrip()
+          }}
+        />
+      )}
     </div>
   )
 }
