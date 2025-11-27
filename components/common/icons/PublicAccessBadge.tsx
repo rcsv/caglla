@@ -53,7 +53,7 @@ export default function PublicAccessBadge({ accessLevel, onToggle, size = 'sm', 
     <button
       type="button"
       onClick={onToggle}
-      className="focus:outline-none"
+      className="focus:outline-none hover:opacity-80 transition-opacity cursor-pointer"
       aria-label={ariaLabel}
     >
       {content}

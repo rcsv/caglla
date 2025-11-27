@@ -132,7 +132,8 @@ export default function TripHeroSection({
                 )}
               </button>
             )}
-            {canPublish && onPublish && (
+            {/* Publish ボタン: テンプレートのDraft状態では非表示（Draftバッジで操作可能） */}
+            {canPublish && onPublish && !(trip.is_template && trip.access_level === 'private') && (
               <button
                 type="button"
                 onClick={onPublish}
