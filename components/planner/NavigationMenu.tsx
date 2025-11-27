@@ -15,13 +15,13 @@ import { ClockIcon } from '@/components/common/icons/ClockIcon'
 import { PieChartIcon } from '@/components/common/icons/PieChartIcon'
 import { LocationIcon } from '@/components/common/icons/LocationIcon'
 import { CagllaLogo } from '@/components/common/icons/CagllaLogo'
+import { UserMenu } from '@/components/common/UserMenu'
 import { Trip, Day, Itinerary } from '@/lib/core/types'
 import { dateUtils } from '@/lib/utils/date'
 import { toDate } from '@/lib/firebase/timestamp-utils'
 import { t } from '@/lib/i18n'
 import { getUserLanguage } from '@/lib/utils/language'
 import PremiumButton from '@/components/ui/PremiumButton'
-import { Icon } from '@iconify/react'
 
 interface NavigationMenuProps {
   trip: Trip
@@ -29,14 +29,6 @@ interface NavigationMenuProps {
   onDayClick?: (dayId: string) => void
   isCollapsed?: boolean
   onToggleCollapse?: () => void
-  onLogout?: () => void
-  extraControlsMenuItems?: Array<{
-    id: string
-    label: string
-    icon?: React.ReactNode | string
-    onClick: () => void
-    disabled?: boolean
-  }>
 }
 
 interface MenuSection {
@@ -57,11 +49,10 @@ interface MenuItem {
   onClick: () => void
 }
 
-export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, isCollapsed = false, onToggleCollapse, onLogout, extraControlsMenuItems = [] }: NavigationMenuProps) {
+export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, isCollapsed = false, onToggleCollapse }: NavigationMenuProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['itinerary']))
-  const [showExtraControls, setShowExtraControls] = useState(false)
   const templateWithoutDates = Boolean(trip.is_template && (!trip.start_date || !trip.end_date))
 
   const updateQuery = (updates: Record<string, string | null>) => {
@@ -176,35 +167,6 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     }
   ]
 
-  // 下付きメニューアイテムの定義
-  const bottomMenuItems = [
-    ...(extraControlsMenuItems.length > 0 ? [{
-      id: 'extra-controls',
-      title: 'Extra Controls >',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m6-6H6" />
-        </svg>
-      ),
-      onClick: () => setShowExtraControls(v => !v)
-    }] : []),
-    {
-      id: 'logout',
-      title: t('nav.logout'),
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-      ),
-      onClick: () => {
-        if (onLogout) {
-          onLogout()
-        } else {
-          onNavigateToSection('settings')
-        }
-      }
-    }
-  ]
 
   // 日付のタイトルを生成（簡潔版）
   function getDayTitle(day: Day): string {
@@ -320,16 +282,6 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
     })
   }
 
-  const closeMenuIfMobile = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      onToggleCollapse?.()
-    }
-  }
-
-  const renderIcon = (icon?: React.ReactNode | string) => {
-    if (!icon) return null
-    return typeof icon === 'string' ? <Icon icon={icon} className="w-4 h-4" /> : icon
-  }
 
   return (
     <div className={`bg-white border-r border-gray-200 h-full flex flex-col transition-all duration-200 relative z-30 left-nav-shadow ${
@@ -495,46 +447,9 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
         </nav>
       </div>
 
-      {/* 下付きメニュー（Checklist & Settings） */}
-      <div className={`border-t border-gray-200 space-y-1 ${isCollapsed ? 'p-1' : 'p-2'} relative zidx-left-panel-content bg-white`}>
-        {bottomMenuItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={item.onClick}
-            className={`w-full flex items-center text-left hover:bg-gray-50 rounded-lg transition-colors ${
-              isCollapsed ? 'justify-center p-1' : 'gap-2 p-2'
-            }`}
-            title={isCollapsed ? item.title : undefined}
-          >
-            <span className="text-gray-600">{renderIcon(item.icon)}</span>
-            {!isCollapsed && (
-              <span className="font-medium text-gray-900">{item.title}</span>
-            )}
-          </button>
-        ))}
-        {showExtraControls && extraControlsMenuItems.length > 0 && (
-          <div className="absolute left-2 right-2 bottom-14 bg-white border border-gray-200 rounded-md shadow-lg p-1 zidx-left-panel">
-            {extraControlsMenuItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  if (!item.disabled) {
-                    item.onClick()
-                    setShowExtraControls(false)
-                    closeMenuIfMobile()
-                  }
-                }}
-                disabled={item.disabled}
-                className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 rounded ${
-                  item.disabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {renderIcon(item.icon)}
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
+      {/* 下付きメニュー（UserMenu） */}
+      <div className={`border-t border-gray-200 ${isCollapsed ? 'p-1' : 'p-2'} relative zidx-left-panel-content bg-white`}>
+        <UserMenu isCollapsed={isCollapsed} />
       </div>
     </div>
   )
