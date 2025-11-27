@@ -253,7 +253,17 @@ export async function getTripServer(
       tripWithDest.creator = null
     }
     
-    return tripWithDest
+    // Convert Firestore Timestamps to Date objects for client compatibility
+    const tripForClient: TripWithDestination = {
+      ...tripWithDest,
+      created_at: toDate(tripWithDest.created_at) as FirestoreDate,
+      updated_at: toDate(tripWithDest.updated_at) as FirestoreDate,
+      start_date: toDate(tripWithDest.start_date) as FirestoreDate,
+      end_date: toDate(tripWithDest.end_date) as FirestoreDate,
+      ical_last_accessed_at: toDate(tripWithDest.ical_last_accessed_at) as FirestoreDate | undefined,
+    }
+    
+    return tripForClient
   } catch (error) {
     logger.error('Failed to get trip in Server Component', error)
     return null
