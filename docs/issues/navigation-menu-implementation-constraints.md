@@ -172,7 +172,7 @@
 
 **変更点**:
 - `CagllaLogo` コンポーネントを使用
-- "Back to Home" 削除
+- "Back to Home" 削除（ロゴクリックで /home に遷移）
 - ハンバーガー (☰) → 左矢印 (←) に変更
 - "Menu" テキスト削除
 - 折りたたみ時はロゴのみ表示
@@ -202,10 +202,15 @@
 
 **目標**: "Logout" → アバター + ユーザー名 + ポップアップメニュー
 
+**メニュー構成**: Profile + Logout のみ（シンプル化）
+- "Back to Home" は **削除**（ロゴクリックで /home に遷移できるため冗長）
+- 業界標準（Gmail, Notion, Slack）に準拠
+- 明確な役割分担：ロゴ = ホーム、UserMenu = アカウント関連
+
 **必要な情報**:
 - ユーザー名: `userData?.name` または `user?.displayName`
 - アバターURL: `userData?.avatar_url` または `user?.photoURL`
-- プラン名: `planConfig?.name` または `userPlanId`
+- プラン名: `planConfig?.name` または `userPlanId`（表示はオプション）
 - ユーザーslug: `userData?.slug`
 
 **実装上の問題点**:
@@ -263,9 +268,30 @@ export function UserMenu({ isCollapsed = false }: UserMenuProps) {
         
         {menuOpen && (
           <div 
-            className={`fixed left-14 bottom-2 w-48 bg-white border rounded-lg shadow-lg ${getZIndexClass('POPUP_MENU')}`}
+            className={`fixed left-14 bottom-2 w-48 bg-white border rounded-lg shadow-lg py-1 ${getZIndexClass('POPUP_MENU')}`}
           >
-            {/* メニュー内容 */}
+            {/* Profile */}
+            {userSlug && (
+              <Link
+                href={`/${userSlug}`}
+                onClick={() => setMenuOpen(false)}
+                className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Profile
+              </Link>
+            )}
+            
+            {/* Logout */}
+            <hr className="my-1 border-gray-200" />
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                logout()
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50"
+            >
+              Logout
+            </button>
           </div>
         )}
       </div>
@@ -289,41 +315,36 @@ export function UserMenu({ isCollapsed = false }: UserMenuProps) {
           {userName}
         </span>
         <svg className="w-4 h-4 text-gray-500" {...}>
-          {/* 設定アイコンまたはドロップダウンアイコン */}
+          {/* ドロップダウンアイコン */}
         </svg>
       </button>
       
       {menuOpen && (
         <div 
-          className={`absolute left-0 right-0 bottom-full mb-1 bg-white border rounded-lg shadow-lg ${getZIndexClass('POPUP_MENU')}`}
+          className={`absolute left-0 right-0 bottom-full mb-1 bg-white border rounded-lg shadow-lg py-1 ${getZIndexClass('POPUP_MENU')}`}
         >
-          <div className="py-1">
-            {userSlug && (
-              <Link
-                href={`/${userSlug}`}
-                onClick={() => setMenuOpen(false)}
-                className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                Profile
-              </Link>
-            )}
+          {/* Profile */}
+          {userSlug && (
             <Link
-              href="/home"
+              href={`/${userSlug}`}
               onClick={() => setMenuOpen(false)}
               className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
             >
-              Back to Home
+              Profile
             </Link>
-            <button
-              onClick={() => {
-                setMenuOpen(false)
-                logout()
-              }}
-              className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50"
-            >
-              Logout
-            </button>
-          </div>
+          )}
+          
+          {/* Logout */}
+          <hr className="my-1 border-gray-200" />
+          <button
+            onClick={() => {
+              setMenuOpen(false)
+              logout()
+            }}
+            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50"
+          >
+            Logout
+          </button>
         </div>
       )}
     </div>
@@ -378,7 +399,6 @@ import { UserMenu } from '@/components/common/UserMenu'
 - [ ] `UserMenu` を `NavigationMenu` にインポート
 - [ ] 既存の "Logout" ボタンを削除
 - [ ] `UserMenu` を最下部に配置
-- [ ] "Back to Home" リンクをメニュー内に移動（オプション）
 - [ ] Z-index の調整
 
 **予想作業時間**: 30分
@@ -386,8 +406,7 @@ import { UserMenu } from '@/components/common/UserMenu'
 ### フェーズ5: i18n 対応（優先度: 中）
 - [ ] 新しい翻訳キーを追加
   - `nav.profile`: "Profile" / "プロフィール"
-  - `nav.backToHome`: "Back to Home" / "ホームに戻る"
-  - `nav.settings`: "Settings" / "設定"
+  - `nav.settings`: "Settings" / "設定"（将来実装用）
   - `nav.collapseSidebar`: "Collapse sidebar" / "サイドバーを閉じる"
 - [ ] 各コンポーネントで `t()` 関数を使用
 
@@ -555,9 +574,10 @@ feat(nav): UserMenu コンポーネントを追加
 
 - useAuth と useUserData から情報を取得
 - アバター + ユーザー名を表示
-- ポップアップメニューで Profile, Back to Home, Logout を提供
+- ポップアップメニューで Profile, Logout を提供
 - 折りたたみ時はアバターのみ表示
 - useClickOutside で外側クリックを検知
+- ロゴクリックで /home に遷移するため、メニュー内の "Back to Home" は削除
 ```
 
 ```
@@ -565,8 +585,8 @@ feat(nav): NavigationMenu に UserMenu を統合
 
 - 既存の "Logout" ボタンを削除
 - UserMenu を最下部に配置
-- "Back to Home" をメニュー内に移動
 - z-index を調整してポップアップメニューが正しく表示されるように
+- ロゴで /home に戻れるため、冗長な "Back to Home" は削除
 ```
 
 ## 🧪 テストチェックリスト
@@ -600,11 +620,12 @@ feat(nav): NavigationMenu に UserMenu を統合
 ## 🎯 成功基準
 
 ### ユーザビリティ
-- [ ] ロゴの位置とクリック範囲が明確
+- [ ] ロゴの位置とクリック範囲が明確（ロゴクリックで /home に遷移）
 - [ ] 折りたたみボタンの役割が視覚的に理解できる
 - [ ] メニュー階層が一目で理解できる
 - [ ] ユーザー情報へのアクセスが直感的
 - [ ] ログアウトまでの操作が2クリック以内
+- [ ] ロゴとUserMenuでホームへの導線が明確（冗長性の排除）
 
 ### パフォーマンス
 - [ ] アバター画像の遅延読み込み（Next.js Image を使用）
