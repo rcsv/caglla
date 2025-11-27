@@ -221,7 +221,13 @@ export default function TimelineDefault() {
   }
 
   const handleDayDelete = async (dayId: string) => {
-    // 削除後、tripデータを再取得
+    // 即座にローカルのtripデータから削除されたDayを除外
+    updateTrip(prevTrip => ({
+      ...prevTrip,
+      days: (prevTrip.days || []).filter(d => d.id !== dayId)
+    }))
+    
+    // サーバーから最新データを取得（day_numberの振り直しを反映）
     try {
       await refreshTrip()
     } catch (error) {
