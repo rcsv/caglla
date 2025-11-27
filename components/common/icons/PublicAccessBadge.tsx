@@ -44,12 +44,17 @@ export default function PublicAccessBadge({ accessLevel, onToggle, size = 'sm', 
 
   if (!onToggle) return content
 
+  // aria-labelをテンプレートモードに応じて変更
+  const ariaLabel = isTemplate
+    ? (isPrivate ? 'Publish template' : 'Unpublish template')
+    : (isPrivate ? 'Switch to public' : 'Switch to private')
+
   return (
     <button
       type="button"
       onClick={onToggle}
       className="focus:outline-none"
-      aria-label={isPrivate ? 'Switch to public' : 'Switch to private'}
+      aria-label={ariaLabel}
     >
       {content}
     </button>

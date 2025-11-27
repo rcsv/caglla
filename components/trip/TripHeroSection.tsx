@@ -101,6 +101,12 @@ export default function TripHeroSection({
           <PublicAccessBadge 
             accessLevel={trip.access_level === 'private' ? 'private' : 'public'} 
             isTemplate={trip.is_template}
+            onToggle={
+              // テンプレートのDraft状態でpublish可能な場合のみクリック可能
+              trip.is_template && trip.access_level === 'private' && canPublish && onPublish && !publishLoading
+                ? onPublish
+                : undefined
+            }
           />
         </div>
         {/* Top Navigation */}
