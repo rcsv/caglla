@@ -56,6 +56,7 @@ export default function TimelineDefault() {
 
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set())
   const [loadingDayIds, setLoadingDayIds] = useState<Set<string>>(new Set())
+  const [deletingDayIds, setDeletingDayIds] = useState<Set<string>>(new Set())
   const [summaryCollapsed, setSummaryCollapsed] = useState(false)
   const isProgrammaticScrollRef = useRef(false)
   const scrollToItineraryRef = useRef<((itineraryId: string) => void) | null>(null)
@@ -221,11 +222,24 @@ export default function TimelineDefault() {
   }
 
   const handleDayDelete = async (dayId: string) => {
-    // 即座にローカルのtripデータから削除されたDayを除外
+    // 削除アニメーション開始
+    setDeletingDayIds(prev => new Set(prev).add(dayId))
+    
+    // アニメーション完了を待つ（300ms）
+    await new Promise(resolve => setTimeout(resolve, 300))
+    
+    // ローカルのtripデータから削除されたDayを除外
     updateTrip(prevTrip => ({
       ...prevTrip,
       days: (prevTrip.days || []).filter(d => d.id !== dayId)
     }))
+    
+    // 削除アニメーション状態をクリア
+    setDeletingDayIds(prev => {
+      const next = new Set(prev)
+      next.delete(dayId)
+      return next
+    })
     
     // サーバーから最新データを取得（day_numberの振り直しを反映）
     try {
@@ -327,6 +341,7 @@ export default function TimelineDefault() {
         selectedDayId={selectedDayId}
         selectedItineraryId={selectedItineraryId}
         loadingDayIds={loadingDayIds}
+        deletingDayIds={deletingDayIds}
         onToggleDayCollapse={onToggleDayCollapse}
         onDayClick={onDayClick}
             onAddSchedule={handleAddSchedule}
