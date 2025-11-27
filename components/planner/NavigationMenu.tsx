@@ -404,7 +404,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                 <div className={`flex items-center ${!isCollapsed ? 'gap-2' : ''}`}>
                   <span className="text-gray-600 flex items-center justify-center w-6 h-6">{section.icon}</span>
                   {!isCollapsed && (
-                    <span className="font-medium text-gray-900">{section.title}</span>
+                    <span className="font-semibold text-gray-900">{section.title}</span>
                   )}
                 </div>
                 {!isCollapsed && section.isExpandable && (
@@ -467,8 +467,8 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                               </span>
                             )}
                             <div className="flex-1 min-w-0">
-                              <div className={`text-sm font-medium truncate ${
-                                item.id.startsWith('day-') ? getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day) : 'text-gray-900'
+                              <div className={`text-sm font-normal truncate ${
+                                item.id.startsWith('day-') ? getDayColor(trip.days?.find(d => d.id === item.id.replace('day-', '')) || {} as Day) : 'text-gray-600'
                               }`}>
                                 {item.title}
                               </div>
