@@ -468,43 +468,46 @@ export default function TripEditor({
             </>
           )}
 
-          <div>
-            <label htmlFor="accessLevel" className="block text-sm font-medium text-gray-700 mb-2">
-              {isTemplateMode ? t('tripEditor.field.publishStatus') : t('tripEditor.field.accessLevel')}
-            </label>
-            <select
-              id="accessLevel"
-              name="accessLevel"
-              value={formData.accessLevel}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${disablePublishControls ? 'bg-gray-100 cursor-not-allowed border-gray-200' : 'border-gray-300'}`}
-              disabled={disablePublishControls}
-            >
-              <option value="private">{isTemplateMode ? t('tripEditor.publishStatus.draft') : t('tripEditor.accessLevel.private')}</option>
-              <option value="public">{isTemplateMode ? t('tripEditor.publishStatus.published') : t('tripEditor.accessLevel.public')}</option>
-            </select>
+          {/* Publish Status/Access Level: テンプレートの時は非表示（Draftバッジで操作） */}
+          {!isTemplateMode && (
+            <div>
+              <label htmlFor="accessLevel" className="block text-sm font-medium text-gray-700 mb-2">
+                {t('tripEditor.field.accessLevel')}
+              </label>
+              <select
+                id="accessLevel"
+                name="accessLevel"
+                value={formData.accessLevel}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${disablePublishControls ? 'bg-gray-100 cursor-not-allowed border-gray-200' : 'border-gray-300'}`}
+                disabled={disablePublishControls}
+              >
+                <option value="private">{t('tripEditor.accessLevel.private')}</option>
+                <option value="public">{t('tripEditor.accessLevel.public')}</option>
+              </select>
 
-            {formData.accessLevel === 'public' && !disablePublishControls && (
-              <div className="mt-4">
-                <Toggle
-                  label={t('trip.create.templateMode.label')}
-                  checked={formData.isTemplate}
-                  onChange={(event) => handleTemplateToggle(event.target.checked)}
-                  disabled={!canToggleTemplate}
-                />
-                <p className={`mt-1 text-xs ${publicTemplateEnabled ? 'text-gray-500' : 'text-red-500'}`}>
-                  {formData.isTemplate
-                    ? t('trip.create.templateMode.description.active')
-                    : t('trip.create.templateMode.description.inactive')}
-                </p>
-                {!publicTemplateEnabled && (
-                  <div className="mt-2 rounded-md border border-yellow-200 bg-yellow-50 p-3 text-xs text-yellow-700">
-                    {t('trip.template.upgradeRequired')}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+              {formData.accessLevel === 'public' && !disablePublishControls && (
+                <div className="mt-4">
+                  <Toggle
+                    label={t('trip.create.templateMode.label')}
+                    checked={formData.isTemplate}
+                    onChange={(event) => handleTemplateToggle(event.target.checked)}
+                    disabled={!canToggleTemplate}
+                  />
+                  <p className={`mt-1 text-xs ${publicTemplateEnabled ? 'text-gray-500' : 'text-red-500'}`}>
+                    {formData.isTemplate
+                      ? t('trip.create.templateMode.description.active')
+                      : t('trip.create.templateMode.description.inactive')}
+                  </p>
+                  {!publicTemplateEnabled && (
+                    <div className="mt-2 rounded-md border border-yellow-200 bg-yellow-50 p-3 text-xs text-yellow-700">
+                      {t('trip.template.upgradeRequired')}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {isTemplateMode && (
             <div>
