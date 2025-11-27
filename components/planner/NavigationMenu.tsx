@@ -335,17 +335,17 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
           // 展開時: ロゴと折りたたみボタンを横に配置
           <div className="flex items-center justify-between">
             {/* ロゴ部分 */}
-            <Link
-              href="/home"
+          <Link
+            href="/home"
               className="flex items-center gap-2 text-gray-900 hover:opacity-80 transition-opacity"
               title="Go to home"
-              aria-label="Go to home"
-              onClick={() => {
+            aria-label="Go to home"
+            onClick={() => {
                 if (typeof window !== 'undefined' && window.innerWidth < 768) {
-                  onToggleCollapse?.()
-                }
-              }}
-            >
+                onToggleCollapse?.()
+              }
+            }}
+          >
               <CagllaLogo className="w-8 h-8" />
               <span className="text-xl font-bold font-rajdhani">Caglla</span>
             </Link>
@@ -363,7 +363,7 @@ export default function NavigationMenu({ trip, onNavigateToSection, onDayClick, 
                 </svg>
               </button>
             )}
-          </div>
+        </div>
         )}
       </div>
 
