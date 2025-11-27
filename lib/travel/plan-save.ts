@@ -82,8 +82,7 @@ export class PlanSaveOperations {
       const tripData: TripFormData = {
         title: options?.titleOverride || templateTrip.title,
         description: templateTrip.description,
-        start_date: '', // テンプレートから作成する場合は日付未設定
-        end_date: '',
+        // start_date / end_date は API route で後から設定されるため、ここでは省略
         access_level: 'private',
         image_url: templateTrip.image_url,
         destination: templateTrip.destination,
@@ -203,8 +202,8 @@ export class PlanSaveOperations {
       const newTripData: TripFormData = {
         title: newTitle || `${sourceTrip.trip.title} (コピー)`,
         description: sourceTrip.trip.description,
-        start_date: sourceTrip.trip.start_date?.toString() || '',
-        end_date: sourceTrip.trip.end_date?.toString() || '',
+        start_date: sourceTrip.trip.start_date?.toString(),
+        end_date: sourceTrip.trip.end_date?.toString(),
         access_level: sourceTrip.trip.access_level,
         image_url: sourceTrip.trip.image_url,
         destination: sourceTrip.trip.destination,
@@ -294,8 +293,8 @@ export class PlanSaveOperations {
       const tripData: TripFormData = {
         title: customizations?.title || templateData.trip_data.title,
         description: customizations?.description || templateData.trip_data.description,
-        start_date: customizations?.start_date || templateData.trip_data.start_date?.toString() || '',
-        end_date: customizations?.end_date || templateData.trip_data.end_date?.toString() || '',
+        start_date: customizations?.start_date || templateData.trip_data.start_date?.toString(),
+        end_date: customizations?.end_date || templateData.trip_data.end_date?.toString(),
         access_level: customizations?.access_level || templateData.trip_data.access_level,
         image_url: customizations?.image_url || templateData.trip_data.image_url,
         destination: customizations?.destination || templateData.trip_data.destination,
@@ -341,8 +340,6 @@ export class PlanSaveOperations {
       title: tripData.title,
       description: tripData.description,
       destination: tripData.destination,
-      start_date: tripData.start_date ? new Date(tripData.start_date) : undefined,
-      end_date: tripData.end_date ? new Date(tripData.end_date) : undefined,
       access_level: tripData.access_level,
       image_url: tripData.image_url,
       status: 'PLANNING',
@@ -354,6 +351,14 @@ export class PlanSaveOperations {
         typeof tripData.likes_count === 'number' && Number.isFinite(tripData.likes_count)
           ? Math.max(0, Math.floor(tripData.likes_count))
           : 0
+    }
+
+    // start_date / end_date: undefined を避けるため、値がある場合のみ追加
+    if (tripData.start_date) {
+      baseData.start_date = new Date(tripData.start_date)
+    }
+    if (tripData.end_date) {
+      baseData.end_date = new Date(tripData.end_date)
     }
 
     if (!isTemplate) {
@@ -372,18 +377,26 @@ export class PlanSaveOperations {
   private async updateTripForPlan(tripId: string, tripData: TripFormData): Promise<Trip> {
     const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
     const isTemplate = Boolean(tripData.is_template)
-    await tripRef.update({
+    const updateData: Record<string, unknown> = {
       title: tripData.title,
       description: tripData.description,
       destination: tripData.destination,
-      start_date: tripData.start_date ? new Date(tripData.start_date) : undefined,
-      end_date: tripData.end_date ? new Date(tripData.end_date) : undefined,
       access_level: tripData.access_level,
       image_url: tripData.image_url,
       updated_at: new Date(),
       is_template: isTemplate,
       day_count: isTemplate ? tripData.day_count ?? null : tripData.day_count ?? undefined
-    })
+    }
+
+    // start_date / end_date: undefined を避けるため、値がある場合のみ追加
+    if (tripData.start_date) {
+      updateData.start_date = new Date(tripData.start_date)
+    }
+    if (tripData.end_date) {
+      updateData.end_date = new Date(tripData.end_date)
+    }
+
+    await tripRef.update(updateData)
     
     const tripSnap = await tripRef.get()
     return {

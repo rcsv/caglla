@@ -70,8 +70,8 @@ export interface PlaceDetailsResult extends PlaceData {}
 export interface TripFormData {
   title: string
   description?: string
-  start_date: string
-  end_date: string
+  start_date?: string
+  end_date?: string
   access_level: AccessLevel | 'private' | 'public'  // 後方互換性のため両方許可
   image_url?: string
   destination?: string

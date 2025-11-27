@@ -5,7 +5,7 @@ import React from 'react'
 export type AccessLevel = 'public' | 'private'
 
 export interface PublicAccessBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-accessLevel: AccessLevel
+  accessLevel: AccessLevel
   onToggle?: () => void
   size?: 'sm' | 'md'
   isTemplate?: boolean // テンプレートモードの場合は Draft/Published 表記に変更

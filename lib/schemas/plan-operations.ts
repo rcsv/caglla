@@ -60,7 +60,7 @@ export const SavePlanAsTemplateSchema = z.object({
  * ```
  */
 export const CreateReplicaFromTemplateSchema = z.object({
-  startDate: z.string().datetime({ message: 'Invalid start date format' }).optional()
+  startDate: z.string().optional()
     .refine(
       (val) => {
         if (!val) return true
