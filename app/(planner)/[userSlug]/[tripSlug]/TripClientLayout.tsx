@@ -48,6 +48,7 @@ function TripClientLayoutContent({
   const [leftNavExpanded, setLeftNavExpanded] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [icalModalOpen, setIcalModalOpen] = useState(false)
+  const [unpublishLoading, setUnpublishLoading] = useState(false)
   
   // Trip actions (Publish, PDF, iCal)
   const { publish, exportPdf, publishLoading, pdfExporting } = useTripActions({
@@ -122,8 +123,6 @@ function TripClientLayoutContent({
   const handleICalExport = () => {
     setIcalModalOpen(true)
   }
-
-  const [unpublishLoading, setUnpublishLoading] = useState(false)
 
   const handleTogglePublish = async () => {
     if (!trip || publishLoading || unpublishLoading) return
