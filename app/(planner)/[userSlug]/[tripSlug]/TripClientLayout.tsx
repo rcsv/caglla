@@ -8,6 +8,8 @@ import { useTripUrlState } from './useTripUrlState'
 import { useAuth } from '@/lib/contexts/auth'
 import { useUserData } from '@/lib/contexts/user-data'
 import { useRouter } from 'next/navigation'
+import { useTripActions } from './useTripActions'
+import { t } from '@/lib/i18n'
 import type { Trip } from '@/lib/core/types'
 
 interface TripClientLayoutProps {
@@ -34,14 +36,25 @@ function TripClientLayoutContent({
   social: ReactNode
   children?: ReactNode
 }) {
-  const { trip, loading, error } = useTrip()
+  const { trip, loading, error, refreshTrip, updateTrip } = useTrip()
   const { user } = useAuth()
-  const { removeTrip, userData } = useUserData()
+  const { removeTrip, userData, userPlanId } = useUserData()
   const router = useRouter()
   const { currentView, selectedDayId, setSelectedDayId, updateQuery } = useTripUrlState()
   
   const [leftNavExpanded, setLeftNavExpanded] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  
+  // Trip actions (Publish, PDF, iCal)
+  const { publish, exportPdf, publishLoading, pdfExporting } = useTripActions({
+    trip,
+    user,
+    userData,
+    refreshTrip,
+    updateTrip,
+    router,
+    userPlan: userPlanId,
+  })
   
   // tripがnullの場合、ローディングまたはエラー表示
   if (!trip) {
@@ -101,6 +114,17 @@ function TripClientLayoutContent({
       updateQuery({ view: 'itinerary' })
     }
   }
+
+  const handleICalExport = () => {
+    // TODO: iCal export implementation
+    alert('iCal export feature coming soon!')
+  }
+
+  // 編集権限の確認
+  const canEdit = user && trip && (trip.user_id === userData?.id || trip.user_id === user.uid)
+  
+  // Publish権限: 編集可能でPrivateの場合
+  const canPublish = canEdit && trip?.access_level === 'private'
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -169,7 +193,52 @@ function TripClientLayoutContent({
           {trip && (
             <FloatingTitleBar 
               title={trip.title} 
-              accessLevel={trip.access_level === 'private' ? 'private' : 'public'} 
+              accessLevel={trip.access_level === 'private' ? 'private' : 'public'}
+              actions={
+                canEdit ? (
+                  <div className="flex items-center gap-2">
+                    {/* Publish/Unpublish Button */}
+                    {canPublish && (
+                      <button
+                        onClick={publish}
+                        disabled={publishLoading}
+                        className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-md transition-colors flex items-center gap-1.5"
+                        title={trip.is_template ? t('trip.publish.templateButton') : t('trip.publish.button')}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        {publishLoading ? t('trip.publish.publishing') : (trip.is_template ? t('trip.publish.templateButton') : 'Publish')}
+                      </button>
+                    )}
+                    
+                    {/* PDF Export Button */}
+                    <button
+                      onClick={exportPdf}
+                      disabled={pdfExporting}
+                      className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 border border-gray-300 rounded-md transition-colors flex items-center gap-1.5"
+                      title="Export to PDF"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      {pdfExporting ? 'Exporting...' : 'PDF'}
+                    </button>
+                    
+                    {/* iCal Export Button */}
+                    <button
+                      onClick={handleICalExport}
+                      className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-md transition-colors flex items-center gap-1.5"
+                      title="Export to iCal"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      iCal
+                    </button>
+                  </div>
+                ) : null
+              }
             />
           )}
 
