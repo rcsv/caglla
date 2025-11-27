@@ -91,11 +91,6 @@ function TripClientLayoutContent({
     )
   }
 
-  const handleLogout = async () => {
-    // TODO: logout実装
-    router.push('/')
-  }
-
   const navigateToSection = (sectionId: string) => {
     // Summary view内のセクションへのナビゲーション
     if (currentView === 'summary') {
@@ -183,7 +178,6 @@ function TripClientLayoutContent({
             onDayClick={handleDayClick}
             isCollapsed={!leftNavExpanded}
             onToggleCollapse={() => setLeftNavExpanded(!leftNavExpanded)}
-            onLogout={handleLogout}
           />
         </div>
       )}
@@ -214,7 +208,6 @@ function TripClientLayoutContent({
               }}
               isCollapsed={false}
               onToggleCollapse={() => {}}
-              onLogout={handleLogout}
             />
           </div>
         )}
@@ -228,7 +221,7 @@ function TripClientLayoutContent({
           {trip && (
             <FloatingTitleBar 
               title={trip.title} 
-              accessLevel={trip.access_level === 'private' ? 'private' : 'public'}
+              accessLevel={trip.access_level === 'private' ? 'private' : 'public'} 
               actions={
                 canEdit ? (
                   <div className="flex items-center gap-2">
