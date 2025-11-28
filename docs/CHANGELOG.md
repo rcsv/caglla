@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > バージョニング方針: 本プロジェクトはSemVerに準拠します。詳細は `docs/development/versioning.md` を参照してください。
 
+## [3.0.0] - 2025-01-XX
+
+### Added
+- SNS機能（いいね、コメント、フォロー）の追加
+- Parallel Routes実装（@timeline, @map, @socialスロット）
+- Route Groups導入（(planner), (discover), (profile)）
+- フィード機能（公開フィード、トレンドフィード、フォロー中フィード）
+- 認証プロバイダーマルチ対応の基盤構築
+- Branded Typesによる識別子型システム
+- 権限管理システム（`lib/core/permissions.ts`）
+- SNS関連型定義（`TripSocialStats`, `TripLike`, `TripComment`, `UserFollow`）
+- 新規APIエンドポイント12個（SNS機能関連）
+- Firestoreスキーマ拡張（`social_stats`フィールド、新規コレクション3個）
+
+### Changed
+- Next.js 15.5.6 / React 19.0.0へアップグレード
+- Route Handlerの`params`型を`Promise`型に対応
+- `composeMiddleware`で`params: Promise`を自動解決
+- 認証システムを`auth_uid`ベースに移行（後方互換性維持）
+- Trip詳細ページのレイアウトをParallel Routes構造に変更
+- エラーハンドリングの統一（`handleApiError`の使用）
+
+### Fixed
+- Next.js 15の`useSearchParams`に`Suspense`バウンダリを追加
+- Route Handlerの型安全性向上
+- 各種APIエンドポイントでの`handleApiError`インポート漏れを修正
+- `Day`型のインポート漏れを修正
+- `getUserByAuthUid`の誤用を修正（ドキュメントIDでの直接取得に変更）
+
+### Technical
+- Server Components最適化による初期表示の高速化
+- Composite Indexesの追加によるクエリ最適化
+- テストカバレッジ80%以上を達成
+- 型安全性の大幅な向上
+
 ## [2.2.0] - 2025-11-12
 
 ### Added
