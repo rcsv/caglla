@@ -48,6 +48,19 @@ const nextConfig = {
   // Firebase App Hosting用の設定
   output: 'standalone',
   
+  // Webpack設定（チャンク読み込みエラー対策）
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // クライアント側のチャンク読み込みエラー対策
+      config.optimization = {
+        ...config.optimization,
+        moduleIds: 'deterministic',
+        chunkIds: 'deterministic',
+      }
+    }
+    return config
+  },
+  
   // 画像の外部ドメイン設定
   images: {
     remotePatterns: [

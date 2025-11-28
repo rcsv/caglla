@@ -50,6 +50,30 @@ export default async function RootLayout({
                   originalWarn.apply(console, args);
                 };
               }
+              
+              // Handle chunk load errors (Parallel Routes対応)
+              if (typeof window !== 'undefined') {
+                window.addEventListener('error', function(event) {
+                  if (event.message && event.message.includes('Loading chunk') && event.message.includes('failed')) {
+                    console.warn('Chunk load error detected, reloading page...', event.message);
+                    // チャンク読み込みエラーの場合はページをリロード
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 1000);
+                  }
+                });
+                
+                // Unhandled promise rejectionでもチャンクエラーを検出
+                window.addEventListener('unhandledrejection', function(event) {
+                  if (event.reason && typeof event.reason === 'object' && event.reason.name === 'ChunkLoadError') {
+                    console.warn('ChunkLoadError detected, reloading page...', event.reason);
+                    event.preventDefault();
+                    setTimeout(() => {
+                      window.location.reload();
+                    }, 1000);
+                  }
+                });
+              }
             `,
           }}
         />
