@@ -6,6 +6,13 @@ import { planSaveOperations } from '@/lib/travel/plan-save'
 //import { generateUniqueSlug } from '@/lib/slug-utils'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 
+/**
+ * Create a user-specific replica of a trip template identified by its slug.
+ *
+ * @param request - Incoming Next.js request carrying an Authorization Bearer token.
+ * @param params - Promise resolving to route params; must include `tripSlug`, the template trip's id or slug.
+ * @returns JSON response. On success: `{ success: true, trip: { id, slug, access_level } }`. On error: `{ error: string }` with an appropriate HTTP status (401, 403, 404, 400, or 500).
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ tripSlug: string }> }
@@ -92,4 +99,3 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to create replica trip' }, { status: 500 })
   }
 }
-
