@@ -60,9 +60,9 @@ export default async function TripDetailLayout({
   
   return (
     <Suspense fallback={null}>
-      <TripClientLayout trip={tripForClient} timeline={timeline} map={map} social={social}>
-        {children}
-      </TripClientLayout>
+    <TripClientLayout trip={tripForClient} timeline={timeline} map={map} social={social}>
+      {children}
+    </TripClientLayout>
     </Suspense>
   )
 }
