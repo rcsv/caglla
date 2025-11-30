@@ -3,43 +3,43 @@
  * PDFエクスポートとHTMLプレビューで共有するテンプレート生成機能
  */
 
-import type { Trip, Day, Itinerary } from '@/lib/core/types'
-import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
-import { dateUtils } from '@/lib/utils/date'
+import type { Trip, Day, Itinerary } from "@/lib/core/types";
+import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
+import { dateUtils } from "@/lib/utils/date";
 
 export interface TripTemplateData {
-  trip: Trip
-  days: Day[]
-  itinerariesByDay: Record<string, Itinerary[]>
+	trip: Trip;
+	days: Day[];
+	itinerariesByDay: Record<string, Itinerary[]>;
 }
 
 export interface TemplateOptions {
-  includePreviewControls?: boolean
-  includePreviewHeader?: boolean
-  customStyles?: string
+	includePreviewControls?: boolean;
+	includePreviewHeader?: boolean;
+	customStyles?: string;
 }
 
 /**
  * HTML特殊文字をエスケープ
  */
 export function escapeHtml(text: string | undefined | null): string {
-  if (!text) return ''
-  
-  const map: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  }
-  return text.replace(/[&<>"']/g, m => map[m])
+	if (!text) return "";
+
+	const map: Record<string, string> = {
+		"&": "&amp;",
+		"<": "&lt;",
+		">": "&gt;",
+		'"': "&quot;",
+		"'": "&#039;",
+	};
+	return text.replace(/[&<>"']/g, (m) => map[m]);
 }
 
 /**
  * 基本スタイルを生成
  */
 export function generateBaseStyles(): string {
-  return `
+	return `
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { 
@@ -129,14 +129,14 @@ export function generateBaseStyles(): string {
         text-align: center;
       }
     </style>
-  `
+  `;
 }
 
 /**
  * プレビュー用の追加スタイルを生成
  */
 export function generatePreviewStyles(): string {
-  return `
+	return `
     <style>
       body { 
         background: #f8f9fa;
@@ -200,25 +200,25 @@ export function generatePreviewStyles(): string {
         .header, .day-section, .footer { box-shadow: none; }
       }
     </style>
-  `
+  `;
 }
 
 /**
  * プレビューヘッダーを生成
  */
 export function generatePreviewHeader(): string {
-  return `
+	return `
     <div class="preview-header">
       📄 PDFデザインプレビュー - 開発用表示
     </div>
-  `
+  `;
 }
 
 /**
  * プレビューコントロールを生成
  */
 export function generatePreviewControls(): string {
-  return `
+	return `
     <div class="preview-controls">
       <button onclick="window.print()">🖨️ 印刷プレビュー</button>
       <button onclick="window.location.reload()">🔄 リロード</button>
@@ -227,119 +227,131 @@ export function generatePreviewControls(): string {
         💡 このプレビューはPDFと同じデザインです。印刷プレビューでPDF出力時の見た目を確認できます。
       </div>
     </div>
-  `
+  `;
 }
 
 /**
  * トリップヘッダーを生成
  */
 export function generateTripHeader(trip: Trip): string {
-  const startDate = trip.start_date ? dateUtils.formatDate(toDateOrNull(trip.start_date) || new Date()) : '未定'
-  const endDate = trip.end_date ? dateUtils.formatDate(toDateOrNull(trip.end_date) || new Date()) : '未定'
-  
-  return `
+	const startDate = trip.start_date
+		? dateUtils.formatDate(toDateOrNull(trip.start_date) || new Date())
+		: "未定";
+	const endDate = trip.end_date
+		? dateUtils.formatDate(toDateOrNull(trip.end_date) || new Date())
+		: "未定";
+
+	return `
     <div class="header">
-      <div class="title">${escapeHtml(trip.name || '無題の旅行')}</div>
+      <div class="title">${escapeHtml(trip.name || "無題の旅行")}</div>
       <div class="trip-meta">
         📅 ${startDate} 〜 ${endDate}
-        ${trip.destination ? ` | 📍 ${escapeHtml(trip.destination)}` : ''}
+        ${trip.destination ? ` | 📍 ${escapeHtml(trip.destination)}` : ""}
       </div>
     </div>
-  `
+  `;
 }
 
 /**
  * 日程セクションを生成
  */
 export function generateDaySections(data: TripTemplateData): string {
-  const { days, itinerariesByDay } = data
-  
-  return days
-    .sort((a, b) => {
-      const dateA = toDateOrNull(a.date)
-      const dateB = toDateOrNull(b.date)
-      if (!dateA || !dateB) return 0
-      return dateA.getTime() - dateB.getTime()
-    })
-    .map((day, index) => {
-      const dayDate = toDateOrNull(day.date)
-      const dayTitle = dayDate 
-        ? `${dateUtils.formatDate(dayDate)} (${index + 1}日目)`
-        : `${index + 1}日目`
-      
-      const itineraries = itinerariesByDay[day.id] || []
-      const sortedItineraries = itineraries
-        .sort((a, b) => {
-          const timeA = a.start_time || ''
-          const timeB = b.start_time || ''
-          return timeA.localeCompare(timeB)
-        })
-      
-      const itineraryItems = sortedItineraries.length > 0
-        ? sortedItineraries.map(item => `
+	const { days, itinerariesByDay } = data;
+
+	return days
+		.sort((a, b) => {
+			const dateA = toDateOrNull(a.date);
+			const dateB = toDateOrNull(b.date);
+			if (!dateA || !dateB) return 0;
+			return dateA.getTime() - dateB.getTime();
+		})
+		.map((day, index) => {
+			const dayDate = toDateOrNull(day.date);
+			const dayTitle = dayDate
+				? `${dateUtils.formatDate(dayDate)} (${index + 1}日目)`
+				: `${index + 1}日目`;
+
+			const itineraries = itinerariesByDay[day.id] || [];
+			const sortedItineraries = itineraries.sort((a, b) => {
+				const timeA = a.start_time || "";
+				const timeB = b.start_time || "";
+				return timeA.localeCompare(timeB);
+			});
+
+			const itineraryItems =
+				sortedItineraries.length > 0
+					? sortedItineraries
+							.map(
+								(item) => `
             <div class="itinerary-item">
-              ${item.start_time ? `<div class="itinerary-time">⏰ ${item.start_time}</div>` : ''}
-              <div class="itinerary-name">${escapeHtml(item.title || item.name || '無題の旅程')}</div>
-              ${item.description ? `<div class="itinerary-description">${escapeHtml(item.description)}</div>` : ''}
-              ${item.note ? `<div class="itinerary-note">${escapeHtml(item.note)}</div>` : ''}
-              ${item.address ? `<div class="itinerary-address">📍 ${escapeHtml(item.address)}</div>` : ''}
+              ${item.start_time ? `<div class="itinerary-time">⏰ ${item.start_time}</div>` : ""}
+              <div class="itinerary-name">${escapeHtml(item.title || item.name || "無題の旅程")}</div>
+              ${item.description ? `<div class="itinerary-description">${escapeHtml(item.description)}</div>` : ""}
+              ${item.note ? `<div class="itinerary-note">${escapeHtml(item.note)}</div>` : ""}
+              ${item.address ? `<div class="itinerary-address">📍 ${escapeHtml(item.address)}</div>` : ""}
             </div>
-          `).join('')
-        : '<div class="no-itineraries">予定なし</div>'
-      
-      return `
+          `,
+							)
+							.join("")
+					: '<div class="no-itineraries">予定なし</div>';
+
+			return `
         <div class="day-section">
           <div class="day-header">${dayTitle}</div>
           ${itineraryItems}
         </div>
-      `
-    }).join('')
+      `;
+		})
+		.join("");
 }
 
 /**
  * フッターを生成
  */
 export function generateFooter(): string {
-  return `
+	return `
     <div class="footer">
-      Generated by Caglla Travel Manager | ${new Date().toLocaleDateString('ja-JP')}
+      Generated by Caglla Travel Manager | ${new Date().toLocaleDateString("ja-JP")}
     </div>
-  `
+  `;
 }
 
 /**
  * 完全なHTMLドキュメントを生成
  */
 export function generateTripHtml(
-  data: TripTemplateData, 
-  options: TemplateOptions = {}
+	data: TripTemplateData,
+	options: TemplateOptions = {},
 ): string {
-  const { trip } = data
-  const { 
-    includePreviewControls = false, 
-    includePreviewHeader = false,
-    customStyles = ''
-  } = options
+	const { trip } = data;
+	const {
+		includePreviewControls = false,
+		includePreviewHeader = false,
+		customStyles = "",
+	} = options;
 
-  // スタイルの組み合わせ
-  const styles = generateBaseStyles() + 
-    (includePreviewControls ? generatePreviewStyles() : '') +
-    customStyles
+	// スタイルの組み合わせ
+	const styles =
+		generateBaseStyles() +
+		(includePreviewControls ? generatePreviewStyles() : "") +
+		customStyles;
 
-  // コンテンツの組み合わせ
-  const previewHeader = includePreviewHeader ? generatePreviewHeader() : ''
-  const previewControls = includePreviewControls ? generatePreviewControls() : ''
-  const header = generateTripHeader(trip)
-  const daySections = generateDaySections(data)
-  const footer = generateFooter()
+	// コンテンツの組み合わせ
+	const previewHeader = includePreviewHeader ? generatePreviewHeader() : "";
+	const previewControls = includePreviewControls
+		? generatePreviewControls()
+		: "";
+	const header = generateTripHeader(trip);
+	const daySections = generateDaySections(data);
+	const footer = generateFooter();
 
-  return `
+	return `
     <!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${escapeHtml(trip.name || '無題の旅行')} - ${includePreviewControls ? 'プレビュー' : '旅程表'}</title>
+      <title>${escapeHtml(trip.name || "無題の旅行")} - ${includePreviewControls ? "プレビュー" : "旅程表"}</title>
       ${styles}
     </head>
     <body>
@@ -350,5 +362,5 @@ export function generateTripHtml(
       ${footer}
     </body>
     </html>
-  `
+  `;
 }

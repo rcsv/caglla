@@ -1,188 +1,207 @@
-'use client'
+"use client";
 
-import { useAuth } from '@/lib/contexts/auth'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Icon } from '@iconify/react'
-import Loading from '@/components/common/Loading'
-import logger from '@/lib/core/logger'
-import { t } from '@/lib/i18n'
+import { useAuth } from "@/lib/contexts/auth";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Icon } from "@iconify/react";
+import Loading from "@/components/common/Loading";
+import logger from "@/lib/core/logger";
+import { t } from "@/lib/i18n";
 
 interface TripLikeButtonProps {
-  tripSlug: string
-  initialLikesCount?: number
-  initialLikedByMe?: boolean
-  onStateChange?: (state: { likesCount: number; likedByMe: boolean }) => void
-  className?: string
-  disabled?: boolean
+	tripSlug: string;
+	initialLikesCount?: number;
+	initialLikedByMe?: boolean;
+	onStateChange?: (state: { likesCount: number; likedByMe: boolean }) => void;
+	className?: string;
+	disabled?: boolean;
 }
 
 export function TripLikeButton({
-  tripSlug,
-  initialLikesCount = 0,
-  initialLikedByMe = false,
-  onStateChange,
-  className = '',
-  disabled = false
+	tripSlug,
+	initialLikesCount = 0,
+	initialLikedByMe = false,
+	onStateChange,
+	className = "",
+	disabled = false,
 }: TripLikeButtonProps) {
-  const { user } = useAuth()
-  const [likesCount, setLikesCount] = useState(Math.max(0, initialLikesCount))
-  const [likedByMe, setLikedByMe] = useState(initialLikedByMe)
-  const [pending, setPending] = useState(false)
-  const [initialized, setInitialized] = useState(false)
-  const abortRef = useRef<AbortController | null>(null)
+	const { user } = useAuth();
+	const [likesCount, setLikesCount] = useState(Math.max(0, initialLikesCount));
+	const [likedByMe, setLikedByMe] = useState(initialLikedByMe);
+	const [pending, setPending] = useState(false);
+	const [initialized, setInitialized] = useState(false);
+	const abortRef = useRef<AbortController | null>(null);
 
-  const externalStateRef = useRef(onStateChange)
-  useEffect(() => {
-    externalStateRef.current = onStateChange
-  }, [onStateChange])
+	const externalStateRef = useRef(onStateChange);
+	useEffect(() => {
+		externalStateRef.current = onStateChange;
+	}, [onStateChange]);
 
-  const emitExternalState = useCallback((state: { likesCount: number; likedByMe: boolean }) => {
-    externalStateRef.current?.(state)
-  }, [])
+	const emitExternalState = useCallback(
+		(state: { likesCount: number; likedByMe: boolean }) => {
+			externalStateRef.current?.(state);
+		},
+		[],
+	);
 
-  const fetchLikeStatus = useCallback(async () => {
-    abortRef.current?.abort()
-    const controller = new AbortController()
-    abortRef.current = controller
+	const fetchLikeStatus = useCallback(async () => {
+		abortRef.current?.abort();
+		const controller = new AbortController();
+		abortRef.current = controller;
 
-    try {
-      const headers: Record<string, string> = {}
-      if (user) {
-        const token = await user.getIdToken()
-        headers.Authorization = `Bearer ${token}`
-      }
+		try {
+			const headers: Record<string, string> = {};
+			if (user) {
+				const token = await user.getIdToken();
+				headers.Authorization = `Bearer ${token}`;
+			}
 
-      const response = await fetch(`/api/trip/${tripSlug}/likes`, {
-        method: 'GET',
-        headers,
-        signal: controller.signal
-      })
+			const response = await fetch(`/api/trip/${tripSlug}/likes`, {
+				method: "GET",
+				headers,
+				signal: controller.signal,
+			});
 
-      if (!response.ok) {
-        logger.warn('Failed to fetch trip like status', { status: response.status })
-        return
-      }
+			if (!response.ok) {
+				logger.warn("Failed to fetch trip like status", {
+					status: response.status,
+				});
+				return;
+			}
 
-      const data = await response.json().catch(() => ({}))
-      const serverCount =
-        typeof data.likesCount === 'number' && Number.isFinite(data.likesCount)
-          ? Math.max(0, Math.floor(data.likesCount))
-          : 0
-      const serverLiked = Boolean(data.likedByMe)
+			const data = await response.json().catch(() => ({}));
+			const serverCount =
+				typeof data.likesCount === "number" && Number.isFinite(data.likesCount)
+					? Math.max(0, Math.floor(data.likesCount))
+					: 0;
+			const serverLiked = Boolean(data.likedByMe);
 
-      setLikesCount(serverCount)
-      setLikedByMe(serverLiked)
-      emitExternalState({ likesCount: serverCount, likedByMe: serverLiked })
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        logger.warn('Unable to load like status', error)
-      }
-    } finally {
-      setInitialized(true)
-    }
-  }, [emitExternalState, tripSlug, user])
+			setLikesCount(serverCount);
+			setLikedByMe(serverLiked);
+			emitExternalState({ likesCount: serverCount, likedByMe: serverLiked });
+		} catch (error) {
+			if ((error as Error).name !== "AbortError") {
+				logger.warn("Unable to load like status", error);
+			}
+		} finally {
+			setInitialized(true);
+		}
+	}, [emitExternalState, tripSlug, user]);
 
-  useEffect(() => {
-    void fetchLikeStatus()
-    return () => {
-      abortRef.current?.abort()
-    }
-  }, [fetchLikeStatus])
+	useEffect(() => {
+		void fetchLikeStatus();
+		return () => {
+			abortRef.current?.abort();
+		};
+	}, [fetchLikeStatus]);
 
-  useEffect(() => {
-    setLikesCount(Math.max(0, initialLikesCount))
-  }, [initialLikesCount])
+	useEffect(() => {
+		setLikesCount(Math.max(0, initialLikesCount));
+	}, [initialLikesCount]);
 
-  useEffect(() => {
-    setLikedByMe(initialLikedByMe)
-  }, [initialLikedByMe])
+	useEffect(() => {
+		setLikedByMe(initialLikedByMe);
+	}, [initialLikedByMe]);
 
-  const handleToggle = useCallback(async () => {
-    if (disabled) return
+	const handleToggle = useCallback(async () => {
+		if (disabled) return;
 
-    if (!user) {
-      alert(t('trip.likes.loginRequired'))
-      return
-    }
+		if (!user) {
+			alert(t("trip.likes.loginRequired"));
+			return;
+		}
 
-    if (pending) return
+		if (pending) return;
 
-    const previousLiked = likedByMe
-    const previousCount = likesCount
-    const nextLiked = !likedByMe
-    const optimisticCount = Math.max(0, previousCount + (nextLiked ? 1 : -1))
+		const previousLiked = likedByMe;
+		const previousCount = likesCount;
+		const nextLiked = !likedByMe;
+		const optimisticCount = Math.max(0, previousCount + (nextLiked ? 1 : -1));
 
-    setLikedByMe(nextLiked)
-    setLikesCount(optimisticCount)
-    emitExternalState({ likesCount: optimisticCount, likedByMe: nextLiked })
+		setLikedByMe(nextLiked);
+		setLikesCount(optimisticCount);
+		emitExternalState({ likesCount: optimisticCount, likedByMe: nextLiked });
 
-    setPending(true)
-    try {
-      const token = await user.getIdToken()
-      const response = await fetch(`/api/trip/${tripSlug}/likes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ action: nextLiked ? 'like' : 'unlike' })
-      })
+		setPending(true);
+		try {
+			const token = await user.getIdToken();
+			const response = await fetch(`/api/trip/${tripSlug}/likes`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify({ action: nextLiked ? "like" : "unlike" }),
+			});
 
-      if (!response.ok) {
-        throw new Error(`Failed to toggle like: ${response.status}`)
-      }
+			if (!response.ok) {
+				throw new Error(`Failed to toggle like: ${response.status}`);
+			}
 
-      const data = await response.json().catch(() => ({}))
-      const serverLiked =
-        typeof data.likedByMe === 'boolean' ? data.likedByMe : nextLiked
-      const serverCount =
-        typeof data.likesCount === 'number' && Number.isFinite(data.likesCount)
-          ? Math.max(0, Math.floor(data.likesCount))
-          : optimisticCount
+			const data = await response.json().catch(() => ({}));
+			const serverLiked =
+				typeof data.likedByMe === "boolean" ? data.likedByMe : nextLiked;
+			const serverCount =
+				typeof data.likesCount === "number" && Number.isFinite(data.likesCount)
+					? Math.max(0, Math.floor(data.likesCount))
+					: optimisticCount;
 
-      setLikedByMe(serverLiked)
-      setLikesCount(serverCount)
-      emitExternalState({ likesCount: serverCount, likedByMe: serverLiked })
-    } catch (error) {
-      logger.error('Failed to toggle like', error)
-      setLikedByMe(previousLiked)
-      setLikesCount(previousCount)
-      emitExternalState({ likesCount: previousCount, likedByMe: previousLiked })
-      alert(t('trip.likes.error'))
-    } finally {
-      setPending(false)
-    }
-  }, [disabled, emitExternalState, likedByMe, likesCount, pending, tripSlug, user])
+			setLikedByMe(serverLiked);
+			setLikesCount(serverCount);
+			emitExternalState({ likesCount: serverCount, likedByMe: serverLiked });
+		} catch (error) {
+			logger.error("Failed to toggle like", error);
+			setLikedByMe(previousLiked);
+			setLikesCount(previousCount);
+			emitExternalState({
+				likesCount: previousCount,
+				likedByMe: previousLiked,
+			});
+			alert(t("trip.likes.error"));
+		} finally {
+			setPending(false);
+		}
+	}, [
+		disabled,
+		emitExternalState,
+		likedByMe,
+		likesCount,
+		pending,
+		tripSlug,
+		user,
+	]);
 
-  const buttonLabel = useMemo(() => {
-    if (!initialized && !disabled) {
-      return t('trip.likes.loading')
-    }
-    return likedByMe ? t('trip.likes.button.liked') : t('trip.likes.button.like')
-  }, [disabled, initialized, likedByMe])
+	const buttonLabel = useMemo(() => {
+		if (!initialized && !disabled) {
+			return t("trip.likes.loading");
+		}
+		return likedByMe
+			? t("trip.likes.button.liked")
+			: t("trip.likes.button.like");
+	}, [disabled, initialized, likedByMe]);
 
-  return (
-    <button
-      type="button"
-      onClick={handleToggle}
-      disabled={disabled || pending}
-      aria-pressed={likedByMe}
-      className={`inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/85 px-4 py-2 text-sm font-semibold text-rose-700 backdrop-blur-sm transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-60 ${likedByMe ? 'text-rose-600' : ''} ${className}`}
-      title={buttonLabel}
-    >
-      {pending ? (
-        <Loading inline size="xs" color="rose" />
-      ) : (
-        <Icon
-          icon={likedByMe ? 'mdi:heart' : 'mdi:heart-outline'}
-          className={`h-5 w-5 ${likedByMe ? 'text-rose-600' : 'text-rose-500'}`}
-          aria-hidden="true"
-        />
-      )}
-      <span className="min-w-[1.5rem] text-base tabular-nums">{likesCount}</span>
-    </button>
-  )
+	return (
+		<button
+			type="button"
+			onClick={handleToggle}
+			disabled={disabled || pending}
+			aria-pressed={likedByMe}
+			className={`inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/85 px-4 py-2 text-sm font-semibold text-rose-700 backdrop-blur-sm transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-60 ${likedByMe ? "text-rose-600" : ""} ${className}`}
+			title={buttonLabel}
+		>
+			{pending ? (
+				<Loading inline size="xs" color="rose" />
+			) : (
+				<Icon
+					icon={likedByMe ? "mdi:heart" : "mdi:heart-outline"}
+					className={`h-5 w-5 ${likedByMe ? "text-rose-600" : "text-rose-500"}`}
+					aria-hidden="true"
+				/>
+			)}
+			<span className="min-w-[1.5rem] text-base tabular-nums">
+				{likesCount}
+			</span>
+		</button>
+	);
 }
 
-export default TripLikeButton
-
+export default TripLikeButton;

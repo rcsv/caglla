@@ -10,14 +10,13 @@
  * サポートされる言語コード
  * Google Places API の言語コードに対応
  */
-export type SupportedLanguage = 
-  | 'ja'  // 日本語
-  | 'en'  // 英語
-  | 'zh'  // 中国語（簡体字）
-  | 'ko'  // 韓国語
-  | 'es'  // スペイン語
-  | 'fr'  // フランス語
-  | 'de'  // ドイツ語
-  | 'it'  // イタリア語
-  | 'pt'  // ポルトガル語
-
+export type SupportedLanguage =
+	| "ja" // 日本語
+	| "en" // 英語
+	| "zh" // 中国語（簡体字）
+	| "ko" // 韓国語
+	| "es" // スペイン語
+	| "fr" // フランス語
+	| "de" // ドイツ語
+	| "it" // イタリア語
+	| "pt"; // ポルトガル語

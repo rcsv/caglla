@@ -1,1 +1,1 @@
-export { default } from '@/components/planner/NavigationMenu'
+export { default } from "@/components/planner/NavigationMenu";

@@ -2,13 +2,13 @@
  * 単位系のデフォルト値決定とユーティリティ
  */
 
-import type { UnitSystem, User } from '@/lib/core/types'
+import type { UnitSystem, User } from "@/lib/core/types";
 
 /**
  * ヤードポンド法を使用する国コード
  * アメリカ、リベリア、ミャンマー
  */
-const IMPERIAL_COUNTRIES = ['US', 'LR', 'MM'] as const
+const IMPERIAL_COUNTRIES = ["US", "LR", "MM"] as const;
 
 /**
  * 国コードに基づいてデフォルトの単位系を決定
@@ -16,13 +16,13 @@ const IMPERIAL_COUNTRIES = ['US', 'LR', 'MM'] as const
  * @returns デフォルトの単位系
  */
 export function getDefaultUnitSystem(countryCode?: string | null): UnitSystem {
-  if (!countryCode) {
-    return 'metric' // デフォルトはメートル法
-  }
+	if (!countryCode) {
+		return "metric"; // デフォルトはメートル法
+	}
 
-  return IMPERIAL_COUNTRIES.includes(countryCode.toUpperCase() as any)
-    ? 'imperial'
-    : 'metric'
+	return IMPERIAL_COUNTRIES.includes(countryCode.toUpperCase() as any)
+		? "imperial"
+		: "metric";
 }
 
 /**
@@ -31,12 +31,12 @@ export function getDefaultUnitSystem(countryCode?: string | null): UnitSystem {
  * @returns 単位系
  */
 export function getUserUnitSystem(user?: User | null): UnitSystem {
-  if (user?.preferences?.unit_system) {
-    return user.preferences.unit_system
-  }
+	if (user?.preferences?.unit_system) {
+		return user.preferences.unit_system;
+	}
 
-  // home_country_codeに基づいて自動決定
-  return getDefaultUnitSystem(user?.preferences?.home_country_code)
+	// home_country_codeに基づいて自動決定
+	return getDefaultUnitSystem(user?.preferences?.home_country_code);
 }
 
 /**
@@ -44,8 +44,10 @@ export function getUserUnitSystem(user?: User | null): UnitSystem {
  * @param unitSystem 単位系
  * @returns 温度単位（'celsius' または 'fahrenheit'）
  */
-export function getTemperatureUnit(unitSystem: UnitSystem): 'celsius' | 'fahrenheit' {
-  return unitSystem === 'imperial' ? 'fahrenheit' : 'celsius'
+export function getTemperatureUnit(
+	unitSystem: UnitSystem,
+): "celsius" | "fahrenheit" {
+	return unitSystem === "imperial" ? "fahrenheit" : "celsius";
 }
 
 /**
@@ -53,7 +55,6 @@ export function getTemperatureUnit(unitSystem: UnitSystem): 'celsius' | 'fahrenh
  * @param unitSystem 単位系
  * @returns 距離単位（'metric' または 'imperial'）
  */
-export function getDistanceUnit(unitSystem: UnitSystem): 'metric' | 'imperial' {
-  return unitSystem
+export function getDistanceUnit(unitSystem: UnitSystem): "metric" | "imperial" {
+	return unitSystem;
 }
-

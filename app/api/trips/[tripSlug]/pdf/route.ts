@@ -1,26 +1,29 @@
 /**
  * PDF Export API
  * SelectPdf REST APIを使用してトリップ旅程をPDFとして生成
- * 
+ *
  * Authentication: Bearer token required
  * Authorization: Trip owner only
  * Plan Requirements: Backpacker以上
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase/admin'
-import type { Trip, Day, Itinerary } from '@/lib/core/types'
-import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
-import { generateMagazinePdfHtml, type TripPdfData } from '@/lib/utils/magazine-pdf-template'
-import { generateTripUrl } from '@/lib/utils/app-url'
-import logger from '@/lib/core/logger'
-import { notFound } from '@/lib/core/error-handler'
-import { tripApi } from '@/lib/api/middleware'
-import { adminDayOperations } from '@/lib/firebase/admin-operation'
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase/admin";
+import type { Trip, Day, Itinerary } from "@/lib/core/types";
+import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
+import {
+	generateMagazinePdfHtml,
+	type TripPdfData,
+} from "@/lib/utils/magazine-pdf-template";
+import { generateTripUrl } from "@/lib/utils/app-url";
+import logger from "@/lib/core/logger";
+import { notFound } from "@/lib/core/error-handler";
+import { tripApi } from "@/lib/api/middleware";
+import { adminDayOperations } from "@/lib/firebase/admin-operation";
 
 interface SelectPdfErrorResponse {
-  error: string
-  status: number
+	error: string;
+	status: number;
 }
 
 // TripPdfData型はmagazine-pdf-templateからインポート
@@ -29,153 +32,178 @@ interface SelectPdfErrorResponse {
  * SelectPdf APIへのリクエストを実行
  */
 async function callSelectPdfApi(params: {
-  key: string
-  url?: string
-  html?: string
-  base_url?: string
-  page_numbers?: boolean
-  page_numbers_template?: string
-  page_numbers_font_size?: number
-  page_numbers_font_color?: string
-  page_numbers_position?: string
-  page_numbers_alignment?: string
+	key: string;
+	url?: string;
+	html?: string;
+	base_url?: string;
+	page_numbers?: boolean;
+	page_numbers_template?: string;
+	page_numbers_font_size?: number;
+	page_numbers_font_color?: string;
+	page_numbers_position?: string;
+	page_numbers_alignment?: string;
 }): Promise<Response> {
-  const response = await fetch('https://selectpdf.com/api2/convert/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params)
-  })
-  
-  return response
+	const response = await fetch("https://selectpdf.com/api2/convert/", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(params),
+	});
+
+	return response;
 }
 
 /**
  * トリップデータをHTMLに変換（旅行雑誌風PDF用）
  */
-async function generatePdfHtml(data: TripPdfData, tripUrl?: string): Promise<string> {
-  return await generateMagazinePdfHtml(data, tripUrl)
+async function generatePdfHtml(
+	data: TripPdfData,
+	tripUrl?: string,
+): Promise<string> {
+	return await generateMagazinePdfHtml(data, tripUrl);
 }
-
 
 /**
  * トリップの所有権確認とデータ取得
  */
 async function validateTripOwnership(
-  tripId: string,
-  userId: string
+	tripId: string,
+	userId: string,
 ): Promise<{ trip: Trip; days: Day[] } | NextResponse> {
-  const tripRef = adminDb.collection('trips').doc(tripId)
-  const tripDoc = await tripRef.get()
+	const tripRef = adminDb.collection("trips").doc(tripId);
+	const tripDoc = await tripRef.get();
 
-  if (!tripDoc.exists) {
-    return notFound('Trip')
-  }
+	if (!tripDoc.exists) {
+		return notFound("Trip");
+	}
 
-  const trip = { id: tripDoc.id, ...tripDoc.data() } as Trip
-  logger.debug('PDF API: trip data retrieved', { tripUserId: trip.user_id, authUserId: userId })
+	const trip = { id: tripDoc.id, ...tripDoc.data() } as Trip;
+	logger.debug("PDF API: trip data retrieved", {
+		tripUserId: trip.user_id,
+		authUserId: userId,
+	});
 
-  if (trip.user_id !== userId) {
-    logger.error('PDF API: trip ownership check failed', { tripUserId: trip.user_id, authUserId: userId })
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+	if (trip.user_id !== userId) {
+		logger.error("PDF API: trip ownership check failed", {
+			tripUserId: trip.user_id,
+			authUserId: userId,
+		});
+		return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+	}
 
-  // 日程データを取得（独立したコレクションから）
-  const daysSnapshot = await adminDb
-    .collection('days')
-    .where('trip_id', '==', trip.id)
-    .orderBy('day_number', 'asc')
-    .get()
-    
-  logger.debug('PDF API: days collection query result', { 
-    tripId: trip.id, 
-    daysCount: daysSnapshot.size,
-    dayIds: daysSnapshot.docs.map((doc: any) => doc.id)
-  })
-  
-  const days = daysSnapshot.docs.map((doc: any) => ({
-    id: doc.id,
-    ...doc.data()
-  })) as Day[]
+	// 日程データを取得（独立したコレクションから）
+	const daysSnapshot = await adminDb
+		.collection("days")
+		.where("trip_id", "==", trip.id)
+		.orderBy("day_number", "asc")
+		.get();
 
-  return { trip, days }
+	logger.debug("PDF API: days collection query result", {
+		tripId: trip.id,
+		daysCount: daysSnapshot.size,
+		dayIds: daysSnapshot.docs.map((doc: any) => doc.id),
+	});
+
+	const days = daysSnapshot.docs.map((doc: any) => ({
+		id: doc.id,
+		...doc.data(),
+	})) as Day[];
+
+	return { trip, days };
 }
 
 /**
  * プラン制限のチェック
  */
-async function checkPlanRestrictions(userId: string): Promise<NextResponse | null> {
-  logger.debug('PDF API: checking plan restrictions', { userId })
-  
-  // google_idフィールドでユーザーを検索
-  const userQuery = await adminDb.collection('users').where('google_id', '==', userId).limit(1).get()
-  logger.debug('PDF API: user query result', { exists: !userQuery.empty, size: userQuery.size })
-  
-  if (userQuery.empty) {
-    logger.error('PDF API: user document not found by google_id', { userId })
-    return notFound('User')
-  }
+async function checkPlanRestrictions(
+	userId: string,
+): Promise<NextResponse | null> {
+	logger.debug("PDF API: checking plan restrictions", { userId });
 
-  const userDoc = userQuery.docs[0]
-  const userData = userDoc.data()
-  logger.debug('PDF API: user data retrieved', { userData })
-  
-  const userPlan = userData?.planId || 'season_traveler'
-  logger.debug('PDF API: user plan determined', { userPlan })
+	// google_idフィールドでユーザーを検索
+	const userQuery = await adminDb
+		.collection("users")
+		.where("google_id", "==", userId)
+		.limit(1)
+		.get();
+	logger.debug("PDF API: user query result", {
+		exists: !userQuery.empty,
+		size: userQuery.size,
+	});
 
-  // PDF Export は Backpacker 以上のプランが必要
-  if (userPlan === 'season_traveler') {
-    logger.error('PDF API: plan restriction failed - season_traveler plan', { userPlan })
-    return NextResponse.json(
-      { 
-        error: 'Upgrade Required',
-        message: 'PDF Export requires Backpacker plan or higher'
-      },
-      { status: 403 }
-    )
-  }
+	if (userQuery.empty) {
+		logger.error("PDF API: user document not found by google_id", { userId });
+		return notFound("User");
+	}
 
-  logger.debug('PDF API: plan restriction check passed', { userPlan })
-  return null
+	const userDoc = userQuery.docs[0];
+	const userData = userDoc.data();
+	logger.debug("PDF API: user data retrieved", { userData });
+
+	const userPlan = userData?.planId || "season_traveler";
+	logger.debug("PDF API: user plan determined", { userPlan });
+
+	// PDF Export は Backpacker 以上のプランが必要
+	if (userPlan === "season_traveler") {
+		logger.error("PDF API: plan restriction failed - season_traveler plan", {
+			userPlan,
+		});
+		return NextResponse.json(
+			{
+				error: "Upgrade Required",
+				message: "PDF Export requires Backpacker plan or higher",
+			},
+			{ status: 403 },
+		);
+	}
+
+	logger.debug("PDF API: plan restriction check passed", { userPlan });
+	return null;
 }
 
 /**
  * 全旅程データを取得
  */
 async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPdfData> {
-  const itinerariesByDay: Record<string, Itinerary[]> = {}
-  logger.debug('PDF API: fetching trip data', { tripId: trip.id, daysCount: days.length })
+	const itinerariesByDay: Record<string, Itinerary[]> = {};
+	logger.debug("PDF API: fetching trip data", {
+		tripId: trip.id,
+		daysCount: days.length,
+	});
 
-  // 各日程の旅程アイテムを取得（独立したコレクションから）
-  for (const day of days) {
-    logger.debug('PDF API: fetching itineraries for day', { dayId: day.id, dayDate: day.date })
-    
-    const itinerariesSnapshot = await adminDb
-      .collection('itineraries')
-      .where('day_id', '==', day.id)
-      .orderBy('sort_number', 'asc')
-      .get()
+	// 各日程の旅程アイテムを取得（独立したコレクションから）
+	for (const day of days) {
+		logger.debug("PDF API: fetching itineraries for day", {
+			dayId: day.id,
+			dayDate: day.date,
+		});
 
-    const itineraries = itinerariesSnapshot.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Itinerary[]
-    
-    logger.debug('PDF API: itineraries found for day', { 
-      dayId: day.id, 
-      itinerariesCount: itineraries.length,
-      itineraryNames: itineraries.map(i => i.title || 'No name'),
-      sampleItinerary: itineraries[0] // 最初の旅程アイテムの構造を確認
-    })
-    
-    itinerariesByDay[day.id] = itineraries
-  }
+		const itinerariesSnapshot = await adminDb
+			.collection("itineraries")
+			.where("day_id", "==", day.id)
+			.orderBy("sort_number", "asc")
+			.get();
 
-  logger.debug('PDF API: trip data fetch completed', { 
-    totalDays: days.length,
-    totalItineraries: Object.values(itinerariesByDay).flat().length
-  })
+		const itineraries = itinerariesSnapshot.docs.map((doc: any) => ({
+			id: doc.id,
+			...doc.data(),
+		})) as Itinerary[];
 
-  return { trip, days, itinerariesByDay }
+		logger.debug("PDF API: itineraries found for day", {
+			dayId: day.id,
+			itinerariesCount: itineraries.length,
+			itineraryNames: itineraries.map((i) => i.title || "No name"),
+			sampleItinerary: itineraries[0], // 最初の旅程アイテムの構造を確認
+		});
+
+		itinerariesByDay[day.id] = itineraries;
+	}
+
+	logger.debug("PDF API: trip data fetch completed", {
+		totalDays: days.length,
+		totalItineraries: Object.values(itinerariesByDay).flat().length,
+	});
+
+	return { trip, days, itinerariesByDay };
 }
 
 /**
@@ -183,91 +211,98 @@ async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPdfData> {
  * トリップをPDFとしてエクスポート
  */
 export const GET = tripApi(async (request: NextRequest, ctx) => {
-  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
-  const { userId } = ctx.auth!
-  const { tripId: resolvedTripId, trip } = ctx.trip!
-  const { tripSlug } = ctx.params!
-  
-  logger.debug('PDF API: request received', { tripSlug })
-  logger.debug('PDF API: authentication successful', { userId })
+	// ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+	const { userId } = ctx.auth!;
+	const { tripId: resolvedTripId, trip } = ctx.trip!;
+	const { tripSlug } = ctx.params!;
 
-  // 2. プラン制限チェック
-  const planError = await checkPlanRestrictions(userId)
-  if (planError) {
-    logger.error('PDF API: plan restriction check failed')
-    return planError
-  }
-  logger.debug('PDF API: plan restriction check passed')
+	logger.debug("PDF API: request received", { tripSlug });
+	logger.debug("PDF API: authentication successful", { userId });
 
-  // Days を取得（tripApi は days を返さないため、別途取得が必要）
-  const days = await adminDayOperations.getDaysByTripId(resolvedTripId)
-  logger.debug('PDF API: ownership validated', { tripId: trip.id, tripUserId: (trip as any).user_id, userId, dayCount: days.length })
+	// 2. プラン制限チェック
+	const planError = await checkPlanRestrictions(userId);
+	if (planError) {
+		logger.error("PDF API: plan restriction check failed");
+		return planError;
+	}
+	logger.debug("PDF API: plan restriction check passed");
 
-    // 5. SelectPdf APIキーの確認
-    const apiKey = process.env.SELECTPDF_API_KEY
-    if (!apiKey) {
-      logger.error('SELECTPDF_API_KEY is not configured')
-      return NextResponse.json(
-        { error: 'PDF export is not available' },
-        { status: 503 }
-      )
-    }
+	// Days を取得（tripApi は days を返さないため、別途取得が必要）
+	const days = await adminDayOperations.getDaysByTripId(resolvedTripId);
+	logger.debug("PDF API: ownership validated", {
+		tripId: trip.id,
+		tripUserId: (trip as any).user_id,
+		userId,
+		dayCount: days.length,
+	});
 
-    // 6. トリップデータの取得
-    const tripData = await fetchTripData(trip, days)
-    
-    // トリップURLの生成
-    const tripUrl = generateTripUrl((trip as any).user_slug, tripSlug)
+	// 5. SelectPdf APIキーの確認
+	const apiKey = process.env.SELECTPDF_API_KEY;
+	if (!apiKey) {
+		logger.error("SELECTPDF_API_KEY is not configured");
+		return NextResponse.json(
+			{ error: "PDF export is not available" },
+			{ status: 503 },
+		);
+	}
 
-    // 7. HTMLの生成
-    const html = await generatePdfHtml(tripData, tripUrl)
-    logger.debug('PDF API: HTML content generated', { 
-      htmlLength: html.length,
-      htmlPreview: html.substring(0, 500) + '...'
-    })
+	// 6. トリップデータの取得
+	const tripData = await fetchTripData(trip, days);
 
-    // 8. SelectPdf APIへのリクエスト
-    const apiResponse = await callSelectPdfApi({
-      key: apiKey,
-      html,
-      base_url: generateTripUrl((trip as any).user_slug, tripSlug).replace(`/${(trip as any).user_slug}/${tripSlug}`, ''),
-      page_numbers: false, // ページ番号を無効化
-      page_numbers_template: '', // ページ番号テンプレートを空に
-      page_numbers_font_size: 0, // フォントサイズを0に
-      page_numbers_font_color: 'transparent', // 透明色に設定
-      page_numbers_position: 'none', // 位置を無効化
-      page_numbers_alignment: 'none' // 配置を無効化
-    })
+	// トリップURLの生成
+	const tripUrl = generateTripUrl((trip as any).user_slug, tripSlug);
 
-    // 9. エラーハンドリング
-    if (!apiResponse.ok) {
-      const errorText = await apiResponse.text()
-      logger.error('SelectPdf API error:', {
-        status: apiResponse.status,
-        error: errorText
-      })
-      
-      return NextResponse.json(
-        { 
-          error: 'PDF generation failed',
-          details: errorText
-        },
-        { status: apiResponse.status }
-      )
-    }
+	// 7. HTMLの生成
+	const html = await generatePdfHtml(tripData, tripUrl);
+	logger.debug("PDF API: HTML content generated", {
+		htmlLength: html.length,
+		htmlPreview: html.substring(0, 500) + "...",
+	});
 
-  // 10. PDF返却
-  const pdfBuffer = Buffer.from(await apiResponse.arrayBuffer())
-  const filename = `${trip.slug || trip.id}_itinerary.pdf`
+	// 8. SelectPdf APIへのリクエスト
+	const apiResponse = await callSelectPdfApi({
+		key: apiKey,
+		html,
+		base_url: generateTripUrl((trip as any).user_slug, tripSlug).replace(
+			`/${(trip as any).user_slug}/${tripSlug}`,
+			"",
+		),
+		page_numbers: false, // ページ番号を無効化
+		page_numbers_template: "", // ページ番号テンプレートを空に
+		page_numbers_font_size: 0, // フォントサイズを0に
+		page_numbers_font_color: "transparent", // 透明色に設定
+		page_numbers_position: "none", // 位置を無効化
+		page_numbers_alignment: "none", // 配置を無効化
+	});
 
-  return new NextResponse(pdfBuffer, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
-      'Content-Length': String(pdfBuffer.length),
-      'Cache-Control': 'no-cache'
-    }
-  })
-})
+	// 9. エラーハンドリング
+	if (!apiResponse.ok) {
+		const errorText = await apiResponse.text();
+		logger.error("SelectPdf API error:", {
+			status: apiResponse.status,
+			error: errorText,
+		});
 
+		return NextResponse.json(
+			{
+				error: "PDF generation failed",
+				details: errorText,
+			},
+			{ status: apiResponse.status },
+		);
+	}
+
+	// 10. PDF返却
+	const pdfBuffer = Buffer.from(await apiResponse.arrayBuffer());
+	const filename = `${trip.slug || trip.id}_itinerary.pdf`;
+
+	return new NextResponse(pdfBuffer, {
+		status: 200,
+		headers: {
+			"Content-Type": "application/pdf",
+			"Content-Disposition": `attachment; filename="${encodeURIComponent(filename)}"`,
+			"Content-Length": String(pdfBuffer.length),
+			"Cache-Control": "no-cache",
+		},
+	});
+});

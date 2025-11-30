@@ -1,45 +1,50 @@
-'use client'
-import logger from '@/lib/core/logger'
+"use client";
+import logger from "@/lib/core/logger";
 
-import { useDroppable } from '@dnd-kit/core'
-import { useEffect } from 'react'
+import { useDroppable } from "@dnd-kit/core";
+import { useEffect } from "react";
 
 interface DayDropZoneProps {
-  dayId: string
-  dayNumber: number
-  isOver?: boolean
-  children: React.ReactNode
+	dayId: string;
+	dayNumber: number;
+	isOver?: boolean;
+	children: React.ReactNode;
 }
 
-export default function DayDropZone({ dayId, dayNumber, isOver, children }: DayDropZoneProps) {
-  const { setNodeRef, isOver: isDroppableOver } = useDroppable({
-    id: `day-${dayId}`,
-    data: {
-      type: 'day',
-      dayId,
-      dayNumber
-    }
-  })
+export default function DayDropZone({
+	dayId,
+	dayNumber,
+	isOver,
+	children,
+}: DayDropZoneProps) {
+	const { setNodeRef, isOver: isDroppableOver } = useDroppable({
+		id: `day-${dayId}`,
+		data: {
+			type: "day",
+			dayId,
+			dayNumber,
+		},
+	});
 
-  const isCurrentlyOver = isOver || isDroppableOver
+	const isCurrentlyOver = isOver || isDroppableOver;
 
-  // ドロップゾーンの状態をログ
-  useEffect(() => {
-    if (isDroppableOver) {
-      logger.debug('DayDropZone is over:', dayId)
-    }
-  }, [isDroppableOver, dayId])
+	// ドロップゾーンの状態をログ
+	useEffect(() => {
+		if (isDroppableOver) {
+			logger.debug("DayDropZone is over:", dayId);
+		}
+	}, [isDroppableOver, dayId]);
 
-  return (
-    <div 
-      ref={setNodeRef}
-      className={`bg-white rounded-lg shadow-sm p-6 transition-all duration-200 ${
-        isCurrentlyOver 
-          ? 'bg-blue-50 border-2 border-blue-400 border-dashed shadow-lg' 
-          : 'border border-gray-200 hover:border-gray-300'
-      }`}
-    >
-      {children}
-    </div>
-  )
+	return (
+		<div
+			ref={setNodeRef}
+			className={`bg-white rounded-lg shadow-sm p-6 transition-all duration-200 ${
+				isCurrentlyOver
+					? "bg-blue-50 border-2 border-blue-400 border-dashed shadow-lg"
+					: "border border-gray-200 hover:border-gray-300"
+			}`}
+		>
+			{children}
+		</div>
+	);
 }

@@ -1,27 +1,45 @@
-'use client'
+"use client";
 
-import React from 'react'
+import React from "react";
 
-export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label?: string
-  hint?: string
-  error?: string
+export interface TextareaProps
+	extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+	label?: string;
+	hint?: string;
+	error?: string;
 }
 
-export const Textarea: React.FC<TextareaProps> = ({ label, hint, error, className, ...rest }) => {
-  return (
-    <label className="block w-full">
-      {label && <span className="mb-1 block text-sm font-medium text-gray-700">{label}</span>}
-      <textarea className={["tj-textarea", error ? 'border-rose-400 focus:ring-rose-400' : '', className].filter(Boolean).join(' ')} {...rest} />
-      {error ? (
-        <span className="mt-1 block text-xs text-rose-600">{error}</span>
-      ) : (
-        hint ? <span className="mt-1 block text-xs text-gray-500">{hint}</span> : null
-      )}
-    </label>
-  )
-}
+export const Textarea: React.FC<TextareaProps> = ({
+	label,
+	hint,
+	error,
+	className,
+	...rest
+}) => {
+	return (
+		<label className="block w-full">
+			{label && (
+				<span className="mb-1 block text-sm font-medium text-gray-700">
+					{label}
+				</span>
+			)}
+			<textarea
+				className={[
+					"tj-textarea",
+					error ? "border-rose-400 focus:ring-rose-400" : "",
+					className,
+				]
+					.filter(Boolean)
+					.join(" ")}
+				{...rest}
+			/>
+			{error ? (
+				<span className="mt-1 block text-xs text-rose-600">{error}</span>
+			) : hint ? (
+				<span className="mt-1 block text-xs text-gray-500">{hint}</span>
+			) : null}
+		</label>
+	);
+};
 
-export default Textarea
-
-
+export default Textarea;

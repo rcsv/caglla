@@ -1,36 +1,39 @@
-import { auth } from '@/lib/firebase/client'
-import logger from '@/lib/core/logger'
+import { auth } from "@/lib/firebase/client";
+import logger from "@/lib/core/logger";
 
 export async function getIdToken(): Promise<string | null> {
-  const user = auth.currentUser
-  if (!user) return null
-  
-  try {
-    return await user.getIdToken()
-  } catch (error) {
-    logger.error('Error getting ID token:', error)
-    return null
-  }
+	const user = auth.currentUser;
+	if (!user) return null;
+
+	try {
+		return await user.getIdToken();
+	} catch (error) {
+		logger.error("Error getting ID token:", error);
+		return null;
+	}
 }
 
-export async function makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
-  const token = await getIdToken()
-  
-  if (!token) {
-    throw new Error('User not authenticated')
-  }
+export async function makeAuthenticatedRequest(
+	url: string,
+	options: RequestInit = {},
+): Promise<Response> {
+	const token = await getIdToken();
 
-  const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-    ...options.headers,
-  }
+	if (!token) {
+		throw new Error("User not authenticated");
+	}
 
-  // 相対URLの場合は現在のオリジンを使用
-  const fullUrl = url.startsWith('/') ? `${window.location.origin}${url}` : url
+	const headers = {
+		"Content-Type": "application/json",
+		Authorization: `Bearer ${token}`,
+		...options.headers,
+	};
 
-  return fetch(fullUrl, {
-    ...options,
-    headers,
-  })
+	// 相対URLの場合は現在のオリジンを使用
+	const fullUrl = url.startsWith("/") ? `${window.location.origin}${url}` : url;
+
+	return fetch(fullUrl, {
+		...options,
+		headers,
+	});
 }

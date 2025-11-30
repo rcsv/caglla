@@ -1,552 +1,674 @@
-'use client'
+"use client";
 
-import { Trip, Day, Itinerary } from '@/lib/core/types'
-import DayEditor from '@/components/trip/DayEditor'
-import SortableItineraryCard from '@/components/trip/SortableItineraryCard'
-import VenueDistance from '@/components/trip/VenueDistance'
-import VenueInsertButton from '@/components/trip/VenueInsertButton'
-import { IconRenderer } from '@/components/common/icons/IconRenderer'
-import { Icon } from '@iconify/react'
-import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { useEffect, useRef, useCallback } from 'react'
-import { toDate } from '@/lib/firebase/timestamp-utils'
-import { t } from '@/lib/i18n'
-import { getUserLanguage } from '@/lib/utils/language'
-import Loading from '@/components/common/Loading'
-import logger from '@/lib/core/logger'
+import { Trip, Day, Itinerary } from "@/lib/core/types";
+import DayEditor from "@/components/trip/DayEditor";
+import SortableItineraryCard from "@/components/trip/SortableItineraryCard";
+import VenueDistance from "@/components/trip/VenueDistance";
+import VenueInsertButton from "@/components/trip/VenueInsertButton";
+import { IconRenderer } from "@/components/common/icons/IconRenderer";
+import { Icon } from "@iconify/react";
+import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
+import {
+	SortableContext,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useEffect, useRef, useCallback } from "react";
+import { toDate } from "@/lib/firebase/timestamp-utils";
+import { t } from "@/lib/i18n";
+import { getUserLanguage } from "@/lib/utils/language";
+import Loading from "@/components/common/Loading";
+import logger from "@/lib/core/logger";
 
 interface TripItineraryViewProps {
-  trip: Trip
-  canEdit?: boolean
-  collapsedDays: Set<string>
-  selectedDayId: string | null
-  selectedItineraryId: string | null
-  loadingDayIds?: Set<string>
-  onToggleDayCollapse: (dayId: string) => void
-  onDayClick: (dayId: string) => void
-  onAddSchedule: (dayId: string) => void
-  onInsertSchedule: (dayId: string, afterIndex: number) => void
-  onAddDay: () => void
-  onDayDelete?: (dayId: string) => void
-  onScheduleUpdated: (updatedItinerary: Itinerary) => void
-  onMoveUp: (itineraryId: string, dayId: string) => void
-  onMoveDown: (itineraryId: string, dayId: string) => void
-  onMoveToDay: (itineraryId: string, targetDayId: string) => void
-  onDuplicateToDay: (itineraryId: string, targetDayId: string) => void
-  onScheduleDelete: (itineraryId: string) => void
-  onItineraryClick: (itineraryId: string) => void
-  onDragEnd: (event: DragEndEvent) => void
-  onUpdateTrip: (updatedTrip: Trip) => void
-  onReorderItineraries: (dayId: string, reorderedItineraries: Itinerary[]) => void
-  expandAllDays: () => void
-  collapseAllDays: () => void
-  scrollSyncEnabled?: boolean
-  onScrollSyncEnabledChange?: (enabled: boolean) => void
-  isProgrammaticScrollRef?: React.MutableRefObject<boolean>
-  scrollToItineraryRef?: React.MutableRefObject<((itineraryId: string) => void) | null>
+	trip: Trip;
+	canEdit?: boolean;
+	collapsedDays: Set<string>;
+	selectedDayId: string | null;
+	selectedItineraryId: string | null;
+	loadingDayIds?: Set<string>;
+	onToggleDayCollapse: (dayId: string) => void;
+	onDayClick: (dayId: string) => void;
+	onAddSchedule: (dayId: string) => void;
+	onInsertSchedule: (dayId: string, afterIndex: number) => void;
+	onAddDay: () => void;
+	onDayDelete?: (dayId: string) => void;
+	onScheduleUpdated: (updatedItinerary: Itinerary) => void;
+	onMoveUp: (itineraryId: string, dayId: string) => void;
+	onMoveDown: (itineraryId: string, dayId: string) => void;
+	onMoveToDay: (itineraryId: string, targetDayId: string) => void;
+	onDuplicateToDay: (itineraryId: string, targetDayId: string) => void;
+	onScheduleDelete: (itineraryId: string) => void;
+	onItineraryClick: (itineraryId: string) => void;
+	onDragEnd: (event: DragEndEvent) => void;
+	onUpdateTrip: (updatedTrip: Trip) => void;
+	onReorderItineraries: (
+		dayId: string,
+		reorderedItineraries: Itinerary[],
+	) => void;
+	expandAllDays: () => void;
+	collapseAllDays: () => void;
+	scrollSyncEnabled?: boolean;
+	onScrollSyncEnabledChange?: (enabled: boolean) => void;
+	isProgrammaticScrollRef?: React.MutableRefObject<boolean>;
+	scrollToItineraryRef?: React.MutableRefObject<
+		((itineraryId: string) => void) | null
+	>;
 }
 
 export default function TripItineraryView({
-  trip,
-  canEdit = true,
-  collapsedDays,
-  selectedDayId,
-  selectedItineraryId,
-  loadingDayIds = new Set(),
-  onToggleDayCollapse,
-  onDayClick,
-  onAddSchedule,
-  onInsertSchedule,
-  onAddDay,
-  onDayDelete,
-  onScheduleUpdated,
-  onMoveUp,
-  onMoveDown,
-  onMoveToDay,
-  onDuplicateToDay,
-  onScheduleDelete,
-  onItineraryClick,
-  onDragEnd,
-  onUpdateTrip,
-  onReorderItineraries,
-  expandAllDays,
-  collapseAllDays,
-  scrollSyncEnabled = true,
-  onScrollSyncEnabledChange,
-  isProgrammaticScrollRef,
-  scrollToItineraryRef,
+	trip,
+	canEdit = true,
+	collapsedDays,
+	selectedDayId,
+	selectedItineraryId,
+	loadingDayIds = new Set(),
+	onToggleDayCollapse,
+	onDayClick,
+	onAddSchedule,
+	onInsertSchedule,
+	onAddDay,
+	onDayDelete,
+	onScheduleUpdated,
+	onMoveUp,
+	onMoveDown,
+	onMoveToDay,
+	onDuplicateToDay,
+	onScheduleDelete,
+	onItineraryClick,
+	onDragEnd,
+	onUpdateTrip,
+	onReorderItineraries,
+	expandAllDays,
+	collapseAllDays,
+	scrollSyncEnabled = true,
+	onScrollSyncEnabledChange,
+	isProgrammaticScrollRef,
+	scrollToItineraryRef,
 }: TripItineraryViewProps) {
-  const itineraryRefs = useRef<Map<string, HTMLDivElement>>(new Map())
-  const observerRef = useRef<IntersectionObserver | null>(null)
-  const isUserScrollingRef = useRef(false)
-  const templateWithoutDates = trip.is_template && !trip.start_date && !trip.end_date
+	const itineraryRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+	const observerRef = useRef<IntersectionObserver | null>(null);
+	const isUserScrollingRef = useRef(false);
+	const templateWithoutDates =
+		trip.is_template && !trip.start_date && !trip.end_date;
 
-  // itinerariesのタイトルを生成する関数
-  const generateItinerarySummary = (day: Day): string => {
-    if (!day.itineraries || day.itineraries.length === 0) {
-      return ''
-    }
-    
-    const sortedItineraries = [...day.itineraries].sort((a, b) => a.sort_number - b.sort_number)
-    return sortedItineraries.map(itinerary => itinerary.title).join(' → ')
-  }
+	// itinerariesのタイトルを生成する関数
+	const generateItinerarySummary = (day: Day): string => {
+		if (!day.itineraries || day.itineraries.length === 0) {
+			return "";
+		}
 
-  // ユーザーがスクロールしたことを検出
-  useEffect(() => {
-    const handleScroll = () => {
-      // プログラムによるスクロール中は何もしない
-      if (isProgrammaticScrollRef?.current) {
-        return
-      }
-      
-      isUserScrollingRef.current = true
-      // 以前は「スクロールで自動復帰」していたが、地図操作からの誤復帰を防ぐため廃止
-    }
+		const sortedItineraries = [...day.itineraries].sort(
+			(a, b) => a.sort_number - b.sort_number,
+		);
+		return sortedItineraries.map((itinerary) => itinerary.title).join(" → ");
+	};
 
-    window.addEventListener('scroll', handleScroll, true)
-    return () => {
-      window.removeEventListener('scroll', handleScroll, true)
-    }
-  }, [scrollSyncEnabled, onScrollSyncEnabledChange, isProgrammaticScrollRef])
+	// ユーザーがスクロールしたことを検出
+	useEffect(() => {
+		const handleScroll = () => {
+			// プログラムによるスクロール中は何もしない
+			if (isProgrammaticScrollRef?.current) {
+				return;
+			}
 
-  // Intersection Observerでスクロール位置を監視
-  useEffect(() => {
-    // スクロール連動が無効の場合は監視しない
-    if (!scrollSyncEnabled) {
-      if (observerRef.current) {
-        observerRef.current.disconnect()
-      }
-      return
-    }
+			isUserScrollingRef.current = true;
+			// 以前は「スクロールで自動復帰」していたが、地図操作からの誤復帰を防ぐため廃止
+		};
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        // ユーザーがスクロール中でない場合は何もしない
-        if (!isUserScrollingRef.current) return
-        // プログラムによるスクロール中は何もしない
-        if (isProgrammaticScrollRef?.current) return
-        
-        // 画面中央より上にある要素を検出
-        const visibleEntries = entries.filter(entry => entry.isIntersecting)
-        if (visibleEntries.length > 0) {
-          // 最初に交差している要素（一番上にある要素）を選択
-          const topEntry = visibleEntries[0]
-          const itineraryId = topEntry.target.getAttribute('data-itinerary-id')
-          if (itineraryId && itineraryId !== selectedItineraryId) {
-            onItineraryClick(itineraryId)
-          }
-        }
-        
-        // スクロール検出フラグをリセット
-        setTimeout(() => {
-          isUserScrollingRef.current = false
-        }, 100)
-      },
-      {
-        root: null, // ビューポートをルートとして使用
-        rootMargin: '-20% 0px -60% 0px', // 画面中央より上部（上20%〜下40%の範囲）
-        threshold: 0.5, // 50%以上表示されたときにトリガー
-      }
-    )
+		window.addEventListener("scroll", handleScroll, true);
+		return () => {
+			window.removeEventListener("scroll", handleScroll, true);
+		};
+	}, [scrollSyncEnabled, onScrollSyncEnabledChange, isProgrammaticScrollRef]);
 
-    // 全てのItineraryカードを監視
-    itineraryRefs.current.forEach((element) => {
-      if (observerRef.current) {
-        observerRef.current.observe(element)
-      }
-    })
+	// Intersection Observerでスクロール位置を監視
+	useEffect(() => {
+		// スクロール連動が無効の場合は監視しない
+		if (!scrollSyncEnabled) {
+			if (observerRef.current) {
+				observerRef.current.disconnect();
+			}
+			return;
+		}
 
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect()
-      }
-    }
-  }, [trip, collapsedDays, onItineraryClick, selectedItineraryId, scrollSyncEnabled, isProgrammaticScrollRef])
+		observerRef.current = new IntersectionObserver(
+			(entries) => {
+				// ユーザーがスクロール中でない場合は何もしない
+				if (!isUserScrollingRef.current) return;
+				// プログラムによるスクロール中は何もしない
+				if (isProgrammaticScrollRef?.current) return;
 
-  // Itinerary要素のref設定
-  const setItineraryRef = (itineraryId: string, element: HTMLDivElement | null) => {
-    if (element) {
-      itineraryRefs.current.set(itineraryId, element)
-    } else {
-      itineraryRefs.current.delete(itineraryId)
-    }
-  }
+				// 画面中央より上にある要素を検出
+				const visibleEntries = entries.filter((entry) => entry.isIntersecting);
+				if (visibleEntries.length > 0) {
+					// 最初に交差している要素（一番上にある要素）を選択
+					const topEntry = visibleEntries[0];
+					const itineraryId = topEntry.target.getAttribute("data-itinerary-id");
+					if (itineraryId && itineraryId !== selectedItineraryId) {
+						onItineraryClick(itineraryId);
+					}
+				}
 
-  // スクロール関数の実装（useCallbackでメモ化）
-  const scrollToItinerary = useCallback((itineraryId: string) => {
-    const element = itineraryRefs.current.get(itineraryId)
-    if (element) {
-      // プログラムスクロールフラグを設定（スクロール連動の誤検知を防ぐ）
-      if (isProgrammaticScrollRef) {
-        isProgrammaticScrollRef.current = true
-      }
+				// スクロール検出フラグをリセット
+				setTimeout(() => {
+					isUserScrollingRef.current = false;
+				}, 100);
+			},
+			{
+				root: null, // ビューポートをルートとして使用
+				rootMargin: "-20% 0px -60% 0px", // 画面中央より上部（上20%〜下40%の範囲）
+				threshold: 0.5, // 50%以上表示されたときにトリガー
+			},
+		);
 
-      // スムーズスクロール
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'nearest'
-      })
+		// 全てのItineraryカードを監視
+		itineraryRefs.current.forEach((element) => {
+			if (observerRef.current) {
+				observerRef.current.observe(element);
+			}
+		});
 
-      // スクロール完了後、フラグをリセット
-      setTimeout(() => {
-        if (isProgrammaticScrollRef) {
-          isProgrammaticScrollRef.current = false
-        }
-      }, 1000) // スクロールアニメーションが完了するまでの時間
-    }
-  }, [isProgrammaticScrollRef])
+		return () => {
+			if (observerRef.current) {
+				observerRef.current.disconnect();
+			}
+		};
+	}, [
+		trip,
+		collapsedDays,
+		onItineraryClick,
+		selectedItineraryId,
+		scrollSyncEnabled,
+		isProgrammaticScrollRef,
+	]);
 
-  // scrollToItineraryRefにスクロール関数を設定
-  useEffect(() => {
-    if (scrollToItineraryRef) {
-      scrollToItineraryRef.current = scrollToItinerary
-    }
-    return () => {
-      if (scrollToItineraryRef) {
-        scrollToItineraryRef.current = null
-      }
-    }
-  }, [scrollToItineraryRef, scrollToItinerary])
+	// Itinerary要素のref設定
+	const setItineraryRef = (
+		itineraryId: string,
+		element: HTMLDivElement | null,
+	) => {
+		if (element) {
+			itineraryRefs.current.set(itineraryId, element);
+		} else {
+			itineraryRefs.current.delete(itineraryId);
+		}
+	};
 
-  return (
-    <main className="px-4 py-8 pb-4">
-      {/* Days */}
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">{t('trip.itineraryView.title')}</h2>
-          <div className="flex items-center gap-2">
-              {trip.days && trip.days.length > 0 && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={expandAllDays}
-                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
-                    title={t('trip.itineraryView.expandAll')}
-                    aria-label={t('trip.itineraryView.expandAll')}
-                  >
-                    <Icon icon="mdi:unfold-more-horizontal" className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={collapseAllDays}
-                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
-                    title={t('trip.itineraryView.collapseAll')}
-                    aria-label={t('trip.itineraryView.collapseAll')}
-                  >
-                    <Icon icon="mdi:unfold-less-horizontal" className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
-          </div>
-        </div>
-        
-        {/* Day Cards - 常に表示 */}
-        {trip.days && trip.days.length > 0 ? (
-          trip.days.map((day) => {
-            const isCollapsed = collapsedDays.has(day.id)
-            const itinerarySummary = generateItinerarySummary(day)
-            // 表示は常に sort_number 昇順で固定
-            const sortedItineraries = [...(day.itineraries || [])].sort((a, b) => a.sort_number - b.sort_number)
+	// スクロール関数の実装（useCallbackでメモ化）
+	const scrollToItinerary = useCallback(
+		(itineraryId: string) => {
+			const element = itineraryRefs.current.get(itineraryId);
+			if (element) {
+				// プログラムスクロールフラグを設定（スクロール連動の誤検知を防ぐ）
+				if (isProgrammaticScrollRef) {
+					isProgrammaticScrollRef.current = true;
+				}
 
-            return (
-              <div
-                key={day.id}
-                id={`day-${day.id}`}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 anchor-offset"
-              >
-                {/* ヘッダー部分 - 常に表示 */}
-                <div 
-                  className={`flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors zidx-day-card-button relative ${selectedDayId === day.id ? 'ring-2 ring-emerald-500 ring-opacity-50 rounded-lg' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDayClick(day.id)
-                  }}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-2xl font-bold italic text-gray-900 mb-1">
-                          Day {day.day_number}
-                        </h3>
-                        {(() => {
-                          const getDayHeaderInfo = (): { text: string | null; className: string } => {
-                            if (day.date) {
-                              try {
-                                const dayDate = toDate(day.date)
-                                const month = dayDate.getMonth() + 1
-                                const dayNum = dayDate.getDate()
-                                
-                                // ユーザーの言語設定に基づいて曜日名をローカライズ
-                                const language = getUserLanguage()
-                                const locale = language === 'ja' ? 'ja-JP' : 'en-US'
-                                const dayName = new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(dayDate)
+				// スムーズスクロール
+				element.scrollIntoView({
+					behavior: "smooth",
+					block: "center",
+					inline: "nearest",
+				});
 
-                                const dayOfWeek = dayDate.getDay()
-                                const colorClass =
-                                  dayOfWeek === 6
-                                    ? 'text-blue-600'
-                                    : dayOfWeek === 0
-                                      ? 'text-red-600'
-                                      : 'text-gray-900'
+				// スクロール完了後、フラグをリセット
+				setTimeout(() => {
+					if (isProgrammaticScrollRef) {
+						isProgrammaticScrollRef.current = false;
+					}
+				}, 1000); // スクロールアニメーションが完了するまでの時間
+			}
+		},
+		[isProgrammaticScrollRef],
+	);
 
-                                return {
-                                  text: `${month}/${dayNum} ${dayName}`,
-                                  className: colorClass
-                                }
-                              } catch (error) {
-                                // 開発環境でのみエラーをログ出力
-                                if (process.env.NODE_ENV === 'development') {
-                                  logger.error('Invalid date for day:', day.id, error)
-                                }
-                                return {
-                                  text: t('tripItinerary.invalidDate'),
-                                  className: 'text-gray-900'
-                                }
-                              }
-                            }
+	// scrollToItineraryRefにスクロール関数を設定
+	useEffect(() => {
+		if (scrollToItineraryRef) {
+			scrollToItineraryRef.current = scrollToItinerary;
+		}
+		return () => {
+			if (scrollToItineraryRef) {
+				scrollToItineraryRef.current = null;
+			}
+		};
+	}, [scrollToItineraryRef, scrollToItinerary]);
 
-                            // Shared Private Tripの場合、shared_month_labelがあればそれを表示
-                            if (trip.shared_month_label) {
-                              return {
-                                text: trip.shared_month_label,
-                                className: 'text-gray-900'
-                              }
-                            }
+	return (
+		<main className="px-4 py-8 pb-4">
+			{/* Days */}
+			<div className="space-y-8">
+				<div className="flex justify-between items-center">
+					<h2 className="text-2xl font-bold text-gray-900">
+						{t("trip.itineraryView.title")}
+					</h2>
+					<div className="flex items-center gap-2">
+						{trip.days && trip.days.length > 0 && (
+							<div className="flex gap-2">
+								<button
+									onClick={expandAllDays}
+									className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
+									title={t("trip.itineraryView.expandAll")}
+									aria-label={t("trip.itineraryView.expandAll")}
+								>
+									<Icon icon="mdi:unfold-more-horizontal" className="w-5 h-5" />
+								</button>
+								<button
+									onClick={collapseAllDays}
+									className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 transition-colors"
+									title={t("trip.itineraryView.collapseAll")}
+									aria-label={t("trip.itineraryView.collapseAll")}
+								>
+									<Icon icon="mdi:unfold-less-horizontal" className="w-5 h-5" />
+								</button>
+							</div>
+						)}
+					</div>
+				</div>
 
-                            if (templateWithoutDates) {
-                              return { text: null, className: '' }
-                            }
+				{/* Day Cards - 常に表示 */}
+				{trip.days && trip.days.length > 0 ? (
+					trip.days.map((day) => {
+						const isCollapsed = collapsedDays.has(day.id);
+						const itinerarySummary = generateItinerarySummary(day);
+						// 表示は常に sort_number 昇順で固定
+						const sortedItineraries = [...(day.itineraries || [])].sort(
+							(a, b) => a.sort_number - b.sort_number,
+						);
 
-                            return {
-                              text: t('tripItinerary.dateNotSet'),
-                              className: 'text-gray-600'
-                            }
-                          }
+						return (
+							<div
+								key={day.id}
+								id={`day-${day.id}`}
+								className="bg-white rounded-lg shadow-sm border border-gray-200 anchor-offset"
+							>
+								{/* ヘッダー部分 - 常に表示 */}
+								<div
+									className={`flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors zidx-day-card-button relative ${selectedDayId === day.id ? "ring-2 ring-emerald-500 ring-opacity-50 rounded-lg" : ""}`}
+									onClick={(e) => {
+										e.stopPropagation();
+										onDayClick(day.id);
+									}}
+								>
+									<div className="flex-1">
+										<div className="flex items-start justify-between">
+											<div>
+												<h3 className="text-2xl font-bold italic text-gray-900 mb-1">
+													Day {day.day_number}
+												</h3>
+												{(() => {
+													const getDayHeaderInfo = (): {
+														text: string | null;
+														className: string;
+													} => {
+														if (day.date) {
+															try {
+																const dayDate = toDate(day.date);
+																const month = dayDate.getMonth() + 1;
+																const dayNum = dayDate.getDate();
 
-                          const { text: dayDateLabel, className: dayDateClass } = getDayHeaderInfo()
+																// ユーザーの言語設定に基づいて曜日名をローカライズ
+																const language = getUserLanguage();
+																const locale =
+																	language === "ja" ? "ja-JP" : "en-US";
+																const dayName = new Intl.DateTimeFormat(
+																	locale,
+																	{ weekday: "short" },
+																).format(dayDate);
 
-                          return dayDateLabel ? (
-                            <div className={`text-base ${dayDateClass}`}>
-                              {dayDateLabel}
-                            </div>
-                          ) : null
-                        })()}
-                      </div>
-                      {/* 折りたたみアイコン */}
-                      <button
-                        className="p-1 hover:bg-gray-100 rounded zidx-day-card-button relative"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onToggleDayCollapse(day.id)
-                        }}
-                        aria-label={isCollapsed ? t('tripItinerary.expand') : t('tripItinerary.collapse')}
-                      >
-                        <svg 
-                          className={`w-5 h-5 text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                    </div>
-                    
-                    {/* 縮小表示時の情報 */}
-                    {isCollapsed && (
-                      <div className="text-sm text-gray-600">
-                        {day.description && (
-                          <p className="mb-1">{day.description}</p>
-                        )}
-                        {itinerarySummary && (
-                          <p className="text-gray-500">{itinerarySummary}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
+																const dayOfWeek = dayDate.getDay();
+																const colorClass =
+																	dayOfWeek === 6
+																		? "text-blue-600"
+																		: dayOfWeek === 0
+																			? "text-red-600"
+																			: "text-gray-900";
 
-                {/* 詳細部分 - 折りたたまれていない時のみ表示 */}
-                {!isCollapsed && (
-                  <div className="px-6 pb-6">
-                    <DayEditor 
-                      day={day} 
-                      canEdit={canEdit}
-                      itinerarySummary={itinerarySummary}
-                      itineraries={sortedItineraries}
-                      onUpdate={(updatedDay: Day) => {
-                        onUpdateTrip({
-                          ...trip,
-                          days: trip.days?.map(d => 
-                            d.id === updatedDay.id ? updatedDay : d
-                          ) || []
-                        })
-                      }} 
-                      onDelete={onDayDelete}
-                      onReorderItineraries={onReorderItineraries}
-                    />
+																return {
+																	text: `${month}/${dayNum} ${dayName}`,
+																	className: colorClass,
+																};
+															} catch (error) {
+																// 開発環境でのみエラーをログ出力
+																if (process.env.NODE_ENV === "development") {
+																	logger.error(
+																		"Invalid date for day:",
+																		day.id,
+																		error,
+																	);
+																}
+																return {
+																	text: t("tripItinerary.invalidDate"),
+																	className: "text-gray-900",
+																};
+															}
+														}
 
-                    {/* ローディング状態の表示 */}
-                    {loadingDayIds.has(day.id) && (
-                      <div className="mt-6 flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <Loading inline size="sm" color="blue" message={t('loading.addingSchedule')} />
-                      </div>
-                    )}
+														// Shared Private Tripの場合、shared_month_labelがあればそれを表示
+														if (trip.shared_month_label) {
+															return {
+																text: trip.shared_month_label,
+																className: "text-gray-900",
+															};
+														}
 
-                    {sortedItineraries && sortedItineraries.length > 0 ? (
-                      <div className="mt-6">
-                        {canEdit && (
-                          <div className="flex justify-end items-center mb-4">
-                            <button
-                              onClick={() => onAddSchedule(day.id)}
-                              className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors"
-                              title={t('tripItinerary.addVenue')}
-                              aria-label={t('tripItinerary.addVenue')}
-                            >
-                              <IconRenderer iconName="plus" />
-                            </button>
-                          </div>
-                        )}
-                        <DndContext collisionDetection={closestCenter} onDragEnd={canEdit ? onDragEnd : () => {}}>
-                          <SortableContext 
-                            items={sortedItineraries.map(i => i.id)} 
-                            strategy={verticalListSortingStrategy}
-                          >
-                            <div className="space-y-2">
-                              {sortedItineraries.map((itinerary, index) => {
-                                const previousItinerary = index > 0 ? sortedItineraries[index - 1] : null
-                                const nextItinerary = index < (sortedItineraries.length || 0) - 1 ? sortedItineraries[index + 1] : null
-                                
-                                return (
-                                  <div 
-                                    key={itinerary.id} 
-                                    className="relative"
-                                    ref={(el) => setItineraryRef(itinerary.id, el)}
-                                    data-itinerary-id={itinerary.id}
-                                  >
-                                    <SortableItineraryCard
-                                      itinerary={itinerary}
-                                      canEdit={canEdit}
-                                      previousPlace={previousItinerary?.place_data}
-                                      nextPlace={nextItinerary?.place_data}
-                                      trip={trip}
-                                      onUpdate={onScheduleUpdated}
-                                      onMoveUp={() => onMoveUp(itinerary.id, day.id)}
-                                      onMoveDown={() => onMoveDown(itinerary.id, day.id)}
-                                      onMoveToDay={onMoveToDay}
-                                      onDuplicateToDay={onDuplicateToDay}
-                                      onDelete={onScheduleDelete}
-                                      onItineraryClick={onItineraryClick}
-                                      isSelected={selectedItineraryId === itinerary.id}
-                                      isFirst={index === 0}
-                                      isLast={index === (sortedItineraries.length || 0) - 1}
-                                      availableDays={trip.days}
-                                    />
-                                    
-                                    {/* 次のVenueへの距離表示（編集権限がある場合のみ挿入ボタン表示） */}
-                                    {itinerary.place_data && 
-                                     nextItinerary?.place_data && 
-                                     itinerary.place_data.place_id !== nextItinerary.place_data.place_id && (
-                                      <VenueDistance 
-                                        fromPlace={itinerary.place_data}
-                                        toPlace={nextItinerary.place_data}
-                                        mode="driving"
-                                        showInsertButton={canEdit}
-                                        onInsertVenue={() => onInsertSchedule(day.id, index)}
-                                      />
-                                    )}
-                                    
-                                    {/* Venue間の挿入ボタン（距離表示がない場合のみ、編集権限がある場合のみ） */}
-                                    {canEdit && index < (sortedItineraries.length || 0) - 1 && 
-                                     (!itinerary.place_data || !nextItinerary?.place_data || 
-                                      itinerary.place_data.place_id === nextItinerary.place_data.place_id) && (
-                                      <VenueInsertButton
-                                        onInsert={() => onInsertSchedule(day.id, index)}
-                                        dayId={day.id}
-                                      />
-                                    )}
-                                  </div>
-                                )
-                              })}
-                              
-                              {/* 最後のVenueの後に挿入ボタンを表示 - 編集権限がある場合のみ */}
-                              {canEdit && sortedItineraries.length > 0 && (
-                                <div className="flex justify-center py-4">
-                                  <div className="relative flex items-center justify-center">
-                                    {/* Gitタイムライン風の縦線（上側のみ） */}
-                                    <div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300 top-0"></div>
-                                    
-                                    {/* 挿入ボタン */}
-                                    <button
-                                      onClick={() => onInsertSchedule(day.id, sortedItineraries.length)}
-                                      className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center hover:bg-emerald-600 transition-colors shadow-sm"
-                                      title={t('tripItinerary.addVenueAtEnd')}
-                                    >
-                                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 2C13.1 2 14 2.9 14 4V10H20C21.1 10 22 10.9 22 12S21.1 14 20 14H14V20C14 21.1 13.1 22 12 22S10 21.1 10 20V14H4C2.9 14 2 13.1 2 12S2.9 10 4 10H10V4C10 2.9 10.9 2 12 2Z" />
-                                        <path 
-                                          d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z" 
-                                          fill="white"
-                                          opacity="0.8"
-                                          transform="scale(0.3) translate(20, 20)"
-                                        />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </SortableContext>
-                        </DndContext>
-                      </div>
-                    ) : canEdit ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <button
-                          onClick={() => onAddSchedule(day.id)}
-                          className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors mx-auto"
-                          title={t('tripItinerary.addVenue')}
-                          aria-label={t('tripItinerary.addVenue')}
-                        >
-                          <IconRenderer iconName="plus" className="w-5 h-5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        <p className="text-sm italic">{t('tripItinerary.noSchedules')}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })
-        ) : (
-          // 日程が0件の場合でも空のDayカードを表示
-          <div className="text-center py-8 text-gray-500">
-            <div className="flex items-center justify-center mb-4">
-              <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <p className="text-gray-600 mb-4">{t('trip.itineraryView.empty.description')}</p>
-          </div>
-        )}
-        
-        {/* 日程追加ボタン - 所有者のみ表示 */}
-        {canEdit && (
-          <div className="mt-6 text-center">
-            <button
-              onClick={onAddDay}
-              className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2 mx-auto"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              {t('trip.itineraryView.addDay')}
-            </button>
-          </div>
-        )}
-      </div>
-    </main>
-  )
+														if (templateWithoutDates) {
+															return { text: null, className: "" };
+														}
+
+														return {
+															text: t("tripItinerary.dateNotSet"),
+															className: "text-gray-600",
+														};
+													};
+
+													const {
+														text: dayDateLabel,
+														className: dayDateClass,
+													} = getDayHeaderInfo();
+
+													return dayDateLabel ? (
+														<div className={`text-base ${dayDateClass}`}>
+															{dayDateLabel}
+														</div>
+													) : null;
+												})()}
+											</div>
+											{/* 折りたたみアイコン */}
+											<button
+												className="p-1 hover:bg-gray-100 rounded zidx-day-card-button relative"
+												onClick={(e) => {
+													e.stopPropagation();
+													onToggleDayCollapse(day.id);
+												}}
+												aria-label={
+													isCollapsed
+														? t("tripItinerary.expand")
+														: t("tripItinerary.collapse")
+												}
+											>
+												<svg
+													className={`w-5 h-5 text-gray-400 transition-transform ${isCollapsed ? "rotate-180" : ""}`}
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M19 9l-7 7-7-7"
+													/>
+												</svg>
+											</button>
+										</div>
+
+										{/* 縮小表示時の情報 */}
+										{isCollapsed && (
+											<div className="text-sm text-gray-600">
+												{day.description && (
+													<p className="mb-1">{day.description}</p>
+												)}
+												{itinerarySummary && (
+													<p className="text-gray-500">{itinerarySummary}</p>
+												)}
+											</div>
+										)}
+									</div>
+								</div>
+
+								{/* 詳細部分 - 折りたたまれていない時のみ表示 */}
+								{!isCollapsed && (
+									<div className="px-6 pb-6">
+										<DayEditor
+											day={day}
+											canEdit={canEdit}
+											itinerarySummary={itinerarySummary}
+											itineraries={sortedItineraries}
+											onUpdate={(updatedDay: Day) => {
+												onUpdateTrip({
+													...trip,
+													days:
+														trip.days?.map((d) =>
+															d.id === updatedDay.id ? updatedDay : d,
+														) || [],
+												});
+											}}
+											onDelete={onDayDelete}
+											onReorderItineraries={onReorderItineraries}
+										/>
+
+										{/* ローディング状態の表示 */}
+										{loadingDayIds.has(day.id) && (
+											<div className="mt-6 flex items-center justify-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+												<Loading
+													inline
+													size="sm"
+													color="blue"
+													message={t("loading.addingSchedule")}
+												/>
+											</div>
+										)}
+
+										{sortedItineraries && sortedItineraries.length > 0 ? (
+											<div className="mt-6">
+												{canEdit && (
+													<div className="flex justify-end items-center mb-4">
+														<button
+															onClick={() => onAddSchedule(day.id)}
+															className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors"
+															title={t("tripItinerary.addVenue")}
+															aria-label={t("tripItinerary.addVenue")}
+														>
+															<IconRenderer iconName="plus" />
+														</button>
+													</div>
+												)}
+												<DndContext
+													collisionDetection={closestCenter}
+													onDragEnd={canEdit ? onDragEnd : () => {}}
+												>
+													<SortableContext
+														items={sortedItineraries.map((i) => i.id)}
+														strategy={verticalListSortingStrategy}
+													>
+														<div className="space-y-2">
+															{sortedItineraries.map((itinerary, index) => {
+																const previousItinerary =
+																	index > 0
+																		? sortedItineraries[index - 1]
+																		: null;
+																const nextItinerary =
+																	index < (sortedItineraries.length || 0) - 1
+																		? sortedItineraries[index + 1]
+																		: null;
+
+																return (
+																	<div
+																		key={itinerary.id}
+																		className="relative"
+																		ref={(el) =>
+																			setItineraryRef(itinerary.id, el)
+																		}
+																		data-itinerary-id={itinerary.id}
+																	>
+																		<SortableItineraryCard
+																			itinerary={itinerary}
+																			canEdit={canEdit}
+																			previousPlace={
+																				previousItinerary?.place_data
+																			}
+																			nextPlace={nextItinerary?.place_data}
+																			trip={trip}
+																			onUpdate={onScheduleUpdated}
+																			onMoveUp={() =>
+																				onMoveUp(itinerary.id, day.id)
+																			}
+																			onMoveDown={() =>
+																				onMoveDown(itinerary.id, day.id)
+																			}
+																			onMoveToDay={onMoveToDay}
+																			onDuplicateToDay={onDuplicateToDay}
+																			onDelete={onScheduleDelete}
+																			onItineraryClick={onItineraryClick}
+																			isSelected={
+																				selectedItineraryId === itinerary.id
+																			}
+																			isFirst={index === 0}
+																			isLast={
+																				index ===
+																				(sortedItineraries.length || 0) - 1
+																			}
+																			availableDays={trip.days}
+																		/>
+
+																		{/* 次のVenueへの距離表示（編集権限がある場合のみ挿入ボタン表示） */}
+																		{itinerary.place_data &&
+																			nextItinerary?.place_data &&
+																			itinerary.place_data.place_id !==
+																				nextItinerary.place_data.place_id && (
+																				<VenueDistance
+																					fromPlace={itinerary.place_data}
+																					toPlace={nextItinerary.place_data}
+																					mode="driving"
+																					showInsertButton={canEdit}
+																					onInsertVenue={() =>
+																						onInsertSchedule(day.id, index)
+																					}
+																				/>
+																			)}
+
+																		{/* Venue間の挿入ボタン（距離表示がない場合のみ、編集権限がある場合のみ） */}
+																		{canEdit &&
+																			index <
+																				(sortedItineraries.length || 0) - 1 &&
+																			(!itinerary.place_data ||
+																				!nextItinerary?.place_data ||
+																				itinerary.place_data.place_id ===
+																					nextItinerary.place_data
+																						.place_id) && (
+																				<VenueInsertButton
+																					onInsert={() =>
+																						onInsertSchedule(day.id, index)
+																					}
+																					dayId={day.id}
+																				/>
+																			)}
+																	</div>
+																);
+															})}
+
+															{/* 最後のVenueの後に挿入ボタンを表示 - 編集権限がある場合のみ */}
+															{canEdit && sortedItineraries.length > 0 && (
+																<div className="flex justify-center py-4">
+																	<div className="relative flex items-center justify-center">
+																		{/* Gitタイムライン風の縦線（上側のみ） */}
+																		<div className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300 top-0"></div>
+
+																		{/* 挿入ボタン */}
+																		<button
+																			onClick={() =>
+																				onInsertSchedule(
+																					day.id,
+																					sortedItineraries.length,
+																				)
+																			}
+																			className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center hover:bg-emerald-600 transition-colors shadow-sm"
+																			title={t("tripItinerary.addVenueAtEnd")}
+																		>
+																			<svg
+																				className="w-4 h-4"
+																				fill="currentColor"
+																				viewBox="0 0 24 24"
+																			>
+																				<path d="M12 2C13.1 2 14 2.9 14 4V10H20C21.1 10 22 10.9 22 12S21.1 14 20 14H14V20C14 21.1 13.1 22 12 22S10 21.1 10 20V14H4C2.9 14 2 13.1 2 12S2.9 10 4 10H10V4C10 2.9 10.9 2 12 2Z" />
+																				<path
+																					d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5S14.5 7.62 14.5 9S13.38 11.5 12 11.5Z"
+																					fill="white"
+																					opacity="0.8"
+																					transform="scale(0.3) translate(20, 20)"
+																				/>
+																			</svg>
+																		</button>
+																	</div>
+																</div>
+															)}
+														</div>
+													</SortableContext>
+												</DndContext>
+											</div>
+										) : canEdit ? (
+											<div className="text-center py-8 text-gray-500">
+												<button
+													onClick={() => onAddSchedule(day.id)}
+													className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center hover:bg-emerald-700 transition-colors mx-auto"
+													title={t("tripItinerary.addVenue")}
+													aria-label={t("tripItinerary.addVenue")}
+												>
+													<IconRenderer iconName="plus" className="w-5 h-5" />
+												</button>
+											</div>
+										) : (
+											<div className="text-center py-8 text-gray-500">
+												<p className="text-sm italic">
+													{t("tripItinerary.noSchedules")}
+												</p>
+											</div>
+										)}
+									</div>
+								)}
+							</div>
+						);
+					})
+				) : (
+					// 日程が0件の場合でも空のDayカードを表示
+					<div className="text-center py-8 text-gray-500">
+						<div className="flex items-center justify-center mb-4">
+							<svg
+								className="w-10 h-10 text-gray-400"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+								/>
+							</svg>
+						</div>
+						<p className="text-gray-600 mb-4">
+							{t("trip.itineraryView.empty.description")}
+						</p>
+					</div>
+				)}
+
+				{/* 日程追加ボタン - 所有者のみ表示 */}
+				{canEdit && (
+					<div className="mt-6 text-center">
+						<button
+							onClick={onAddDay}
+							className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center gap-2 mx-auto"
+						>
+							<svg
+								className="w-5 h-5"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+								/>
+							</svg>
+							{t("trip.itineraryView.addDay")}
+						</button>
+					</div>
+				)}
+			</div>
+		</main>
+	);
 }

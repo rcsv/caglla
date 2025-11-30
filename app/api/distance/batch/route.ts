@@ -1,237 +1,259 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import logger from '@/lib/core/logger'
-import { composeMiddleware } from '@/lib/core/middleware'
-import { withBodyValidation, withGooglePlacesKey } from '@/lib/api/middleware'
-import { BatchDistanceSchema } from '@/lib/schemas/distance'
-import type { PlaceData } from '@/lib/core/types'
-import { withExternalApiErrorHandler } from '@/lib/api/external-api-helpers'
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import logger from "@/lib/core/logger";
+import { composeMiddleware } from "@/lib/core/middleware";
+import { withBodyValidation, withGooglePlacesKey } from "@/lib/api/middleware";
+import { BatchDistanceSchema } from "@/lib/schemas/distance";
+import type { PlaceData } from "@/lib/core/types";
+import { withExternalApiErrorHandler } from "@/lib/api/external-api-helpers";
 
-const GOOGLE_DISTANCE_MATRIX_API_URL = 'https://maps.googleapis.com/maps/api/distancematrix/json'
+const GOOGLE_DISTANCE_MATRIX_API_URL =
+	"https://maps.googleapis.com/maps/api/distancematrix/json";
 
 /**
  * POST /api/distance/batch - 複数地点間の連続した距離計算
- * 
+ *
  * zod スキーマバリデーション + Context ミドルウェアで移行済み
  */
 export const POST = composeMiddleware(
-  withGooglePlacesKey(),
-  withBodyValidation(BatchDistanceSchema)
+	withGooglePlacesKey(),
+	withBodyValidation(BatchDistanceSchema),
 )(async (request: NextRequest, ctx) => {
-  try {
-    // ctx.apiKeys, ctx.body が保証されている（型推論が効く）
-    const GOOGLE_PLACES_API_KEY = ctx.apiKeys!.GOOGLE_PLACES!
-    
-    // zod スキーマでバリデーション済み & 型推論
-    type BodyType = z.infer<typeof BatchDistanceSchema>
-    const body = ctx.body as BodyType
-    const { places, mode = 'driving' } = body
+	try {
+		// ctx.apiKeys, ctx.body が保証されている（型推論が効く）
+		const GOOGLE_PLACES_API_KEY = ctx.apiKeys!.GOOGLE_PLACES!;
 
-    // 連続する地点間の距離を計算
-    const origins: string[] = []
-    const destinations: string[] = []
-    
-    for (let i = 0; i < places.length - 1; i++) {
-      const origin = places[i]
-      const destination = places[i + 1]
-      
-      if (origin.geometry?.location && destination.geometry?.location) {
-        origins.push(`${origin.geometry.location.lat},${origin.geometry.location.lng}`)
-        destinations.push(`${destination.geometry.location.lat},${destination.geometry.location.lng}`)
-      }
-    }
+		// zod スキーマでバリデーション済み & 型推論
+		type BodyType = z.infer<typeof BatchDistanceSchema>;
+		const body = ctx.body as BodyType;
+		const { places, mode = "driving" } = body;
 
-    if (origins.length === 0) {
-      const { createBadRequestError, handleApiError } = await import('@/lib/core/error-handler')
-      return handleApiError(
-        createBadRequestError('No valid place coordinates found'),
-        '/api/distance/batch'
-      )
-    }
+		// 連続する地点間の距離を計算
+		const origins: string[] = [];
+		const destinations: string[] = [];
 
-    // Distance Matrix APIを呼び出し（エラーハンドリング付き）
-    const data = await withExternalApiErrorHandler(
-      async () => {
-        const params = new URLSearchParams({
-          origins: origins.join('|'),
-          destinations: destinations.join('|'),
-          mode: mode,
-          language: 'ja',
-          region: 'jp',
-          key: GOOGLE_PLACES_API_KEY
-        })
+		for (let i = 0; i < places.length - 1; i++) {
+			const origin = places[i];
+			const destination = places[i + 1];
 
-        const response = await fetch(`${GOOGLE_DISTANCE_MATRIX_API_URL}?${params}`, {
-          signal: AbortSignal.timeout(15000) // 15秒でタイムアウト（バッチ処理は時間がかかるため）
-        })
+			if (origin.geometry?.location && destination.geometry?.location) {
+				origins.push(
+					`${origin.geometry.location.lat},${origin.geometry.location.lng}`,
+				);
+				destinations.push(
+					`${destination.geometry.location.lat},${destination.geometry.location.lng}`,
+				);
+			}
+		}
 
-        if (!response.ok) {
-          throw new Error(`Google Distance Matrix API error: ${response.status}`)
-        }
+		if (origins.length === 0) {
+			const { createBadRequestError, handleApiError } = await import(
+				"@/lib/core/error-handler"
+			);
+			return handleApiError(
+				createBadRequestError("No valid place coordinates found"),
+				"/api/distance/batch",
+			);
+		}
 
-        const result = await response.json()
-        
-        if (result.status !== 'OK') {
-          throw new Error(`Google Distance Matrix API error: ${result.status}`)
-        }
+		// Distance Matrix APIを呼び出し（エラーハンドリング付き）
+		const data = await withExternalApiErrorHandler(
+			async () => {
+				const params = new URLSearchParams({
+					origins: origins.join("|"),
+					destinations: destinations.join("|"),
+					mode: mode,
+					language: "ja",
+					region: "jp",
+					key: GOOGLE_PLACES_API_KEY,
+				});
 
-        return result
-      },
-      'Google Distance Matrix API (Batch)',
-      '/api/distance/batch'
-    )
+				const response = await fetch(
+					`${GOOGLE_DISTANCE_MATRIX_API_URL}?${params}`,
+					{
+						signal: AbortSignal.timeout(15000), // 15秒でタイムアウト（バッチ処理は時間がかかるため）
+					},
+				);
 
-    if (data instanceof NextResponse) {
-      return data
-    }
+				if (!response.ok) {
+					throw new Error(
+						`Google Distance Matrix API error: ${response.status}`,
+					);
+				}
 
-    // 結果を処理して総距離と総時間を計算
-    let totalDistance = 0 // meters
-    let totalDuration = 0 // seconds
-    const segments: Array<{
-      from: string
-      to: string
-      distance: { text: string; value: number }
-      duration: { text: string; value: number }
-    }> = []
+				const result = await response.json();
 
-    data.rows.forEach((row: any, rowIndex: number) => {
-      row.elements.forEach((element: any, elementIndex: number) => {
-        if (element.status === 'OK') {
-          totalDistance += element.distance.value
-          totalDuration += element.duration.value
-          
-          segments.push({
-            from: places[rowIndex].name,
-            to: places[rowIndex + 1].name,
-            distance: element.distance,
-            duration: element.duration
-          })
-        } else {
-          // 距離計算に失敗した区間をログに記録
-          const fromPlace = places[rowIndex]
-          const toPlace = places[rowIndex + 1]
-          
-          logger.warn('Distance calculation failed for segment', {
-            rowIndex,
-            elementIndex,
-            from: fromPlace?.name || 'Unknown',
-            to: toPlace?.name || 'Unknown',
-            from_coords: fromPlace?.geometry?.location ? 
-              `${fromPlace.geometry.location.lat},${fromPlace.geometry.location.lng}` : 'No coordinates',
-            to_coords: toPlace?.geometry?.location ? 
-              `${toPlace.geometry.location.lat},${toPlace.geometry.location.lng}` : 'No coordinates',
-            status: element.status,
-            error_message: element.error_message || 'Unknown error'
-          })
-          
-          // ZERO_RESULTSの場合は直線距離を計算してフォールバック
-          if (element.status === 'ZERO_RESULTS' && 
-              fromPlace?.geometry?.location && 
-              toPlace?.geometry?.location) {
-            
-            const fallbackDistance = calculateStraightLineDistance(
-              fromPlace.geometry.location,
-              toPlace.geometry.location
-            )
-            
-            logger.debug('Using fallback straight-line distance', { distanceKm: fallbackDistance.toFixed(2) })
-            
-            // フォールバック距離を追加（徒歩時間を推定）
-            const estimatedWalkingTime = Math.round(fallbackDistance * 12) // 時速5kmで計算
-            totalDistance += fallbackDistance * 1000 // kmをmに変換
-            totalDuration += estimatedWalkingTime * 60 // 分を秒に変換
-            
-            segments.push({
-              from: fromPlace.name,
-              to: toPlace.name,
-              distance: {
-                text: `${fallbackDistance.toFixed(2)}km (estimated)`,
-                value: fallbackDistance * 1000
-              },
-              duration: {
-                text: `${estimatedWalkingTime}min (estimated)`,
-                value: estimatedWalkingTime * 60
-              }
-            })
-          }
-        }
-      })
-    })
+				if (result.status !== "OK") {
+					throw new Error(`Google Distance Matrix API error: ${result.status}`);
+				}
 
-    // 成功した区間がない場合はエラーを返す
-    if (segments.length === 0) {
-      const { createBadRequestError, handleApiError } = await import('@/lib/core/error-handler')
-      return handleApiError(
-        createBadRequestError('All distance calculations failed'),
-        '/api/distance/batch'
-      )
-    }
+				return result;
+			},
+			"Google Distance Matrix API (Batch)",
+			"/api/distance/batch",
+		);
 
-    return NextResponse.json({
-      totalDistance: {
-        meters: totalDistance,
-        kilometers: Math.round(totalDistance / 1000 * 10) / 10,
-        text: `${Math.round(totalDistance / 1000 * 10) / 10}km`
-      },
-      totalDuration: {
-        seconds: totalDuration,
-        minutes: Math.round(totalDuration / 60),
-        hours: Math.floor(totalDuration / 3600),
-        text: formatDuration(totalDuration)
-      },
-      segments,
-      segmentCount: segments.length
-    })
-  } catch (error) {
-    // エラーハンドリングは composeMiddleware 側で自動的に適用される
-    // ただし、このエンドポイントは外部API呼び出しを含むため、詳細なエラーハンドリングが必要
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    logger.error('Error in distance/batch:', error)
-    const { handleApiError } = await import('@/lib/core/error-handler')
-    return handleApiError(
-      error instanceof Error ? error : new Error(String(error)),
-      '/api/distance/batch'
-    )
-  }
-})
+		if (data instanceof NextResponse) {
+			return data;
+		}
+
+		// 結果を処理して総距離と総時間を計算
+		let totalDistance = 0; // meters
+		let totalDuration = 0; // seconds
+		const segments: Array<{
+			from: string;
+			to: string;
+			distance: { text: string; value: number };
+			duration: { text: string; value: number };
+		}> = [];
+
+		data.rows.forEach((row: any, rowIndex: number) => {
+			row.elements.forEach((element: any, elementIndex: number) => {
+				if (element.status === "OK") {
+					totalDistance += element.distance.value;
+					totalDuration += element.duration.value;
+
+					segments.push({
+						from: places[rowIndex].name,
+						to: places[rowIndex + 1].name,
+						distance: element.distance,
+						duration: element.duration,
+					});
+				} else {
+					// 距離計算に失敗した区間をログに記録
+					const fromPlace = places[rowIndex];
+					const toPlace = places[rowIndex + 1];
+
+					logger.warn("Distance calculation failed for segment", {
+						rowIndex,
+						elementIndex,
+						from: fromPlace?.name || "Unknown",
+						to: toPlace?.name || "Unknown",
+						from_coords: fromPlace?.geometry?.location
+							? `${fromPlace.geometry.location.lat},${fromPlace.geometry.location.lng}`
+							: "No coordinates",
+						to_coords: toPlace?.geometry?.location
+							? `${toPlace.geometry.location.lat},${toPlace.geometry.location.lng}`
+							: "No coordinates",
+						status: element.status,
+						error_message: element.error_message || "Unknown error",
+					});
+
+					// ZERO_RESULTSの場合は直線距離を計算してフォールバック
+					if (
+						element.status === "ZERO_RESULTS" &&
+						fromPlace?.geometry?.location &&
+						toPlace?.geometry?.location
+					) {
+						const fallbackDistance = calculateStraightLineDistance(
+							fromPlace.geometry.location,
+							toPlace.geometry.location,
+						);
+
+						logger.debug("Using fallback straight-line distance", {
+							distanceKm: fallbackDistance.toFixed(2),
+						});
+
+						// フォールバック距離を追加（徒歩時間を推定）
+						const estimatedWalkingTime = Math.round(fallbackDistance * 12); // 時速5kmで計算
+						totalDistance += fallbackDistance * 1000; // kmをmに変換
+						totalDuration += estimatedWalkingTime * 60; // 分を秒に変換
+
+						segments.push({
+							from: fromPlace.name,
+							to: toPlace.name,
+							distance: {
+								text: `${fallbackDistance.toFixed(2)}km (estimated)`,
+								value: fallbackDistance * 1000,
+							},
+							duration: {
+								text: `${estimatedWalkingTime}min (estimated)`,
+								value: estimatedWalkingTime * 60,
+							},
+						});
+					}
+				}
+			});
+		});
+
+		// 成功した区間がない場合はエラーを返す
+		if (segments.length === 0) {
+			const { createBadRequestError, handleApiError } = await import(
+				"@/lib/core/error-handler"
+			);
+			return handleApiError(
+				createBadRequestError("All distance calculations failed"),
+				"/api/distance/batch",
+			);
+		}
+
+		return NextResponse.json({
+			totalDistance: {
+				meters: totalDistance,
+				kilometers: Math.round((totalDistance / 1000) * 10) / 10,
+				text: `${Math.round((totalDistance / 1000) * 10) / 10}km`,
+			},
+			totalDuration: {
+				seconds: totalDuration,
+				minutes: Math.round(totalDuration / 60),
+				hours: Math.floor(totalDuration / 3600),
+				text: formatDuration(totalDuration),
+			},
+			segments,
+			segmentCount: segments.length,
+		});
+	} catch (error) {
+		// エラーハンドリングは composeMiddleware 側で自動的に適用される
+		// ただし、このエンドポイントは外部API呼び出しを含むため、詳細なエラーハンドリングが必要
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		logger.error("Error in distance/batch:", error);
+		const { handleApiError } = await import("@/lib/core/error-handler");
+		return handleApiError(
+			error instanceof Error ? error : new Error(String(error)),
+			"/api/distance/batch",
+		);
+	}
+});
 
 // 時間をフォーマットする関数（サーバー側は英語表記で統一）
 function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.round((seconds % 3600) / 60)
-  
-  if (hours >= 1) {
-    if (minutes === 0) {
-      return `${hours}h`
-    } else {
-      return `${hours}h${minutes}m`
-    }
-  } else {
-    return `${minutes}min`
-  }
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.round((seconds % 3600) / 60);
+
+	if (hours >= 1) {
+		if (minutes === 0) {
+			return `${hours}h`;
+		} else {
+			return `${hours}h${minutes}m`;
+		}
+	} else {
+		return `${minutes}min`;
+	}
 }
 
 // 2点間の直線距離を計算する関数（ハヴァサイン公式）
 function calculateStraightLineDistance(
-  point1: { lat: number; lng: number },
-  point2: { lat: number; lng: number }
+	point1: { lat: number; lng: number },
+	point2: { lat: number; lng: number },
 ): number {
-  const R = 6371 // 地球の半径（km）
-  const dLat = toRadians(point2.lat - point1.lat)
-  const dLng = toRadians(point2.lng - point1.lng)
-  
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRadians(point1.lat)) * Math.cos(toRadians(point2.lat)) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2)
-  
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  const distance = R * c
-  
-  return distance
+	const R = 6371; // 地球の半径（km）
+	const dLat = toRadians(point2.lat - point1.lat);
+	const dLng = toRadians(point2.lng - point1.lng);
+
+	const a =
+		Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+		Math.cos(toRadians(point1.lat)) *
+			Math.cos(toRadians(point2.lat)) *
+			Math.sin(dLng / 2) *
+			Math.sin(dLng / 2);
+
+	const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	const distance = R * c;
+
+	return distance;
 }
 
 // 度をラジアンに変換する関数
 function toRadians(degrees: number): number {
-  return degrees * (Math.PI / 180)
+	return degrees * (Math.PI / 180);
 }
