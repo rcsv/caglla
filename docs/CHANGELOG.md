@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > バージョニング方針: 本プロジェクトはSemVerに準拠します。詳細は `docs/development/versioning.md` を参照してください。
 
+## [3.0.1] - 2025-11-30
+
+### Added
+- Notificationコンポーネント（Success/Warning/Errorタイプ）
+- ConfirmDialogコンポーネント（Warning/Info/Dangerタイプ）
+- NotificationProviderとuseNotificationフック
+- 通知・ダイアログ用アニメーション（slideInFromTop, fadeIn, slideInScale）
+- i18nキー追加（unpublishConfirmTitle, unpublishConfirmMessage, unpublishSuccess, unpublishFailed, pdfExportSuccess）
+
+### Changed
+- Publish/Unpublish機能の通知を`alert()`からNotificationコンポーネントに置き換え
+- Publish/Unpublish確認を`confirm()`からConfirmDialogコンポーネントに置き換え
+- PDF Export機能の通知を`alert()`からNotificationコンポーネントに置き換え
+- Replicate機能のエラー表示を`alert()`からNotificationコンポーネントに置き換え
+
+### Fixed
+- Unpublish APIエンドポイントの404エラーを修正（`/unpublish`から`/publish`（DELETE）に変更）
+
 ## [3.0.0] - 2025-01-XX
 
 ### Added
