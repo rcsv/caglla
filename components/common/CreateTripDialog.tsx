@@ -1,54 +1,56 @@
-'use client'
-import logger from '@/lib/core/logger'
+"use client";
+import logger from "@/lib/core/logger";
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { makeAuthenticatedRequest } from '@/lib/api/helpers'
-import { createTrip } from '@/lib/travel/trip-operations'
-import ImageUpload from '@/components/ui/ImageUpload'
-import { imageUploadHelpers } from '@/lib/storage/image-upload'
-import PlaceSearchInput from '@/components/common/PlaceSearchInput'
-import { PlaceData } from '@/lib/core/types'
-import { useUserData } from '@/lib/contexts/user-data'
-import { placesApiHelpers } from '@/lib/api/google/places'
-import { getCurrencyByCountryCode } from '@/lib/core/locations'
-import { currencyUtils } from '@/lib/utils/currency'
-import { RestrictionProvider, RestrictionType } from '@/lib/subscription/restriction'
-import { getZIndexClass } from '@/lib/core/z-index'
-import { Input } from '@/components/common/Input'
-import { Textarea } from '@/components/common/Textarea'
-import { Select } from '@/components/common/Select'
-import { Button } from '@/components/common/Button'
-import { IconRenderer } from '@/components/common/icons/IconRenderer'
-import { t } from '@/lib/i18n'
-import { getUserLanguage } from '@/lib/utils/language'
-import { useAuth } from '@/lib/contexts/auth'
-import Loading from '@/components/common/Loading'
-
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { makeAuthenticatedRequest } from "@/lib/api/helpers";
+import { createTrip } from "@/lib/travel/trip-operations";
+import ImageUpload from "@/components/ui/ImageUpload";
+import { imageUploadHelpers } from "@/lib/storage/image-upload";
+import PlaceSearchInput from "@/components/common/PlaceSearchInput";
+import { PlaceData } from "@/lib/core/types";
+import { useUserData } from "@/lib/contexts/user-data";
+import { placesApiHelpers } from "@/lib/api/google/places";
+import { getCurrencyByCountryCode } from "@/lib/core/locations";
+import { currencyUtils } from "@/lib/utils/currency";
+import {
+	RestrictionProvider,
+	RestrictionType,
+} from "@/lib/subscription/restriction";
+import { getZIndexClass } from "@/lib/core/z-index";
+import { Input } from "@/components/common/Input";
+import { Textarea } from "@/components/common/Textarea";
+import { Select } from "@/components/common/Select";
+import { Button } from "@/components/common/Button";
+import { IconRenderer } from "@/components/common/icons/IconRenderer";
+import { t } from "@/lib/i18n";
+import { getUserLanguage } from "@/lib/utils/language";
+import { useAuth } from "@/lib/contexts/auth";
+import Loading from "@/components/common/Loading";
 
 interface CreateTripDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess: () => void
-  initialMode?: CreateMode // 初期モードを指定（'trip' または 'template'）
-  hideModeSelector?: boolean // モード選択UIを非表示にする（初期モードで固定）
+	isOpen: boolean;
+	onClose: () => void;
+	onSuccess: () => void;
+	initialMode?: CreateMode; // 初期モードを指定（'trip' または 'template'）
+	hideModeSelector?: boolean; // モード選択UIを非表示にする（初期モードで固定）
 }
 
-type CreateMode = 'trip' | 'template'
+type CreateMode = "trip" | "template";
 
 const createInitialFormState = () => ({
-  title: '',
-  description: '',
-  destination: '',
-  destinationPlace: undefined as PlaceData | undefined,
-  startDate: '',
-  endDate: '',
-  dayCount: 3,
-  imageUrl: '',
-  defaultCurrency: 'JPY' as string
-})
+	title: "",
+	description: "",
+	destination: "",
+	destinationPlace: undefined as PlaceData | undefined,
+	startDate: "",
+	endDate: "",
+	dayCount: 3,
+	imageUrl: "",
+	defaultCurrency: "JPY" as string,
+});
 
-type CreateTripFormState = ReturnType<typeof createInitialFormState>
+type CreateTripFormState = ReturnType<typeof createInitialFormState>;
 
 /**
  * Dialog modal for creating a new trip, collecting destination, travel dates, optional title/description/image, and access level.
@@ -60,733 +62,870 @@ type CreateTripFormState = ReturnType<typeof createInitialFormState>
  * @param onSuccess - Called after a trip is successfully created
  * @returns The dialog's rendered React element when open, or `null` when closed
  */
-export default function CreateTripDialog({ 
-  isOpen, 
-  onClose, 
-  onSuccess,
-  initialMode = 'trip',
-  hideModeSelector = false
+export default function CreateTripDialog({
+	isOpen,
+	onClose,
+	onSuccess,
+	initialMode = "trip",
+	hideModeSelector = false,
 }: CreateTripDialogProps) {
-  const router = useRouter()
-  const { userPlanId, tripCount, privateTripCount } = useUserData()
-  const { user } = useAuth()
-  
-  // 現在のユーザー言語を取得（date inputのlang属性用）
-  const currentLanguage = getUserLanguage(user)
-  
-  const [formData, setFormData] = useState<CreateTripFormState>(createInitialFormState)
-  const [mode, setMode] = useState<CreateMode>(initialMode)
-  const [submitting, setSubmitting] = useState(false)
-  const [dateError, setDateError] = useState('')
-  const [dateAutoAdjusted, setDateAutoAdjusted] = useState(false)
-  const [isLoadingUnsplashImage, setIsLoadingUnsplashImage] = useState(false)
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
-  const [isInferringCurrency, setIsInferringCurrency] = useState(false)
-  const [inferredCurrency, setInferredCurrency] = useState<string | null>(null)
-  const isInferringCurrencyRef = useRef(false)
+	const router = useRouter();
+	const { userPlanId, tripCount, privateTripCount } = useUserData();
+	const { user } = useAuth();
 
-  // RestrictionProviderを使用してプラン制限をチェック
-  const canCreateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRIPS, tripCount + 1)
-  const canCreatePrivateTrip = RestrictionProvider.can(userPlanId, RestrictionType.MAX_PRIVATE_TRIPS, privateTripCount + 1)
-  const canUseTemplateMode = RestrictionProvider.hasFeature(userPlanId, RestrictionType.PUBLIC_TEMPLATE)
-  
-  const remainingTrips = RestrictionProvider.getRemaining(userPlanId, RestrictionType.MAX_TRIPS, tripCount)
-  const remainingPrivateTrips = RestrictionProvider.getRemaining(userPlanId, RestrictionType.MAX_PRIVATE_TRIPS, privateTripCount)
+	// 現在のユーザー言語を取得（date inputのlang属性用）
+	const currentLanguage = getUserLanguage(user);
 
-  // Unsplash画像の自動取得
-  const fetchUnsplashImage = async (destination: string) => {
-    if (!destination.trim()) return
+	const [formData, setFormData] = useState<CreateTripFormState>(
+		createInitialFormState,
+	);
+	const [mode, setMode] = useState<CreateMode>(initialMode);
+	const [submitting, setSubmitting] = useState(false);
+	const [dateError, setDateError] = useState("");
+	const [dateAutoAdjusted, setDateAutoAdjusted] = useState(false);
+	const [isLoadingUnsplashImage, setIsLoadingUnsplashImage] = useState(false);
+	const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+	const [isInferringCurrency, setIsInferringCurrency] = useState(false);
+	const [inferredCurrency, setInferredCurrency] = useState<string | null>(null);
+	const isInferringCurrencyRef = useRef(false);
 
-    setIsLoadingUnsplashImage(true)
-    try {
-      const response = await makeAuthenticatedRequest(`/api/unsplash?destination=${encodeURIComponent(destination)}&count=1`)
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success && data.photo) {
-          setFormData(prev => ({ ...prev, imageUrl: data.photo.url }))
-        }
-      }
-    } catch (error) {
-      logger.error('Failed to fetch Unsplash image:', error)
-    } finally {
-      setIsLoadingUnsplashImage(false)
-    }
-  }
+	// RestrictionProviderを使用してプラン制限をチェック
+	const canCreateTrip = RestrictionProvider.can(
+		userPlanId,
+		RestrictionType.MAX_TRIPS,
+		tripCount + 1,
+	);
+	const canCreatePrivateTrip = RestrictionProvider.can(
+		userPlanId,
+		RestrictionType.MAX_PRIVATE_TRIPS,
+		privateTripCount + 1,
+	);
+	const canUseTemplateMode = RestrictionProvider.hasFeature(
+		userPlanId,
+		RestrictionType.PUBLIC_TEMPLATE,
+	);
 
-  // 目的地が変更された時にUnsplash画像を自動取得
-  useEffect(() => {
-    if (formData.destination.trim() && !formData.imageUrl) {
-      const timeoutId = setTimeout(() => {
-        fetchUnsplashImage(formData.destination)
-      }, 1000) // 1秒後に実行（デバウンス）
+	const remainingTrips = RestrictionProvider.getRemaining(
+		userPlanId,
+		RestrictionType.MAX_TRIPS,
+		tripCount,
+	);
+	const remainingPrivateTrips = RestrictionProvider.getRemaining(
+		userPlanId,
+		RestrictionType.MAX_PRIVATE_TRIPS,
+		privateTripCount,
+	);
 
-      return () => clearTimeout(timeoutId)
-    }
-  }, [formData.destination, formData.imageUrl])
+	// Unsplash画像の自動取得
+	const fetchUnsplashImage = async (destination: string) => {
+		if (!destination.trim()) return;
 
-  // 目的地が選択された時に通貨を自動推定
-  useEffect(() => {
-    const placeId = formData.destinationPlace?.place_id
-    if (!placeId || isInferringCurrencyRef.current) {
-        return
-      }
+		setIsLoadingUnsplashImage(true);
+		try {
+			const response = await makeAuthenticatedRequest(
+				`/api/unsplash?destination=${encodeURIComponent(destination)}&count=1`,
+			);
 
-    let isMounted = true
+			if (response.ok) {
+				const data = await response.json();
+				if (data.success && data.photo) {
+					setFormData((prev) => ({ ...prev, imageUrl: data.photo.url }));
+				}
+			}
+		} catch (error) {
+			logger.error("Failed to fetch Unsplash image:", error);
+		} finally {
+			setIsLoadingUnsplashImage(false);
+		}
+	};
 
-    const inferCurrencyFromDestination = async () => {
-      isInferringCurrencyRef.current = true
-      setIsInferringCurrency(true)
-      try {
-        const language = getUserLanguage(user || undefined)
-        const placeDetails = await placesApiHelpers.getPlaceDetails(placeId, language)
+	// 目的地が変更された時にUnsplash画像を自動取得
+	useEffect(() => {
+		if (formData.destination.trim() && !formData.imageUrl) {
+			const timeoutId = setTimeout(() => {
+				fetchUnsplashImage(formData.destination);
+			}, 1000); // 1秒後に実行（デバウンス）
 
-        // address_componentsから国コードを取得
-        const countryCode = placeDetails.address_components?.find(
-          (component) => component.types.includes('country')
-        )?.short_name
+			return () => clearTimeout(timeoutId);
+		}
+	}, [formData.destination, formData.imageUrl]);
 
-        if (countryCode) {
-          const currency = getCurrencyByCountryCode(countryCode)
-          if (currency) {
-            logger.debug('Currency inferred from destination:', { countryCode, currency })
-            setFormData(prev => ({ ...prev, defaultCurrency: currency }))
-            setInferredCurrency(currency)
-          } else {
-            logger.debug('Currency not found for country code:', countryCode)
-            setInferredCurrency(null)
-          }
-        } else {
-          logger.debug('Country code not found in address_components')
-          setInferredCurrency(null)
-        }
-      } catch (error) {
-        logger.error('Error inferring currency from destination:', error)
-        setInferredCurrency(null)
-      } finally {
-        isInferringCurrencyRef.current = false
-        if (isMounted) {
-        setIsInferringCurrency(false)
-      }
-      }
-    }
+	// 目的地が選択された時に通貨を自動推定
+	useEffect(() => {
+		const placeId = formData.destinationPlace?.place_id;
+		if (!placeId || isInferringCurrencyRef.current) {
+			return;
+		}
 
-    void inferCurrencyFromDestination()
+		let isMounted = true;
 
-    return () => {
-      isMounted = false
-    }
-  }, [formData.destinationPlace?.place_id, user])
+		const inferCurrencyFromDestination = async () => {
+			isInferringCurrencyRef.current = true;
+			setIsInferringCurrency(true);
+			try {
+				const language = getUserLanguage(user || undefined);
+				const placeDetails = await placesApiHelpers.getPlaceDetails(
+					placeId,
+					language,
+				);
 
-  // ダイアログが開いた時にフォームをリセット
-  useEffect(() => {
-    if (isOpen) {
-      setFormData(createInitialFormState())
-      setMode(initialMode)
-      setDateError('')
-      setDateAutoAdjusted(false)
-      setSubmitting(false)
-    }
-  }, [isOpen, initialMode])
+				// address_componentsから国コードを取得
+				const countryCode = placeDetails.address_components?.find((component) =>
+					component.types.includes("country"),
+				)?.short_name;
 
-  const isTemplateMode = mode === 'template'
+				if (countryCode) {
+					const currency = getCurrencyByCountryCode(countryCode);
+					if (currency) {
+						logger.debug("Currency inferred from destination:", {
+							countryCode,
+							currency,
+						});
+						setFormData((prev) => ({ ...prev, defaultCurrency: currency }));
+						setInferredCurrency(currency);
+					} else {
+						logger.debug("Currency not found for country code:", countryCode);
+						setInferredCurrency(null);
+					}
+				} else {
+					logger.debug("Country code not found in address_components");
+					setInferredCurrency(null);
+				}
+			} catch (error) {
+				logger.error("Error inferring currency from destination:", error);
+				setInferredCurrency(null);
+			} finally {
+				isInferringCurrencyRef.current = false;
+				if (isMounted) {
+					setIsInferringCurrency(false);
+				}
+			}
+		};
 
-  // 旅行日数の計算
-  const calculateTravelDays = (startDate: string, endDate: string): number => {
-    if (!startDate || !endDate) return 0
-    
-    const start = new Date(startDate)
-    const end = new Date(endDate)
-    const diffTime = Math.abs(end.getTime() - start.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1 // 開始日と終了日を含む
-    
-    return diffDays
-  }
+		void inferCurrencyFromDestination();
 
-  // 旅行日数制限チェック
-  const canCreateTravelDays = isTemplateMode
-    ? true
-    : RestrictionProvider.can(userPlanId, RestrictionType.MAX_TRAVEL_DAYS, calculateTravelDays(formData.startDate, formData.endDate))
+		return () => {
+			isMounted = false;
+		};
+	}, [formData.destinationPlace?.place_id, user]);
 
-  const meetsTemplateRequirements = isTemplateMode ? formData.dayCount > 0 : true
-  const meetsDateRequirements = isTemplateMode
-    ? true
-    : Boolean(formData.startDate && formData.endDate && !dateError)
-  const meetsAccessRestrictions = canCreatePrivateTrip
+	// ダイアログが開いた時にフォームをリセット
+	useEffect(() => {
+		if (isOpen) {
+			setFormData(createInitialFormState());
+			setMode(initialMode);
+			setDateError("");
+			setDateAutoAdjusted(false);
+			setSubmitting(false);
+		}
+	}, [isOpen, initialMode]);
 
-  const canSubmitForm =
-    Boolean(formData.destinationPlace) &&
-    meetsTemplateRequirements &&
-    meetsDateRequirements &&
-    meetsAccessRestrictions &&
-    canCreateTrip &&
-    canCreateTravelDays &&
-    (!isTemplateMode || canUseTemplateMode)
+	const isTemplateMode = mode === "template";
 
-  const isSubmitDisabled = submitting || !canSubmitForm
+	// 旅行日数の計算
+	const calculateTravelDays = (startDate: string, endDate: string): number => {
+		if (!startDate || !endDate) return 0;
 
-  // 日付のバリデーション
-  const validateDates = (startDate: string, endDate: string): string => {
-    if (!startDate || !endDate) return ''
-    
-    const start = new Date(startDate)
-    const end = new Date(endDate)
-    
-    if (start > end) {
-      return t('trip.create.dateValidation.startBeforeEnd')
-    }
-    
-    return ''
-  }
+		const start = new Date(startDate);
+		const end = new Date(endDate);
+		const diffTime = Math.abs(end.getTime() - start.getTime());
+		const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // 開始日と終了日を含む
 
-  const handleModeChange = (nextMode: CreateMode) => {
-    if (nextMode === mode) return
-    if (nextMode === 'template' && !canUseTemplateMode) {
-      return
-    }
-    setMode(nextMode)
-    setFormData(prev => ({
-      ...prev,
-      startDate: nextMode === 'trip' ? prev.startDate : '',
-      endDate: nextMode === 'trip' ? prev.endDate : '',
-      dayCount: nextMode === 'template'
-        ? prev.dayCount && prev.dayCount > 0
-          ? prev.dayCount
-          : 3
-        : prev.dayCount
-    }))
-    setDateError('')
-    setDateAutoAdjusted(false)
-  }
+		return diffDays;
+	};
 
-  const handleDayCountChange = (value: string) => {
-    const parsed = Number(value)
-    setFormData(prev => ({
-      ...prev,
-      dayCount: Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0
-    }))
-  }
+	// 旅行日数制限チェック
+	const canCreateTravelDays = isTemplateMode
+		? true
+		: RestrictionProvider.can(
+				userPlanId,
+				RestrictionType.MAX_TRAVEL_DAYS,
+				calculateTravelDays(formData.startDate, formData.endDate),
+			);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+	const meetsTemplateRequirements = isTemplateMode
+		? formData.dayCount > 0
+		: true;
+	const meetsDateRequirements = isTemplateMode
+		? true
+		: Boolean(formData.startDate && formData.endDate && !dateError);
+	const meetsAccessRestrictions = canCreatePrivateTrip;
 
-    // 必須項目のバリデーション
-    if (!formData.destinationPlace) {
-      alert(t('trip.create.validation.destinationRequired'))
-      return
-    }
+	const canSubmitForm =
+		Boolean(formData.destinationPlace) &&
+		meetsTemplateRequirements &&
+		meetsDateRequirements &&
+		meetsAccessRestrictions &&
+		canCreateTrip &&
+		canCreateTravelDays &&
+		(!isTemplateMode || canUseTemplateMode);
 
-    if (isTemplateMode) {
-      if (!formData.dayCount || formData.dayCount <= 0) {
-        alert(t('trip.create.validation.dayCountRequired'))
-        return
-      }
-    } else {
-      if (!formData.startDate) {
-        alert(t('trip.create.validation.startDateRequired'))
-        return
-      }
+	const isSubmitDisabled = submitting || !canSubmitForm;
 
-      if (!formData.endDate) {
-        alert(t('trip.create.validation.endDateRequired'))
-        return
-      }
+	// 日付のバリデーション
+	const validateDates = (startDate: string, endDate: string): string => {
+		if (!startDate || !endDate) return "";
 
-      // 日付のバリデーション
-      const dateValidationError = validateDates(formData.startDate, formData.endDate)
-      if (dateValidationError) {
-        setDateError(dateValidationError)
-        return
-      }
-      setDateError('')
-    }
+		const start = new Date(startDate);
+		const end = new Date(endDate);
 
+		if (start > end) {
+			return t("trip.create.dateValidation.startBeforeEnd");
+		}
 
-    const normalizeDateInput = (value?: string) => {
-      if (!value) return undefined
-      // 既にISO形式であればそのまま使用
-      if (value.includes('T')) return value
-      // HTML date入力（YYYY-MM-DD）をUTC 00:00:00のISO文字列に変換
-      return new Date(`${value}T00:00:00.000Z`).toISOString()
-    }
+		return "";
+	};
 
-    setSubmitting(true)
-    try {
-      const normalizedStartDate = isTemplateMode ? undefined : normalizeDateInput(formData.startDate)
-      const normalizedEndDate = isTemplateMode ? undefined : normalizeDateInput(formData.endDate)
+	const handleModeChange = (nextMode: CreateMode) => {
+		if (nextMode === mode) return;
+		if (nextMode === "template" && !canUseTemplateMode) {
+			return;
+		}
+		setMode(nextMode);
+		setFormData((prev) => ({
+			...prev,
+			startDate: nextMode === "trip" ? prev.startDate : "",
+			endDate: nextMode === "trip" ? prev.endDate : "",
+			dayCount:
+				nextMode === "template"
+					? prev.dayCount && prev.dayCount > 0
+						? prev.dayCount
+						: 3
+					: prev.dayCount,
+		}));
+		setDateError("");
+		setDateAutoAdjusted(false);
+	};
 
-      const trip = await createTrip({
-        title: formData.title || formData.destination,
-        description: formData.description || undefined,
-        destination: formData.destination || undefined,
-        destinationPlaceId: formData.destinationPlace?.place_id || undefined,
-        startDate: normalizedStartDate,
-        endDate: normalizedEndDate,
-        imageUrl: formData.imageUrl || undefined,
-        defaultCurrency: formData.defaultCurrency,
-        isTemplate: isTemplateMode,
-        dayCount: isTemplateMode ? formData.dayCount : undefined,
-      })
+	const handleDayCountChange = (value: string) => {
+		const parsed = Number(value);
+		setFormData((prev) => ({
+			...prev,
+			dayCount: Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0,
+		}));
+	};
 
-      onSuccess()
-      onClose()
-      // スラッグベースのURLにリダイレクト
-      if (trip.creator?.slug && trip.slug) {
-        router.push(`/${trip.creator.slug}/${trip.slug}`)
-      } else {
-        // スラッグが生成されていない場合はエラー（通常は発生しない）
-        logger.error('Trip created but slugs are missing', { tripId: trip.id })
-        alert('旅行の作成に成功しましたが、URLの生成に失敗しました。')
-        router.push('/home')
-      }
-    } catch (error) {
-      // エラーが発生した場合、アップロードした画像を削除
-      if (formData.imageUrl) {
-        try {
-          await imageUploadHelpers.deleteImage(formData.imageUrl)
-          logger.debug('Error image deleted:', formData.imageUrl)
-        } catch (deleteError) {
-          logger.error('Failed to delete image after error:', deleteError)
-        }
-      }
-      logger.error('Error creating trip:', error)
-      alert(error instanceof Error ? error.message : 'Failed to create trip')
-    } finally {
-      setSubmitting(false)
-    }
-  }
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => {
-      const newFormData = { ...prev, [name]: value }
-      if (mode !== 'trip') {
-        return newFormData
-      }
-      let autoAdjusted = false
-      
-      // 出発日が変更された場合、帰宅日を自動的に出発日と同じ日にする
-      if (name === 'startDate' && value && !prev.endDate) {
-        newFormData.endDate = value
-      }
-      
-      // 出発日が帰宅日より未来の場合、帰宅日を出発日と同じ日に自動調整
-      if (name === 'startDate' && value && prev.endDate) {
-        const start = new Date(value)
-        const end = new Date(prev.endDate)
-        if (start > end) {
-          newFormData.endDate = value
-          autoAdjusted = true
-        }
-      }
-      
-      // 自動調整のフィードバックを表示
-      if (autoAdjusted) {
-        setDateAutoAdjusted(true)
-        setDateError('') // エラーをクリア
-        // 3秒後に自動的に非表示
-        setTimeout(() => {
-          setDateAutoAdjusted(false)
-        }, 3000)
-      } else {
-        setDateAutoAdjusted(false)
-      }
-      
-      return newFormData
-    })
-    
-    // 日付が変更された場合は即座にバリデーションを実行
-    if (mode === 'trip' && (name === 'startDate' || name === 'endDate')) {
-      const newFormData = { ...formData, [name]: value }
-      // 出発日が変更された場合、帰宅日も更新する
-      if (name === 'startDate' && value && !formData.endDate) {
-        newFormData.endDate = value
-      }
-      // 自動調整が行われた場合はエラーチェックをスキップ
-      if (!dateAutoAdjusted) {
-        const dateValidationError = validateDates(newFormData.startDate, newFormData.endDate)
-        setDateError(dateValidationError)
-      }
-    }
-  }
+		// 必須項目のバリデーション
+		if (!formData.destinationPlace) {
+			alert(t("trip.create.validation.destinationRequired"));
+			return;
+		}
 
-  const handleCancel = async () => {
-    // キャンセル時にアップロードした画像を削除
-    if (formData.imageUrl) {
-      try {
-        await imageUploadHelpers.deleteImage(formData.imageUrl)
-        logger.debug('Cancelled image deleted:', formData.imageUrl)
-      } catch (error) {
-        logger.error('Failed to delete cancelled image:', error)
-      }
-    }
-    
-    // フォームをリセット
-    setFormData(createInitialFormState())
-    setMode('trip')
-    setInferredCurrency(null)
-    setDateError('')
-    onClose()
-  }
+		if (isTemplateMode) {
+			if (!formData.dayCount || formData.dayCount <= 0) {
+				alert(t("trip.create.validation.dayCountRequired"));
+				return;
+			}
+		} else {
+			if (!formData.startDate) {
+				alert(t("trip.create.validation.startDateRequired"));
+				return;
+			}
 
-  if (!isOpen) return null
+			if (!formData.endDate) {
+				alert(t("trip.create.validation.endDateRequired"));
+				return;
+			}
 
-  const modeOptions: Array<{
-    id: CreateMode
-    label: string
-    description: string
-    disabled?: boolean
-  }> = [
-    {
-      id: 'trip',
-      label: t('trip.create.mode.trip'),
-      description: t('trip.create.mode.tripDescription')
-    },
-    {
-      id: 'template',
-      label: t('trip.create.mode.template'),
-      description: canUseTemplateMode
-        ? t('trip.create.mode.templateDescription')
-        : t('trip.create.mode.templateDescriptionLocked'),
-      disabled: !canUseTemplateMode
-    }
-  ]
+			// 日付のバリデーション
+			const dateValidationError = validateDates(
+				formData.startDate,
+				formData.endDate,
+			);
+			if (dateValidationError) {
+				setDateError(dateValidationError);
+				return;
+			}
+			setDateError("");
+		}
 
-  return (
-    <div className={`fixed inset-0 bg-black bg-opacity-50 ${getZIndexClass('FLOAT_MODAL')}`} style={{ margin: 0, top: 0 }}>
-      <div className="fixed inset-0 flex items-center justify-center p-4">
-        <div className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${getZIndexClass('FLOAT_MODAL')}`}>
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {hideModeSelector && mode === 'template' 
-                ? 'Create a Guide' 
-                : t('trip.create.title')}
-            </h2>
-            <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600">
-              <IconRenderer iconName="close" className="w-6 h-6" />
-            </button>
-          </div>
+		const normalizeDateInput = (value?: string) => {
+			if (!value) return undefined;
+			// 既にISO形式であればそのまま使用
+			if (value.includes("T")) return value;
+			// HTML date入力（YYYY-MM-DD）をUTC 00:00:00のISO文字列に変換
+			return new Date(`${value}T00:00:00.000Z`).toISOString();
+		};
 
-          {/* Content */}
-          <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {!hideModeSelector && (
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-3">
-                  {t('trip.create.mode.label')}
-                </p>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {modeOptions.map(option => {
-                    const isActive = mode === option.id
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => handleModeChange(option.id)}
-                        disabled={option.disabled}
-                        aria-pressed={isActive}
-                        className={`rounded-xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
-                          isActive
-                            ? 'border-emerald-500 bg-emerald-50 shadow-sm'
-                            : 'border-gray-200 bg-white hover:border-emerald-300'
-                        } ${option.disabled ? 'cursor-not-allowed opacity-60' : ''}`}
-                      >
-                        <span className="text-base font-semibold text-gray-900">
-                          {option.label}
-                        </span>
-                        <span className="mt-2 block text-sm text-gray-600">
-                          {option.description}
-                        </span>
-                        {option.disabled && (
-                          <span className="mt-3 inline-block rounded bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">
-                            {t('trip.create.mode.templateUpgradeHint')}
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-                <p className="mt-3 text-xs text-gray-500">
-                  {t('trip.create.visibilityNotice')}
-                </p>
-              </div>
-              )}
+		setSubmitting(true);
+		try {
+			const normalizedStartDate = isTemplateMode
+				? undefined
+				: normalizeDateInput(formData.startDate);
+			const normalizedEndDate = isTemplateMode
+				? undefined
+				: normalizeDateInput(formData.endDate);
 
-              {/* 必須項目 */}
-              <div>
-                <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('trip.create.destination.label')}
-                </label>
-                <PlaceSearchInput
-                  currentPlace={formData.destinationPlace}
-                  onPlaceSelect={(place: PlaceData | null) => {
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      destinationPlace: place || undefined,
-                      destination: place?.name || '' // 後方互換性のため
-                    }))
-                    // 目的地が変更されたら推定結果をリセット
-                    if (!place) {
-                      setInferredCurrency(null)
-                    }
-                  }}
-                  placeholder={t('trip.create.destination.placeholder')}
-                  disabled={submitting}
-                />
-                {!formData.destinationPlace && (
-                  <p className="mt-2 text-sm text-gray-500">
-                    <span className="text-red-600 mr-1">*</span>{t('trip.create.destination.hint')}
-                  </p>
-                )}
-                {/* 通貨推定の状態表示 */}
-                {formData.destinationPlace && (
-                  <div className="mt-2">
-                    {isInferringCurrency ? (
-                      <div className="flex items-center text-sm text-blue-600">
-                        <Loading inline size="sm" color="blue" />
-                        <span className="ml-2">推測中...</span>
-                      </div>
-                    ) : inferredCurrency ? (
-                      <div className="text-sm text-green-600">
-                        <span>✓ 通貨を自動検出: {currencyUtils.getCurrencyInfo(inferredCurrency).symbol} {inferredCurrency}</span>
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-              </div>
+			const trip = await createTrip({
+				title: formData.title || formData.destination,
+				description: formData.description || undefined,
+				destination: formData.destination || undefined,
+				destinationPlaceId: formData.destinationPlace?.place_id || undefined,
+				startDate: normalizedStartDate,
+				endDate: normalizedEndDate,
+				imageUrl: formData.imageUrl || undefined,
+				defaultCurrency: formData.defaultCurrency,
+				isTemplate: isTemplateMode,
+				dayCount: isTemplateMode ? formData.dayCount : undefined,
+			});
 
-              {isTemplateMode ? (
-                <div className="space-y-2">
-                  <Input
-                    label={t('trip.create.dayCount.label')}
-                    type="number"
-                    id="dayCount"
-                    name="dayCount"
-                    min={1}
-                    value={formData.dayCount ? String(formData.dayCount) : ''}
-                    onChange={(event) => handleDayCountChange(event.target.value)}
-                    placeholder={t('trip.create.dayCount.placeholder')}
-                    required
-                  />
-                  <p className="text-xs text-gray-500">
-                    {t('trip.create.dayCount.description')}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      label={t('trip.create.startDate.label')}
-                      type="date"
-                      id="startDate"
-                      name="startDate"
-                      value={formData.startDate}
-                      onChange={handleInputChange}
-                      placeholder={t('trip.create.startDate.placeholder')}
-                      hint={t('trip.create.startDate.hint')}
-                      required
-                      error={dateError ? t('trip.create.dateError') : undefined}
-                      lang={currentLanguage}
-                    />
+			onSuccess();
+			onClose();
+			// スラッグベースのURLにリダイレクト
+			if (trip.creator?.slug && trip.slug) {
+				router.push(`/${trip.creator.slug}/${trip.slug}`);
+			} else {
+				// スラッグが生成されていない場合はエラー（通常は発生しない）
+				logger.error("Trip created but slugs are missing", { tripId: trip.id });
+				alert("旅行の作成に成功しましたが、URLの生成に失敗しました。");
+				router.push("/home");
+			}
+		} catch (error) {
+			// エラーが発生した場合、アップロードした画像を削除
+			if (formData.imageUrl) {
+				try {
+					await imageUploadHelpers.deleteImage(formData.imageUrl);
+					logger.debug("Error image deleted:", formData.imageUrl);
+				} catch (deleteError) {
+					logger.error("Failed to delete image after error:", deleteError);
+				}
+			}
+			logger.error("Error creating trip:", error);
+			alert(error instanceof Error ? error.message : "Failed to create trip");
+		} finally {
+			setSubmitting(false);
+		}
+	};
 
-                    <Input
-                      label={t('trip.create.endDate.label')}
-                      type="date"
-                      id="endDate"
-                      name="endDate"
-                      value={formData.endDate}
-                      onChange={handleInputChange}
-                      placeholder={t('trip.create.endDate.placeholder')}
-                      hint={t('trip.create.endDate.hint')}
-                      required
-                      error={dateError ? t('trip.create.dateError') : undefined}
-                      min={formData.startDate || undefined}
-                      lang={currentLanguage}
-                    />
-                  </div>
+	const handleInputChange = (
+		e: React.ChangeEvent<
+			HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+		>,
+	) => {
+		const { name, value } = e.target;
+		setFormData((prev) => {
+			const newFormData = { ...prev, [name]: value };
+			if (mode !== "trip") {
+				return newFormData;
+			}
+			let autoAdjusted = false;
 
-                  {/* 日付自動調整の情報メッセージ */}
-                  {dateAutoAdjusted && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div className="ml-3 flex-1">
-                          <p className="text-sm text-blue-800">{t('trip.create.dateAutoAdjusted')}</p>
-                        </div>
-                        <button
-                          onClick={() => setDateAutoAdjusted(false)}
-                          className="ml-3 flex-shrink-0 text-blue-400 hover:text-blue-600"
-                        >
-                          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
+			// 出発日が変更された場合、帰宅日を自動的に出発日と同じ日にする
+			if (name === "startDate" && value && !prev.endDate) {
+				newFormData.endDate = value;
+			}
 
-              {/* 日付エラーメッセージ（自動調整が行われていない場合のみ表示） */}
-              {dateError && !dateAutoAdjusted && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-800">{dateError}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+			// 出発日が帰宅日より未来の場合、帰宅日を出発日と同じ日に自動調整
+			if (name === "startDate" && value && prev.endDate) {
+				const start = new Date(value);
+				const end = new Date(prev.endDate);
+				if (start > end) {
+					newFormData.endDate = value;
+					autoAdjusted = true;
+				}
+			}
 
-              {/* 詳細設定の折りたたみ */}
-              <div className="border-t border-gray-200 pt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                  className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md p-2 -m-2"
-                >
-                  <span>{t('trip.create.advancedSettings')}</span>
-                  <svg
-                    className={`w-5 h-5 transform transition-transform ${showAdvancedSettings ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+			// 自動調整のフィードバックを表示
+			if (autoAdjusted) {
+				setDateAutoAdjusted(true);
+				setDateError(""); // エラーをクリア
+				// 3秒後に自動的に非表示
+				setTimeout(() => {
+					setDateAutoAdjusted(false);
+				}, 3000);
+			} else {
+				setDateAutoAdjusted(false);
+			}
 
-                {showAdvancedSettings && (
-                  <div className="mt-4 space-y-6">
-                    <Input
-                      label={t('trip.create.title.label')}
-                      type="text"
-                      id="title"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      placeholder={t('trip.create.title.placeholder')}
-                    />
+			return newFormData;
+		});
 
-                    <Textarea
-                      label={t('trip.create.description.label')}
-                      id="description"
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      rows={3}
-                      placeholder={t('trip.create.description.placeholder')}
-                    />
+		// 日付が変更された場合は即座にバリデーションを実行
+		if (mode === "trip" && (name === "startDate" || name === "endDate")) {
+			const newFormData = { ...formData, [name]: value };
+			// 出発日が変更された場合、帰宅日も更新する
+			if (name === "startDate" && value && !formData.endDate) {
+				newFormData.endDate = value;
+			}
+			// 自動調整が行われた場合はエラーチェックをスキップ
+			if (!dateAutoAdjusted) {
+				const dateValidationError = validateDates(
+					newFormData.startDate,
+					newFormData.endDate,
+				);
+				setDateError(dateValidationError);
+			}
+		}
+	};
 
-                    <ImageUpload
-                      currentImageUrl={formData.imageUrl}
-                      onImageChange={(imageUrl) => setFormData(prev => ({ ...prev, imageUrl: imageUrl || '' }))}
-                      disabled={submitting}
-                    />
+	const handleCancel = async () => {
+		// キャンセル時にアップロードした画像を削除
+		if (formData.imageUrl) {
+			try {
+				await imageUploadHelpers.deleteImage(formData.imageUrl);
+				logger.debug("Cancelled image deleted:", formData.imageUrl);
+			} catch (error) {
+				logger.error("Failed to delete cancelled image:", error);
+			}
+		}
 
-                    {/* Unsplash画像自動取得の状態表示 */}
-                    {isLoadingUnsplashImage && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                        <Loading inline size="sm" color="blue" message={t('trip.create.imageLoading')} />
-                      </div>
-                    )}
+		// フォームをリセット
+		setFormData(createInitialFormState());
+		setMode("trip");
+		setInferredCurrency(null);
+		setDateError("");
+		onClose();
+	};
 
-                    {/* Unsplash画像が取得された場合の表示 */}
-                    {formData.imageUrl && !isLoadingUnsplashImage && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                          <div className="ml-3">
-                            <p className="text-sm text-green-800">
-                              {t('trip.create.imageLoaded')}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+	if (!isOpen) return null;
 
-                    <div>
-                      <label htmlFor="defaultCurrency" className="block text-sm font-medium text-gray-700 mb-2">
-                        Default Currency
-                      </label>
-                      <Select
-                        id="defaultCurrency"
-                        name="defaultCurrency"
-                        value={formData.defaultCurrency}
-                        onChange={(e) => {
-                          setFormData(prev => ({
-                            ...prev,
-                            defaultCurrency: e.target.value
-                          }))
-                        }}
-                        disabled={submitting}
-                      >
-                        {/* 主要通貨を優先表示 */}
-                        <optgroup label="主要通貨">
-                          <option value="USD">$ USD (US Dollar)</option>
-                          <option value="EUR">€ EUR (Euro)</option>
-                          <option value="JPY">¥ JPY (Japanese Yen)</option>
-                          <option value="GBP">£ GBP (British Pound)</option>
-                          <option value="CNY">¥ CNY (Chinese Yuan)</option>
-                          <option value="KRW">₩ KRW (South Korean Won)</option>
-                          <option value="AUD">A$ AUD (Australian Dollar)</option>
-                          <option value="CAD">C$ CAD (Canadian Dollar)</option>
-                          <option value="CHF">CHF (Swiss Franc)</option>
-                          <option value="SGD">S$ SGD (Singapore Dollar)</option>
-                        </optgroup>
-                        <optgroup label="その他の通貨">
-                          {currencyUtils.getAvailableCurrencies()
-                            .filter(c => !['USD', 'EUR', 'JPY', 'GBP', 'CNY', 'KRW', 'AUD', 'CAD', 'CHF', 'SGD'].includes(c.code))
-                            .sort((a, b) => a.code.localeCompare(b.code))
-                            .map(currency => (
-                              <option key={currency.code} value={currency.code}>
-                                {currency.symbol} {currency.code}
-                              </option>
-                            ))}
-                        </optgroup>
-                      </Select>
-                      <p className="mt-1 text-xs text-gray-500">
-                        この旅行のデフォルト通貨を設定します。旅程の費用入力時に自動的に使用されます。
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+	const modeOptions: Array<{
+		id: CreateMode;
+		label: string;
+		description: string;
+		disabled?: boolean;
+	}> = [
+		{
+			id: "trip",
+			label: t("trip.create.mode.trip"),
+			description: t("trip.create.mode.tripDescription"),
+		},
+		{
+			id: "template",
+			label: t("trip.create.mode.template"),
+			description: canUseTemplateMode
+				? t("trip.create.mode.templateDescription")
+				: t("trip.create.mode.templateDescriptionLocked"),
+			disabled: !canUseTemplateMode,
+		},
+	];
 
-              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancel}
-                >
-                  {t('trip.create.cancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={isSubmitDisabled}
-                >
-                  {submitting ? t('trip.create.submitting') : t('trip.create.submit')}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+	return (
+		<div
+			className={`fixed inset-0 bg-black bg-opacity-50 ${getZIndexClass("FLOAT_MODAL")}`}
+			style={{ margin: 0, top: 0 }}
+		>
+			<div className="fixed inset-0 flex items-center justify-center p-4">
+				<div
+					className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${getZIndexClass("FLOAT_MODAL")}`}
+				>
+					{/* Header */}
+					<div className="flex items-center justify-between p-6 border-b border-gray-200">
+						<h2 className="text-2xl font-bold text-gray-900">
+							{hideModeSelector && mode === "template"
+								? "Create a Guide"
+								: t("trip.create.title")}
+						</h2>
+						<button
+							onClick={handleCancel}
+							className="text-gray-400 hover:text-gray-600"
+						>
+							<IconRenderer iconName="close" className="w-6 h-6" />
+						</button>
+					</div>
+
+					{/* Content */}
+					<div className="p-6">
+						<form onSubmit={handleSubmit} className="space-y-6">
+							{!hideModeSelector && (
+								<div>
+									<p className="text-sm font-medium text-gray-700 mb-3">
+										{t("trip.create.mode.label")}
+									</p>
+									<div className="grid gap-3 md:grid-cols-2">
+										{modeOptions.map((option) => {
+											const isActive = mode === option.id;
+											return (
+												<button
+													key={option.id}
+													type="button"
+													onClick={() => handleModeChange(option.id)}
+													disabled={option.disabled}
+													aria-pressed={isActive}
+													className={`rounded-xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${
+														isActive
+															? "border-emerald-500 bg-emerald-50 shadow-sm"
+															: "border-gray-200 bg-white hover:border-emerald-300"
+													} ${option.disabled ? "cursor-not-allowed opacity-60" : ""}`}
+												>
+													<span className="text-base font-semibold text-gray-900">
+														{option.label}
+													</span>
+													<span className="mt-2 block text-sm text-gray-600">
+														{option.description}
+													</span>
+													{option.disabled && (
+														<span className="mt-3 inline-block rounded bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">
+															{t("trip.create.mode.templateUpgradeHint")}
+														</span>
+													)}
+												</button>
+											);
+										})}
+									</div>
+									<p className="mt-3 text-xs text-gray-500">
+										{t("trip.create.visibilityNotice")}
+									</p>
+								</div>
+							)}
+
+							{/* 必須項目 */}
+							<div>
+								<label
+									htmlFor="destination"
+									className="block text-sm font-medium text-gray-700 mb-2"
+								>
+									{t("trip.create.destination.label")}
+								</label>
+								<PlaceSearchInput
+									currentPlace={formData.destinationPlace}
+									onPlaceSelect={(place: PlaceData | null) => {
+										setFormData((prev) => ({
+											...prev,
+											destinationPlace: place || undefined,
+											destination: place?.name || "", // 後方互換性のため
+										}));
+										// 目的地が変更されたら推定結果をリセット
+										if (!place) {
+											setInferredCurrency(null);
+										}
+									}}
+									placeholder={t("trip.create.destination.placeholder")}
+									disabled={submitting}
+								/>
+								{!formData.destinationPlace && (
+									<p className="mt-2 text-sm text-gray-500">
+										<span className="text-red-600 mr-1">*</span>
+										{t("trip.create.destination.hint")}
+									</p>
+								)}
+								{/* 通貨推定の状態表示 */}
+								{formData.destinationPlace && (
+									<div className="mt-2">
+										{isInferringCurrency ? (
+											<div className="flex items-center text-sm text-blue-600">
+												<Loading inline size="sm" color="blue" />
+												<span className="ml-2">推測中...</span>
+											</div>
+										) : inferredCurrency ? (
+											<div className="text-sm text-green-600">
+												<span>
+													✓ 通貨を自動検出:{" "}
+													{
+														currencyUtils.getCurrencyInfo(inferredCurrency)
+															.symbol
+													}{" "}
+													{inferredCurrency}
+												</span>
+											</div>
+										) : null}
+									</div>
+								)}
+							</div>
+
+							{isTemplateMode ? (
+								<div className="space-y-2">
+									<Input
+										label={t("trip.create.dayCount.label")}
+										type="number"
+										id="dayCount"
+										name="dayCount"
+										min={1}
+										value={formData.dayCount ? String(formData.dayCount) : ""}
+										onChange={(event) =>
+											handleDayCountChange(event.target.value)
+										}
+										placeholder={t("trip.create.dayCount.placeholder")}
+										required
+									/>
+									<p className="text-xs text-gray-500">
+										{t("trip.create.dayCount.description")}
+									</p>
+								</div>
+							) : (
+								<>
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+										<Input
+											label={t("trip.create.startDate.label")}
+											type="date"
+											id="startDate"
+											name="startDate"
+											value={formData.startDate}
+											onChange={handleInputChange}
+											placeholder={t("trip.create.startDate.placeholder")}
+											hint={t("trip.create.startDate.hint")}
+											required
+											error={dateError ? t("trip.create.dateError") : undefined}
+											lang={currentLanguage}
+										/>
+
+										<Input
+											label={t("trip.create.endDate.label")}
+											type="date"
+											id="endDate"
+											name="endDate"
+											value={formData.endDate}
+											onChange={handleInputChange}
+											placeholder={t("trip.create.endDate.placeholder")}
+											hint={t("trip.create.endDate.hint")}
+											required
+											error={dateError ? t("trip.create.dateError") : undefined}
+											min={formData.startDate || undefined}
+											lang={currentLanguage}
+										/>
+									</div>
+
+									{/* 日付自動調整の情報メッセージ */}
+									{dateAutoAdjusted && (
+										<div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+											<div className="flex items-start">
+												<div className="flex-shrink-0">
+													<svg
+														className="h-5 w-5 text-blue-400"
+														viewBox="0 0 20 20"
+														fill="currentColor"
+													>
+														<path
+															fillRule="evenodd"
+															d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+															clipRule="evenodd"
+														/>
+													</svg>
+												</div>
+												<div className="ml-3 flex-1">
+													<p className="text-sm text-blue-800">
+														{t("trip.create.dateAutoAdjusted")}
+													</p>
+												</div>
+												<button
+													onClick={() => setDateAutoAdjusted(false)}
+													className="ml-3 flex-shrink-0 text-blue-400 hover:text-blue-600"
+												>
+													<svg
+														className="h-4 w-4"
+														viewBox="0 0 20 20"
+														fill="currentColor"
+													>
+														<path
+															fillRule="evenodd"
+															d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+															clipRule="evenodd"
+														/>
+													</svg>
+												</button>
+											</div>
+										</div>
+									)}
+								</>
+							)}
+
+							{/* 日付エラーメッセージ（自動調整が行われていない場合のみ表示） */}
+							{dateError && !dateAutoAdjusted && (
+								<div className="bg-red-50 border border-red-200 rounded-lg p-3">
+									<div className="flex items-start">
+										<div className="flex-shrink-0">
+											<svg
+												className="h-5 w-5 text-red-400"
+												viewBox="0 0 20 20"
+												fill="currentColor"
+											>
+												<path
+													fillRule="evenodd"
+													d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+													clipRule="evenodd"
+												/>
+											</svg>
+										</div>
+										<div className="ml-3">
+											<p className="text-sm text-red-800">{dateError}</p>
+										</div>
+									</div>
+								</div>
+							)}
+
+							{/* 詳細設定の折りたたみ */}
+							<div className="border-t border-gray-200 pt-6">
+								<button
+									type="button"
+									onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+									className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md p-2 -m-2"
+								>
+									<span>{t("trip.create.advancedSettings")}</span>
+									<svg
+										className={`w-5 h-5 transform transition-transform ${showAdvancedSettings ? "rotate-180" : ""}`}
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											strokeWidth={2}
+											d="M19 9l-7 7-7-7"
+										/>
+									</svg>
+								</button>
+
+								{showAdvancedSettings && (
+									<div className="mt-4 space-y-6">
+										<Input
+											label={t("trip.create.title.label")}
+											type="text"
+											id="title"
+											name="title"
+											value={formData.title}
+											onChange={handleInputChange}
+											placeholder={t("trip.create.title.placeholder")}
+										/>
+
+										<Textarea
+											label={t("trip.create.description.label")}
+											id="description"
+											name="description"
+											value={formData.description}
+											onChange={handleInputChange}
+											rows={3}
+											placeholder={t("trip.create.description.placeholder")}
+										/>
+
+										<ImageUpload
+											currentImageUrl={formData.imageUrl}
+											onImageChange={(imageUrl) =>
+												setFormData((prev) => ({
+													...prev,
+													imageUrl: imageUrl || "",
+												}))
+											}
+											disabled={submitting}
+										/>
+
+										{/* Unsplash画像自動取得の状態表示 */}
+										{isLoadingUnsplashImage && (
+											<div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+												<Loading
+													inline
+													size="sm"
+													color="blue"
+													message={t("trip.create.imageLoading")}
+												/>
+											</div>
+										)}
+
+										{/* Unsplash画像が取得された場合の表示 */}
+										{formData.imageUrl && !isLoadingUnsplashImage && (
+											<div className="bg-green-50 border border-green-200 rounded-lg p-3">
+												<div className="flex items-center">
+													<div className="flex-shrink-0">
+														<svg
+															className="h-5 w-5 text-green-400"
+															viewBox="0 0 20 20"
+															fill="currentColor"
+														>
+															<path
+																fillRule="evenodd"
+																d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+																clipRule="evenodd"
+															/>
+														</svg>
+													</div>
+													<div className="ml-3">
+														<p className="text-sm text-green-800">
+															{t("trip.create.imageLoaded")}
+														</p>
+													</div>
+												</div>
+											</div>
+										)}
+
+										<div>
+											<label
+												htmlFor="defaultCurrency"
+												className="block text-sm font-medium text-gray-700 mb-2"
+											>
+												Default Currency
+											</label>
+											<Select
+												id="defaultCurrency"
+												name="defaultCurrency"
+												value={formData.defaultCurrency}
+												onChange={(e) => {
+													setFormData((prev) => ({
+														...prev,
+														defaultCurrency: e.target.value,
+													}));
+												}}
+												disabled={submitting}
+											>
+												{/* 主要通貨を優先表示 */}
+												<optgroup label="主要通貨">
+													<option value="USD">$ USD (US Dollar)</option>
+													<option value="EUR">€ EUR (Euro)</option>
+													<option value="JPY">¥ JPY (Japanese Yen)</option>
+													<option value="GBP">£ GBP (British Pound)</option>
+													<option value="CNY">¥ CNY (Chinese Yuan)</option>
+													<option value="KRW">₩ KRW (South Korean Won)</option>
+													<option value="AUD">
+														A$ AUD (Australian Dollar)
+													</option>
+													<option value="CAD">C$ CAD (Canadian Dollar)</option>
+													<option value="CHF">CHF (Swiss Franc)</option>
+													<option value="SGD">S$ SGD (Singapore Dollar)</option>
+												</optgroup>
+												<optgroup label="その他の通貨">
+													{currencyUtils
+														.getAvailableCurrencies()
+														.filter(
+															(c) =>
+																![
+																	"USD",
+																	"EUR",
+																	"JPY",
+																	"GBP",
+																	"CNY",
+																	"KRW",
+																	"AUD",
+																	"CAD",
+																	"CHF",
+																	"SGD",
+																].includes(c.code),
+														)
+														.sort((a, b) => a.code.localeCompare(b.code))
+														.map((currency) => (
+															<option key={currency.code} value={currency.code}>
+																{currency.symbol} {currency.code}
+															</option>
+														))}
+												</optgroup>
+											</Select>
+											<p className="mt-1 text-xs text-gray-500">
+												この旅行のデフォルト通貨を設定します。旅程の費用入力時に自動的に使用されます。
+											</p>
+										</div>
+									</div>
+								)}
+							</div>
+
+							<div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+								<Button type="button" variant="outline" onClick={handleCancel}>
+									{t("trip.create.cancel")}
+								</Button>
+								<Button
+									type="submit"
+									variant="primary"
+									disabled={isSubmitDisabled}
+								>
+									{submitting
+										? t("trip.create.submitting")
+										: t("trip.create.submit")}
+								</Button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 }

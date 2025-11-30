@@ -2,257 +2,300 @@
 // 本番環境での情報漏洩を防ぐため、環境に応じたログレベル制御を実装
 
 export enum LogLevel {
-  DEBUG = 0,
-  INFO = 1,
-  WARN = 2,
-  ERROR = 3,
-  NONE = 4,
+	DEBUG = 0,
+	INFO = 1,
+	WARN = 2,
+	ERROR = 3,
+	NONE = 4,
 }
 
 interface LoggerConfig {
-  level: LogLevel
-  enableColors: boolean
-  enableTimestamp: boolean
+	level: LogLevel;
+	enableColors: boolean;
+	enableTimestamp: boolean;
 }
 
 class Logger {
-  private config: LoggerConfig
-  private lastDebugKey?: string
-  private lastDebugAt?: number
-  private dedupeWindowMs = 500
+	private config: LoggerConfig;
+	private lastDebugKey?: string;
+	private lastDebugAt?: number;
+	private dedupeWindowMs = 500;
 
-  constructor() {
-    // 環境に応じたデフォルト設定
-    const isDevelopment = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development'
-    const isTest = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
-    
-    this.config = {
-      level: isDevelopment ? LogLevel.DEBUG : isTest ? LogLevel.WARN : LogLevel.ERROR,
-      enableColors: isDevelopment,
-      enableTimestamp: true,
-    }
-  }
+	constructor() {
+		// 環境に応じたデフォルト設定
+		const isDevelopment =
+			typeof process !== "undefined" && process.env?.NODE_ENV === "development";
+		const isTest =
+			typeof process !== "undefined" && process.env?.NODE_ENV === "test";
 
-  // ログレベルの設定
-  setLevel(level: LogLevel) {
-    this.config.level = level
-  }
+		this.config = {
+			level: isDevelopment
+				? LogLevel.DEBUG
+				: isTest
+					? LogLevel.WARN
+					: LogLevel.ERROR,
+			enableColors: isDevelopment,
+			enableTimestamp: true,
+		};
+	}
 
-  // 現在のログレベルを取得
-  getLevel(): LogLevel {
-    return this.config.level
-  }
+	// ログレベルの設定
+	setLevel(level: LogLevel) {
+		this.config.level = level;
+	}
 
-  // タイムスタンプを生成
-  private getTimestamp(): string {
-    if (!this.config.enableTimestamp) return ''
-    const now = new Date()
-    return `[${now.toISOString()}]`
-  }
+	// 現在のログレベルを取得
+	getLevel(): LogLevel {
+		return this.config.level;
+	}
 
-  // ログメッセージのフォーマット
-  private formatMessage(level: string, message: string): string {
-    const timestamp = this.getTimestamp()
-    return `${timestamp} ${level}: ${message}`
-  }
+	// タイムスタンプを生成
+	private getTimestamp(): string {
+		if (!this.config.enableTimestamp) return "";
+		const now = new Date();
+		return `[${now.toISOString()}]`;
+	}
 
-  // データのサニタイズ（機密情報を隠す）
-  private sanitizeData(data: any, visited?: WeakSet<object>, depth: number = 0): any {
-    // プリミティブはそのまま返す
-    if (typeof data !== 'object' || data === null) {
-      return data
-    }
+	// ログメッセージのフォーマット
+	private formatMessage(level: string, message: string): string {
+		const timestamp = this.getTimestamp();
+		return `${timestamp} ${level}: ${message}`;
+	}
 
-    // 循環参照の検出
-    const seen = visited ?? new WeakSet<object>()
-    if (seen.has(data as object)) {
-      return '[Circular]'
-    }
+	// データのサニタイズ（機密情報を隠す）
+	private sanitizeData(
+		data: any,
+		visited?: WeakSet<object>,
+		depth: number = 0,
+	): any {
+		// プリミティブはそのまま返す
+		if (typeof data !== "object" || data === null) {
+			return data;
+		}
 
-    // 深さ制限（極端に深い入れ子での暴走を防止）
-    const MAX_DEPTH = 3
-    if (depth >= MAX_DEPTH) {
-      if (Array.isArray(data)) {
-        return `[Array(length=${(data as unknown[]).length})]`
-      }
-      // 可能ならコンストラクタ名を表示
-      const ctor = (data as any)?.constructor?.name
-      return ctor ? `[Object(${ctor})]` : '[Object]'
-    }
+		// 循環参照の検出
+		const seen = visited ?? new WeakSet<object>();
+		if (seen.has(data as object)) {
+			return "[Circular]";
+		}
 
-    // 特殊オブジェクトの取り扱い
-    // File / Blob はメタ情報のみ
-    // Date は ISO 文字列
-    // エラーは name/message（開発時のみ stack）
-    // Promise / Function は簡易表現
-    try {
-      if (typeof File !== 'undefined' && data instanceof File) {
-        return { name: data.name, size: data.size, type: data.type }
-      }
-    } catch {}
-    try {
-      if (typeof Blob !== 'undefined' && data instanceof Blob) {
-        return { size: (data as Blob).size, type: (data as Blob).type }
-      }
-    } catch {}
-    if (data instanceof Date) {
-      return data.toISOString()
-    }
-    if (data instanceof Error) {
-      return {
-        name: data.name,
-        message: data.message,
-        stack: (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') ? data.stack : undefined,
-      }
-    }
-    if (typeof Promise !== 'undefined' && data instanceof Promise) {
-      return '[Promise]'
-    }
-    if (typeof data === 'function') {
-      return `[Function${(data as any).name ? ' ' + (data as any).name : ''}]`
-    }
-    // ArrayBuffer / TypedArray はサイズのみ
-    if ((data as any)?.byteLength && typeof (data as any).slice === 'function') {
-      return `[ArrayBuffer(byteLength=${(data as any).byteLength})]`
-    }
+		// 深さ制限（極端に深い入れ子での暴走を防止）
+		const MAX_DEPTH = 3;
+		if (depth >= MAX_DEPTH) {
+			if (Array.isArray(data)) {
+				return `[Array(length=${(data as unknown[]).length})]`;
+			}
+			// 可能ならコンストラクタ名を表示
+			const ctor = (data as any)?.constructor?.name;
+			return ctor ? `[Object(${ctor})]` : "[Object]";
+		}
 
-    const sensitiveKeys = [
-      'password',
-      'token',
-      'apiKey',
-      'api_key',
-      'privateKey',
-      'private_key',
-      'secret',
-      'authorization',
-      'credential',
-    ]
+		// 特殊オブジェクトの取り扱い
+		// File / Blob はメタ情報のみ
+		// Date は ISO 文字列
+		// エラーは name/message（開発時のみ stack）
+		// Promise / Function は簡易表現
+		try {
+			if (typeof File !== "undefined" && data instanceof File) {
+				return { name: data.name, size: data.size, type: data.type };
+			}
+		} catch {}
+		try {
+			if (typeof Blob !== "undefined" && data instanceof Blob) {
+				return { size: (data as Blob).size, type: (data as Blob).type };
+			}
+		} catch {}
+		if (data instanceof Date) {
+			return data.toISOString();
+		}
+		if (data instanceof Error) {
+			return {
+				name: data.name,
+				message: data.message,
+				stack:
+					typeof process !== "undefined" &&
+					process.env?.NODE_ENV === "development"
+						? data.stack
+						: undefined,
+			};
+		}
+		if (typeof Promise !== "undefined" && data instanceof Promise) {
+			return "[Promise]";
+		}
+		if (typeof data === "function") {
+			return `[Function${(data as any).name ? " " + (data as any).name : ""}]`;
+		}
+		// ArrayBuffer / TypedArray はサイズのみ
+		if (
+			(data as any)?.byteLength &&
+			typeof (data as any).slice === "function"
+		) {
+			return `[ArrayBuffer(byteLength=${(data as any).byteLength})]`;
+		}
 
-    seen.add(data as object)
+		const sensitiveKeys = [
+			"password",
+			"token",
+			"apiKey",
+			"api_key",
+			"privateKey",
+			"private_key",
+			"secret",
+			"authorization",
+			"credential",
+		];
 
-    if (Array.isArray(data)) {
-      return (data as unknown[]).map((item) => this.sanitizeData(item, seen, depth + 1))
-    }
+		seen.add(data as object);
 
-    const sanitized: any = {}
-    for (const key in data) {
-      if (!Object.prototype.hasOwnProperty.call(data, key)) continue
-      const lowerKey = key.toLowerCase()
-      const isSensitive = sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive.toLowerCase()))
-      if (isSensitive) {
-        sanitized[key] = '***REDACTED***'
-        continue
-      }
+		if (Array.isArray(data)) {
+			return (data as unknown[]).map((item) =>
+				this.sanitizeData(item, seen, depth + 1),
+			);
+		}
 
-      const value = (data as any)[key]
-      if (typeof value === 'object' && value !== null) {
-        sanitized[key] = this.sanitizeData(value, seen, depth + 1)
-      } else {
-        sanitized[key] = value
-      }
-    }
+		const sanitized: any = {};
+		for (const key in data) {
+			if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
+			const lowerKey = key.toLowerCase();
+			const isSensitive = sensitiveKeys.some((sensitive) =>
+				lowerKey.includes(sensitive.toLowerCase()),
+			);
+			if (isSensitive) {
+				sanitized[key] = "***REDACTED***";
+				continue;
+			}
 
-    return sanitized
-  }
+			const value = (data as any)[key];
+			if (typeof value === "object" && value !== null) {
+				sanitized[key] = this.sanitizeData(value, seen, depth + 1);
+			} else {
+				sanitized[key] = value;
+			}
+		}
 
-  // DEBUGレベルログ（開発環境のみ）
-  debug(message: string, ...args: any[]) {
-    if (this.config.level <= LogLevel.DEBUG) {
-      // 簡易重複抑止（同一メッセージ+先頭引数が短時間に連続した場合はスキップ）
-      const firstArg = args.length > 0 ? JSON.stringify(this.sanitizeData(args[0])) : ''
-      const key = `${message}::${firstArg}`
-      const now = Date.now()
-      if (this.lastDebugKey === key && this.lastDebugAt && now - this.lastDebugAt < this.dedupeWindowMs) {
-        return
-      }
-      this.lastDebugKey = key
-      this.lastDebugAt = now
+		return sanitized;
+	}
 
-      const sanitizedArgs = args.map(arg => this.sanitizeData(arg))
-      console.debug(this.formatMessage('DEBUG', message), ...sanitizedArgs)
-    }
-  }
+	// DEBUGレベルログ（開発環境のみ）
+	debug(message: string, ...args: any[]) {
+		if (this.config.level <= LogLevel.DEBUG) {
+			// 簡易重複抑止（同一メッセージ+先頭引数が短時間に連続した場合はスキップ）
+			const firstArg =
+				args.length > 0 ? JSON.stringify(this.sanitizeData(args[0])) : "";
+			const key = `${message}::${firstArg}`;
+			const now = Date.now();
+			if (
+				this.lastDebugKey === key &&
+				this.lastDebugAt &&
+				now - this.lastDebugAt < this.dedupeWindowMs
+			) {
+				return;
+			}
+			this.lastDebugKey = key;
+			this.lastDebugAt = now;
 
-  // INFOレベルログ
-  info(message: string, ...args: any[]) {
-    if (this.config.level <= LogLevel.INFO) {
-      const sanitizedArgs = args.map(arg => this.sanitizeData(arg))
-      console.info(this.formatMessage('INFO', message), ...sanitizedArgs)
-    }
-  }
+			const sanitizedArgs = args.map((arg) => this.sanitizeData(arg));
+			console.debug(this.formatMessage("DEBUG", message), ...sanitizedArgs);
+		}
+	}
 
-  // WARNレベルログ
-  warn(message: string, ...args: any[]) {
-    if (this.config.level <= LogLevel.WARN) {
-      const sanitizedArgs = args.map(arg => this.sanitizeData(arg))
-      console.warn(this.formatMessage('WARN', message), ...sanitizedArgs)
-    }
-  }
+	// INFOレベルログ
+	info(message: string, ...args: any[]) {
+		if (this.config.level <= LogLevel.INFO) {
+			const sanitizedArgs = args.map((arg) => this.sanitizeData(arg));
+			console.info(this.formatMessage("INFO", message), ...sanitizedArgs);
+		}
+	}
 
-  // ERRORレベルログ
-  error(message: string, error?: Error | any, ...args: any[]) {
-    if (this.config.level <= LogLevel.ERROR) {
-      const sanitizedArgs = args.map(arg => this.sanitizeData(arg))
-      
-      if (error instanceof Error) {
-        // 本番環境ではスタックトレースを隠す
-        if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') {
-          console.error(this.formatMessage('ERROR', message), error.message, ...sanitizedArgs)
-        } else {
-          console.error(this.formatMessage('ERROR', message), error, ...sanitizedArgs)
-        }
-      } else if (error) {
-        const sanitizedError = this.sanitizeData(error)
-        console.error(this.formatMessage('ERROR', message), sanitizedError, ...sanitizedArgs)
-      } else {
-        console.error(this.formatMessage('ERROR', message), ...sanitizedArgs)
-      }
-    }
-  }
+	// WARNレベルログ
+	warn(message: string, ...args: any[]) {
+		if (this.config.level <= LogLevel.WARN) {
+			const sanitizedArgs = args.map((arg) => this.sanitizeData(arg));
+			console.warn(this.formatMessage("WARN", message), ...sanitizedArgs);
+		}
+	}
 
-  // API呼び出しログ（デバッグ用）
-  apiCall(method: string, url: string, data?: any) {
-    if (this.config.level <= LogLevel.DEBUG) {
-      const sanitizedData = data ? this.sanitizeData(data) : undefined
-      this.debug(`API Call: ${method} ${url}`, sanitizedData)
-    }
-  }
+	// ERRORレベルログ
+	error(message: string, error?: Error | any, ...args: any[]) {
+		if (this.config.level <= LogLevel.ERROR) {
+			const sanitizedArgs = args.map((arg) => this.sanitizeData(arg));
 
-  // API応答ログ（デバッグ用）
-  apiResponse(method: string, url: string, status: number, data?: any) {
-    if (this.config.level <= LogLevel.DEBUG) {
-      const sanitizedData = data ? this.sanitizeData(data) : undefined
-      this.debug(`API Response: ${method} ${url} - Status: ${status}`, sanitizedData)
-    }
-  }
+			if (error instanceof Error) {
+				// 本番環境ではスタックトレースを隠す
+				if (
+					typeof process !== "undefined" &&
+					process.env?.NODE_ENV === "production"
+				) {
+					console.error(
+						this.formatMessage("ERROR", message),
+						error.message,
+						...sanitizedArgs,
+					);
+				} else {
+					console.error(
+						this.formatMessage("ERROR", message),
+						error,
+						...sanitizedArgs,
+					);
+				}
+			} else if (error) {
+				const sanitizedError = this.sanitizeData(error);
+				console.error(
+					this.formatMessage("ERROR", message),
+					sanitizedError,
+					...sanitizedArgs,
+				);
+			} else {
+				console.error(this.formatMessage("ERROR", message), ...sanitizedArgs);
+			}
+		}
+	}
 
-  // パフォーマンス測定開始
-  time(label: string) {
-    if (this.config.level <= LogLevel.DEBUG) {
-      console.time(label)
-    }
-  }
+	// API呼び出しログ（デバッグ用）
+	apiCall(method: string, url: string, data?: any) {
+		if (this.config.level <= LogLevel.DEBUG) {
+			const sanitizedData = data ? this.sanitizeData(data) : undefined;
+			this.debug(`API Call: ${method} ${url}`, sanitizedData);
+		}
+	}
 
-  // パフォーマンス測定終了
-  timeEnd(label: string) {
-    if (this.config.level <= LogLevel.DEBUG) {
-      console.timeEnd(label)
-    }
-  }
+	// API応答ログ（デバッグ用）
+	apiResponse(method: string, url: string, status: number, data?: any) {
+		if (this.config.level <= LogLevel.DEBUG) {
+			const sanitizedData = data ? this.sanitizeData(data) : undefined;
+			this.debug(
+				`API Response: ${method} ${url} - Status: ${status}`,
+				sanitizedData,
+			);
+		}
+	}
+
+	// パフォーマンス測定開始
+	time(label: string) {
+		if (this.config.level <= LogLevel.DEBUG) {
+			console.time(label);
+		}
+	}
+
+	// パフォーマンス測定終了
+	timeEnd(label: string) {
+		if (this.config.level <= LogLevel.DEBUG) {
+			console.timeEnd(label);
+		}
+	}
 }
 
 // シングルトンインスタンス
-const logger = new Logger()
+const logger = new Logger();
 
-export default logger
+export default logger;
 
 // 便利な関数エクスポート
-export const debug = logger.debug.bind(logger)
-export const info = logger.info.bind(logger)
-export const warn = logger.warn.bind(logger)
-export const error = logger.error.bind(logger)
-export const apiCall = logger.apiCall.bind(logger)
-export const apiResponse = logger.apiResponse.bind(logger)
-export const time = logger.time.bind(logger)
-export const timeEnd = logger.timeEnd.bind(logger)
-
+export const debug = logger.debug.bind(logger);
+export const info = logger.info.bind(logger);
+export const warn = logger.warn.bind(logger);
+export const error = logger.error.bind(logger);
+export const apiCall = logger.apiCall.bind(logger);
+export const apiResponse = logger.apiResponse.bind(logger);
+export const time = logger.time.bind(logger);
+export const timeEnd = logger.timeEnd.bind(logger);

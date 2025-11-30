@@ -2,9 +2,9 @@
  * UIコンポーネント Props 型定義
  */
 
-import type { Trip, Day, Itinerary } from './trip'
-import type { PlaceData } from './place'
-import type { ItineraryFormData } from './api'
+import type { Trip, Day, Itinerary } from "./trip";
+import type { PlaceData } from "./place";
+import type { ItineraryFormData } from "./api";
 
 // ============================================================================
 // コンポーネント Props 型定義
@@ -14,150 +14,149 @@ import type { ItineraryFormData } from './api'
  * ユーザー設定モーダル Props
  */
 export interface UserSettingsModalProps {
-  isOpen: boolean
-  onClose: () => void
+	isOpen: boolean;
+	onClose: () => void;
 }
 
 /**
  * Trip編集コンポーネント Props
  */
 export interface TripEditorProps {
-  trip: Trip
-  onUpdate: (updatedTrip: Trip) => void
-  onDelete?: () => void
-  onClose?: () => void // 編集モードが閉じられたときに呼ばれる
-  hideDestinationEdit?: boolean // 旅行先編集を非表示にする
-  initialEditing?: boolean // 初期状態で編集モードを開く
-  hideEditButton?: boolean // 編集ボタンを非表示にする
-  disableDateFields?: boolean // 出発・帰宅日の編集を無効化する
-  disablePublishControls?: boolean // 公開関連の切り替えを無効化する
+	trip: Trip;
+	onUpdate: (updatedTrip: Trip) => void;
+	onDelete?: () => void;
+	onClose?: () => void; // 編集モードが閉じられたときに呼ばれる
+	hideDestinationEdit?: boolean; // 旅行先編集を非表示にする
+	initialEditing?: boolean; // 初期状態で編集モードを開く
+	hideEditButton?: boolean; // 編集ボタンを非表示にする
+	disableDateFields?: boolean; // 出発・帰宅日の編集を無効化する
+	disablePublishControls?: boolean; // 公開関連の切り替えを無効化する
 }
 
 /**
  * Tripマップコンポーネント Props
  */
 export interface TripMapProps {
-  trips: Trip[]
-  center?: { lat: number; lng: number }
-  zoom?: number
+	trips: Trip[];
+	center?: { lat: number; lng: number };
+	zoom?: number;
 }
 
 /**
  * Trip天気表示コンポーネント Props
  */
 export interface TripWeatherDisplayProps {
-  trip: Trip
+	trip: Trip;
 }
 
 /**
  * Trip距離表示コンポーネント Props
  */
 export interface TripDistanceDisplayProps {
-  trip: Trip
+	trip: Trip;
 }
 
 /**
  * Tripコスト表示コンポーネント Props
  */
 export interface TripCostDisplayProps {
-  trip: Trip
+	trip: Trip;
 }
 
 /**
  * スケジュールカードコンポーネント Props
  */
 export interface ScheduleCardProps {
-  itinerary: Itinerary
-  onUpdate: (updatedItinerary: Itinerary) => void
-  onDelete: () => void
+	itinerary: Itinerary;
+	onUpdate: (updatedItinerary: Itinerary) => void;
+	onDelete: () => void;
 }
 
 /**
  * 会場間距離表示コンポーネント Props
  */
 export interface VenueDistanceProps {
-  fromPlace: PlaceData
-  toPlace: PlaceData
+	fromPlace: PlaceData;
+	toPlace: PlaceData;
 }
 
 /**
  * 場所検索入力コンポーネント Props
  */
 export interface PlaceSearchInputProps {
-  currentPlace?: PlaceData | null
-  onPlaceSelect: (place: PlaceData | null) => void
-  placeholder?: string
-  disabled?: boolean
+	currentPlace?: PlaceData | null;
+	onPlaceSelect: (place: PlaceData | null) => void;
+	placeholder?: string;
+	disabled?: boolean;
 }
 
 /**
  * Day編集コンポーネント Props
  */
 export interface DayEditorProps {
-  day: Day
-  onUpdate: (updatedDay: Day) => void
-  onDelete: () => void
+	day: Day;
+	onUpdate: (updatedDay: Day) => void;
+	onDelete: () => void;
 }
 
 /**
  * Itineraryドロップゾーンコンポーネント Props
  */
 export interface ItineraryDropZoneProps {
-  dayId: string
-  onItineraryAdd: (itinerary: Itinerary) => void
+	dayId: string;
+	onItineraryAdd: (itinerary: Itinerary) => void;
 }
 
 /**
  * Dayドロップゾーンコンポーネント Props
  */
 export interface DayDropZoneProps {
-  tripId: string
-  onDayAdd: (day: Day) => void
+	tripId: string;
+	onDayAdd: (day: Day) => void;
 }
 
 /**
  * スケジュール追加モーダルコンポーネント Props
  */
 export interface AddScheduleModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onAdd: (itinerary: ItineraryFormData) => void
-  dayId: string
+	isOpen: boolean;
+	onClose: () => void;
+	onAdd: (itinerary: ItineraryFormData) => void;
+	dayId: string;
 }
 
 /**
  * 画像アップロードコンポーネント Props
  */
 export interface ImageUploadProps {
-  currentImageUrl?: string
-  onImageChange: (imageUrl: string | null) => void
-  tripId: string
-  disabled?: boolean
+	currentImageUrl?: string;
+	onImageChange: (imageUrl: string | null) => void;
+	tripId: string;
+	disabled?: boolean;
 }
 
 /**
  * アバターアップロードコンポーネント Props
  */
 export interface AvatarUploadProps {
-  currentImageUrl?: string
-  onImageChange: (imageUrl: string | null) => void
-  userId: string
-  disabled?: boolean
+	currentImageUrl?: string;
+	onImageChange: (imageUrl: string | null) => void;
+	userId: string;
+	disabled?: boolean;
 }
 
 /**
  * 国別マップコンポーネント Props
  */
 export interface CountryMapProps {
-  countries: string[]
-  center?: { lat: number; lng: number }
-  zoom?: number
+	countries: string[];
+	center?: { lat: number; lng: number };
+	zoom?: number;
 }
 
 /**
  * 国別統計コンポーネント Props
  */
 export interface CountryStatsProps {
-  userId: string
+	userId: string;
 }
-

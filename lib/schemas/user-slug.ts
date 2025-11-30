@@ -1,16 +1,16 @@
 /**
  * User Slug（ユーザースラッグ）スキーマ
- * 
+ *
  * zod スキーマとして定義し、型推論とバリデーションを一元管理
  */
 
-import { z } from 'zod'
+import { z } from "zod";
 
 /**
  * ユーザースラッグ確認リクエストスキーマ
- * 
+ *
  * `app/api/users/check-slug/route.ts` POST エンドポイントのバリデーションロジックを zod に変換
- * 
+ *
  * Before:
  * ```typescript
  * const body = await parseRequestBody<{ name?: string }>(request)
@@ -18,7 +18,7 @@ import { z } from 'zod'
  *   return badRequest('Name is required')
  * }
  * ```
- * 
+ *
  * After:
  * ```typescript
  * // ctx.body が型安全 & バリデ済み
@@ -26,11 +26,10 @@ import { z } from 'zod'
  * ```
  */
 export const CheckUserSlugSchema = z.object({
-  name: z.string().min(1, 'Name is required')
-})
+	name: z.string().min(1, "Name is required"),
+});
 
 /**
  * 型推論
  */
-export type CheckUserSlugInput = z.infer<typeof CheckUserSlugSchema>
-
+export type CheckUserSlugInput = z.infer<typeof CheckUserSlugSchema>;

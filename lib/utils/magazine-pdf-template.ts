@@ -1,7 +1,7 @@
 /**
  * PDF テンプレートシステム - 旅行雑誌風デザイン
  * スッキリ系の旅行雑誌をモチーフにしたPDF生成
- * 
+ *
  * 基本構成:
  * - A4サイズ縦型、左開き
  * - 長辺閉じを前提としたレイアウト
@@ -9,70 +9,78 @@
  * - ページ番号表示
  */
 
-import type { Trip, Day, Itinerary } from '@/lib/core/types'
-import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
-import { dateUtils } from '@/lib/utils/date'
-import QRCode from 'qrcode'
-import Image from 'next/image'
+import type { Trip, Day, Itinerary } from "@/lib/core/types";
+import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
+import { dateUtils } from "@/lib/utils/date";
+import QRCode from "qrcode";
+import Image from "next/image";
 
 export interface TripPdfData {
-  trip: Trip
-  days: Day[]
-  itinerariesByDay: Record<string, Itinerary[]>
-  reservations?: any[] // 予約情報（将来実装）
-  checklist?: any[] // チェックリスト（将来実装）
+	trip: Trip;
+	days: Day[];
+	itinerariesByDay: Record<string, Itinerary[]>;
+	reservations?: any[]; // 予約情報（将来実装）
+	checklist?: any[]; // チェックリスト（将来実装）
 }
 
 export interface PageTemplate {
-  type: 'cover' | 'toc' | 'reservations' | 'itinerary' | 'emergency' | 'checklist' | 'memo' | 'back-cover'
-  title?: string
-  subtitle?: string
-  content: string
-  pageNumber?: number
-  isNewPage?: boolean
+	type:
+		| "cover"
+		| "toc"
+		| "reservations"
+		| "itinerary"
+		| "emergency"
+		| "checklist"
+		| "memo"
+		| "back-cover";
+	title?: string;
+	subtitle?: string;
+	content: string;
+	pageNumber?: number;
+	isNewPage?: boolean;
 }
 
 /**
  * HTML特殊文字をエスケープ
  */
 export function escapeHtml(text: string | undefined | null): string {
-  if (!text) return ''
-  
-  const map: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  }
-  return text.replace(/[&<>"']/g, m => map[m])
+	if (!text) return "";
+
+	const map: Record<string, string> = {
+		"&": "&amp;",
+		"<": "&lt;",
+		">": "&gt;",
+		'"': "&quot;",
+		"'": "&#039;",
+	};
+	return text.replace(/[&<>"']/g, (m) => map[m]);
 }
 
 /**
  * QRコードを生成
  */
 async function generateQRCode(url: string): Promise<string> {
-  try {
-    const qrDataURL = await QRCode.toDataURL(url, {
-      width: 64,
-      margin: 1,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    })
-    return qrDataURL
-  } catch (error) {
-    console.error('QR code generation failed:', error)
-    return ''
-  }
+	try {
+		const qrDataURL = await QRCode.toDataURL(url, {
+			width: 64,
+			margin: 1,
+			color: {
+				dark: "#000000",
+				light: "#FFFFFF",
+			},
+		});
+		return qrDataURL;
+	} catch (error) {
+		console.error("QR code generation failed:", error);
+		return "";
+	}
 }
 
 /**
  * 基本スタイル（旅行雑誌風）
  */
 export function generateMagazineStyles(): string {
-  return `
+	return `
     <style>
       @page {
         size: A4 portrait;
@@ -582,26 +590,34 @@ export function generateMagazineStyles(): string {
         }
       }
     </style>
-  `
+  `;
 }
 
 /**
  * 表紙ページを生成
  */
-export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Promise<string> {
-  const { trip } = data
-  const startDate = trip.start_date ? dateUtils.formatDate(toDateOrNull(trip.start_date) || new Date()) : '未定'
-  const endDate = trip.end_date ? dateUtils.formatDate(toDateOrNull(trip.end_date) || new Date()) : '未定'
-  
-  // 背景画像のURL（旅行データから取得）
-  const backgroundImage = (trip as any).cover_image || (trip as any).image_url || ''
-  
-  // QRコード生成
-  let qrCodeHtml = ''
-  if (tripUrl) {
-    const qrDataURL = await generateQRCode(tripUrl)
-    if (qrDataURL) {
-      qrCodeHtml = `
+export async function generateCoverPage(
+	data: TripPdfData,
+	tripUrl?: string,
+): Promise<string> {
+	const { trip } = data;
+	const startDate = trip.start_date
+		? dateUtils.formatDate(toDateOrNull(trip.start_date) || new Date())
+		: "未定";
+	const endDate = trip.end_date
+		? dateUtils.formatDate(toDateOrNull(trip.end_date) || new Date())
+		: "未定";
+
+	// 背景画像のURL（旅行データから取得）
+	const backgroundImage =
+		(trip as any).cover_image || (trip as any).image_url || "";
+
+	// QRコード生成
+	let qrCodeHtml = "";
+	if (tripUrl) {
+		const qrDataURL = await generateQRCode(tripUrl);
+		if (qrDataURL) {
+			qrCodeHtml = `
         <div class="cover-qr">
           <Image
             src="${qrDataURL}"
@@ -610,16 +626,16 @@ export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Pr
             height={128}
           />
         </div>
-      `
-    }
-  }
-  
-  // 縦書きテキスト（JOURNEY OF FREEDOM風）
-  const verticalText = 'JOURNEY OF FREEDOM'
-  
-  return `
+      `;
+		}
+	}
+
+	// 縦書きテキスト（JOURNEY OF FREEDOM風）
+	const verticalText = "JOURNEY OF FREEDOM";
+
+	return `
     <div class="page cover-page">
-      ${backgroundImage ? `<div class="cover-background" style="background-image: url('${backgroundImage}')"></div>` : ''}
+      ${backgroundImage ? `<div class="cover-background" style="background-image: url('${backgroundImage}')"></div>` : ""}
       <div class="cover-overlay"></div>
       <div class="vertical-text">${verticalText}</div>
       ${qrCodeHtml}
@@ -627,10 +643,10 @@ export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Pr
         <div>
           <div class="cover-title-yuji">旅のしおり</div>
           <!-- Yuji Bokuに変更する場合: <div class="cover-title-yuji">旅のしおり</div> -->
-          <div class="cover-subtitle">${escapeHtml((trip as any).name || '無題の旅行')}</div>
+          <div class="cover-subtitle">${escapeHtml((trip as any).name || "無題の旅行")}</div>
           <div class="cover-meta">
             ${startDate} 〜 ${endDate}
-            ${trip.destination ? `<br>📍 ${escapeHtml(trip.destination)}` : ''}
+            ${trip.destination ? `<br>📍 ${escapeHtml(trip.destination)}` : ""}
           </div>
         </div>
         <div class="cover-features">
@@ -652,31 +668,35 @@ export async function generateCoverPage(data: TripPdfData, tripUrl?: string): Pr
         </div>
       </div>
     </div>
-  `
+  `;
 }
 
 /**
  * 目次ページを生成
  */
 export function generateTocPage(data: TripPdfData): string {
-  const { trip, days } = data
-  const startDate = trip.start_date ? dateUtils.formatDate(toDateOrNull(trip.start_date) || new Date()) : '未定'
-  const endDate = trip.end_date ? dateUtils.formatDate(toDateOrNull(trip.end_date) || new Date()) : '未定'
-  
-  // 自動生成の格言
-  const quotes = [
-    "This trip isn't just a plan. It's a story waiting to be written.",
-    "Adventure awaits those who dare to explore.",
-    "Travel is the only thing you buy that makes you richer.",
-    "The world is a book, and those who do not travel read only one page.",
-    "Life is either a daring adventure or nothing at all."
-  ]
-  const randomQuote = quotes[Math.floor(Math.random() * quotes.length)]
-  
-  return `
+	const { trip, days } = data;
+	const startDate = trip.start_date
+		? dateUtils.formatDate(toDateOrNull(trip.start_date) || new Date())
+		: "未定";
+	const endDate = trip.end_date
+		? dateUtils.formatDate(toDateOrNull(trip.end_date) || new Date())
+		: "未定";
+
+	// 自動生成の格言
+	const quotes = [
+		"This trip isn't just a plan. It's a story waiting to be written.",
+		"Adventure awaits those who dare to explore.",
+		"Travel is the only thing you buy that makes you richer.",
+		"The world is a book, and those who do not travel read only one page.",
+		"Life is either a daring adventure or nothing at all.",
+	];
+	const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+
+	return `
     <div class="page toc-page">
       <div class="page-header">
-        <div>${escapeHtml((trip as any).name || '無題の旅行').toUpperCase()} - TABLE OF CONTENTS</div>
+        <div>${escapeHtml((trip as any).name || "無題の旅行").toUpperCase()} - TABLE OF CONTENTS</div>
       </div>
       
       <div class="toc-header">
@@ -685,7 +705,7 @@ export function generateTocPage(data: TripPdfData): string {
       
       <div class="toc-content">
         <div class="toc-left">
-          <div class="toc-main-title">${escapeHtml((trip as any).name || '無題の旅行')}</div>
+          <div class="toc-main-title">${escapeHtml((trip as any).name || "無題の旅行")}</div>
           <div class="toc-meta">${days.length}日間の旅行 | ${startDate} - ${endDate}</div>
           
           <div class="toc-section">
@@ -719,7 +739,7 @@ export function generateTocPage(data: TripPdfData): string {
         
         <div class="toc-right">
           <div class="toc-map">
-            <div>🗺️ 主要目的地の地図<br><small>${escapeHtml(trip.destination || '目的地')}</small></div>
+            <div>🗺️ 主要目的地の地図<br><small>${escapeHtml(trip.destination || "目的地")}</small></div>
           </div>
           
           <div class="toc-quote">
@@ -728,7 +748,7 @@ export function generateTocPage(data: TripPdfData): string {
           
           <div class="toc-colophon">
             <div>This travel companion book was created using "Caglla Travel Manager".</div>
-            <div>Published on ${new Date().toLocaleDateString('ja-JP')}</div>
+            <div>Published on ${new Date().toLocaleDateString("ja-JP")}</div>
             <div>Website: https://caglla.com</div>
             <div>Printed in PDF</div>
             <div>Version: 1.0</div>
@@ -742,17 +762,17 @@ export function generateTocPage(data: TripPdfData): string {
         <div>CAGLLA TRAVEL MANAGER | 1</div>
       </div>
     </div>
-  `
+  `;
 }
 
 /**
  * 予約情報ページを生成
  */
 export function generateReservationsPage(data: TripPdfData): string {
-  return `
+	return `
     <div class="page reservations-page">
       <div class="page-header">
-        <div>${escapeHtml((data.trip as any).name || '無題の旅行').toUpperCase()} - RESERVATIONS</div>
+        <div>${escapeHtml((data.trip as any).name || "無題の旅行").toUpperCase()} - RESERVATIONS</div>
       </div>
       
       <div class="page-title">Reservations</div>
@@ -766,52 +786,56 @@ export function generateReservationsPage(data: TripPdfData): string {
         <div>2 | caglla travel manager</div>
       </div>
     </div>
-  `
+  `;
 }
 
 /**
  * 旅程ページを生成
  */
 export function generateItineraryPages(data: TripPdfData): string {
-  const { trip, days, itinerariesByDay } = data
-  
-  return days
-    .sort((a, b) => {
-      const dateA = toDateOrNull(a.date)
-      const dateB = toDateOrNull(b.date)
-      if (!dateA || !dateB) return 0
-      return dateA.getTime() - dateB.getTime()
-    })
-    .map((day, index) => {
-      const dayDate = toDateOrNull(day.date)
-      const dayTitle = dayDate 
-        ? `${dateUtils.formatDate(dayDate)} (Day ${index + 1})`
-        : `Day ${index + 1}`
-      
-      const itineraries = itinerariesByDay[day.id] || []
-      const sortedItineraries = itineraries
-        .sort((a, b) => {
-          const timeA = a.start_time || ''
-          const timeB = b.start_time || ''
-          return timeA.localeCompare(timeB)
-        })
-      
-      const itineraryItems = sortedItineraries.length > 0
-        ? sortedItineraries.map(item => `
+	const { trip, days, itinerariesByDay } = data;
+
+	return days
+		.sort((a, b) => {
+			const dateA = toDateOrNull(a.date);
+			const dateB = toDateOrNull(b.date);
+			if (!dateA || !dateB) return 0;
+			return dateA.getTime() - dateB.getTime();
+		})
+		.map((day, index) => {
+			const dayDate = toDateOrNull(day.date);
+			const dayTitle = dayDate
+				? `${dateUtils.formatDate(dayDate)} (Day ${index + 1})`
+				: `Day ${index + 1}`;
+
+			const itineraries = itinerariesByDay[day.id] || [];
+			const sortedItineraries = itineraries.sort((a, b) => {
+				const timeA = a.start_time || "";
+				const timeB = b.start_time || "";
+				return timeA.localeCompare(timeB);
+			});
+
+			const itineraryItems =
+				sortedItineraries.length > 0
+					? sortedItineraries
+							.map(
+								(item) => `
             <div class="itinerary-item">
-              ${item.start_time ? `<div class="itinerary-time">⏰ ${item.start_time}</div>` : ''}
-              <div class="itinerary-name">${escapeHtml(item.title || '無題の旅程')}</div>
-              ${item.description ? `<div class="itinerary-description">${escapeHtml(item.description)}</div>` : ''}
-              ${(item as any).note ? `<div class="itinerary-note">${escapeHtml((item as any).note)}</div>` : ''}
-              ${(item as any).address ? `<div class="itinerary-address">📍 ${escapeHtml((item as any).address)}</div>` : ''}
+              ${item.start_time ? `<div class="itinerary-time">⏰ ${item.start_time}</div>` : ""}
+              <div class="itinerary-name">${escapeHtml(item.title || "無題の旅程")}</div>
+              ${item.description ? `<div class="itinerary-description">${escapeHtml(item.description)}</div>` : ""}
+              ${(item as any).note ? `<div class="itinerary-note">${escapeHtml((item as any).note)}</div>` : ""}
+              ${(item as any).address ? `<div class="itinerary-address">📍 ${escapeHtml((item as any).address)}</div>` : ""}
             </div>
-          `).join('')
-        : '<div class="reservations-content">予定なし</div>'
-      
-      return `
+          `,
+							)
+							.join("")
+					: '<div class="reservations-content">予定なし</div>';
+
+			return `
         <div class="page itinerary-page">
           <div class="page-header">
-            <div>${escapeHtml((trip as any).name || '無題の旅行').toUpperCase()} - DAILY SCHEDULE</div>
+            <div>${escapeHtml((trip as any).name || "無題の旅行").toUpperCase()} - DAILY SCHEDULE</div>
           </div>
           
           <div class="day-title">${dayTitle}</div>
@@ -821,20 +845,21 @@ export function generateItineraryPages(data: TripPdfData): string {
             <div>${3 + index} | caglla travel manager</div>
           </div>
         </div>
-      `
-    }).join('')
+      `;
+		})
+		.join("");
 }
 
 /**
  * 緊急連絡先ページを生成
  */
 export function generateEmergencyPage(data: TripPdfData): string {
-  const { trip, days } = data
-  
-  return `
+	const { trip, days } = data;
+
+	return `
     <div class="page emergency-page">
       <div class="page-header">
-        <div>${escapeHtml((trip as any).name || '無題の旅行').toUpperCase()} - EMERGENCY CONTACTS</div>
+        <div>${escapeHtml((trip as any).name || "無題の旅行").toUpperCase()} - EMERGENCY CONTACTS</div>
       </div>
       
       <div class="page-title">Emergency Contacts</div>
@@ -848,14 +873,14 @@ export function generateEmergencyPage(data: TripPdfData): string {
         <div>${3 + days.length} | caglla travel manager</div>
       </div>
     </div>
-  `
+  `;
 }
 
 /**
  * チェックリストページを生成
  */
 export function generateChecklistPage(data: TripPdfData): string {
-  return `
+	return `
     <div class="page checklist-page">
       <div class="page-header">
         <div>APPENDIX - CHECKLIST</div>
@@ -872,28 +897,28 @@ export function generateChecklistPage(data: TripPdfData): string {
         <div>i | caglla travel manager</div>
       </div>
     </div>
-  `
+  `;
 }
 
 /**
  * メモページを生成
  */
 export function generateMemoPage(data: TripPdfData): string {
-  const { trip, days } = data
-  
-  const memoQuotes = [
-    "To travel is to live. - Hans Christian Andersen",
-    "The journey of a thousand miles begins with a single step. - Lao Tzu",
-    "Adventure awaits those who dare to explore. - Unknown",
-    "Travel makes one modest. You see what a tiny place you occupy in the world. - Gustave Flaubert",
-    "Life is either a daring adventure or nothing at all. - Helen Keller"
-  ]
-  const randomQuote = memoQuotes[Math.floor(Math.random() * memoQuotes.length)]
-  
-  return `
+	const { trip, days } = data;
+
+	const memoQuotes = [
+		"To travel is to live. - Hans Christian Andersen",
+		"The journey of a thousand miles begins with a single step. - Lao Tzu",
+		"Adventure awaits those who dare to explore. - Unknown",
+		"Travel makes one modest. You see what a tiny place you occupy in the world. - Gustave Flaubert",
+		"Life is either a daring adventure or nothing at all. - Helen Keller",
+	];
+	const randomQuote = memoQuotes[Math.floor(Math.random() * memoQuotes.length)];
+
+	return `
     <div class="page memo-page">
       <div class="page-header">
-        <div>${escapeHtml((trip as any).name || '無題の旅行').toUpperCase()} - MEMO</div>
+        <div>${escapeHtml((trip as any).name || "無題の旅行").toUpperCase()} - MEMO</div>
       </div>
       
       <div class="page-title">Memo</div>
@@ -902,7 +927,7 @@ export function generateMemoPage(data: TripPdfData): string {
       <div class="memo-subtitle">My highlight</div>
       
       <div class="memo-lines">
-        ${Array.from({ length: 20 }, () => '<div class="memo-line"></div>').join('')}
+        ${Array.from({ length: 20 }, () => '<div class="memo-line"></div>').join("")}
       </div>
       
       <div class="memo-quote">
@@ -913,14 +938,14 @@ export function generateMemoPage(data: TripPdfData): string {
         <div>${4 + days.length} | caglla travel manager</div>
       </div>
     </div>
-  `
+  `;
 }
 
 /**
  * 裏表紙ページを生成
  */
 export function generateBackCoverPage(data: TripPdfData): string {
-  return `
+	return `
     <div class="page back-cover-page">
       <div class="back-cover-title">Caglla</div>
       <div class="back-cover-meta">
@@ -933,33 +958,36 @@ export function generateBackCoverPage(data: TripPdfData): string {
         Please make sure to double-check all reservations, times, and contact details before departure.
       </div>
     </div>
-  `
+  `;
 }
 
 /**
  * 完全なPDF用HTMLドキュメントを生成
  */
-export async function generateMagazinePdfHtml(data: TripPdfData, tripUrl?: string): Promise<string> {
-  const { trip } = data
-  
-  const pages = [
-    await generateCoverPage(data, tripUrl),
-    generateTocPage(data),
-    generateReservationsPage(data),
-    generateItineraryPages(data),
-    generateEmergencyPage(data),
-    generateChecklistPage(data),
-    generateMemoPage(data),
-    generateBackCoverPage(data)
-  ].join('')
-  
-  return `
+export async function generateMagazinePdfHtml(
+	data: TripPdfData,
+	tripUrl?: string,
+): Promise<string> {
+	const { trip } = data;
+
+	const pages = [
+		await generateCoverPage(data, tripUrl),
+		generateTocPage(data),
+		generateReservationsPage(data),
+		generateItineraryPages(data),
+		generateEmergencyPage(data),
+		generateChecklistPage(data),
+		generateMemoPage(data),
+		generateBackCoverPage(data),
+	].join("");
+
+	return `
     <!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${escapeHtml((trip as any).name || '無題の旅行')} - Travel Companion</title>
+      <title>${escapeHtml((trip as any).name || "無題の旅行")} - Travel Companion</title>
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=New+Tegomin&family=Yuji+Boku&display=swap" rel="stylesheet">
@@ -969,5 +997,5 @@ export async function generateMagazinePdfHtml(data: TripPdfData, tripUrl?: strin
       ${pages}
     </body>
     </html>
-  `
+  `;
 }

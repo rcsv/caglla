@@ -1,16 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import logger from '@/lib/core/logger'
-import { planSaveOperations } from '@/lib/travel/plan-save'
-import { composeMiddleware } from '@/lib/core/middleware'
-import { withAuth, withBodyValidation } from '@/lib/api/middleware'
-import { PlanSaveDataSchema, UpdatePlanRequestSchema } from '@/lib/schemas/plan'
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import logger from "@/lib/core/logger";
+import { planSaveOperations } from "@/lib/travel/plan-save";
+import { composeMiddleware } from "@/lib/core/middleware";
+import { withAuth, withBodyValidation } from "@/lib/api/middleware";
+import {
+	PlanSaveDataSchema,
+	UpdatePlanRequestSchema,
+} from "@/lib/schemas/plan";
 
 /**
  * 完全なプランを一括で保存する
- * 
+ *
  * zod スキーマバリデーション + Context ミドルウェアで移行済み
- * 
+ *
  * Before:
  * ```typescript
  * const planData = await parseRequestBody<PlanSaveData>(request)
@@ -18,7 +21,7 @@ import { PlanSaveDataSchema, UpdatePlanRequestSchema } from '@/lib/schemas/plan'
  *   return badRequest('プランのタイトルは必須です')
  * }
  * ```
- * 
+ *
  * After:
  * ```typescript
  * // ctx.body が型安全 & バリデ済み
@@ -26,30 +29,30 @@ import { PlanSaveDataSchema, UpdatePlanRequestSchema } from '@/lib/schemas/plan'
  * ```
  */
 export const POST = composeMiddleware(
-  withAuth(),
-  withBodyValidation(PlanSaveDataSchema)
+	withAuth(),
+	withBodyValidation(PlanSaveDataSchema),
 )(async (request: NextRequest, ctx) => {
-  // ctx.auth, ctx.body が保証されている（型推論が効く）
-  const { userId } = ctx.auth!
-  
-  // zod スキーマでバリデーション済み & 型推論
-  type BodyType = z.infer<typeof PlanSaveDataSchema>
-  const planData = ctx.body as BodyType
+	// ctx.auth, ctx.body が保証されている（型推論が効く）
+	const { userId } = ctx.auth!;
 
-  // プランを保存
-  const result = await planSaveOperations.saveCompletePlan(userId, planData)
-  
-  return NextResponse.json({
-    success: true,
-    data: result
-  })
-})
+	// zod スキーマでバリデーション済み & 型推論
+	type BodyType = z.infer<typeof PlanSaveDataSchema>;
+	const planData = ctx.body as BodyType;
+
+	// プランを保存
+	const result = await planSaveOperations.saveCompletePlan(userId, planData);
+
+	return NextResponse.json({
+		success: true,
+		data: result,
+	});
+});
 
 /**
  * 既存のプランを更新する
- * 
+ *
  * zod スキーマバリデーション + Context ミドルウェアで移行済み
- * 
+ *
  * Before:
  * ```typescript
  * const body = await parseRequestBody<{ tripId?: string; planData?: PlanSaveData }>(request)
@@ -57,7 +60,7 @@ export const POST = composeMiddleware(
  *   return badRequest('旅行IDとプランデータは必須です')
  * }
  * ```
- * 
+ *
  * After:
  * ```typescript
  * // ctx.body が型安全 & バリデ済み
@@ -65,22 +68,22 @@ export const POST = composeMiddleware(
  * ```
  */
 export const PUT = composeMiddleware(
-  withAuth(),
-  withBodyValidation(UpdatePlanRequestSchema)
+	withAuth(),
+	withBodyValidation(UpdatePlanRequestSchema),
 )(async (request: NextRequest, ctx) => {
-  // ctx.auth, ctx.body が保証されている（型推論が効く）
-  const { userId } = ctx.auth!
-  
-  // zod スキーマでバリデーション済み & 型推論
-  type BodyType = z.infer<typeof UpdatePlanRequestSchema>
-  const body = ctx.body as BodyType
-  const { tripId, planData } = body
+	// ctx.auth, ctx.body が保証されている（型推論が効く）
+	const { userId } = ctx.auth!;
 
-  // プランを更新
-  const result = await planSaveOperations.updateCompletePlan(tripId, planData)
-  
-  return NextResponse.json({
-    success: true,
-    data: result
-  })
-})
+	// zod スキーマでバリデーション済み & 型推論
+	type BodyType = z.infer<typeof UpdatePlanRequestSchema>;
+	const body = ctx.body as BodyType;
+	const { tripId, planData } = body;
+
+	// プランを更新
+	const result = await planSaveOperations.updateCompletePlan(tripId, planData);
+
+	return NextResponse.json({
+		success: true,
+		data: result,
+	});
+});

@@ -3,7 +3,7 @@
  * メートル法とヤードポンド法の変換を提供
  */
 
-import type { UnitSystem } from '@/lib/core/types'
+import type { UnitSystem } from "@/lib/core/types";
 
 /**
  * 温度単位変換
@@ -13,23 +13,23 @@ import type { UnitSystem } from '@/lib/core/types'
  * @returns 変換後の温度
  */
 export function convertTemperature(
-  temp: number,
-  from: UnitSystem,
-  to: UnitSystem
+	temp: number,
+	from: UnitSystem,
+	to: UnitSystem,
 ): number {
-  if (from === to) return temp
+	if (from === to) return temp;
 
-  // metric (摂氏) → imperial (華氏)
-  if (from === 'metric' && to === 'imperial') {
-    return (temp * 9 / 5) + 32
-  }
+	// metric (摂氏) → imperial (華氏)
+	if (from === "metric" && to === "imperial") {
+		return (temp * 9) / 5 + 32;
+	}
 
-  // imperial (華氏) → metric (摂氏)
-  if (from === 'imperial' && to === 'metric') {
-    return (temp - 32) * 5 / 9
-  }
+	// imperial (華氏) → metric (摂氏)
+	if (from === "imperial" && to === "metric") {
+		return ((temp - 32) * 5) / 9;
+	}
 
-  return temp
+	return temp;
 }
 
 /**
@@ -39,43 +39,43 @@ export function convertTemperature(
  * @returns 変換後の距離情報
  */
 export function convertDistance(
-  distanceKm: number,
-  to: UnitSystem
+	distanceKm: number,
+	to: UnitSystem,
 ): { value: number; unit: string; formatted: string } {
-  if (to === 'metric') {
-    if (distanceKm >= 1) {
-      return {
-        value: distanceKm,
-        unit: 'km',
-        formatted: `${distanceKm.toFixed(1)} km`
-      }
-    } else {
-      const meters = distanceKm * 1000
-      return {
-        value: meters,
-        unit: 'm',
-        formatted: `${Math.round(meters)} m`
-      }
-    }
-  }
+	if (to === "metric") {
+		if (distanceKm >= 1) {
+			return {
+				value: distanceKm,
+				unit: "km",
+				formatted: `${distanceKm.toFixed(1)} km`,
+			};
+		} else {
+			const meters = distanceKm * 1000;
+			return {
+				value: meters,
+				unit: "m",
+				formatted: `${Math.round(meters)} m`,
+			};
+		}
+	}
 
-  // imperial (ヤードポンド法)
-  const miles = distanceKm * 0.621371
-  // 0.5マイル以上はマイルで表示、未満はフィートで表示
-  if (miles >= 0.5) {
-    return {
-      value: miles,
-      unit: 'mi',
-      formatted: `${miles.toFixed(1)} mi`
-    }
-  } else {
-    const feet = miles * 5280
-    return {
-      value: feet,
-      unit: 'ft',
-      formatted: `${Math.round(feet)} ft`
-    }
-  }
+	// imperial (ヤードポンド法)
+	const miles = distanceKm * 0.621371;
+	// 0.5マイル以上はマイルで表示、未満はフィートで表示
+	if (miles >= 0.5) {
+		return {
+			value: miles,
+			unit: "mi",
+			formatted: `${miles.toFixed(1)} mi`,
+		};
+	} else {
+		const feet = miles * 5280;
+		return {
+			value: feet,
+			unit: "ft",
+			formatted: `${Math.round(feet)} ft`,
+		};
+	}
 }
 
 /**
@@ -85,24 +85,24 @@ export function convertDistance(
  * @returns 変換後の風速情報
  */
 export function convertWindSpeed(
-  kmh: number,
-  to: UnitSystem
+	kmh: number,
+	to: UnitSystem,
 ): { value: number; unit: string; formatted: string } {
-  if (to === 'metric') {
-    return {
-      value: kmh,
-      unit: 'km/h',
-      formatted: `${kmh.toFixed(1)} km/h`
-    }
-  }
+	if (to === "metric") {
+		return {
+			value: kmh,
+			unit: "km/h",
+			formatted: `${kmh.toFixed(1)} km/h`,
+		};
+	}
 
-  // imperial (mph)
-  const mph = kmh * 0.621371
-  return {
-    value: mph,
-    unit: 'mph',
-    formatted: `${mph.toFixed(1)} mph`
-  }
+	// imperial (mph)
+	const mph = kmh * 0.621371;
+	return {
+		value: mph,
+		unit: "mph",
+		formatted: `${mph.toFixed(1)} mph`,
+	};
 }
 
 /**
@@ -112,24 +112,24 @@ export function convertWindSpeed(
  * @returns 変換後の降水量情報
  */
 export function convertPrecipitation(
-  mm: number,
-  to: UnitSystem
+	mm: number,
+	to: UnitSystem,
 ): { value: number; unit: string; formatted: string } {
-  if (to === 'metric') {
-    return {
-      value: mm,
-      unit: 'mm',
-      formatted: `${mm.toFixed(1)} mm`
-    }
-  }
+	if (to === "metric") {
+		return {
+			value: mm,
+			unit: "mm",
+			formatted: `${mm.toFixed(1)} mm`,
+		};
+	}
 
-  // imperial (inch)
-  const inches = mm * 0.0393701
-  return {
-    value: inches,
-    unit: 'in',
-    formatted: `${inches.toFixed(2)} in`
-  }
+	// imperial (inch)
+	const inches = mm * 0.0393701;
+	return {
+		value: inches,
+		unit: "in",
+		formatted: `${inches.toFixed(2)} in`,
+	};
 }
 
 /**
@@ -138,6 +138,5 @@ export function convertPrecipitation(
  * @returns 温度単位のシンボル（°C または °F）
  */
 export function getTemperatureSymbol(unitSystem: UnitSystem): string {
-  return unitSystem === 'imperial' ? '°F' : '°C'
+	return unitSystem === "imperial" ? "°F" : "°C";
 }
-

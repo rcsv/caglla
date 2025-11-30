@@ -1,448 +1,455 @@
- 'use client'
+"use client";
 
-import TripItineraryView from '@/components/trip/TripItineraryView'
-import TripSummaryView from '@/components/trip/TripSummaryView'
-import TripChecklistView from '@/components/trip/TripChecklistView'
-import TripHeroSection from '@/components/trip/TripHeroSection'
-import AddScheduleModal from '@/components/modals/AddScheduleModal'
-import ExportDataModal from '@/components/modals/ExportDataModal'
-import TemplateReplicaModal from '@/components/modals/TemplateReplicaModal'
-import TripEditor from '@/components/trip/TripEditor'
-import { useRef, useState } from 'react'
-import Loading from '@/components/common/Loading'
-import { useAuth } from '@/lib/contexts/auth'
-import { useUserData } from '@/lib/contexts/user-data'
-import { useSubscription } from '@/lib/contexts/subscription'
-import { canEditTrip } from '@/lib/core/permissions'
-import { useTrip } from '../TripProvider'
-import useTripViewState from './hooks/useTripViewState'
-import useTripModals from './hooks/useTripModals'
-import useTripPublishing from './hooks/useTripPublishing'
-import useItineraryActions from './hooks/useItineraryActions'
-import { dispatchPOIOpen } from '../poi-events'
-import { makeAuthenticatedRequest } from '@/lib/api/helpers'
-import { t } from '@/lib/i18n'
-import logger from '@/lib/core/logger'
-import { useRouter } from 'next/navigation'
-import type { PlaceData } from '@/lib/core/types'
+import TripItineraryView from "@/components/trip/TripItineraryView";
+import TripSummaryView from "@/components/trip/TripSummaryView";
+import TripChecklistView from "@/components/trip/TripChecklistView";
+import TripHeroSection from "@/components/trip/TripHeroSection";
+import AddScheduleModal from "@/components/modals/AddScheduleModal";
+import ExportDataModal from "@/components/modals/ExportDataModal";
+import TemplateReplicaModal from "@/components/modals/TemplateReplicaModal";
+import TripEditor from "@/components/trip/TripEditor";
+import { useRef, useState } from "react";
+import Loading from "@/components/common/Loading";
+import { useAuth } from "@/lib/contexts/auth";
+import { useUserData } from "@/lib/contexts/user-data";
+import { useSubscription } from "@/lib/contexts/subscription";
+import { canEditTrip } from "@/lib/core/permissions";
+import { useTrip } from "../TripProvider";
+import useTripViewState from "./hooks/useTripViewState";
+import useTripModals from "./hooks/useTripModals";
+import useTripPublishing from "./hooks/useTripPublishing";
+import useItineraryActions from "./hooks/useItineraryActions";
+import { dispatchPOIOpen } from "../poi-events";
+import { makeAuthenticatedRequest } from "@/lib/api/helpers";
+import { t } from "@/lib/i18n";
+import logger from "@/lib/core/logger";
+import { useRouter } from "next/navigation";
+import type { PlaceData } from "@/lib/core/types";
 
 /**
  * Timeline Default Slot
- * 
+ *
  * Phase 3: page.tsxのロジック移行（v3.0.0）
- * 
+ *
  * TripProviderからTripデータを取得し、useTripUrlStateでURL状態を管理します。
  * 3つのビュー（Summary, Itinerary, Checklist）を条件付きレンダリングで切り替えます。
  * モーダル管理と編集機能を実装します。
  */
 export default function TimelineDefault() {
-  const { trip, loading, error, updateTrip, refreshTrip } = useTrip()
-  const { user } = useAuth()
-  const { removeTrip, userData } = useUserData()
-  const { subscriptionStatus } = useSubscription()
-  const router = useRouter()
-  const userPlan = subscriptionStatus.plan?.id || 'season_traveler'
-  
-  const {
-    currentView,
-    selectedDayId,
-    selectedItineraryId,
-    setSelectedDayId,
-    setSelectedItineraryId,
-    updateQuery,
-    selectDay,
-    selectItinerary,
-  } = useTripViewState()
+	const { trip, loading, error, updateTrip, refreshTrip } = useTrip();
+	const { user } = useAuth();
+	const { removeTrip, userData } = useUserData();
+	const { subscriptionStatus } = useSubscription();
+	const router = useRouter();
+	const userPlan = subscriptionStatus.plan?.id || "season_traveler";
 
-  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set())
-  const [loadingDayIds, setLoadingDayIds] = useState<Set<string>>(new Set())
-  const [summaryCollapsed, setSummaryCollapsed] = useState(false)
-  const isProgrammaticScrollRef = useRef(false)
-  const scrollToItineraryRef = useRef<((itineraryId: string) => void) | null>(null)
+	const {
+		currentView,
+		selectedDayId,
+		selectedItineraryId,
+		setSelectedDayId,
+		setSelectedItineraryId,
+		updateQuery,
+		selectDay,
+		selectItinerary,
+	} = useTripViewState();
 
-  const {
-    modals,
-    open,
-    close,
-    addScheduleContext,
-    openAddSchedule,
-    closeAddSchedule,
-  } = useTripModals()
+	const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
+	const [loadingDayIds, setLoadingDayIds] = useState<Set<string>>(new Set());
+	const [summaryCollapsed, setSummaryCollapsed] = useState(false);
+	const isProgrammaticScrollRef = useRef(false);
+	const scrollToItineraryRef = useRef<((itineraryId: string) => void) | null>(
+		null,
+	);
 
-  const {
-    replicate,
-    publish,
-    replicaLoading,
-    publishLoading,
-  } = useTripPublishing({
-    trip,
-    user,
-    userData,
-    updateTrip,
-    refreshTrip,
-    router,
-    userPlan,
-  })
+	const {
+		modals,
+		open,
+		close,
+		addScheduleContext,
+		openAddSchedule,
+		closeAddSchedule,
+	} = useTripModals();
 
-  const {
-    getAllItineraries,
-    handleScheduleAdded,
-    handleScheduleUpdated,
-    handleScheduleDelete,
-    handleMoveUp,
-    handleMoveDown,
-    handleMoveToDay,
-    handleDuplicateToDay,
-    handleDragEnd,
-    handleReorderItineraries,
-  } = useItineraryActions({
-    trip,
-    updateTrip,
-    refreshTrip,
-    setSelectedDayId,
-    setSelectedItineraryId,
-    updateQuery,
-  })
+	const { replicate, publish, replicaLoading, publishLoading } =
+		useTripPublishing({
+			trip,
+			user,
+			userData,
+			updateTrip,
+			refreshTrip,
+			router,
+			userPlan,
+		});
 
-  const handleOpenReplicaModal = () => {
-    if (!trip || !user) return
-    open('replica')
-  }
+	const {
+		getAllItineraries,
+		handleScheduleAdded,
+		handleScheduleUpdated,
+		handleScheduleDelete,
+		handleMoveUp,
+		handleMoveDown,
+		handleMoveToDay,
+		handleDuplicateToDay,
+		handleDragEnd,
+		handleReorderItineraries,
+	} = useItineraryActions({
+		trip,
+		updateTrip,
+		refreshTrip,
+		setSelectedDayId,
+		setSelectedItineraryId,
+		updateQuery,
+	});
 
-  const handleAddSchedule = (dayId: string) => {
-    setSelectedDayId(dayId)
-    openAddSchedule(dayId)
-  }
+	const handleOpenReplicaModal = () => {
+		if (!trip || !user) return;
+		open("replica");
+	};
 
-  const handleInsertSchedule = (dayId: string, afterIndex: number) => {
-    setSelectedDayId(dayId)
-    openAddSchedule(dayId, afterIndex)
-  }
+	const handleAddSchedule = (dayId: string) => {
+		setSelectedDayId(dayId);
+		openAddSchedule(dayId);
+	};
 
-  const handleAddScheduleModalClose = () => {
-    closeAddSchedule()
-    setSelectedDayId(null)
-  }
+	const handleInsertSchedule = (dayId: string, afterIndex: number) => {
+		setSelectedDayId(dayId);
+		openAddSchedule(dayId, afterIndex);
+	};
 
-  const onToggleDayCollapse = (dayId: string) => {
-    setCollapsedDays(prev => {
-      const next = new Set(prev)
-      if (next.has(dayId)) next.delete(dayId)
-      else next.add(dayId)
-      return next
-    })
-  }
-  
-  const onDayClick = (dayId: string) => {
-    if (selectedDayId === dayId) {
-      selectDay(null)
-    } else {
-      selectDay(dayId)
-    }
-  }
-  
-  const onItineraryClickSync = (id: string) => {
-    selectItinerary(id)
-    
-    // POIデータを取得してCustomEventで@mapに通知
-    if (trip?.days) {
-      for (const day of trip.days) {
-        const itinerary = day.itineraries?.find(it => it.id === id)
-        if (itinerary) {
-          const placeData = itinerary.place_data as PlaceData | undefined
-          if (placeData?.place_id) {
-            dispatchPOIOpen({
-              placeId: placeData.place_id,
-              name: itinerary.title,
-              location: {
-                lat: placeData.geometry?.location?.lat || 0,
-                lng: placeData.geometry?.location?.lng || 0,
-              },
-              placeData: placeData,
-            })
-          } else if (itinerary.place_id) {
-            // place_idのみがある場合（place_dataがまだキャッシュされていない）
-            dispatchPOIOpen({
-              placeId: itinerary.place_id,
-              name: itinerary.title,
-              location: { lat: 0, lng: 0 },
-              placeData: undefined,
-            })
-          }
-          break
-        }
-      }
-    }
-  }
+	const handleAddScheduleModalClose = () => {
+		closeAddSchedule();
+		setSelectedDayId(null);
+	};
 
-  const handleAddDay = async () => {
-    if (!trip) return
-    
-    try {
-      setLoadingDayIds(prev => new Set(prev).add('new-day'))
-      const response = await makeAuthenticatedRequest(`/api/trip/${trip.id}/day`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({})
-      })
+	const onToggleDayCollapse = (dayId: string) => {
+		setCollapsedDays((prev) => {
+			const next = new Set(prev);
+			if (next.has(dayId)) next.delete(dayId);
+			else next.add(dayId);
+			return next;
+		});
+	};
 
-      if (response.ok) {
-        const newDay = await response.json()
-        
-        // tripの情報を再取得してend_dateの更新を反映
-        const tripResponse = await makeAuthenticatedRequest(`/api/trip/${trip.id}`)
-        if (tripResponse.ok) {
-          const updatedTripData = await tripResponse.json()
-          updateTrip(updatedTripData)
-          await refreshTrip()
-        } else {
-          // 再取得に失敗した場合は、ローカルで日程のみ追加
-          updateTrip(prevTrip => ({
-            ...prevTrip,
-            days: [...(prevTrip.days || []), newDay]
-          }))
-        }
-      } else {
-        logger.error('Failed to add day')
-        alert(t('tripSlugPage.addDayFailed'))
-      }
-    } catch (error) {
-      logger.error('Error adding day:', error)
-      alert(t('tripSlugPage.addDayFailed'))
-    } finally {
-      setLoadingDayIds(prev => {
-        const next = new Set(prev)
-        next.delete('new-day')
-        return next
-      })
-    }
-  }
+	const onDayClick = (dayId: string) => {
+		if (selectedDayId === dayId) {
+			selectDay(null);
+		} else {
+			selectDay(dayId);
+		}
+	};
 
-  const handleDayDelete = async (dayId: string) => {
-    // 楽観的UI更新: すぐに画面から削除 + day_numberを振り直し
-    updateTrip(prevTrip => {
-      if (!prevTrip.days) return prevTrip
-      
-      // 削除されるdayのday_numberを取得
-      const deletedDay = prevTrip.days.find(d => d.id === dayId)
-      if (!deletedDay) return prevTrip
-      
-      const deletedDayNumber = deletedDay.day_number
-      
-      // 削除 + 番号振り直し
-      const updatedDays = prevTrip.days
-        .filter(d => d.id !== dayId) // 削除
-        .map(d => {
-          // 削除されたdayより後のday_numberを-1
-          if (d.day_number > deletedDayNumber) {
-            return { ...d, day_number: d.day_number - 1 }
-          }
-          return d
-        })
-      
-      return {
-        ...prevTrip,
-        days: updatedDays
-      }
-    })
-    
-    // サーバーからの削除完了後、最新データを取得（確認用）
-    try {
-      await refreshTrip()
-    } catch (error) {
-      logger.error('Failed to refresh trip after day deletion:', error)
-      // エラーの場合、再度refreshして元の状態に戻す
-      try {
-        await refreshTrip()
-      } catch (retryError) {
-        logger.error('Failed to refresh trip on retry:', retryError)
-      }
-    }
-  }
+	const onItineraryClickSync = (id: string) => {
+		selectItinerary(id);
 
-  const expandAllDays = () => {
-    setCollapsedDays(new Set())
-  }
+		// POIデータを取得してCustomEventで@mapに通知
+		if (trip?.days) {
+			for (const day of trip.days) {
+				const itinerary = day.itineraries?.find((it) => it.id === id);
+				if (itinerary) {
+					const placeData = itinerary.place_data as PlaceData | undefined;
+					if (placeData?.place_id) {
+						dispatchPOIOpen({
+							placeId: placeData.place_id,
+							name: itinerary.title,
+							location: {
+								lat: placeData.geometry?.location?.lat || 0,
+								lng: placeData.geometry?.location?.lng || 0,
+							},
+							placeData: placeData,
+						});
+					} else if (itinerary.place_id) {
+						// place_idのみがある場合（place_dataがまだキャッシュされていない）
+						dispatchPOIOpen({
+							placeId: itinerary.place_id,
+							name: itinerary.title,
+							location: { lat: 0, lng: 0 },
+							placeData: undefined,
+						});
+					}
+					break;
+				}
+			}
+		}
+	};
 
-  const collapseAllDays = () => {
-    if (!trip?.days) return
-    setCollapsedDays(new Set(trip.days.map(d => d.id)))
-  }
+	const handleAddDay = async () => {
+		if (!trip) return;
 
-  // tripがnullの場合、ローディングまたはエラー表示
-  if (!trip) {
-    if (loading) {
-      return <Loading className="py-6" />
-    }
-    if (error === 'not-found') {
-      return (
-        <div className="p-4 text-center text-gray-500">
-          <p>Trip not found</p>
-        </div>
-      )
-    }
-    if (error === 'forbidden') {
-      return (
-        <div className="p-4 text-center text-gray-500">
-          <p>Access forbidden</p>
-        </div>
-      )
-    }
-    return <Loading className="py-6" />
-  }
+		try {
+			setLoadingDayIds((prev) => new Set(prev).add("new-day"));
+			const response = await makeAuthenticatedRequest(
+				`/api/trip/${trip.id}/day`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({}),
+				},
+			);
 
-  // 所有者判定：userData.idとtrip.user_idを比較（userDataが存在する場合）
-  // または、canEditTripを使用（userDataが存在しない場合のフォールバック）
-  const isOwner = Boolean(
-    userData?.id && trip?.user_id && userData.id === trip.user_id
-  ) || Boolean(user && canEditTrip(user, trip))
-  const canEdit = Boolean(
-    userData?.id && trip?.user_id && userData.id === trip.user_id
-  ) || Boolean(user && canEditTrip(user, trip))
-  const isTemplateTrip = trip?.is_template
-  // Publish可能な条件: 編集可能 かつ Private状態
-  // テンプレートのDraftバッジクリックとPublishボタン両方で使用
-  const canPublishTrip = canEdit && trip?.access_level === 'private'
-  
-  if (trip.access_level !== 'public' && !isOwner) {
-    return (
-      <div className="p-4 text-gray-500">
-        This trip is private. Timeline is not available.
-      </div>
-    )
-  }
+			if (response.ok) {
+				const newDay = await response.json();
 
-  const templateDayCount = trip?.days?.length ?? 0
+				// tripの情報を再取得してend_dateの更新を反映
+				const tripResponse = await makeAuthenticatedRequest(
+					`/api/trip/${trip.id}`,
+				);
+				if (tripResponse.ok) {
+					const updatedTripData = await tripResponse.json();
+					updateTrip(updatedTripData);
+					await refreshTrip();
+				} else {
+					// 再取得に失敗した場合は、ローカルで日程のみ追加
+					updateTrip((prevTrip) => ({
+						...prevTrip,
+						days: [...(prevTrip.days || []), newDay],
+					}));
+				}
+			} else {
+				logger.error("Failed to add day");
+				alert(t("tripSlugPage.addDayFailed"));
+			}
+		} catch (error) {
+			logger.error("Error adding day:", error);
+			alert(t("tripSlugPage.addDayFailed"));
+		} finally {
+			setLoadingDayIds((prev) => {
+				const next = new Set(prev);
+				next.delete("new-day");
+				return next;
+			});
+		}
+	};
 
-  return (
-    <>
-    <div className="p-0">
-        {/* Summary View */}
-        {currentView === 'summary' && (
-          <>
-            <TripHeroSection
-              trip={trip}
-              canEdit={canEdit}
-              canReplica={isTemplateTrip && trip.access_level === 'public' && Boolean(user)}
-              onReplica={isTemplateTrip ? handleOpenReplicaModal : undefined}
-              replicaLoading={replicaLoading}
-              canPublish={canPublishTrip}
-              onPublish={canPublishTrip ? () => publish() : undefined}
-              publishLoading={publishLoading}
-              onUpdateTrip={updateTrip}
-              onEditBaseInfoRequest={() => open('editBaseInfo')}
-              onDeleteTrip={() => {
-                removeTrip(trip.id)
-                router.push('/home')
-              }}
-            />
-            <TripSummaryView
-              trip={trip}
-              summaryCollapsed={summaryCollapsed}
-              onToggleSummary={() => setSummaryCollapsed(!summaryCollapsed)}
-              getAllItineraries={getAllItineraries}
-            />
-          </>
-        )}
+	const handleDayDelete = async (dayId: string) => {
+		// 楽観的UI更新: すぐに画面から削除 + day_numberを振り直し
+		updateTrip((prevTrip) => {
+			if (!prevTrip.days) return prevTrip;
 
-        {/* Itinerary View */}
-        {currentView === 'itinerary' && (
-      <TripItineraryView
-        trip={trip}
-            canEdit={canEdit}
-        collapsedDays={collapsedDays}
-        selectedDayId={selectedDayId}
-        selectedItineraryId={selectedItineraryId}
-        loadingDayIds={loadingDayIds}
-        onToggleDayCollapse={onToggleDayCollapse}
-        onDayClick={onDayClick}
-            onAddSchedule={handleAddSchedule}
-            onInsertSchedule={handleInsertSchedule}
-            onAddDay={handleAddDay}
-            onDayDelete={handleDayDelete}
-            onScheduleUpdated={handleScheduleUpdated}
-            onMoveUp={handleMoveUp}
-            onMoveDown={handleMoveDown}
-            onMoveToDay={handleMoveToDay}
-            onDuplicateToDay={handleDuplicateToDay}
-            onScheduleDelete={handleScheduleDelete}
-                        onItineraryClick={onItineraryClickSync}
-                        onDragEnd={handleDragEnd}
-                        onUpdateTrip={updateTrip}
-                        onReorderItineraries={handleReorderItineraries}
-            expandAllDays={expandAllDays}
-            collapseAllDays={collapseAllDays}
-        scrollSyncEnabled={false}
-        onScrollSyncEnabledChange={() => {}}
-        isProgrammaticScrollRef={isProgrammaticScrollRef}
-        scrollToItineraryRef={scrollToItineraryRef}
-      />
-        )}
+			// 削除されるdayのday_numberを取得
+			const deletedDay = prevTrip.days.find((d) => d.id === dayId);
+			if (!deletedDay) return prevTrip;
 
-        {/* Checklist View */}
-        {currentView === 'checklist' && (
-          <TripChecklistView tripId={trip.id} readOnly={!canEdit} />
-        )}
-    </div>
+			const deletedDayNumber = deletedDay.day_number;
 
-      {/* Modals */}
-      <TemplateReplicaModal
-        isOpen={modals.replica}
-        onClose={() => {
-          if (replicaLoading) return
-          close('replica')
-        }}
-        onConfirm={async (startDate) => {
-          const success = await replicate(startDate)
-          if (success) {
-            close('replica')
-          }
-        }}
-        dayCount={templateDayCount}
-        loading={replicaLoading}
-        templateTitle={trip.title}
-      />
+			// 削除 + 番号振り直し
+			const updatedDays = prevTrip.days
+				.filter((d) => d.id !== dayId) // 削除
+				.map((d) => {
+					// 削除されたdayより後のday_numberを-1
+					if (d.day_number > deletedDayNumber) {
+						return { ...d, day_number: d.day_number - 1 };
+					}
+					return d;
+				});
 
-      {modals.addSchedule && addScheduleContext?.dayId && (
-        <AddScheduleModal
-          isOpen={modals.addSchedule}
-          dayId={addScheduleContext.dayId}
-          onClose={handleAddScheduleModalClose}
-          onScheduleAdded={handleScheduleAdded}
-          insertAfterIndex={addScheduleContext.insertAfterIndex}
-        />
-      )}
+			return {
+				...prevTrip,
+				days: updatedDays,
+			};
+		});
 
-      {modals.export && (
-        <ExportDataModal
-          isOpen={modals.export}
-          onClose={() => close('export')}
-          trip={trip}
-        />
-      )}
+		// サーバーからの削除完了後、最新データを取得（確認用）
+		try {
+			await refreshTrip();
+		} catch (error) {
+			logger.error("Failed to refresh trip after day deletion:", error);
+			// エラーの場合、再度refreshして元の状態に戻す
+			try {
+				await refreshTrip();
+			} catch (retryError) {
+				logger.error("Failed to refresh trip on retry:", retryError);
+			}
+		}
+	};
 
-      {modals.editBaseInfo && trip && (
-        <TripEditor
-          trip={trip}
-          onUpdate={async (updatedTrip) => {
-            updateTrip(updatedTrip)
-            await refreshTrip()
-            close('editBaseInfo')
-          }}
-          onDelete={() => {
-            removeTrip(trip.id)
-            router.push('/home')
-          }}
-          onClose={() => close('editBaseInfo')}
-          hideDestinationEdit={true}
-          initialEditing={true}
-          hideEditButton={true}
-          disableDateFields={Boolean(trip.is_template)}
-          disablePublishControls={Boolean(trip.is_template)}
-        />
-      )}
-    </>
-  )
+	const expandAllDays = () => {
+		setCollapsedDays(new Set());
+	};
+
+	const collapseAllDays = () => {
+		if (!trip?.days) return;
+		setCollapsedDays(new Set(trip.days.map((d) => d.id)));
+	};
+
+	// tripがnullの場合、ローディングまたはエラー表示
+	if (!trip) {
+		if (loading) {
+			return <Loading className="py-6" />;
+		}
+		if (error === "not-found") {
+			return (
+				<div className="p-4 text-center text-gray-500">
+					<p>Trip not found</p>
+				</div>
+			);
+		}
+		if (error === "forbidden") {
+			return (
+				<div className="p-4 text-center text-gray-500">
+					<p>Access forbidden</p>
+				</div>
+			);
+		}
+		return <Loading className="py-6" />;
+	}
+
+	// 所有者判定：userData.idとtrip.user_idを比較（userDataが存在する場合）
+	// または、canEditTripを使用（userDataが存在しない場合のフォールバック）
+	const isOwner =
+		Boolean(userData?.id && trip?.user_id && userData.id === trip.user_id) ||
+		Boolean(user && canEditTrip(user, trip));
+	const canEdit =
+		Boolean(userData?.id && trip?.user_id && userData.id === trip.user_id) ||
+		Boolean(user && canEditTrip(user, trip));
+	const isTemplateTrip = trip?.is_template;
+	// Publish可能な条件: 編集可能 かつ Private状態
+	// テンプレートのDraftバッジクリックとPublishボタン両方で使用
+	const canPublishTrip = canEdit && trip?.access_level === "private";
+
+	if (trip.access_level !== "public" && !isOwner) {
+		return (
+			<div className="p-4 text-gray-500">
+				This trip is private. Timeline is not available.
+			</div>
+		);
+	}
+
+	const templateDayCount = trip?.days?.length ?? 0;
+
+	return (
+		<>
+			<div className="p-0">
+				{/* Summary View */}
+				{currentView === "summary" && (
+					<>
+						<TripHeroSection
+							trip={trip}
+							canEdit={canEdit}
+							canReplica={
+								isTemplateTrip &&
+								trip.access_level === "public" &&
+								Boolean(user)
+							}
+							onReplica={isTemplateTrip ? handleOpenReplicaModal : undefined}
+							replicaLoading={replicaLoading}
+							canPublish={canPublishTrip}
+							onPublish={canPublishTrip ? () => publish() : undefined}
+							publishLoading={publishLoading}
+							onUpdateTrip={updateTrip}
+							onEditBaseInfoRequest={() => open("editBaseInfo")}
+							onDeleteTrip={() => {
+								removeTrip(trip.id);
+								router.push("/home");
+							}}
+						/>
+						<TripSummaryView
+							trip={trip}
+							summaryCollapsed={summaryCollapsed}
+							onToggleSummary={() => setSummaryCollapsed(!summaryCollapsed)}
+							getAllItineraries={getAllItineraries}
+						/>
+					</>
+				)}
+
+				{/* Itinerary View */}
+				{currentView === "itinerary" && (
+					<TripItineraryView
+						trip={trip}
+						canEdit={canEdit}
+						collapsedDays={collapsedDays}
+						selectedDayId={selectedDayId}
+						selectedItineraryId={selectedItineraryId}
+						loadingDayIds={loadingDayIds}
+						onToggleDayCollapse={onToggleDayCollapse}
+						onDayClick={onDayClick}
+						onAddSchedule={handleAddSchedule}
+						onInsertSchedule={handleInsertSchedule}
+						onAddDay={handleAddDay}
+						onDayDelete={handleDayDelete}
+						onScheduleUpdated={handleScheduleUpdated}
+						onMoveUp={handleMoveUp}
+						onMoveDown={handleMoveDown}
+						onMoveToDay={handleMoveToDay}
+						onDuplicateToDay={handleDuplicateToDay}
+						onScheduleDelete={handleScheduleDelete}
+						onItineraryClick={onItineraryClickSync}
+						onDragEnd={handleDragEnd}
+						onUpdateTrip={updateTrip}
+						onReorderItineraries={handleReorderItineraries}
+						expandAllDays={expandAllDays}
+						collapseAllDays={collapseAllDays}
+						scrollSyncEnabled={false}
+						onScrollSyncEnabledChange={() => {}}
+						isProgrammaticScrollRef={isProgrammaticScrollRef}
+						scrollToItineraryRef={scrollToItineraryRef}
+					/>
+				)}
+
+				{/* Checklist View */}
+				{currentView === "checklist" && (
+					<TripChecklistView tripId={trip.id} readOnly={!canEdit} />
+				)}
+			</div>
+
+			{/* Modals */}
+			<TemplateReplicaModal
+				isOpen={modals.replica}
+				onClose={() => {
+					if (replicaLoading) return;
+					close("replica");
+				}}
+				onConfirm={async (startDate) => {
+					const success = await replicate(startDate);
+					if (success) {
+						close("replica");
+					}
+				}}
+				dayCount={templateDayCount}
+				loading={replicaLoading}
+				templateTitle={trip.title}
+			/>
+
+			{modals.addSchedule && addScheduleContext?.dayId && (
+				<AddScheduleModal
+					isOpen={modals.addSchedule}
+					dayId={addScheduleContext.dayId}
+					onClose={handleAddScheduleModalClose}
+					onScheduleAdded={handleScheduleAdded}
+					insertAfterIndex={addScheduleContext.insertAfterIndex}
+				/>
+			)}
+
+			{modals.export && (
+				<ExportDataModal
+					isOpen={modals.export}
+					onClose={() => close("export")}
+					trip={trip}
+				/>
+			)}
+
+			{modals.editBaseInfo && trip && (
+				<TripEditor
+					trip={trip}
+					onUpdate={async (updatedTrip) => {
+						updateTrip(updatedTrip);
+						await refreshTrip();
+						close("editBaseInfo");
+					}}
+					onDelete={() => {
+						removeTrip(trip.id);
+						router.push("/home");
+					}}
+					onClose={() => close("editBaseInfo")}
+					hideDestinationEdit={true}
+					initialEditing={true}
+					hideEditButton={true}
+					disableDateFields={Boolean(trip.is_template)}
+					disablePublishControls={Boolean(trip.is_template)}
+				/>
+			)}
+		</>
+	);
 }

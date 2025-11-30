@@ -2,31 +2,37 @@
  * HTML Preview API
  * トリップ旅程をHTMLとしてプレビュー表示
  * PDFデザイン開発用のコスト削減機能
- * 
+ *
  * Authentication: Bearer token required
  * Authorization: Trip owner only
  * Plan Requirements: None (プレビューは無料)
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase/admin'
-import type { Trip, Day, Itinerary } from '@/lib/core/types'
-import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
-import { generateMagazinePdfHtml, type TripPdfData } from '@/lib/utils/magazine-pdf-template'
-import { generateTripUrl } from '@/lib/utils/app-url'
-import logger from '@/lib/core/logger'
-import { notFound } from '@/lib/core/error-handler'
-import { tripApi } from '@/lib/api/middleware'
-import { adminDayOperations } from '@/lib/firebase/admin-operation'
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase/admin";
+import type { Trip, Day, Itinerary } from "@/lib/core/types";
+import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
+import {
+	generateMagazinePdfHtml,
+	type TripPdfData,
+} from "@/lib/utils/magazine-pdf-template";
+import { generateTripUrl } from "@/lib/utils/app-url";
+import logger from "@/lib/core/logger";
+import { notFound } from "@/lib/core/error-handler";
+import { tripApi } from "@/lib/api/middleware";
+import { adminDayOperations } from "@/lib/firebase/admin-operation";
 
 // TripPdfData型はmagazine-pdf-templateからインポート
 
 /**
  * トリップデータをHTMLに変換（プレビュー用）
  */
-async function generatePreviewHtml(data: TripPdfData, tripUrl?: string): Promise<string> {
-  // プレビュー用の追加スタイルを追加
-  const previewStyles = `
+async function generatePreviewHtml(
+	data: TripPdfData,
+	tripUrl?: string,
+): Promise<string> {
+	// プレビュー用の追加スタイルを追加
+	const previewStyles = `
     <style>
       body { 
         background: #f8f9fa;
@@ -86,18 +92,18 @@ async function generatePreviewHtml(data: TripPdfData, tripUrl?: string): Promise
         .page { box-shadow: none; margin-bottom: 0; }
       }
     </style>
-  `
-  
-  const html = await generateMagazinePdfHtml(data, tripUrl)
-  
-  // プレビューヘッダーとコントロールを追加
-  const previewHeader = `
+  `;
+
+	const html = await generateMagazinePdfHtml(data, tripUrl);
+
+	// プレビューヘッダーとコントロールを追加
+	const previewHeader = `
     <div class="preview-header">
       📄 PDFデザインプレビュー - 旅行雑誌風デザイン
     </div>
-  `
-  
-  const previewControls = `
+  `;
+
+	const previewControls = `
     <div class="preview-controls">
       <button onclick="window.print()">🖨️ 印刷プレビュー</button>
       <button onclick="window.location.reload()">🔄 リロード</button>
@@ -106,100 +112,110 @@ async function generatePreviewHtml(data: TripPdfData, tripUrl?: string): Promise
         💡 このプレビューは旅行雑誌風PDFと同じデザインです。印刷プレビューでPDF出力時の見た目を確認できます。
       </div>
     </div>
-  `
-  
-  // HTMLにプレビュー要素を挿入
-  return html.replace(
-    '<head>',
-    `<head>${previewStyles}`
-  ).replace(
-    '<body>',
-    `<body>${previewHeader}${previewControls}`
-  )
-}
+  `;
 
+	// HTMLにプレビュー要素を挿入
+	return html
+		.replace("<head>", `<head>${previewStyles}`)
+		.replace("<body>", `<body>${previewHeader}${previewControls}`);
+}
 
 /**
  * トリップの所有権確認とデータ取得
  */
 async function validateTripOwnership(
-  tripId: string,
-  userId: string
+	tripId: string,
+	userId: string,
 ): Promise<{ trip: Trip; days: Day[] } | NextResponse> {
-  const tripRef = adminDb.collection('trips').doc(tripId)
-  const tripDoc = await tripRef.get()
+	const tripRef = adminDb.collection("trips").doc(tripId);
+	const tripDoc = await tripRef.get();
 
-  if (!tripDoc.exists) {
-    return notFound('Trip')
-  }
+	if (!tripDoc.exists) {
+		return notFound("Trip");
+	}
 
-  const trip = { id: tripDoc.id, ...tripDoc.data() } as Trip
-  logger.debug('Preview API: trip data retrieved', { tripUserId: trip.user_id, authUserId: userId })
+	const trip = { id: tripDoc.id, ...tripDoc.data() } as Trip;
+	logger.debug("Preview API: trip data retrieved", {
+		tripUserId: trip.user_id,
+		authUserId: userId,
+	});
 
-  if (trip.user_id !== userId) {
-    logger.error('Preview API: trip ownership check failed', { tripUserId: trip.user_id, authUserId: userId })
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+	if (trip.user_id !== userId) {
+		logger.error("Preview API: trip ownership check failed", {
+			tripUserId: trip.user_id,
+			authUserId: userId,
+		});
+		return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+	}
 
-  // 日程データを取得（独立したコレクションから）
-  const daysSnapshot = await adminDb
-    .collection('days')
-    .where('trip_id', '==', trip.id)
-    .orderBy('day_number', 'asc')
-    .get()
-    
-  logger.debug('Preview API: days collection query result', { 
-    tripId: trip.id, 
-    daysCount: daysSnapshot.size,
-    dayIds: daysSnapshot.docs.map(doc => doc.id)
-  })
-  
-  const days = daysSnapshot.docs.map((doc: any) => ({
-    id: doc.id,
-    ...doc.data()
-  })) as Day[]
+	// 日程データを取得（独立したコレクションから）
+	const daysSnapshot = await adminDb
+		.collection("days")
+		.where("trip_id", "==", trip.id)
+		.orderBy("day_number", "asc")
+		.get();
 
-  return { trip, days }
+	logger.debug("Preview API: days collection query result", {
+		tripId: trip.id,
+		daysCount: daysSnapshot.size,
+		dayIds: daysSnapshot.docs.map((doc) => doc.id),
+	});
+
+	const days = daysSnapshot.docs.map((doc: any) => ({
+		id: doc.id,
+		...doc.data(),
+	})) as Day[];
+
+	return { trip, days };
 }
 
 /**
  * 全旅程データを取得
  */
-async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPreviewData> {
-  const itinerariesByDay: Record<string, Itinerary[]> = {}
-  logger.debug('Preview API: fetching trip data', { tripId: trip.id, daysCount: days.length })
+async function fetchTripData(
+	trip: Trip,
+	days: Day[],
+): Promise<TripPreviewData> {
+	const itinerariesByDay: Record<string, Itinerary[]> = {};
+	logger.debug("Preview API: fetching trip data", {
+		tripId: trip.id,
+		daysCount: days.length,
+	});
 
-  // 各日程の旅程アイテムを取得（独立したコレクションから）
-  for (const day of days) {
-    logger.debug('Preview API: fetching itineraries for day', { dayId: day.id, dayDate: day.date })
-    
-    const itinerariesSnapshot = await adminDb
-      .collection('itineraries')
-      .where('day_id', '==', day.id)
-      .orderBy('sort_number', 'asc')
-      .get()
+	// 各日程の旅程アイテムを取得（独立したコレクションから）
+	for (const day of days) {
+		logger.debug("Preview API: fetching itineraries for day", {
+			dayId: day.id,
+			dayDate: day.date,
+		});
 
-    const itineraries = itinerariesSnapshot.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Itinerary[]
-    
-    logger.debug('Preview API: itineraries found for day', { 
-      dayId: day.id, 
-      itinerariesCount: itineraries.length,
-      itineraryNames: itineraries.map(i => i.title || 'No name'),
-      sampleItinerary: itineraries[0] // 最初の旅程アイテムの構造を確認
-    })
-    
-    itinerariesByDay[day.id] = itineraries
-  }
+		const itinerariesSnapshot = await adminDb
+			.collection("itineraries")
+			.where("day_id", "==", day.id)
+			.orderBy("sort_number", "asc")
+			.get();
 
-  logger.debug('Preview API: trip data fetch completed', { 
-    totalDays: days.length,
-    totalItineraries: Object.values(itinerariesByDay).flat().length
-  })
+		const itineraries = itinerariesSnapshot.docs.map((doc: any) => ({
+			id: doc.id,
+			...doc.data(),
+		})) as Itinerary[];
 
-  return { trip, days, itinerariesByDay }
+		logger.debug("Preview API: itineraries found for day", {
+			dayId: day.id,
+			itinerariesCount: itineraries.length,
+			itineraryNames: itineraries.map((i) => i.title || "No name"),
+			sampleItinerary: itineraries[0], // 最初の旅程アイテムの構造を確認
+		});
+
+		itinerariesByDay[day.id] = itineraries;
+	}
+
+	logger.debug("Preview API: trip data fetch completed", {
+		totalDays: days.length,
+		totalItineraries: Object.values(itinerariesByDay).flat().length,
+	});
+
+	return { trip, days, itinerariesByDay };
 }
 
 /**
@@ -207,37 +223,42 @@ async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPreviewData> 
  * トリップをHTMLとしてプレビュー表示
  */
 export const GET = tripApi(async (request: NextRequest, ctx) => {
-  // ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
-  const { userId } = ctx.auth!
-  const { tripId: resolvedTripId, trip } = ctx.trip!
-  const { tripSlug } = ctx.params!
-  
-  logger.debug('Preview API: request received', { tripSlug })
-  logger.debug('Preview API: authentication successful', { userId })
+	// ctx.auth, ctx.trip, ctx.params が保証されている（tripApi プリセットが認証・所有権チェックを実行）
+	const { userId } = ctx.auth!;
+	const { tripId: resolvedTripId, trip } = ctx.trip!;
+	const { tripSlug } = ctx.params!;
 
-  // Days を取得（tripApi は days を返さないため、別途取得が必要）
-  const days = await adminDayOperations.getDaysByTripId(resolvedTripId)
-  logger.debug('Preview API: ownership validated', { tripId: trip.id, tripUserId: (trip as any).user_id, userId, dayCount: days.length })
+	logger.debug("Preview API: request received", { tripSlug });
+	logger.debug("Preview API: authentication successful", { userId });
 
-    // 4. トリップデータの取得
-    const tripData = await fetchTripData(trip, days)
-    
-    // トリップURLの生成
-    const tripUrl = generateTripUrl((trip as any).user_slug, tripSlug)
+	// Days を取得（tripApi は days を返さないため、別途取得が必要）
+	const days = await adminDayOperations.getDaysByTripId(resolvedTripId);
+	logger.debug("Preview API: ownership validated", {
+		tripId: trip.id,
+		tripUserId: (trip as any).user_id,
+		userId,
+		dayCount: days.length,
+	});
 
-    // 5. HTMLの生成
-    const html = await generatePreviewHtml(tripData, tripUrl)
-    logger.debug('Preview API: HTML content generated', { 
-      htmlLength: html.length,
-      htmlPreview: html.substring(0, 500) + '...'
-    })
+	// 4. トリップデータの取得
+	const tripData = await fetchTripData(trip, days);
 
-  // 6. HTML返却
-  return new NextResponse(html, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'no-cache'
-    }
-  })
-})
+	// トリップURLの生成
+	const tripUrl = generateTripUrl((trip as any).user_slug, tripSlug);
+
+	// 5. HTMLの生成
+	const html = await generatePreviewHtml(tripData, tripUrl);
+	logger.debug("Preview API: HTML content generated", {
+		htmlLength: html.length,
+		htmlPreview: html.substring(0, 500) + "...",
+	});
+
+	// 6. HTML返却
+	return new NextResponse(html, {
+		status: 200,
+		headers: {
+			"Content-Type": "text/html; charset=utf-8",
+			"Cache-Control": "no-cache",
+		},
+	});
+});

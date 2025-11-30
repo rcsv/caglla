@@ -4,235 +4,286 @@
 
 /* Heading fonts - Apply Rajdhani to all headings */
 @layer base {
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-rajdhani), 'Rajdhani', sans-serif;
-  }
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		font-family: var(--font-rajdhani), "Rajdhani", sans-serif;
+	}
 }
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+	--foreground-rgb: 0, 0, 0;
+	--background-start-rgb: 214, 219, 220;
+	--background-end-rgb: 255, 255, 255;
 
-  /* Z-Index レイヤー定義（階層順） */
-  --z-index-map:                       0 ;   /* 地図（最下層） */
-  --z-index-main:                    100 ;   /* メインコンテンツ */
-  --z-index-main-content:            150 ;   /* メインコンテンツ詳細 */
-  --z-index-left-panel:              200 ;   /* 左メニュー */
-  --z-index-left-panel-content:      250 ;   /* 左メニュー詳細 */
-  --z-index-map-button:              300 ;   /* マップボタン */
-  --z-index-map-overlay:             350 ;   /* マップオーバーレイ */
-  --z-index-day-card-button:         375 ;   /* Dayカードの折りたたみ・展開ボタン */
-  --z-index-top-menu:                400 ;   /* トップメニュー */
-  --z-index-top-menu-content:        450 ;   /* トップメニュー詳細 */
-  --z-index-popup-menu:              500 ;   /* ポップアップメニュー */
-  --z-index-popup-menu-content:      550 ;   /* ポップアップメニュー詳細 */
-  --z-index-float-modal:             900 ;   /* モーダルダイアログ */
-  --z-index-float-modal-content:     950 ;   /* モーダルダイアログ詳細 */
-  --z-index-dialog-popup:            700 ;   /* ダイアログ内ポップアップ */
-  --z-index-dialog-overlay:          750 ;   /* ダイアログ内オーバーレイ */
-  --z-index-user-settings:           800 ;   /* ユーザー設定ダイアログ */
-  --z-index-user-settings-content:   850 ;   /* ユーザー設定ダイアログ詳細 */
-  
+	/* Z-Index レイヤー定義（階層順） */
+	--z-index-map: 0; /* 地図（最下層） */
+	--z-index-main: 100; /* メインコンテンツ */
+	--z-index-main-content: 150; /* メインコンテンツ詳細 */
+	--z-index-left-panel: 200; /* 左メニュー */
+	--z-index-left-panel-content: 250; /* 左メニュー詳細 */
+	--z-index-map-button: 300; /* マップボタン */
+	--z-index-map-overlay: 350; /* マップオーバーレイ */
+	--z-index-day-card-button: 375; /* Dayカードの折りたたみ・展開ボタン */
+	--z-index-top-menu: 400; /* トップメニュー */
+	--z-index-top-menu-content: 450; /* トップメニュー詳細 */
+	--z-index-popup-menu: 500; /* ポップアップメニュー */
+	--z-index-popup-menu-content: 550; /* ポップアップメニュー詳細 */
+	--z-index-float-modal: 900; /* モーダルダイアログ */
+	--z-index-float-modal-content: 950; /* モーダルダイアログ詳細 */
+	--z-index-dialog-popup: 700; /* ダイアログ内ポップアップ */
+	--z-index-dialog-overlay: 750; /* ダイアログ内オーバーレイ */
+	--z-index-user-settings: 800; /* ユーザー設定ダイアログ */
+	--z-index-user-settings-content: 850; /* ユーザー設定ダイアログ詳細 */
 }
 
 /* Z-Index CSS クラス定義 */
-.zidx-map {               z-index: var(--z-index-map); }
-.zidx-main {              z-index: var(--z-index-main); }
-.zidx-main-content {      z-index: var(--z-index-main-content); }
-.zidx-left-panel {        z-index: var(--z-index-left-panel); }
-.zidx-left-panel-content { z-index: var(--z-index-left-panel-content); }
-.zidx-map-button {        z-index: var(--z-index-map-button); }
-.zidx-map-overlay {       z-index: var(--z-index-map-overlay); }
-.zidx-day-card-button {   z-index: var(--z-index-day-card-button); }
-.zidx-top-menu {          z-index: var(--z-index-top-menu); }
-.zidx-top-menu-content {  z-index: var(--z-index-top-menu-content); }
-.zidx-popup-menu {        z-index: var(--z-index-popup-menu); }
-.zidx-popup-menu-content { z-index: var(--z-index-popup-menu-content); }
-.zidx-float-modal {       z-index: var(--z-index-float-modal); }
-.zidx-float-modal-content { z-index: var(--z-index-float-modal-content); }
-.zidx-dialog-popup {      z-index: var(--z-index-dialog-popup); }
-.zidx-dialog-overlay {    z-index: var(--z-index-dialog-overlay); }
-.zidx-user-settings {     z-index: var(--z-index-user-settings); }
-.zidx-user-settings-content { z-index: var(--z-index-user-settings-content); }
-
+.zidx-map {
+	z-index: var(--z-index-map);
+}
+.zidx-main {
+	z-index: var(--z-index-main);
+}
+.zidx-main-content {
+	z-index: var(--z-index-main-content);
+}
+.zidx-left-panel {
+	z-index: var(--z-index-left-panel);
+}
+.zidx-left-panel-content {
+	z-index: var(--z-index-left-panel-content);
+}
+.zidx-map-button {
+	z-index: var(--z-index-map-button);
+}
+.zidx-map-overlay {
+	z-index: var(--z-index-map-overlay);
+}
+.zidx-day-card-button {
+	z-index: var(--z-index-day-card-button);
+}
+.zidx-top-menu {
+	z-index: var(--z-index-top-menu);
+}
+.zidx-top-menu-content {
+	z-index: var(--z-index-top-menu-content);
+}
+.zidx-popup-menu {
+	z-index: var(--z-index-popup-menu);
+}
+.zidx-popup-menu-content {
+	z-index: var(--z-index-popup-menu-content);
+}
+.zidx-float-modal {
+	z-index: var(--z-index-float-modal);
+}
+.zidx-float-modal-content {
+	z-index: var(--z-index-float-modal-content);
+}
+.zidx-dialog-popup {
+	z-index: var(--z-index-dialog-popup);
+}
+.zidx-dialog-overlay {
+	z-index: var(--z-index-dialog-overlay);
+}
+.zidx-user-settings {
+	z-index: var(--z-index-user-settings);
+}
+.zidx-user-settings-content {
+	z-index: var(--z-index-user-settings-content);
+}
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+	:root {
+		--foreground-rgb: 255, 255, 255;
+		--background-start-rgb: 0, 0, 0;
+		--background-end-rgb: 0, 0, 0;
+	}
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+	color: rgb(var(--foreground-rgb));
+	background: linear-gradient(
+			to bottom,
+			transparent,
+			rgb(var(--background-end-rgb))
+		)
+		rgb(var(--background-start-rgb));
 }
 
 /* ===== Hero big text with image clip ===== */
 .bg-text-image {
-  background-image: url('/upgraded-points.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: bg-pan-vertical 40s linear infinite alternate;
+	background-image: url("/upgraded-points.jpg");
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	animation: bg-pan-vertical 40s linear infinite alternate;
 }
 
 @keyframes bg-pan-vertical {
-  0% { background-position: center top; }
-  100% { background-position: center bottom; }
+	0% {
+		background-position: center top;
+	}
+	100% {
+		background-position: center bottom;
+	}
 }
 
 /* Notification animation */
 @keyframes slideInFromTop {
-  0% {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+	0% {
+		opacity: 0;
+		transform: translateY(-20px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 /* Confirm Dialog animations */
 @keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
 }
 
 @keyframes slideInScale {
-  0% {
-    opacity: 0;
-    transform: scale(0.95) translateY(-10px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+	0% {
+		opacity: 0;
+		transform: scale(0.95) translateY(-10px);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
 }
 
 /* Left rail accent for about page */
 .page-rail {
-  position: relative;
-  padding-left: 2.5rem;
-  --rail-offset: 1.5rem;
+	position: relative;
+	padding-left: 2.5rem;
+	--rail-offset: 1.5rem;
 }
 
 .page-rail::before {
-  content: "";
-  position: absolute;
-  left: var(--rail-offset);
-  top: -4rem;
-  bottom: -4rem;
-  width: 1px;
-  background: linear-gradient(180deg, rgba(148, 163, 184, 0.35) 0%, rgba(148, 163, 184, 0.1) 100%);
+	content: "";
+	position: absolute;
+	left: var(--rail-offset);
+	top: -4rem;
+	bottom: -4rem;
+	width: 1px;
+	background: linear-gradient(
+		180deg,
+		rgba(148, 163, 184, 0.35) 0%,
+		rgba(148, 163, 184, 0.1) 100%
+	);
 }
 
 @media (max-width: 639px) {
-  .page-rail {
-    padding-left: 0;
-    --rail-offset: 0;
-  }
-  .page-rail::before {
-    display: none;
-  }
+	.page-rail {
+		padding-left: 0;
+		--rail-offset: 0;
+	}
+	.page-rail::before {
+		display: none;
+	}
 }
 
 @media (min-width: 768px) {
-  .page-rail {
-    padding-left: 3.5rem;
-    --rail-offset: 2rem;
-  }
+	.page-rail {
+		padding-left: 3.5rem;
+		--rail-offset: 2rem;
+	}
 }
 
 .headline-marker {
-  position: relative;
-  padding-left: clamp(2rem, 4vw, 4rem);
+	position: relative;
+	padding-left: clamp(2rem, 4vw, 4rem);
 }
 
 .headline-marker::before {
-  content: "";
-  position: absolute;
-  left: calc(var(--rail-offset) - 3px);
-  top: 0;
-  bottom: 0;
-  width: 6px;
-  border-radius: 0;
-  background: linear-gradient(180deg, rgba(5, 150, 105, 1) 0%, rgba(52, 211, 153, 1) 100%);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+	content: "";
+	position: absolute;
+	left: calc(var(--rail-offset) - 3px);
+	top: 0;
+	bottom: 0;
+	width: 6px;
+	border-radius: 0;
+	background: linear-gradient(
+		180deg,
+		rgba(5, 150, 105, 1) 0%,
+		rgba(52, 211, 153, 1) 100%
+	);
+	box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
 }
 
 * {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
 }
 
 html,
 body {
-  max-width: 100vw;
-  overflow-x: hidden;
+	max-width: 100vw;
+	overflow-x: hidden;
 }
 
 /* スクロールバーを非表示にする */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+	-ms-overflow-style: none; /* IE and Edge */
+	scrollbar-width: none; /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+	display: none; /* Chrome, Safari and Opera */
 }
 
 /* 左ペインから右ペインへのドロップシャドウ効果 */
 .left-pane-shadow {
-  box-shadow: 
-    12px 0 24px rgba(0, 0, 0, 0.15),
-    6px 0 12px rgba(0, 0, 0, 0.1),
-    0 6px 12px rgba(0, 0, 0, 0.1);
-  position: relative;
-  z-index: 10;
+	box-shadow:
+		12px 0 24px rgba(0, 0, 0, 0.15),
+		6px 0 12px rgba(0, 0, 0, 0.1),
+		0 6px 12px rgba(0, 0, 0, 0.1);
+	position: relative;
+	z-index: 10;
 }
 
 /* メインコンテンツ用のゆったりとした影 */
 .main-content-shadow {
-  box-shadow: 
-    16px 0 32px rgba(0, 0, 0, 0.12),
-    8px 0 16px rgba(0, 0, 0, 0.08),
-    0 8px 16px rgba(0, 0, 0, 0.08);
-  position: relative;
-  z-index: 10;
+	box-shadow:
+		16px 0 32px rgba(0, 0, 0, 0.12),
+		8px 0 16px rgba(0, 0, 0, 0.08),
+		0 8px 16px rgba(0, 0, 0, 0.08);
+	position: relative;
+	z-index: 10;
 }
 
 /* フローティングヘッダに隠れないよう、スクロール時の上部余白を確保 */
 .anchor-offset {
-  scroll-margin-top: 60px; /* FloatingTitleBar: h-[53px] のため余裕を加味して60px */
+	scroll-margin-top: 60px; /* FloatingTitleBar: h-[53px] のため余裕を加味して60px */
 }
 
 /* 左メニューからメインコンテンツへのドロップシャドウ効果（768px以下限定） */
 @media (max-width: 768px) {
-  .left-nav-shadow {
-    box-shadow: 
-      8px 0 16px rgba(0, 0, 0, 0.12),
-      4px 0 8px rgba(0, 0, 0, 0.08),
-      0 4px 8px rgba(0, 0, 0, 0.08);
-    position: relative;
-    z-index: 20;
-  }
+	.left-nav-shadow {
+		box-shadow:
+			8px 0 16px rgba(0, 0, 0, 0.12),
+			4px 0 8px rgba(0, 0, 0, 0.08),
+			0 4px 8px rgba(0, 0, 0, 0.08);
+		position: relative;
+		z-index: 20;
+	}
 }
 
 /* メインコンテンツエリアの幅制御
@@ -240,230 +291,274 @@ body {
  * モバイル・タブレットサイズでの最小幅のみ CSS で保証
  */
 .main-content-scrollable {
-  min-width: 400px;
+	min-width: 400px;
 }
 
 /* 右ペイン（マップ側）のレスポンシブ制御 */
 .right-pane-responsive {
-  /* デフォルト（md以上）: 335px */
-  width: 300px;
+	/* デフォルト（md以上）: 335px */
+	width: 300px;
 }
 
 /* lg以上（1024px以上）: 400px */
 @media (min-width: 1024px) {
-  .right-pane-responsive {
-    width: auto;
-    min-width: 300px;
-    flex: 1;
-  }
+	.right-pane-responsive {
+		width: auto;
+		min-width: 300px;
+		flex: 1;
+	}
 }
 
 /* 1200px-1520pxの範囲で地図側を優先的に縮小 */
 @media (min-width: 1024px) and (max-width: 1520px) {
-  .right-pane-responsive {
-    width: auto;
-    min-width: 300px;
-    flex: 1;
-  }
+	.right-pane-responsive {
+		width: auto;
+		min-width: 300px;
+		flex: 1;
+	}
 }
 
 /* 2xl以上（1536px以上）: 450px */
 @media (min-width: 1536px) {
-  .right-pane-responsive {
-    width: auto;
-    flex: 1;
-  }
+	.right-pane-responsive {
+		width: auto;
+		flex: 1;
+	}
 }
 
 /* 3xl以上（1920px以上）: 500px */
 @media (min-width: 1920px) {
-  .right-pane-responsive {
-    width: auto;
-    flex: 1;
-  }
+	.right-pane-responsive {
+		width: auto;
+		flex: 1;
+	}
 }
 
 /* 4xl以上（2560px以上）: flex-1で可変幅 */
 @media (min-width: 2560px) {
-  .right-pane-responsive {
-    width: auto;
-    flex: 1;
-  }
+	.right-pane-responsive {
+		width: auto;
+		flex: 1;
+	}
 }
 
 /* ===== Tropical Joy Buttons ===== */
 /* Base */
 .btn-base {
-  @apply inline-flex items-center justify-center font-semibold rounded-md shadow-md hover:shadow-lg transition active:scale-[0.99]
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed
-    [&>svg]:-ms-0.5 [&>svg]:me-1.5;
+	@apply inline-flex items-center justify-center font-semibold rounded-md shadow-md hover:shadow-lg transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed [&>svg]:-ms-0.5 [&>svg]:me-1.5;
 }
 
 /* Sizes */
-.btn-sm { @apply h-9 px-3 text-sm; }
-.btn-md { @apply h-10 px-4 text-sm; }
-.btn-lg { @apply h-12 px-6 text-base; }
+.btn-sm {
+	@apply h-9 px-3 text-sm;
+}
+.btn-md {
+	@apply h-10 px-4 text-sm;
+}
+.btn-lg {
+	@apply h-12 px-6 text-base;
+}
 
 /* Variants */
-.btn-primary   { @apply bg-gradient-to-r from-emerald-500 to-lime-500 text-white hover:from-emerald-600 hover:to-lime-600 focus-visible:ring-emerald-500; }
-.btn-secondary { @apply bg-gradient-to-r from-sky-400 to-blue-500 text-white hover:from-sky-500 hover:to-blue-600 focus-visible:ring-sky-500; }
-.btn-accent    { @apply bg-gradient-to-r from-orange-400 to-rose-500 text-white hover:from-orange-500 hover:to-rose-600 focus-visible:ring-rose-500; }
-.btn-outline   { @apply border border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50 focus-visible:ring-emerald-500; }
-.btn-ghost     { @apply bg-transparent text-emerald-700 hover:bg-emerald-50 focus-visible:ring-emerald-500; }
-.btn-soft      { @apply bg-emerald-50 text-emerald-700 hover:bg-emerald-100 focus-visible:ring-emerald-400; }
-.btn-danger    { @apply bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 focus-visible:ring-red-500; }
-.btn-disabled  { @apply bg-gray-200 text-gray-500 shadow-none; }
+.btn-primary {
+	@apply bg-gradient-to-r from-emerald-500 to-lime-500 text-white hover:from-emerald-600 hover:to-lime-600 focus-visible:ring-emerald-500;
+}
+.btn-secondary {
+	@apply bg-gradient-to-r from-sky-400 to-blue-500 text-white hover:from-sky-500 hover:to-blue-600 focus-visible:ring-sky-500;
+}
+.btn-accent {
+	@apply bg-gradient-to-r from-orange-400 to-rose-500 text-white hover:from-orange-500 hover:to-rose-600 focus-visible:ring-rose-500;
+}
+.btn-outline {
+	@apply border border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50 focus-visible:ring-emerald-500;
+}
+.btn-ghost {
+	@apply bg-transparent text-emerald-700 hover:bg-emerald-50 focus-visible:ring-emerald-500;
+}
+.btn-soft {
+	@apply bg-emerald-50 text-emerald-700 hover:bg-emerald-100 focus-visible:ring-emerald-400;
+}
+.btn-danger {
+	@apply bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 focus-visible:ring-red-500;
+}
+.btn-disabled {
+	@apply bg-gray-200 text-gray-500 shadow-none;
+}
 
 /* Dark mode (optional) */
-.dark .btn-outline { @apply border-emerald-400 text-emerald-200 hover:bg-emerald-900/30; }
-.dark .btn-ghost   { @apply text-emerald-200 hover:bg-emerald-900/30; }
-.dark .btn-soft    { @apply bg-emerald-900/40 text-emerald-200 hover:bg-emerald-900/60; }
+.dark .btn-outline {
+	@apply border-emerald-400 text-emerald-200 hover:bg-emerald-900/30;
+}
+.dark .btn-ghost {
+	@apply text-emerald-200 hover:bg-emerald-900/30;
+}
+.dark .btn-soft {
+	@apply bg-emerald-900/40 text-emerald-200 hover:bg-emerald-900/60;
+}
 
 /* ===== Tropical Joy Form Elements ===== */
 /* Input */
 .tj-input {
-  @apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 placeholder-gray-400
-    focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition disabled:bg-gray-100 disabled:text-gray-500;
+	@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition disabled:bg-gray-100 disabled:text-gray-500;
 }
-.tj-input:hover { @apply border-emerald-400; }
+.tj-input:hover {
+	@apply border-emerald-400;
+}
 
 /* Select */
 .tj-select {
-  @apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 appearance-none bg-no-repeat
-    focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
-  background-image: url("data:image/svg+xml;utf8,<svg fill='none' stroke='%2334d399' stroke-width='2' viewBox='0 0 24 24'><path d='M6 9l6 6 6-6'/></svg>");
-  background-position: right .75rem center;
-  background-size: 1rem 1rem;
+	@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 appearance-none bg-no-repeat focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
+	background-image: url("data:image/svg+xml;utf8,<svg fill='none' stroke='%2334d399' stroke-width='2' viewBox='0 0 24 24'><path d='M6 9l6 6 6-6'/></svg>");
+	background-position: right 0.75rem center;
+	background-size: 1rem 1rem;
 }
 
 /* Textarea */
 .tj-textarea {
-  @apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 resize-y
-    focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
+	@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 resize-y focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
 }
 
 /* Toggle */
-.tj-toggle { @apply relative inline-block w-12 h-6; }
-.tj-toggle input { @apply opacity-0 w-0 h-0; }
-.tj-toggle .slider { @apply absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full transition; }
-.tj-toggle input:checked + .slider { @apply bg-gradient-to-r from-emerald-500 to-lime-500; }
-.tj-toggle .slider::before { content: ""; @apply absolute h-5 w-5 left-0.5 bottom-0.5 bg-white rounded-full transition; }
-.tj-toggle input:checked + .slider::before { @apply translate-x-6; }
+.tj-toggle {
+	@apply relative inline-block w-12 h-6;
+}
+.tj-toggle input {
+	@apply opacity-0 w-0 h-0;
+}
+.tj-toggle .slider {
+	@apply absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full transition;
+}
+.tj-toggle input:checked + .slider {
+	@apply bg-gradient-to-r from-emerald-500 to-lime-500;
+}
+.tj-toggle .slider::before {
+	content: "";
+	@apply absolute h-5 w-5 left-0.5 bottom-0.5 bg-white rounded-full transition;
+}
+.tj-toggle input:checked + .slider::before {
+	@apply translate-x-6;
+}
 
 /* Dark mode for forms */
-.dark .tj-input, .dark .tj-select, .dark .tj-textarea {
-  @apply bg-slate-800 text-gray-100 border-slate-600 placeholder-gray-500;
+.dark .tj-input,
+.dark .tj-select,
+.dark .tj-textarea {
+	@apply bg-slate-800 text-gray-100 border-slate-600 placeholder-gray-500;
 }
-.dark .tj-input:focus, .dark .tj-select:focus, .dark .tj-textarea:focus { @apply border-emerald-400 ring-emerald-400; }
+.dark .tj-input:focus,
+.dark .tj-select:focus,
+.dark .tj-textarea:focus {
+	@apply border-emerald-400 ring-emerald-400;
+}
 
 /* ===== チェックリストビュー専用レイアウト ===== */
 /* チェックリストビュー時のメインコンテンツ全幅表示 */
 .main-content-full-width {
-  width: 100%;
-  max-width: 100%;
+	width: 100%;
+	max-width: 100%;
 }
 
 /* 右ペインの詳細定義は既存セクション（.right-pane-responsive）を使用する */
 
 /* ティアドロップ形状のマーカー（左ペイン用） */
 .teardrop-marker-left {
-  width: 30px;
-  height: 30px;
-  position: relative;
-  background-color: #3B82F6;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
-  transition: all 0.2s ease;
+	width: 30px;
+	height: 30px;
+	position: relative;
+	background-color: #3b82f6;
+	border-radius: 50% 50% 50% 0;
+	transform: rotate(-45deg);
+	box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+	transition: all 0.2s ease;
 }
 
 .teardrop-marker-left.selected {
-  background-color: #EF4444;
-  transform: rotate(-45deg) scale(1.1);
-  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+	background-color: #ef4444;
+	transform: rotate(-45deg) scale(1.1);
+	box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 .teardrop-label-left {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(45deg);
-  color: white;
-  font-weight: bold;
-  font-size: 12px;
-  pointer-events: none;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%) rotate(45deg);
+	color: white;
+	font-weight: bold;
+	font-size: 12px;
+	pointer-events: none;
 }
 
 /* マップ用ティアドロップマーカー */
 .teardrop-marker {
-  width: 30px;
-  height: 30px;
-  position: relative;
-  background-color: #3B82F6;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
-  cursor: pointer;
-  transition: all 0.2s ease;
+	width: 30px;
+	height: 30px;
+	position: relative;
+	background-color: #3b82f6;
+	border-radius: 50% 50% 50% 0;
+	transform: rotate(-45deg);
+	box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+	cursor: pointer;
+	transition: all 0.2s ease;
 }
 
 .teardrop-marker:hover {
-  transform: rotate(-45deg) scale(1.1);
-  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+	transform: rotate(-45deg) scale(1.1);
+	box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 .teardrop-marker.selected {
-  background-color: #EF4444;
-  transform: rotate(-45deg) scale(1.2);
-  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+	background-color: #ef4444;
+	transform: rotate(-45deg) scale(1.2);
+	box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
 }
 
 .teardrop-label {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(45deg);
-  color: white;
-  font-weight: bold;
-  font-size: 12px;
-  pointer-events: none;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%) rotate(45deg);
+	color: white;
+	font-weight: bold;
+	font-size: 12px;
+	pointer-events: none;
 }
 
 /* Google Maps 標準情報ウィンドウを非表示 */
 /* POIクリック時の標準吹き出しを抑止し、カスタムダイアログのみを表示 */
 .gm-style-iw {
-  display: none !important;
+	display: none !important;
 }
 
 .gm-style-iw-c {
-  display: none !important;
+	display: none !important;
 }
 
 .gm-style-iw-d {
-  display: none !important;
+	display: none !important;
 }
 
 .gm-style-iw-t {
-  display: none !important;
+	display: none !important;
 }
 
 .gm-style-iw-t::after {
-  display: none !important;
+	display: none !important;
 }
 
 .gm-style-iw-t::before {
-  display: none !important;
+	display: none !important;
 }
 
 /* 追加の吹き出し矢印要素を非表示 */
 .gm-style-iw-b {
-  display: none !important;
+	display: none !important;
 }
 
 .gm-style-iw-b::after {
-  display: none !important;
+	display: none !important;
 }
 
 .gm-style-iw-b::before {
-  display: none !important;
+	display: none !important;
 }

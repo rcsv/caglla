@@ -1,46 +1,46 @@
-import type { Metadata } from 'next'
-import { Inter, Rajdhani } from 'next/font/google'
-import { cookies } from 'next/headers'
-import './globals.css'
-import { AuthProvider } from '@/lib/contexts/auth'
-import { SubscriptionProvider } from '@/lib/contexts/subscription'
-import { UserDataProvider } from '@/lib/contexts/user-data'
-import { NotificationProvider } from '@/lib/contexts/notification'
-import { isSupportedLanguage } from '@/lib/utils/language'
-import type { SupportedLanguage } from '@/lib/core/types'
+import type { Metadata } from "next";
+import { Inter, Rajdhani } from "next/font/google";
+import { cookies } from "next/headers";
+import "./globals.css";
+import { AuthProvider } from "@/lib/contexts/auth";
+import { SubscriptionProvider } from "@/lib/contexts/subscription";
+import { UserDataProvider } from "@/lib/contexts/user-data";
+import { NotificationProvider } from "@/lib/contexts/notification";
+import { isSupportedLanguage } from "@/lib/utils/language";
+import type { SupportedLanguage } from "@/lib/core/types";
 
-const inter = Inter({ subsets: ['latin'] })
-const rajdhani = Rajdhani({ 
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-rajdhani',
-})
+const inter = Inter({ subsets: ["latin"] });
+const rajdhani = Rajdhani({
+	subsets: ["latin"],
+	weight: ["300", "400", "500", "600", "700"],
+	variable: "--font-rajdhani",
+});
 
 export const metadata: Metadata = {
-  title: 'Caglla - Travel Manager',
-  description: 'Personal travel itinerary management app',
-}
+	title: "Caglla - Travel Manager",
+	description: "Personal travel itinerary management app",
+};
 
 export default async function RootLayout({
-  children,
+	children,
 }: {
-  children: React.ReactNode
+	children: React.ReactNode;
 }) {
-  // Cookieから言語設定を取得（サーバーサイド）
-  const cookieStore = await cookies()
-  const languageCookie = cookieStore.get('language')?.value || ''
-  
-  // サポート言語のみ許可、デフォルトは'en'
-  const lang: SupportedLanguage = isSupportedLanguage(languageCookie) 
-    ? languageCookie 
-    : 'en'
-  
-  return (
-    <html lang={lang}>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+	// Cookieから言語設定を取得（サーバーサイド）
+	const cookieStore = await cookies();
+	const languageCookie = cookieStore.get("language")?.value || "";
+
+	// サポート言語のみ許可、デフォルトは'en'
+	const lang: SupportedLanguage = isSupportedLanguage(languageCookie)
+		? languageCookie
+		: "en";
+
+	return (
+		<html lang={lang}>
+			<head>
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `
               // Suppress content-visibility warnings in development
               if (typeof window !== 'undefined' && typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
                 const originalWarn = console.warn;
@@ -76,20 +76,18 @@ export default async function RootLayout({
                 });
               }
             `,
-          }}
-        />
-      </head>
-      <body className={`${inter.className} ${rajdhani.variable}`}>
-        <AuthProvider>
-          <UserDataProvider>
-            <SubscriptionProvider>
-              <NotificationProvider>
-                {children}
-              </NotificationProvider>
-            </SubscriptionProvider>
-          </UserDataProvider>
-        </AuthProvider>
-      </body>
-    </html>
-  )
+					}}
+				/>
+			</head>
+			<body className={`${inter.className} ${rajdhani.variable}`}>
+				<AuthProvider>
+					<UserDataProvider>
+						<SubscriptionProvider>
+							<NotificationProvider>{children}</NotificationProvider>
+						</SubscriptionProvider>
+					</UserDataProvider>
+				</AuthProvider>
+			</body>
+		</html>
+	);
 }

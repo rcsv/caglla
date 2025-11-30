@@ -3,7 +3,7 @@
  * FirestoreDate型（Timestamp | Date | string）をDate型に統一的に変換
  */
 
-import type { FirestoreDate } from '@/lib/core/types'
+import type { FirestoreDate } from "@/lib/core/types";
 
 /**
  * FirestoreDateをDate型に変換
@@ -11,41 +11,41 @@ import type { FirestoreDate } from '@/lib/core/types'
  * @returns Date オブジェクト
  */
 export function toDate(timestamp: FirestoreDate | undefined | null): Date {
-  if (!timestamp) {
-    throw new Error('Invalid timestamp: undefined or null')
-  }
+	if (!timestamp) {
+		throw new Error("Invalid timestamp: undefined or null");
+	}
 
-  // 既にDate型の場合
-  if (timestamp instanceof Date) {
-    return timestamp
-  }
+	// 既にDate型の場合
+	if (timestamp instanceof Date) {
+		return timestamp;
+	}
 
-  // string型の場合
-  if (typeof timestamp === 'string') {
-    const date = new Date(timestamp)
-    if (isNaN(date.getTime())) {
-      throw new Error(`Invalid date string: ${timestamp}`)
-    }
-    return date
-  }
+	// string型の場合
+	if (typeof timestamp === "string") {
+		const date = new Date(timestamp);
+		if (isNaN(date.getTime())) {
+			throw new Error(`Invalid date string: ${timestamp}`);
+		}
+		return date;
+	}
 
-  // Firestore Timestamp型の場合（toDateメソッドを持つ）
-  if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) {
-    if (typeof timestamp.toDate === 'function') {
-      return timestamp.toDate()
-    }
-  }
+	// Firestore Timestamp型の場合（toDateメソッドを持つ）
+	if (timestamp && typeof timestamp === "object" && "toDate" in timestamp) {
+		if (typeof timestamp.toDate === "function") {
+			return timestamp.toDate();
+		}
+	}
 
-  // Firestore Timestamp の JSON シリアライズ形式（{_seconds, _nanoseconds}）
-  if (timestamp && typeof timestamp === 'object' && '_seconds' in timestamp) {
-    const seconds = (timestamp as any)._seconds
-    const nanoseconds = (timestamp as any)._nanoseconds || 0
-    if (typeof seconds === 'number' && !isNaN(seconds)) {
-      return new Date(seconds * 1000 + nanoseconds / 1000000)
-    }
-  }
+	// Firestore Timestamp の JSON シリアライズ形式（{_seconds, _nanoseconds}）
+	if (timestamp && typeof timestamp === "object" && "_seconds" in timestamp) {
+		const seconds = (timestamp as any)._seconds;
+		const nanoseconds = (timestamp as any)._nanoseconds || 0;
+		if (typeof seconds === "number" && !isNaN(seconds)) {
+			return new Date(seconds * 1000 + nanoseconds / 1000000);
+		}
+	}
 
-  throw new Error(`Unsupported timestamp type: ${typeof timestamp}`)
+	throw new Error(`Unsupported timestamp type: ${typeof timestamp}`);
 }
 
 /**
@@ -53,16 +53,18 @@ export function toDate(timestamp: FirestoreDate | undefined | null): Date {
  * @param timestamp FirestoreDate (Timestamp | Date | string) | undefined | null
  * @returns Date オブジェクト または null
  */
-export function toDateOrNull(timestamp: FirestoreDate | undefined | null): Date | null {
-  if (!timestamp) {
-    return null
-  }
+export function toDateOrNull(
+	timestamp: FirestoreDate | undefined | null,
+): Date | null {
+	if (!timestamp) {
+		return null;
+	}
 
-  try {
-    return toDate(timestamp)
-  } catch (error) {
-    return null
-  }
+	try {
+		return toDate(timestamp);
+	} catch (error) {
+		return null;
+	}
 }
 
 /**
@@ -70,10 +72,12 @@ export function toDateOrNull(timestamp: FirestoreDate | undefined | null): Date 
  * @param timestamps FirestoreDate配列
  * @returns Date配列
  */
-export function toDates(timestamps: (FirestoreDate | undefined | null)[]): Date[] {
-  return timestamps
-    .map(toDateOrNull)
-    .filter((date): date is Date => date !== null)
+export function toDates(
+	timestamps: (FirestoreDate | undefined | null)[],
+): Date[] {
+	return timestamps
+		.map(toDateOrNull)
+		.filter((date): date is Date => date !== null);
 }
 
 /**
@@ -83,22 +87,22 @@ export function toDates(timestamps: (FirestoreDate | undefined | null)[]): Date[
  * @returns 変換後のオブジェクト
  */
 export function convertDatesInObject<T extends Record<string, any>>(
-  obj: T,
-  dateFields: (keyof T)[]
+	obj: T,
+	dateFields: (keyof T)[],
 ): T {
-  const converted = { ...obj }
+	const converted = { ...obj };
 
-  for (const field of dateFields) {
-    if (converted[field]) {
-      try {
-        converted[field] = toDate(converted[field] as FirestoreDate) as any
-      } catch (error) {
-        // 変換に失敗した場合はそのまま残す
-      }
-    }
-  }
+	for (const field of dateFields) {
+		if (converted[field]) {
+			try {
+				converted[field] = toDate(converted[field] as FirestoreDate) as any;
+			} catch (error) {
+				// 変換に失敗した場合はそのまま残す
+			}
+		}
+	}
 
-  return converted
+	return converted;
 }
 
 /**
@@ -107,7 +111,13 @@ export function convertDatesInObject<T extends Record<string, any>>(
  * @returns 変換後のドキュメント
  */
 export function convertStandardDates<T extends Record<string, any>>(doc: T): T {
-  return convertDatesInObject(doc, ['created_at', 'updated_at', 'start_date', 'end_date', 'date'] as (keyof T)[])
+	return convertDatesInObject(doc, [
+		"created_at",
+		"updated_at",
+		"start_date",
+		"end_date",
+		"date",
+	] as (keyof T)[]);
 }
 
 /**
@@ -116,13 +126,12 @@ export function convertStandardDates<T extends Record<string, any>>(doc: T): T {
  * @returns 有効な日付かどうか
  */
 export function isValidDate(date: any): boolean {
-  if (!date) return false
+	if (!date) return false;
 
-  try {
-    const converted = toDate(date)
-    return !isNaN(converted.getTime())
-  } catch (error) {
-    return false
-  }
+	try {
+		const converted = toDate(date);
+		return !isNaN(converted.getTime());
+	} catch (error) {
+		return false;
+	}
 }
-

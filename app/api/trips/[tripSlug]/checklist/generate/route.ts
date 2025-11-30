@@ -1,148 +1,170 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { adminDb } from '@/lib/firebase/admin'
-import { checklistGenerator } from '@/lib/checklist-generator'
-import logger from '@/lib/core/logger'
-import { PlacesCache, Trip, Day, Itinerary } from '@/lib/core/types'
-import { COLLECTIONS } from '@/lib/firebase/firestore'
-import { adminTripOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
-import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
-import { notFound } from '@/lib/core/error-handler'
-import { authApi } from '@/lib/api/middleware'
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase/admin";
+import { checklistGenerator } from "@/lib/checklist-generator";
+import logger from "@/lib/core/logger";
+import { PlacesCache, Trip, Day, Itinerary } from "@/lib/core/types";
+import { COLLECTIONS } from "@/lib/firebase/firestore";
+import {
+	adminTripOperations,
+	adminUserOperations,
+} from "@/lib/firebase/admin-operation";
+import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
+import { notFound } from "@/lib/core/error-handler";
+import { authApi } from "@/lib/api/middleware";
 
 export const POST = authApi(async (request: NextRequest, ctx) => {
-  // ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
-  const { tripSlug } = ctx.params!
-  const { userId: googleId } = ctx.auth!
+	// ctx.auth, ctx.params が保証されている（authApi プリセットが認証チェックを実行）
+	const { tripSlug } = ctx.params!;
+	const { userId: googleId } = ctx.auth!;
 
-    // ユーザー情報取得（auth_uid で検索、後方互換性のため google_id もチェック）
-    // Phase 1-1.5: 認証プロバイダーマルチ対応化
-    const user = await adminUserOperations.getUserByAuthUid(googleId)
-    if (!user) {
-      return notFound('User')
-    }
+	// ユーザー情報取得（auth_uid で検索、後方互換性のため google_id もチェック）
+	// Phase 1-1.5: 認証プロバイダーマルチ対応化
+	const user = await adminUserOperations.getUserByAuthUid(googleId);
+	if (!user) {
+		return notFound("User");
+	}
 
-    // ユーザーの居住国コードを place_cache から解決（home_place_id 優先）
-    if (user.preferences?.home_place_id && !user.preferences.home_country_code) {
-      try {
-        const cacheDoc = await adminDb.collection(COLLECTIONS.PLACES_CACHE).doc(user.preferences.home_place_id).get()
-        if (cacheDoc.exists) {
-          const place = cacheDoc.data() as PlacesCache
-          const countryComponent = place.address_components?.find(c => c.types.includes('country'))
-          if (countryComponent?.short_name) {
-            user.preferences.home_country_code = countryComponent.short_name
-          }
-          // 住所名の補完
-          if (!user.preferences.home_address) {
-            user.preferences.home_address = place.name || place.formatted_address
-          }
-        }
-      } catch (e) {
-        logger.warn('Failed to resolve user home country from place cache', e)
-      }
-    }
+	// ユーザーの居住国コードを place_cache から解決（home_place_id 優先）
+	if (user.preferences?.home_place_id && !user.preferences.home_country_code) {
+		try {
+			const cacheDoc = await adminDb
+				.collection(COLLECTIONS.PLACES_CACHE)
+				.doc(user.preferences.home_place_id)
+				.get();
+			if (cacheDoc.exists) {
+				const place = cacheDoc.data() as PlacesCache;
+				const countryComponent = place.address_components?.find((c) =>
+					c.types.includes("country"),
+				);
+				if (countryComponent?.short_name) {
+					user.preferences.home_country_code = countryComponent.short_name;
+				}
+				// 住所名の補完
+				if (!user.preferences.home_address) {
+					user.preferences.home_address = place.name || place.formatted_address;
+				}
+			}
+		} catch (e) {
+			logger.warn("Failed to resolve user home country from place cache", e);
+		}
+	}
 
-    // tripSlugからtripIdとtripを解決
-    const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-    if (!resolved) {
-      return notFound('Trip')
-    }
-    const { id: tripId, trip: tripData } = resolved
+	// tripSlugからtripIdとtripを解決
+	const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug);
+	if (!resolved) {
+		return notFound("Trip");
+	}
+	const { id: tripId, trip: tripData } = resolved;
 
-    // Daysを取得
-    const daysSnapshot = await adminDb
-      .collection(COLLECTIONS.DAYS)
-      .where('trip_id', '==', tripId)
-      .orderBy('day_number', 'asc')
-      .get()
+	// Daysを取得
+	const daysSnapshot = await adminDb
+		.collection(COLLECTIONS.DAYS)
+		.where("trip_id", "==", tripId)
+		.orderBy("day_number", "asc")
+		.get();
 
-    // 各DayにItinerariesを紐付け
-    const days: Day[] = []
-    for (const dayDoc of daysSnapshot.docs) {
-      const dayData = dayDoc.data()
-      const dayId = dayDoc.id
-      
-      // 各DayのItinerariesを取得（day_idでクエリ）
-      const itinerariesSnapshot = await adminDb
-        .collection(COLLECTIONS.ITINERARIES)
-        .where('day_id', '==', dayId)
-        .orderBy('sort_number', 'asc')
-        .get()
+	// 各DayにItinerariesを紐付け
+	const days: Day[] = [];
+	for (const dayDoc of daysSnapshot.docs) {
+		const dayData = dayDoc.data();
+		const dayId = dayDoc.id;
 
-      const itineraries: Itinerary[] = itinerariesSnapshot.docs.map(doc => {
-        const data = doc.data()
-        return {
-          id: doc.id,
-          ...data,
-          start_time: data.start_time || null,
-          end_time: data.end_time || null,
-          created_at: toDateOrNull(data.created_at) || data.created_at,
-          updated_at: toDateOrNull(data.updated_at) || data.updated_at,
-        } as Itinerary
-      })
+		// 各DayのItinerariesを取得（day_idでクエリ）
+		const itinerariesSnapshot = await adminDb
+			.collection(COLLECTIONS.ITINERARIES)
+			.where("day_id", "==", dayId)
+			.orderBy("sort_number", "asc")
+			.get();
 
-      logger.debug('Fetched itineraries for day', { dayId, count: itineraries.length })
+		const itineraries: Itinerary[] = itinerariesSnapshot.docs.map((doc) => {
+			const data = doc.data();
+			return {
+				id: doc.id,
+				...data,
+				start_time: data.start_time || null,
+				end_time: data.end_time || null,
+				created_at: toDateOrNull(data.created_at) || data.created_at,
+				updated_at: toDateOrNull(data.updated_at) || data.updated_at,
+			} as Itinerary;
+		});
 
-      days.push({
-        id: dayId,
-        ...dayData,
-        date: toDateOrNull(dayData.date) || dayData.date,
-        created_at: toDateOrNull(dayData.created_at) || dayData.created_at,
-        updated_at: toDateOrNull(dayData.updated_at) || dayData.updated_at,
-        itineraries
-      } as Day)
-    }
+		logger.debug("Fetched itineraries for day", {
+			dayId,
+			count: itineraries.length,
+		});
 
-    // Tripオブジェクトを構築
-    const trip: Trip = {
-      ...tripData,
-      days
-    }
+		days.push({
+			id: dayId,
+			...dayData,
+			date: toDateOrNull(dayData.date) || dayData.date,
+			created_at: toDateOrNull(dayData.created_at) || dayData.created_at,
+			updated_at: toDateOrNull(dayData.updated_at) || dayData.updated_at,
+			itineraries,
+		} as Day);
+	}
 
-    logger.debug('Checklist Generate API: Trip data prepared', {
-      tripId,
-      daysCount: trip.days?.length || 0,
-      totalItineraries: trip.days?.reduce((sum, day) => sum + (day.itineraries?.length || 0), 0) || 0,
-      itinerariesWithActivityTag: trip.days?.flatMap(day => 
-        day.itineraries?.filter(it => it.activity_tag) || []
-      ).length || 0
-    })
+	// Tripオブジェクトを構築
+	const trip: Trip = {
+		...tripData,
+		days,
+	};
 
-    // チェックリスト生成（ユーザー情報も渡す）
-    const items = await checklistGenerator.generateTripChecklist(trip, user)
-    
-    logger.debug('Checklist Generate API: Generated items', {
-      itemsCount: items.length,
-      itemsByCategory: items.reduce((acc, item) => {
-        acc[item.category] = (acc[item.category] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
-    })
+	logger.debug("Checklist Generate API: Trip data prepared", {
+		tripId,
+		daysCount: trip.days?.length || 0,
+		totalItineraries:
+			trip.days?.reduce(
+				(sum, day) => sum + (day.itineraries?.length || 0),
+				0,
+			) || 0,
+		itinerariesWithActivityTag:
+			trip.days?.flatMap(
+				(day) => day.itineraries?.filter((it) => it.activity_tag) || [],
+			).length || 0,
+	});
 
-    // 保存: trip_checklists/{tripId}
-    const checklistRef = adminDb.collection(COLLECTIONS.TRIP_CHECKLISTS).doc(tripId)
-    await checklistRef.set(
-      {
-      id: tripId,
-      trip_id: tripId,
-      items,
-      last_generated_at: new Date(),
-      created_at: new Date(),
-      updated_at: new Date()
-      },
-      { merge: true }
-    )
+	// チェックリスト生成（ユーザー情報も渡す）
+	const items = await checklistGenerator.generateTripChecklist(trip, user);
 
-    // Trip.stats.checklists を items.length に同期
-    try {
-      const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId)
-      await tripRef.update({
-        'stats.checklists': items.length
-      } as any)
-    } catch (e) {
-      logger.warn('Failed to update trip.stats.checklists after generate', { tripId, error: e })
-    }
+	logger.debug("Checklist Generate API: Generated items", {
+		itemsCount: items.length,
+		itemsByCategory: items.reduce(
+			(acc, item) => {
+				acc[item.category] = (acc[item.category] || 0) + 1;
+				return acc;
+			},
+			{} as Record<string, number>,
+		),
+	});
 
-  return NextResponse.json({ success: true, items })
-})
+	// 保存: trip_checklists/{tripId}
+	const checklistRef = adminDb
+		.collection(COLLECTIONS.TRIP_CHECKLISTS)
+		.doc(tripId);
+	await checklistRef.set(
+		{
+			id: tripId,
+			trip_id: tripId,
+			items,
+			last_generated_at: new Date(),
+			created_at: new Date(),
+			updated_at: new Date(),
+		},
+		{ merge: true },
+	);
 
+	// Trip.stats.checklists を items.length に同期
+	try {
+		const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId);
+		await tripRef.update({
+			"stats.checklists": items.length,
+		} as any);
+	} catch (e) {
+		logger.warn("Failed to update trip.stats.checklists after generate", {
+			tripId,
+			error: e,
+		});
+	}
 
+	return NextResponse.json({ success: true, items });
+});

@@ -1,4 +1,4 @@
-import { useEffect, RefObject } from 'react'
+import { useEffect, RefObject } from "react";
 
 /**
  * 要素外のクリックを検知するカスタムフック
@@ -7,23 +7,22 @@ import { useEffect, RefObject } from 'react'
  * @param enabled フックを有効にするかどうか（デフォルト: true）
  */
 export function useClickOutside<T extends HTMLElement = HTMLElement>(
-  ref: RefObject<T>,
-  handler: (event: MouseEvent) => void,
-  enabled: boolean = true
+	ref: RefObject<T>,
+	handler: (event: MouseEvent) => void,
+	enabled: boolean = true,
 ) {
-  useEffect(() => {
-    if (!enabled) return
+	useEffect(() => {
+		if (!enabled) return;
 
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        handler(event)
-      }
-    }
+		const handleClickOutside = (event: MouseEvent) => {
+			if (ref.current && !ref.current.contains(event.target as Node)) {
+				handler(event);
+			}
+		};
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [ref, handler, enabled])
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [ref, handler, enabled]);
 }
-

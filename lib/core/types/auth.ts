@@ -10,9 +10,8 @@
  * Auth Context型
  */
 export interface AuthContextType {
-  user: any | null
-  loading: boolean
-  signInWithGoogle: () => Promise<void>
-  logout: () => Promise<void>
+	user: any | null;
+	loading: boolean;
+	signInWithGoogle: () => Promise<void>;
+	logout: () => Promise<void>;
 }
-

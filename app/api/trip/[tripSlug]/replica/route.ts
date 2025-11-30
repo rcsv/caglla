@@ -1,21 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
-import logger from '@/lib/core/logger'
-import { adminDb } from '@/lib/firebase/admin'
-import { adminTripOperations, adminDayOperations, adminUserOperations } from '@/lib/firebase/admin-operation'
-import { planSaveOperations } from '@/lib/travel/plan-save'
-import { generateUniqueSlug } from '@/lib/utils/slug'
-import { COLLECTIONS } from '@/lib/firebase/firestore'
-import { notFound, badRequest, createForbiddenError } from '@/lib/core/error-handler'
-import { composeMiddleware } from '@/lib/core/middleware'
-import { withAuth, withParams, withBodyValidation } from '@/lib/api/middleware'
-import { CreateReplicaFromTemplateSchema } from '@/lib/schemas/plan-operations'
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import logger from "@/lib/core/logger";
+import { adminDb } from "@/lib/firebase/admin";
+import {
+	adminTripOperations,
+	adminDayOperations,
+	adminUserOperations,
+} from "@/lib/firebase/admin-operation";
+import { planSaveOperations } from "@/lib/travel/plan-save";
+import { generateUniqueSlug } from "@/lib/utils/slug";
+import { COLLECTIONS } from "@/lib/firebase/firestore";
+import {
+	notFound,
+	badRequest,
+	createForbiddenError,
+} from "@/lib/core/error-handler";
+import { composeMiddleware } from "@/lib/core/middleware";
+import { withAuth, withParams, withBodyValidation } from "@/lib/api/middleware";
+import { CreateReplicaFromTemplateSchema } from "@/lib/schemas/plan-operations";
 
 /**
  * POST /api/trip/[tripSlug]/replica - テンプレートからレプリカ作成
- * 
+ *
  * zod スキーマバリデーション + Context ミドルウェアで移行済み
- * 
+ *
  * Before:
  * ```typescript
  * const body = await parseRequestBody<{ startDate?: string }>(request)
@@ -25,7 +33,7 @@ import { CreateReplicaFromTemplateSchema } from '@/lib/schemas/plan-operations'
  *   return badRequest('Invalid start date')
  * }
  * ```
- * 
+ *
  * After:
  * ```typescript
  * // ctx.body が型安全 & バリデ済み
@@ -33,145 +41,166 @@ import { CreateReplicaFromTemplateSchema } from '@/lib/schemas/plan-operations'
  * ```
  */
 export const POST = composeMiddleware(
-  withAuth(),
-  withParams(),
-  withBodyValidation(CreateReplicaFromTemplateSchema)
+	withAuth(),
+	withParams(),
+	withBodyValidation(CreateReplicaFromTemplateSchema),
 )(async (request: NextRequest, ctx) => {
-  // ctx.auth, ctx.params, ctx.body が保証されている（型推論が効く）
-  const { userId: authUid } = ctx.auth!  // Firebase Auth UID
-  const { tripSlug } = ctx.params!
-  
-  // Firebase Auth UID を users コレクションのドキュメントIDに変換
-  const user = await adminUserOperations.getUserByAuthUid(authUid)
-  if (!user) {
-    return NextResponse.json({ error: 'User not found' }, { status: 404 })
-  }
-  const userId = user.id  // users コレクションのドキュメントID
-  
-  // zod スキーマでバリデーション済み & 型推論
-  type BodyType = z.infer<typeof CreateReplicaFromTemplateSchema>
-  const body = ctx.body as BodyType
-  const startDateRaw = body.startDate || ''
-  const startDate = startDateRaw ? new Date(startDateRaw) : null
+	// ctx.auth, ctx.params, ctx.body が保証されている（型推論が効く）
+	const { userId: authUid } = ctx.auth!; // Firebase Auth UID
+	const { tripSlug } = ctx.params!;
 
-  const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug)
-  if (!resolved) {
-    return notFound('Template trip')
-  }
+	// Firebase Auth UID を users コレクションのドキュメントIDに変換
+	const user = await adminUserOperations.getUserByAuthUid(authUid);
+	if (!user) {
+		return NextResponse.json({ error: "User not found" }, { status: 404 });
+	}
+	const userId = user.id; // users コレクションのドキュメントID
 
-  const { id: templateTripId, trip: templateTrip } = resolved
+	// zod スキーマでバリデーション済み & 型推論
+	type BodyType = z.infer<typeof CreateReplicaFromTemplateSchema>;
+	const body = ctx.body as BodyType;
+	const startDateRaw = body.startDate || "";
+	const startDate = startDateRaw ? new Date(startDateRaw) : null;
 
-  if (!templateTrip.is_template) {
-    return badRequest('Trip is not marked as template')
-  }
+	const resolved = await adminTripOperations.resolveTripByIdOrSlug(tripSlug);
+	if (!resolved) {
+		return notFound("Template trip");
+	}
 
-  if (templateTrip.access_level !== 'public' && templateTrip.user_id !== userId) {
-    throw createForbiddenError('You do not have permission to access this template')
-  }
+	const { id: templateTripId, trip: templateTrip } = resolved;
 
-    // テンプレートのday_countを確認して、startDateの必要性を検証
-    const templateDays = await adminDayOperations.getDaysByTripId(templateTripId)
-    const derivedDayCount =
-      templateTrip.day_count && templateTrip.day_count > 0
-        ? templateTrip.day_count
-        : templateDays.length
+	if (!templateTrip.is_template) {
+		return badRequest("Trip is not marked as template");
+	}
 
-    if (derivedDayCount > 0 && !startDate) {
-      return badRequest('Start date is required for this template')
-    }
+	if (
+		templateTrip.access_level !== "public" &&
+		templateTrip.user_id !== userId
+	) {
+		throw createForbiddenError(
+			"You do not have permission to access this template",
+		);
+	}
 
-    // バリデーション通過後にreplicaを作成
-    const replicaResult = await planSaveOperations.createReplicaFromTripTemplate(templateTripId, userId)
+	// テンプレートのday_countを確認して、startDateの必要性を検証
+	const templateDays = await adminDayOperations.getDaysByTripId(templateTripId);
+	const derivedDayCount =
+		templateTrip.day_count && templateTrip.day_count > 0
+			? templateTrip.day_count
+			: templateDays.length;
 
-    // グローバルにユニークな slug を生成するため、全トリップの slug を取得
-    const allTripsSnapshot = await adminDb.collection(COLLECTIONS.TRIPS).select('slug').get()
-    const existingSlugs = allTripsSnapshot.docs
-      .map((doc) => doc.data().slug as string | undefined)
-      .filter((slug): slug is string => Boolean(slug))
+	if (derivedDayCount > 0 && !startDate) {
+		return badRequest("Start date is required for this template");
+	}
 
-    const newSlug = generateUniqueSlug(replicaResult.trip.title, existingSlugs)
+	// バリデーション通過後にreplicaを作成
+	const replicaResult = await planSaveOperations.createReplicaFromTripTemplate(
+		templateTripId,
+		userId,
+	);
 
-    const updatePayload: Record<string, unknown> = {
-      slug: newSlug,
-      access_level: 'private',
-      is_template: false,
-      likes_count: 0,
-      ...(derivedDayCount > 0 ? { day_count: derivedDayCount } : {}),
-    }
+	// グローバルにユニークな slug を生成するため、全トリップの slug を取得
+	const allTripsSnapshot = await adminDb
+		.collection(COLLECTIONS.TRIPS)
+		.select("slug")
+		.get();
+	const existingSlugs = allTripsSnapshot.docs
+		.map((doc) => doc.data().slug as string | undefined)
+		.filter((slug): slug is string => Boolean(slug));
 
-    let endDate: Date | null = null
-    if (startDate) {
-      endDate = new Date(startDate)
-      if (derivedDayCount > 0) {
-        endDate.setDate(startDate.getDate() + derivedDayCount - 1)
-      }
-      updatePayload.start_date = startDate
-      updatePayload.end_date = endDate
-    }
+	const newSlug = generateUniqueSlug(replicaResult.trip.title, existingSlugs);
 
-    await adminTripOperations.updateTrip(replicaResult.trip.id, updatePayload)
+	const updatePayload: Record<string, unknown> = {
+		slug: newSlug,
+		access_level: "private",
+		is_template: false,
+		likes_count: 0,
+		...(derivedDayCount > 0 ? { day_count: derivedDayCount } : {}),
+	};
 
-    if (startDate && replicaResult.days.length > 0) {
-      const sortedDays = [...replicaResult.days].sort((a, b) => {
-        const aNum = typeof a.day_number === 'number' ? a.day_number : 0
-        const bNum = typeof b.day_number === 'number' ? b.day_number : 0
-        return aNum - bNum
-      })
-      await Promise.all(
-        sortedDays.map((day, index) => {
-          const dateForDay = new Date(startDate)
-          dateForDay.setDate(startDate.getDate() + index)
-          return adminDb
-            .collection(COLLECTIONS.DAYS)
-            .doc(day.id)
-            .update({
-              date: dateForDay,
-              updated_at: new Date()
-            })
-            .catch((error: unknown) => {
-              logger.error('Failed to set date on replicated day', { error, dayId: day.id })
-            })
-        })
-      )
-    }
+	let endDate: Date | null = null;
+	if (startDate) {
+		endDate = new Date(startDate);
+		if (derivedDayCount > 0) {
+			endDate.setDate(startDate.getDate() + derivedDayCount - 1);
+		}
+		updatePayload.start_date = startDate;
+		updatePayload.end_date = endDate;
+	}
 
-    try {
-      const checklistDoc = await adminDb.collection('trip_checklists').doc(templateTripId).get()
-      if (checklistDoc.exists) {
-        const checklistData = checklistDoc.data() || {}
-        const now = new Date()
-        await adminDb.collection('trip_checklists').doc(replicaResult.trip.id).set({
-          ...checklistData,
-          id: replicaResult.trip.id,
-          trip_id: replicaResult.trip.id,
-          created_at: now,
-          updated_at: now,
-          last_generated_at: checklistData.last_generated_at ?? now,
-        })
-      }
-    } catch (error) {
-      logger.error('Failed to copy checklist for replica', error)
-    }
+	await adminTripOperations.updateTrip(replicaResult.trip.id, updatePayload);
 
-    const latestTrip = await adminTripOperations.getTripById(replicaResult.trip.id)
+	if (startDate && replicaResult.days.length > 0) {
+		const sortedDays = [...replicaResult.days].sort((a, b) => {
+			const aNum = typeof a.day_number === "number" ? a.day_number : 0;
+			const bNum = typeof b.day_number === "number" ? b.day_number : 0;
+			return aNum - bNum;
+		});
+		await Promise.all(
+			sortedDays.map((day, index) => {
+				const dateForDay = new Date(startDate);
+				dateForDay.setDate(startDate.getDate() + index);
+				return adminDb
+					.collection(COLLECTIONS.DAYS)
+					.doc(day.id)
+					.update({
+						date: dateForDay,
+						updated_at: new Date(),
+					})
+					.catch((error: unknown) => {
+						logger.error("Failed to set date on replicated day", {
+							error,
+							dayId: day.id,
+						});
+					});
+			}),
+		);
+	}
 
-    return NextResponse.json({
-      success: true,
-      trip: latestTrip
-        ? {
-            id: latestTrip.id,
-            slug: latestTrip.slug,
-            access_level: latestTrip.access_level,
-            start_date: latestTrip.start_date,
-            end_date: latestTrip.end_date
-          }
-        : {
-        id: replicaResult.trip.id,
-        slug: newSlug,
-        access_level: 'private',
-        start_date: startDate ?? null,
-        end_date: endDate ?? null
-      },
-    })
-})
+	try {
+		const checklistDoc = await adminDb
+			.collection("trip_checklists")
+			.doc(templateTripId)
+			.get();
+		if (checklistDoc.exists) {
+			const checklistData = checklistDoc.data() || {};
+			const now = new Date();
+			await adminDb
+				.collection("trip_checklists")
+				.doc(replicaResult.trip.id)
+				.set({
+					...checklistData,
+					id: replicaResult.trip.id,
+					trip_id: replicaResult.trip.id,
+					created_at: now,
+					updated_at: now,
+					last_generated_at: checklistData.last_generated_at ?? now,
+				});
+		}
+	} catch (error) {
+		logger.error("Failed to copy checklist for replica", error);
+	}
 
+	const latestTrip = await adminTripOperations.getTripById(
+		replicaResult.trip.id,
+	);
+
+	return NextResponse.json({
+		success: true,
+		trip: latestTrip
+			? {
+					id: latestTrip.id,
+					slug: latestTrip.slug,
+					access_level: latestTrip.access_level,
+					start_date: latestTrip.start_date,
+					end_date: latestTrip.end_date,
+				}
+			: {
+					id: replicaResult.trip.id,
+					slug: newSlug,
+					access_level: "private",
+					start_date: startDate ?? null,
+					end_date: endDate ?? null,
+				},
+	});
+});

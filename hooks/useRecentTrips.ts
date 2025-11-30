@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { getRecentTrips, type RecentTripEntry } from '@/lib/utils/recent-trips'
+import { useEffect, useState } from "react";
+import { getRecentTrips, type RecentTripEntry } from "@/lib/utils/recent-trips";
 
 /**
  * Recently You Checked 用に localStorage から履歴を取得し、
@@ -11,24 +11,24 @@ import { getRecentTrips, type RecentTripEntry } from '@/lib/utils/recent-trips'
  * - []: 履歴なし
  */
 export function useRecentTrips(): RecentTripEntry[] | null {
-  const [recentTrips, setRecentTrips] = useState<RecentTripEntry[] | null>(null)
+	const [recentTrips, setRecentTrips] = useState<RecentTripEntry[] | null>(
+		null,
+	);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    setRecentTrips(getRecentTrips())
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		setRecentTrips(getRecentTrips());
 
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key && e.key !== 'recent_trips_v1') return
-      setRecentTrips(getRecentTrips())
-    }
+		const handleStorage = (e: StorageEvent) => {
+			if (e.key && e.key !== "recent_trips_v1") return;
+			setRecentTrips(getRecentTrips());
+		};
 
-    window.addEventListener('storage', handleStorage)
-    return () => {
-      window.removeEventListener('storage', handleStorage)
-    }
-  }, [])
+		window.addEventListener("storage", handleStorage);
+		return () => {
+			window.removeEventListener("storage", handleStorage);
+		};
+	}, []);
 
-  return recentTrips
+	return recentTrips;
 }
-
-

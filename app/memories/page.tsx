@@ -1,103 +1,123 @@
-'use client'
+"use client";
 
-import { useAuth } from '@/lib/contexts/auth'
-import { useUserData } from '@/lib/contexts/user-data'
-import { dateUtils } from '@/lib/utils/date'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import Loading from '@/components/common/Loading'
-import TripCard from '@/components/tripcard/TripCard'
-import Card from '@/components/common/Card'
-import HomeHeader from '@/components/common/HomeHeader'
-import HomeFooter from '@/components/common/HomeFooter'
-import { t } from '@/lib/i18n'
-import { toDateOrNull } from '@/lib/firebase/timestamp-utils'
-import { getUserDisplayName, getPlanDisplayName, getUserAvatarUrl } from '@/lib/utils/user-helpers'
+import { useAuth } from "@/lib/contexts/auth";
+import { useUserData } from "@/lib/contexts/user-data";
+import { dateUtils } from "@/lib/utils/date";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Loading from "@/components/common/Loading";
+import TripCard from "@/components/tripcard/TripCard";
+import Card from "@/components/common/Card";
+import HomeHeader from "@/components/common/HomeHeader";
+import HomeFooter from "@/components/common/HomeFooter";
+import { t } from "@/lib/i18n";
+import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
+import {
+	getUserDisplayName,
+	getPlanDisplayName,
+	getUserAvatarUrl,
+} from "@/lib/utils/user-helpers";
 // 設定モーダルはプロフィールページへ移行
-import type { Trip } from '@/lib/core/types'
-import { groupTripsByYear } from '@/lib/travel/trip-filters'
+import type { Trip } from "@/lib/core/types";
+import { groupTripsByYear } from "@/lib/travel/trip-filters";
 
 export default function MemoriesListPage() {
-  const { user, loading, logout } = useAuth()
-  const { trips, tripsLoading, planConfig, planLoading, userData, userDataLoading } = useUserData()
-  const router = useRouter()
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
+	const { user, loading, logout } = useAuth();
+	const {
+		trips,
+		tripsLoading,
+		planConfig,
+		planLoading,
+		userData,
+		userDataLoading,
+	} = useUserData();
+	const router = useRouter();
+	const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-  if (loading || tripsLoading || planLoading || userDataLoading) {
-    return <Loading fullScreen size="lg" />
-  }
-  if (!user) return null
+	if (loading || tripsLoading || planLoading || userDataLoading) {
+		return <Loading fullScreen size="lg" />;
+	}
+	if (!user) return null;
 
-  const { pastTrips } = dateUtils.sortTripsByDate(trips)
+	const { pastTrips } = dateUtils.sortTripsByDate(trips);
 
-  // 過去の旅行を年別にグループ化
-  const tripsByYear = groupTripsByYear(pastTrips)
+	// 過去の旅行を年別にグループ化
+	const tripsByYear = groupTripsByYear(pastTrips);
 
-  // 年を降順でソート（新しい年が上）
-  const sortedYears = Object.keys(tripsByYear).map(Number).sort((a, b) => b - a)
+	// 年を降順でソート（新しい年が上）
+	const sortedYears = Object.keys(tripsByYear)
+		.map(Number)
+		.sort((a, b) => b - a);
 
-  const handleLogout = async () => {
-    await logout()
-    router.push('/')
-  }
+	const handleLogout = async () => {
+		await logout();
+		router.push("/");
+	};
 
-  const handleChangePlan = () => {
-    router.push('/subscription')
-  }
+	const handleChangePlan = () => {
+		router.push("/subscription");
+	};
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <HomeHeader
-        userName={getUserDisplayName(userData, user)}
-        planName={getPlanDisplayName(planConfig)}
-        avatarUrl={getUserAvatarUrl(userData, user)}
-        onLogout={handleLogout}
-        onChangePlan={handleChangePlan}
-        userSlug={userData?.slug}
-      />
+	return (
+		<div className="min-h-screen bg-gray-50">
+			{/* Header */}
+			<HomeHeader
+				userName={getUserDisplayName(userData, user)}
+				planName={getPlanDisplayName(planConfig)}
+				avatarUrl={getUserAvatarUrl(userData, user)}
+				onLogout={handleLogout}
+				onChangePlan={handleChangePlan}
+				userSlug={userData?.slug}
+			/>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">{t('memories.page.title')}</h1>
-          <p className="text-gray-600 mt-2">{t('memories.page.description')}</p>
-        </div>
+			{/* Main Content */}
+			<main className="container mx-auto px-4 py-8">
+				<div className="mb-6">
+					<h1 className="text-3xl font-bold text-gray-900">
+						{t("memories.page.title")}
+					</h1>
+					<p className="text-gray-600 mt-2">{t("memories.page.description")}</p>
+				</div>
 
-        {pastTrips.length === 0 ? (
-          <Card padding="lg">
-            <div className="text-center text-gray-500 py-12">{t('memories.page.empty')}</div>
-          </Card>
-        ) : (
-          <div className="space-y-8">
-            {sortedYears.map(year => (
-              <Card
-                key={year}
-                title={<div className="text-xl font-semibold text-gray-900">{year}{t('memories.page.year')}</div>}
-                padding="lg"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {tripsByYear[year].map((trip: Trip, index: number) => (
-                    <TripCard 
-                      key={trip.id} 
-                      trip={trip} 
-                      isPastTrip={true} 
-                      variant="imageFull" 
-                      priority={year === sortedYears[0] && index === 0} // 最初の年の最初のカードのみpriority
-                    />
-                  ))}
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </main>
+				{pastTrips.length === 0 ? (
+					<Card padding="lg">
+						<div className="text-center text-gray-500 py-12">
+							{t("memories.page.empty")}
+						</div>
+					</Card>
+				) : (
+					<div className="space-y-8">
+						{sortedYears.map((year) => (
+							<Card
+								key={year}
+								title={
+									<div className="text-xl font-semibold text-gray-900">
+										{year}
+										{t("memories.page.year")}
+									</div>
+								}
+								padding="lg"
+							>
+								<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+									{tripsByYear[year].map((trip: Trip, index: number) => (
+										<TripCard
+											key={trip.id}
+											trip={trip}
+											isPastTrip={true}
+											variant="imageFull"
+											priority={year === sortedYears[0] && index === 0} // 最初の年の最初のカードのみpriority
+										/>
+									))}
+								</div>
+							</Card>
+						))}
+					</div>
+				)}
+			</main>
 
-      {/* 設定モーダルはプロフィールページに移行したため削除 */}
+			{/* 設定モーダルはプロフィールページに移行したため削除 */}
 
-      <HomeFooter />
-    </div>
-  )
+			<HomeFooter />
+		</div>
+	);
 }
-
-
