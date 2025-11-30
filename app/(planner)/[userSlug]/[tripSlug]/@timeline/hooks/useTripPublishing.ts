@@ -163,7 +163,7 @@ export default function useTripPublishing({
       setPdfExporting(false)
     }
     return false
-  }, [trip, user, userPlan, showWarning, showError])
+  }, [trip, user, userPlan, showWarning, showError, showSuccess])
 
   return {
     replicate,
