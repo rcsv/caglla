@@ -5,6 +5,7 @@ import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import logger from '@/lib/core/logger'
 import { t } from '@/lib/i18n'
 import { exportTripToPdf, canExportToPdf } from '@/lib/utils/export-helpers'
+import { useNotification } from '@/lib/contexts/notification'
 import type { Trip } from '@/lib/core/types'
 import type { User } from 'firebase/auth'
 
@@ -25,6 +26,7 @@ export function useTripActions({
   router: any
   userPlan: string
 }) {
+  const { showSuccess, showError, showWarning } = useNotification()
   const [publishLoading, setPublishLoading] = useState(false)
   const [replicaLoading, setReplicaLoading] = useState(false)
   const [pdfExporting, setPdfExporting] = useState(false)
@@ -47,33 +49,33 @@ export function useTripActions({
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}))
-          alert(errorData.error || t('trip.template.replicateFailed'))
+          showError(errorData.error || t('trip.template.replicateFailed'))
           return
         }
 
         const data = await response.json()
         const newTrip = data.trip
         if (!newTrip) {
-          alert(t('trip.template.replicateFailed'))
+          showError(t('trip.template.replicateFailed'))
           return
         }
 
         const targetSlug = newTrip.slug || newTrip.id
         const targetUserSlug = userData?.slug || user.uid
         if (!targetSlug || !targetUserSlug) {
-          alert(t('trip.template.replicateFailed'))
+          showError(t('trip.template.replicateFailed'))
           return
         }
 
         router.push(`/${targetUserSlug}/${targetSlug}`)
       } catch (err) {
         logger.error('Replica creation failed:', err)
-        alert(t('trip.template.replicateFailed'))
+        showError(t('trip.template.replicateFailed'))
       } finally {
         setReplicaLoading(false)
       }
     },
-    [trip, user, userData, router]
+    [trip, user, userData, router, showError]
   )
 
   // -----------------------------------------
@@ -96,21 +98,21 @@ export function useTripActions({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        alert(errorData.error || t('trip.publish.failed'))
+        showError(errorData.error || t('trip.publish.failed'))
         return
       }
 
       const data = await response.json()
       const publishedTrip = data.trip
       if (!publishedTrip?.id) {
-        alert(t('trip.publish.failed'))
+        showError(t('trip.publish.failed'))
         return
       }
 
       // 最新情報を再取得（slug変更に備える）
       const refreshedResponse = await makeAuthenticatedRequest(`/api/trip/${publishedTrip.id}`)
       if (!refreshedResponse.ok) {
-        alert(t('trip.publish.failed'))
+        showError(t('trip.publish.failed'))
         return
       }
 
@@ -118,7 +120,7 @@ export function useTripActions({
       updateTrip(refreshedTrip)
       await refreshTrip()
 
-      alert(t('trip.publish.success'))
+      showSuccess(t('trip.publish.success'))
 
       // slug変更があった場合のルーター同期
       const newSlug = refreshedTrip.slug || publishedTrip.slug || previousSlug
@@ -128,11 +130,11 @@ export function useTripActions({
       }
     } catch (err) {
       logger.error('Trip publish failed:', err)
-      alert(t('trip.publish.failed'))
+      showError(t('trip.publish.failed'))
     } finally {
       setPublishLoading(false)
     }
-  }, [trip, user, userData, router, updateTrip, refreshTrip])
+  }, [trip, user, userData, router, updateTrip, refreshTrip, showSuccess, showError])
 
   // -----------------------------------------
   // 3) PDF 出力
@@ -141,7 +143,7 @@ export function useTripActions({
     if (!trip || !user) return
 
     if (!canExportToPdf(userPlan)) {
-      alert(t('tripSlugPage.pdfRequiresBackpacker'))
+      showWarning(t('tripSlugPage.pdfRequiresBackpacker'))
       return
     }
 
@@ -156,13 +158,14 @@ export function useTripActions({
       })
 
       logger.info('PDF export completed successfully')
+      showSuccess(t('tripSlugPage.pdfExportSuccess'))
     } catch (err: any) {
       logger.error('PDF export failed:', err)
-      alert(err.message || t('tripSlugPage.pdfExportFailed'))
+      showError(err.message || t('tripSlugPage.pdfExportFailed'))
     } finally {
       setPdfExporting(false)
     }
-  }, [trip, user, userPlan])
+  }, [trip, user, userPlan, showWarning, showError, showSuccess])
 
   return {
     replicate,

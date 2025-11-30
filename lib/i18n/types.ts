@@ -642,6 +642,7 @@ export type TranslationKey =
   // Trip Slug Page
   | 'tripSlugPage.pdfRequiresBackpacker'
   | 'tripSlugPage.pdfExportFailed'
+  | 'tripSlugPage.pdfExportSuccess'
   | 'tripSlugPage.fetchTripFailed'
   | 'tripSlugPage.fetchTripFailedDescription'
   | 'tripSlugPage.notFoundDescription'
@@ -1127,6 +1128,10 @@ export type TranslationKey =
   | 'trip.publish.label'
   | 'trip.publish.publish'
   | 'trip.publish.unpublish'
+  | 'trip.publish.unpublishConfirmTitle'
+  | 'trip.publish.unpublishConfirmMessage'
+  | 'trip.publish.unpublishSuccess'
+  | 'trip.publish.unpublishFailed'
   | 'trip.template.replicateDialogTitle'
   | 'trip.template.replicateStartDateLabel'
   | 'trip.template.replicateDayCountSummary'

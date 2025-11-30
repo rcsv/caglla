@@ -288,36 +288,36 @@ export default function useItineraryActions({
       }
 
       // ローカル状態を更新
-      updateTrip(prevTrip => {
-        if (!prevTrip) return prevTrip
-        return {
-          ...prevTrip,
-          days: prevTrip.days?.map(d => {
-            if (d.id === sourceDay.id) {
-              return {
-                ...d,
-                itineraries: d.itineraries?.filter(item => item.id !== itineraryId) || [],
-              }
+    updateTrip(prevTrip => {
+      if (!prevTrip) return prevTrip
+      return {
+        ...prevTrip,
+        days: prevTrip.days?.map(d => {
+          if (d.id === sourceDay.id) {
+            return {
+              ...d,
+              itineraries: d.itineraries?.filter(item => item.id !== itineraryId) || [],
             }
-            if (d.id === targetDayId) {
-              const maxSortNumber = d.itineraries?.reduce((max, item) => Math.max(max, item.sort_number), 0) || 0
-              return {
-                ...d,
-                itineraries: [
-                  ...(d.itineraries || []),
-                  {
-                    ...itineraryToMove,
-                    day_id: targetDayId,
-                    sort_number: maxSortNumber + 1,
-                  },
-                ],
-              }
+          }
+          if (d.id === targetDayId) {
+            const maxSortNumber = d.itineraries?.reduce((max, item) => Math.max(max, item.sort_number), 0) || 0
+            return {
+              ...d,
+              itineraries: [
+                ...(d.itineraries || []),
+                {
+                  ...itineraryToMove,
+                  day_id: targetDayId,
+                  sort_number: maxSortNumber + 1,
+                },
+              ],
             }
-            return d
-          }) || [],
-        }
-      })
-      await refreshTrip()
+          }
+          return d
+        }) || [],
+      }
+    })
+    await refreshTrip()
     } catch (error) {
       logger.error('Error moving itinerary:', error)
       alert(t('common.updateFailed'))
@@ -355,28 +355,28 @@ export default function useItineraryActions({
       const duplicatedItinerary = await response.json()
 
       // ローカル状態を更新
-      updateTrip(prevTrip => {
-        if (!prevTrip) return prevTrip
-        return {
-          ...prevTrip,
-          days: prevTrip.days?.map(d => {
-            if (d.id === targetDayId) {
-              return {
-                ...d,
-                itineraries: [
-                  ...(d.itineraries || []),
-                  {
+    updateTrip(prevTrip => {
+      if (!prevTrip) return prevTrip
+      return {
+        ...prevTrip,
+        days: prevTrip.days?.map(d => {
+          if (d.id === targetDayId) {
+            return {
+              ...d,
+              itineraries: [
+                ...(d.itineraries || []),
+                {
                     ...duplicatedItinerary,
                     // サーバーから返されたデータを使用
-                  },
-                ],
-              }
+                },
+              ],
             }
-            return d
-          }) || [],
-        }
-      })
-      await refreshTrip()
+          }
+          return d
+        }) || [],
+      }
+    })
+    await refreshTrip()
     } catch (error) {
       logger.error('Error duplicating itinerary:', error)
       alert(t('common.updateFailed'))

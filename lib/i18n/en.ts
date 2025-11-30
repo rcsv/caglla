@@ -738,6 +738,7 @@ const en: Dictionary = {
   // Trip Slug Page
   'tripSlugPage.pdfRequiresBackpacker': 'PDF export requires Backpacker plan or higher',
   'tripSlugPage.pdfExportFailed': 'PDF export failed',
+  'tripSlugPage.pdfExportSuccess': 'PDF exported successfully',
   'tripSlugPage.fetchTripFailed': 'Failed to fetch trip data',
   'tripSlugPage.fetchTripFailedDescription': 'Something went wrong while loading this trip. Please try again.',
   'tripSlugPage.notFoundDescription': 'We couldn\'t find this trip or you may not have access to it.',
@@ -1161,6 +1162,10 @@ const en: Dictionary = {
   'trip.publish.label': 'Publish',
   'trip.publish.publish': 'Publish',
   'trip.publish.unpublish': 'Unpublish',
+  'trip.publish.unpublishConfirmTitle': 'Unpublish this trip?',
+  'trip.publish.unpublishConfirmMessage': 'Unpublishing this trip will make it invisible to other users.',
+  'trip.publish.unpublishSuccess': 'Trip has been unpublished.',
+  'trip.publish.unpublishFailed': 'Failed to unpublish.',
   'trip.likes.loading': 'Loading likes…',
   'trip.likes.button.like': 'Like this trip',
   'trip.likes.button.liked': 'Liked',

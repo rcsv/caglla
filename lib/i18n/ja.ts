@@ -738,6 +738,7 @@ const ja: Dictionary = {
   // Trip Slug Page
   'tripSlugPage.pdfRequiresBackpacker': 'PDF出力にはBackpackerプラン以上が必要です。',
   'tripSlugPage.pdfExportFailed': 'PDF出力に失敗しました。',
+  'tripSlugPage.pdfExportSuccess': 'PDF出力が完了しました。',
   'tripSlugPage.fetchTripFailed': '旅行データの取得に失敗しました',
   'tripSlugPage.fetchTripFailedDescription': '旅行データの読み込み中に問題が発生しました。もう一度お試しください。',
   'tripSlugPage.notFoundDescription': '該当する旅行が見つからないか、アクセス権がありません。',
@@ -1161,6 +1162,10 @@ const ja: Dictionary = {
   'trip.publish.label': '公開',
   'trip.publish.publish': '公開',
   'trip.publish.unpublish': '非公開',
+  'trip.publish.unpublishConfirmTitle': '旅行を非公開にしますか？',
+  'trip.publish.unpublishConfirmMessage': 'この旅行を非公開にすると、他のユーザーが閲覧できなくなります。',
+  'trip.publish.unpublishSuccess': '旅行を非公開にしました。',
+  'trip.publish.unpublishFailed': '非公開に失敗しました。',
   'trip.likes.loading': 'いいねを読み込み中…',
   'trip.likes.button.like': 'いいねする',
   'trip.likes.button.liked': 'いいね済み',

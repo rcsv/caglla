@@ -13,6 +13,7 @@ import { useTripActions } from './useTripActions'
 import { makeAuthenticatedRequest } from '@/lib/api/helpers'
 import logger from '@/lib/core/logger'
 import { t } from '@/lib/i18n'
+import { useNotification } from '@/lib/contexts/notification'
 import type { Trip } from '@/lib/core/types'
 
 interface TripClientLayoutProps {
@@ -44,6 +45,7 @@ function TripClientLayoutContent({
   const { removeTrip, userData, userPlanId } = useUserData()
   const router = useRouter()
   const { currentView, selectedDayId, setSelectedDayId, updateQuery } = useTripUrlState()
+  const { showConfirm, showSuccess, showError } = useNotification()
   
   const [leftNavExpanded, setLeftNavExpanded] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -124,29 +126,37 @@ function TripClientLayoutContent({
     
     // Public → Private (Unpublish)
     if (trip.access_level === 'public') {
-      if (!confirm('この旅行を非公開にしますか？')) return
-      
-      try {
-        setUnpublishLoading(true)
-        const response = await makeAuthenticatedRequest(`/api/trip/${trip.slug || trip.id}/unpublish`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        })
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          alert(errorData.error || 'Failed to unpublish')
-          return
-        }
-        
-        await refreshTrip()
-        alert('旅行を非公開にしました')
-      } catch (err) {
-        logger.error('Unpublish failed:', err)
-        alert('Failed to unpublish')
-      } finally {
-        setUnpublishLoading(false)
-      }
+      showConfirm(
+        'warning',
+        t('trip.publish.unpublishConfirmTitle'),
+        t('trip.publish.unpublishConfirmMessage'),
+        async () => {
+          try {
+            setUnpublishLoading(true)
+            const response = await makeAuthenticatedRequest(`/api/trip/${trip.slug || trip.id}/publish`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+            })
+            
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}))
+              showError(errorData.error || t('trip.publish.unpublishFailed'))
+              return
+            }
+            
+            await refreshTrip()
+            showSuccess(t('trip.publish.unpublishSuccess'))
+          } catch (err) {
+            logger.error('Unpublish failed:', err)
+            showError(t('trip.publish.unpublishFailed'))
+          } finally {
+            setUnpublishLoading(false)
+          }
+        },
+        undefined,
+        t('trip.publish.unpublish'),
+        t('common.cancel')
+      )
     } else {
       // Private → Public (Publish)
       await publish()

@@ -5,6 +5,7 @@ import './globals.css'
 import { AuthProvider } from '@/lib/contexts/auth'
 import { SubscriptionProvider } from '@/lib/contexts/subscription'
 import { UserDataProvider } from '@/lib/contexts/user-data'
+import { NotificationProvider } from '@/lib/contexts/notification'
 import { isSupportedLanguage } from '@/lib/utils/language'
 import type { SupportedLanguage } from '@/lib/core/types'
 
@@ -82,7 +83,9 @@ export default async function RootLayout({
         <AuthProvider>
           <UserDataProvider>
             <SubscriptionProvider>
-              {children}
+              <NotificationProvider>
+                {children}
+              </NotificationProvider>
             </SubscriptionProvider>
           </UserDataProvider>
         </AuthProvider>
