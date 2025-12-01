@@ -414,7 +414,7 @@ export function exportTripToICal(trip: Trip): string {
 	// ヘッダー
 	lines.push("BEGIN:VCALENDAR");
 	lines.push("VERSION:2.0");
-	lines.push("PRODID://rcsv//Caglla Travel Manager//EN");
+	lines.push("PRODID:-//rcsv//Caglla Travel Manager//EN");
 	lines.push(`X-WR-CALNAME:${escapeICalValue(trip.title)}`);
 	lines.push("CALSCALE:GREGORIAN");
 	lines.push("METHOD:PUBLISH");
@@ -534,7 +534,7 @@ export function exportReservationsToICal(trip: Trip): string {
 	// ヘッダー
 	lines.push("BEGIN:VCALENDAR");
 	lines.push("VERSION:2.0");
-	lines.push("PRODID://rcsv//Caglla Travel Manager//EN");
+	lines.push("PRODID:-//rcsv//Caglla Travel Manager//EN");
 	lines.push(`X-WR-CALNAME:${escapeICalValue(trip.title)} - Reservations`);
 	lines.push("CALSCALE:GREGORIAN");
 	lines.push("METHOD:PUBLISH");
