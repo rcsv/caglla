@@ -465,9 +465,9 @@ export function exportTripToICal(trip: Trip): string {
 			// 説明（旅行タイトル + 既存の説明 + by Caglla）
 			let description = `Trip: ${trip.title}`;
 			if (itinerary.description) {
-				description += `\\n${itinerary.description}`;
+				description += `\n${itinerary.description}`;
 			}
-			description += "\\n\\nby Caglla";
+			description += "\n\nby Caglla";
 			lines.push(`DESCRIPTION:${escapeICalValue(description)}`);
 
 			// 場所（locationが未設定の場合はplace_dataから取得）
@@ -578,21 +578,21 @@ export function exportReservationsToICal(trip: Trip): string {
 			// 説明（旅行タイトル + 予約詳細 + by Caglla）
 			let description = `Trip: ${trip.title}`;
 			if (res.confirmation_number) {
-				description += `\\nConfirmation: ${res.confirmation_number}`;
+				description += `\nConfirmation: ${res.confirmation_number}`;
 			}
 			if (res.reservation_site) {
-				description += `\\nSite: ${res.reservation_site}`;
+				description += `\nSite: ${res.reservation_site}`;
 			}
 			if (res.flight_number) {
-				description += `\\nFlight: ${res.flight_number}`;
+				description += `\nFlight: ${res.flight_number}`;
 			}
 			if (res.departure_airport && res.arrival_airport) {
-				description += `\\nRoute: ${res.departure_airport} → ${res.arrival_airport}`;
+				description += `\nRoute: ${res.departure_airport} → ${res.arrival_airport}`;
 			}
 			if (res.notes) {
-				description += `\\nNotes: ${res.notes}`;
+				description += `\nNotes: ${res.notes}`;
 			}
-			description += "\\n\\nby Caglla";
+			description += "\n\nby Caglla";
 			lines.push(`DESCRIPTION:${escapeICalValue(description)}`);
 
 			// 場所
