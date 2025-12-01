@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 > バージョニング方針: 本プロジェクトはSemVerに準拠します。詳細は `docs/development/versioning.md` を参照してください。
 
+## [3.1.0] - 2025-12-01
+
+### Added
+- iCalendarエクスポート機能の改善
+  - すべてのイベントに30分前のアラーム（VALARM）を追加
+  - DESCRIPTIONフィールドに旅行タイトルを追加
+  - DESCRIPTIONフィールドの末尾に「by Caglla」を表示
+
+### Changed
+- iCalendarのPRODIDを`-//rcsv//Caglla Travel Manager//EN`に変更
+
 ## [3.0.1] - 2025-11-30
 
 ### Added

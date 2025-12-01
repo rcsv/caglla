@@ -122,3 +122,6 @@ docs/firebase/*.json
 # /app/test/
 # /app/dev-tools/
 Linux_Dynamic_Wallpapers/
+
+# Assets - generated images
+assets/*.png
