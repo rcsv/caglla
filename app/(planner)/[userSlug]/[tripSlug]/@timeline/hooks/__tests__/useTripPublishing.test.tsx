@@ -19,6 +19,18 @@ jest.mock("@/lib/core/logger", () => ({
 	debug: jest.fn(),
 }));
 
+jest.mock("@/lib/contexts/notification", () => ({
+	useNotification: () => ({
+		showNotification: jest.fn(),
+		showSuccess: jest.fn(),
+		showWarning: jest.fn(),
+		showError: jest.fn(),
+		showConfirm: jest.fn(),
+	}),
+	NotificationProvider: ({ children }: { children: React.ReactNode }) =>
+		children,
+}));
+
 describe("useTripPublishing", () => {
 	const mockRouter = { push: jest.fn(), replace: jest.fn() };
 	const updateTrip = jest.fn();
