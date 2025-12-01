@@ -45,6 +45,10 @@ const nextConfig = {
 	// Firebase App Hosting用の設定
 	output: "standalone",
 
+	// Next.js 16対応: Turbopackではなくwebpackを明示的に使用
+	// (webpack設定があるため、空のturbopack設定を追加して警告を回避)
+	turbopack: {},
+
 	// Webpack設定（チャンク読み込みエラー対策）
 	webpack: (config, { isServer }) => {
 		if (!isServer) {
