@@ -107,8 +107,15 @@ export const POST = composeMiddleware(
 			duration: { text: string; value: number };
 		}> = [];
 
+		// 連続する地点間（i → i+1）の距離だけを計算
+		// Google Distance Matrix APIは全組み合わせを返すが、対角線上の要素（rowIndex === elementIndex）だけを使用
 		data.rows.forEach((row: any, rowIndex: number) => {
 			row.elements.forEach((element: any, elementIndex: number) => {
+				// 連続する地点間（i → i+1）の距離だけを処理（対角線上）
+				if (rowIndex !== elementIndex) {
+					return;
+				}
+
 				if (element.status === "OK") {
 					totalDistance += element.distance.value;
 					totalDuration += element.duration.value;
