@@ -1,6 +1,6 @@
 module.exports = {
 	plugins: {
-		tailwindcss: {},
-		autoprefixer: {},
+		'@tailwindcss/postcss': {},
+		// autoprefixer は不要（Tailwind 4に統合されたため）
 	},
 };

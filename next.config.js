@@ -38,29 +38,14 @@ const nextConfig = {
 	typescript: {
 		ignoreBuildErrors: true,
 	},
-	eslint: {
-		ignoreDuringBuilds: true,
-	},
+	// eslint 設定は削除（Next.js 16では非推奨）
+	// 必要なら .eslintignore を使用
 
 	// Firebase App Hosting用の設定
 	output: "standalone",
 
-	// Next.js 16対応: Turbopackではなくwebpackを明示的に使用
-	// (webpack設定があるため、空のturbopack設定を追加して警告を回避)
-	turbopack: {},
-
-	// Webpack設定（チャンク読み込みエラー対策）
-	webpack: (config, { isServer }) => {
-		if (!isServer) {
-			// クライアント側のチャンク読み込みエラー対策
-			config.optimization = {
-				...config.optimization,
-				moduleIds: "deterministic",
-				chunkIds: "deterministic",
-			};
-		}
-		return config;
-	},
+	// Next.js 16対応: Turbopackを有効化（webpack設定を削除したため自動的に有効）
+	// webpack設定は削除済み（Turbopackが自動でdeterministic IDsに対応）
 
 	// 画像の外部ドメイン設定
 	images: {
