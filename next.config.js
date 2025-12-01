@@ -92,6 +92,15 @@ const nextConfig = {
 				pathname: "/**",
 			},
 		],
+		// Next.js 16対応: 使用する画像品質のリスト
+		qualities: [75, 90],
+		// Next.js 16対応: クエリパラメータ付きローカル画像パスの許可
+		localPatterns: [
+			{
+				pathname: "/api/places/photo",
+				// search を省略すると、すべてのクエリパラメータが許可される
+			},
+		],
 	},
 
 	async redirects() {

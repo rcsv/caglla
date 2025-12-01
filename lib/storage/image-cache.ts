@@ -29,6 +29,8 @@ export interface CachedImageInfo {
 export class ImageCacheManager {
 	private static instance: ImageCacheManager;
 	private cache: Map<string, string> = new Map();
+	// 存在しない画像を記録（同じ画像への不要なリクエストを回避）
+	private notFoundCache: Set<string> = new Set();
 
 	static getInstance(): ImageCacheManager {
 		if (!ImageCacheManager.instance) {
@@ -75,20 +77,46 @@ export class ImageCacheManager {
 	): Promise<string | null> {
 		const cacheKey = this.generateCacheKey(photoReference, options);
 
+		// 既に「存在しない」ことが確認済みの場合は早期リターン
+		if (this.notFoundCache.has(cacheKey)) {
+			return null;
+		}
+
 		try {
 			const imageRef = ref(storage, cacheKey);
+			
+			// まず存在確認（404エラーを回避するため）
+			try {
+				await getMetadata(imageRef);
+			} catch (metadataError: any) {
+				// 画像が存在しない場合は早期リターン（getDownloadURLを呼ばない）
+				if (metadataError.code === "storage/object-not-found") {
+					// 「存在しない」ことを記録（同じ画像への不要なリクエストを回避）
+					this.notFoundCache.add(cacheKey);
+					// これは正常な動作 - 画像がまだキャッシュされていない
+					// デバッグログも出力しない（404エラーのノイズを減らすため）
+					return null;
+				}
+				// その他のエラーは再スロー
+				throw metadataError;
+			}
+
+			// 存在確認が成功した場合のみURLを取得
 			const url = await getDownloadURL(imageRef);
 
 			// メモリキャッシュにも保存
 			this.cache.set(cacheKey, url);
+			// 「存在しない」キャッシュから削除（もしあれば）
+			this.notFoundCache.delete(cacheKey);
 
 			return url;
 		} catch (error: any) {
 			if (error.code === "storage/object-not-found") {
+				// 「存在しない」ことを記録（同じ画像への不要なリクエストを回避）
+				this.notFoundCache.add(cacheKey);
 				// これは正常な動作 - 画像がまだキャッシュされていない
-				console.debug(
-					`🔍 Image not found in Firebase Storage (will cache): ${cacheKey}`,
-				);
+				// デバッグログも出力しない（404エラーのノイズを減らすため）
+				return null;
 			} else if (error.code === "storage/unauthorized") {
 				console.error(`❌ Permission denied for Firebase Storage: ${cacheKey}`);
 			} else {
@@ -103,6 +131,7 @@ export class ImageCacheManager {
 
 	/**
 	 * Google Places APIから画像を取得してFirebase Storageにキャッシュ
+	 * 注意: このメソッドは、既にFirebase Storageに存在しないことが確認された後に呼ばれる
 	 */
 	async cacheAndGetImageUrl(
 		photoReference: string,
@@ -111,17 +140,13 @@ export class ImageCacheManager {
 	): Promise<string> {
 		const cacheKey = this.generateCacheKey(photoReference, options);
 
-		// メモリキャッシュから確認
+		// メモリキャッシュから確認（念のため）
 		if (this.cache.has(cacheKey)) {
 			return this.cache.get(cacheKey)!;
 		}
 
-		// Firebase Storageから確認
-		const cachedUrl = await this.getCachedImageUrl(photoReference, options);
-		if (cachedUrl) {
-			return cachedUrl;
-		}
-
+		// この時点でFirebase Storageには存在しないことが確定しているので、
+		// 直接 Google Places API から取得してキャッシュする
 		try {
 			// Google Places APIから画像を取得
 			const response = await fetch(googlePhotoUrl);
@@ -148,6 +173,8 @@ export class ImageCacheManager {
 
 			// メモリキャッシュに保存
 			this.cache.set(cacheKey, url);
+			// 「存在しない」キャッシュから削除（アップロード成功したため）
+			this.notFoundCache.delete(cacheKey);
 
 			return url;
 		} catch (error) {
@@ -204,6 +231,7 @@ export class ImageCacheManager {
 	 */
 	clearMemoryCache(): void {
 		this.cache.clear();
+		this.notFoundCache.clear();
 	}
 
 	/**
@@ -215,6 +243,7 @@ export class ImageCacheManager {
 	): void {
 		const cacheKey = this.generateCacheKey(photoReference, options);
 		this.cache.delete(cacheKey);
+		this.notFoundCache.delete(cacheKey);
 	}
 }
 
