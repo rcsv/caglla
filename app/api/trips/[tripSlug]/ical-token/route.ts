@@ -62,7 +62,7 @@ export const POST = tripApi(async (request: NextRequest, ctx) => {
 	});
 
 	// 7. iCal URLを生成
-	const baseUrl = request.headers.get("origin") || "https://caglla.app";
+	const baseUrl = request.headers.get("origin") || "https://caglla.travel";
 	const icalUrl = `${baseUrl}/api/trips/${resolvedTripId}/ical?token=${token}&type=trip`;
 	const reservationsUrl = `${baseUrl}/api/trips/${resolvedTripId}/ical?token=${token}&type=reservations`;
 

@@ -7,7 +7,9 @@ import {
 	exportReservationsToICal,
 } from "@/lib/utils/export-helpers";
 import { validateICalToken } from "@/lib/utils/ical-token";
-import type { Trip, Day, Itinerary } from "@/lib/core/types";
+import type { Trip, Day, Itinerary, PlaceData } from "@/lib/core/types";
+import type { PlacesCache } from "@/lib/core/types/place";
+import { COLLECTIONS } from "@/lib/firebase/firestore";
 
 /**
  * iCal公開API
@@ -141,13 +143,73 @@ export async function GET(
 				itinerariesSnapshot.docs.map((doc: any) => ({
 					id: doc.id,
 					title: doc.data().title,
+					description: doc.data().description,
+					location: doc.data().location,
 				})),
 			);
 
-			day.itineraries = itinerariesSnapshot.docs.map((itineraryDoc: any) => ({
-				...itineraryDoc.data(),
-				id: itineraryDoc.id,
-			})) as Itinerary[];
+			// Itineraryデータを取得し、place_idからplace_dataを解決
+			const itineraries: Itinerary[] = [];
+			for (const itineraryDoc of itinerariesSnapshot.docs) {
+				const itineraryData = itineraryDoc.data() as Itinerary;
+				const itinerary: Itinerary = {
+					...itineraryData,
+					id: itineraryDoc.id,
+				};
+
+				// place_idが存在し、place_dataが未設定の場合、places_cacheから取得
+				if (itinerary.place_id && !itinerary.place_data) {
+					try {
+						// v2フォーマット({place_id}_{language})優先で検索し、最後に旧フォーマット(place_id)を試す
+						const candidateKeys: string[] = [
+							`${itinerary.place_id}_en`,
+							`${itinerary.place_id}_ja`,
+							itinerary.place_id,
+						];
+						let placesCache: PlacesCache | null = null;
+						for (const key of candidateKeys) {
+							const cacheDoc = await adminDb
+								.collection(COLLECTIONS.PLACES_CACHE)
+								.doc(key)
+								.get();
+							if (cacheDoc.exists) {
+								placesCache = cacheDoc.data() as PlacesCache;
+								break;
+							}
+						}
+
+						if (placesCache) {
+							// PlacesCacheからPlaceDataに変換（メタデータを除外）
+							itinerary.place_data = {
+								place_id: placesCache.place_id,
+								name: placesCache.name,
+								formatted_address: placesCache.formatted_address,
+								geometry: placesCache.geometry,
+								address_components: placesCache.address_components,
+								photos: placesCache.photos,
+								rating: placesCache.rating,
+								user_ratings_total: placesCache.user_ratings_total,
+								price_level: placesCache.price_level,
+								types: placesCache.types,
+								opening_hours: placesCache.opening_hours,
+								international_phone_number:
+									placesCache.international_phone_number,
+								website: placesCache.website,
+								editorial_summary: placesCache.editorial_summary,
+							} as PlaceData;
+						}
+					} catch (error) {
+						console.error(
+							`[iCal Debug] Failed to fetch place_data for place_id: ${itinerary.place_id}`,
+							error,
+						);
+					}
+				}
+
+				itineraries.push(itinerary);
+			}
+
+			day.itineraries = itineraries;
 
 			days.push(day);
 		}

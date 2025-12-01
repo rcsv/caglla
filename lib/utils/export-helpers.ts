@@ -323,6 +323,37 @@ function formatICalDateTime(date: Date): string {
 }
 
 /**
+ * 日時をiCal形式（タイムゾーン指定）に変換
+ * 形式: DTSTART;TZID=Pacific/Honolulu:YYYYMMDDTHHmmss
+ * 
+ * dateは、combineDateAndTimeで作成されたDateオブジェクトで、
+ * ユーザーが入力した時刻（例：10:00）をローカル時刻として解釈している。
+ * タイムゾーンを指定する場合、そのタイムゾーンでの時刻を正しく出力する。
+ * 
+ * 注意: dateオブジェクトは既にユーザーが入力した時刻（例：10:00）を
+ * ローカル時刻として保持しているため、その時刻をそのままタイムゾーンで出力する。
+ */
+function formatICalDateTimeWithTimezone(
+	date: Date,
+	timezone: string | undefined,
+): string {
+	if (!timezone || timezone === "UTC") {
+		return `DTSTART:${formatICalDateTime(date)}`;
+	}
+
+	// dateオブジェクトから年、月、日、時、分を取得
+	// これらはユーザーが入力した時刻をローカル時刻として保持している
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDate()).padStart(2, "0");
+	const hours = String(date.getHours()).padStart(2, "0");
+	const minutes = String(date.getMinutes()).padStart(2, "0");
+	const seconds = String(date.getSeconds()).padStart(2, "0");
+
+	return `DTSTART;TZID=${timezone}:${year}${month}${day}T${hours}${minutes}${seconds}`;
+}
+
+/**
  * 日付のみをiCal形式に変換
  * 形式: YYYYMMDD
  */
@@ -335,10 +366,12 @@ function formatICalDate(date: Date): string {
 
 /**
  * Day の日付と時刻を合成して Date オブジェクトを生成
+ * タイムゾーンを考慮して、指定されたタイムゾーンでの時刻として解釈する
  */
 function combineDateAndTime(
 	dayDate: any,
 	time: string | undefined,
+	_timezone?: string, // 未使用だが、将来の拡張のために保持
 ): Date | null {
 	if (!time) return null;
 
@@ -354,12 +387,15 @@ function combineDateAndTime(
 		}
 
 		const [hours, minutes] = time.split(":").map((v) => parseInt(v, 10));
-		if (isNaN(hours) || isNaN(minutes)) return null;
+		if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
 
+		// タイムゾーンが指定されている場合でも、dateオブジェクトは
+		// ユーザーが入力した時刻をローカル時刻として保持する
+		// iCal出力時には formatICalDateTimeWithTimezone で正しく変換される
 		const result = new Date(baseDate);
 		result.setHours(hours, minutes, 0, 0);
 		return result;
-	} catch (error) {
+	} catch {
 		return null;
 	}
 }
@@ -378,7 +414,7 @@ export function exportTripToICal(trip: Trip): string {
 	// ヘッダー
 	lines.push("BEGIN:VCALENDAR");
 	lines.push("VERSION:2.0");
-	lines.push("PRODID:-//Caglla Travel Manager//EN");
+	lines.push("PRODID://rcsv//Caglla Travel Manager//EN");
 	lines.push(`X-WR-CALNAME:${escapeICalValue(trip.title)}`);
 	lines.push("CALSCALE:GREGORIAN");
 	lines.push("METHOD:PUBLISH");
@@ -406,40 +442,70 @@ export function exportTripToICal(trip: Trip): string {
 			console.log(
 				`[iCal Export Debug] Adding event ${eventCount}: ${itinerary.title}`,
 			);
+			console.log(
+				`[iCal Export Debug] Itinerary data:`,
+				{
+					id: itinerary.id,
+					title: itinerary.title,
+					description: itinerary.description,
+					location: itinerary.location,
+					hasDescription: !!itinerary.description,
+					hasLocation: !!itinerary.location,
+				},
+			);
 
 			lines.push("BEGIN:VEVENT");
 
 			// UID（ユニークID）
-			lines.push(`UID:${itinerary.id}@caglla.app`);
+			lines.push(`UID:${itinerary.id}@caglla.travel`);
 
 			// タイトル
 			lines.push(`SUMMARY:${escapeICalValue(itinerary.title)}`);
 
-			// 説明
+			// 説明（旅行タイトル + 既存の説明 + by Caglla）
+			let description = `Trip: ${trip.title}`;
 			if (itinerary.description) {
-				lines.push(`DESCRIPTION:${escapeICalValue(itinerary.description)}`);
+				description += `\\n${itinerary.description}`;
 			}
+			description += "\\n\\nby Caglla";
+			lines.push(`DESCRIPTION:${escapeICalValue(description)}`);
 
-			// 場所
-			if (itinerary.location) {
-				lines.push(`LOCATION:${escapeICalValue(itinerary.location)}`);
+			// 場所（locationが未設定の場合はplace_dataから取得）
+			// 優先順位: location > formatted_address > name
+			const location =
+				itinerary.location ||
+				itinerary.place_data?.formatted_address ||
+				itinerary.place_data?.name;
+			if (location) {
+				lines.push(`LOCATION:${escapeICalValue(location)}`);
 			}
 
 			// 日時（start_timeが必須）
-			const startDate = combineDateAndTime(day.date, itinerary.start_time);
+			// タイムゾーンを考慮してローカル時刻で出力
+			const timezone = itinerary.timezone || "UTC";
+			const startDate = combineDateAndTime(day.date, itinerary.start_time, timezone);
 			if (startDate) {
-				lines.push(`DTSTART:${formatICalDateTime(startDate)}`);
+				lines.push(formatICalDateTimeWithTimezone(startDate, timezone));
 			}
 
 			if (itinerary.end_time) {
-				const endDate = combineDateAndTime(day.date, itinerary.end_time);
+				const endDate = combineDateAndTime(day.date, itinerary.end_time, timezone);
 				if (endDate) {
-					lines.push(`DTEND:${formatICalDateTime(endDate)}`);
+					// DTENDも同じタイムゾーン形式を使用
+					const dtendLine = formatICalDateTimeWithTimezone(endDate, timezone);
+					lines.push(dtendLine.replace("DTSTART", "DTEND"));
 				}
 			}
 
 			// タイムスタンプ
 			lines.push(`DTSTAMP:${formatICalDateTime(new Date())}`);
+
+			// アラーム（30分前に通知）
+			lines.push("BEGIN:VALARM");
+			lines.push("ACTION:DISPLAY");
+			lines.push(`DESCRIPTION:Reminder: ${escapeICalValue(itinerary.title)}`);
+			lines.push("TRIGGER:-PT30M"); // 30分前
+			lines.push("END:VALARM");
 
 			lines.push("END:VEVENT");
 		});
@@ -468,7 +534,7 @@ export function exportReservationsToICal(trip: Trip): string {
 	// ヘッダー
 	lines.push("BEGIN:VCALENDAR");
 	lines.push("VERSION:2.0");
-	lines.push("PRODID:-//Caglla Travel Manager//EN");
+	lines.push("PRODID://rcsv//Caglla Travel Manager//EN");
 	lines.push(`X-WR-CALNAME:${escapeICalValue(trip.title)} - Reservations`);
 	lines.push("CALSCALE:GREGORIAN");
 	lines.push("METHOD:PUBLISH");
@@ -492,7 +558,7 @@ export function exportReservationsToICal(trip: Trip): string {
 			lines.push("BEGIN:VEVENT");
 
 			// UID（ユニークID）
-			lines.push(`UID:${itinerary.id}-reservation@caglla.app`);
+			lines.push(`UID:${itinerary.id}-reservation@caglla.travel`);
 
 			// タイトル（予約タイプを含める）
 			const typeLabel =
@@ -509,28 +575,25 @@ export function exportReservationsToICal(trip: Trip): string {
 				`SUMMARY:${escapeICalValue(`${typeLabel}: ${itinerary.title}`)}`,
 			);
 
-			// 説明（予約詳細）
-			const description: string[] = [];
+			// 説明（旅行タイトル + 予約詳細 + by Caglla）
+			let description = `Trip: ${trip.title}`;
 			if (res.confirmation_number) {
-				description.push(`Confirmation: ${res.confirmation_number}`);
+				description += `\\nConfirmation: ${res.confirmation_number}`;
 			}
 			if (res.reservation_site) {
-				description.push(`Site: ${res.reservation_site}`);
+				description += `\\nSite: ${res.reservation_site}`;
 			}
 			if (res.flight_number) {
-				description.push(`Flight: ${res.flight_number}`);
+				description += `\\nFlight: ${res.flight_number}`;
 			}
 			if (res.departure_airport && res.arrival_airport) {
-				description.push(
-					`Route: ${res.departure_airport} → ${res.arrival_airport}`,
-				);
+				description += `\\nRoute: ${res.departure_airport} → ${res.arrival_airport}`;
 			}
 			if (res.notes) {
-				description.push(`Notes: ${res.notes}`);
+				description += `\\nNotes: ${res.notes}`;
 			}
-			if (description.length > 0) {
-				lines.push(`DESCRIPTION:${escapeICalValue(description.join("\\n"))}`);
-			}
+			description += "\\n\\nby Caglla";
+			lines.push(`DESCRIPTION:${escapeICalValue(description)}`);
 
 			// 場所
 			if (itinerary.location) {
@@ -585,6 +648,13 @@ export function exportReservationsToICal(trip: Trip): string {
 				lines.push("TRIGGER:-PT24H"); // 24時間前
 				lines.push("END:VALARM");
 			}
+
+			// アラーム（30分前に通知）
+			lines.push("BEGIN:VALARM");
+			lines.push("ACTION:DISPLAY");
+			lines.push(`DESCRIPTION:Reminder: ${escapeICalValue(itinerary.title)}`);
+			lines.push("TRIGGER:-PT30M"); // 30分前
+			lines.push("END:VALARM");
 
 			// タイムスタンプ
 			lines.push(`DTSTAMP:${formatICalDateTime(new Date())}`);
