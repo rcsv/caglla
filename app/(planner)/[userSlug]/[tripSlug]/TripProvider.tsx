@@ -15,6 +15,8 @@ import { makeAuthenticatedRequest, getIdToken } from "@/lib/api/helpers";
 import { useAuth } from "@/lib/contexts/auth";
 import logger from "@/lib/core/logger";
 import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
+import { dateUtils } from "@/lib/utils/date";
+import { getUserLanguage } from "@/lib/utils/language";
 
 export interface AvailableDay {
 	id: string;
@@ -207,11 +209,37 @@ export function TripProvider({
 	const availableDays = useMemo<AvailableDay[]>(() => {
 		if (!trip?.days) return [];
 
+		// 複数の年が含まれるかチェック
+		const years = new Set<number>();
+		trip.days.forEach((day) => {
+			if (day.date) {
+				const date = toDateOrNull(day.date);
+				if (date) {
+					years.add(date.getFullYear());
+				}
+			}
+		});
+
+		// 複数の年が含まれる場合は年も表示、そうでなければ省略
+		const includeYear = years.size > 1;
+		const userLanguage = getUserLanguage(user);
+
 		return trip.days.map((d, index) => {
 			const dayDate = toDateOrNull(d.date);
 
 			// テンプレートモードの場合は日付が存在しないので、"Day 1", "Day 2" 形式を使用
-			const dateDisplay = dayDate ? dayDate.toISOString() : `Day ${index + 1}`;
+			const dateDisplay = dayDate
+				? dateUtils.formatDate(
+						d.date,
+						{
+							month: "long",
+							day: "numeric",
+							weekday: "short",
+							year: includeYear ? "numeric" : undefined,
+						},
+						userLanguage,
+					)
+				: `Day ${index + 1}`;
 
 			return {
 				id: d.id,
@@ -219,7 +247,7 @@ export function TripProvider({
 				title: d.description || "",
 			};
 		});
-	}, [trip?.days]);
+	}, [trip?.days, user]);
 
 	return (
 		<TripContext.Provider

@@ -10,6 +10,7 @@ import { useTripUrlState } from "../useTripUrlState";
 import { POIProvider, usePOI } from "../POIProvider";
 import { dispatchPOIOpen, dispatchPOIClose } from "../poi-events";
 import { makeAuthenticatedRequest } from "@/lib/api/helpers";
+import logger from "@/lib/core/logger";
 
 /**
  * Map Default Slot (Read-only)
@@ -70,26 +71,53 @@ function MapContent() {
 		if (!poiData) return;
 
 		try {
-			const response = await makeAuthenticatedRequest("/api/itineraries", {
-				method: "POST",
-				body: JSON.stringify({
-					day_id: dayId,
-					place_id: placeId,
-					place_data: poiData.placeData || {
+			// place_dataの構造をPlaceDataSchemaに合わせる
+			const placeDataForRequest = poiData.placeData || {
 						place_id: placeId,
 						name: poiData.name,
 						geometry: {
-							location: poiData.location,
+					location: {
+						lat: poiData.location.lat,
+						lng: poiData.location.lng,
 						},
 					},
+			};
+
+			const requestBody = {
+				day_id: dayId,
+				place_id: placeId,
+				place_data: placeDataForRequest,
 					title: poiData.name,
 					description: poiData.placeData?.formatted_address || "",
 					location: poiData.placeData?.formatted_address || "",
-				}),
+			};
+
+			logger.debug("Adding itinerary from POI", {
+				placeId,
+				dayId,
+				title: requestBody.title,
+				hasPlaceData: !!poiData.placeData,
+			});
+
+			const response = await makeAuthenticatedRequest("/api/itineraries", {
+				method: "POST",
+				body: JSON.stringify(requestBody),
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to add itinerary: ${response.status}`);
+				const errorData = await response.json().catch(() => ({}));
+				const errorMessage =
+					errorData?.error || errorData?.message || `Failed to add itinerary: ${response.status}`;
+				logger.error("Failed to add itinerary", {
+					status: response.status,
+					error: errorMessage,
+					details: errorData,
+				});
+				alert(
+					`旅程の追加に失敗しました: ${errorMessage}\n\n` +
+					`詳細: ${JSON.stringify(errorData, null, 2)}`,
+				);
+				return;
 			}
 
 			// レスポンスから追加されたItineraryのIDを取得
@@ -108,7 +136,10 @@ function MapContent() {
 			setPoiData(null);
 			dispatchPOIClose();
 		} catch (error) {
-			console.error("Failed to add itinerary:", error);
+			logger.error("Failed to add itinerary", error);
+			alert(
+				`旅程の追加に失敗しました: ${error instanceof Error ? error.message : String(error)}`,
+			);
 		}
 	};
 
