@@ -100,6 +100,10 @@ const nextConfig = {
 				pathname: "/api/places/photo",
 				// search を省略すると、すべてのクエリパラメータが許可される
 			},
+			{
+				pathname: "/api/cached-place-image/**",
+				// search を省略すると、すべてのクエリパラメータが許可される
+			},
 		],
 	},
 

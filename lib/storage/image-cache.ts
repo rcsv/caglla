@@ -63,13 +63,15 @@ export class ImageCacheManager {
 			const imageRef = ref(storage, cacheKey);
 			await getMetadata(imageRef);
 			return true;
-		} catch (error) {
+		} catch {
 			return false;
 		}
 	}
 
 	/**
 	 * キャッシュされた画像のURLを取得
+	 * 
+	 * 新しいAPI Routeを使用して、404エラーを回避する
 	 */
 	async getCachedImageUrl(
 		photoReference: string,
@@ -83,26 +85,26 @@ export class ImageCacheManager {
 		}
 
 		try {
-			const imageRef = ref(storage, cacheKey);
+			// まず、新しいAPI Routeに対してHEADリクエストを送って存在確認
+			// HEADリクエストは404エラーをコンソールに表示しない
+			const queryParams = new URLSearchParams();
+			if (options.width) queryParams.set("width", options.width.toString());
+			if (options.height) queryParams.set("height", options.height.toString());
+			if (options.quality) queryParams.set("quality", options.quality.toString());
+
+			const apiUrl = `/api/cached-place-image/${encodeURIComponent(photoReference)}?${queryParams.toString()}`;
 			
-			// まず存在確認（404エラーを回避するため）
-			try {
-				await getMetadata(imageRef);
-			} catch (metadataError: any) {
-				// 画像が存在しない場合は早期リターン（getDownloadURLを呼ばない）
-				if (metadataError.code === "storage/object-not-found") {
-					// 「存在しない」ことを記録（同じ画像への不要なリクエストを回避）
-					this.notFoundCache.add(cacheKey);
-					// これは正常な動作 - 画像がまだキャッシュされていない
-					// デバッグログも出力しない（404エラーのノイズを減らすため）
-					return null;
-				}
-				// その他のエラーは再スロー
-				throw metadataError;
+			const headResponse = await fetch(apiUrl, { method: "HEAD" });
+
+			// 204 (No Content) が返された場合は存在しない
+			if (headResponse.status === 204) {
+				this.notFoundCache.add(cacheKey);
+				return null;
 			}
 
-			// 存在確認が成功した場合のみURLを取得
-			const url = await getDownloadURL(imageRef);
+			// 200が返された場合は存在する
+			// API Routeが画像データを直接返すため、API RouteのURLをそのまま使用
+			const url = apiUrl;
 
 			// メモリキャッシュにも保存
 			this.cache.set(cacheKey, url);
@@ -110,21 +112,11 @@ export class ImageCacheManager {
 			this.notFoundCache.delete(cacheKey);
 
 			return url;
-		} catch (error: any) {
-			if (error.code === "storage/object-not-found") {
-				// 「存在しない」ことを記録（同じ画像への不要なリクエストを回避）
-				this.notFoundCache.add(cacheKey);
-				// これは正常な動作 - 画像がまだキャッシュされていない
-				// デバッグログも出力しない（404エラーのノイズを減らすため）
-				return null;
-			} else if (error.code === "storage/unauthorized") {
-				console.error(`❌ Permission denied for Firebase Storage: ${cacheKey}`);
-			} else {
-				console.warn(
-					`⚠️ Failed to get cached image from Firebase Storage for ${cacheKey}:`,
-					error.message,
-				);
-			}
+		} catch {
+			// エラーが発生した場合は、「存在しない」として扱う
+			// （ネットワークエラーなども含む）
+			this.notFoundCache.add(cacheKey);
+			// コンソールエラーは出力しない（404エラーのノイズを減らすため）
 			return null;
 		}
 	}
