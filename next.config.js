@@ -45,6 +45,9 @@ const nextConfig = {
 	// Firebase App Hosting用の設定
 	output: "standalone",
 
+	// Turbopack設定（空の設定でWebpackを使用）
+	turbopack: {},
+
 	// Webpack設定（チャンク読み込みエラー対策）
 	webpack: (config, { isServer }) => {
 		if (!isServer) {
