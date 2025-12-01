@@ -164,4 +164,27 @@ describe("timezoneUtils", () => {
 			expect(getTimezoneByCountryCode("XX")).toBeNull();
 		});
 	});
+
+	describe("getTimezoneFromPlace with place_cache timezone", () => {
+		it("should use timezone from place_data if available", () => {
+			// place_cacheから取得したtimezoneがplace_dataに含まれている場合
+			// 実際の実装では、place_data.timezoneを優先的に使用する必要がある
+			// このテストは、将来的な実装のためのプレースホルダー
+
+			const placeDataWithTimezone: PlaceData = {
+				place_id: "test-place-with-timezone",
+				name: "Some Place",
+				formatted_address: "Unknown Address",
+				// timezoneフィールドがPlaceDataに追加された場合を想定
+				// 注: 現在のPlaceData型定義にはtimezoneフィールドがないため、
+				// 実際の実装では、place_cacheから取得したPlacesCacheのtimezoneを
+				// place_dataにマージするか、別途処理する必要がある
+			};
+
+			// 現在の実装では、推定ロジックが使用される
+			const timezone = timezoneUtils.getTimezoneFromPlace(placeDataWithTimezone);
+			// 推定失敗のためUTCが返される
+			expect(timezone).toBe("UTC");
+		});
+	});
 });

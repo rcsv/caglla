@@ -25,14 +25,15 @@ import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
 import { COLLECTIONS } from "@/lib/firebase/firestore";
 import logger from "@/lib/core/logger";
 import { placesApiHelpers } from "@/lib/api/google/places";
+import { timezoneApiHelpers } from "@/lib/api/google/timezone";
 import { DEFAULT_LANGUAGE } from "@/lib/utils/language";
 
 // キャッシュの有効期限設定
 const CACHE_EXPIRY = {
 	// 基本情報（住所、座標など）は1年間有効
 	BASIC_INFO_DAYS: 365,
-	// 動的情報（営業時間、評価など）は7日間有効
-	DYNAMIC_INFO_DAYS: 7,
+	// 動的情報（営業時間、評価など）は30日間有効
+	DYNAMIC_INFO_DAYS: 30,
 	// 写真は30日間有効
 	PHOTOS_DAYS: 30,
 } as const;
@@ -165,6 +166,27 @@ export class PlacesCacheManager {
 				cacheData.editorial_summary = placeData.editorial_summary;
 			if (placeData.reviews) cacheData.reviews = placeData.reviews;
 
+			// Google Timezone APIからタイムゾーン情報を取得
+			// geometry.locationが存在する場合のみ実行
+			if (placeData.geometry?.location?.lat && placeData.geometry?.location?.lng) {
+				try {
+					const timezoneResult = await timezoneApiHelpers.getTimezone(
+						placeData.geometry.location.lat,
+						placeData.geometry.location.lng,
+					);
+					
+					if (timezoneResult?.timeZoneId) {
+						cacheData.timezone = timezoneResult.timeZoneId;
+						// utc_offset_minutesも計算して保存（分単位）
+						const totalOffsetSeconds = timezoneResult.rawOffset + timezoneResult.dstOffset;
+						cacheData.utc_offset_minutes = Math.floor(totalOffsetSeconds / 60);
+					}
+				} catch (error) {
+					// Timezone APIの呼び出しに失敗しても、Places APIのデータは保存する
+					logger.warn("Failed to fetch timezone information:", error);
+				}
+			}
+
 			// Firestoreに保存（新形式: {place_id}_{language}）
 			// logger.debug('💾 Saving cache data:', cacheData)
 			const cacheKey = `${placeId}_${language}`;
@@ -172,6 +194,7 @@ export class PlacesCacheManager {
 			await setDoc(docRef, cacheData);
 			logger.debug("✅ Successfully saved to PlacesCache (NEW FORMAT)", {
 				cacheKey,
+				timezone: cacheData.timezone,
 			});
 
 			return cacheData;
