@@ -29,7 +29,7 @@ export default function PremiumFeature({
 		<>
 			<div className={`relative ${className}`}>
 				{/* プレミアム機能のオーバーレイ */}
-				<div className="absolute inset-0 bg-white bg-opacity-90 backdrop-blur-sm z-10 rounded-lg">
+				<div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 rounded-lg">
 					<div className="flex flex-col items-center justify-center h-full p-4">
 						<div className="text-center mb-4">
 							<div className="mb-2 flex items-center justify-center">

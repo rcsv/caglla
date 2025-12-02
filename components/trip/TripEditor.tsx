@@ -359,7 +359,7 @@ export default function TripEditor({
 				{showLoadingOverlay &&
 					createPortal(
 						<div
-							className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass("FLOAT_MODAL")}`}
+							className={`fixed inset-0 bg-black/50 flex items-center justify-center ${getZIndexClass("FLOAT_MODAL")}`}
 						>
 							<div className="bg-white rounded-lg p-8 flex flex-col items-center space-y-4 shadow-xl">
 								<Loading
@@ -376,10 +376,10 @@ export default function TripEditor({
 					)}
 
 				{/* 編集モーダル（Portal） */}
-				{createPortal(
-					<div
-						className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass("FLOAT_MODAL")}`}
-					>
+			{createPortal(
+				<div
+					className={`fixed inset-0 bg-black/50 flex items-center justify-center ${getZIndexClass("FLOAT_MODAL")}`}
+				>
 						<div className="bg-white rounded-lg shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
 							<div className="flex justify-between items-center mb-4">
 								<h2 className="text-xl font-semibold text-gray-900">
@@ -730,7 +730,7 @@ export default function TripEditor({
 				{showDeleteConfirm &&
 					createPortal(
 						<div
-							className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center ${getZIndexClass("FLOAT_MODAL")}`}
+							className={`fixed inset-0 bg-black/50 flex items-center justify-center ${getZIndexClass("FLOAT_MODAL")}`}
 						>
 							<div className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4">
 								<h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -775,7 +775,7 @@ export default function TripEditor({
 	return (
 		<button
 			onClick={() => setIsEditing(true)}
-			className="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-lg hover:bg-opacity-30 transition-all duration-200 border border-white border-opacity-30 font-medium"
+			className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-white/30 transition-all duration-200 border border-white/30 font-medium"
 		>
 			<svg
 				className="w-4 h-4 mr-2"

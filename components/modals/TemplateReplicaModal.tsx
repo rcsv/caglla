@@ -71,7 +71,7 @@ export default function TemplateReplicaModal({
 		touched && !startDate ? t("trip.template.replicateStartDateError") : "";
 
 	return (
-		<div className="fixed inset-0 zidx-float-modal flex items-center justify-center bg-black bg-opacity-50 px-4">
+		<div className="fixed inset-0 zidx-float-modal flex items-center justify-center bg-black/50 px-4">
 			<div className="w-full max-w-md rounded-lg bg-white shadow-2xl">
 				<form onSubmit={handleSubmit}>
 					<div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">

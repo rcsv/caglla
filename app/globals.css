@@ -10,6 +10,19 @@
 	h6 {
 		font-family: var(--font-rajdhani), "Rajdhani", sans-serif;
 	}
+
+	/* Global reset (Tailwind CSS 4では @layer base 内に配置が必要) */
+	* {
+		box-sizing: border-box;
+		padding: 0;
+		margin: 0;
+	}
+
+	html,
+	body {
+		max-width: 100vw;
+		overflow-x: hidden;
+	}
 }
 
 :root {
@@ -223,18 +236,6 @@ body {
 		rgba(52, 211, 153, 1) 100%
 	);
 	box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
-}
-
-* {
-	box-sizing: border-box;
-	padding: 0;
-	margin: 0;
-}
-
-html,
-body {
-	max-width: 100vw;
-	overflow-x: hidden;
 }
 
 /* スクロールバーを非表示にする */
