@@ -233,13 +233,12 @@ export default function HomePage() {
 								</p>
 							</div>
 							<div className="flex gap-3 flex-shrink-0">
-								<Button
-									variant="secondary"
+								<button
 									onClick={handleRejectCookies}
-									className="px-6 py-2 border border-[#1F7E79] text-[#1F7E79] hover:bg-[#1F7E79]/10 bg-transparent"
+									className="px-6 py-2 border border-[#1F7E79] text-[#1F7E79] hover:bg-[#1F7E79]/10 bg-white/45 rounded-md transition-colors font-medium"
 								>
 									{t("home.cookie.reject")}
-								</Button>
+								</button>
 								<Button
 									variant="primary"
 									onClick={handleAcceptCookies}

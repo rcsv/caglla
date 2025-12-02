@@ -104,15 +104,10 @@ const nextConfig = {
 		const isDevelopment = process.env.NODE_ENV === "development";
 		
 		const redirects = [
-			// Public static section under /s
 			// 開発環境では / へのリダイレクトをスキップ
 			...(isDevelopment ? [] : [
-				{ source: "/", destination: "/s", permanent: false },
 			]),
-			{ source: "/about", destination: "/s/about", permanent: false },
-			{ source: "/terms", destination: "/s/terms", permanent: false },
-			{ source: "/privacy", destination: "/s/privacy", permanent: false },
-			{ source: "/contact", destination: "/s/contact", permanent: false },
+			// リダイレクトやめ
 		];
 		
 		return redirects;
