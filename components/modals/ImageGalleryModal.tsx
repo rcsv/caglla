@@ -153,7 +153,7 @@ export default function ImageGalleryModal({
 
 	return (
 		<div
-			className="fixed inset-0 zidx-dialog-overlay bg-black bg-opacity-75 flex items-center justify-center"
+			className="fixed inset-0 zidx-dialog-overlay bg-black/75 flex items-center justify-center"
 			onClick={handleBackdropClick}
 		>
 			<div
@@ -203,7 +203,7 @@ export default function ImageGalleryModal({
 										e.stopPropagation();
 										goToPrevious();
 									}}
-									className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-3 rounded-full transition-all z-10"
+									className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/75 text-white p-3 rounded-full transition-all z-10"
 									aria-label={require("@/lib/i18n").t("gallery.previousImage")}
 								>
 									<svg
@@ -239,6 +239,7 @@ export default function ImageGalleryModal({
 											fill
 											sizes="(max-width: 1024px) 100vw, 80vw"
 											className="object-contain rounded-lg shadow-2xl"
+											unoptimized
 											onError={() => {
 												setMainImageFallbacks((prev) => ({
 													...prev,
@@ -258,7 +259,7 @@ export default function ImageGalleryModal({
 										e.stopPropagation();
 										goToNext();
 									}}
-									className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-3 rounded-full transition-all z-10"
+									className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/75 text-white p-3 rounded-full transition-all z-10"
 									aria-label={require("@/lib/i18n").t("gallery.nextImage")}
 								>
 									<svg
@@ -317,6 +318,7 @@ export default function ImageGalleryModal({
 											fill
 											className="object-cover"
 											sizes="64px"
+											unoptimized
 											onError={() => {
 												setThumbnailFallbacks((prev) => ({
 													...prev,
