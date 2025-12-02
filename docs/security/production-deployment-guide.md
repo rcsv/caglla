@@ -50,15 +50,21 @@
 ### 2. Firebase API キー制限設定
 
 #### アプリケーション制限
-1. **Firebase Console** → **Project Settings** → **Service accounts**
-2. **Web API Key**を選択
-3. **Application restrictions**を設定
+1. **Google Cloud Console** → **APIs & Services** → **Credentials**
+2. **Web API Key**（Firebase API Key）を選択
+3. **Application restrictions** → **HTTP referrers (web sites)** を選択
+4. 以下のドメインを追加:
 
 ```
 HTTPリファラー（ウェブサイト）:
-- https://caglla.com/*
-- https://www.caglla.com/*
+- https://caglla.travel/*
+- https://www.caglla.travel/*
+- http://localhost:3000/*
+- https://localhost:3000/*
+- https://*.firebaseapp.com/*
 ```
+
+**重要**: Firebase Authentication は `*.firebaseapp.com` ドメインを経由して認証フローを処理するため、このドメインを許可リストに含める必要があります。`firebaseapp.com` を除外すると、`localhost:3000` からのログインが失敗し、"The requested action is invalid." エラーが発生します。
 
 #### API制限
 有効にするAPI:
