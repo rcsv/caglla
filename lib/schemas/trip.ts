@@ -44,7 +44,11 @@ export const PlaceDataSchema: z.ZodType<PlaceData> = z
 		opening_hours: z.any().optional(),
 		international_phone_number: z.string().optional(),
 		website: z.string().optional(),
-		editorial_summary: z.string().optional(),
+		editorial_summary: z
+			.object({
+				overview: z.string(),
+			})
+			.optional(),
 		vicinity: z.string().optional(),
 		short_formatted_address: z.string().optional(),
 	})

@@ -122,8 +122,11 @@ export default function ScheduleCard({
 		setTitle(itinerary.title || "");
 		setStartTime(itinerary.start_time || "");
 		setEndTime(itinerary.end_time || "");
-		setTempStartTime(itinerary.start_time || "");
-		setTempEndTime(itinerary.end_time || "");
+		// 時間編集モード中は、一時的な入力値を保持するため、tempStartTime/tempEndTimeを更新しない
+		if (!isEditingTime) {
+			setTempStartTime(itinerary.start_time || "");
+			setTempEndTime(itinerary.end_time || "");
+		}
 		if (itinerary.timezone) {
 			setDestinationTimezone(itinerary.timezone);
 		} else {
@@ -150,6 +153,7 @@ export default function ScheduleCard({
 		itinerary.timezone,
 		itinerary.cost_currency,
 		trip?.default_currency,
+		isEditingTime, // 編集モード状態も依存配列に追加
 	]);
 
 	// place_dataが初めて設定されたときのみ自動的にタイムゾーンを設定

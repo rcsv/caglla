@@ -689,6 +689,7 @@ export default function POIDialog({
 													width={144}
 													height={144}
 													className="w-full h-full object-cover"
+													unoptimized
 													onError={(e) => {
 														// キャッシュされた画像が読み込めない場合は、元のGoogle Photo URLにフォールバック
 														const target = e.target as HTMLImageElement;
@@ -719,6 +720,7 @@ export default function POIDialog({
 															width={144}
 															height={144}
 															className="w-full h-full object-cover"
+															unoptimized
 														/>
 													)}
 												</div>
@@ -738,7 +740,7 @@ export default function POIDialog({
 												</div>
 											)}
 											{/* クリック可能インジケーター */}
-											<div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
+											<div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center">
 												<div className="opacity-0 group-hover:opacity-100 transition-opacity">
 													<svg
 														className="w-6 h-6 text-white drop-shadow-lg"

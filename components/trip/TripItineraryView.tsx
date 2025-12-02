@@ -430,7 +430,13 @@ export default function TripItineraryView({
 													...trip,
 													days:
 														trip.days?.map((d) =>
-															d.id === updatedDay.id ? updatedDay : d,
+															d.id === updatedDay.id
+																? {
+																		...updatedDay,
+																		// itinerariesは既存のものを保持（APIから返されるupdatedDayには含まれないため）
+																		itineraries: d.itineraries,
+																	}
+																: d,
 														) || [],
 												});
 											}}

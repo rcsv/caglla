@@ -90,7 +90,7 @@ export default function TripPageLayout({
 			{/* Mobile Menu Overlay */}
 			{mobileMenuOpen && (
 				<div
-					className={`fixed inset-0 bg-black bg-opacity-50 md:hidden zidx-left-panel`}
+					className={`fixed inset-0 bg-black/50 md:hidden zidx-left-panel`}
 					onClick={onToggleMobileMenu}
 				/>
 			)}

@@ -63,6 +63,18 @@ jest.mock("@/lib/contexts/subscription", () => ({
 	}),
 }));
 
+jest.mock("@/lib/contexts/notification", () => ({
+	useNotification: () => ({
+		showNotification: jest.fn(),
+		showSuccess: jest.fn(),
+		showWarning: jest.fn(),
+		showError: jest.fn(),
+		showConfirm: jest.fn(),
+	}),
+	NotificationProvider: ({ children }: { children: React.ReactNode }) =>
+		children,
+}));
+
 const mockTrip: Trip = {
 	id: "trip1",
 	slug: "tokyo-2025",

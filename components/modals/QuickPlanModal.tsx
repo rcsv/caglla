@@ -159,7 +159,7 @@ export default function QuickPlanModal({
 
 	const modalContent = (
 		<div
-			className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center zidx-dialog-overlay"
+			className="fixed inset-0 bg-black/50 flex items-center justify-center zidx-dialog-overlay"
 			onClick={handleBackdropClick}
 		>
 			<div

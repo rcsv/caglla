@@ -38,25 +38,14 @@ const nextConfig = {
 	typescript: {
 		ignoreBuildErrors: true,
 	},
-	eslint: {
-		ignoreDuringBuilds: true,
-	},
+	// eslint 設定は削除（Next.js 16では非推奨）
+	// 必要なら .eslintignore を使用
 
 	// Firebase App Hosting用の設定
 	output: "standalone",
 
-	// Webpack設定（チャンク読み込みエラー対策）
-	webpack: (config, { isServer }) => {
-		if (!isServer) {
-			// クライアント側のチャンク読み込みエラー対策
-			config.optimization = {
-				...config.optimization,
-				moduleIds: "deterministic",
-				chunkIds: "deterministic",
-			};
-		}
-		return config;
-	},
+	// Next.js 16対応: Turbopackを有効化（webpack設定を削除したため自動的に有効）
+	// webpack設定は削除済み（Turbopackが自動でdeterministic IDsに対応）
 
 	// 画像の外部ドメイン設定
 	images: {
@@ -90,6 +79,22 @@ const nextConfig = {
 				protocol: "https",
 				hostname: "api.dicebear.com",
 				pathname: "/**",
+			},
+		],
+		// Next.js 16対応: 使用する画像品質のリスト
+		qualities: [75, 90],
+		// Next.js 16対応: クエリパラメータ付きローカル画像パスの許可
+		localPatterns: [
+			{
+				pathname: "/api/places/photo",
+				// search を省略すると、すべてのクエリパラメータが許可される
+			},
+			{
+				pathname: "/api/cached-place-image/**",
+				// search を省略すると、すべてのクエリパラメータが許可される
+			},
+			{
+				pathname: "/default-avatar.png",
 			},
 		],
 	},

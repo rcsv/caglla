@@ -505,7 +505,7 @@ export default function CreateTripDialog({
 
 	return (
 		<div
-			className={`fixed inset-0 bg-black bg-opacity-50 ${getZIndexClass("FLOAT_MODAL")}`}
+			className={`fixed inset-0 bg-black/50 ${getZIndexClass("FLOAT_MODAL")}`}
 			style={{ margin: 0, top: 0 }}
 		>
 			<div className="fixed inset-0 flex items-center justify-center p-4">

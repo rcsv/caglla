@@ -165,7 +165,7 @@ export default function AddScheduleModal({
 	if (!isOpen) return null;
 
 	const modalContent = (
-		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center zidx-float-modal">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center zidx-float-modal">
 			<div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md mx-4 zidx-float-modal-content">
 				<div className="flex justify-between items-center mb-4">
 					<h2 className="text-lg font-semibold text-gray-900">

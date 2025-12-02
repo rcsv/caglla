@@ -64,7 +64,7 @@ export default function MyPresetsModal({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center zidx-float-modal">
+		<div className="fixed inset-0 bg-black/50 flex items-center justify-center zidx-float-modal">
 			<div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto p-6 zidx-float-modal-content">
 				<h2 className="text-lg font-semibold text-gray-900 mb-4">
 					{t("checklist.myPresets.title")}

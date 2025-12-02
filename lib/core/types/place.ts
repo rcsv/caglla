@@ -101,6 +101,7 @@ export interface PlacesCache {
 	url?: string;
 	icon?: string;
 	utc_offset_minutes?: number; // タイムゾーンオフセット（分単位、例: JST = 540）
+	timezone?: string; // IANA timezone ID (例: "Asia/Tokyo") - Google Timezone APIから取得
 	// Contact Data（$3.00/1,000件）
 	formatted_phone_number?: string;
 	international_phone_number?: string;

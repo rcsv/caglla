@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* Heading fonts - Apply Rajdhani to all headings */
 @layer base {
@@ -11,6 +9,19 @@
 	h5,
 	h6 {
 		font-family: var(--font-rajdhani), "Rajdhani", sans-serif;
+	}
+
+	/* Global reset (Tailwind CSS 4では @layer base 内に配置が必要) */
+	* {
+		box-sizing: border-box;
+		padding: 0;
+		margin: 0;
+	}
+
+	html,
+	body {
+		max-width: 100vw;
+		overflow-x: hidden;
 	}
 }
 
@@ -227,18 +238,6 @@ body {
 	box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
 }
 
-* {
-	box-sizing: border-box;
-	padding: 0;
-	margin: 0;
-}
-
-html,
-body {
-	max-width: 100vw;
-	overflow-x: hidden;
-}
-
 /* スクロールバーを非表示にする */
 .scrollbar-hide {
 	-ms-overflow-style: none; /* IE and Edge */
@@ -343,112 +342,114 @@ body {
 }
 
 /* ===== Tropical Joy Buttons ===== */
-/* Base */
-.btn-base {
-	@apply inline-flex items-center justify-center font-semibold rounded-md shadow-md hover:shadow-lg transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed [&>svg]:-ms-0.5 [&>svg]:me-1.5;
-}
+@layer components {
+	/* Base */
+	.btn-base {
+		@apply inline-flex items-center justify-center font-semibold rounded-md shadow-md hover:shadow-lg transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed [&>svg]:-ms-0.5 [&>svg]:me-1.5;
+	}
 
-/* Sizes */
-.btn-sm {
-	@apply h-9 px-3 text-sm;
-}
-.btn-md {
-	@apply h-10 px-4 text-sm;
-}
-.btn-lg {
-	@apply h-12 px-6 text-base;
-}
+	/* Sizes */
+	.btn-sm {
+		@apply h-9 px-3 text-sm;
+	}
+	.btn-md {
+		@apply h-10 px-4 text-sm;
+	}
+	.btn-lg {
+		@apply h-12 px-6 text-base;
+	}
 
-/* Variants */
-.btn-primary {
-	@apply bg-gradient-to-r from-emerald-500 to-lime-500 text-white hover:from-emerald-600 hover:to-lime-600 focus-visible:ring-emerald-500;
-}
-.btn-secondary {
-	@apply bg-gradient-to-r from-sky-400 to-blue-500 text-white hover:from-sky-500 hover:to-blue-600 focus-visible:ring-sky-500;
-}
-.btn-accent {
-	@apply bg-gradient-to-r from-orange-400 to-rose-500 text-white hover:from-orange-500 hover:to-rose-600 focus-visible:ring-rose-500;
-}
-.btn-outline {
-	@apply border border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50 focus-visible:ring-emerald-500;
-}
-.btn-ghost {
-	@apply bg-transparent text-emerald-700 hover:bg-emerald-50 focus-visible:ring-emerald-500;
-}
-.btn-soft {
-	@apply bg-emerald-50 text-emerald-700 hover:bg-emerald-100 focus-visible:ring-emerald-400;
-}
-.btn-danger {
-	@apply bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 focus-visible:ring-red-500;
-}
-.btn-disabled {
-	@apply bg-gray-200 text-gray-500 shadow-none;
-}
+	/* Variants */
+	.btn-primary {
+		@apply bg-gradient-to-r from-emerald-500 to-lime-500 text-white hover:from-emerald-600 hover:to-lime-600 focus-visible:ring-emerald-500;
+	}
+	.btn-secondary {
+		@apply bg-gradient-to-r from-sky-400 to-blue-500 text-white hover:from-sky-500 hover:to-blue-600 focus-visible:ring-sky-500;
+	}
+	.btn-accent {
+		@apply bg-gradient-to-r from-orange-400 to-rose-500 text-white hover:from-orange-500 hover:to-rose-600 focus-visible:ring-rose-500;
+	}
+	.btn-outline {
+		@apply border border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50 focus-visible:ring-emerald-500;
+	}
+	.btn-ghost {
+		@apply bg-transparent text-emerald-700 hover:bg-emerald-50 focus-visible:ring-emerald-500;
+	}
+	.btn-soft {
+		@apply bg-emerald-50 text-emerald-700 hover:bg-emerald-100 focus-visible:ring-emerald-400;
+	}
+	.btn-danger {
+		@apply bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 focus-visible:ring-red-500;
+	}
+	.btn-disabled {
+		@apply bg-gray-200 text-gray-500 shadow-none;
+	}
 
-/* Dark mode (optional) */
-.dark .btn-outline {
-	@apply border-emerald-400 text-emerald-200 hover:bg-emerald-900/30;
-}
-.dark .btn-ghost {
-	@apply text-emerald-200 hover:bg-emerald-900/30;
-}
-.dark .btn-soft {
-	@apply bg-emerald-900/40 text-emerald-200 hover:bg-emerald-900/60;
-}
+	/* Dark mode (optional) */
+	.dark .btn-outline {
+		@apply border-emerald-400 text-emerald-200 hover:bg-emerald-900/30;
+	}
+	.dark .btn-ghost {
+		@apply text-emerald-200 hover:bg-emerald-900/30;
+	}
+	.dark .btn-soft {
+		@apply bg-emerald-900/40 text-emerald-200 hover:bg-emerald-900/60;
+	}
 
-/* ===== Tropical Joy Form Elements ===== */
-/* Input */
-.tj-input {
-	@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition disabled:bg-gray-100 disabled:text-gray-500;
-}
-.tj-input:hover {
-	@apply border-emerald-400;
-}
+	/* ===== Tropical Joy Form Elements ===== */
+	/* Input */
+	.tj-input {
+		@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition disabled:bg-gray-100 disabled:text-gray-500;
+	}
+	.tj-input:hover {
+		@apply border-emerald-400;
+	}
 
-/* Select */
-.tj-select {
-	@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 appearance-none bg-no-repeat focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
-	background-image: url("data:image/svg+xml;utf8,<svg fill='none' stroke='%2334d399' stroke-width='2' viewBox='0 0 24 24'><path d='M6 9l6 6 6-6'/></svg>");
-	background-position: right 0.75rem center;
-	background-size: 1rem 1rem;
-}
+	/* Select */
+	.tj-select {
+		@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 appearance-none bg-no-repeat focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
+		background-image: url("data:image/svg+xml;utf8,<svg fill='none' stroke='%2334d399' stroke-width='2' viewBox='0 0 24 24'><path d='M6 9l6 6 6-6'/></svg>");
+		background-position: right 0.75rem center;
+		background-size: 1rem 1rem;
+	}
 
-/* Textarea */
-.tj-textarea {
-	@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 resize-y focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
-}
+	/* Textarea */
+	.tj-textarea {
+		@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 resize-y focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
+	}
 
-/* Toggle */
-.tj-toggle {
-	@apply relative inline-block w-12 h-6;
-}
-.tj-toggle input {
-	@apply opacity-0 w-0 h-0;
-}
-.tj-toggle .slider {
-	@apply absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full transition;
-}
-.tj-toggle input:checked + .slider {
-	@apply bg-gradient-to-r from-emerald-500 to-lime-500;
-}
-.tj-toggle .slider::before {
-	content: "";
-	@apply absolute h-5 w-5 left-0.5 bottom-0.5 bg-white rounded-full transition;
-}
-.tj-toggle input:checked + .slider::before {
-	@apply translate-x-6;
-}
+	/* Toggle */
+	.tj-toggle {
+		@apply relative inline-block w-12 h-6;
+	}
+	.tj-toggle input {
+		@apply opacity-0 w-0 h-0;
+	}
+	.tj-toggle .slider {
+		@apply absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-gray-300 rounded-full transition;
+	}
+	.tj-toggle input:checked + .slider {
+		@apply bg-gradient-to-r from-emerald-500 to-lime-500;
+	}
+	.tj-toggle .slider::before {
+		content: "";
+		@apply absolute h-5 w-5 left-0.5 bottom-0.5 bg-white rounded-full transition;
+	}
+	.tj-toggle input:checked + .slider::before {
+		@apply translate-x-6;
+	}
 
-/* Dark mode for forms */
-.dark .tj-input,
-.dark .tj-select,
-.dark .tj-textarea {
-	@apply bg-slate-800 text-gray-100 border-slate-600 placeholder-gray-500;
-}
-.dark .tj-input:focus,
-.dark .tj-select:focus,
-.dark .tj-textarea:focus {
-	@apply border-emerald-400 ring-emerald-400;
+	/* Dark mode for forms */
+	.dark .tj-input,
+	.dark .tj-select,
+	.dark .tj-textarea {
+		@apply bg-slate-800 text-gray-100 border-slate-600 placeholder-gray-500;
+	}
+	.dark .tj-input:focus,
+	.dark .tj-select:focus,
+	.dark .tj-textarea:focus {
+		@apply border-emerald-400 ring-emerald-400;
+	}
 }
 
 /* ===== チェックリストビュー専用レイアウト ===== */

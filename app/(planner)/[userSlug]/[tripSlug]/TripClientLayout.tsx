@@ -279,35 +279,37 @@ function TripClientLayoutContent({
 											{pdfExporting ? "Exporting..." : "PDF"}
 										</button>
 
-										{/* iCal Export Button */}
-										<button
-											onClick={handleICalExport}
-											className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${
-												trip?.ical_enabled
-													? "text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-300"
-													: "text-gray-700 bg-white hover:bg-gray-50 border border-gray-300"
-											}`}
-											title={
-												trip?.ical_enabled
-													? "iCal sharing enabled"
-													: "Enable iCal sharing"
-											}
-										>
-											<svg
-												className="w-4 h-4"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
+										{/* iCal Export Button - テンプレートの場合は非表示 */}
+										{!trip?.is_template && (
+											<button
+												onClick={handleICalExport}
+												className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+													trip?.ical_enabled
+														? "text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-300"
+														: "text-gray-700 bg-white hover:bg-gray-50 border border-gray-300"
+												}`}
+												title={
+													trip?.ical_enabled
+														? "iCal sharing enabled"
+														: "Enable iCal sharing"
+												}
 											>
-												<path
-													strokeLinecap="round"
-													strokeLinejoin="round"
-													strokeWidth={2}
-													d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-												/>
-											</svg>
-											iCal
-										</button>
+												<svg
+													className="w-4 h-4"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+													/>
+												</svg>
+												iCal
+											</button>
+										)}
 
 										{/* Publish Toggle Switch */}
 										<button
@@ -366,8 +368,8 @@ function TripClientLayoutContent({
 				</div>
 			</div>
 
-			{/* iCal Publish Modal */}
-			{trip && (
+			{/* iCal Publish Modal - テンプレートの場合は非表示 */}
+			{trip && !trip.is_template && (
 				<ICalPublishModal
 					isOpen={icalModalOpen}
 					onClose={() => setIcalModalOpen(false)}
