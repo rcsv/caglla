@@ -93,6 +93,9 @@ const nextConfig = {
 				pathname: "/api/cached-place-image/**",
 				// search を省略すると、すべてのクエリパラメータが許可される
 			},
+			{
+				pathname: "/default-avatar.png",
+			},
 		],
 	},
 
