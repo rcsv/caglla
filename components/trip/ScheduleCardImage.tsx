@@ -24,7 +24,7 @@ export function ScheduleCardImage({
 	children,
 }: ScheduleCardImageProps) {
 	return (
-		<div className="flex-shrink-0 w-32 h-18 relative">
+		<div className="flex-shrink-0 w-32 relative self-stretch">
 			{photoUrl ? (
 				<>
 					<Image
@@ -34,6 +34,7 @@ export function ScheduleCardImage({
 						sizes="256px"
 						className="object-cover"
 						quality={90}
+						unoptimized
 						onError={(e) => {
 							logger.error("❌ Image load error for:", title, photoUrl);
 							if (cachedImage?.cached && photoReference) {
@@ -67,7 +68,7 @@ export function ScheduleCardImage({
 						</div>
 					)}
 					{imageLoading && (
-						<div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+						<div className="absolute inset-0 bg-black/50 flex items-center justify-center">
 							<div className="text-white text-xs">
 								{require("@/lib/i18n").t("loading.message")}
 							</div>
