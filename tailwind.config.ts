@@ -21,6 +21,22 @@ const config: Config = {
 			colors: {
 				background: "var(--background)",
 				foreground: "var(--foreground)",
+				// CAGLLA Brand Colors
+				brand: {
+					teal: "#1F7E79",
+					tealDark: "#165955",
+					sand: "#E8DCC2",
+					ink: "#2B2B2B",
+					blue: "#5FA3D7",
+					olive: "#7A8755",
+					clay: "#C46A42",
+					white: "#FAFAF7", // Mist White
+				},
+			},
+			spacing: {
+				section: "4rem",
+				card: "2rem",
+				cta: "3rem",
 			},
 			fontFamily: {
 				rajdhani: ["var(--font-rajdhani)", "Rajdhani", "sans-serif"],

@@ -64,7 +64,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
 								</li>
 								<li>
 									<Link
-										href="/features"
+										href="/product/features"
 										className="hover:text-white transition-colors"
 									>
 										{t("features")}
@@ -72,7 +72,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
 								</li>
 								<li>
 									<Link
-										href="/pricing"
+										href="/product/pricing"
 										className="hover:text-white transition-colors"
 									>
 										{t("pricing")}
@@ -80,7 +80,7 @@ export const LandingFooter: React.FC<LandingFooterProps> = ({
 								</li>
 								<li>
 									<Link
-										href="/releases"
+										href="/product/releases"
 										className="hover:text-white transition-colors"
 									>
 										{t("footer.releaseNotes")}

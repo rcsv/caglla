@@ -35,7 +35,7 @@ export default function FAQPage() {
 				{
 					id: "plans",
 					q: "プランの違いは？",
-					a: "無料のseason_traveler、有料のbackpacker/globetrotterをご用意。詳細は/pricingをご覧ください。",
+					a: "無料のseason_traveler、有料のbackpacker/globetrotterをご用意。詳細は/product/pricingをご覧ください。",
 					tags: ["プラン"],
 				},
 				{

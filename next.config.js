@@ -100,14 +100,17 @@ const nextConfig = {
 	},
 
 	async redirects() {
-		return [
-			// Public static section under /s
-			{ source: "/", destination: "/s", permanent: false },
-			{ source: "/about", destination: "/s/about", permanent: false },
-			{ source: "/terms", destination: "/s/terms", permanent: false },
-			{ source: "/privacy", destination: "/s/privacy", permanent: false },
-			{ source: "/contact", destination: "/s/contact", permanent: false },
+		// 開発環境では / へのリダイレクトを無効化（app/page.tsx を閲覧可能にするため）
+		const isDevelopment = process.env.NODE_ENV === "development";
+		
+		const redirects = [
+			// 開発環境では / へのリダイレクトをスキップ
+			...(isDevelopment ? [] : [
+			]),
+			// リダイレクトやめ
 		];
+		
+		return redirects;
 	},
 };
 
