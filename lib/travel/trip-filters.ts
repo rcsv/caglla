@@ -57,8 +57,14 @@ export function filterOngoingTrips(
 
 		const normalizedEndDate = new Date(endDate);
 		normalizedEndDate.setHours(0, 0, 0, 0);
+		
+		// end_date が start_date より前の場合は除外
+		if (normalizedEndDate < normalizedStartDate) return false;
+		
+		// end_date はその日の終わり（23:59:59.999）として扱うため、次の日の00:00:00と比較
+		normalizedEndDate.setDate(normalizedEndDate.getDate() + 1);
 
-		return normalizedStartDate <= today && today <= normalizedEndDate;
+		return normalizedStartDate <= today && today < normalizedEndDate;
 	});
 }
 
