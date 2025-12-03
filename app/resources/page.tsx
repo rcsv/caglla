@@ -36,7 +36,7 @@ export default function DocsPage() {
 			description: "旅・日程・予定の作成、編集、共有",
 			icon: <PlannerIcon className="h-6 w-6 text-indigo-600" />,
 			links: [
-				{ label: "機能一覧", href: "/features" },
+				{ label: "機能一覧", href: "/product/features" },
 				{ label: "FAQ: 旅・日程・予定", href: "/faq#trips" },
 			],
 		},
@@ -56,7 +56,7 @@ export default function DocsPage() {
 			description: "Waypoint最適化、移動モード、回避設定、コスト見積り",
 			icon: <PieChartIcon className="h-6 w-6 text-indigo-600" />,
 			links: [
-				{ label: "価格/プラン", href: "/pricing" },
+				{ label: "価格/プラン", href: "/product/pricing" },
 				{ label: "FAQ", href: "/faq#trips" },
 			],
 		},
@@ -76,7 +76,7 @@ export default function DocsPage() {
 			description: "認証/認可、公開設定、データ保護",
 			icon: <WarningIcon className="h-6 w-6 text-indigo-600" />,
 			links: [
-				{ label: "リリースノート", href: "/releases" },
+				{ label: "リリースノート", href: "/product/releases" },
 				{ label: "FAQ: セキュリティ", href: "/faq#privacy" },
 			],
 		},
@@ -85,7 +85,7 @@ export default function DocsPage() {
 			title: "リリースノート",
 			description: "バージョン履歴と変更点",
 			icon: <CalendarIcon className="h-6 w-6 text-indigo-600" />,
-			links: [{ label: "リリース一覧", href: "/releases" }],
+			links: [{ label: "リリース一覧", href: "/product/releases" }],
 		},
 	];
 
@@ -195,7 +195,7 @@ export default function DocsPage() {
 						</Link>
 					</SolidCard>
 					<SolidCard className="p-6 hover:shadow-sm transition">
-						<Link href="/releases" className="flex items-center gap-3">
+						<Link href="/product/releases" className="flex items-center gap-3">
 							<CalendarIcon className="h-5 w-5 text-indigo-600" />
 							<div>
 								<div className="font-medium">

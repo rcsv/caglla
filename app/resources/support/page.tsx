@@ -56,7 +56,7 @@ export default function SupportPage() {
 			description: "サブスクリプションと制限",
 			icon: <UserIcon className="h-6 w-6 text-indigo-600" />,
 			links: [
-				{ label: "プランと機能", href: "/pricing" },
+				{ label: "プランと機能", href: "/product/pricing" },
 				{ label: "上限/制限について", href: "/faq#limits" },
 				{ label: "請求・更新", href: "/faq#billing" },
 			],
@@ -119,13 +119,13 @@ export default function SupportPage() {
 		{
 			id: "limits",
 			q: "プランの上限はどこで確認できますか？",
-			a: "プラン別の制限は`/pricing`とアプリ内のチェックで確認できます。",
+			a: "プラン別の制限は`/product/pricing`とアプリ内のチェックで確認できます。",
 			tags: ["アカウント・プラン"],
 		},
 		{
 			id: "billing",
 			q: "請求や更新手続きはどうなりますか？",
-			a: "現在は段階的に提供中です。詳細は`/pricing`およびサポートへお問い合わせください。",
+			a: "現在は段階的に提供中です。詳細は`/product/pricing`およびサポートへお問い合わせください。",
 			tags: ["アカウント・プラン"],
 		},
 		{

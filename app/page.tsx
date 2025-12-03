@@ -94,7 +94,7 @@ export default function HomePage() {
 							{t("home.cta.primary.button")}
 						</Button>
 						<Link
-							href="/features"
+							href="/product/features"
 							className="text-brand-teal underline decoration-dotted hover:text-brand-tealDark"
 						>
 							{t("home.cta.primary.seeFeatures")}
