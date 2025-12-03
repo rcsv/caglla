@@ -410,6 +410,17 @@ const ja: Dictionary = {
 	"profile.stats.countries.title": "訪問国トップ5",
 	"profile.stats.times": "回",
 	"profile.stats.countries.more": "あと{count}カ国",
+	// Social (Follow/Followers)
+	"social.followers": "フォロワー",
+	"social.following": "フォロー中",
+	"social.followers.count": "{count} フォロワー",
+	"social.following.count": "{count} フォロー中",
+	"social.followers.title": "フォロワー",
+	"social.following.title": "フォロー中",
+	"social.followers.countLabel": "人",
+	"social.following.countLabel": "人",
+	"social.userList.empty": "ユーザーが見つかりませんでした",
+	"social.userList.retry": "再試行",
 	// iCal Publish Modal
 	"ical.title": "iCal公開設定",
 	"ical.close": "閉じる",

@@ -58,6 +58,10 @@ export function filterOngoingTrips(
 		const normalizedEndDate = new Date(endDate);
 		normalizedEndDate.setHours(0, 0, 0, 0);
 
+		// 終了日が過去の場合は除外（明示的にチェック）
+		if (normalizedEndDate < today) return false;
+
+		// 開始日が今日以前 かつ 終了日が今日以降
 		return normalizedStartDate <= today && today <= normalizedEndDate;
 	});
 }

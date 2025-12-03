@@ -418,6 +418,17 @@ const en: Dictionary = {
 	"profile.stats.countries.title": "Top Countries",
 	"profile.stats.times": "times",
 	"profile.stats.countries.more": "and {count} more countries",
+	// Social (Follow/Followers)
+	"social.followers": "Followers",
+	"social.following": "Following",
+	"social.followers.count": "{count} Followers",
+	"social.following.count": "{count} Following",
+	"social.followers.title": "Followers",
+	"social.following.title": "Following",
+	"social.followers.countLabel": "people",
+	"social.following.countLabel": "people",
+	"social.userList.empty": "No users found",
+	"social.userList.retry": "Retry",
 	// iCal Publish Modal
 	"ical.title": "iCal Publishing Settings",
 	"ical.close": "Close",

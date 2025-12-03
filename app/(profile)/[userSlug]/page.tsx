@@ -10,11 +10,9 @@ import type { Trip, User, PlaceData, Gender } from "@/lib/core/types";
 import { getCountryFlag, getCountryNameJa } from "@/lib/utils/country-flags";
 import { makeAuthenticatedRequest } from "@/lib/api/helpers";
 import AvatarUpload from "@/components/ui/AvatarUpload";
-import { CloseIcon } from "@/components/common/icons/CloseIcon";
 import { PinIcon } from "@/components/common/icons/PinIcon";
 import { MailIcon } from "@/components/common/icons/MailIcon";
 import { UserIcon } from "@/components/common/icons/UserIcon";
-import { getZIndexClass } from "@/lib/core/z-index";
 import PlaceSearchInput from "@/components/common/PlaceSearchInput";
 import { extractCountryFromAddress } from "@/lib/travel/country/utils";
 import { SUPPORTED_LANGUAGES, LANGUAGE_NAMES } from "@/lib/utils/language";
@@ -27,6 +25,9 @@ import { Section } from "@/components/common/static/Section";
 import { SolidCard } from "@/components/common/static/SolidCard";
 import HomeFooter from "@/components/common/HomeFooter";
 import { isSameUserByAuthUid } from "@/lib/auth/client-identity-helpers";
+import FollowStats from "@/components/social/FollowStats";
+import FollowButton from "@/components/social/FollowButton";
+import UserListModal, { type PaginatedUsers } from "@/components/modals/UserListModal";
 
 export default function UserProfileBySlugPage() {
 	const { user, loading } = useAuth();
@@ -51,6 +52,9 @@ export default function UserProfileBySlugPage() {
 	const [isEditing, setIsEditing] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [isFirstTimeSetup, setIsFirstTimeSetup] = useState(false);
+	const [followersModalOpen, setFollowersModalOpen] = useState(false);
+	const [followingModalOpen, setFollowingModalOpen] = useState(false);
+	const [isFollowing, setIsFollowing] = useState(false);
 
 	const fetchUserProfile = useCallback(async () => {
 		try {
@@ -221,6 +225,31 @@ export default function UserProfileBySlugPage() {
 		}
 	}, [user, userSlug, fetchUserProfile]);
 
+	// フォロー状態を取得（自分以外のプロフィールの場合）
+	useEffect(() => {
+		if (!user || !userSlug || !profileUser) return;
+
+		// 自分自身のプロフィールかどうかを判定
+		const isOwnProfileCheck = isSameUserByAuthUid(user?.uid, profileUser);
+		if (isOwnProfileCheck) return;
+
+		const fetchFollowState = async () => {
+			try {
+				const response = await makeAuthenticatedRequest(
+					`/api/users/${userSlug}/follow`,
+				);
+				if (response.ok) {
+					const data = await response.json();
+					setIsFollowing(data.isFollowing ?? false);
+				}
+			} catch (err) {
+				console.error("Error fetching follow state:", err);
+			}
+		};
+
+		void fetchFollowState();
+	}, [user, userSlug, profileUser]);
+
 	const handleSave = async () => {
 		if (!user) return;
 
@@ -340,6 +369,7 @@ export default function UserProfileBySlugPage() {
 					<div className="flex justify-between items-center">
 						<div className="flex items-center space-x-4">
 							<button
+								type="button"
 								onClick={() => router.back()}
 								className="text-gray-600 hover:text-gray-900"
 							>
@@ -351,6 +381,7 @@ export default function UserProfileBySlugPage() {
 						</div>
 						{!isFirstTimeSetup && (
 							<button
+								type="button"
 								onClick={() => setIsEditing(!isEditing)}
 								className="px-6 py-2 bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition-colors"
 							>
@@ -580,6 +611,7 @@ export default function UserProfileBySlugPage() {
 
 												<div className="flex space-x-3">
 													<button
+														type="button"
 														onClick={handleSave}
 														disabled={saving}
 														className="px-8 py-3 bg-emerald-600 text-white font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors"
@@ -592,6 +624,7 @@ export default function UserProfileBySlugPage() {
 													</button>
 													{isFirstTimeSetup && (
 														<button
+															type="button"
 															onClick={() => setIsFirstTimeSetup(false)}
 															className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition-colors"
 														>
@@ -617,6 +650,31 @@ export default function UserProfileBySlugPage() {
 														</p>
 													)}
 												</div>
+
+												{/* フォロワー数・フォロー中数 */}
+												{!isFirstTimeSetup && userSlug && (
+													<div className="mb-4">
+														<FollowStats
+															userSlug={userSlug}
+															onFollowersClick={() => setFollowersModalOpen(true)}
+															onFollowingClick={() => setFollowingModalOpen(true)}
+														/>
+													</div>
+												)}
+
+												{/* フォローボタン（自分以外のプロフィールの場合のみ） */}
+												{!isFirstTimeSetup && !isOwnProfile && userSlug && (
+													<div className="mb-4">
+														<FollowButton
+															userSlug={userSlug}
+															initialFollowing={isFollowing}
+															onToggle={(following) => {
+																setIsFollowing(following);
+															}}
+															size="md"
+														/>
+													</div>
+												)}
 
 												<div className="space-y-2 text-gray-600">
 													<p className="flex items-center gap-2">
@@ -898,6 +956,44 @@ export default function UserProfileBySlugPage() {
 				</div>
 			</main>
 			<HomeFooter />
+
+			{/* フォロワー一覧モーダル */}
+			{userSlug && (
+				<UserListModal
+					isOpen={followersModalOpen}
+					onClose={() => setFollowersModalOpen(false)}
+					title={t("social.followers.title")}
+					fetcher={async (page, limit) => {
+						const response = await makeAuthenticatedRequest(
+							`/api/users/${userSlug}/follow-list?type=followers&page=${page}&limit=${limit}`,
+						);
+						if (!response.ok) {
+							throw new Error("Failed to fetch followers");
+						}
+						return (await response.json()) as PaginatedUsers;
+					}}
+					showFollowButton={true}
+				/>
+			)}
+
+			{/* フォロー中一覧モーダル */}
+			{userSlug && (
+				<UserListModal
+					isOpen={followingModalOpen}
+					onClose={() => setFollowingModalOpen(false)}
+					title={t("social.following.title")}
+					fetcher={async (page, limit) => {
+						const response = await makeAuthenticatedRequest(
+							`/api/users/${userSlug}/follow-list?type=following&page=${page}&limit=${limit}`,
+						);
+						if (!response.ok) {
+							throw new Error("Failed to fetch following");
+						}
+						return (await response.json()) as PaginatedUsers;
+					}}
+					showFollowButton={true}
+				/>
+			)}
 		</div>
 	);
 }

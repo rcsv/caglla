@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
@@ -32,6 +31,19 @@ export default function OngoingTripCard({
 
 	const startDate = toDateOrNull(trip.start_date);
 	const endDate = toDateOrNull(trip.end_date);
+	
+	// 終了日が過去の場合は表示しない（Ongoingに表示されるべきではない）
+	if (endDate) {
+		const normalizedEndDate = new Date(endDate);
+		normalizedEndDate.setHours(0, 0, 0, 0);
+		const normalizedToday = new Date(today);
+		normalizedToday.setHours(0, 0, 0, 0);
+		
+		if (normalizedEndDate < normalizedToday) {
+			return null; // 過去の旅行は表示しない
+		}
+	}
+	
 	const totalDays =
 		startDate && endDate
 			? Math.max(
@@ -112,10 +124,18 @@ export default function OngoingTripCard({
 											? `${startMonth}/${startDay} - ${endDay}`
 											: `${startMonth}/${startDay} - ${endMonth}/${endDay}`;
 
+									// 終了日が今日の場合のみ「until today」を表示
+									const normalizedEndDate = new Date(end);
+									normalizedEndDate.setHours(0, 0, 0, 0);
+									const normalizedToday = new Date(today);
+									normalizedToday.setHours(0, 0, 0, 0);
+									
 									const restText =
-										remainingDays === 0
-											? `(until today)`
-											: `(rest ${remainingDays}${t("date.days")})`;
+										normalizedEndDate.getTime() === normalizedToday.getTime()
+											? `(${t("home.dashboard.ongoingTrips.untilToday")})`
+											: remainingDays === 0
+												? `(${t("home.dashboard.ongoingTrips.untilToday")})`
+												: `(rest ${remainingDays}${t("date.days")})`;
 
 									return `${dateRange} ${restText}`;
 								})()}

@@ -341,6 +341,17 @@ export type TranslationKey =
 	| "profile.stats.countries.title"
 	| "profile.stats.times"
 	| "profile.stats.countries.more"
+	// Social (Follow/Followers)
+	| "social.followers"
+	| "social.following"
+	| "social.followers.count"
+	| "social.following.count"
+	| "social.followers.title"
+	| "social.following.title"
+	| "social.followers.countLabel"
+	| "social.following.countLabel"
+	| "social.userList.empty"
+	| "social.userList.retry"
 	// iCal Publish Modal
 	| "ical.title"
 	| "ical.close"
