@@ -15,6 +15,7 @@ import logger from "@/lib/core/logger";
 import { t } from "@/lib/i18n";
 import { useNotification } from "@/lib/contexts/notification";
 import type { Trip } from "@/lib/core/types";
+import { canExportToPdf } from "@/lib/utils/export-helpers";
 
 interface TripClientLayoutProps {
 	trip: Trip | null;
@@ -256,12 +257,56 @@ function TripClientLayoutContent({
 							actions={
 								canEdit ? (
 									<div className="flex items-center gap-2">
+										{/* HTML Preview Button (no external PDF cost) */}
+										<button
+											type="button"
+											onClick={() => {
+												if (!trip) return;
+												const slugOrId = trip.slug || trip.id;
+												if (!slugOrId) return;
+												if (typeof window !== "undefined") {
+													window.open(
+														`/dev-tools/pdf-preview/${slugOrId}`,
+														"_blank",
+														"noopener,noreferrer",
+													);
+												}
+											}}
+											className="px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition-colors flex items-center gap-1.5"
+											title="PDF化前のHTMLプレビュー（印刷プレビューでPDF確認）"
+										>
+											<svg
+												className="w-4 h-4"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M4 16V4a2 2 0 012-2h8m2 6h4m-4 4h4m-4 4h4M8 22h8a2 2 0 002-2v-8a2 2 0 00-2-2H8a2 2 0 00-2 2v8a2 2 0 002 2z"
+												/>
+											</svg>
+											<span className="hidden sm:inline">HTML Preview</span>
+											<span className="sm:hidden">Preview</span>
+										</button>
+
 										{/* PDF Export Button */}
 										<button
+											type="button"
 											onClick={exportPdf}
-											disabled={pdfExporting}
-											className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 border border-gray-300 rounded-md transition-colors flex items-center gap-1.5"
-											title="Export to PDF"
+											disabled={pdfExporting || !canExportToPdf(userPlanId || "season_traveler")}
+											className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+												canExportToPdf(userPlanId || "season_traveler")
+													? "text-gray-700 bg-white hover:bg-gray-50 disabled:bg-gray-100 border border-gray-300"
+													: "text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed"
+											}`}
+											title={
+												canExportToPdf(userPlanId || "season_traveler")
+													? t("tripSlugPage.pdfExport")
+													: t("tripSlugPage.pdfRequiresBackpacker")
+											}
 										>
 											<svg
 												className="w-4 h-4"
@@ -276,7 +321,7 @@ function TripClientLayoutContent({
 													d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
 												/>
 											</svg>
-											{pdfExporting ? "Exporting..." : "PDF"}
+											{pdfExporting ? t("tripSlugPage.pdfExporting") : "PDF"}
 										</button>
 
 										{/* iCal Export Button - テンプレートの場合は非表示 */}

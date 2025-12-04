@@ -9,7 +9,7 @@
  * - ページ番号表示
  */
 
-import type { Trip, Day, Itinerary } from "@/lib/core/types";
+import type { Trip, Day, Itinerary, ReservationInfo, ReservationType } from "@/lib/core/types";
 import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
 import { dateUtils } from "@/lib/utils/date";
 import QRCode from "qrcode";
@@ -150,154 +150,229 @@ export function generateMagazineStyles(): string {
         margin-left: auto;
       }
       
-      /* 表紙スタイル */
+      /* 表紙スタイル（雑誌カバー風レイアウト） */
       .cover-page {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background: #ffffff;
         display: flex;
-        flex-direction: column;
         justify-content: center;
         align-items: center;
-        text-align: center;
-        padding: 160px 80px; /* 40mm ≈ 160px, 20mm ≈ 80px */
-        position: relative;
-        overflow: hidden;
+        padding: 0;
       }
       
-      .cover-background {
-        position: absolute;
-        top: 0;
-        left: 0;
+      .cover-frame {
         width: 100%;
         height: 100%;
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        z-index: 1;
+        background: #ffffff;
+        padding: 48px 48px 48px 56px;
+        display: flex;
+        gap: 40px;
       }
       
-      .cover-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.3);
-        z-index: 2;
-      }
-      
-      .cover-content {
-        position: relative;
-        z-index: 3;
-        width: 100%;
-        height: 100%;
+      .cover-left {
+        width: 22%;
+        border-right: 1px solid #e5e5e5;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        align-items: center;
       }
       
-      /* 表紙タイトルスタイル - New Tegomin */
-      .cover-title {
-        font-family: 'New Tegomin', 'Hiragino Mincho Pro', 'Yu Mincho', serif;
-        font-size: 180px;
-        font-weight: normal;
-        color: white;
-        margin-bottom: 80px; /* 20mm ≈ 80px */
-        letter-spacing: 2px;
-        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
-        text-align: center;
-        line-height: 0.9;
+      .cover-trip-title {
+        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+        font-size: 9pt;
+        font-weight: 600;
+        color: #444;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 32px;
+        line-height: 1.4;
       }
       
-      /* Yuji Boku版のタイトルスタイル */
-      .cover-title-yuji {
-        font-family: 'Yuji Boku', 'Hiragino Mincho Pro', 'Yu Mincho', serif;
-        font-size: 150px;
-        font-weight: normal;
-        color: white;
-        margin-bottom: 80px; /* 20mm ≈ 80px */
-        letter-spacing: 2px;
-        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+      .cover-left-title {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+        font-size: 84pt;
+        font-weight: 800;
+        letter-spacing: 8px;
+        color: #111;
+        line-height: 1.2;
+      }
+      
+      .cover-left-issue {
+        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+        font-size: 11pt;
+        font-weight: 600;
+        color: #111;
+        align-self: flex-start;
+        margin-top: auto;
+        margin-bottom: 32px;
+      }
+      
+      .cover-right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .cover-photo {
+        position: relative;
+        flex: 1;
+        background-color: #d4d4d4;
+        border-radius: 8px;
+        overflow: hidden;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+      
+      .cover-photo::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.35) 0%,
+          rgba(0, 0, 0, 0.55) 40%,
+          rgba(0, 0, 0, 0.75) 100%
+        );
+      }
+      
+      .cover-photo-content {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        padding: 40px 40px 48px 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: #ffffff;
+      }
+      
+      .cover-issue-meta {
+        font-size: 9pt;
         text-align: right;
-        line-height: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        line-height: 1.6;
+      }
+      
+      .cover-issue-meta strong {
+        font-weight: 700;
+      }
+      
+      .cover-main-title {
+        margin-top: 32px;
+        font-size: 20pt;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+      
+      .cover-main-subtitle {
+        font-size: 11pt;
+        opacity: 0.9;
+        margin-top: 8px;
+      }
+      
+      .cover-section-group {
+        margin-top: 60px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        max-width: 70%;
+      }
+      
+      .cover-section {
+        font-size: 10pt;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      
+      .cover-section-title {
+        font-weight: 700;
+        font-size: 11pt;
+      }
+      
+      .cover-section-line {
+        width: 60px;
+        height: 2px;
+        background: #ffffff;
+        margin: 8px 0 8px 0;
+      }
+      
+      .cover-section-body {
+        font-size: 9pt;
+        line-height: 1.5;
+        opacity: 0.9;
+        max-height: 80px; /* 20mm ≈ 80px (約3-4行分) */
+        overflow: hidden;
+        word-wrap: break-word;
+      }
+      
+      /* 表紙タイトルスタイル - モダンなサンセリフ */
+      .cover-title {
+        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+        font-size: 72pt;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 24px;
+        letter-spacing: -1px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        text-align: center;
+        line-height: 1.1;
+      }
+      
+      /* メインタイトルスタイル */
+      .cover-title-yuji {
+        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+        font-size: 64pt;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 32px;
+        letter-spacing: -0.5px;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+        text-align: center;
+        line-height: 1.2;
       }
       
       .cover-subtitle {
-        font-size: 24pt;
+        font-size: 28pt;
         font-weight: 300;
-        color: #333;
-        margin-bottom: 40px; /* 10mm ≈ 40px */
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        color: rgba(255, 255, 255, 0.95);
+        margin-bottom: 48px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        letter-spacing: 0.5px;
       }
       
       .cover-meta {
-        font-size: 14pt;
-        color: #666;
-        margin-bottom: 120px; /* 30mm ≈ 120px */
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        font-size: 16pt;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 80px;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        line-height: 1.6;
+        font-weight: 400;
       }
       
-      .cover-features {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 80px; /* 20mm ≈ 80px */
-        justify-content: center;
-        margin-top: 80px; /* 20mm ≈ 80px */
-      }
-      
-      .cover-feature {
-        text-align: center;
-        max-width: 240px; /* 60mm ≈ 240px */
-      }
-      
-      .cover-feature-icon {
-        font-size: 32pt;
-        margin-bottom: 20px; /* 5mm ≈ 20px */
-      }
-      
-      .cover-feature-title {
-        font-size: 12pt;
-        font-weight: bold;
-        margin-bottom: 8px; /* 2mm ≈ 8px */
-      }
-      
-      .cover-feature-desc {
-        font-size: 10pt;
-        color: #666;
-      }
-      
-      /* 縦書きテキスト */
-      .vertical-text {
-        position: absolute;
-        left: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        writing-mode: vertical-rl;
-        text-orientation: mixed;
-        font-size: 8pt;
-        color: rgba(255, 255, 255, 0.7);
-        letter-spacing: 2px;
-        line-height: 1.8;
-        z-index: 4;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-      }
-      
-      /* QRコード */
+      /* QRコード（右下の小さなパネル） */
       .cover-qr {
-        position: absolute;
-        bottom: 40px;
-        right: 40px;
-        width: 80px;
-        height: 80px;
-        background: white;
-        padding: 8px;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        z-index: 4;
+        align-self: flex-end;
+        margin-top: 24px;
+        margin-right: 20px;
+        margin-bottom: 20px;
+        width: 90px;
+        height: 90px;
+        background: #ffffff;
+        padding: 0;
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
       }
       
       .cover-qr img {
         width: 100%;
         height: 100%;
+        object-fit: contain;
+        display: block;
       }
       
       .cover-qr-label {
@@ -315,12 +390,23 @@ export function generateMagazineStyles(): string {
       .toc-page {
         display: flex;
         flex-direction: column;
-        height: 100%;
+        min-height: 100%;
+        height: 1482px; /* A4高さ: 297mm ≈ 1482px (300dpi) - 他のページと同じ */
       }
       
       .toc-header {
         text-align: right;
-        margin-bottom: 80px; /* 20mm ≈ 80px */
+        margin-bottom: 60px; /* 15mm ≈ 60px */
+      }
+      
+      .toc-brand-title {
+        font-size: 72pt;
+        font-weight: 800;
+        color: #111;
+        letter-spacing: 4px;
+        margin-bottom: 20px; /* 5mm ≈ 20px */
+        text-transform: uppercase;
+        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
       }
       
       .toc-title {
@@ -337,13 +423,58 @@ export function generateMagazineStyles(): string {
         font-size: 36pt;
         font-weight: 300;
         color: #333;
-        margin-bottom: 20px; /* 5mm ≈ 20px */
+        margin-bottom: 12px; /* 3mm ≈ 12px */
       }
       
       .toc-meta {
         font-size: 12pt;
         color: #666;
-        margin-bottom: 60px; /* 15mm ≈ 60px */
+        margin-bottom: 8px; /* 2mm ≈ 8px */
+      }
+      
+      .toc-meta-sub {
+        font-size: 11pt;
+        color: #888;
+        margin-bottom: 20px; /* 5mm ≈ 20px */
+      }
+      
+      .toc-meta-description {
+        font-size: 10pt;
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 40px; /* 10mm ≈ 40px */
+        max-height: 120px; /* 30mm ≈ 120px (約6行分) */
+        overflow: hidden;
+        word-wrap: break-word;
+      }
+      
+      .toc-cover-image {
+        margin-bottom: 40px; /* 10mm ≈ 40px */
+      }
+      
+      .toc-cover-image-title {
+        font-size: 11pt;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 12px; /* 3mm ≈ 12px */
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      
+      .toc-cover-image img {
+        width: 100%;
+        height: 200px; /* 50mm ≈ 200px */
+        object-fit: cover;
+        border: 1px solid #ddd;
+        margin-bottom: 12px; /* 3mm ≈ 12px */
+      }
+      
+      .toc-cover-caption {
+        font-size: 9pt;
+        color: #666;
+        font-style: italic;
+        line-height: 1.6;
+        text-align: left;
       }
       
       .toc-content {
@@ -404,6 +535,13 @@ export function generateMagazineStyles(): string {
         justify-content: center;
         color: #666;
         font-size: 10pt;
+        overflow: hidden;
+      }
+      
+      .toc-map img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
       
       .toc-quote {
@@ -443,12 +581,138 @@ export function generateMagazineStyles(): string {
       .reservations-content {
         font-size: 11pt;
         color: #666;
+      }
+      
+      .reservation-section {
+        margin-bottom: 60px; /* 15mm ≈ 60px */
+      }
+      
+      .reservation-section-title {
+        font-size: 18pt;
+        font-weight: 300;
+        color: #2563eb;
+        margin-bottom: 32px; /* 8mm ≈ 32px */
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 2px solid #2563eb;
+        padding-bottom: 8px; /* 2mm ≈ 8px */
+      }
+      
+      .reservation-card {
+        background: #f8f9fa;
+        border-left: 3px solid #2563eb;
+        padding: 20px; /* 5mm ≈ 20px */
+        margin-bottom: 24px; /* 6mm ≈ 24px */
+      }
+      
+      .reservation-card-title {
+        font-size: 14pt;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 12px; /* 3mm ≈ 12px */
+      }
+      
+      .reservation-info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px; /* 2mm ≈ 8px */
+        font-size: 10pt;
+        color: #666;
+      }
+      
+      .reservation-info-label {
+        font-weight: 600;
+        color: #333;
+        min-width: 100px;
+      }
+      
+      .reservation-info-value {
+        flex: 1;
+        text-align: right;
+        word-break: break-word;
+      }
+      
+      .flight-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px; /* 4mm ≈ 16px */
+        padding: 16px; /* 4mm ≈ 16px */
+        background: white;
+        border-radius: 4px;
+      }
+      
+      .flight-route {
+        display: flex;
+        align-items: center;
+        gap: 16px; /* 4mm ≈ 16px */
+        flex: 1;
+      }
+      
+      .flight-airport {
+        font-size: 24pt;
+        font-weight: 700;
+        color: #2563eb;
+        letter-spacing: 2px;
+      }
+      
+      .flight-arrow {
+        font-size: 16pt;
+        color: #666;
+      }
+      
+      .flight-details {
+        text-align: right;
+        font-size: 10pt;
+        color: #666;
+      }
+      
+      .flight-number {
+        font-size: 12pt;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 4px; /* 1mm ≈ 4px */
+      }
+      
+      .reservation-empty {
+        text-align: center;
+        padding: 60px 20px; /* 15mm ≈ 60px, 5mm ≈ 20px */
+        color: #999;
         font-style: italic;
       }
       
       /* 旅程ページスタイル */
       .itinerary-page {
         padding-top: 80px; /* 20mm ≈ 80px */
+      }
+      
+      .itinerary-page-content {
+        display: flex;
+        gap: 40px; /* 10mm ≈ 40px */
+        position: relative;
+      }
+      
+      .itinerary-main {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .itinerary-sidebar {
+        width: 20%;
+        min-width: 160px;
+        border-left: 1px solid #ddd;
+        padding-left: 40px; /* 10mm ≈ 40px */
+        position: relative;
+      }
+      
+      .itinerary-sidebar::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: #ddd;
       }
       
       .day-section {
@@ -464,11 +728,98 @@ export function generateMagazineStyles(): string {
         letter-spacing: 1px;
       }
       
+      .itinerary-items-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 32px; /* 8mm ≈ 32px */
+      }
+      
+      .itinerary-items-grid.two-columns {
+        grid-template-columns: 1fr 1fr;
+        grid-auto-flow: column;
+        gap: 24px; /* 6mm ≈ 24px */
+      }
+      
       .itinerary-item {
-        margin-bottom: 32px; /* 8mm ≈ 32px */
+        margin-bottom: 0;
         padding: 20px; /* 5mm ≈ 20px */
         background: #f8f9fa;
         border-left: 3px solid #2563eb;
+        break-inside: avoid;
+        position: relative;
+      }
+      
+      .itinerary-arrow {
+        position: absolute;
+        font-size: 20pt;
+        color: #2563eb;
+        font-weight: bold;
+        pointer-events: none;
+        z-index: 10;
+        line-height: 1;
+      }
+      
+      .itinerary-arrow.down {
+        bottom: -28px; /* gap (24px) + 4px で中央に */
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      
+      .itinerary-arrow.up {
+        top: -28px; /* gap (24px) + 4px で中央に */
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      
+      .itinerary-arrow.horizontal {
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18pt;
+      }
+      
+      .itinerary-arrow.horizontal.left-to-right {
+        right: -34px; /* gap (24px) + 10px */
+      }
+      
+      .lodging-sidebar {
+        margin-bottom: 40px; /* 10mm ≈ 40px */
+      }
+      
+      .lodging-sidebar-title {
+        font-size: 12pt;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 16px; /* 4mm ≈ 16px */
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      
+      .lodging-card {
+        margin-bottom: 32px; /* 8mm ≈ 32px */
+      }
+      
+      .lodging-photo {
+        width: 100%;
+        height: 120px; /* 30mm ≈ 120px */
+        object-fit: cover;
+        border-radius: 4px;
+        margin-bottom: 12px; /* 3mm ≈ 12px */
+        background: #e5e5e5;
+      }
+      
+      .lodging-name {
+        font-size: 11pt;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px; /* 2mm ≈ 8px */
+        line-height: 1.4;
+      }
+      
+      .lodging-address {
+        font-size: 9pt;
+        color: #666;
+        line-height: 1.4;
+        word-break: break-word;
       }
       
       .itinerary-time {
@@ -489,6 +840,9 @@ export function generateMagazineStyles(): string {
         font-size: 10pt;
         margin-bottom: 8px; /* 2mm ≈ 8px */
         line-height: 1.4;
+        max-height: 100px; /* 25mm ≈ 100px (約4-5行分) */
+        overflow: hidden;
+        word-wrap: break-word;
       }
       
       .itinerary-note {
@@ -619,56 +973,229 @@ export async function generateCoverPage(
 		if (qrDataURL) {
 			qrCodeHtml = `
         <div class="cover-qr">
-          <Image
-            src="${qrDataURL}"
-            alt="QR Code"
-            width={128}
-            height={128}
-          />
+          <img src="${qrDataURL}" alt="QR Code" width="80" height="80" />
         </div>
       `;
 		}
 	}
 
-	// 縦書きテキスト（JOURNEY OF FREEDOM風）
-	const verticalText = "JOURNEY OF FREEDOM";
+	// 左帯のタイトルテキスト
+	const spineTitle = "CAGLLA";
+
+	// 号数っぽい表示（単純に日数ベースでなんちゃってNo.を作る）
+	const issueNo = (data.days?.length || 1).toString();
+
+	// 月・年の表示（開始日ベース）
+	const startDateObj = trip.start_date
+		? toDateOrNull(trip.start_date) || new Date()
+		: new Date();
+	const monthLabel = startDateObj.toLocaleDateString("en-US", {
+		month: "long",
+		year: "numeric",
+	});
+
+	// カテゴリ別にItineraryを分類
+	const exploreItineraries: string[] = []; // exploration, adventure, culture
+	const playItineraries: string[] = []; // entertainment
+	const lodgingItineraries: string[] = []; // accommodation
+	const diningItineraries: string[] = []; // dining
+
+	if (data.itinerariesByDay) {
+		for (const dayId in data.itinerariesByDay) {
+			const itineraries = data.itinerariesByDay[dayId] || [];
+			for (const itinerary of itineraries) {
+				const primaryCategory = itinerary.activity_tag?.primaryCategory;
+				if (!primaryCategory) continue;
+
+				const title = itinerary.title;
+				if (primaryCategory === "exploration" || 
+				    primaryCategory === "adventure" || 
+				    primaryCategory === "culture") {
+					exploreItineraries.push(title);
+				} else if (primaryCategory === "entertainment") {
+					playItineraries.push(title);
+				} else if (primaryCategory === "accommodation") {
+					lodgingItineraries.push(title);
+				} else if (primaryCategory === "dining") {
+					diningItineraries.push(title);
+				}
+			}
+		}
+	}
+
+	// 各カテゴリのテキストを生成（フォールバックテキスト + リスト）
+	const exploreIntro = "Discover hidden gems and cultural experiences.";
+	const exploreText =
+		exploreItineraries.length > 0
+			? `${exploreIntro} ${exploreItineraries.join(", ")}`
+			: exploreIntro;
+
+	const playIntro = "Fun activities and entertainment spots.";
+	const playText =
+		playItineraries.length > 0
+			? `${playIntro} ${playItineraries.join(", ")}`
+			: playIntro;
+
+	const lodgingIntro = "Hotels, ryokan, and hidden spots chosen for this trip.";
+	const lodgingText =
+		lodgingItineraries.length > 0
+			? `${lodgingIntro} ${lodgingItineraries.join(", ")}`
+			: lodgingIntro;
+
+	const diningIntro = "Restaurants, cafes, and local food experiences.";
+	const diningText =
+		diningItineraries.length > 0
+			? `${diningIntro} ${diningItineraries.join(", ")}`
+			: diningIntro;
 
 	return `
     <div class="page cover-page">
-      ${backgroundImage ? `<div class="cover-background" style="background-image: url('${backgroundImage}')"></div>` : ""}
-      <div class="cover-overlay"></div>
-      <div class="vertical-text">${verticalText}</div>
-      ${qrCodeHtml}
-      <div class="cover-content">
-        <div>
-          <div class="cover-title-yuji">旅のしおり</div>
-          <!-- Yuji Bokuに変更する場合: <div class="cover-title-yuji">旅のしおり</div> -->
-          <div class="cover-subtitle">${escapeHtml((trip as any).name || "無題の旅行")}</div>
-          <div class="cover-meta">
-            ${startDate} 〜 ${endDate}
-            ${trip.destination ? `<br>📍 ${escapeHtml(trip.destination)}` : ""}
+      <div class="cover-frame">
+        <div class="cover-left">
+          <div class="cover-trip-title">
+            ${escapeHtml(trip.title?.trim() || "Trip itinerary")}
           </div>
+          <div class="cover-left-issue">NO.${issueNo}</div>
+          <div class="cover-left-title">${spineTitle}</div>
         </div>
-        <div class="cover-features">
-          <div class="cover-feature">
-            <div class="cover-feature-icon">🏨</div>
-            <div class="cover-feature-title">宿泊先</div>
-            <div class="cover-feature-desc">厳選されたホテル・宿泊施設</div>
-          </div>
-          <div class="cover-feature">
-            <div class="cover-feature-icon">🎯</div>
-            <div class="cover-feature-title">主要アクティビティ</div>
-            <div class="cover-feature-desc">現地の魅力を最大限に</div>
-          </div>
-          <div class="cover-feature">
-            <div class="cover-feature-icon">🗺️</div>
-            <div class="cover-feature-title">詳細ルート</div>
-            <div class="cover-feature-desc">最適化された旅程プラン</div>
+        <div class="cover-right">
+          <div class="cover-photo" style="${
+						backgroundImage
+							? `background-image: url('${escapeHtml(backgroundImage)}');`
+							: "background-image: linear-gradient(135deg, #9ca3af, #6b7280);"
+					}">
+            <div class="cover-photo-content">
+              <div>
+                <div class="cover-issue-meta">
+                  <div><strong>${monthLabel.toUpperCase()}</strong></div>
+                  <div>TRIP SNAPSHOT</div>
+                  <div>${escapeHtml(trip.destination || "DESTINATION")}</div>
+                </div>
+
+                <div class="cover-main-title">
+                  ${escapeHtml(trip.title?.trim() || "Trip itinerary")}
+                </div>
+                <div class="cover-main-subtitle">
+                  ${startDate} – ${endDate}
+                </div>
+
+                <div class="cover-section-group">
+                  <div class="cover-section">
+                    <div class="cover-section-title">EXPLORE</div>
+                    <div class="cover-section-line"></div>
+                    <div class="cover-section-body">
+                      ${escapeHtml(exploreText)}
+                    </div>
+                  </div>
+                  <div class="cover-section">
+                    <div class="cover-section-title">LODGING</div>
+                    <div class="cover-section-line"></div>
+                    <div class="cover-section-body">
+                      ${escapeHtml(lodgingText)}
+                    </div>
+                  </div>
+                  <div class="cover-section">
+                    <div class="cover-section-title">DINING</div>
+                    <div class="cover-section-line"></div>
+                    <div class="cover-section-body">
+                      ${escapeHtml(diningText)}
+                    </div>
+                  </div>
+                  <div class="cover-section">
+                    <div class="cover-section-title">PLAY</div>
+                    <div class="cover-section-line"></div>
+                    <div class="cover-section-body">
+                      ${escapeHtml(playText)}
+                    </div>
+                  </div>
+                  <div class="cover-section">
+                    <div class="cover-section-title">VOYAGE</div>
+                    <div class="cover-section-line"></div>
+                    <div class="cover-section-body">
+                      A curated itinerary to experience this place like a local.
+                    </div>
+                  </div>
+                </div>
+              </div>
+              ${qrCodeHtml ? `<div class="cover-qr">${qrCodeHtml}</div>` : ""}
+            </div>
           </div>
         </div>
       </div>
     </div>
   `;
+}
+
+/**
+ * Google Maps Static APIのURLを生成（place_id はサポート外のため lat/lng 必須）
+ * 
+ * 注意: Static Maps APIは `place_id:` を `center` パラメータにサポートしていないため、
+ * 緯度経度（lat, lng）を使用する必要があります。
+ */
+function generateStaticMapUrl(
+	destinationPlaceId?: string,
+	destinationPlace?: any,
+): string | null {
+	const apiKey =
+		// process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
+		process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+
+	if (!apiKey) {
+		return null;
+	}
+
+	// 地図のサイズ（目次ページの .toc-map のサイズに合わせる）
+	// Static Maps API の最大サイズは 640x640 だが、400x320 は安全
+	const width = 400;
+	const height = 320;
+	const zoom = 12;
+
+	let centerParam = "";
+
+	// geometry.location が lat()/lng() を持つケースと、生の number ケース両方に対応
+	if (destinationPlace?.geometry?.location) {
+		const loc = destinationPlace.geometry.location;
+
+		// 関数形式（lat(), lng()）と生の値（lat, lng）の両方に対応
+		const lat =
+			typeof loc.lat === "function" ? loc.lat() : loc.lat;
+		const lng =
+			typeof loc.lng === "function" ? loc.lng() : loc.lng;
+
+		// 型チェック：数値であることを確認
+		if (typeof lat === "number" && typeof lng === "number") {
+			centerParam = `${lat},${lng}`;
+		}
+	}
+
+	// geometry がない → place_id だけでは Static Maps は生成不可
+	if (!centerParam) {
+		// ログ出力：キャッシュが遅れている可能性や、データ構造の問題を記録
+		console.warn(
+			"[generateStaticMapUrl] geometry.location が無いため Static Map を生成できません。",
+			{
+				destinationPlaceId,
+				hasDestinationPlace: !!destinationPlace,
+				hasGeometry: !!destinationPlace?.geometry,
+				hasLocation: !!destinationPlace?.geometry?.location,
+			},
+		);
+		return null;
+	}
+
+	// Google Maps Static API URL
+	const baseUrl = "https://maps.googleapis.com/maps/api/staticmap";
+	const params = new URLSearchParams({
+		center: centerParam,
+		zoom: zoom.toString(),
+		size: `${width}x${height}`,
+    scale: "2",
+		maptype: "roadmap",
+		format: "png",
+		key: apiKey,
+	});
+
+	return `${baseUrl}?${params.toString()}`;
 }
 
 /**
@@ -693,33 +1220,49 @@ export function generateTocPage(data: TripPdfData): string {
 	];
 	const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
 
+	// Google Maps Static APIのURLを生成
+	const mapUrl = generateStaticMapUrl(
+		trip.destination_place_id,
+		(trip as any).destination_place,
+	);
+	const mapImageHtml = mapUrl
+		? `<img src="${escapeHtml(mapUrl)}" alt="Destination Map" style="width: 100%; height: 100%; object-fit: cover;" />`
+		: `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 10pt;">🗺️ 主要目的地の地図<br><small>${escapeHtml(trip.destination || "目的地")}</small></div>`;
+
+	// 表紙画像の取得
+	const coverImage =
+		(trip as any).cover_image || (trip as any).image_url || "";
+
 	return `
     <div class="page toc-page">
       <div class="page-header">
-        <div>${escapeHtml((trip as any).name || "無題の旅行").toUpperCase()} - TABLE OF CONTENTS</div>
+        <div>${escapeHtml(trip.title || "無題の旅行").toUpperCase()} - TABLE OF CONTENTS</div>
       </div>
       
       <div class="toc-header">
+        <div class="toc-brand-title">CAGLLA</div>
         <div class="toc-title">TABLE OF CONTENTS</div>
       </div>
       
       <div class="toc-content">
         <div class="toc-left">
-          <div class="toc-main-title">${escapeHtml((trip as any).name || "無題の旅行")}</div>
-          <div class="toc-meta">${days.length}日間の旅行 | ${startDate} - ${endDate}</div>
+          <div class="toc-main-title">${escapeHtml(trip.title || "無題の旅行")}</div>
+          <div class="toc-meta">${days.length}日間の旅行 | ${escapeHtml(trip.destination || "目的地")}</div>
+          <div class="toc-meta-sub">${startDate} - ${endDate}</div>
+          <div class="toc-meta-description">${escapeHtml(trip.description || "No description")}</div>
           
           <div class="toc-section">
-            <div class="toc-section-title">table of contents 目次</div>
+            <div class="toc-section-title">ARTICLES</div>
             <div class="toc-item">
-              <div class="toc-item-title">RESERVATIONS 予約情報</div>
+              <div class="toc-item-title">Reservations</div>
               <div class="toc-item-page">2</div>
             </div>
             <div class="toc-item">
-              <div class="toc-item-title">DAILY SCHEDULE 毎日の日程</div>
+              <div class="toc-item-title">Daily Schedule</div>
               <div class="toc-item-page">3</div>
             </div>
             <div class="toc-item">
-              <div class="toc-item-title">EMERGENCY CONTACTS 緊急連絡先</div>
+              <div class="toc-item-title">Emergency Contacts</div>
               <div class="toc-item-page">${3 + days.length}</div>
             </div>
             <div class="toc-item">
@@ -738,8 +1281,10 @@ export function generateTocPage(data: TripPdfData): string {
         </div>
         
         <div class="toc-right">
+
+          
           <div class="toc-map">
-            <div>🗺️ 主要目的地の地図<br><small>${escapeHtml(trip.destination || "目的地")}</small></div>
+            ${mapImageHtml}
           </div>
           
           <div class="toc-quote">
@@ -749,12 +1294,22 @@ export function generateTocPage(data: TripPdfData): string {
           <div class="toc-colophon">
             <div>This travel companion book was created using "Caglla Travel Manager".</div>
             <div>Published on ${new Date().toLocaleDateString("ja-JP")}</div>
-            <div>Website: https://caglla.com</div>
+            <div>Website: https://caglla.travel</div>
             <div>Printed in PDF</div>
             <div>Version: 1.0</div>
             <br>
             <div>This booklet is for reference only. Please verify all information before your trip.</div>
           </div>
+
+          ${coverImage ? `
+          <div class="toc-cover-image">
+            <div class="toc-cover-image-title">Cover Image</div>
+            <img src="${escapeHtml(coverImage)}" alt="Cover Image" />
+            <div class="toc-cover-caption">
+              Local image of the destination. Selected by: ${escapeHtml((trip as any).creator_name || (trip as any).creator?.name || "Unknown")}
+            </div>
+          </div>
+          ` : ""}
         </div>
       </div>
       
@@ -766,24 +1321,361 @@ export function generateTocPage(data: TripPdfData): string {
 }
 
 /**
+ * 予約情報を抽出（itinerariesByDayから）
+ */
+function extractReservations(data: TripPdfData): Array<{
+	itinerary: Itinerary;
+	reservation: ReservationInfo;
+}> {
+	const reservations: Array<{ itinerary: Itinerary; reservation: ReservationInfo }> = [];
+	
+	if (!data.itinerariesByDay) return reservations;
+	
+	for (const dayId in data.itinerariesByDay) {
+		const itineraries = data.itinerariesByDay[dayId] || [];
+		for (const itinerary of itineraries) {
+			if (itinerary.reservation) {
+				reservations.push({
+					itinerary,
+					reservation: itinerary.reservation,
+				});
+			}
+		}
+	}
+	
+	return reservations;
+}
+
+/**
+ * 予約タイプのラベルを取得
+ */
+function getReservationTypeLabel(type: ReservationType): string {
+	const labels: Record<ReservationType, string> = {
+		flight: "Flight",
+		hotel: "Hotel",
+		rental_car: "Rental Car",
+		dining: "Dining",
+		other: "Other",
+	};
+	return labels[type] || type;
+}
+
+/**
+ * 予約サイトのラベルを取得
+ */
+function getReservationSiteLabel(site?: string): string {
+	if (!site) return "";
+	const labels: Record<string, string> = {
+		expedia: "Expedia",
+		booking_com: "Booking.com",
+		agoda: "Agoda",
+		airbnb: "Airbnb",
+		kayak: "Kayak",
+		skyscanner: "Skyscanner",
+		tripadvisor: "TripAdvisor",
+		opentable: "OpenTable",
+		tabelog: "Tabelog",
+		hot_pepper: "Hot Pepper",
+		ana: "ANA",
+		jal: "JAL",
+		rakuten_travel: "Rakuten Travel",
+		jalan: "Jalan",
+	};
+	return labels[site] || site;
+}
+
+/**
  * 予約情報ページを生成
  */
 export function generateReservationsPage(data: TripPdfData): string {
+	const reservations = extractReservations(data);
+	
+	// 予約タイプ別にグループ化
+	const reservationsByType = reservations.reduce(
+		(acc, { itinerary, reservation }) => {
+			const type = reservation.type;
+			if (!acc[type]) {
+				acc[type] = [];
+			}
+			acc[type].push({ itinerary, reservation });
+			return acc;
+		},
+		{} as Record<ReservationType, Array<{ itinerary: Itinerary; reservation: ReservationInfo }>>,
+	);
+	
+	// 予約タイプの順序
+	const typeOrder: ReservationType[] = ["flight", "hotel", "rental_car", "dining", "other"];
+	
+	// 予約がない場合
+	if (reservations.length === 0) {
+		return `
+    <div class="page reservations-page">
+      <div class="page-header">
+        <div>${escapeHtml(data.trip.title || "無題の旅行").toUpperCase()} - RESERVATIONS</div>
+      </div>
+      
+      <div class="page-title">Reservations</div>
+      <div class="page-subtitle">予約情報</div>
+      
+      <div class="reservation-empty">
+        No reservations found. Please add reservations to your itinerary.
+      </div>
+      
+      <div class="page-footer">
+        <div>2 | caglla travel manager</div>
+      </div>
+    </div>
+  `;
+	}
+	
+	// 各予約タイプのセクションを生成
+	const sections = typeOrder
+		.filter((type) => reservationsByType[type] && reservationsByType[type].length > 0)
+		.map((type) => {
+			const typeReservations = reservationsByType[type];
+			const reservationCards = typeReservations
+				.map(({ itinerary, reservation }) => {
+					if (type === "flight") {
+						return generateFlightReservationCard(itinerary, reservation);
+					} else {
+						return generateStandardReservationCard(itinerary, reservation);
+					}
+				})
+				.join("");
+			
+			return `
+        <div class="reservation-section">
+          <div class="reservation-section-title">${getReservationTypeLabel(type)}</div>
+          ${reservationCards}
+        </div>
+      `;
+		})
+		.join("");
+	
 	return `
     <div class="page reservations-page">
       <div class="page-header">
-        <div>${escapeHtml((data.trip as any).name || "無題の旅行").toUpperCase()} - RESERVATIONS</div>
+        <div>${escapeHtml(data.trip.title || "無題の旅行").toUpperCase()} - RESERVATIONS</div>
       </div>
       
       <div class="page-title">Reservations</div>
       <div class="page-subtitle">予約情報</div>
       
       <div class="reservations-content">
-        not implemented yet
+        ${sections}
       </div>
       
       <div class="page-footer">
         <div>2 | caglla travel manager</div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * フライト予約カードを生成
+ */
+function generateFlightReservationCard(
+	itinerary: Itinerary,
+	reservation: ReservationInfo,
+): string {
+	const departure = reservation.departure_airport || "";
+	const arrival = reservation.arrival_airport || "";
+	const flightNumber = reservation.flight_number || "";
+	const airline = reservation.airline || "";
+	
+	const departureDate = reservation.departure_at
+		? toDateOrNull(reservation.departure_at)
+		: null;
+	const arrivalDate = reservation.arrival_at
+		? toDateOrNull(reservation.arrival_at)
+		: null;
+	
+	const formatDateTime = (date: Date | null): string => {
+		if (!date) return "";
+		return date.toLocaleString("ja-JP", {
+			year: "numeric",
+			month: "2-digit",
+			day: "2-digit",
+			hour: "2-digit",
+			minute: "2-digit",
+		});
+	};
+	
+	const departureTime = formatDateTime(departureDate);
+	const arrivalTime = formatDateTime(arrivalDate);
+	
+	return `
+    <div class="reservation-card">
+      <div class="reservation-card-title">${escapeHtml(itinerary.title || "Flight")}</div>
+      
+      ${departure && arrival ? `
+        <div class="flight-info">
+          <div class="flight-route">
+            <div class="flight-airport">${escapeHtml(departure)}</div>
+            <div class="flight-arrow">→</div>
+            <div class="flight-airport">${escapeHtml(arrival)}</div>
+          </div>
+          <div class="flight-details">
+            ${flightNumber ? `<div class="flight-number">${escapeHtml(flightNumber)}</div>` : ""}
+            ${airline ? `<div>${escapeHtml(airline)}</div>` : ""}
+          </div>
+        </div>
+      ` : ""}
+      
+      ${departureTime ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">Departure:</span>
+          <span class="reservation-info-value">${escapeHtml(departureTime)}</span>
+        </div>
+      ` : ""}
+      
+      ${arrivalTime ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">Arrival:</span>
+          <span class="reservation-info-value">${escapeHtml(arrivalTime)}</span>
+        </div>
+      ` : ""}
+      
+      ${reservation.confirmation_number ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">Confirmation:</span>
+          <span class="reservation-info-value">${escapeHtml(reservation.confirmation_number)}</span>
+        </div>
+      ` : ""}
+      
+      ${reservation.reservation_site ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">Booking Site:</span>
+          <span class="reservation-info-value">${escapeHtml(getReservationSiteLabel(reservation.reservation_site))}</span>
+        </div>
+      ` : ""}
+      
+      ${reservation.notes ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">Notes:</span>
+          <span class="reservation-info-value">${escapeHtml(reservation.notes)}</span>
+        </div>
+      ` : ""}
+    </div>
+  `;
+}
+
+/**
+ * 標準予約カードを生成（ホテル、レンタカー、食事、その他）
+ */
+function generateStandardReservationCard(
+	itinerary: Itinerary,
+	reservation: ReservationInfo,
+): string {
+	const startDate = reservation.start_date
+		? toDateOrNull(reservation.start_date)
+		: null;
+	const endDate = reservation.end_date
+		? toDateOrNull(reservation.end_date)
+		: null;
+	
+	const formatDateTime = (date: Date | null): string => {
+		if (!date) return "";
+		return date.toLocaleString("ja-JP", {
+			year: "numeric",
+			month: "2-digit",
+			day: "2-digit",
+			hour: "2-digit",
+			minute: "2-digit",
+		});
+	};
+	
+	const startTime = formatDateTime(startDate);
+	const endTime = formatDateTime(endDate);
+	
+	return `
+    <div class="reservation-card">
+      <div class="reservation-card-title">${escapeHtml(itinerary.title || "Reservation")}</div>
+      
+      ${startTime ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">Start:</span>
+          <span class="reservation-info-value">${escapeHtml(startTime)}</span>
+        </div>
+      ` : ""}
+      
+      ${endTime ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">End:</span>
+          <span class="reservation-info-value">${escapeHtml(endTime)}</span>
+        </div>
+      ` : ""}
+      
+      ${reservation.confirmation_number ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">Confirmation:</span>
+          <span class="reservation-info-value">${escapeHtml(reservation.confirmation_number)}</span>
+        </div>
+      ` : ""}
+      
+      ${reservation.reservation_site ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">Booking Site:</span>
+          <span class="reservation-info-value">${escapeHtml(getReservationSiteLabel(reservation.reservation_site))}</span>
+        </div>
+      ` : ""}
+      
+      ${itinerary.location || itinerary.place_data?.formatted_address ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">Location:</span>
+          <span class="reservation-info-value">${escapeHtml(itinerary.location || itinerary.place_data?.formatted_address || "")}</span>
+        </div>
+      ` : ""}
+      
+      ${reservation.notes ? `
+        <div class="reservation-info-row">
+          <span class="reservation-info-label">Notes:</span>
+          <span class="reservation-info-value">${escapeHtml(reservation.notes)}</span>
+        </div>
+      ` : ""}
+    </div>
+  `;
+}
+
+/**
+ * Lodging（宿泊）のitineraryを抽出
+ */
+function extractLodgingItineraries(itineraries: Itinerary[]): Itinerary[] {
+	return itineraries.filter((itinerary) => {
+		const primaryCategory = itinerary.activity_tag?.primaryCategory;
+		return primaryCategory === "accommodation";
+	});
+}
+
+/**
+ * Lodgingサイドバーを生成
+ */
+function generateLodgingSidebar(lodgingItineraries: Itinerary[]): string {
+	if (lodgingItineraries.length === 0) return "";
+
+	const lodgingCards = lodgingItineraries.map((lodging) => {
+		const photoRef = lodging.place_data?.photos?.[0]?.photo_reference;
+		const photoUrl = photoRef
+			? `/api/places/photo?photoreference=${encodeURIComponent(photoRef)}&maxwidth=400`
+			: null;
+		const address = lodging.location || lodging.place_data?.formatted_address || "";
+		const name = lodging.title || "";
+
+		return `
+      <div class="lodging-card">
+        ${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name)}" class="lodging-photo" />` : ""}
+        ${name ? `<div class="lodging-name">${escapeHtml(name)}</div>` : ""}
+        ${address ? `<div class="lodging-address">${escapeHtml(address)}</div>` : ""}
+      </div>
+    `;
+	}).join("");
+
+	return `
+    <div class="itinerary-sidebar">
+      <div class="lodging-sidebar">
+        <div class="lodging-sidebar-title">Lodging</div>
+        ${lodgingCards}
       </div>
     </div>
   `;
@@ -815,31 +1707,83 @@ export function generateItineraryPages(data: TripPdfData): string {
 				return timeA.localeCompare(timeB);
 			});
 
+			// Lodging（accommodation）を抽出
+			const lodgingItineraries = extractLodgingItineraries(sortedItineraries);
+			const lodgingSidebar = generateLodgingSidebar(lodgingItineraries);
+
+			// 2段組レイアウトかどうか（5つ以上の予定がある場合）
+			const useTwoColumns = sortedItineraries.length >= 5;
+			const gridClass = useTwoColumns ? "two-columns" : "";
+			
+			// 列優先レイアウトのための行数を計算
+			const itemCount = sortedItineraries.length;
+			const rowCount = useTwoColumns ? Math.ceil(itemCount / 2) : itemCount;
+			const gridStyle = useTwoColumns
+				? `style="grid-template-rows: repeat(${rowCount}, auto);"`
+				: "";
+
 			const itineraryItems =
 				sortedItineraries.length > 0
 					? sortedItineraries
-							.map(
-								(item) => `
+							.map((item, itemIndex) => {
+								// 2列レイアウトの場合の矢印を決定
+								let arrows = "";
+								if (useTwoColumns) {
+									const rowCount = Math.ceil(itemCount / 2);
+									const isLeftColumn = itemIndex < rowCount;
+									const isRightColumn = itemIndex >= rowCount;
+									const isLastInLeftColumn = itemIndex === rowCount - 1;
+									const isFirstInRightColumn = itemIndex === rowCount;
+									const isLastItem = itemIndex === itemCount - 1;
+									
+									// 左列のアイテム（最後以外）→ 下矢印
+									if (isLeftColumn && !isLastInLeftColumn) {
+										arrows += '<div class="itinerary-arrow down">↓</div>';
+									}
+									// 左列の最後のアイテム → 右下矢印（下と右の組み合わせ）
+									if (isLastInLeftColumn) {
+										arrows += '<div class="itinerary-arrow down">↓</div>';
+										arrows += '<div class="itinerary-arrow horizontal left-to-right">→</div>';
+									}
+									// 右列の最初のアイテム → 上矢印
+									if (isFirstInRightColumn) {
+										arrows += '<div class="itinerary-arrow up">↑</div>';
+									}
+									// 右列のアイテム（最後以外）→ 下矢印
+									if (isRightColumn && !isLastItem) {
+										arrows += '<div class="itinerary-arrow down">↓</div>';
+									}
+								}
+								
+								return `
             <div class="itinerary-item">
               ${item.start_time ? `<div class="itinerary-time">⏰ ${item.start_time}</div>` : ""}
               <div class="itinerary-name">${escapeHtml(item.title || "無題の旅程")}</div>
               ${item.description ? `<div class="itinerary-description">${escapeHtml(item.description)}</div>` : ""}
               ${(item as any).note ? `<div class="itinerary-note">${escapeHtml((item as any).note)}</div>` : ""}
               ${(item as any).address ? `<div class="itinerary-address">📍 ${escapeHtml((item as any).address)}</div>` : ""}
+              ${arrows}
             </div>
-          `,
-							)
+          `;
+							})
 							.join("")
 					: '<div class="reservations-content">予定なし</div>';
 
 			return `
         <div class="page itinerary-page">
           <div class="page-header">
-            <div>${escapeHtml((trip as any).name || "無題の旅行").toUpperCase()} - DAILY SCHEDULE</div>
+            <div>${escapeHtml(trip.title || "無題の旅行").toUpperCase()} - DAILY SCHEDULE</div>
           </div>
           
-          <div class="day-title">${dayTitle}</div>
-          ${itineraryItems}
+          <div class="itinerary-page-content">
+            <div class="itinerary-main">
+              <div class="day-title">${dayTitle}</div>
+              <div class="itinerary-items-grid ${gridClass}" ${gridStyle}>
+                ${itineraryItems}
+              </div>
+            </div>
+            ${lodgingSidebar}
+          </div>
           
           <div class="page-footer">
             <div>${3 + index} | caglla travel manager</div>
@@ -859,7 +1803,7 @@ export function generateEmergencyPage(data: TripPdfData): string {
 	return `
     <div class="page emergency-page">
       <div class="page-header">
-        <div>${escapeHtml((trip as any).name || "無題の旅行").toUpperCase()} - EMERGENCY CONTACTS</div>
+        <div>${escapeHtml(trip.title || "無題の旅行").toUpperCase()} - EMERGENCY CONTACTS</div>
       </div>
       
       <div class="page-title">Emergency Contacts</div>
@@ -918,7 +1862,7 @@ export function generateMemoPage(data: TripPdfData): string {
 	return `
     <div class="page memo-page">
       <div class="page-header">
-        <div>${escapeHtml((trip as any).name || "無題の旅行").toUpperCase()} - MEMO</div>
+        <div>${escapeHtml(trip.title || "無題の旅行").toUpperCase()} - MEMO</div>
       </div>
       
       <div class="page-title">Memo</div>
@@ -951,7 +1895,7 @@ export function generateBackCoverPage(data: TripPdfData): string {
       <div class="back-cover-meta">
         Travel Manager<br>
         <br>
-        Website: https://caglla.com<br>
+        Website: https://caglla.travel<br>
         Version: 1.0<br>
         <br>
         This travel companion book was created using Caglla Travel Manager.<br>
@@ -987,7 +1931,7 @@ export async function generateMagazinePdfHtml(
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${escapeHtml((trip as any).name || "無題の旅行")} - Travel Companion</title>
+      <title>${escapeHtml(trip.title || "無題の旅行")} - Travel Companion</title>
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link href="https://fonts.googleapis.com/css2?family=New+Tegomin&family=Yuji+Boku&display=swap" rel="stylesheet">

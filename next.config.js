@@ -96,6 +96,9 @@ const nextConfig = {
 			{
 				pathname: "/default-avatar.png",
 			},
+			{
+				pathname: "/imgs/**",
+			},
 		],
 	},
 

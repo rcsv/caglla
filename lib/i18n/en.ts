@@ -842,6 +842,10 @@ const en: Dictionary = {
 		"PDF export requires Backpacker plan or higher",
 	"tripSlugPage.pdfExportFailed": "PDF export failed",
 	"tripSlugPage.pdfExportSuccess": "PDF exported successfully",
+	"tripSlugPage.pdfExportUnavailable":
+		"PDF export service is unavailable. SELECTPDF_API_KEY may not be configured.",
+	"tripSlugPage.pdfExporting": "Exporting...",
+	"tripSlugPage.pdfExport": "Export to PDF",
 	"tripSlugPage.fetchTripFailed": "Failed to fetch trip data",
 	"tripSlugPage.fetchTripFailedDescription":
 		"Something went wrong while loading this trip. Please try again.",

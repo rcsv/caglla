@@ -834,6 +834,10 @@ const ja: Dictionary = {
 		"PDF出力にはBackpackerプラン以上が必要です。",
 	"tripSlugPage.pdfExportFailed": "PDF出力に失敗しました。",
 	"tripSlugPage.pdfExportSuccess": "PDF出力が完了しました。",
+	"tripSlugPage.pdfExportUnavailable":
+		"PDF出力サービスが利用できません。SELECTPDF_API_KEYが設定されていない可能性があります。",
+	"tripSlugPage.pdfExporting": "PDF出力中...",
+	"tripSlugPage.pdfExport": "PDF出力",
 	"tripSlugPage.fetchTripFailed": "旅行データの取得に失敗しました",
 	"tripSlugPage.fetchTripFailedDescription":
 		"旅行データの読み込み中に問題が発生しました。もう一度お試しください。",
