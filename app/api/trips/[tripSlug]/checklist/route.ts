@@ -16,7 +16,7 @@ export async function GET(
 	try {
 		const { tripSlug } = await params;
 		const tripId = tripSlug;
-		const ref = adminDb.collection("trip_checklists").doc(tripId);
+		const ref = adminDb.collection(COLLECTIONS.TRIP_CHECKLISTS).doc(tripId);
 		const doc = await ref.get();
 		if (!doc.exists) {
 			return NextResponse.json({ items: [] });
@@ -46,7 +46,7 @@ export async function PUT(
 			return badRequest("items array required");
 		}
 
-		const ref = adminDb.collection("trip_checklists").doc(tripId);
+		const ref = adminDb.collection(COLLECTIONS.TRIP_CHECKLISTS).doc(tripId);
 		await ref.set(
 			{
 				id: tripId,

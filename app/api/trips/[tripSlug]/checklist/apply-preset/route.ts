@@ -42,7 +42,7 @@ export const POST = composeMiddleware(
 	const { preset_id } = body;
 
 	// プリセットを取得
-	const presetRef = adminDb.collection("checklist_presets").doc(preset_id);
+	const presetRef = adminDb.collection(COLLECTIONS.CHECKLIST_PRESETS).doc(preset_id);
 	const presetDoc = await presetRef.get();
 
 	if (!presetDoc.exists) {
@@ -57,7 +57,7 @@ export const POST = composeMiddleware(
 	}
 
 	// 現在のチェックリストを取得
-	const checklistRef = adminDb.collection("trip_checklists").doc(tripId);
+	const checklistRef = adminDb.collection(COLLECTIONS.TRIP_CHECKLISTS).doc(tripId);
 	const checklistDoc = await checklistRef.get();
 	const existingItems = checklistDoc.exists
 		? checklistDoc.data()?.items || []

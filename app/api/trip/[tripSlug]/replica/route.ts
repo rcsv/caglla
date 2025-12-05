@@ -159,14 +159,14 @@ export const POST = composeMiddleware(
 
 	try {
 		const checklistDoc = await adminDb
-			.collection("trip_checklists")
+			.collection(COLLECTIONS.TRIP_CHECKLISTS)
 			.doc(templateTripId)
 			.get();
 		if (checklistDoc.exists) {
 			const checklistData = checklistDoc.data() || {};
 			const now = new Date();
 			await adminDb
-				.collection("trip_checklists")
+				.collection(COLLECTIONS.TRIP_CHECKLISTS)
 				.doc(replicaResult.trip.id)
 				.set({
 					...checklistData,
