@@ -118,19 +118,19 @@ async function getIsFollowingBatch(
 		// 各チャンクを並列処理
 		await Promise.all(
 			chunks.map(async (chunk) => {
-				// 現在のユーザーがフォローしているユーザーIDのリストを取得
-				const followsSnapshot = await adminDb
-					.collection(COLLECTIONS.USER_FOLLOWS)
-					.where("follower_id", "==", currentUserId)
+		// 現在のユーザーがフォローしているユーザーIDのリストを取得
+		const followsSnapshot = await adminDb
+			.collection(COLLECTIONS.USER_FOLLOWS)
+			.where("follower_id", "==", currentUserId)
 					.where("following_id", "in", chunk)
-					.get();
+			.get();
 
-				followsSnapshot.docs.forEach((doc) => {
-					const data = doc.data();
-					if (data.following_id) {
-						followingSet.add(data.following_id);
-					}
-				});
+		followsSnapshot.docs.forEach((doc) => {
+			const data = doc.data();
+			if (data.following_id) {
+				followingSet.add(data.following_id);
+			}
+		});
 			}),
 		);
 
