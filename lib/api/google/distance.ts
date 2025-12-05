@@ -128,14 +128,22 @@ export const distanceApiHelpers = {
 				signal: AbortSignal.timeout(15000), // 15秒でタイムアウト（バッチ処理は時間がかかるため）
 			});
 
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}));
-				logger.error("Batch distance API error:", {
-					status: response.status,
-					error: errorData.error || "Unknown error",
-				});
-				return null;
+		if (!response.ok) {
+			let errorData: any = {};
+			try {
+				errorData = await response.json();
+			} catch {
+				// JSONパースエラーの場合は空オブジェクト
 			}
+			
+			logger.error("Batch distance API error:", {
+				status: response.status,
+				statusText: response.statusText,
+				error: errorData.error || errorData.message || "Unknown error",
+				errorData: errorData,
+			});
+			return null;
+		}
 
 			const data = await response.json();
 
@@ -146,9 +154,12 @@ export const distanceApiHelpers = {
 			}
 
 			return data;
-		} catch (error) {
-			logger.error("Error calculating total distance:", error);
-			return null;
-		}
+	} catch (error) {
+		logger.error("Error calculating total distance:", {
+			error: error instanceof Error ? error.message : String(error),
+			stack: error instanceof Error ? error.stack : undefined,
+		});
+		return null;
+	}
 	},
 };
