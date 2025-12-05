@@ -3,7 +3,7 @@
  */
 
 import type { PdfContext } from "../types";
-import { escapeHtml } from "../helpers/utils";
+import { escapeHtml, getDeterministicIndex } from "../helpers/utils";
 import { generateStaticMapUrl } from "../helpers/map";
 import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
 import { dateUtils } from "@/lib/utils/date";
@@ -30,7 +30,8 @@ export function generateTocPage(ctx: PdfContext): string[] {
 		"The world is a book, and those who do not travel read only one page.",
 		"Life is either a daring adventure or nothing at all.",
 	];
-	const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+	const quoteIndex = getDeterministicIndex(trip.id, quotes.length);
+	const selectedQuote = quotes[quoteIndex];
 
 	// Google Maps Static APIのURLを生成
 	const mapUrl = generateStaticMapUrl(
@@ -42,13 +43,12 @@ export function generateTocPage(ctx: PdfContext): string[] {
 		: `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666; font-size: 10pt;">🗺️ 主要目的地の地図<br><small>${escapeHtml(trip.destination || "目的地")}</small></div>`;
 
 	// 表紙画像の取得
-	const coverImage =
-		(trip as any).cover_image || (trip as any).image_url || "";
+	const coverImage = trip.cover_image ?? trip.image_url ?? "";
 
 	const pageHtml = `
     <div class="page toc-page">
       <div class="page-header">
-        <div>${escapeHtml(trip.title || "無題の旅行").toUpperCase()} - TABLE OF CONTENTS</div>
+        <div>${escapeHtml((trip.title || "無題の旅行").toUpperCase())} - TABLE OF CONTENTS</div>
       </div>
       
       <div class="toc-header">
@@ -98,7 +98,7 @@ export function generateTocPage(ctx: PdfContext): string[] {
           </div>
           
           <div class="toc-quote">
-            "${randomQuote}"
+            "${selectedQuote}"
           </div>
           
           <div class="toc-colophon">

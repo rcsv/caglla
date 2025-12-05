@@ -15,14 +15,14 @@ export function generateEmergencyPage(ctx: PdfContext): string[] {
 	const pageHtml = `
     <div class="page emergency-page">
       <div class="page-header">
-        <div>${escapeHtml(trip.title || "無題の旅行").toUpperCase()} - EMERGENCY CONTACTS</div>
+        <div>${escapeHtml((trip.title || "無題の旅行").toUpperCase())} - EMERGENCY CONTACTS</div>
       </div>
       
       <div class="page-title">Emergency Contacts</div>
       <div class="page-subtitle">緊急連絡先</div>
       
       <div class="emergency-content">
-        not implemented yet
+        <p style="color: #666; font-style: italic;">このセクションは準備中です。緊急時の連絡先情報は、別途メモしておくことをお勧めします。</p>
       </div>
       
       <div class="page-footer">

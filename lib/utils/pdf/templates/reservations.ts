@@ -40,7 +40,7 @@ export function generateReservationsPage(ctx: PdfContext): string[] {
 		const pageHtml = `
     <div class="page reservations-page">
       <div class="page-header">
-        <div>${escapeHtml(ctx.trip.title || "無題の旅行").toUpperCase()} - RESERVATIONS</div>
+        <div>${escapeHtml((ctx.trip.title || "無題の旅行").toUpperCase())} - RESERVATIONS</div>
       </div>
       
       <div class="page-title">Reservations</div>
@@ -85,7 +85,7 @@ export function generateReservationsPage(ctx: PdfContext): string[] {
 	const pageHtml = `
     <div class="page reservations-page">
       <div class="page-header">
-        <div>${escapeHtml(ctx.trip.title || "無題の旅行").toUpperCase()} - RESERVATIONS</div>
+        <div>${escapeHtml((ctx.trip.title || "無題の旅行").toUpperCase())} - RESERVATIONS</div>
       </div>
       
       <div class="page-title">Reservations</div>
