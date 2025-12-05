@@ -106,20 +106,33 @@ async function getIsFollowingBatch(
 	}
 
 	try {
-		// 現在のユーザーがフォローしているユーザーIDのリストを取得
-		const followsSnapshot = await adminDb
-			.collection(COLLECTIONS.USER_FOLLOWS)
-			.where("follower_id", "==", currentUserId)
-			.where("following_id", "in", targetUserIds)
-			.get();
+		// Firestoreの'in'クエリは最大10件までなので、チャンクに分割
+		const chunkSize = 10;
+		const chunks: string[][] = [];
+		for (let i = 0; i < targetUserIds.length; i += chunkSize) {
+			chunks.push(targetUserIds.slice(i, i + chunkSize));
+		}
 
 		const followingSet = new Set<string>();
-		followsSnapshot.docs.forEach((doc) => {
-			const data = doc.data();
-			if (data.following_id) {
-				followingSet.add(data.following_id);
-			}
-		});
+
+		// 各チャンクを並列処理
+		await Promise.all(
+			chunks.map(async (chunk) => {
+				// 現在のユーザーがフォローしているユーザーIDのリストを取得
+				const followsSnapshot = await adminDb
+					.collection(COLLECTIONS.USER_FOLLOWS)
+					.where("follower_id", "==", currentUserId)
+					.where("following_id", "in", chunk)
+					.get();
+
+				followsSnapshot.docs.forEach((doc) => {
+					const data = doc.data();
+					if (data.following_id) {
+						followingSet.add(data.following_id);
+					}
+				});
+			}),
+		);
 
 		return followingSet;
 	} catch (error) {
