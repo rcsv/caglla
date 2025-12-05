@@ -22,11 +22,15 @@ import { escapeHtml } from "./helpers/utils";
 export async function generateMagazinePdfHtml(
 	data: TripPdfData,
 	tripUrl?: string,
+	language?: string,
 ): Promise<string> {
 	const { trip } = data;
 	
-	// TripPdfDataをPdfContextに変換
-	const ctx: PdfContext = createPdfContext(data, { tripUrl });
+	// TripPdfDataをPdfContextに変換（言語設定を含む）
+	const ctx: PdfContext = createPdfContext(data, {
+		tripUrl,
+		language: language || "en",
+	});
 	
 	// スタイル生成
 	const styles = generateMagazineStyles(ctx.config);

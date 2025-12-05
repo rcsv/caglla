@@ -21,6 +21,7 @@ import logger from "@/lib/core/logger";
 import { notFound } from "@/lib/core/error-handler";
 import { tripApi } from "@/lib/api/middleware";
 import { adminDayOperations } from "@/lib/firebase/admin-operation";
+import { getUserLanguage, DEFAULT_LANGUAGE } from "@/lib/utils/language";
 
 interface SelectPdfErrorResponse {
 	error: string;
@@ -59,8 +60,9 @@ async function callSelectPdfApi(params: {
 async function generatePdfHtml(
 	data: TripPdfData,
 	tripUrl?: string,
+	language?: string,
 ): Promise<string> {
-	return await generateMagazinePdfHtml(data, tripUrl);
+	return await generateMagazinePdfHtml(data, tripUrl, language);
 }
 
 /**
@@ -164,48 +166,29 @@ async function checkPlanRestrictions(
 /**
  * 全旅程データを取得
  */
-async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPdfData> {
+async function fetchTripData(trip: Trip, days: Day[]): Promise<{
+	data: TripPdfData;
+	language: string;
+}> {
 	const itinerariesByDay: Record<string, Itinerary[]> = {};
 	logger.debug("PDF API: fetching trip data", {
 		tripId: trip.id,
 		daysCount: days.length,
 	});
 
-	// destination_place を解決（places_cache から取得）
 	let enrichedTrip = trip;
-	if (trip.destination_place_id && !(trip as any).destination_place) {
-		try {
-			const { resolveDestinationPlace } = await import("@/lib/api/places-cache");
-			const destinationPlace = await resolveDestinationPlace(
-				trip.destination_place_id,
-				"en", // デフォルト言語として 'en' を使用
-			);
-			if (destinationPlace) {
-				enrichedTrip = {
-					...trip,
-					destination_place: destinationPlace,
-				} as Trip & { destination_place?: any };
-				logger.debug("PDF API: destination_place resolved", {
-					place_id: destinationPlace.place_id,
-					hasGeometry: !!destinationPlace.geometry?.location,
-				});
-			}
-		} catch (error) {
-			logger.error("PDF API: Error resolving destination_place", error, {
-				tripId: trip.id,
-			});
-		}
-	}
 
 	// creator 情報を取得（trip.user_id から users コレクションを取得）
-	if (!(enrichedTrip as any).creator && trip.user_id) {
+	let creator: User | null = null;
+	let language = DEFAULT_LANGUAGE;
+	if (trip.user_id) {
 		try {
 			const userDoc = await adminDb
 				.collection(COLLECTIONS.USERS)
 				.doc(trip.user_id)
 				.get();
 			if (userDoc.exists) {
-				const creator = {
+				creator = {
 					id: userDoc.id,
 					...userDoc.data(),
 				} as User;
@@ -214,15 +197,49 @@ async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPdfData> {
 					creator_name: creator.name,
 					creator,
 				} as Trip & { creator_name?: string; creator?: User };
+				// ユーザーの言語設定を取得
+				language = getUserLanguage(creator) || DEFAULT_LANGUAGE;
 				logger.debug("PDF API: creator resolved", {
 					userId: trip.user_id,
 					creatorName: creator.name,
+					language,
 				});
 			}
 		} catch (error) {
 			logger.error("PDF API: Error fetching creator", error, {
 				tripId: trip.id,
 				userId: trip.user_id,
+			});
+		}
+	}
+
+	// destination_place を解決（places_cache から取得）
+	// ユーザーの言語設定を使用
+	if (trip.destination_place_id && !(enrichedTrip as any).destination_place) {
+		try {
+			const { resolveDestinationPlace } = await import("@/lib/api/places-cache");
+			// ユーザードキュメントから言語設定を取得
+			const locale = creator
+				? getUserLanguage(creator) || DEFAULT_LANGUAGE
+				: DEFAULT_LANGUAGE;
+			const destinationPlace = await resolveDestinationPlace(
+				trip.destination_place_id,
+				locale,
+			);
+			if (destinationPlace) {
+				enrichedTrip = {
+					...enrichedTrip,
+					destination_place: destinationPlace,
+				} as Trip & { destination_place?: any };
+				logger.debug("PDF API: destination_place resolved", {
+					place_id: destinationPlace.place_id,
+					hasGeometry: !!destinationPlace.geometry?.location,
+					language: locale,
+				});
+			}
+		} catch (error) {
+			logger.error("PDF API: Error resolving destination_place", error, {
+				tripId: trip.id,
 			});
 		}
 	}
@@ -260,7 +277,10 @@ async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPdfData> {
 		totalItineraries: Object.values(itinerariesByDay).flat().length,
 	});
 
-	return { trip: enrichedTrip, days, itinerariesByDay };
+	return {
+		data: { trip: enrichedTrip, days, itinerariesByDay },
+		language,
+	};
 }
 
 /**
@@ -325,17 +345,18 @@ export const GET = tripApi(async (request: NextRequest, ctx) => {
 		tripTitleType: typeof trip.title,
 		tripTitleValue: trip.title,
 	});
-	const tripData = await fetchTripData(trip, days);
+	const tripDataResult = await fetchTripData(trip, days);
 	logger.debug("PDF API: tripData after fetchTripData", {
-		tripDataTripTitle: tripData.trip.title,
-		tripDataTripKeys: Object.keys(tripData.trip),
+		tripDataTripTitle: tripDataResult.data.trip.title,
+		tripDataTripKeys: Object.keys(tripDataResult.data.trip),
+		language: tripDataResult.language,
 	});
 
 	// トリップURLの生成
 	const tripUrl = generateTripUrl((trip as any).user_slug, tripSlug);
 
 	// 7. HTMLの生成
-	const html = await generatePdfHtml(tripData, tripUrl);
+	const html = await generatePdfHtml(tripDataResult.data, tripUrl, tripDataResult.language);
 	logger.debug("PDF API: HTML content generated", {
 		htmlLength: html.length,
 		htmlPreview: html.substring(0, 500) + "...",

@@ -23,8 +23,7 @@ export async function generateCoverPage(ctx: PdfContext): Promise<string[]> {
 		: "未定";
 
 	// 背景画像のURL（旅行データから取得）
-	const backgroundImage =
-		(trip as any).cover_image || (trip as any).image_url || "";
+	const backgroundImage = trip.cover_image ?? trip.image_url ?? "";
 
 	// QRコード生成
 	let qrCodeHtml = "";

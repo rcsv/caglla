@@ -10,6 +10,7 @@ import type { Trip, Day, Itinerary } from "@/lib/core/types";
 export interface PdfConfig {
 	theme?: "light" | "dark"; // 将来的なテーマ対応
 	tripUrl?: string; // QRコード生成用のURL
+	language?: string; // 言語コード（例: "ja", "en"）、デフォルトは "en"
 }
 
 /**

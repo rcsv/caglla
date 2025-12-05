@@ -1449,6 +1449,15 @@ export type TranslationKey =
 	| "tripGuide.modals.delete.untitled"
 	| "tripGuide.modals.delete.deleting"
 	| "tripGuide.modals.delete.confirm"
-	| "tripGuide.modals.delete.cancel";
+	| "tripGuide.modals.delete.cancel"
+	// PDF templates
+	| "pdf.trip.untitled"
+	| "pdf.itinerary.untitled"
+	| "pdf.itinerary.empty"
+	| "pdf.memo.header"
+	| "pdf.memo.title"
+	| "pdf.memo.subtitle"
+	| "pdf.memo.highlight"
+	| "pdf.lodging.sidebarTitle";
 
 export type Dictionary = Record<TranslationKey, string>;

@@ -3,7 +3,9 @@
  */
 
 import type { Itinerary } from "@/lib/core/types";
+import type { SupportedLanguage } from "@/lib/core/types";
 import { escapeHtml } from "./utils";
+import { t } from "@/lib/i18n";
 
 /**
  * Lodging（宿泊）のitineraryを抽出
@@ -17,8 +19,13 @@ export function extractLodgingItineraries(itineraries: Itinerary[]): Itinerary[]
 
 /**
  * Lodgingサイドバーを生成
+ * @param lodgingItineraries 宿泊情報のリスト
+ * @param language 言語コード（デフォルトは "en"）
  */
-export function generateLodgingSidebar(lodgingItineraries: Itinerary[]): string {
+export function generateLodgingSidebar(
+	lodgingItineraries: Itinerary[],
+	language: SupportedLanguage = "en",
+): string {
 	if (lodgingItineraries.length === 0) return "";
 
 	const lodgingCards = lodgingItineraries.map((lodging) => {
@@ -41,7 +48,7 @@ export function generateLodgingSidebar(lodgingItineraries: Itinerary[]): string 
 	return `
     <div class="itinerary-sidebar">
       <div class="lodging-sidebar">
-        <div class="lodging-sidebar-title">Lodging</div>
+        <div class="lodging-sidebar-title">${escapeHtml(t("pdf.lodging.sidebarTitle", language))}</div>
         ${lodgingCards}
       </div>
     </div>

@@ -1619,6 +1619,15 @@ const ja: Dictionary = {
 	"country.PH": "フィリピン",
 	"country.VN": "ベトナム",
 	"country.IN": "インド",
+	// PDF templates
+	"pdf.trip.untitled": "無題の旅行",
+	"pdf.itinerary.untitled": "無題の旅程",
+	"pdf.itinerary.empty": "予定なし",
+	"pdf.memo.header": "メモ",
+	"pdf.memo.title": "Memo",
+	"pdf.memo.subtitle": "メモ",
+	"pdf.memo.highlight": "マイハイライト",
+	"pdf.lodging.sidebarTitle": "宿泊",
 };
 
 export default ja;

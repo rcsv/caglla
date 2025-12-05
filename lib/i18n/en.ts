@@ -1650,6 +1650,15 @@ const en: Dictionary = {
 	"country.PH": "Philippines",
 	"country.VN": "Vietnam",
 	"country.IN": "India",
+	// PDF templates
+	"pdf.trip.untitled": "Untitled Trip",
+	"pdf.itinerary.untitled": "Untitled Itinerary",
+	"pdf.itinerary.empty": "No schedule",
+	"pdf.memo.header": "MEMO",
+	"pdf.memo.title": "Memo",
+	"pdf.memo.subtitle": "Memo",
+	"pdf.memo.highlight": "My highlight",
+	"pdf.lodging.sidebarTitle": "Lodging",
 };
 
 export default en;
