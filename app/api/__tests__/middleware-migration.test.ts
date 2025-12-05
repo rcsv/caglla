@@ -142,12 +142,17 @@ describe("Middleware Migration Test Suite", () => {
 			process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
 		originalEnv.NEXT_PUBLIC_GOOGLE_GEOCODING_API_KEY =
 			process.env.NEXT_PUBLIC_GOOGLE_GEOCODING_API_KEY;
+		originalEnv.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY =
+			process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+		originalEnv.GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 	});
 
 	beforeEach(() => {
 		// 環境変数を設定
 		process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY = "test-api-key";
 		process.env.NEXT_PUBLIC_GOOGLE_GEOCODING_API_KEY = "test-api-key";
+		process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = "test-api-key";
+		process.env.GOOGLE_MAPS_API_KEY = "test-api-key"; // バックエンド用キー（Distance API用）
 
 		// fetch をリセット
 		(global.fetch as jest.MockedFunction<typeof fetch>).mockClear();

@@ -27,6 +27,17 @@
 5. プロジェクトのサポートメールを設定
 6. 「保存」をクリック
 
+#### 承認済みドメインの設定（重要）
+
+開発環境で `localhost:3000` からログインできるようにするには、承認済みドメインに `localhost` を追加する必要があります：
+
+1. **Authentication** → **Settings** タブをクリック
+2. **Authorized domains** セクションを確認
+3. `localhost` が含まれていない場合は、「Add domain」をクリック
+4. `localhost` を入力して「Add」をクリック
+
+**注意**: `localhost` は通常デフォルトで含まれていますが、何らかの理由で削除された場合は手動で追加する必要があります。エラー "The requested action is invalid." が表示される場合は、この設定を確認してください。
+
 ### 4. 環境変数の取得
 
 1. プロジェクト設定（歯車アイコン）をクリック
@@ -49,6 +60,21 @@ NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
+
+### 6. Firebase API キーの制限設定（重要）
+
+Firebase API Key にウェブサイト制限を設定する場合、**必ず `*.firebaseapp.com` ドメインを含める**必要があります。
+
+1. [Google Cloud Console](https://console.cloud.google.com/apis/credentials?project=caglla-fb) にアクセス
+2. Firebase API Key（`NEXT_PUBLIC_FIREBASE_API_KEY` の値）を選択
+3. **Application restrictions** → **HTTP referrers (web sites)** を選択
+4. 以下のドメインを追加:
+   - `http://localhost:3000/*`
+   - `https://localhost:3000/*`
+   - `https://*.firebaseapp.com/*` ← **必須**
+   - 本番ドメイン（例: `https://caglla.travel/*`）
+
+**なぜ必要か**: Firebase Authentication は認証フロー中に `*.firebaseapp.com` ドメインを使用します。このドメインを許可リストから除外すると、`localhost:3000` からのログインが失敗し、"The requested action is invalid." エラーが発生します。
 
 ## 📋 コレクションの手動作成
 

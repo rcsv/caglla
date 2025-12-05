@@ -92,8 +92,19 @@ function isTripActive(trip: Trip): boolean {
 	const start = toDateOrNull(trip.start_date);
 	const end = toDateOrNull(trip.end_date);
 	if (!start || !end) return false;
+	
+	const normalizedStart = new Date(start);
+	normalizedStart.setHours(0, 0, 0, 0);
+	
+	const normalizedEnd = new Date(end);
+	normalizedEnd.setHours(0, 0, 0, 0);
+	// end_date はその日の終わり（23:59:59.999）として扱うため、次の日の00:00:00と比較
+	normalizedEnd.setDate(normalizedEnd.getDate() + 1);
+	
 	const now = new Date();
-	return start <= now && now <= end;
+	now.setHours(0, 0, 0, 0);
+	
+	return normalizedStart <= now && now < normalizedEnd;
 }
 
 const MY_SHARED_TRIPS = [
