@@ -50,10 +50,14 @@ GOOGLE_PLACES_API_KEY=xxx  # Places API (サーバー側)、Geocoding API用
 #### フロントエンド用キー（`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`）
 **有効にするAPI:**
 - ✅ Maps JavaScript API
+- ✅ Directions API（JavaScript API経由のDirections Service用）
 - ✅ Places API (New) - クライアント側のみ（オプション）
 
 **サイト制限:**
 - HTTP referrer: `https://caglla.travel/*`, `https://www.caglla.travel/*`
+
+**使用場所:**
+- `components/trip/TripMap.tsx` - Directions Service（ルート表示用）
 
 ---
 
