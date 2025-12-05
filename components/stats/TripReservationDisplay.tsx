@@ -435,21 +435,21 @@ export default function TripReservationDisplay({
 														<div className="flex items-center justify-end">
 															{siteLogos[reservation.reservation_site] && (
 																<div className="relative w-3 h-3 mr-1">
-																<Image
-																	src={
-																		siteLogos[reservation.reservation_site]
-																	}
-																	alt={reservation.reservation_site}
-																	fill
-																	className="object-contain opacity-70"
-																	sizes="12px"
+																	<Image
+																		src={
+																			siteLogos[reservation.reservation_site]
+																		}
+																		alt={reservation.reservation_site}
+																		fill
+																		className="object-contain opacity-70"
+																		sizes="12px"
 																	unoptimized
-																	onError={(e) => {
-																		const target =
-																			e.currentTarget as HTMLImageElement;
-																		target.style.display = "none";
-																	}}
-																/>
+																		onError={(e) => {
+																			const target =
+																				e.currentTarget as HTMLImageElement;
+																			target.style.display = "none";
+																		}}
+																	/>
 																</div>
 															)}
 															<span className="text-xs text-gray-400">
