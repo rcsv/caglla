@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Testing
+coverage/
+test-results/
+playwright-report/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+ui-debug.log
+.emulators/
+
+# Cache
+.eslintcache
+.cache/
+.parcel-cache/
+
+# Environment
+.env*
+!.env.example
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Documentation (optional, but helps speed up linting)
+docs/
+
+# Generated files
+public/favicon*.png
+public/favicon.ico
+
+# Scripts (can be linted separately if needed)
+scripts/
+
+# Config files (often have different patterns)
+*.config.js
+*.config.ts
+
+# Legacy or temporary files
+*.local
+
+# Test files (can be linted separately)
+**/__tests__/**
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
