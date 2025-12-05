@@ -29,14 +29,13 @@ export function HomeRightColumn({
 	recentTrips,
 	onOpenCreateTrip,
 }: HomeRightColumnProps) {
-	// 進行中のTrip（期間内のものを優先、最大3件）
+	// 進行中のTrip（期間内のもののみ、最大3件）
 	// テンプレートは除外
 	const nonTemplateTrips = trips.filter((trip) => trip.is_template !== true);
 	const tripsSortedByRecent = sortTripsByUpdatedAt(nonTemplateTrips);
 	const ongoingTrips = filterOngoingTrips(tripsSortedByRecent);
-	const activeTrips = (
-		ongoingTrips.length > 0 ? ongoingTrips : tripsSortedByRecent
-	).slice(0, 3);
+	// 進行中の旅行のみを表示（フォールバックなし）
+	const activeTrips = ongoingTrips.slice(0, 3);
 
 	// 近日のTrip（referenceDateForUpcoming より先のみ、開始日順、最大3件）
 	const upcomingTrips = sortTripsByStartDate(
