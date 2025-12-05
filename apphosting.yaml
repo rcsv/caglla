@@ -85,21 +85,34 @@ env:
       - RUNTIME
 
   - variable: NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-    secret: caglla-google-places-api-key
+    # secret: caglla-google-places-api-key
+    secret: caglla-frontend-places
     availability:
       - BUILD
       - RUNTIME
   
   - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-    secret: caglla-google-maps-api-key
+    #secret: caglla-google-maps-api-key
+    secret: caglla-frontend-maps
     availability:
       - BUILD
       - RUNTIME
   
+  - variable: GOOGLE_PLACES_API_KEY
+    secret: caglla-backend-places
+    availability:
+      - RUNTIME
+  
+  - variable: GOOGLE_MAPS_API_KEY
+    secret: caglla-backend-maps
+    availability:
+      - RUNTIME
+
   - variable: NEXT_PUBLIC_GOOGLE_MAP_ID
     secret: caglla-google-map-id
     availability:
       - BUILD
+      - RUNTIME
   
   # --- 3. Sendgrid
   # firebase functions も利用している可能性があるので、secrets mangager のキー名普遍
@@ -125,13 +138,11 @@ env:
     secret: caglla-unsplash-access-key
     availability:
       - RUNTIME
-      - BUILD
   
   - variable: UNSPLASH_SECRET_KEY
     secret: caglla-unsplash-secret-key
     availability:
       - RUNTIME
-      - BUILD
   
   # --- 5. TripAdvisor
   - variable: TRIPADVISOR_API_KEY
@@ -165,6 +176,7 @@ env:
   - variable: NEXT_PUBLIC_PRODUCT_ID
     secret: caglla-stripe-product-id
     availability:
+      - BUILD
       - RUNTIME
 
   ## fix typo in Google Secret Manager

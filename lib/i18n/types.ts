@@ -341,6 +341,17 @@ export type TranslationKey =
 	| "profile.stats.countries.title"
 	| "profile.stats.times"
 	| "profile.stats.countries.more"
+	// Social (Follow/Followers)
+	| "social.followers"
+	| "social.following"
+	| "social.followers.count"
+	| "social.following.count"
+	| "social.followers.title"
+	| "social.following.title"
+	| "social.followers.countLabel"
+	| "social.following.countLabel"
+	| "social.userList.empty"
+	| "social.userList.retry"
 	// iCal Publish Modal
 	| "ical.title"
 	| "ical.close"
@@ -643,6 +654,9 @@ export type TranslationKey =
 	| "tripSlugPage.pdfRequiresBackpacker"
 	| "tripSlugPage.pdfExportFailed"
 	| "tripSlugPage.pdfExportSuccess"
+	| "tripSlugPage.pdfExportUnavailable"
+	| "tripSlugPage.pdfExporting"
+	| "tripSlugPage.pdfExport"
 	| "tripSlugPage.fetchTripFailed"
 	| "tripSlugPage.fetchTripFailedDescription"
 	| "tripSlugPage.notFoundDescription"
@@ -1435,6 +1449,15 @@ export type TranslationKey =
 	| "tripGuide.modals.delete.untitled"
 	| "tripGuide.modals.delete.deleting"
 	| "tripGuide.modals.delete.confirm"
-	| "tripGuide.modals.delete.cancel";
+	| "tripGuide.modals.delete.cancel"
+	// PDF templates
+	| "pdf.trip.untitled"
+	| "pdf.itinerary.untitled"
+	| "pdf.itinerary.empty"
+	| "pdf.memo.header"
+	| "pdf.memo.title"
+	| "pdf.memo.subtitle"
+	| "pdf.memo.highlight"
+	| "pdf.lodging.sidebarTitle";
 
 export type Dictionary = Record<TranslationKey, string>;

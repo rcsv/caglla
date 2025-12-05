@@ -9,7 +9,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
-import type { Trip, Day, Itinerary } from "@/lib/core/types";
+import { COLLECTIONS } from "@/lib/firebase/firestore";
+import type { Trip, Day, Itinerary, User } from "@/lib/core/types";
 import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
 import {
 	generateMagazinePdfHtml,
@@ -20,6 +21,7 @@ import logger from "@/lib/core/logger";
 import { notFound } from "@/lib/core/error-handler";
 import { tripApi } from "@/lib/api/middleware";
 import { adminDayOperations } from "@/lib/firebase/admin-operation";
+import { getUserLanguage, DEFAULT_LANGUAGE } from "@/lib/utils/language";
 
 interface SelectPdfErrorResponse {
 	error: string;
@@ -58,8 +60,9 @@ async function callSelectPdfApi(params: {
 async function generatePdfHtml(
 	data: TripPdfData,
 	tripUrl?: string,
+	language?: string,
 ): Promise<string> {
-	return await generateMagazinePdfHtml(data, tripUrl);
+	return await generateMagazinePdfHtml(data, tripUrl, language);
 }
 
 /**
@@ -163,12 +166,83 @@ async function checkPlanRestrictions(
 /**
  * 全旅程データを取得
  */
-async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPdfData> {
+async function fetchTripData(trip: Trip, days: Day[]): Promise<{
+	data: TripPdfData;
+	language: string;
+}> {
 	const itinerariesByDay: Record<string, Itinerary[]> = {};
 	logger.debug("PDF API: fetching trip data", {
 		tripId: trip.id,
 		daysCount: days.length,
 	});
+
+	let enrichedTrip = trip;
+
+	// creator 情報を取得（trip.user_id から users コレクションを取得）
+	let creator: User | null = null;
+	let language = DEFAULT_LANGUAGE;
+	if (trip.user_id) {
+		try {
+			const userDoc = await adminDb
+				.collection(COLLECTIONS.USERS)
+				.doc(trip.user_id)
+				.get();
+			if (userDoc.exists) {
+				creator = {
+					id: userDoc.id,
+					...userDoc.data(),
+				} as User;
+				enrichedTrip = {
+					...enrichedTrip,
+					creator_name: creator.name,
+					creator,
+				} as Trip & { creator_name?: string; creator?: User };
+				// ユーザーの言語設定を取得
+				language = getUserLanguage(creator) || DEFAULT_LANGUAGE;
+				logger.debug("PDF API: creator resolved", {
+					userId: trip.user_id,
+					creatorName: creator.name,
+					language,
+				});
+			}
+		} catch (error) {
+			logger.error("PDF API: Error fetching creator", error, {
+				tripId: trip.id,
+				userId: trip.user_id,
+			});
+		}
+	}
+
+	// destination_place を解決（places_cache から取得）
+	// ユーザーの言語設定を使用
+	if (trip.destination_place_id && !(enrichedTrip as any).destination_place) {
+		try {
+			const { resolveDestinationPlace } = await import("@/lib/api/places-cache");
+			// ユーザードキュメントから言語設定を取得
+			const locale = creator
+				? getUserLanguage(creator) || DEFAULT_LANGUAGE
+				: DEFAULT_LANGUAGE;
+			const destinationPlace = await resolveDestinationPlace(
+				trip.destination_place_id,
+				locale,
+			);
+			if (destinationPlace) {
+				enrichedTrip = {
+					...enrichedTrip,
+					destination_place: destinationPlace,
+				} as Trip & { destination_place?: any };
+				logger.debug("PDF API: destination_place resolved", {
+					place_id: destinationPlace.place_id,
+					hasGeometry: !!destinationPlace.geometry?.location,
+					language: locale,
+				});
+			}
+		} catch (error) {
+			logger.error("PDF API: Error resolving destination_place", error, {
+				tripId: trip.id,
+			});
+		}
+	}
 
 	// 各日程の旅程アイテムを取得（独立したコレクションから）
 	for (const day of days) {
@@ -203,7 +277,10 @@ async function fetchTripData(trip: Trip, days: Day[]): Promise<TripPdfData> {
 		totalItineraries: Object.values(itinerariesByDay).flat().length,
 	});
 
-	return { trip, days, itinerariesByDay };
+	return {
+		data: { trip: enrichedTrip, days, itinerariesByDay },
+		language,
+	};
 }
 
 /**
@@ -234,26 +311,52 @@ export const GET = tripApi(async (request: NextRequest, ctx) => {
 		tripUserId: (trip as any).user_id,
 		userId,
 		dayCount: days.length,
+		tripTitle: trip.title,
+		tripHasTitle: "title" in trip,
+		tripKeys: Object.keys(trip).slice(0, 10), // 最初の10個のキーだけ表示
 	});
 
 	// 5. SelectPdf APIキーの確認
 	const apiKey = process.env.SELECTPDF_API_KEY;
 	if (!apiKey) {
-		logger.error("SELECTPDF_API_KEY is not configured");
+		logger.error("SELECTPDF_API_KEY is not configured", {
+			hasApiKey: !!apiKey,
+			envKeys: Object.keys(process.env).filter((k) =>
+				k.includes("PDF") || k.includes("SELECT"),
+			),
+		});
 		return NextResponse.json(
-			{ error: "PDF export is not available" },
+			{
+				error: "PDF export service is not configured",
+				message:
+					"SELECTPDF_API_KEY environment variable is not set. Please configure the API key to enable PDF export.",
+			},
 			{ status: 503 },
 		);
 	}
 
 	// 6. トリップデータの取得
-	const tripData = await fetchTripData(trip, days);
+	// デバッグ: trip オブジェクトの構造を確認
+	logger.debug("PDF API: trip object before fetchTripData", {
+		tripId: trip.id,
+		tripTitle: trip.title,
+		tripKeys: Object.keys(trip),
+		tripHasTitle: "title" in trip,
+		tripTitleType: typeof trip.title,
+		tripTitleValue: trip.title,
+	});
+	const tripDataResult = await fetchTripData(trip, days);
+	logger.debug("PDF API: tripData after fetchTripData", {
+		tripDataTripTitle: tripDataResult.data.trip.title,
+		tripDataTripKeys: Object.keys(tripDataResult.data.trip),
+		language: tripDataResult.language,
+	});
 
 	// トリップURLの生成
 	const tripUrl = generateTripUrl((trip as any).user_slug, tripSlug);
 
 	// 7. HTMLの生成
-	const html = await generatePdfHtml(tripData, tripUrl);
+	const html = await generatePdfHtml(tripDataResult.data, tripUrl, tripDataResult.language);
 	logger.debug("PDF API: HTML content generated", {
 		htmlLength: html.length,
 		htmlPreview: html.substring(0, 500) + "...",

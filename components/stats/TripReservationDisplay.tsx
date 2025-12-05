@@ -443,6 +443,7 @@ export default function TripReservationDisplay({
 																		fill
 																		className="object-contain opacity-70"
 																		sizes="12px"
+																	unoptimized
 																		onError={(e) => {
 																			const target =
 																				e.currentTarget as HTMLImageElement;
@@ -472,6 +473,7 @@ export default function TripReservationDisplay({
 																	fill
 																	className="object-contain opacity-70"
 																	sizes="12px"
+																	unoptimized
 																	onError={(e) => {
 																		const target =
 																			e.currentTarget as HTMLImageElement;

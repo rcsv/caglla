@@ -11,6 +11,7 @@ import { internalError } from "@/lib/core/error-handler";
 
 /**
  * Google Places API Key を context に追加するミドルウェア
+ * バックエンド用（サーバーサイド専用、サイト制限なし）
  *
  * @returns Middleware 関数
  *
@@ -30,7 +31,11 @@ export function withGooglePlacesKey(): Middleware {
 		request: NextRequest,
 		ctx: MiddlewareContext,
 	): Promise<MiddlewareContext | NextResponse> => {
-		const key = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
+		// バックエンド用キーを優先（サイト制限なし）
+		// フォールバック: フロントエンド用キー（後方互換性のため）
+		const key =
+			process.env.GOOGLE_PLACES_API_KEY ||
+			process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
 		if (!key) {
 			return internalError("Google Places API key is not configured");
 		}
@@ -47,6 +52,7 @@ export function withGooglePlacesKey(): Middleware {
 
 /**
  * Google Geocoding API Key を context に追加するミドルウェア
+ * バックエンド用（サーバーサイド専用、サイト制限なし）
  * (Google Places API Key と共用)
  *
  * @returns Middleware 関数
@@ -67,7 +73,11 @@ export function withGoogleGeocodingKey(): Middleware {
 		request: NextRequest,
 		ctx: MiddlewareContext,
 	): Promise<MiddlewareContext | NextResponse> => {
-		const key = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY; // 共用
+		// バックエンド用キーを優先（サイト制限なし）
+		// フォールバック: フロントエンド用キー（後方互換性のため）
+		const key =
+			process.env.GOOGLE_PLACES_API_KEY ||
+			process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
 		if (!key) {
 			return internalError("Google Geocoding API key is not configured");
 		}
@@ -77,6 +87,48 @@ export function withGoogleGeocodingKey(): Middleware {
 			apiKeys: {
 				...ctx.apiKeys,
 				GOOGLE_GEOCODING: key,
+			},
+		};
+	};
+}
+
+/**
+ * Google Maps API Key を context に追加するミドルウェア
+ * バックエンド用（サーバーサイド専用、サイト制限なし）
+ * Distance Matrix API等のGoogle Maps Platform APIで使用
+ *
+ * @returns Middleware 関数
+ *
+ * @example
+ * ```typescript
+ * export const POST = composeMiddleware(
+ *   withErrorHandling,
+ *   withGoogleMapsKey()
+ * )(async (request, ctx) => {
+ *   const apiKey = ctx.apiKeys!.GOOGLE_MAPS!
+ *   // API呼び出し
+ * })
+ * ```
+ */
+export function withGoogleMapsKey(): Middleware {
+	return async (
+		request: NextRequest,
+		ctx: MiddlewareContext,
+	): Promise<MiddlewareContext | NextResponse> => {
+		// バックエンド用キーを優先（サイト制限なし）
+		// フォールバック: フロントエンド用キー（後方互換性のため）
+		const key =
+			process.env.GOOGLE_MAPS_API_KEY ||
+			process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+		if (!key) {
+			return internalError("Google Maps API key is not configured");
+		}
+
+		return {
+			...ctx,
+			apiKeys: {
+				...ctx.apiKeys,
+				GOOGLE_MAPS: key,
 			},
 		};
 	};

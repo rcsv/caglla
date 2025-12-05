@@ -1,5 +1,7 @@
 # Caglla Travel Manager
 
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/rcsv/caglla?utm_source=oss&utm_medium=github&utm_campaign=rcsv%2Fcaglla&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+
 Next.js + TypeScript + Firebase で構築された旅行管理アプリケーションです。
 wanderlogのような機能を提供し、個人の旅行計画を管理できます。
 

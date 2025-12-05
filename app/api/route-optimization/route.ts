@@ -5,7 +5,7 @@ import { composeMiddleware } from "@/lib/core/middleware";
 import {
 	withBodyValidation,
 	withQueryValidation,
-	withGooglePlacesKey,
+	withGoogleMapsKey,
 } from "@/lib/api/middleware";
 import {
 	RouteOptimizationRequestSchema,
@@ -60,12 +60,12 @@ export interface RouteOptimizationResponse {
  * ```
  */
 export const POST = composeMiddleware(
-	withGooglePlacesKey(),
+	withGoogleMapsKey(),
 	withBodyValidation(RouteOptimizationRequestSchema),
 )(async (request: NextRequest, ctx) => {
 	try {
 		// ctx.apiKeys, ctx.body が保証されている（型推論が効く）
-		const GOOGLE_PLACES_API_KEY = ctx.apiKeys!.GOOGLE_PLACES!;
+		const GOOGLE_MAPS_API_KEY = ctx.apiKeys!.GOOGLE_MAPS!;
 
 		// zod スキーマでバリデーション済み & 型推論
 		type BodyType = z.infer<typeof RouteOptimizationRequestSchema>;
@@ -94,7 +94,7 @@ export const POST = composeMiddleware(
 			travelMode: body.travelMode || "DRIVING",
 			language: "ja",
 			region: "jp",
-			key: GOOGLE_PLACES_API_KEY,
+			key: GOOGLE_MAPS_API_KEY,
 		});
 
 		// 最適化オプションを追加

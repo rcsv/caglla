@@ -129,10 +129,18 @@ export const distanceApiHelpers = {
 			});
 
 			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}));
+			let errorData: any = {};
+			try {
+				errorData = await response.json();
+			} catch {
+				// JSONパースエラーの場合は空オブジェクト
+			}
+			
 				logger.error("Batch distance API error:", {
 					status: response.status,
-					error: errorData.error || "Unknown error",
+				statusText: response.statusText,
+				error: errorData.error || errorData.message || "Unknown error",
+				errorData: errorData,
 				});
 				return null;
 			}
@@ -147,7 +155,10 @@ export const distanceApiHelpers = {
 
 			return data;
 		} catch (error) {
-			logger.error("Error calculating total distance:", error);
+		logger.error("Error calculating total distance:", {
+			error: error instanceof Error ? error.message : String(error),
+			stack: error instanceof Error ? error.stack : undefined,
+		});
 			return null;
 		}
 	},

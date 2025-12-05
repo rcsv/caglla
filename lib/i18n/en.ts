@@ -418,6 +418,17 @@ const en: Dictionary = {
 	"profile.stats.countries.title": "Top Countries",
 	"profile.stats.times": "times",
 	"profile.stats.countries.more": "and {count} more countries",
+	// Social (Follow/Followers)
+	"social.followers": "Followers",
+	"social.following": "Following",
+	"social.followers.count": "{count} Followers",
+	"social.following.count": "{count} Following",
+	"social.followers.title": "Followers",
+	"social.following.title": "Following",
+	"social.followers.countLabel": "people",
+	"social.following.countLabel": "people",
+	"social.userList.empty": "No users found",
+	"social.userList.retry": "Retry",
 	// iCal Publish Modal
 	"ical.title": "iCal Publishing Settings",
 	"ical.close": "Close",
@@ -831,6 +842,10 @@ const en: Dictionary = {
 		"PDF export requires Backpacker plan or higher",
 	"tripSlugPage.pdfExportFailed": "PDF export failed",
 	"tripSlugPage.pdfExportSuccess": "PDF exported successfully",
+	"tripSlugPage.pdfExportUnavailable":
+		"PDF export service is unavailable. SELECTPDF_API_KEY may not be configured.",
+	"tripSlugPage.pdfExporting": "Exporting...",
+	"tripSlugPage.pdfExport": "Export to PDF",
 	"tripSlugPage.fetchTripFailed": "Failed to fetch trip data",
 	"tripSlugPage.fetchTripFailedDescription":
 		"Something went wrong while loading this trip. Please try again.",
@@ -1635,6 +1650,15 @@ const en: Dictionary = {
 	"country.PH": "Philippines",
 	"country.VN": "Vietnam",
 	"country.IN": "India",
+	// PDF templates
+	"pdf.trip.untitled": "Untitled Trip",
+	"pdf.itinerary.untitled": "Untitled Itinerary",
+	"pdf.itinerary.empty": "No schedule",
+	"pdf.memo.header": "MEMO",
+	"pdf.memo.title": "Memo",
+	"pdf.memo.subtitle": "Memo",
+	"pdf.memo.highlight": "My highlight",
+	"pdf.lodging.sidebarTitle": "Lodging",
 };
 
 export default en;

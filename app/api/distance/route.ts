@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import logger from "@/lib/core/logger";
 import { composeMiddleware } from "@/lib/core/middleware";
-import { withBodyValidation, withGooglePlacesKey } from "@/lib/api/middleware";
+import { withBodyValidation, withGoogleMapsKey } from "@/lib/api/middleware";
 import { DistanceSchema } from "@/lib/schemas/distance";
 import { withExternalApiErrorHandler } from "@/lib/api/external-api-helpers";
 
@@ -29,12 +29,12 @@ const GOOGLE_DISTANCE_MATRIX_API_URL =
  * ```
  */
 export const POST = composeMiddleware(
-	withGooglePlacesKey(),
+	withGoogleMapsKey(),
 	withBodyValidation(DistanceSchema),
 )(async (request: NextRequest, ctx) => {
 	try {
 		// ctx.apiKeys, ctx.body が保証されている（型推論が効く）
-		const GOOGLE_PLACES_API_KEY = ctx.apiKeys!.GOOGLE_PLACES!;
+		const GOOGLE_MAPS_API_KEY = ctx.apiKeys!.GOOGLE_MAPS!;
 
 		// zod スキーマでバリデーション済み & 型推論
 		type BodyType = z.infer<typeof DistanceSchema>;
@@ -52,7 +52,7 @@ export const POST = composeMiddleware(
 					mode: mode, // driving, walking, bicycling, transit
 					language: "ja",
 					region: "jp",
-					key: GOOGLE_PLACES_API_KEY,
+					key: GOOGLE_MAPS_API_KEY,
 				});
 
 				const response = await fetch(

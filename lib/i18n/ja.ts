@@ -410,6 +410,17 @@ const ja: Dictionary = {
 	"profile.stats.countries.title": "訪問国トップ5",
 	"profile.stats.times": "回",
 	"profile.stats.countries.more": "あと{count}カ国",
+	// Social (Follow/Followers)
+	"social.followers": "フォロワー",
+	"social.following": "フォロー中",
+	"social.followers.count": "{count} フォロワー",
+	"social.following.count": "{count} フォロー中",
+	"social.followers.title": "フォロワー",
+	"social.following.title": "フォロー中",
+	"social.followers.countLabel": "人",
+	"social.following.countLabel": "人",
+	"social.userList.empty": "ユーザーが見つかりませんでした",
+	"social.userList.retry": "再試行",
 	// iCal Publish Modal
 	"ical.title": "iCal公開設定",
 	"ical.close": "閉じる",
@@ -823,6 +834,10 @@ const ja: Dictionary = {
 		"PDF出力にはBackpackerプラン以上が必要です。",
 	"tripSlugPage.pdfExportFailed": "PDF出力に失敗しました。",
 	"tripSlugPage.pdfExportSuccess": "PDF出力が完了しました。",
+	"tripSlugPage.pdfExportUnavailable":
+		"PDF出力サービスが利用できません。SELECTPDF_API_KEYが設定されていない可能性があります。",
+	"tripSlugPage.pdfExporting": "PDF出力中...",
+	"tripSlugPage.pdfExport": "PDF出力",
 	"tripSlugPage.fetchTripFailed": "旅行データの取得に失敗しました",
 	"tripSlugPage.fetchTripFailedDescription":
 		"旅行データの読み込み中に問題が発生しました。もう一度お試しください。",
@@ -1604,6 +1619,15 @@ const ja: Dictionary = {
 	"country.PH": "フィリピン",
 	"country.VN": "ベトナム",
 	"country.IN": "インド",
+	// PDF templates
+	"pdf.trip.untitled": "無題の旅行",
+	"pdf.itinerary.untitled": "無題の旅程",
+	"pdf.itinerary.empty": "予定なし",
+	"pdf.memo.header": "メモ",
+	"pdf.memo.title": "Memo",
+	"pdf.memo.subtitle": "メモ",
+	"pdf.memo.highlight": "マイハイライト",
+	"pdf.lodging.sidebarTitle": "宿泊",
 };
 
 export default ja;

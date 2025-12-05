@@ -42,6 +42,7 @@ export interface BaseMiddlewareContext {
 	// API Keys（外部APIキーが必要な場合に追加）
 	apiKeys?: {
 		GOOGLE_PLACES?: string;
+		GOOGLE_MAPS?: string;
 		GOOGLE_GEOCODING?: string;
 		UNSPLASH?: string;
 	};

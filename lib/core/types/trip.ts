@@ -113,6 +113,7 @@ export interface Trip {
 	start_date?: FirestoreDate;
 	end_date?: FirestoreDate;
 	image_url?: string;
+	cover_image?: string; // 表紙画像URL（PDF生成などで使用）
 	/** ハッシュタグ（例: ["#女子旅", "#3泊4日", "#ビーチ"]） */
 	hashtags?: string[];
 

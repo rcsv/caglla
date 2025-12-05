@@ -739,7 +739,11 @@ export async function exportTripToPdf(
 			}
 
 			if (response.status === 503) {
-				throw new Error("PDF export service is currently unavailable.");
+				const errorMessage =
+					errorData.message ||
+					errorData.error ||
+					"PDF export service is currently unavailable. The SELECTPDF_API_KEY may not be configured.";
+				throw new Error(errorMessage);
 			}
 
 			throw new Error(errorData.error || "PDF generation failed");
