@@ -17,7 +17,7 @@
 
 ### CVE-2025-55182 脆弱性修正
 
-**影響**: Next.js 16.0.6 の Remote Code Execution 脆弱性
+**影響**: React Server Components RCE vulnerability (CVE-2025-55182) affecting Next.js 16.x via React 19.2.0 dependency
 
 **修正内容**:
 - `next`: 16.0.6 → 16.0.7
