@@ -19,7 +19,7 @@ export function generateChecklistPage(ctx: PdfContext): string[] {
       <div class="page-subtitle">チェックリスト</div>
       
       <div class="checklist-content">
-        not implemented yet
+        <p style="color: #666; font-style: italic;">このセクションは準備中です。旅行前に必要な準備項目を別途チェックリストとして作成することをお勧めします。</p>
       </div>
       
       <div class="page-footer">
