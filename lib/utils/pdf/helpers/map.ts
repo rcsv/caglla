@@ -12,8 +12,10 @@ export function generateStaticMapUrl(
 	destinationPlaceId?: string,
 	destinationPlace?: any,
 ): string | null {
+	// バックエンド用キーを優先（サーバーサイド専用、サイト制限なし）
+	// フォールバック: フロントエンド用キー（後方互換性のため）
 	const apiKey =
-		// process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
+		process.env.GOOGLE_PLACES_API_KEY ||
 		process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
 
 	if (!apiKey) {

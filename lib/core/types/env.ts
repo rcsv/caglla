@@ -50,4 +50,7 @@ export interface OptionalEnvVars {
 	FOURSQUARE_API_KEY?: string;
 	// SelectPdf API (サーバーサイド専用)
 	SELECTPDF_API_KEY?: string;
+	// Google API Keys (サーバーサイド専用 - サイト制限なし)
+	GOOGLE_MAPS_API_KEY?: string;
+	GOOGLE_PLACES_API_KEY?: string;
 }

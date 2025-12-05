@@ -20,6 +20,7 @@ export { withBodyValidation } from "./body-validation";
 export { withQueryValidation } from "./query-validation";
 export {
 	withGooglePlacesKey,
+	withGoogleMapsKey,
 	withGoogleGeocodingKey,
 	withUnsplashKey,
 } from "./api-keys";

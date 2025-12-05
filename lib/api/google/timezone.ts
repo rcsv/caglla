@@ -2,10 +2,13 @@
 import logger from "@/lib/core/logger";
 
 // Google Timezone API configuration
+// バックエンド用キーを優先（サーバーサイド専用、サイト制限なし）
+// フォールバック: フロントエンド用キー（後方互換性のため）
 function getApiKey(): string | undefined {
 	if (typeof window === "undefined") {
-		// サーバー側
+		// サーバー側: バックエンド用キーを優先
 		return (
+			process.env.GOOGLE_MAPS_API_KEY ||
 			process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
 			process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
 		);
