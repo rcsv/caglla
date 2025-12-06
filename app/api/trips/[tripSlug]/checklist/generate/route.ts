@@ -173,11 +173,13 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 
 		if (existingItem) {
 			// 既存アイテムが見つかった場合、doneとuserMemoを保持
+			// longDescriptionは新しく生成されたものがあれば優先、なければ既存のものを保持
 			return {
 				...newItem,
 				id: existingItem.id, // 既存のIDを保持
 				done: existingItem.done, // 完了状態を保持
 				userMemo: existingItem.userMemo, // ユーザーメモを保持
+				longDescription: newItem.longDescription || existingItem.longDescription, // 新しく生成されたlongDescriptionを優先
 			};
 		}
 		// 新規アイテムの場合はそのまま
