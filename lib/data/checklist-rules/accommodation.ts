@@ -2,7 +2,7 @@
  * Accommodation（宿泊）関連のチェックリストルール
  */
 
-import { ChecklistGenerationRule } from "./types";
+import type { ChecklistGenerationRule } from "./types";
 
 export const ACCOMMODATION_RULES: ChecklistGenerationRule[] = [
 	{

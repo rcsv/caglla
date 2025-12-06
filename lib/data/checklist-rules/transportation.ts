@@ -2,7 +2,7 @@
  * Transportation（乗り物）関連のチェックリストルール
  */
 
-import { ChecklistGenerationRule } from "./types";
+import type { ChecklistGenerationRule } from "./types";
 
 export const TRANSPORTATION_RULES: ChecklistGenerationRule[] = [
 	{
@@ -12,6 +12,23 @@ export const TRANSPORTATION_RULES: ChecklistGenerationRule[] = [
 			{
 				title: "パスポートの有効期限確認（6ヶ月以上残存）",
 				description: "多くの国で入国時に6ヶ月以上の残存期間が必要",
+				longDescription: `一般的に、パスポートの残存期間は**6ヶ月以上**あることが求められます。
+
+## 例外がある場合
+
+一部例外で、以下のような場合はその限りではありません：
+
+- 日本とアメリカのように国家間で協定を結んでいる場合
+- 特定のビザを取得している場合
+- 短期滞在（通常30日以内）の場合
+
+## 確認方法
+
+- パスポートの有効期限を確認
+- 出発日から6ヶ月以上残っているか計算
+- 渡航先の大使館・領事館のウェブサイトで最新情報を確認
+
+詳細は[外務省の海外安全情報](https://www.anzen.mofa.go.jp/)を参照してください。`,
 				category: "preparation",
 				priority: "high",
 				condition: { type: "always" },

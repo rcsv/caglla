@@ -2,7 +2,7 @@
  * Dining（食事）関連のチェックリストルール
  */
 
-import { ChecklistGenerationRule } from "./types";
+import type { ChecklistGenerationRule } from "./types";
 
 export const DINING_RULES: ChecklistGenerationRule[] = [
 	{
@@ -183,6 +183,13 @@ export const DINING_RULES: ChecklistGenerationRule[] = [
 				description: "万が一に備えて",
 				category: "packing",
 				priority: "medium",
+				condition: { type: "always" },
+			},
+			{
+				title: "ビニール袋",
+				description: "食べ終わったゴミを一時的にまとめる",
+				category: "packing",
+				priority: "low",
 				condition: { type: "always" },
 			},
 		],

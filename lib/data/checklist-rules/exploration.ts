@@ -2,7 +2,7 @@
  * Exploration（探索）関連のチェックリストルール
  */
 
-import { ChecklistGenerationRule } from "./types";
+import type { ChecklistGenerationRule } from "./types";
 
 export const EXPLORATION_RULES: ChecklistGenerationRule[] = [
 	{

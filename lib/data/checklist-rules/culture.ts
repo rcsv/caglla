@@ -2,7 +2,7 @@
  * Culture（文化）関連のチェックリストルール
  */
 
-import { ChecklistGenerationRule } from "./types";
+import type { ChecklistGenerationRule } from "./types";
 
 export const CULTURE_RULES: ChecklistGenerationRule[] = [
 	{
