@@ -93,8 +93,8 @@ export class ChecklistGenerator {
 				rulesCount: rules.length,
 			});
 
-			rules.forEach((rule) => {
-				rule.items.forEach((ruleItem) => {
+			for (const rule of rules) {
+				for (const ruleItem of rule.items) {
 					// 条件チェック
 					const conditionResult = this.checkCondition(ruleItem.condition, {
 						count,
@@ -158,8 +158,8 @@ export class ChecklistGenerator {
 							hasLongDescription: !!longDescription,
 						});
 					}
-				});
-			});
+				}
+			}
 		}
 
 		// 5. 旅のしおりの印刷用URLを準備物として追加
