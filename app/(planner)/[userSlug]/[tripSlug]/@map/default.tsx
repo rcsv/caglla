@@ -24,6 +24,7 @@ import logger from "@/lib/core/logger";
 function MapContent() {
 	const { trip, refreshTrip } = useTrip();
 	const {
+		currentView,
 		selectedDayId,
 		selectedItineraryId,
 		mapFocusMode,
@@ -31,6 +32,11 @@ function MapContent() {
 		updateQuery,
 	} = useTripUrlState();
 	const { poiData, setPoiData } = usePOI();
+
+	// チェックリストビューの場合は地図を非表示
+	if (currentView === "checklist") {
+		return null;
+	}
 
 	// @timelineからのCustomEventを受け取る
 	useEffect(() => {

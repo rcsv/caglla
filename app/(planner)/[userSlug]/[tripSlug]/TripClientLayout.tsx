@@ -246,7 +246,13 @@ function TripClientLayoutContent({
 			{/* Main Content Area */}
 			<div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
 				{/* Left Content (Timeline) */}
-				<div className="flex flex-col overflow-hidden main-content-scrollable lg:flex-shrink-0 lg:w-[740px]">
+				<div
+					className={`flex flex-col overflow-hidden main-content-scrollable ${
+						currentView === "checklist"
+							? "lg:flex-1"
+							: "lg:flex-shrink-0 lg:w-[740px]"
+					}`}
+				>
 					{/* Floating Title Bar */}
 					{trip && (
 						<FloatingTitleBar
@@ -408,9 +414,11 @@ function TripClientLayoutContent({
 				</div>
 
 				{/* Map Panel (Desktop only) - Takes remaining space */}
+				{currentView !== "checklist" && (
 				<div className="hidden lg:block lg:flex-1 lg:min-w-[400px] border-l border-gray-200 h-full overflow-hidden">
 					{map}
 				</div>
+				)}
 			</div>
 
 			{/* iCal Publish Modal - テンプレートの場合は非表示 */}
