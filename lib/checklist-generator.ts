@@ -4,11 +4,10 @@
  * Itineraryのアクティビティタグに基づき、チェックリスト項目を動的に生成
  */
 
-import {
-	Trip,
-	Itinerary,
+import type {
 	ChecklistItem,
-	ActivityTag,
+	Itinerary,
+	Trip,
 	User,
 } from "@/lib/core/types";
 import { getChecklistRules } from "@/lib/data/checklist-rules";
@@ -20,7 +19,7 @@ import { generateLongDescription } from "@/lib/ai/gemini-client";
 
 interface DestinationInfo {
 	countryCode?: string;
-	continentCode?: string;
+	continentCode?: string | null; // null も許可（getContinentCode が null を返す可能性があるため）
 	cityName?: string;
 }
 
@@ -139,24 +138,26 @@ export class ChecklistGenerator {
 							itemPromises.push({
 								item: baseItem,
 								longDescriptionPromise: generateLongDescription({
-									title,
-									description: ruleItem.description,
-									category: ruleItem.category,
+							title,
+									description: ruleItem.description || undefined, // undefined を明示的に渡す
+							category: ruleItem.category,
 									priority: ruleItem.priority,
 									generatedFrom: secondaryCategory,
-								}).catch((error) => {
-									logger.warn(
-										"Failed to generate longDescription with Gemini",
-										{
-											title,
-											error: error instanceof Error
-												? error.message
-												: String(error),
-										},
-									);
-									return undefined;
-								}),
-							});
+								})
+									.then((result) => result ?? undefined) // nullをundefinedに変換
+									.catch((error) => {
+										logger.warn(
+											"Failed to generate longDescription with Gemini",
+											{
+												title,
+												error: error instanceof Error
+													? error.message
+													: String(error),
+											},
+										);
+										return undefined;
+									}),
+				});
 						} else {
 							// longDescriptionが既にある場合はそのまま使用
 							itemPromises.push({
@@ -164,8 +165,8 @@ export class ChecklistGenerator {
 									...baseItem,
 									longDescription: ruleItem.longDescription,
 								} as ChecklistItem,
-							});
-						}
+			});
+		}
 					}
 				}
 			}
@@ -181,41 +182,23 @@ export class ChecklistGenerator {
 			itemsNeedingGeneration: itemsNeedingGeneration.length,
 		});
 
-		// バッチ処理: レート制限（10件/分）を考慮して、10件ずつ処理
-		const BATCH_SIZE = 10;
-		const batches: Array<typeof itemPromises> = [];
-		for (let i = 0; i < itemPromises.length; i += BATCH_SIZE) {
-			batches.push(itemPromises.slice(i, i + BATCH_SIZE));
-		}
-
+		// バッチ処理: レート制限を考慮して、1リクエストごとに最小間隔を挟む
+		// これにより burst 制限に引っかかることを防ぐ
 		const itemsWithLongDescription: ChecklistItem[] = [];
-		for (let i = 0; i < batches.length; i++) {
-			const batch = batches[i];
-			logger.debug("ChecklistGenerator: Processing batch", {
-				batchIndex: i + 1,
-				totalBatches: batches.length,
-				batchSize: batch.length,
-			});
+		const REQUEST_INTERVAL_MS = 700; // 0.7秒間隔（10件/分のレート制限に対応）
 
-			const batchResults = await Promise.all(
-				batch.map(async (promise) => {
-					if (promise.longDescriptionPromise) {
-						const longDescription = await promise.longDescriptionPromise;
-						return {
-							...promise.item,
-							longDescription,
-						} as ChecklistItem;
-					} else {
-						// longDescriptionが既にある場合
-						return promise.item as ChecklistItem;
-					}
-				}),
-			);
-			itemsWithLongDescription.push(...batchResults);
-
-			// 最後のバッチでない場合、レート制限を考慮して少し待機（60秒/10件 = 6秒）
-			if (i < batches.length - 1) {
-				await new Promise((resolve) => setTimeout(resolve, 6000));
+		for (const promise of itemPromises) {
+			if (promise.longDescriptionPromise) {
+				const longDescription = await promise.longDescriptionPromise;
+				itemsWithLongDescription.push({
+					...promise.item,
+					longDescription,
+				} as ChecklistItem);
+				// 次のリクエストまで間隔を空ける
+				await new Promise((resolve) => setTimeout(resolve, REQUEST_INTERVAL_MS));
+			} else {
+				// longDescriptionが既にある場合
+				itemsWithLongDescription.push(promise.item as ChecklistItem);
 			}
 		}
 
@@ -319,8 +302,9 @@ export class ChecklistGenerator {
 
 	/**
 	 * 国コードから大陸コードを取得
+	 * 判定不可能な場合は null を返す
 	 */
-	private getContinentCode(countryCode: string): string {
+	private getContinentCode(countryCode: string): string | null {
 		const continentMap: { [key: string]: string } = {
 			// Asia
 			JP: "AS",
@@ -366,7 +350,8 @@ export class ChecklistGenerator {
 			FJ: "OC",
 		};
 
-		return continentMap[countryCode] || "UNKNOWN";
+		// 判定不可能な場合は null を返す（条件判定ロジックと一貫性を保つ）
+		return continentMap[countryCode] || null;
 	}
 
 	/**
@@ -396,14 +381,15 @@ export class ChecklistGenerator {
 					return false;
 				return true;
 
-			case "destination":
-				// 国コードまたは大陸コードが不明な場合は、destination系の条件をスキップ
+			case "destination": {
+				// 国コードまたは大陸コードが不明な場合は、destination系の条件を無視
 				// （手動入力で作成された旅行の場合、destination_place_idがないため）
+				// 判定不可能な場合は true を返して、ユーザーに自然な動作を提供
 				if (
 					!context.destination.countryCode &&
 					!context.destination.continentCode
 				) {
-					return false;
+					return true;
 				}
 
 				// 国際旅行チェック：ユーザーの居住国と旅行先が異なる場合のみ国際的な項目を表示
@@ -443,6 +429,7 @@ export class ChecklistGenerator {
 					}
 				}
 				return true;
+			}
 
 			default:
 				return false;
@@ -452,28 +439,37 @@ export class ChecklistGenerator {
 	/**
 	 * 動的な値の置換
 	 */
+	/**
+	 * 動的な値を置換
+	 * {token} 形式のトークンを一括置換できる柔軟な実装
+	 */
 	private replaceDynamicValues(
 		text: string,
-		values: { count: number; duration: number },
+		values: Record<string, string | number>,
 	): string {
-		return text
-			.replace(/\{count\}/g, values.count.toString())
-			.replace(/\{duration\}/g, values.duration.toString());
+		return Object.entries(values).reduce(
+			(acc, [key, value]) =>
+				acc.replace(new RegExp(`\\{${key}\\}`, "g"), String(value)),
+			text,
+		);
 	}
 
 	/**
 	 * 重複項目を除去
+	 * タイトルを trim + lowercase にして堅牢な重複判定を行う
 	 */
 	private deduplicateItems(items: ChecklistItem[]): ChecklistItem[] {
 		const seen = new Map<string, ChecklistItem>();
 
 		items.forEach((item) => {
-			const key = `${item.title}:${item.category}`;
-			if (!seen.has(key)) {
+			// タイトルを正規化（trim + lowercase）して重複判定の精度を向上
+			const normalizedTitle = item.title.trim().toLowerCase();
+			const key = `${normalizedTitle}:${item.category}`;
+			const existing = seen.get(key);
+			if (!existing) {
 				seen.set(key, item);
 			} else {
 				// 既存項目の優先度が低い場合は上書き
-				const existing = seen.get(key)!;
 				if (
 					this.priorityValue(item.priority) >
 					this.priorityValue(existing.priority)
@@ -506,16 +502,22 @@ export class ChecklistGenerator {
 	 * 優先度順にソート
 	 */
 	private sortByPriority(items: ChecklistItem[]): ChecklistItem[] {
+		// カテゴリーの順序マップ（将来の拡張に対応）
+		const categoryOrder: Record<string, number> = {
+			preparation: 1,
+			packing: 2,
+		};
+
 		return items.sort((a, b) => {
 			// 優先度の比較
 			const priorityDiff =
 				this.priorityValue(b.priority) - this.priorityValue(a.priority);
 			if (priorityDiff !== 0) return priorityDiff;
 
-			// カテゴリーの比較（preparation を先に）
-			if (a.category !== b.category) {
-				return a.category === "preparation" ? -1 : 1;
-			}
+			// カテゴリーの比較（順序マップを使用）
+			const categoryDiff =
+				(categoryOrder[a.category] ?? 99) - (categoryOrder[b.category] ?? 99);
+			if (categoryDiff !== 0) return categoryDiff;
 
 			// タイトルのアルファベット順
 			return a.title.localeCompare(b.title);
@@ -524,9 +526,10 @@ export class ChecklistGenerator {
 
 	/**
 	 * ユニークIDの生成
+	 * crypto.randomUUID()を使用して衝突を防ぐ
 	 */
 	private generateId(): string {
-		return `checklist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+		return crypto.randomUUID();
 	}
 }
 
