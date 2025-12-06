@@ -6,6 +6,31 @@ import type { Trip, TripStatus } from "@/lib/core/types";
 import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
 
 /**
+ * Tripが現在進行中かどうかを判定
+ * @param trip - 判定するTripオブジェクト
+ * @returns 進行中の場合true
+ */
+export function isTripActive(trip: Trip): boolean {
+	if (!trip.start_date || !trip.end_date) return false;
+	const start = toDateOrNull(trip.start_date);
+	const end = toDateOrNull(trip.end_date);
+	if (!start || !end) return false;
+	
+	const normalizedStart = new Date(start);
+	normalizedStart.setHours(0, 0, 0, 0);
+	
+	const normalizedEnd = new Date(end);
+	normalizedEnd.setHours(0, 0, 0, 0);
+	// end_date はその日の終わり（23:59:59.999）として扱うため、次の日の00:00:00と比較
+	normalizedEnd.setDate(normalizedEnd.getDate() + 1);
+	
+	const now = new Date();
+	now.setHours(0, 0, 0, 0);
+	
+	return normalizedStart <= now && now < normalizedEnd;
+}
+
+/**
  * Tripの進行状態を計算する
  *
  * 判定ロジック:

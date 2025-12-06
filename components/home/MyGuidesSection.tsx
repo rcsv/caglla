@@ -45,13 +45,13 @@ export function MyGuidesSection({
 						icon="mdi:book-edit-outline"
 						className="h-5 w-5 text-purple-600"
 					/>
-					執筆中の Guide
+					{t("home.guides.title")}
 				</h2>
 				<Link
 					href="/home?tab=ideas"
 					className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
 				>
-					すべて見る
+					{t("home.guides.viewAll")}
 					<Icon icon="mdi:chevron-right" className="h-3 w-3" />
 				</Link>
 			</div>
@@ -69,7 +69,7 @@ export function MyGuidesSection({
 						icon="mdi:book-outline"
 						className="h-8 w-8 mx-auto mb-2 text-gray-400"
 					/>
-					<p className="text-xs mb-2">執筆中の Guide はありません</p>
+					<p className="text-xs mb-2">{t("home.guides.empty")}</p>
 				</div>
 			)}
 
@@ -120,7 +120,7 @@ export function MyGuidesSection({
 										)}
 										{updatedAt && (
 											<p className="text-[11px] text-slate-400">
-												更新: {updatedAt}
+												{t("home.guides.updated", { date: updatedAt })}
 											</p>
 										)}
 										{/* 旅行属性: 日数・スポット数・写真枚数・チェックリスト数 */}

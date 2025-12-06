@@ -178,7 +178,7 @@ export function HomeRightColumn({
 							icon="mdi:clock-time-four-outline"
 							className="h-5 w-5 text-purple-500"
 						/>
-						Recently You Checked
+						{t("home.recentlyChecked.title")}
 					</h2>
 					{/* v1 では View All の遷移先未定のため、ボタンは非表示 */}
 				</div>
@@ -192,7 +192,7 @@ export function HomeRightColumn({
 
 				{recentTrips && recentTrips.length === 0 && (
 					<div className="border border-dashed border-gray-300 rounded-sm p-4 text-center text-xs text-gray-500">
-						You haven’t viewed any trips recently.
+						{t("home.recentlyChecked.empty")}
 					</div>
 				)}
 

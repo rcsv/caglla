@@ -8,6 +8,33 @@ import { t } from "@/lib/i18n";
 import { getUserLanguage } from "@/lib/utils/language";
 import type { SupportedLanguage } from "@/lib/core/types";
 
+/**
+ * 相対時間をフォーマット（例: "45分前", "2時間前", "昨日"）
+ * @param date - フォーマットする日付
+ * @returns 相対時間の文字列
+ */
+export function formatRelativeTime(date: Date): string {
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+	const diffMins = Math.floor(diffMs / 60000);
+	const diffHours = Math.floor(diffMs / 3600000);
+	const diffDays = Math.floor(diffMs / 86400000);
+
+	if (diffMins < 1) {
+		return t("home.mainTabs.relativeTime.justNow");
+	} else if (diffMins < 60) {
+		return t("home.mainTabs.relativeTime.minutesAgo", { minutes: diffMins });
+	} else if (diffHours < 24) {
+		return t("home.mainTabs.relativeTime.hoursAgo", { hours: diffHours });
+	} else if (diffDays === 1) {
+		return t("home.mainTabs.relativeTime.yesterday");
+	} else if (diffDays < 7) {
+		return t("home.mainTabs.relativeTime.daysAgo", { days: diffDays });
+	} else {
+		return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" });
+	}
+}
+
 export const dateUtils = {
 	// Check if a date is valid (delegated to timestamp-utils)
 	isValidDate: (date: FirestoreDate | null | undefined): boolean => {
