@@ -46,12 +46,24 @@ export async function PUT(
 			return badRequest("items array required");
 		}
 
+		// undefinedフィールドを除外してFirestoreに保存
+		const sanitizedItems = items.map((item) => {
+			const sanitized: any = { ...item };
+			// undefinedのフィールドを削除
+			Object.keys(sanitized).forEach((key) => {
+				if (sanitized[key] === undefined) {
+					delete sanitized[key];
+				}
+			});
+			return sanitized;
+		});
+
 		const ref = adminDb.collection(COLLECTIONS.TRIP_CHECKLISTS).doc(tripId);
 		await ref.set(
 			{
 				id: tripId,
 				trip_id: tripId,
-				items,
+				items: sanitizedItems,
 				updated_at: new Date(),
 			},
 			{ merge: true },

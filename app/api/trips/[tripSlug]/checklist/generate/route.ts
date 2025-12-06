@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { checklistGenerator } from "@/lib/checklist-generator";
 import logger from "@/lib/core/logger";
-import { PlacesCache, Trip, Day, Itinerary } from "@/lib/core/types";
+import {
+	PlacesCache,
+	Trip,
+	Day,
+	Itinerary,
+	ChecklistItem,
+} from "@/lib/core/types";
 import { COLLECTIONS } from "@/lib/firebase/firestore";
 import {
 	adminTripOperations,
@@ -123,12 +129,35 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 			).length || 0,
 	});
 
+	// 既存のチェックリストを取得
+	const checklistRef = adminDb
+		.collection(COLLECTIONS.TRIP_CHECKLISTS)
+		.doc(tripId);
+	const existingChecklistDoc = await checklistRef.get();
+	const existingItems: ChecklistItem[] = existingChecklistDoc.exists
+		? (existingChecklistDoc.data()?.items || [])
+		: [];
+
+	// カスタムアイテムを分離（保持する）
+	const customItems = existingItems.filter((item) => item.isCustom === true);
+
+	// 既存の自動生成アイテムをマップ化（キー: `${title}_${generatedFrom || ''}`）
+	const existingItemsMap = new Map<string, ChecklistItem>();
+	existingItems
+		.filter((item) => !item.isCustom)
+		.forEach((item) => {
+			const key = `${item.title}_${item.generatedFrom || ""}`;
+			existingItemsMap.set(key, item);
+		});
+
 	// チェックリスト生成（ユーザー情報も渡す）
-	const items = await checklistGenerator.generateTripChecklist(trip, user);
+	const newItems = await checklistGenerator.generateTripChecklist(trip, user);
 
 	logger.debug("Checklist Generate API: Generated items", {
-		itemsCount: items.length,
-		itemsByCategory: items.reduce(
+		newItemsCount: newItems.length,
+		existingItemsCount: existingItems.length,
+		customItemsCount: customItems.length,
+		itemsByCategory: newItems.reduce(
 			(acc, item) => {
 				acc[item.category] = (acc[item.category] || 0) + 1;
 				return acc;
@@ -137,17 +166,49 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 		),
 	});
 
+	// 新しい生成アイテムと既存アイテムをマージ（doneとuserMemoを保持）
+	const mergedItems = newItems.map((newItem) => {
+		const key = `${newItem.title}_${newItem.generatedFrom || ""}`;
+		const existingItem = existingItemsMap.get(key);
+
+		if (existingItem) {
+			// 既存アイテムが見つかった場合、doneとuserMemoを保持
+			return {
+				...newItem,
+				id: existingItem.id, // 既存のIDを保持
+				done: existingItem.done, // 完了状態を保持
+				userMemo: existingItem.userMemo, // ユーザーメモを保持
+			};
+		}
+		// 新規アイテムの場合はそのまま
+		return newItem;
+	});
+
+	// カスタムアイテムとマージされたアイテムを結合
+	const finalItems = [...mergedItems, ...customItems];
+
+	// undefinedフィールドを除外してFirestoreに保存
+	const sanitizedItems = finalItems.map((item) => {
+		const sanitized: any = { ...item };
+		// undefinedのフィールドを削除
+		Object.keys(sanitized).forEach((key) => {
+			if (sanitized[key] === undefined) {
+				delete sanitized[key];
+			}
+		});
+		return sanitized;
+	});
+
 	// 保存: trip_checklists/{tripId}
-	const checklistRef = adminDb
-		.collection(COLLECTIONS.TRIP_CHECKLISTS)
-		.doc(tripId);
 	await checklistRef.set(
 		{
 			id: tripId,
 			trip_id: tripId,
-			items,
+			items: sanitizedItems,
 			last_generated_at: new Date(),
-			created_at: new Date(),
+			created_at: existingChecklistDoc.exists
+				? existingChecklistDoc.data()?.created_at || new Date()
+				: new Date(),
 			updated_at: new Date(),
 		},
 		{ merge: true },
@@ -157,7 +218,7 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 	try {
 		const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId);
 		await tripRef.update({
-			"stats.checklists": items.length,
+			"stats.checklists": sanitizedItems.length,
 		} as any);
 	} catch (e) {
 		logger.warn("Failed to update trip.stats.checklists after generate", {
@@ -166,5 +227,5 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 		});
 	}
 
-	return NextResponse.json({ success: true, items });
+	return NextResponse.json({ success: true, items: sanitizedItems });
 });
