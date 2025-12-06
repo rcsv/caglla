@@ -755,9 +755,6 @@ export default function TripChecklistView({
 										})()}
 										{selectedItem.longDescription && (
 											<div className="mb-6">
-												<h4 className="text-base font-semibold text-gray-800 mb-3">
-													{t("checklist.longDescription")}
-												</h4>
 												<div
 													className={`text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none ${
 														!expandedSections.has("longDescription")
