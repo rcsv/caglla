@@ -42,8 +42,7 @@ export async function generateLongDescription(
 		}
 
 		// Gemini APIクライアントを初期化（新しいSDK: @google/genai）
-		// 環境変数 GEMINI_API_KEY が自動的に使用される
-		const ai = new GoogleGenAI({});
+		const ai = new GoogleGenAI({ apiKey });
 
 		// プロンプトを構築
 		const prompt = buildPrompt(title, description, category, priority);
