@@ -76,6 +76,13 @@ export default function TripChecklistView({
 					links: item.links || [],
 				}));
 				setItems(normalizedItems);
+				// 選択中のアイテムも更新（longDescriptionが生成された場合に反映される）
+				if (selectedItem) {
+					const updatedItem = normalizedItems.find((item) => item.id === selectedItem.id);
+					if (updatedItem) {
+						setSelectedItem(updatedItem);
+					}
+				}
 			} else {
 				console.error("Failed to regenerate checklist", await res.text());
 			}
