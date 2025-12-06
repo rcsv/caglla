@@ -34,6 +34,14 @@ export interface RequiredEnvVars {
 }
 
 /**
+ * オプション環境変数（AI関連）
+ */
+export interface AIServiceEnvVars {
+	// Gemini API (for checklist longDescription generation)
+	GEMINI_API_KEY?: string;
+}
+
+/**
  * オプション環境変数
  */
 export interface OptionalEnvVars {
@@ -53,4 +61,6 @@ export interface OptionalEnvVars {
 	// Google API Keys (サーバーサイド専用 - サイト制限なし)
 	GOOGLE_MAPS_API_KEY?: string;
 	GOOGLE_PLACES_API_KEY?: string;
+	// Gemini API (サーバーサイド専用 - チェックリストlongDescription生成用)
+	GEMINI_API_KEY?: string;
 }

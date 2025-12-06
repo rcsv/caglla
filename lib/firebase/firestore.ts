@@ -24,6 +24,7 @@ export const COLLECTIONS = {
 	PLACES_CACHE: "places_cache",
 	TRIP_CHECKLISTS: "trip_checklists",
 	CHECKLIST_PRESETS: "checklist_presets",
+	CHECKLIST_LONG_DESCRIPTION_CACHE: "checklist_long_description_cache",
 	// v3.0.0 SNS機能コレクション
 	TRIP_LIKES: "trip_likes",
 	TRIP_COMMENTS: "trip_comments",

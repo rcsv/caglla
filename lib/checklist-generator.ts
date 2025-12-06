@@ -16,6 +16,7 @@ import type { ChecklistCondition } from "@/lib/data/checklist-rules";
 import { dateUtils } from "@/lib/utils/date";
 import logger from "@/lib/core/logger";
 import { getAppUrl } from "@/lib/utils/app-url";
+import { generateLongDescription } from "@/lib/ai/gemini-client";
 
 interface DestinationInfo {
 	countryCode?: string;
@@ -115,11 +116,36 @@ export class ChecklistGenerator {
 							duration: tripDuration,
 						});
 
+						// longDescriptionがない場合、Gemini APIで生成を試みる
+						let longDescription = ruleItem.longDescription;
+						if (!longDescription) {
+							try {
+								longDescription = await generateLongDescription({
+									title,
+									description: ruleItem.description,
+									category: ruleItem.category,
+									priority: ruleItem.priority,
+									generatedFrom: secondaryCategory,
+								});
+							} catch (error) {
+								logger.warn(
+									"Failed to generate longDescription with Gemini",
+									{
+										title,
+										error: error instanceof Error
+											? error.message
+											: String(error),
+									},
+								);
+								// エラーが発生しても処理を続行
+							}
+						}
+
 						items.push({
 							id: this.generateId(),
 							title,
 							description: ruleItem.description,
-							longDescription: ruleItem.longDescription,
+							longDescription,
 							category: ruleItem.category,
 							done: false,
 							generatedFrom: secondaryCategory,
@@ -129,6 +155,7 @@ export class ChecklistGenerator {
 						logger.debug("ChecklistGenerator: Item added", {
 							title,
 							category: ruleItem.category,
+							hasLongDescription: !!longDescription,
 						});
 					}
 				});

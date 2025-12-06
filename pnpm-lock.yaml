@@ -20,6 +20,9 @@ importers:
       '@google-cloud/secret-manager':
         specifier: ^6.1.1
         version: 6.1.1
+      '@google/generative-ai':
+        specifier: ^0.24.1
+        version: 0.24.1
       '@googlemaps/js-api-loader':
         specifier: 2.0.2
         version: 2.0.2
@@ -787,6 +790,10 @@ packages:
   '@google-cloud/storage@7.17.3':
     resolution: {integrity: sha512-gOnCAbFgAYKRozywLsxagdevTF7Gm+2Ncz5u5CQAuOv/2VCa0rdGJWvJFDOftPx1tc+q8TXiC2pEJfFKu+yeMQ==}
     engines: {node: '>=14'}
+
+  '@google/generative-ai@0.24.1':
+    resolution: {integrity: sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q==}
+    engines: {node: '>=18.0.0'}
 
   '@googleapis/sqladmin@31.1.0':
     resolution: {integrity: sha512-k4lXSFCFuZmWtYuW/OH/PcHimZP5P/uDLK0+ACbgoZFB8qmlgcyF0531aJt6JHIdBwCRlHXZlMW4LDC5Gqra5w==}
@@ -7227,6 +7234,8 @@ snapshots:
       - encoding
       - supports-color
     optional: true
+
+  '@google/generative-ai@0.24.1': {}
 
   '@googleapis/sqladmin@31.1.0':
     dependencies:
