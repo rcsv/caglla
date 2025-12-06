@@ -7,6 +7,7 @@ import PresetLibraryModal from "@/components/modals/PresetLibraryModal";
 import { IconRenderer } from "@/components/common/icons/IconRenderer";
 import { t } from "@/lib/i18n";
 import { makeAuthenticatedRequest } from "@/lib/api/helpers";
+import { useAuth } from "@/lib/contexts/auth";
 import {
 	getSecondaryCategoryLabel,
 	getPrimaryCategoryFromSecondary,
@@ -24,6 +25,7 @@ export default function TripChecklistView({
 }: TripChecklistViewProps) {
 	const params = useParams();
 	const tripSlug = params?.tripSlug as string | undefined;
+	const { user, loading: authLoading } = useAuth();
 	const [items, setItems] = useState<ChecklistItem[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
@@ -39,6 +41,10 @@ export default function TripChecklistView({
 	useEffect(() => {
 		const fetchChecklist = async () => {
 			if (!tripId) return;
+			// 認証状態の読み込み中、または認証されていない場合はスキップ
+			if (authLoading) return;
+			if (!user && !readOnly) return;
+
 			try {
 				setLoading(true);
 				const res = await makeAuthenticatedRequest(
@@ -68,16 +74,28 @@ export default function TripChecklistView({
 				} else {
 					console.error("Failed to fetch checklist", await res.text());
 				}
+			} catch (error) {
+				// 認証エラーは静かに無視（readOnlyモードの場合）
+				if (readOnly) {
+					console.debug("Checklist fetch failed (read-only mode):", error);
+				} else {
+					console.error("Failed to fetch checklist:", error);
+				}
 			} finally {
 				setLoading(false);
 			}
 		};
 		fetchChecklist();
-	}, [tripId]);
+	}, [tripId, user, authLoading, readOnly]);
 
 	// 再生成
 	const regenerate = async () => {
 		if (!tripId) return;
+		// 認証されていない場合は実行しない
+		if (!user) {
+			console.warn("Cannot regenerate checklist: user not authenticated");
+			return;
+		}
 		try {
 			setSaving(true);
 			const res = await makeAuthenticatedRequest(
@@ -119,6 +137,8 @@ export default function TripChecklistView({
 			} else {
 				console.error("Failed to regenerate checklist", await res.text());
 			}
+		} catch (error) {
+			console.error("Failed to regenerate checklist:", error);
 		} finally {
 			setSaving(false);
 		}
@@ -127,6 +147,11 @@ export default function TripChecklistView({
 	// 保存
 	const persist = async (next: ChecklistItem[]) => {
 		if (!tripId) return;
+		// 認証されていない場合は実行しない
+		if (!user) {
+			console.warn("Cannot save checklist: user not authenticated");
+			return;
+		}
 		try {
 			setSaving(true);
 			const res = await makeAuthenticatedRequest(
@@ -144,6 +169,10 @@ export default function TripChecklistView({
 				console.error("Failed to save checklist", await res.text());
 				setItems(next);
 			}
+		} catch (error) {
+			console.error("Failed to save checklist:", error);
+			// エラーが発生してもローカル状態は保持
+			setItems(next);
 		} finally {
 			setSaving(false);
 		}
