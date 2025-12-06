@@ -172,27 +172,52 @@ export class ChecklistGenerator {
 		}
 
 		// すべてのlongDescription生成を並列実行
+		// ただし、レート制限を考慮してバッチ処理（最大10件ずつ）
+		const itemsNeedingGeneration = itemPromises.filter(
+			(p) => p.longDescriptionPromise,
+		);
 		logger.debug("ChecklistGenerator: Starting parallel longDescription generation", {
 			totalItems: itemPromises.length,
-			itemsNeedingGeneration: itemPromises.filter(
-				(p) => p.longDescriptionPromise,
-			).length,
+			itemsNeedingGeneration: itemsNeedingGeneration.length,
 		});
 
-		const itemsWithLongDescription = await Promise.all(
-			itemPromises.map(async (promise) => {
-				if (promise.longDescriptionPromise) {
-					const longDescription = await promise.longDescriptionPromise;
-					return {
-						...promise.item,
-						longDescription,
-					} as ChecklistItem;
-				} else {
-					// longDescriptionが既にある場合
-					return promise.item as ChecklistItem;
-				}
-			}),
-		);
+		// バッチ処理: レート制限（10件/分）を考慮して、10件ずつ処理
+		const BATCH_SIZE = 10;
+		const batches: Array<typeof itemPromises> = [];
+		for (let i = 0; i < itemPromises.length; i += BATCH_SIZE) {
+			batches.push(itemPromises.slice(i, i + BATCH_SIZE));
+		}
+
+		const itemsWithLongDescription: ChecklistItem[] = [];
+		for (let i = 0; i < batches.length; i++) {
+			const batch = batches[i];
+			logger.debug("ChecklistGenerator: Processing batch", {
+				batchIndex: i + 1,
+				totalBatches: batches.length,
+				batchSize: batch.length,
+			});
+
+			const batchResults = await Promise.all(
+				batch.map(async (promise) => {
+					if (promise.longDescriptionPromise) {
+						const longDescription = await promise.longDescriptionPromise;
+						return {
+							...promise.item,
+							longDescription,
+						} as ChecklistItem;
+					} else {
+						// longDescriptionが既にある場合
+						return promise.item as ChecklistItem;
+					}
+				}),
+			);
+			itemsWithLongDescription.push(...batchResults);
+
+			// 最後のバッチでない場合、レート制限を考慮して少し待機（60秒/10件 = 6秒）
+			if (i < batches.length - 1) {
+				await new Promise((resolve) => setTimeout(resolve, 6000));
+			}
+		}
 
 		items.push(...itemsWithLongDescription);
 
