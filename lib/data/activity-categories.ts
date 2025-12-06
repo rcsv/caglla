@@ -684,3 +684,20 @@ export function getSecondaryCategoryIconName(
 	const info = getSecondaryCategoryInfo(primaryCategory, secondaryCategoryId);
 	return info?.iconName;
 }
+
+/**
+ * SecondaryCategory IDからPrimaryCategoryを逆引き
+ * @param secondaryCategoryId - SecondaryCategory ID
+ * @returns PrimaryCategoryType または null（見つからない場合）
+ */
+export function getPrimaryCategoryFromSecondary(
+	secondaryCategoryId: string,
+): PrimaryCategoryType | null {
+	for (const master of ACTIVITY_CATEGORIES) {
+		const found = master.secondaryCategories.find(
+			(sc) => sc.id === secondaryCategoryId,
+		);
+		if (found) return master.primaryCategory;
+	}
+	return null; // 見つからない場合はnull（fallback処理でcustomグループへ）
+}
