@@ -42,7 +42,9 @@ export async function generateLongDescription(
 
 		// Gemini APIクライアントを初期化
 		const genAI = new GoogleGenerativeAI(apiKey);
-		const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+		// モデル名を修正: gemini-1.5-flash は存在しないため、gemini-1.5-flash-latest を使用
+		// または gemini-1.5-pro も利用可能
+		const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
 		// プロンプトを構築
 		const prompt = buildPrompt(title, description, category, priority);
