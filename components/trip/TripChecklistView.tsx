@@ -48,6 +48,18 @@ export default function TripChecklistView({
 						...item,
 						links: item.links || [],
 					}));
+					// デバッグ: longDescriptionが含まれているアイテムをログ出力
+					const itemsWithLongDesc = normalizedItems.filter(
+						(item) => item.longDescription && item.longDescription.length > 0,
+					);
+					console.log("Fetched checklist items with longDescription:", {
+						count: itemsWithLongDesc.length,
+						titles: itemsWithLongDesc.map((item) => ({
+							title: item.title,
+							hasLongDesc: !!item.longDescription,
+							length: item.longDescription?.length || 0,
+						})),
+					});
 					setItems(normalizedItems);
 				} else {
 					console.error("Failed to fetch checklist", await res.text());
@@ -75,11 +87,28 @@ export default function TripChecklistView({
 					...item,
 					links: item.links || [],
 				}));
+				// デバッグ: longDescriptionが含まれているアイテムをログ出力
+				const itemsWithLongDesc = normalizedItems.filter(
+					(item) => item.longDescription && item.longDescription.length > 0,
+				);
+				console.log("Regenerated checklist items with longDescription:", {
+					count: itemsWithLongDesc.length,
+					titles: itemsWithLongDesc.map((item) => ({
+						title: item.title,
+						hasLongDesc: !!item.longDescription,
+						length: item.longDescription?.length || 0,
+					})),
+				});
 				setItems(normalizedItems);
 				// 選択中のアイテムも更新（longDescriptionが生成された場合に反映される）
 				if (selectedItem) {
 					const updatedItem = normalizedItems.find((item) => item.id === selectedItem.id);
 					if (updatedItem) {
+						console.log("Updating selectedItem:", {
+							title: updatedItem.title,
+							hasLongDesc: !!updatedItem.longDescription,
+							length: updatedItem.longDescription?.length || 0,
+						});
 						setSelectedItem(updatedItem);
 					}
 				}
@@ -373,7 +402,15 @@ export default function TripChecklistView({
 																		? "bg-blue-50 border border-blue-200"
 																		: ""
 																}`}
-																onClick={() => setSelectedItem(item)}
+																onClick={() => {
+																	console.log("Selecting item:", {
+																		title: item.title,
+																		hasLongDesc: !!item.longDescription,
+																		length: item.longDescription?.length || 0,
+																		longDescPreview: item.longDescription?.substring(0, 100),
+																	});
+																	setSelectedItem(item);
+																}}
 															>
 										<input
 											type="checkbox"
@@ -513,7 +550,15 @@ export default function TripChecklistView({
 																		? "bg-blue-50 border border-blue-200"
 																		: ""
 																}`}
-																onClick={() => setSelectedItem(item)}
+																onClick={() => {
+																	console.log("Selecting item:", {
+																		title: item.title,
+																		hasLongDesc: !!item.longDescription,
+																		length: item.longDescription?.length || 0,
+																		longDescPreview: item.longDescription?.substring(0, 100),
+																	});
+																	setSelectedItem(item);
+																}}
 															>
 																<input
 																	type="checkbox"
@@ -738,6 +783,15 @@ export default function TripChecklistView({
 									)}
 
 									{/* 詳細説明（Markdown） */}
+									{(() => {
+										console.log("Rendering longDescription section:", {
+											title: selectedItem.title,
+											hasLongDesc: !!selectedItem.longDescription,
+											length: selectedItem.longDescription?.length || 0,
+											longDescValue: selectedItem.longDescription,
+										});
+										return null;
+									})()}
 									{selectedItem.longDescription && (
 										<div className="mb-4">
 											<h4 className="text-sm font-semibold text-gray-700 mb-2">
@@ -905,7 +959,15 @@ export default function TripChecklistView({
 														{relatedItems.map((item) => (
 															<button
 																key={item.id}
-																onClick={() => setSelectedItem(item)}
+																onClick={() => {
+																	console.log("Selecting item:", {
+																		title: item.title,
+																		hasLongDesc: !!item.longDescription,
+																		length: item.longDescription?.length || 0,
+																		longDescPreview: item.longDescription?.substring(0, 100),
+																	});
+																	setSelectedItem(item);
+																}}
 																className="w-full text-left px-3 py-2 text-sm bg-gray-50 hover:bg-gray-100 rounded-md transition-colors flex items-center justify-between"
 															>
 																<span

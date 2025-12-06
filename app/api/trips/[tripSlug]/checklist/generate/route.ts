@@ -192,13 +192,25 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 	// undefinedフィールドを除外してFirestoreに保存
 	const sanitizedItems = finalItems.map((item) => {
 		const sanitized: any = { ...item };
-		// undefinedのフィールドを削除
+		// undefinedのフィールドを削除（longDescriptionは空文字列でも保持）
 		Object.keys(sanitized).forEach((key) => {
 			if (sanitized[key] === undefined) {
 				delete sanitized[key];
 			}
 		});
 		return sanitized;
+	});
+
+	// デバッグ: longDescriptionが含まれているアイテムをログ出力
+	const itemsWithLongDesc = sanitizedItems.filter(
+		(item) => item.longDescription && item.longDescription.length > 0,
+	);
+	logger.debug("Checklist Generate API: Items with longDescription", {
+		count: itemsWithLongDesc.length,
+		titles: itemsWithLongDesc.map((item) => ({
+			title: item.title,
+			length: item.longDescription?.length || 0,
+		})),
 	});
 
 	// 保存: trip_checklists/{tripId}
