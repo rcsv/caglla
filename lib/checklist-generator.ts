@@ -16,6 +16,7 @@ import { dateUtils } from "@/lib/utils/date";
 import logger from "@/lib/core/logger";
 import { getAppUrl } from "@/lib/utils/app-url";
 import { generateLongDescription } from "@/lib/ai/gemini-client";
+import { getUserLanguage } from "@/lib/utils/language";
 
 interface DestinationInfo {
 	countryCode?: string;
@@ -116,10 +117,13 @@ export class ChecklistGenerator {
 
 					if (conditionResult) {
 						// 動的な値置換（例: {count}日分 → 5日分）
-						const title = this.replaceDynamicValues(ruleItem.title, {
-							count,
-							duration: tripDuration,
-						});
+						// i18nキーの場合は置換しない（クライアント側で解決）
+						const title = ruleItem.title.startsWith("checklist.items.")
+							? ruleItem.title
+							: this.replaceDynamicValues(ruleItem.title, {
+									count,
+									duration: tripDuration,
+								});
 
 						// アイテムの基本情報を作成
 						const baseItem: Omit<ChecklistItem, "longDescription"> = {
@@ -129,8 +133,10 @@ export class ChecklistGenerator {
 							category: ruleItem.category,
 							done: false,
 							generatedFrom: secondaryCategory,
+							ruleId: rule.id, // i18nキー解決用（ruleIdを保存）
 							priority: ruleItem.priority || "medium",
 							links: ruleItem.links || [],
+							itemKey: ruleItem.itemKey, // i18nキー解決用
 						};
 
 						// longDescriptionがない場合、Gemini APIで生成を試みる（並列処理用にPromiseを保存）
@@ -138,11 +144,12 @@ export class ChecklistGenerator {
 							itemPromises.push({
 								item: baseItem,
 								longDescriptionPromise: generateLongDescription({
-							title,
+									title,
 									description: ruleItem.description || undefined, // undefined を明示的に渡す
-							category: ruleItem.category,
+									category: ruleItem.category,
 									priority: ruleItem.priority,
 									generatedFrom: secondaryCategory,
+									language: userLanguage, // ユーザーの言語設定を渡す
 								})
 									.then((result) => result ?? undefined) // nullをundefinedに変換
 									.catch((error) => {
@@ -157,7 +164,7 @@ export class ChecklistGenerator {
 										);
 										return undefined;
 									}),
-				});
+							});
 						} else {
 							// longDescriptionが既にある場合はそのまま使用
 							itemPromises.push({

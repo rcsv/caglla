@@ -10,15 +10,17 @@ export const SHOPPING_RULES: ChecklistGenerationRule[] = [
 		secondaryCategory: "souvenir",
 		items: [
 			{
-				title: "エコバッグ・折りたたみバッグ",
-				description: "お土産を入れるのに便利",
+				itemKey: "eco_bag_folding",
+				title: "checklist.items.shopping_rule.eco_bag_folding.title",
+				description: "checklist.items.shopping_rule.eco_bag_folding.description",
 				category: "packing",
 				priority: "medium",
 				condition: { type: "always" },
 			},
 			{
-				title: "現金（お土産予算）",
-				description: "市場や小規模店舗ではカード不可の場合あり",
+				itemKey: "cash_souvenir_budget",
+				title: "checklist.items.shopping_rule.cash_souvenir_budget.title",
+				description: "checklist.items.shopping_rule.cash_souvenir_budget.description",
 				category: "packing",
 				priority: "medium",
 				condition: { type: "always" },

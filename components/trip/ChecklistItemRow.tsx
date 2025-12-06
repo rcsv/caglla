@@ -60,17 +60,17 @@ export function ChecklistItemRow({
 			<div className="flex items-center gap-1 ml-auto">
 				{item.priority === "high" && (
 					<span className="px-2 py-0.5 text-xs bg-red-100 text-red-700 rounded">
-						高
+						{t("checklist.priority.high")}
 					</span>
 				)}
 				{item.priority === "medium" && (
 					<span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded">
-						中
+						{t("checklist.priority.medium")}
 					</span>
 				)}
 				{item.priority === "low" && (
 					<span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">
-						低
+						{t("checklist.priority.low")}
 					</span>
 				)}
 				{/* リンク存在インジケーター（クリック可能） */}

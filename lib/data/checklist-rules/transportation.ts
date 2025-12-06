@@ -10,81 +10,74 @@ export const TRANSPORTATION_RULES: ChecklistGenerationRule[] = [
 		secondaryCategory: "flight",
 		items: [
 			{
-				title: "パスポートの有効期限確認（6ヶ月以上残存）",
-				description: "多くの国で入国時に6ヶ月以上の残存期間が必要",
-				longDescription: `一般的に、パスポートの残存期間は**6ヶ月以上**あることが求められます。
-
-## 例外がある場合
-
-一部例外で、以下のような場合はその限りではありません：
-
-- 日本とアメリカのように国家間で協定を結んでいる場合
-- 特定のビザを取得している場合
-- 短期滞在（通常30日以内）の場合
-
-## 確認方法
-
-- パスポートの有効期限を確認
-- 出発日から6ヶ月以上残っているか計算
-- 渡航先の大使館・領事館のウェブサイトで最新情報を確認
-
-詳細は[外務省の海外安全情報](https://www.anzen.mofa.go.jp/)を参照してください。`,
+				itemKey: "passport_validity",
+				title: "checklist.items.flight_international_rule.passport_validity.title",
+				description: "checklist.items.flight_international_rule.passport_validity.description",
+				longDescription: "checklist.items.flight_international_rule.passport_validity.longDescription",
 				category: "preparation",
 				priority: "high",
 				condition: { type: "always" },
 			},
 			{
-				title: "航空券の印刷またはモバイルチケット準備",
-				description: "Eチケット控えまたはアプリでの搭乗券",
+				itemKey: "flight_ticket",
+				title: "checklist.items.flight_international_rule.flight_ticket.title",
+				description: "checklist.items.flight_international_rule.flight_ticket.description",
 				category: "preparation",
 				priority: "high",
 				condition: { type: "always" },
 			},
 			{
-				title: "オンラインチェックイン（24時間前）",
-				description: "座席指定や搭乗時間の短縮に",
+				itemKey: "online_checkin",
+				title: "checklist.items.flight_international_rule.online_checkin.title",
+				description: "checklist.items.flight_international_rule.online_checkin.description",
 				category: "preparation",
 				priority: "medium",
 				condition: { type: "always" },
 			},
 			{
-				title: "ESTA申請（アメリカ入国）",
-				description: "渡航72時間前までに申請推奨、有効期限2年",
+				itemKey: "esta_application",
+				title: "checklist.items.flight_international_rule.esta_application.title",
+				description: "checklist.items.flight_international_rule.esta_application.description",
 				category: "preparation",
 				priority: "high",
 				condition: { type: "destination", countries: ["US"] },
 			},
 			{
-				title: "eTA申請（カナダ入国）",
-				description: "カナダへの空路入国に必要",
+				itemKey: "eta_application",
+				title: "checklist.items.flight_international_rule.eta_application.title",
+				description: "checklist.items.flight_international_rule.eta_application.description",
 				category: "preparation",
 				priority: "high",
 				condition: { type: "destination", countries: ["CA"] },
 			},
 			{
-				title: "ETIAS申請（EU入国）",
-				description: "2025年からEU圏入国に必要（予定）",
+				itemKey: "etias_application",
+				title: "checklist.items.flight_international_rule.etias_application.title",
+				description: "checklist.items.flight_international_rule.etias_application.description",
 				category: "preparation",
 				priority: "high",
 				condition: { type: "destination", continents: ["EU"] },
 			},
 			{
-				title: "海外旅行保険加入",
-				description: "医療費が高額な国では必須",
+				itemKey: "travel_insurance",
+				title: "checklist.items.flight_international_rule.travel_insurance.title",
+				description: "checklist.items.flight_international_rule.travel_insurance.description",
 				category: "preparation",
 				priority: "high",
 				condition: { type: "destination", continents: ["NA", "EU"] },
 			},
 			{
-				title: "ネックピロー",
-				description: "長時間フライトの快適性向上",
+				itemKey: "neck_pillow",
+				title: "checklist.items.flight_international_rule.neck_pillow.title",
+				description: "checklist.items.flight_international_rule.neck_pillow.description",
 				category: "packing",
 				priority: "low",
 				condition: { type: "always" },
 			},
 			{
-				title: "耳栓・アイマスク",
-				description: "機内での睡眠サポート",
+				itemKey: "earplugs_eyemask",
+				title: "checklist.items.flight_international_rule.earplugs_eyemask.title",
+				description: "checklist.items.flight_international_rule.earplugs_eyemask.description",
 				category: "packing",
 				priority: "low",
 				condition: { type: "always" },
@@ -96,29 +89,33 @@ export const TRANSPORTATION_RULES: ChecklistGenerationRule[] = [
 		secondaryCategory: "car_rental",
 		items: [
 			{
-				title: "国際運転免許証の取得",
-				description: "海外でレンタカーを借りる場合に必要",
+				itemKey: "international_driving_license",
+				title: "checklist.items.car_rental_rule.international_driving_license.title",
+				description: "checklist.items.car_rental_rule.international_driving_license.description",
 				category: "preparation",
 				priority: "high",
 				condition: { type: "always" },
 			},
 			{
-				title: "レンタカー予約確認書の印刷",
-				description: "貸出時に提示が必要",
+				itemKey: "rental_confirmation",
+				title: "checklist.items.car_rental_rule.rental_confirmation.title",
+				description: "checklist.items.car_rental_rule.rental_confirmation.description",
 				category: "preparation",
 				priority: "high",
 				condition: { type: "always" },
 			},
 			{
-				title: "クレジットカード（デポジット用）",
-				description: "レンタカーのデポジットに使用",
+				itemKey: "credit_card_deposit",
+				title: "checklist.items.car_rental_rule.credit_card_deposit.title",
+				description: "checklist.items.car_rental_rule.credit_card_deposit.description",
 				category: "packing",
 				priority: "high",
 				condition: { type: "always" },
 			},
 			{
-				title: "カーナビまたはスマホホルダー",
-				description: "ナビゲーション用",
+				itemKey: "navigation_device",
+				title: "checklist.items.car_rental_rule.navigation_device.title",
+				description: "checklist.items.car_rental_rule.navigation_device.description",
 				category: "packing",
 				priority: "medium",
 				condition: { type: "always" },
@@ -130,22 +127,25 @@ export const TRANSPORTATION_RULES: ChecklistGenerationRule[] = [
 		secondaryCategory: "personal_car",
 		items: [
 			{
-				title: "車検証・自賠責保険証の確認",
-				description: "有効期限や携行の必要書類をチェック",
+				itemKey: "car_inspection_insurance",
+				title: "checklist.items.personal_car_rule.car_inspection_insurance.title",
+				description: "checklist.items.personal_car_rule.car_inspection_insurance.description",
 				category: "preparation",
 				priority: "high",
 				condition: { type: "always" },
 			},
 			{
-				title: "ガソリン補給または充電",
-				description: "長距離運転前に給油・充電を済ませる",
+				itemKey: "fuel_charge",
+				title: "checklist.items.personal_car_rule.fuel_charge.title",
+				description: "checklist.items.personal_car_rule.fuel_charge.description",
 				category: "preparation",
 				priority: "medium",
 				condition: { type: "always" },
 			},
 			{
-				title: "ETCカード・高速料金の準備",
-				description: "高速道路利用時の支払い手段を用意",
+				itemKey: "etc_card",
+				title: "checklist.items.personal_car_rule.etc_card.title",
+				description: "checklist.items.personal_car_rule.etc_card.description",
 				category: "packing",
 				priority: "medium",
 				condition: { type: "always" },
@@ -157,22 +157,25 @@ export const TRANSPORTATION_RULES: ChecklistGenerationRule[] = [
 		secondaryCategory: "parking",
 		items: [
 			{
-				title: "駐車場の事前予約確認",
-				description: "予約番号・入庫可能時間を確認",
+				itemKey: "parking_reservation",
+				title: "checklist.items.parking_rule.parking_reservation.title",
+				description: "checklist.items.parking_rule.parking_reservation.description",
 				category: "preparation",
 				priority: "high",
 				condition: { type: "always" },
 			},
 			{
-				title: "精算方法の準備（現金・アプリ）",
-				description: "現地の支払い方法に合わせて準備",
+				itemKey: "parking_payment",
+				title: "checklist.items.parking_rule.parking_payment.title",
+				description: "checklist.items.parking_rule.parking_payment.description",
 				category: "preparation",
 				priority: "medium",
 				condition: { type: "always" },
 			},
 			{
-				title: "駐車位置メモ用のノート／アプリ",
-				description: "駐車フロアや番号を記録できるようにする",
+				itemKey: "parking_location_memo",
+				title: "checklist.items.parking_rule.parking_location_memo.title",
+				description: "checklist.items.parking_rule.parking_location_memo.description",
 				category: "packing",
 				priority: "low",
 				condition: { type: "always" },
