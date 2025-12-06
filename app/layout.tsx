@@ -6,7 +6,8 @@ import { AuthProvider } from "@/lib/contexts/auth";
 import { SubscriptionProvider } from "@/lib/contexts/subscription";
 import { UserDataProvider } from "@/lib/contexts/user-data";
 import { NotificationProvider } from "@/lib/contexts/notification";
-import { isSupportedLanguage } from "@/lib/utils/language";
+import { DEFAULT_LANGUAGE } from "@/lib/utils/language";
+import { getLanguageOverrideFromCookies } from "@/lib/i18n/storage";
 import type { SupportedLanguage } from "@/lib/core/types";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -27,13 +28,10 @@ export default async function RootLayout({
 	children: React.ReactNode;
 }) {
 	// Cookieから言語設定を取得（サーバーサイド）
+	// 正しいCookie名（"lang"）を使用して言語設定を取得
 	const cookieStore = await cookies();
-	const languageCookie = cookieStore.get("language")?.value || "";
-
-	// サポート言語のみ許可、デフォルトは'en'
-	const lang: SupportedLanguage = isSupportedLanguage(languageCookie)
-		? languageCookie
-		: "en";
+	const lang: SupportedLanguage =
+		getLanguageOverrideFromCookies(cookieStore) ?? DEFAULT_LANGUAGE;
 
 	return (
 		<html lang={lang}>
