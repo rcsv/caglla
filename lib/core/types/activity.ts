@@ -46,17 +46,30 @@ export type ChecklistCategory = "preparation" | "packing";
 export type ChecklistPriority = "high" | "medium" | "low";
 
 /**
+ * Checklist Item Link（チェックリスト項目のリンク）
+ */
+export interface ChecklistItemLink {
+	type: "amazon" | "official" | "review" | "other";
+	label: string;
+	url: string;
+	affiliateId?: string; // アフィリエイトID（オプション）
+}
+
+/**
  * チェックリスト項目
  */
 export interface ChecklistItem {
 	id: string;
 	title: string;
 	description?: string;
+	longDescription?: string; // 詳細な説明文（右ペイン用）
 	category: ChecklistCategory;
 	done: boolean;
 	generatedFrom?: string; // 生成元のsecondaryCategory ID
 	isCustom?: boolean; // ユーザーが手動追加した項目
 	priority?: ChecklistPriority;
+	links?: ChecklistItemLink[]; // 関連リンク（Amazon、公式サイトなど）
+	userMemo?: string; // ユーザーが追加できるメモ
 }
 
 /**

@@ -1228,6 +1228,7 @@ export type TranslationKey =
 	| "checklist.priority.low"
 	| "checklist.generatedFrom"
 	| "checklist.description"
+	| "checklist.longDescription"
 	| "checklist.links"
 	| "checklist.selectItem"
 	| "checklist.customItems"
@@ -1236,6 +1237,8 @@ export type TranslationKey =
 	| "checklist.relatedItems"
 	| "checklist.relatedItems.empty"
 	| "checklist.progress.completed"
+	| "checklist.userMemo"
+	| "checklist.userMemo.placeholder"
 	| "common.readOnly"
 	// Loading messages
 	| "loading.message"

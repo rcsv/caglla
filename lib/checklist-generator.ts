@@ -15,6 +15,7 @@ import { getChecklistRules } from "@/lib/data/checklist-rules";
 import type { ChecklistCondition } from "@/lib/data/checklist-rules";
 import { dateUtils } from "@/lib/utils/date";
 import logger from "@/lib/core/logger";
+import { getAppUrl } from "@/lib/utils/app-url";
 
 interface DestinationInfo {
 	countryCode?: string;
@@ -118,10 +119,12 @@ export class ChecklistGenerator {
 							id: this.generateId(),
 							title,
 							description: ruleItem.description,
+							longDescription: ruleItem.longDescription,
 							category: ruleItem.category,
 							done: false,
 							generatedFrom: secondaryCategory,
 							priority: ruleItem.priority || "medium",
+							links: ruleItem.links || [],
 						});
 						logger.debug("ChecklistGenerator: Item added", {
 							title,
@@ -132,10 +135,31 @@ export class ChecklistGenerator {
 			});
 		}
 
-		// 5. 重複を除去（同じタイトルの項目は1つにまとめる）
+		// 5. 旅のしおりの印刷用URLを準備物として追加
+		const tripSlug = trip.slug || trip.id;
+		const baseUrl = getAppUrl();
+		const printUrl = `${baseUrl}/dev-tools/pdf-preview/${tripSlug}`;
+		const printUrlItem: ChecklistItem = {
+			id: this.generateId(),
+			title: "旅のしおりの印刷用URL",
+			description: "印刷プレビューでPDF化できます",
+			category: "preparation",
+			done: false,
+			priority: "high",
+			links: [
+				{
+					type: "official",
+					label: "印刷プレビューを開く",
+					url: printUrl,
+				},
+			],
+		};
+		items.push(printUrlItem);
+
+		// 6. 重複を除去（同じタイトルの項目は1つにまとめる）
 		const uniqueItems = this.deduplicateItems(items);
 
-		// 6. 優先度順にソート
+		// 7. 優先度順にソート
 		return this.sortByPriority(uniqueItems);
 	}
 

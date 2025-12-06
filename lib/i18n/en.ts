@@ -1429,6 +1429,7 @@ const en: Dictionary = {
 	"checklist.priority.low": "Low",
 	"checklist.generatedFrom": "Generated from",
 	"checklist.description": "Description",
+	"checklist.longDescription": "Detailed Description",
 	"checklist.links": "Links",
 	"checklist.selectItem": "Select an item",
 	"checklist.customItems": "Custom Items",
@@ -1437,6 +1438,8 @@ const en: Dictionary = {
 	"checklist.relatedItems": "Related Items",
 	"checklist.relatedItems.empty": "No other items in this category",
 	"checklist.progress.completed": "completed",
+	"checklist.userMemo": "Memo",
+	"checklist.userMemo.placeholder": "Enter a memo...",
 	"common.readOnly": "Read Only",
 	// Loading messages
 	"loading.message": "Loading...",

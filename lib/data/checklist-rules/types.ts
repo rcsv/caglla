@@ -2,6 +2,8 @@
  * チェックリスト生成ルール型定義
  */
 
+import type { ChecklistItemLink } from "@/lib/core/types/activity";
+
 export interface ChecklistCondition {
 	type: "count" | "duration" | "destination" | "always";
 	// count: 同じsecondaryCategoryの回数
@@ -18,8 +20,10 @@ export interface ChecklistCondition {
 export interface ChecklistRuleItem {
 	title: string;
 	description?: string;
+	longDescription?: string; // 詳細な説明文（右ペイン用）
 	category: "preparation" | "packing";
 	priority?: "high" | "medium" | "low";
+	links?: ChecklistItemLink[]; // 関連リンク（Amazon、公式サイトなど）
 	condition?: ChecklistCondition;
 }
 

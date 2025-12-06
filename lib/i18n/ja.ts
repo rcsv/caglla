@@ -1402,6 +1402,7 @@ const ja: Dictionary = {
 	"checklist.priority.low": "低",
 	"checklist.generatedFrom": "生成根拠",
 	"checklist.description": "説明",
+	"checklist.longDescription": "詳細説明",
 	"checklist.links": "リンク",
 	"checklist.selectItem": "アイテムを選択",
 	"checklist.customItems": "カスタム項目",
@@ -1410,6 +1411,8 @@ const ja: Dictionary = {
 	"checklist.relatedItems": "関連アイテム",
 	"checklist.relatedItems.empty": "このカテゴリの他のアイテムはありません",
 	"checklist.progress.completed": "完了",
+	"checklist.userMemo": "メモ",
+	"checklist.userMemo.placeholder": "メモを入力...",
 	"common.readOnly": "閲覧専用",
 	// Loading messages
 	"loading.message": "読み込み中...",
