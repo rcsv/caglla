@@ -743,7 +743,7 @@ export default function TripChecklistView({
 
 									{/* スクロール可能コンテンツ */}
 									<div className="flex-1 overflow-y-auto p-4">
-										{/* 詳細説明（Markdown）- メインコンテンツ、常に表示 */}
+										{/* 詳細説明（Markdown）- メインコンテンツ、折りたたみ可能 */}
 										{(() => {
 											console.log("Rendering longDescription section:", {
 												title: selectedItem.title,
@@ -758,7 +758,13 @@ export default function TripChecklistView({
 												<h4 className="text-base font-semibold text-gray-800 mb-3">
 													{t("checklist.longDescription")}
 												</h4>
-												<div className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none">
+												<div
+													className={`text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none ${
+														!expandedSections.has("longDescription")
+															? "line-clamp-3"
+															: ""
+													}`}
+												>
 													<ReactMarkdown
 														components={{
 															p: ({ children }) => (
@@ -825,6 +831,23 @@ export default function TripChecklistView({
 														{selectedItem.longDescription}
 													</ReactMarkdown>
 												</div>
+												<button
+													type="button"
+													onClick={() => {
+														const newExpanded = new Set(expandedSections);
+														if (newExpanded.has("longDescription")) {
+															newExpanded.delete("longDescription");
+														} else {
+															newExpanded.add("longDescription");
+														}
+														setExpandedSections(newExpanded);
+													}}
+													className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
+												>
+													{expandedSections.has("longDescription")
+														? t("checklist.readLess")
+														: t("checklist.readMore")}
+												</button>
 											</div>
 										)}
 

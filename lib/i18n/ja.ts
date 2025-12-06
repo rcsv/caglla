@@ -1403,6 +1403,8 @@ const ja: Dictionary = {
 	"checklist.generatedFrom": "生成根拠",
 	"checklist.description": "説明",
 	"checklist.longDescription": "詳細説明",
+	"checklist.readMore": "もっと読む",
+	"checklist.readLess": "閉じる",
 	"checklist.links": "リンク",
 	"checklist.selectItem": "アイテムを選択",
 	"checklist.customItems": "カスタム項目",

@@ -1430,6 +1430,8 @@ const en: Dictionary = {
 	"checklist.generatedFrom": "Generated from",
 	"checklist.description": "Description",
 	"checklist.longDescription": "Detailed Description",
+	"checklist.readMore": "Read More",
+	"checklist.readLess": "Read Less",
 	"checklist.links": "Links",
 	"checklist.selectItem": "Select an item",
 	"checklist.customItems": "Custom Items",

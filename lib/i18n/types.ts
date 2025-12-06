@@ -1229,6 +1229,8 @@ export type TranslationKey =
 	| "checklist.generatedFrom"
 	| "checklist.description"
 	| "checklist.longDescription"
+	| "checklist.readMore"
+	| "checklist.readLess"
 	| "checklist.links"
 	| "checklist.selectItem"
 	| "checklist.customItems"
