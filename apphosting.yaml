@@ -197,3 +197,8 @@ env:
     availability:
       - BUILD
       - RUNTIME
+
+  - variable: GEMINI_API_KEY
+    secret: caglla-backend-gemini-api-key
+    availability:
+      - RUNTIME
