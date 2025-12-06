@@ -1,9 +1,10 @@
 /**
  * Gemini API クライアント
- * Firebase Gemini Developer APIを使用してlongDescriptionを生成
+ * Google GenAI SDKを使用してlongDescriptionを生成
+ * 公式ドキュメント: https://ai.google.dev/gemini-api/docs/quickstart?hl=ja#javascript
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import logger from "@/lib/core/logger";
 import { adminDb } from "@/lib/firebase/admin";
 import { COLLECTIONS } from "@/lib/firebase/firestore";
@@ -40,21 +41,22 @@ export async function generateLongDescription(
 			return cached;
 		}
 
-		// Gemini APIクライアントを初期化
-		const genAI = new GoogleGenerativeAI(apiKey);
-		// モデル名を修正: gemini-1.5-flash は存在しないため、gemini-1.5-flash-latest を使用
-		// または gemini-1.5-pro も利用可能
-		const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+		// Gemini APIクライアントを初期化（新しいSDK: @google/genai）
+		// 環境変数 GEMINI_API_KEY が自動的に使用される
+		const ai = new GoogleGenAI({});
 
 		// プロンプトを構築
 		const prompt = buildPrompt(title, description, category, priority);
 
 		logger.debug("Generating longDescription with Gemini", { title, category });
 
-		// APIリクエスト
-		const result = await model.generateContent(prompt);
-		const response = await result.response;
-		const text = response.text();
+		// APIリクエスト（新しいSDKのAPI）
+		// モデル名: gemini-2.5-flash または gemini-1.5-flash を使用
+		const response = await ai.models.generateContent({
+			model: "gemini-2.5-flash", // 最新のFlashモデル（公式ドキュメント準拠）
+			contents: prompt,
+		});
+		const text = response.text;
 
 		if (!text || text.trim().length === 0) {
 			logger.warn("Gemini API returned empty response", { title });
