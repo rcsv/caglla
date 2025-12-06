@@ -1,23 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import logger from "@/lib/core/logger";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import type { z } from "zod";
 import { adminDb } from "@/lib/firebase/admin";
 import {
 	adminTripOperations,
 	adminDayOperations,
 	adminUserOperations,
 } from "@/lib/firebase/admin-operation";
-import { planSaveOperations } from "@/lib/travel/plan-save";
-import { generateUniqueSlug } from "@/lib/utils/slug";
 import { COLLECTIONS } from "@/lib/firebase/firestore";
+import { withAuth, withParams, withBodyValidation } from "@/lib/api/middleware";
 import {
 	notFound,
 	badRequest,
 	createForbiddenError,
 } from "@/lib/core/error-handler";
+import logger from "@/lib/core/logger";
 import { composeMiddleware } from "@/lib/core/middleware";
-import { withAuth, withParams, withBodyValidation } from "@/lib/api/middleware";
 import { CreateReplicaFromTemplateSchema } from "@/lib/schemas/plan-operations";
+import { planSaveOperations } from "@/lib/travel/plan-save";
+import { generateUniqueSlug } from "@/lib/utils/slug";
 
 /**
  * POST /api/trip/[tripSlug]/replica - テンプレートからレプリカ作成
