@@ -1,41 +1,30 @@
 "use client";
 
-import { useState } from "react";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import type { Trip } from "@/lib/core/types";
 import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
-import { resolveSocialStats } from "@/lib/social/trip-social-utils";
-import { TripStatsRow } from "@/components/tripcard/TripStatsRow";
-import { TripSocialStatsRow } from "@/components/tripcard/TripSocialStatsRow";
+import { formatDate } from "@/lib/utils/date";
+import { getAccessLevelInfo } from "@/lib/utils/access-level";
 import { t } from "@/lib/i18n";
+import { resolveSocialStats } from "@/lib/social/trip-social-utils";
+import { TripSocialStatsRow } from "@/components/tripcard/TripSocialStatsRow";
+import { TripStatsRow } from "@/components/tripcard/TripStatsRow";
 
 interface MyGuidesSectionProps {
 	trips?: Trip[] | null;
 	loading: boolean;
 	onRefresh?: () => void;
+	maxItems?: number;
 }
 
 export function MyGuidesSection({
 	trips,
 	loading,
-	onRefresh,
+	maxItems = 5,
 }: MyGuidesSectionProps) {
 	const hasTrips = trips && trips.length > 0;
-
-	const getAccessLevelLabel = (accessLevel?: string) => {
-		if (accessLevel === "public") return "Public";
-		if (accessLevel === "unlisted") return "Shared link";
-		return "Draft";
-	};
-
-	const getAccessLevelColor = (accessLevel?: string) => {
-		if (accessLevel === "public")
-			return "text-green-600 bg-green-50 border-green-200";
-		if (accessLevel === "unlisted")
-			return "text-blue-600 bg-blue-50 border-blue-200";
-		return "text-gray-600 bg-gray-50 border-gray-200";
-	};
+	const displayTrips = hasTrips && trips ? trips.slice(0, maxItems) : [];
 
 	return (
 		<section className="bg-white rounded-sm shadow-sm border border-gray-200 p-4">
@@ -75,27 +64,28 @@ export function MyGuidesSection({
 
 			{!loading && hasTrips && (
 				<div className="space-y-3">
-					{trips!.slice(0, 5).map((trip) => {
-						const updatedAtDate = toDateOrNull(trip.updated_at as any);
-						const updatedAt = updatedAtDate
-							? updatedAtDate.toLocaleDateString()
-							: trip.updated_at
-								? String(trip.updated_at)
-								: "";
+					{displayTrips.map((trip) => {
+						const updatedAtDate = toDateOrNull(trip.updated_at);
+						const updatedAt = formatDate(updatedAtDate);
 
 						const resolvedStats = resolveSocialStats(trip);
-						const accessLevelLabel = getAccessLevelLabel(trip.access_level);
-						const accessLevelColor = getAccessLevelColor(trip.access_level);
+						const accessInfo = getAccessLevelInfo(trip.access_level);
+
+						const tripUrl =
+							trip.creator?.slug && trip.slug
+								? `/${trip.creator.slug}/${trip.slug}`
+								: undefined;
 
 						return (
 							<Link
 								key={trip.id}
-								href={
-									trip.creator?.slug && trip.slug
-										? `/${trip.creator.slug}/${trip.slug}`
-										: "#"
-								}
-								className="block rounded-sm border border-slate-200 border-l-4 border-l-purple-400 bg-white p-3 shadow-sm hover:border-purple-300 hover:shadow-md transition-all"
+								href={tripUrl ?? "/"}
+								aria-disabled={!tripUrl}
+								className={`block rounded-sm border border-slate-200 border-l-4 border-l-purple-400 bg-white p-3 shadow-sm transition-all ${
+									tripUrl
+										? "hover:border-purple-300 hover:shadow-md"
+										: "opacity-60 cursor-not-allowed"
+								}`}
 							>
 								<div className="flex items-start justify-between gap-3">
 									<div className="flex-1 min-w-0 space-y-1">
@@ -104,9 +94,9 @@ export function MyGuidesSection({
 												{trip.title || trip.destination || "Untitled Guide"}
 											</h3>
 											<span
-												className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${accessLevelColor}`}
+												className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${accessInfo.color}`}
 											>
-												{accessLevelLabel}
+												{accessInfo.label}
 											</span>
 										</div>
 										{trip.destination && (

@@ -35,6 +35,20 @@ export function formatRelativeTime(date: Date): string {
 	}
 }
 
+/**
+ * 日付をロケール形式でフォーマット（シンプル版）
+ * @param date - フォーマットする日付（Date、文字列、null、undefined）
+ * @returns フォーマットされた日付文字列、または空文字列
+ */
+export function formatDate(
+	date?: Date | string | null,
+): string {
+	if (!date) return "";
+	const d = typeof date === "string" ? new Date(date) : date;
+	if (isNaN(d.getTime())) return "";
+	return d.toLocaleDateString();
+}
+
 export const dateUtils = {
 	// Check if a date is valid (delegated to timestamp-utils)
 	isValidDate: (date: FirestoreDate | null | undefined): boolean => {

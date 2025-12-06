@@ -16,26 +16,28 @@ export function HomeWelcomeRow({
 		<div className="mb-8 flex items-center justify-between">
 			<div>
 				<h1 className="text-3xl font-bold text-gray-900 mb-2">
-					{t("home.welcome.title", "Welcome")}
+					{t("home.welcome.title")}
 				</h1>
 				<p className="text-gray-600">
-					{t("home.welcome.subtitle", "Discover and manage your travels")}
+					{t("home.welcome.subtitle")}
 				</p>
 			</div>
 			<div className="flex items-center gap-3">
 				<button
+					type="button"
 					onClick={onOpenCreateTrip}
 					className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-indigo-600 text-white text-sm font-semibold shadow-sm hover:bg-indigo-700 transition-colors"
 				>
 					<Icon icon="mdi:plus-circle" className="h-5 w-5" />
-					{t("home.welcome.createTrip", "Create Trip")}
+					{t("home.welcome.createTrip")}
 				</button>
 				<button
+					type="button"
 					onClick={onOpenQuickPlan}
 					className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-sm border border-indigo-200 text-indigo-600 text-sm font-semibold hover:border-indigo-300 transition-colors"
 				>
 					<Icon icon="mdi:calendar-edit" className="h-5 w-5" />
-					{t("home.welcome.quickPlan", "Quick Plan")}
+					{t("home.welcome.quickPlan")}
 				</button>
 			</div>
 		</div>
