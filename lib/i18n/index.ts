@@ -1,5 +1,5 @@
 import { getUserLanguage } from "@/lib/utils/language";
-import type { SupportedLanguage } from "@/lib/core/types";
+import type { SupportedLanguage, User } from "@/lib/core/types";
 
 // 型定義をインポート
 import type { TranslationKey, Dictionary } from "./types";
@@ -24,6 +24,19 @@ const dictionaries: Record<SupportedLanguage, Dictionary> = {
 	pt: en,
 };
 
+// グローバルなユーザーデータ参照（クライアント側でのみ使用）
+let globalUserData: User | null = null;
+
+/**
+ * グローバルなユーザーデータを設定（クライアント側でのみ使用）
+ * @param user - ユーザーデータ
+ */
+export function setGlobalUserData(user: User | null): void {
+	if (typeof window !== "undefined") {
+		globalUserData = user;
+	}
+}
+
 /**
  * 翻訳キーから翻訳テキストを取得する関数
  * @param key - 翻訳キー
@@ -47,8 +60,15 @@ export function t(
 	} else {
 		// t(key, { dayCount: 3 }) または t(key, { dayCount: 3 }, 'ja') の形式
 		actualVariables = variables;
-		actualLang =
-			lang || (typeof window !== "undefined" ? getUserLanguage() : "en");
+		if (lang) {
+			actualLang = lang;
+		} else if (typeof window !== "undefined") {
+			// クライアント側では、グローバルなユーザーデータを使用
+			actualLang = getUserLanguage(globalUserData);
+		} else {
+			// サーバー側ではデフォルト
+			actualLang = "en";
+		}
 	}
 
 	const dict = dictionaries[actualLang] || en;

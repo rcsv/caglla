@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import HomeHeader from "@/components/common/HomeHeader";
 import HomeFooter from "@/components/common/HomeFooter";
 import { useUserData } from "@/lib/contexts/user-data";
+import { setGlobalUserData } from "@/lib/i18n";
 import Loading from "@/components/common/Loading";
 import {
 	getUserDisplayName,
@@ -46,6 +47,11 @@ export default function HomePage() {
 			router.push("/");
 		}
 	}, [user, loading, router]);
+
+	// グローバルなユーザーデータを設定（i18nのt関数で使用）
+	useEffect(() => {
+		setGlobalUserData(userData);
+	}, [userData]);
 
 	// ローディング状態の表示
 	if (loading || userDataLoading) {

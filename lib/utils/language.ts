@@ -170,7 +170,7 @@ export function getUserLanguage(
 	// 2. ユーザープリファレンスがない場合、ブラウザ言語への自動フォールバックは行わない
 	// （ユーザーが明示的に設定していない場合でも、自動で言語を変更しない）
 	// デフォルト言語を返す
-	logLanguageOnce(
+			logLanguageOnce(
 		"default",
 		"Using default language (no user preference, browser auto-detection disabled):",
 		DEFAULT_LANGUAGE,

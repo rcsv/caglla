@@ -16,7 +16,7 @@ import { dateUtils } from "@/lib/utils/date";
 import logger from "@/lib/core/logger";
 import { getAppUrl } from "@/lib/utils/app-url";
 import { generateLongDescription } from "@/lib/ai/gemini-client";
-import { getUserLanguage } from "@/lib/utils/language";
+import { isSupportedLanguage, type SupportedLanguage } from "@/lib/utils/language";
 
 interface DestinationInfo {
 	countryCode?: string;
@@ -42,6 +42,26 @@ export class ChecklistGenerator {
 		trip: Trip,
 		user?: User,
 	): Promise<ChecklistItem[]> {
+		// ユーザーの言語設定を取得（サーバーサイドでは直接preferences.languageを参照）
+		// 注意: getUserLanguage()は副作用がある可能性があるため、サーバーサイドでは直接参照
+		// 設定変更はPOSTトリガー（/api/users）のみで行う
+		const userLanguage: SupportedLanguage =
+			user?.preferences?.language &&
+			user.preferences.language !== "" &&
+			isSupportedLanguage(user.preferences.language)
+				? user.preferences.language
+				: "en"; // デフォルトは英語
+		
+		// 決定された言語をサーバーコンソールに出力
+		logger.info(
+			`[ChecklistGenerator] 決定言語: ${userLanguage} (ユーザー設定: ${user?.preferences?.language || "未設定"}, ユーザーID: ${user?.id || "なし"})`,
+		);
+		logger.debug("ChecklistGenerator: User language", {
+			userLanguage,
+			userPreferencesLanguage: user?.preferences?.language,
+			userId: user?.id,
+		});
+
 		const items: ChecklistItem[] = [];
 		const activityCounts = new Map<string, number>();
 
@@ -221,15 +241,15 @@ export class ChecklistGenerator {
 		const printUrl = `${baseUrl}/dev-tools/pdf-preview/${tripSlug}`;
 		const printUrlItem: ChecklistItem = {
 			id: this.generateId(),
-			title: "旅のしおりの印刷用URL",
-			description: "印刷プレビューでPDF化できます",
+			title: "checklist.printUrl.title", // i18nキー
+			description: "checklist.printUrl.description", // i18nキー
 			category: "preparation",
 			done: false,
 			priority: "high",
 			links: [
 				{
 					type: "official",
-					label: "印刷プレビューを開く",
+					label: "checklist.printUrl.linkLabel", // i18nキー
 					url: printUrl,
 				},
 			],

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
-import { t } from "@/lib/i18n";
+import { t, setGlobalUserData } from "@/lib/i18n";
 import type { Trip } from "@/lib/core/types";
+import { useUserData } from "@/lib/contexts/user-data";
 import { FriendsTimeline } from "./tabs/FriendsTimeline";
 import { IdeasCatalog } from "./tabs/IdeasCatalog";
 import { MyShareManager } from "./tabs/MyShareManager";
@@ -73,7 +74,13 @@ export function HomeMainTabs({
 	mySharesLoading = false,
 	onMySharesRefresh,
 }: HomeMainTabsProps) {
+	const { userData } = useUserData();
 	const [activeTab, setActiveTab] = useState<TabId>("friends");
+
+	// グローバルなユーザーデータを設定（i18nのt関数で使用）
+	useEffect(() => {
+		setGlobalUserData(userData);
+	}, [userData]);
 
 	const renderTabContent = () => {
 		switch (activeTab) {

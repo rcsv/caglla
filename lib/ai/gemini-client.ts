@@ -25,7 +25,7 @@ interface GenerateLongDescriptionParams {
 export async function generateLongDescription(
 	params: GenerateLongDescriptionParams,
 ): Promise<string | null> {
-	const { title, description, category, priority, generatedFrom, language = "ja" } = params;
+	const { title, description, category, priority, generatedFrom, language = "en" } = params;
 
 	// APIキーの確認
 	const apiKey = process.env.GEMINI_API_KEY;
@@ -90,7 +90,7 @@ function buildPrompt(
 	description: string | undefined,
 	category: "preparation" | "packing",
 	priority: "high" | "medium" | "low" | undefined,
-	language: SupportedLanguage = "ja",
+	language: SupportedLanguage = "en",
 ): string {
 	// 言語に応じたラベルを取得
 	const labels = getLabelsForLanguage(language);

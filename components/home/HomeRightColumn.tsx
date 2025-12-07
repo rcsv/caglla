@@ -111,14 +111,14 @@ export function HomeRightColumn({
 			<section className="bg-white rounded-sm shadow-sm border border-gray-200 p-4">
 				<SectionHeader
 					title={t("home.dashboard.ongoingTrips.title")}
-					icon="mdi:map-marker-path"
+							icon="mdi:map-marker-path"
 					iconColor="text-indigo-600"
 					subtitle={t("home.dashboard.ongoingTrips.subtitle")}
 				/>
 
 				{activeTrips.length === 0 ? (
 					<EmptyState
-						icon="mdi:map-outline"
+							icon="mdi:map-outline"
 						text={t("home.dashboard.ongoingTrips.empty")}
 						onCreate={onOpenCreateTrip}
 						createButtonText={t("home.dashboard.ongoingTrips.createNew")}
@@ -150,7 +150,7 @@ export function HomeRightColumn({
 			<section className="bg-white rounded-sm shadow-sm border border-gray-200 p-4">
 				<SectionHeader
 					title={t("home.dashboard.upcomingTrips.title")}
-					icon="mdi:calendar-clock"
+							icon="mdi:calendar-clock"
 					iconColor="text-emerald-600"
 					viewAllLink="/plan"
 					viewAllText={t("home.dashboard.upcomingTrips.viewAll")}
@@ -158,7 +158,7 @@ export function HomeRightColumn({
 
 				{upcomingTrips.length === 0 ? (
 					<EmptyState
-						icon="mdi:calendar-outline"
+							icon="mdi:calendar-outline"
 						text={t("home.dashboard.upcomingTrips.empty")}
 						onCreate={onOpenCreateTrip}
 						createButtonText={t("home.dashboard.ongoingTrips.createNew")}
