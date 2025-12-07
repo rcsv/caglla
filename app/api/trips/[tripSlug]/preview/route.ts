@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
 import { COLLECTIONS } from "@/lib/firebase/firestore";
-import type { Trip, Day, Itinerary, User } from "@/lib/core/types";
+import type { Trip, Day, Itinerary, User, ChecklistItem } from "@/lib/core/types";
 import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
 import {
 	generateMagazinePdfHtml,
@@ -267,12 +267,36 @@ async function fetchTripData(
 		itinerariesByDay[day.id] = itineraries;
 	}
 
+	// チェックリストデータを取得
+	let checklist: ChecklistItem[] = [];
+	try {
+		const checklistDoc = await adminDb
+			.collection(COLLECTIONS.TRIP_CHECKLISTS)
+			.doc(trip.id)
+			.get();
+		if (checklistDoc.exists) {
+			const checklistData = checklistDoc.data();
+			checklist = (checklistData?.items || []) as ChecklistItem[];
+			logger.debug("Preview API: checklist retrieved", {
+				tripId: trip.id,
+				itemsCount: checklist.length,
+			});
+		} else {
+			logger.debug("Preview API: no checklist found", { tripId: trip.id });
+		}
+	} catch (error) {
+		logger.error("Preview API: Error fetching checklist", error, {
+			tripId: trip.id,
+		});
+	}
+
 	logger.debug("Preview API: trip data fetch completed", {
 		totalDays: days.length,
 		totalItineraries: Object.values(itinerariesByDay).flat().length,
+		checklistItemsCount: checklist.length,
 	});
 
-	return { trip: enrichedTrip, days, itinerariesByDay };
+	return { trip: enrichedTrip, days, itinerariesByDay, checklist };
 }
 
 /**

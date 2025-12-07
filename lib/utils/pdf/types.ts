@@ -2,7 +2,7 @@
  * PDFテンプレート関連の型定義
  */
 
-import type { Trip, Day, Itinerary } from "@/lib/core/types";
+import type { Trip, Day, Itinerary, ChecklistItem } from "@/lib/core/types";
 
 /**
  * PDF生成設定
@@ -22,6 +22,7 @@ export interface PdfContext {
 	itinerariesByDay: Record<string, Itinerary[]>;
 	config: PdfConfig;
 	mapImages?: Record<string, string>; // base64 map images（将来的に使用）
+	checklist?: ChecklistItem[]; // チェックリスト
 }
 
 /**
@@ -32,7 +33,7 @@ export interface TripPdfData {
 	days: Day[];
 	itinerariesByDay: Record<string, Itinerary[]>;
 	reservations?: any[]; // 予約情報（将来実装）
-	checklist?: any[]; // チェックリスト（将来実装）
+	checklist?: ChecklistItem[]; // チェックリスト
 }
 
 /**
@@ -47,6 +48,7 @@ export function createPdfContext(
 		days: data.days,
 		itinerariesByDay: data.itinerariesByDay,
 		config,
+		checklist: data.checklist,
 	};
 }
 

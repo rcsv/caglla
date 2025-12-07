@@ -809,15 +809,55 @@ export function generateMagazineStyles(options: StyleOptions = {}): string {
         font-style: italic;
       }
       
-      /* チェックリストページスタイル */
+      /* チェックリストページスタイル（コンパクト形式） */
       .checklist-page {
         padding-top: 80px; /* 20mm ≈ 80px */
       }
       
       .checklist-content {
-        font-size: 11pt;
-        color: #666;
-        font-style: italic;
+        margin-top: 40px; /* 10mm ≈ 40px */
+      }
+      
+      .checklist-section {
+        margin-bottom: 40px; /* 10mm ≈ 40px */
+      }
+      
+      .checklist-section-title {
+        font-size: 14pt;
+        font-weight: 600;
+        color: #2563eb;
+        margin-bottom: 16px; /* 4mm ≈ 16px */
+        padding-bottom: 8px; /* 2mm ≈ 8px */
+        border-bottom: 2px solid #2563eb;
+      }
+      
+      .checklist-items-compact {
+        display: flex;
+        flex-direction: column;
+        gap: 6px; /* 1.5mm ≈ 6px */
+      }
+      
+      .checklist-item-compact {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* 2.5mm ≈ 10px */
+        padding: 4px 0; /* 1mm ≈ 4px */
+        font-size: 10pt;
+        line-height: 1.4;
+      }
+      
+      .checklist-checkbox-compact {
+        font-size: 12pt;
+        color: #2563eb;
+        font-weight: bold;
+        min-width: 18px;
+        flex-shrink: 0;
+      }
+      
+      .checklist-title-compact {
+        font-size: 10pt;
+        color: #333;
+        flex: 1;
       }
       
       /* メモページスタイル */

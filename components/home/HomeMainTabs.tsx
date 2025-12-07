@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
-import { t, setGlobalUserData } from "@/lib/i18n";
+import { t, setGlobalUserData, type TranslationKey } from "@/lib/i18n";
 import type { Trip } from "@/lib/core/types";
 import { useUserData } from "@/lib/contexts/user-data";
 import { FriendsTimeline } from "./tabs/FriendsTimeline";
@@ -29,17 +29,17 @@ const TAB_OPTIONS: Array<{
 	},
 ];
 
-const SEARCH_PLACEHOLDERS = {
+const SEARCH_PLACEHOLDERS: Record<TabId, TranslationKey> = {
 	friends: "home.mainTabs.searchPlaceholder.friends",
 	ideas: "home.mainTabs.searchPlaceholder.ideas",
 	shares: "home.mainTabs.searchPlaceholder.shares",
-} as const;
-
-const getSearchPlaceholder = (tabId: TabId): string => {
-	return t(SEARCH_PLACEHOLDERS[tabId] as keyof typeof t);
 };
 
-const FILTER_CHIPS: Record<TabId, string[]> = {
+const getSearchPlaceholder = (tabId: TabId): string => {
+	return t(SEARCH_PLACEHOLDERS[tabId]);
+};
+
+const FILTER_CHIPS: Record<TabId, TranslationKey[]> = {
 	friends: [
 		"home.mainTabs.filterChips.friends.all",
 		"home.mainTabs.filterChips.friends.active",
@@ -60,7 +60,7 @@ const FILTER_CHIPS: Record<TabId, string[]> = {
 };
 
 const getFilterChips = (tabId: TabId): string[] => {
-	return FILTER_CHIPS[tabId].map((key) => t(key as keyof typeof t));
+	return FILTER_CHIPS[tabId].map((key) => t(key));
 };
 
 interface HomeMainTabsProps {
