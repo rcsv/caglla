@@ -51,10 +51,38 @@ export function ChecklistProvider({
 	// 取得関数
 	const fetchChecklist = useCallback(async () => {
 		if (!tripId) return;
-		// 認証状態の読み込み中、または認証されていない場合はスキップ
+		// 認証状態の読み込み中はスキップ
 		if (authLoading) return;
-		if (!user && !readOnly) return;
 
+		if (!user) {
+			// In read-only mode, try public fetch; otherwise skip
+			if (!readOnly) return;
+
+			// For public/read-only access, use regular fetch without auth
+			try {
+				setLoading(true);
+				const res = await fetch(`/api/trips/${tripId}/checklist`, {
+					cache: "no-store",
+				});
+				if (res.ok) {
+					const data = await res.json();
+					const normalizedItems = (data.items || []).map(
+						(item: ChecklistItem) => ({
+							...item,
+							links: item.links || [],
+						}),
+					);
+					setItems(normalizedItems);
+				}
+			} catch (error) {
+				console.debug("Checklist fetch failed (read-only mode):", error);
+			} finally {
+				setLoading(false);
+			}
+			return;
+		}
+
+		// 認証済みユーザーの場合、認証付きリクエストを使用
 		try {
 			setLoading(true);
 			const res = await makeAuthenticatedRequest(
@@ -75,12 +103,7 @@ export function ChecklistProvider({
 				console.error("Failed to fetch checklist", await res.text());
 			}
 		} catch (error) {
-			// 認証エラーは静かに無視（readOnlyモードの場合）
-			if (readOnly) {
-				console.debug("Checklist fetch failed (read-only mode):", error);
-			} else {
-				console.error("Failed to fetch checklist:", error);
-			}
+			console.error("Failed to fetch checklist:", error);
 		} finally {
 			setLoading(false);
 		}

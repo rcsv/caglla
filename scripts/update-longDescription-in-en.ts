@@ -3,7 +3,7 @@
  * longDescription_en_extract.txt の内容を en.ts に反映するスクリプト
  * 
  * 使用方法:
- *   ts-node scripts/update-longDescription-in-en.ts.ts
+ *   ts-node scripts/update-longDescription-in-en.ts
  */
 
 import * as fs from 'fs';

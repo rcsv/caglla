@@ -4,6 +4,7 @@
 
 import { t } from "@/lib/i18n";
 import type { ChecklistItem } from "@/lib/core/types/activity";
+import logger from "@/lib/core/logger";
 
 /**
  * チェックリストアイテムのi18nキーを解決
@@ -68,7 +69,25 @@ export function resolveChecklistItemText(
 	const actualRuleId = ruleId || item.ruleId || item.generatedFrom || "unknown";
 	
 	// itemKeyが未指定の場合はtitleから生成（スラッグ化）
-	const actualItemKey = itemKey || item.itemKey || slugify(item.title);
+	// 注意: itemKeyはマスターデータから来るべきなので、slugifyにフォールバックする場合は警告を出す
+	const actualItemKey = itemKey || item.itemKey || (() => {
+		const slugified = slugify(item.title);
+		if (!slugified) {
+			logger.warn("slugify produced empty string, using fallback", {
+				title: item.title,
+				ruleId: actualRuleId,
+			});
+			return "item";
+		}
+		if (!itemKey && !item.itemKey) {
+			logger.debug("Falling back to slugify for itemKey (should come from master data)", {
+				title: item.title,
+				ruleId: actualRuleId,
+				slugified,
+			});
+		}
+		return slugified;
+	})();
 
 	// i18nキーを構築
 	const titleKey = `checklist.items.${actualRuleId}.${actualItemKey}.title`;
@@ -118,13 +137,20 @@ function tryResolveI18nKey(
 
 /**
  * 文字列をスラッグ化（i18nキー用）
+ * CJK文字（中国語、日本語、韓国語）を保持し、空文字列の場合はフォールバックを返す
  */
 function slugify(text: string): string {
-	return text
+	const result = text
 		.toLowerCase()
-		.replace(/[^\w\s-]/g, "") // 特殊文字を削除
+		// CJK文字（中国語、日本語、韓国語）を保持しつつ、特殊文字を削除
+		// \u3000-\u9FFF: CJK統合漢字、ひらがな、カタカナ
+		// \uAC00-\uD7AF: ハングル
+		.replace(/[^\w\s\u3000-\u9FFF\uAC00-\uD7AF-]/g, "")
 		.replace(/\s+/g, "_") // スペースをアンダースコアに
 		.replace(/-+/g, "_") // ハイフンをアンダースコアに
 		.replace(/^_+|_+$/g, ""); // 先頭・末尾のアンダースコアを削除
+	
+	// 空文字列の場合はフォールバックを返す
+	return result || "item";
 }
 

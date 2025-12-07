@@ -11,9 +11,13 @@ import type { SupportedLanguage } from "@/lib/core/types";
 /**
  * 相対時間をフォーマット（例: "45分前", "2時間前", "昨日"）
  * @param date - フォーマットする日付
+ * @param locale - オプショナルなロケール文字列（指定しない場合はユーザーの言語設定から自動決定）
  * @returns 相対時間の文字列
  */
-export function formatRelativeTime(date: Date): string {
+export function formatRelativeTime(
+	date: Date,
+	locale?: string,
+): string {
 	const now = new Date();
 	const diffMs = now.getTime() - date.getTime();
 	const diffMins = Math.floor(diffMs / 60000);
@@ -31,7 +35,14 @@ export function formatRelativeTime(date: Date): string {
 	} else if (diffDays < 7) {
 		return t("home.mainTabs.relativeTime.daysAgo", { days: diffDays });
 	} else {
-		return date.toLocaleDateString("ja-JP", { month: "short", day: "numeric" });
+		// ロケールが指定されていない場合は、ユーザーの言語設定から決定
+		const actualLocale =
+			locale ||
+			(() => {
+				const lang = getUserLanguage();
+				return lang === "ja" ? "ja-JP" : "en-US";
+			})();
+		return date.toLocaleDateString(actualLocale, { month: "short", day: "numeric" });
 	}
 }
 
