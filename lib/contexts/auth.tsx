@@ -65,11 +65,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
 			if (existingUserResponse.ok) {
 				// 既存ユーザーの場合：preferencesのみ更新（Google情報は送信しない）
+				// 注意: languageは送信しない（ユーザーが手動で設定した言語を保持するため）
 				const userData = {
 					preferences: {
 						currency: browserInfo.currency,
 						timezone: browserInfo.timezone,
-						language: browserInfo.language,
+						// language: browserInfo.language, // 既存ユーザーの言語設定を上書きしない
 						home_address: browserInfo.homeAddress,
 						theme: "light" as const,
 						notifications: true,
