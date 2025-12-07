@@ -60,16 +60,19 @@ export interface ChecklistItemLink {
  */
 export interface ChecklistItem {
 	id: string;
-	title: string;
-	description?: string;
-	longDescription?: string; // 詳細な説明文（右ペイン用）
+	title: string; // i18nキーまたは直接テキスト（後方互換性のため）
+	description?: string; // i18nキーまたは直接テキスト
+	longDescription?: string; // i18nキーまたは直接テキスト（Markdown対応）
 	category: ChecklistCategory;
 	done: boolean;
 	generatedFrom?: string; // 生成元のsecondaryCategory ID
+	ruleId?: string; // 生成元のルールID（i18nキー解決用）
 	isCustom?: boolean; // ユーザーが手動追加した項目
 	priority?: ChecklistPriority;
 	links?: ChecklistItemLink[]; // 関連リンク（Amazon、公式サイトなど）
 	userMemo?: string; // ユーザーが追加できるメモ
+	itemKey?: string; // i18nキー用の一意なキー（マスタデータから取得）
+	variables?: Record<string, string | number>; // i18n変数置換用（例: {count: 3, duration: 5}）
 }
 
 /**

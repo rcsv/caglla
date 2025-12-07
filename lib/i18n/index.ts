@@ -1,5 +1,5 @@
 import { getUserLanguage } from "@/lib/utils/language";
-import type { SupportedLanguage } from "@/lib/core/types";
+import type { SupportedLanguage, User } from "@/lib/core/types";
 
 // 型定義をインポート
 import type { TranslationKey, Dictionary } from "./types";
@@ -24,6 +24,19 @@ const dictionaries: Record<SupportedLanguage, Dictionary> = {
 	pt: en,
 };
 
+// グローバルなユーザーデータ参照（クライアント側でのみ使用）
+let globalUserData: User | null = null;
+
+/**
+ * グローバルなユーザーデータを設定（クライアント側でのみ使用）
+ * @param user - ユーザーデータ
+ */
+export function setGlobalUserData(user: User | null): void {
+	if (typeof window !== "undefined") {
+		globalUserData = user;
+	}
+}
+
 /**
  * 翻訳キーから翻訳テキストを取得する関数
  * @param key - 翻訳キー
@@ -47,19 +60,36 @@ export function t(
 	} else {
 		// t(key, { dayCount: 3 }) または t(key, { dayCount: 3 }, 'ja') の形式
 		actualVariables = variables;
-		actualLang =
-			lang || (typeof window !== "undefined" ? getUserLanguage() : "en");
+		if (lang) {
+			actualLang = lang;
+		} else if (typeof window !== "undefined") {
+			// クライアント側では、グローバルなユーザーデータを使用
+			actualLang = getUserLanguage(globalUserData);
+		} else {
+			// サーバー側ではデフォルト
+			actualLang = "en";
+		}
 	}
 
 	const dict = dictionaries[actualLang] || en;
 	let translation = dict[key];
 
-	// 変数置換: {{variable}} を実際の値に置換
+	// 変数置換: {{variable}} または {variable} を実際の値に置換
 	if (actualVariables) {
 		Object.entries(actualVariables).forEach(([varKey, varValue]) => {
-			const placeholder = `{{${varKey}}}`;
+			// 二重波括弧 {{variable}} と単一波括弧 {variable} の両方に対応
+			// 正規表現でエスケープが必要
+			const escapedKey = varKey.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			const doubleBracePattern = `\\{\\{${escapedKey}\\}\\}`;
+			const singleBracePattern = `\\{${escapedKey}\\}`;
+			
+			// まず二重波括弧を置換、次に単一波括弧を置換
 			translation = translation.replace(
-				new RegExp(placeholder, "g"),
+				new RegExp(doubleBracePattern, "g"),
+				String(varValue),
+			);
+			translation = translation.replace(
+				new RegExp(singleBracePattern, "g"),
 				String(varValue),
 			);
 		});

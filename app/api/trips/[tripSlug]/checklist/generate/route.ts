@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
 import { checklistGenerator } from "@/lib/checklist-generator";
 import logger from "@/lib/core/logger";
-import {
+import type {
 	PlacesCache,
 	Trip,
 	Day,
@@ -82,7 +83,8 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 			.orderBy("sort_number", "asc")
 			.get();
 
-		const itineraries: Itinerary[] = itinerariesSnapshot.docs.map((doc) => {
+		const itineraries: Itinerary[] = itinerariesSnapshot.docs.map(
+			(doc: QueryDocumentSnapshot) => {
 			const data = doc.data();
 			return {
 				id: doc.id,
@@ -135,7 +137,7 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 		.doc(tripId);
 	const existingChecklistDoc = await checklistRef.get();
 	const existingItems: ChecklistItem[] = existingChecklistDoc.exists
-		? (existingChecklistDoc.data()?.items || [])
+		? existingChecklistDoc.data()?.items || []
 		: [];
 
 	// カスタムアイテムを分離（保持する）
@@ -179,7 +181,8 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 				id: existingItem.id, // 既存のIDを保持
 				done: existingItem.done, // 完了状態を保持
 				userMemo: existingItem.userMemo, // ユーザーメモを保持
-				longDescription: newItem.longDescription || existingItem.longDescription, // 新しく生成されたlongDescriptionを優先
+				longDescription:
+					newItem.longDescription || existingItem.longDescription, // 新しく生成されたlongDescriptionを優先
 			};
 		}
 		// 新規アイテムの場合はそのまま
@@ -191,14 +194,14 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 
 	// undefinedフィールドを除外してFirestoreに保存
 	const sanitizedItems = finalItems.map((item) => {
-		const sanitized: any = { ...item };
+		const sanitized: Record<string, unknown> = { ...item };
 		// undefinedのフィールドを削除（longDescriptionは空文字列でも保持）
 		Object.keys(sanitized).forEach((key) => {
 			if (sanitized[key] === undefined) {
 				delete sanitized[key];
 			}
 		});
-		return sanitized;
+		return sanitized as unknown as ChecklistItem;
 	});
 
 	// デバッグ: longDescriptionが含まれているアイテムをログ出力
@@ -233,7 +236,7 @@ export const POST = authApi(async (request: NextRequest, ctx) => {
 		const tripRef = adminDb.collection(COLLECTIONS.TRIPS).doc(tripId);
 		await tripRef.update({
 			"stats.checklists": sanitizedItems.length,
-		} as any);
+		} as Record<string, unknown>);
 	} catch (e) {
 		logger.warn("Failed to update trip.stats.checklists after generate", {
 			tripId,

@@ -18,9 +18,10 @@ export interface ChecklistCondition {
 }
 
 export interface ChecklistRuleItem {
-	title: string;
-	description?: string;
-	longDescription?: string; // 詳細な説明文（右ペイン用）
+	itemKey: string; // i18nキー用の一意なキー（例: "passport_validity"）
+	title: string; // i18nキー（例: "checklist.items.flight_international_rule.passport_validity.title"）または直接テキスト（後方互換性のため）
+	description?: string; // i18nキーまたは直接テキスト
+	longDescription?: string; // i18nキーまたは直接テキスト（Markdown対応）
 	category: "preparation" | "packing";
 	priority?: "high" | "medium" | "low";
 	links?: ChecklistItemLink[]; // 関連リンク（Amazon、公式サイトなど）

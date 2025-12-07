@@ -1,0 +1,18 @@
+/**
+ * Tripカバー画像用のフォールバックプール
+ * Unsplash画像IDの配列
+ */
+
+export const ACTIVE_COVER_POOL = [
+	"1491557345352-5929e343eb89",
+	"1500530855697-b586d89ba3ee",
+	"1507525428034-b723cf961d3e",
+	"1500048993953-d23a436266cf",
+] as const;
+
+export const UPCOMING_COVER_POOL = [
+	"1508672019048-805c876b67e2",
+	"1526772662000-3f88f10405ff",
+	"1500534314209-a25ddb2bd429",
+] as const;
+

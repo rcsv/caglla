@@ -6,6 +6,16 @@ import type { Trip, TripStatus } from "@/lib/core/types";
 import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
 
 /**
+ * Tripが現在進行中かどうかを判定
+ * @param trip - 判定するTripオブジェクト
+ * @param referenceDate - 基準日時（デフォルト: 現在日時、テスト用に指定可能）
+ * @returns 進行中の場合true
+ */
+export function isTripActive(trip: Trip, referenceDate?: Date): boolean {
+	return getTripStatus(trip, referenceDate) === "ACTIVE";
+}
+
+/**
  * Tripの進行状態を計算する
  *
  * 判定ロジック:

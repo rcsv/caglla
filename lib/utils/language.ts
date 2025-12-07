@@ -167,21 +167,14 @@ export function getUserLanguage(
 		}
 	}
 
-	// 2. ユーザープリファレンスがない場合のブラウザ設定
-	if (typeof window !== "undefined" && typeof navigator !== "undefined") {
-		const browserLang = (navigator.language || "en").split("-")[0];
-		if (isSupportedLanguage(browserLang)) {
+	// 2. ユーザープリファレンスがない場合、ブラウザ言語への自動フォールバックは行わない
+	// （ユーザーが明示的に設定していない場合でも、自動で言語を変更しない）
+	// デフォルト言語を返す
 			logLanguageOnce(
-				"browserPreference",
-				"Language from browser (no user preference):",
-				browserLang,
-			);
-			return browserLang;
-		}
-	}
-
-	// 3. デフォルト
-	logLanguageOnce("default", "Using default language:", DEFAULT_LANGUAGE);
+		"default",
+		"Using default language (no user preference, browser auto-detection disabled):",
+		DEFAULT_LANGUAGE,
+	);
 	return DEFAULT_LANGUAGE;
 }
 

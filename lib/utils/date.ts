@@ -8,6 +8,58 @@ import { t } from "@/lib/i18n";
 import { getUserLanguage } from "@/lib/utils/language";
 import type { SupportedLanguage } from "@/lib/core/types";
 
+/**
+ * 相対時間をフォーマット（例: "45分前", "2時間前", "昨日"）
+ * @param date - フォーマットする日付
+ * @param locale - オプショナルなロケール文字列（指定しない場合はユーザーの言語設定から自動決定）
+ * @returns 相対時間の文字列
+ */
+export function formatRelativeTime(
+	date: Date,
+	locale?: string,
+): string {
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+	const diffMins = Math.floor(diffMs / 60000);
+	const diffHours = Math.floor(diffMs / 3600000);
+	const diffDays = Math.floor(diffMs / 86400000);
+
+	if (diffMins < 1) {
+		return t("home.mainTabs.relativeTime.justNow");
+	} else if (diffMins < 60) {
+		return t("home.mainTabs.relativeTime.minutesAgo", { minutes: diffMins });
+	} else if (diffHours < 24) {
+		return t("home.mainTabs.relativeTime.hoursAgo", { hours: diffHours });
+	} else if (diffDays === 1) {
+		return t("home.mainTabs.relativeTime.yesterday");
+	} else if (diffDays < 7) {
+		return t("home.mainTabs.relativeTime.daysAgo", { days: diffDays });
+	} else {
+		// ロケールが指定されていない場合は、ユーザーの言語設定から決定
+		const actualLocale =
+			locale ||
+			(() => {
+				const lang = getUserLanguage();
+				return lang === "ja" ? "ja-JP" : "en-US";
+			})();
+		return date.toLocaleDateString(actualLocale, { month: "short", day: "numeric" });
+	}
+}
+
+/**
+ * 日付をロケール形式でフォーマット（シンプル版）
+ * @param date - フォーマットする日付（Date、文字列、null、undefined）
+ * @returns フォーマットされた日付文字列、または空文字列
+ */
+export function formatDate(
+	date?: Date | string | null,
+): string {
+	if (!date) return "";
+	const d = typeof date === "string" ? new Date(date) : date;
+	if (isNaN(d.getTime())) return "";
+	return d.toLocaleDateString();
+}
+
 export const dateUtils = {
 	// Check if a date is valid (delegated to timestamp-utils)
 	isValidDate: (date: FirestoreDate | null | undefined): boolean => {
