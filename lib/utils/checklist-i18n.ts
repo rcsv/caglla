@@ -75,10 +75,8 @@ export function resolveChecklistItemText(
 	const descriptionKey = `checklist.items.${actualRuleId}.${actualItemKey}.description`;
 	const longDescriptionKey = `checklist.items.${actualRuleId}.${actualItemKey}.longDescription`;
 
-	// 変数を取得（item.variablesがあれば使用）
-	const variables = item.variables;
-
 	// i18nキーを解決（存在しない場合は元の文字列を返す）
+	// 変数は27行目で既に取得済み
 	const resolvedTitle = tryResolveI18nKey(titleKey, item.title, variables);
 	const resolvedDescription = item.description
 		? tryResolveI18nKey(descriptionKey, item.description, variables)
