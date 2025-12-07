@@ -72,6 +72,7 @@ export interface ChecklistItem {
 	links?: ChecklistItemLink[]; // 関連リンク（Amazon、公式サイトなど）
 	userMemo?: string; // ユーザーが追加できるメモ
 	itemKey?: string; // i18nキー用の一意なキー（マスタデータから取得）
+	variables?: Record<string, string | number>; // i18n変数置換用（例: {count: 3, duration: 5}）
 }
 
 /**

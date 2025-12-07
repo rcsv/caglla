@@ -146,6 +146,7 @@ export class ChecklistGenerator {
 								});
 
 						// アイテムの基本情報を作成
+						// i18nキーの場合、変数（count, duration）を保存してクライアント側で解決
 						const baseItem: Omit<ChecklistItem, "longDescription"> = {
 							id: this.generateId(),
 							title,
@@ -157,6 +158,10 @@ export class ChecklistGenerator {
 							priority: ruleItem.priority || "medium",
 							links: ruleItem.links || [],
 							itemKey: ruleItem.itemKey, // i18nキー解決用
+							// i18nキーの場合、変数を保存（{count}などの置換用）
+							variables: ruleItem.title.startsWith("checklist.items.")
+								? { count, duration: tripDuration }
+								: undefined,
 						};
 
 						// longDescriptionがない場合、Gemini APIで生成を試みる（並列処理用にPromiseを保存）
@@ -171,15 +176,32 @@ export class ChecklistGenerator {
 									generatedFrom: secondaryCategory,
 									language: userLanguage, // ユーザーの言語設定を渡す
 								})
-									.then((result) => result ?? undefined) // nullをundefinedに変換
+									.then((result) => {
+										if (result) {
+											logger.debug("Successfully generated longDescription", {
+												title,
+												length: result.length,
+												language: userLanguage,
+											});
+										} else {
+											logger.warn("longDescription generation returned null", {
+												title,
+												language: userLanguage,
+											});
+										}
+										return result ?? undefined; // nullをundefinedに変換
+									})
 									.catch((error) => {
-										logger.warn(
-											"Failed to generate longDescription with Gemini",
+										logger.error(
+											"Failed to generate longDescription with Gemini (in checklist generator)",
 											{
 												title,
+												language: userLanguage,
+												category: ruleItem.category,
 												error: error instanceof Error
 													? error.message
 													: String(error),
+												stack: error instanceof Error ? error.stack : undefined,
 											},
 										);
 										return undefined;
@@ -204,7 +226,7 @@ export class ChecklistGenerator {
 		const itemsNeedingGeneration = itemPromises.filter(
 			(p) => p.longDescriptionPromise,
 		);
-		logger.debug("ChecklistGenerator: Starting parallel longDescription generation", {
+		logger.info("ChecklistGenerator: Starting parallel longDescription generation", {
 			totalItems: itemPromises.length,
 			itemsNeedingGeneration: itemsNeedingGeneration.length,
 		});
@@ -217,6 +239,16 @@ export class ChecklistGenerator {
 		for (const promise of itemPromises) {
 			if (promise.longDescriptionPromise) {
 				const longDescription = await promise.longDescriptionPromise;
+				if (longDescription) {
+					logger.debug("Added item with generated longDescription", {
+						title: promise.item.title,
+						hasLongDescription: !!longDescription,
+					});
+				} else {
+					logger.warn("Item missing longDescription after generation", {
+						title: promise.item.title,
+					});
+				}
 				itemsWithLongDescription.push({
 					...promise.item,
 					longDescription,
@@ -224,16 +256,36 @@ export class ChecklistGenerator {
 				// 次のリクエストまで間隔を空ける
 				await new Promise((resolve) => setTimeout(resolve, REQUEST_INTERVAL_MS));
 			} else {
-				// longDescriptionが既にある場合
+				// longDescriptionが既にある場合（ハードコードされたもの）
+				logger.debug("Using existing longDescription", {
+					title: promise.item.title,
+					hasLongDescription: !!(promise.item as ChecklistItem).longDescription,
+				});
 				itemsWithLongDescription.push(promise.item as ChecklistItem);
 			}
 		}
 
 		items.push(...itemsWithLongDescription);
 
-		logger.debug("ChecklistGenerator: Completed parallel longDescription generation", {
-			itemsCount: items.length,
+		const itemsWithGeneratedDescription = itemsWithLongDescription.filter(
+			(item) => item.longDescription,
+		).length;
+		const itemsWithoutDescription = itemsWithLongDescription.filter(
+			(item) => !item.longDescription,
+		).length;
+		
+		logger.info("ChecklistGenerator: Completed parallel longDescription generation", {
+			totalItems: itemsWithLongDescription.length,
+			itemsWithGeneratedDescription,
+			itemsWithoutDescription,
 		});
+		
+		if (itemsWithoutDescription > 0) {
+			logger.warn("Some checklist items are missing longDescription", {
+				count: itemsWithoutDescription,
+				message: "Gemini APIの価格上限に達した可能性があります。既存のキャッシュを使用してください。",
+		});
+		}
 
 		// 5. 旅のしおりの印刷用URLを準備物として追加
 		const tripSlug = trip.slug || trip.id;

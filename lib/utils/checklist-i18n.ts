@@ -23,6 +23,9 @@ export function resolveChecklistItemText(
 	description?: string;
 	longDescription?: string;
 } {
+	// 変数を取得（item.variablesがあれば使用）
+	const variables = item.variables;
+
 	// item.titleが既にi18nキーの場合は、それを直接解決
 	if (item.title.startsWith("checklist.items.")) {
 		// i18nキーからruleIdとitemKeyを抽出（例: "checklist.items.lunch_rule.allergy_translation.title"）
@@ -40,23 +43,23 @@ export function resolveChecklistItemText(
 				: `checklist.items.${extractedRuleId}.${extractedItemKey}.longDescription`;
 
 			return {
-				title: tryResolveI18nKey(item.title, item.title),
+				title: tryResolveI18nKey(item.title, item.title, variables),
 				description: item.description
-					? tryResolveI18nKey(descriptionKey, item.description)
+					? tryResolveI18nKey(descriptionKey, item.description, variables)
 					: undefined,
 				longDescription: item.longDescription
-					? tryResolveI18nKey(longDescriptionKey, item.longDescription)
+					? tryResolveI18nKey(longDescriptionKey, item.longDescription, variables)
 					: undefined,
 			};
 		}
 		// パターンが一致しない場合は、そのまま解決を試みる
 		return {
-			title: tryResolveI18nKey(item.title, item.title),
+			title: tryResolveI18nKey(item.title, item.title, variables),
 			description: item.description?.startsWith("checklist.items.")
-				? tryResolveI18nKey(item.description, item.description)
+				? tryResolveI18nKey(item.description, item.description, variables)
 				: item.description,
 			longDescription: item.longDescription?.startsWith("checklist.items.")
-				? tryResolveI18nKey(item.longDescription, item.longDescription)
+				? tryResolveI18nKey(item.longDescription, item.longDescription, variables)
 				: item.longDescription,
 		};
 	}
@@ -72,13 +75,16 @@ export function resolveChecklistItemText(
 	const descriptionKey = `checklist.items.${actualRuleId}.${actualItemKey}.description`;
 	const longDescriptionKey = `checklist.items.${actualRuleId}.${actualItemKey}.longDescription`;
 
+	// 変数を取得（item.variablesがあれば使用）
+	const variables = item.variables;
+
 	// i18nキーを解決（存在しない場合は元の文字列を返す）
-	const resolvedTitle = tryResolveI18nKey(titleKey, item.title);
+	const resolvedTitle = tryResolveI18nKey(titleKey, item.title, variables);
 	const resolvedDescription = item.description
-		? tryResolveI18nKey(descriptionKey, item.description)
+		? tryResolveI18nKey(descriptionKey, item.description, variables)
 		: undefined;
 	const resolvedLongDescription = item.longDescription
-		? tryResolveI18nKey(longDescriptionKey, item.longDescription)
+		? tryResolveI18nKey(longDescriptionKey, item.longDescription, variables)
 		: undefined;
 
 	return {
@@ -90,13 +96,17 @@ export function resolveChecklistItemText(
 
 /**
  * i18nキーを解決を試みる（存在しない場合はフォールバック値を返す）
+ * @param key - i18nキー
+ * @param fallback - フォールバック値
+ * @param variables - 変数置換用のオブジェクト（オプション）
  */
 function tryResolveI18nKey(
 	key: string,
 	fallback: string,
+	variables?: Record<string, string | number>,
 ): string {
 	try {
-		const resolved = t(key as any);
+		const resolved = variables ? t(key as any, variables) : t(key as any);
 		// キーが存在しない場合、t()はキー自体を返す可能性がある
 		// その場合はフォールバックを使用
 		if (resolved === key) {

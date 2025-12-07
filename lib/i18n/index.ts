@@ -74,12 +74,22 @@ export function t(
 	const dict = dictionaries[actualLang] || en;
 	let translation = dict[key];
 
-	// 変数置換: {{variable}} を実際の値に置換
+	// 変数置換: {{variable}} または {variable} を実際の値に置換
 	if (actualVariables) {
 		Object.entries(actualVariables).forEach(([varKey, varValue]) => {
-			const placeholder = `{{${varKey}}}`;
+			// 二重波括弧 {{variable}} と単一波括弧 {variable} の両方に対応
+			// 正規表現でエスケープが必要
+			const escapedKey = varKey.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			const doubleBracePattern = `\\{\\{${escapedKey}\\}\\}`;
+			const singleBracePattern = `\\{${escapedKey}\\}`;
+			
+			// まず二重波括弧を置換、次に単一波括弧を置換
 			translation = translation.replace(
-				new RegExp(placeholder, "g"),
+				new RegExp(doubleBracePattern, "g"),
+				String(varValue),
+			);
+			translation = translation.replace(
+				new RegExp(singleBracePattern, "g"),
 				String(varValue),
 			);
 		});
