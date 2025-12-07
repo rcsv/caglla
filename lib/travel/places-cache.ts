@@ -25,7 +25,7 @@ import { toDateOrNull } from "@/lib/firebase/timestamp-utils";
 import { COLLECTIONS } from "@/lib/firebase/firestore";
 import logger from "@/lib/core/logger";
 import { placesApiHelpers } from "@/lib/api/google/places";
-import { timezoneApiHelpers } from "@/lib/api/google/timezone";
+import { timezoneUtils } from "@/lib/utils/timezone";
 import { DEFAULT_LANGUAGE } from "@/lib/utils/language";
 
 // キャッシュの有効期限設定
@@ -166,25 +166,28 @@ export class PlacesCacheManager {
 				cacheData.editorial_summary = placeData.editorial_summary;
 			if (placeData.reviews) cacheData.reviews = placeData.reviews;
 
-			// Google Timezone APIからタイムゾーン情報を取得
-			// geometry.locationが存在する場合のみ実行
-			if (placeData.geometry?.location?.lat && placeData.geometry?.location?.lng) {
+			// タイムゾーン情報を推定（address_componentsから国コードや都市名を使用）
+			// Google Timezone APIはreferer制限があるため使用しない
+			// 代わりに、既存のtimezoneUtils.getTimezoneFromPlaceを使用
 				try {
-					const timezoneResult = await timezoneApiHelpers.getTimezone(
-						placeData.geometry.location.lat,
-						placeData.geometry.location.lng,
-					);
-					
-					if (timezoneResult?.timeZoneId) {
-						cacheData.timezone = timezoneResult.timeZoneId;
-						// utc_offset_minutesも計算して保存（分単位）
-						const totalOffsetSeconds = timezoneResult.rawOffset + timezoneResult.dstOffset;
-						cacheData.utc_offset_minutes = Math.floor(totalOffsetSeconds / 60);
+				const detectedTimezone = timezoneUtils.getTimezoneFromPlace(placeData);
+				if (detectedTimezone && detectedTimezone !== "UTC") {
+					cacheData.timezone = detectedTimezone;
+					// utc_offset_minutesは計算（分単位）
+					// タイムゾーン名からオフセットを計算
+					try {
+						const offsetMinutes = timezoneUtils.getTimezoneOffset(detectedTimezone);
+						if (offsetMinutes !== 0) {
+							cacheData.utc_offset_minutes = offsetMinutes;
+						}
+					} catch (offsetError) {
+						// オフセット計算に失敗しても、タイムゾーンIDは保存する
+						logger.debug("Failed to calculate UTC offset:", offsetError);
+					}
 					}
 				} catch (error) {
-					// Timezone APIの呼び出しに失敗しても、Places APIのデータは保存する
-					logger.warn("Failed to fetch timezone information:", error);
-				}
+				// タイムゾーン推定に失敗しても、Places APIのデータは保存する
+				logger.warn("Failed to estimate timezone information:", error);
 			}
 
 			// Firestoreに保存（新形式: {place_id}_{language}）

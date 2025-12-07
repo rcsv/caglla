@@ -53,14 +53,33 @@ export async function generateLongDescription(
 
 		// APIリクエスト（新しいSDKのAPI）
 		// モデル名: gemini-2.5-flash または gemini-1.5-flash を使用
+		logger.info("Calling Gemini API", {
+			title,
+			category,
+			language,
+			model: "gemini-2.5-flash",
+		});
+		
 		const response = await ai.models.generateContent({
 			model: "gemini-2.5-flash", // 最新のFlashモデル（公式ドキュメント準拠）
 			contents: prompt,
 		});
+		
+		logger.debug("Gemini API response received", {
+			title,
+			hasResponse: !!response,
+			responseType: typeof response,
+		});
+		
 		const text = response.text;
 
 		if (!text || text.trim().length === 0) {
-			logger.warn("Gemini API returned empty response", { title });
+			logger.warn("Gemini API returned empty response", {
+				title,
+				category,
+				language,
+				response: response ? JSON.stringify(response).substring(0, 200) : "null",
+			});
 			return null;
 		}
 
@@ -74,10 +93,67 @@ export async function generateLongDescription(
 
 		return text;
 	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorStack = error instanceof Error ? error.stack : undefined;
+		
+		// 価格上限やレート制限エラーを検出
+		const isQuotaExceeded =
+			errorMessage.includes("quota") ||
+			errorMessage.includes("Quota") ||
+			errorMessage.includes("QUOTA") ||
+			errorMessage.includes("resource exhausted") ||
+			errorMessage.includes("RESOURCE_EXHAUSTED") ||
+			errorMessage.includes("429") ||
+			errorMessage.includes("rate limit") ||
+			errorMessage.includes("Rate limit");
+		
+		if (isQuotaExceeded) {
+			logger.warn("Gemini API quota/rate limit exceeded", {
+				title,
+				category,
+				language,
+				error: errorMessage,
+				message: "Gemini APIの価格上限またはレート制限に達しました。キャッシュされた説明文を使用します。",
+			});
+		} else {
 		logger.error("Failed to generate longDescription with Gemini", {
 			title,
-			error: error instanceof Error ? error.message : String(error),
+				category,
+				language,
+				error: errorMessage,
+				stack: errorStack,
+				errorType: error instanceof Error ? error.constructor.name : typeof error,
+			});
+		}
+		
+		// エラーの詳細をログに記録（デバッグ用）
+		if (error instanceof Error) {
+			logger.debug("Gemini API error details", {
+				name: error.name,
+				message: error.message,
+				stack: error.stack?.substring(0, 500), // 最初の500文字のみ
+			});
+		}
+		
+		// 価格上限に達した場合でも、他の言語のキャッシュを確認してみる
+		if (isQuotaExceeded && language !== "en") {
+			logger.debug("Checking for cached longDescription in other languages", {
+				title,
+				requestedLanguage: language,
+			});
+			
+			// 英語版のキャッシュを確認
+			const englishCacheKey = `longDescription:${title}:${category}:${generatedFrom || ""}:en`;
+			const englishCached = await getCachedLongDescription(englishCacheKey);
+			if (englishCached) {
+				logger.info("Using cached English longDescription as fallback", {
+					title,
+					requestedLanguage: language,
 		});
+				return englishCached;
+			}
+		}
+		
 		return null;
 	}
 }
