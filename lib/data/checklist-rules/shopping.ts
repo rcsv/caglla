@@ -29,4 +29,28 @@ export const SHOPPING_RULES: ChecklistGenerationRule[] = [
 			},
 		],
 	},
+	{
+		id: "grocery_rule",
+		secondaryCategory: "grocery",
+		items: [
+			{
+				itemKey: "eco_bag",
+				title: "checklist.items.grocery_rule.eco_bag.title",
+				description: "checklist.items.grocery_rule.eco_bag.description",
+				longDescription: "checklist.items.grocery_rule.eco_bag.longDescription",
+				category: "packing",
+				priority: "medium",
+				condition: { type: "always" },
+			},
+			{
+				itemKey: "coin_purse",
+				title: "checklist.items.grocery_rule.coin_purse.title",
+				description: "checklist.items.grocery_rule.coin_purse.description",
+				longDescription: "checklist.items.grocery_rule.coin_purse.longDescription",
+				category: "packing",
+				priority: "medium",
+				condition: { type: "always" },
+			},
+		],
+	},
 ];

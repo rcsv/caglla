@@ -48,7 +48,7 @@ export const TRANSPORTATION_RULES: ChecklistGenerationRule[] = [
 			{
 				itemKey: "eta_application",
 				title: "checklist.items.flight_international_rule.eta_application.title",
-				description: "checklist.items.flight_international_rule.eta_application.description",	
+				description: "checklist.items.flight_international_rule.eta_application.description",
 				longDescription: "checklist.items.flight_international_rule.eta_application.longDescription",
 				category: "preparation",
 				priority: "high",
