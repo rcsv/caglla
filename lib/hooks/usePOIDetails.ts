@@ -10,8 +10,7 @@ import type {
 	AggregatedVenueData,
 	UnifiedReview,
 } from "@/lib/api/venue-aggregator";
-import type { PlaceData } from "@/lib/core/types";
-import type { SupportedLanguage } from "@/lib/i18n";
+import type { PlaceData, SupportedLanguage } from "@/lib/core/types";
 
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 1週間（7日）
 
@@ -39,6 +38,9 @@ export function usePOIDetails(
 
 	// POIキャッシュ（TTL付き）
 	const poiCacheRef = useRef(new Map<string, POICache>());
+
+	// AbortControllerのref（race condition対策）
+	const abortControllerRef = useRef<AbortController | null>(null);
 
 	const cacheImages = useCallback(async (photos: any[]) => {
 		if (!photos || photos.length === 0) return;
@@ -79,9 +81,21 @@ export function usePOIDetails(
 	const fetchPlaceDetails = useCallback(async () => {
 		if (!placeId) return;
 
+		// 既存のリクエストをキャンセル（race condition対策）
+		if (abortControllerRef.current) {
+			abortControllerRef.current.abort();
+		}
+
+		// 新しいAbortControllerを作成
+		const abortController = new AbortController();
+		abortControllerRef.current = abortController;
+
 		// TTLキャッシュチェック（5分間有効）
 		const cached = poiCacheRef.current.get(placeId);
 		if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+			// abortチェック
+			if (abortController.signal.aborted) return;
+
 			logger.debug("✅ Using TTL cached POI data", { placeId });
 			setPlaceDetails(cached.placeDetails);
 			setAggregatedData(cached.aggregatedData);
@@ -92,33 +106,45 @@ export function usePOIDetails(
 				cached.placeDetails.photos.length > 0
 			) {
 				await cacheImages(cached.placeDetails.photos);
+				// abortチェック
+				if (abortController.signal.aborted) return;
 			}
 			return;
 		}
+
+		// abortチェック
+		if (abortController.signal.aborted) return;
 
 		setLoading(true);
 		setError(null);
 
 		try {
+			// abortチェック
+			if (abortController.signal.aborted) return;
+
 			// placeDataがあり、vicinityが存在する場合はそれを使用
 			if (placeData) {
 				if (placeData.vicinity) {
+					// abortチェック
+					if (abortController.signal.aborted) return;
+
 					logger.debug("✅ Using place_data with vicinity from Itinerary");
 					setPlaceDetails(placeData);
 
 					// placeDataのreviewsをunifiedReviews形式に変換
-					let reviews: UnifiedReview[] = [];
+					const reviews: UnifiedReview[] = [];
 					if (placeData.reviews && Array.isArray(placeData.reviews)) {
-						reviews = placeData.reviews.map((review: any) => ({
-							id: review.name || `google-${review.author_name}-${review.time}`,
-							source: "google" as const,
-							author: review.author_name || "Anonymous",
-							rating: review.rating || 0,
-							text: review.text || "",
-							time: review.time,
-							relative_time_description: review.relative_time_description,
-							helpful_votes: undefined,
-						}));
+						for (const review of placeData.reviews) {
+							reviews.push({
+								id: `google-${review.author_name}-${review.time}`,
+								source: "google" as const,
+								author: review.author_name || "Anonymous",
+								rating: review.rating || 0,
+								text: review.text || "",
+								date: review.relative_time_description || "",
+								helpful_votes: undefined,
+							});
+						}
 						setUnifiedReviews(reviews);
 						logger.debug("✅ Google reviews converted from placeData", {
 							count: reviews.length,
@@ -129,9 +155,16 @@ export function usePOIDetails(
 					return;
 				}
 
+				// abortチェック
+				if (abortController.signal.aborted) return;
+
 				// vicinityがない場合はPlacesCacheをチェック
 				logger.debug("⚠️ place_data missing vicinity, checking PlacesCache...");
 				const cachedData = await getCachedPlace(placeId);
+
+				// abortチェック
+				if (abortController.signal.aborted) return;
+
 				if (cachedData && cachedData.vicinity) {
 					logger.debug("✅ Found vicinity in PlacesCache, merging data");
 					const mergedData = {
@@ -144,18 +177,19 @@ export function usePOIDetails(
 					setPlaceDetails(mergedData);
 
 					// マージされたデータのreviewsをunifiedReviews形式に変換
-					let reviews: UnifiedReview[] = [];
+					const reviews: UnifiedReview[] = [];
 					if (mergedData.reviews && Array.isArray(mergedData.reviews)) {
-						reviews = mergedData.reviews.map((review: any) => ({
-							id: review.name || `google-${review.author_name}-${review.time}`,
-							source: "google" as const,
-							author: review.author_name || "Anonymous",
-							rating: review.rating || 0,
-							text: review.text || "",
-							time: review.time,
-							relative_time_description: review.relative_time_description,
-							helpful_votes: undefined,
-						}));
+						for (const review of mergedData.reviews) {
+							reviews.push({
+								id: `google-${review.author_name}-${review.time}`,
+								source: "google" as const,
+								author: review.author_name || "Anonymous",
+								rating: review.rating || 0,
+								text: review.text || "",
+								date: review.relative_time_description || "",
+								helpful_votes: undefined,
+							});
+						}
 						setUnifiedReviews(reviews);
 						logger.debug("✅ Google reviews converted from merged data", {
 							count: reviews.length,
@@ -167,26 +201,34 @@ export function usePOIDetails(
 				}
 			}
 
+			// abortチェック
+			if (abortController.signal.aborted) return;
+
 			logger.debug("🔍 Checking PlacesCache for place_id:", placeId);
 
 			const cachedData = await getCachedPlace(placeId);
+
+			// abortチェック
+			if (abortController.signal.aborted) return;
+
 			if (cachedData) {
 				logger.debug("✅ Found cached data:", cachedData.name);
 				setPlaceDetails(cachedData);
 
 				// PlacesCacheのreviewsをunifiedReviews形式に変換
-				let reviews: UnifiedReview[] = [];
+				const reviews: UnifiedReview[] = [];
 				if (cachedData.reviews && Array.isArray(cachedData.reviews)) {
-					reviews = cachedData.reviews.map((review: any) => ({
-						id: review.name || `google-${review.author_name}-${review.time}`,
-						source: "google" as const,
-						author: review.author_name || "Anonymous",
-						rating: review.rating || 0,
-						text: review.text || "",
-						time: review.time,
-						relative_time_description: review.relative_time_description,
-						helpful_votes: undefined,
-					}));
+					for (const review of cachedData.reviews) {
+						reviews.push({
+							id: `google-${review.author_name}-${review.time}`,
+							source: "google" as const,
+							author: review.author_name || "Anonymous",
+							rating: review.rating || 0,
+							text: review.text || "",
+							date: review.relative_time_description || "",
+							helpful_votes: undefined,
+						});
+					}
 					setUnifiedReviews(reviews);
 					logger.debug("✅ Google reviews converted from cache", {
 						count: reviews.length,
@@ -216,33 +258,44 @@ export function usePOIDetails(
 				language,
 				requiredFields,
 			);
+
+			// abortチェック
+			if (abortController.signal.aborted) return;
+
 			setPlaceDetails(details);
 
 			logger.debug("💾 Saving to PlacesCache...");
 			await placesCacheManager.fetchAndCachePlace(placeId, language);
+
+			// abortチェック
+			if (abortController.signal.aborted) return;
+
 			logger.debug("✅ Data saved to PlacesCache");
 
 			if (details?.photos && details.photos.length > 0) {
 				await cacheImages(details.photos);
+				// abortチェック
+				if (abortController.signal.aborted) return;
 			}
 
 			// TripAdvisor/Foursquare集約は無効化（コスト削減・エラー回避）
 			// Google Places APIのレビューのみ使用
-			let aggregated: AggregatedVenueData | null = null;
-			let reviews: UnifiedReview[] = [];
+			const aggregated: AggregatedVenueData | null = null;
+			const reviews: UnifiedReview[] = [];
 
 			// Google Places APIのレビューをunifiedReviews形式に変換
 			if (details?.reviews && Array.isArray(details.reviews)) {
-				reviews = details.reviews.map((review: any) => ({
-					id: review.name || `google-${review.author_name}-${review.time}`,
-					source: "google" as const,
-					author: review.author_name || "Anonymous",
-					rating: review.rating || 0,
-					text: review.text || "",
-					time: review.time,
-					relative_time_description: review.relative_time_description,
-					helpful_votes: undefined,
-				}));
+				for (const review of details.reviews) {
+					reviews.push({
+						id: `google-${review.author_name}-${review.time}`,
+						source: "google" as const,
+						author: review.author_name || "Anonymous",
+						rating: review.rating || 0,
+						text: review.text || "",
+						date: review.relative_time_description || "",
+						helpful_votes: undefined,
+					});
+				}
 				logger.debug("✅ Google reviews converted to unified format", {
 					count: reviews.length,
 				});
@@ -263,13 +316,23 @@ export function usePOIDetails(
 			});
 			logger.debug("💾 POI data cached", { placeId });
 		} catch (err) {
-			logger.error("POI詳細取得エラー", err);
-			setError("詳細情報の取得に失敗しました");
-			setTimeout(() => {
-				onClose?.();
-			}, 100);
+			// AbortErrorは無視（意図的なキャンセル）
+			if (err instanceof Error && err.name === "AbortError") {
+				return;
+			}
+			// abortされていない場合のみエラーを設定
+			if (!abortController.signal.aborted) {
+				logger.error("POI詳細取得エラー", err);
+				setError("詳細情報の取得に失敗しました");
+				setTimeout(() => {
+					onClose?.();
+				}, 100);
+			}
 		} finally {
-			setLoading(false);
+			// abortされていない場合のみloadingをfalseに
+			if (!abortController.signal.aborted) {
+				setLoading(false);
+			}
 		}
 	}, [placeId, placeData, language, cacheImages, onClose]);
 
@@ -284,6 +347,13 @@ export function usePOIDetails(
 		setError(null);
 
 		void fetchPlaceDetails();
+
+		// クリーンアップ: コンポーネントアンマウント時またはplaceId変更時にリクエストをキャンセル
+		return () => {
+			if (abortControllerRef.current) {
+				abortControllerRef.current.abort();
+			}
+		};
 	}, [placeId, fetchPlaceDetails]);
 
 	return {

@@ -1,10 +1,8 @@
 "use client";
-import logger from "@/lib/core/logger";
 
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import Image from "next/image";
 import { placesApiHelpers } from "@/lib/api/google/places";
-import { Button } from "@/components/common/Button";
 import type { PlaceData } from "@/lib/core/types";
 import { useAuth } from "@/lib/contexts/auth";
 import { getUserLanguage } from "@/lib/utils/language";
@@ -15,6 +13,9 @@ import { parseOpeningHours } from "./utils/parse-opening-hours";
 import { getZoomForPlaceTypes } from "@/lib/travel/map-zoom";
 import { isDevelopment } from "@/lib/core/env-validation";
 import { usePOIDetails } from "@/lib/hooks/usePOIDetails";
+import { usePOIDialogState } from "@/hooks/usePOIDialogState";
+import { getAggregatedPriceLevel } from "@/lib/utils/venue-pricing";
+import { calculatePopupPosition } from "@/lib/utils/popup-position";
 
 interface POIDialogProps {
 	poiData: {
@@ -47,11 +48,8 @@ export default function POIDialog({
 	const { availableDays } = useTrip();
 
 	// placeIdだけを抽出してメモ化（poiDataオブジェクトの参照変更を無視）
-	const currentPlaceId = useMemo(() => poiData?.placeId, [poiData?.placeId]);
-	const currentPlaceData = useMemo(
-		() => poiData?.placeData,
-		[poiData?.placeId, poiData?.placeData],
-	);
+	const currentPlaceId = poiData?.placeId;
+	const currentPlaceData = poiData?.placeData;
 
 	// データ取得をカスタムhookに委譲
 	const {
@@ -64,42 +62,9 @@ export default function POIDialog({
 		imageLoading,
 	} = usePOIDetails(currentPlaceId, currentPlaceData, language, onClose);
 
-	// UI状態
-	const [showDaySelector, setShowDaySelector] = useState(false);
-	const [showAllHours, setShowAllHours] = useState(false);
-	const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-	const [popupPosition, setPopupPosition] = useState<"bottom" | "top">(
-		"bottom",
-	);
-	const [showAllReviews, setShowAllReviews] = useState(false);
-	const [showImageGallery, setShowImageGallery] = useState(false);
-	const hoursRef = useRef<HTMLDivElement>(null);
-	const buttonRef = useRef<HTMLButtonElement>(null);
-	const popupRef = useRef<HTMLDivElement>(null);
-
-	// 集約された価格レベルを計算（メモ化）
-	const getAggregatedPriceLevel = (
-		data: typeof aggregatedData,
-	): number | null => {
-		if (!data) return null;
-
-		// Google Placesの価格レベル
-		if (data.google?.price_level) {
-			return data.google.price_level;
-		}
-
-		// TripAdvisorの価格レベル（文字列 "$" - "$$$$"）
-		if (data.tripAdvisor?.details?.price_level) {
-			return data.tripAdvisor.details.price_level.length;
-		}
-
-		// Foursquareの価格レベル（数値 1-4）
-		if (data.foursquare?.details?.price) {
-			return data.foursquare.details.price;
-		}
-
-		return null;
-	};
+	// UI状態管理（useReducer版）
+	const { state, dispatch, buttonRef, popupRef } =
+		usePOIDialogState(currentPlaceId);
 
 	// 価格レベルをメモ化
 	const priceLevel = useMemo(
@@ -107,19 +72,12 @@ export default function POIDialog({
 		[aggregatedData],
 	);
 
-	// placeIdが変わった時にUI状態をリセット
-	useEffect(() => {
-		setCurrentPhotoIndex(0);
-		setShowAllReviews(false);
-		setShowImageGallery(false);
-	}, [currentPlaceId]);
-
 	if (!poiData) return null;
 
 	const handleAddToDay = (dayId: string) => {
 		if (onAddToItinerary) {
 			onAddToItinerary(poiData.placeId, dayId);
-			setShowDaySelector(false);
+			dispatch({ type: "TOGGLE_DAY_SELECTOR" });
 		}
 	};
 
@@ -127,45 +85,31 @@ export default function POIDialog({
 	const debugZoomLevel = getZoomForPlaceTypes(zoomTypes);
 	const showZoomDebugInfo = isDevelopment();
 
-	// ポップアップの表示位置を計算する関数
-	const calculatePopupPosition = () => {
-		if (!buttonRef.current) return "bottom";
-
-		const buttonRect = buttonRef.current.getBoundingClientRect();
-		const viewportHeight = window.innerHeight;
-		const buttonBottom = buttonRect.bottom;
-		const estimatedPopupHeight = Math.min(
-			(availableDays?.length ?? 0) * 60 + 40,
-			300,
-		); // 最大300px
-
-		// ボタンの下に十分なスペースがあるかチェック
-		if (buttonBottom + estimatedPopupHeight < viewportHeight - 20) {
-			return "bottom";
-		} else {
-			return "top";
-		}
-	};
-
 	// ポップアップ表示時の位置調整
 	const handleToggleDaySelector = () => {
-		if (!showDaySelector) {
-			const position = calculatePopupPosition();
-			setPopupPosition(position);
+		if (!state.showDaySelector) {
+			const position = calculatePopupPosition({
+				buttonElement: buttonRef.current,
+				estimatedPopupHeight: Math.min(
+					(availableDays?.length ?? 0) * 60 + 40,
+					300,
+				),
+			});
+			dispatch({ type: "SET_POPUP_POSITION", position });
 		}
-		setShowDaySelector(!showDaySelector);
+		dispatch({ type: "TOGGLE_DAY_SELECTOR" });
 	};
 
 	// イメージギャラリーを開く
 	const handleOpenImageGallery = () => {
 		if (placeDetails?.photos && placeDetails.photos.length > 0) {
-			setShowImageGallery(true);
+			dispatch({ type: "SHOW_GALLERY", show: true });
 		}
 	};
 
 	// イメージギャラリーを閉じる
 	const handleCloseImageGallery = () => {
-		setShowImageGallery(false);
+		dispatch({ type: "SHOW_GALLERY", show: false });
 	};
 
 	// 営業時間の解析（言語設定とタイムゾーンを渡す）
@@ -249,6 +193,7 @@ export default function POIDialog({
 						{onAddToItinerary && availableDays && availableDays.length > 0 && (
 							<div className="relative">
 								<button
+									type="button"
 									ref={buttonRef}
 									onClick={handleToggleDaySelector}
 									className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
@@ -279,6 +224,7 @@ export default function POIDialog({
 											<div className="max-h-[240px] overflow-y-auto scrollbar-hide">
 												{availableDays.map((day) => (
 													<button
+														type="button"
 														key={day.id}
 														onClick={() => handleAddToDay(day.id)}
 														className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded transition-colors"
@@ -300,6 +246,7 @@ export default function POIDialog({
 							</div>
 						)}
 						<button
+							type="button"
 							onClick={onClose}
 							className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
 							aria-label={t("common.close")}
@@ -492,8 +439,12 @@ export default function POIDialog({
 									<div className="relative">
 										<div
 											className="flex items-center space-x-2 text-xs cursor-pointer"
-											onMouseEnter={() => setShowAllHours(true)}
-											onMouseLeave={() => setShowAllHours(false)}
+											onMouseEnter={() =>
+												dispatch({ type: "SHOW_ALL_HOURS", show: true })
+											}
+											onMouseLeave={() =>
+												dispatch({ type: "SHOW_ALL_HOURS", show: false })
+											}
 										>
 											<span
 												className={
@@ -534,7 +485,7 @@ export default function POIDialog({
 										</div>
 
 										{/* ホバー時に全営業時間を表示 */}
-										{showAllHours && (
+										{state.showAllHours && (
 											<div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg p-2 zidx-float-modal-content min-w-[200px] z-50">
 												<div className="space-y-0.5 text-xs text-gray-700">
 													{openingHoursInfo.weekdayText.map(
@@ -583,10 +534,16 @@ export default function POIDialog({
 											</h4>
 											{unifiedReviews.length > 3 && (
 												<button
-													onClick={() => setShowAllReviews(!showAllReviews)}
+													type="button"
+													onClick={() =>
+														dispatch({
+															type: "SHOW_REVIEWS",
+															show: !state.showAllReviews,
+														})
+													}
 													className="text-xs text-blue-600 hover:text-blue-700"
 												>
-													{showAllReviews
+													{state.showAllReviews
 														? t("poi.showPartial")
 														: t("poi.showAll").replace(
 																"{count}",
@@ -595,7 +552,7 @@ export default function POIDialog({
 												</button>
 											)}
 										</div>
-										{(showAllReviews
+										{(state.showAllReviews
 											? unifiedReviews
 											: unifiedReviews.slice(0, 3)
 										).map((review) => (
@@ -682,9 +639,9 @@ export default function POIDialog({
 											className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group hover:opacity-90 transition-opacity"
 											onClick={handleOpenImageGallery}
 										>
-											{cachedImages[currentPhotoIndex] ? (
+											{cachedImages[state.currentPhotoIndex] ? (
 												<Image
-													src={cachedImages[currentPhotoIndex].url}
+													src={cachedImages[state.currentPhotoIndex].url}
 													alt={t("poi.photoOf").replace("{name}", poiData.name)}
 													width={144}
 													height={144}
@@ -694,7 +651,7 @@ export default function POIDialog({
 														// キャッシュされた画像が読み込めない場合は、元のGoogle Photo URLにフォールバック
 														const target = e.target as HTMLImageElement;
 														target.src = placesApiHelpers.getPhotoUrl(
-															placeDetails.photos[currentPhotoIndex]
+															placeDetails.photos[state.currentPhotoIndex]
 																.photo_reference,
 															300,
 														);
@@ -709,7 +666,7 @@ export default function POIDialog({
 													) : (
 														<Image
 															src={placesApiHelpers.getPhotoUrl(
-																placeDetails.photos[currentPhotoIndex]
+																placeDetails.photos[state.currentPhotoIndex]
 																	.photo_reference,
 																300,
 															)}
@@ -734,7 +691,7 @@ export default function POIDialog({
 												</div>
 											)}
 											{/* キャッシュ状態インジケーター */}
-											{cachedImages[currentPhotoIndex]?.cached && (
+											{cachedImages[state.currentPhotoIndex]?.cached && (
 												<div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
 													{t("poi.cached")}
 												</div>
@@ -770,6 +727,7 @@ export default function POIDialog({
 								<div className="flex flex-col gap-2">
 									{placeDetails.formatted_phone_number && (
 										<button
+											type="button"
 											onClick={() =>
 												window.open(
 													`tel:${placeDetails.formatted_phone_number}`,
@@ -794,6 +752,7 @@ export default function POIDialog({
 									)}
 									{placeDetails.website && (
 										<button
+											type="button"
 											onClick={() =>
 												window.open(
 													placeDetails.website,
@@ -829,6 +788,7 @@ export default function POIDialog({
 									)}
 									{placeDetails.url && (
 										<button
+											type="button"
 											onClick={() =>
 												window.open(
 													placeDetails.url,
@@ -862,11 +822,11 @@ export default function POIDialog({
 			{/* イメージギャラリーモーダル */}
 			{placeDetails?.photos && placeDetails.photos.length > 0 && (
 				<ImageGalleryModal
-					isOpen={showImageGallery}
+					isOpen={state.showImageGallery}
 					onClose={handleCloseImageGallery}
 					images={placeDetails.photos}
 					placeName={poiData.name}
-					initialIndex={currentPhotoIndex}
+					initialIndex={state.currentPhotoIndex}
 				/>
 			)}
 		</div>
