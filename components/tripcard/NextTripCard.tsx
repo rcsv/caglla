@@ -1,15 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import TripCard from "@/components/tripcard/TripCard";
-import CreateTripDialog from "@/components/common/CreateTripDialog";
-import { Button } from "@/components/common/Button";
-import { useUserData } from "@/lib/contexts/user-data";
-import {
-	RestrictionProvider,
-	RestrictionType,
-} from "@/lib/subscription/restriction";
 import { IconRenderer } from "@/components/common/icons/IconRenderer";
 import type { Trip } from "@/lib/core/types";
 import { t } from "@/lib/i18n";
@@ -24,61 +15,21 @@ export default function NextTripCard({
 	nextTrip,
 	onTripCreated,
 }: NextTripCardProps) {
-	const router = useRouter();
-	const { userPlanId, tripCount } = useUserData();
-	const [isCreateTripDialogOpen, setIsCreateTripDialogOpen] = useState(false);
-
-	// RestrictionProviderを使用してプラン制限をチェック
-	const canCreateTrip = RestrictionProvider.can(
-		userPlanId,
-		RestrictionType.MAX_TRIPS,
-		tripCount + 1,
-	);
-	const limitExceededMessage = RestrictionProvider.getLimitExceededMessage(
-		userPlanId,
-		RestrictionType.MAX_TRIPS,
-		tripCount + 1,
-	);
-
-	const handleTripCreated = () => {
-		onTripCreated();
-		setIsCreateTripDialogOpen(false);
-	};
-
-	const handleCreateTripClick = () => {
-		if (!canCreateTrip) {
-			alert(limitExceededMessage);
-			return;
-		}
-		setIsCreateTripDialogOpen(true);
-	};
-
 	return (
 		<>
 			{/* メインコンテンツエリア */}
 			<div className="bg-white rounded-sm border border-gray-200 p-6">
-				<div className="flex justify-between items-center mb-6">
-					<div>
-						<h2 className="text-2xl font-bold text-gray-900 mb-2">
-							{nextTrip
-								? t("home.dashboard.nextTrip.title")
-								: t("home.dashboard.nextTrip.createNew")}
-						</h2>
-						<p className="text-gray-600">
-							{nextTrip
-								? t("home.dashboard.nextTrip.description")
-								: t("home.dashboard.nextTrip.createDescription")}
-						</p>
-					</div>
-					<Button
-						variant="primary"
-						onClick={handleCreateTripClick}
-						disabled={!canCreateTrip}
-					>
+				<div className="mb-6">
+					<h2 className="text-2xl font-bold text-gray-900 mb-2">
 						{nextTrip
-							? t("home.dashboard.nextTrip.createNew")
-							: t("home.dashboard.nextTrip.create")}
-					</Button>
+							? t("home.dashboard.nextTrip.title")
+							: t("home.dashboard.nextTrip.createNew")}
+					</h2>
+					<p className="text-gray-600">
+						{nextTrip
+							? t("home.dashboard.nextTrip.description")
+							: t("home.dashboard.nextTrip.createDescription")}
+					</p>
 				</div>
 
 				{/* コンテンツエリア - 6:4の比率に変更 */}
@@ -101,13 +52,6 @@ export default function NextTripCard({
 								<p className="text-gray-600 text-center mb-6">
 									{t("home.dashboard.nextTrip.empty.description")}
 								</p>
-								<Button
-									variant="primary"
-									onClick={handleCreateTripClick}
-									disabled={!canCreateTrip}
-								>
-									{t("home.dashboard.nextTrip.create")}
-								</Button>
 							</div>
 						)}
 					</div>
@@ -143,13 +87,6 @@ export default function NextTripCard({
 					</div>
 				</div>
 			</div>
-
-			{/* 旅行作成ダイアログ */}
-			<CreateTripDialog
-				isOpen={isCreateTripDialogOpen}
-				onClose={() => setIsCreateTripDialogOpen(false)}
-				onSuccess={handleTripCreated}
-			/>
 		</>
 	);
 }
