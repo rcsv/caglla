@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import Image from "next/image";
-import { placesApiHelpers } from "@/lib/api/google/places";
 import type { PlaceData } from "@/lib/core/types";
 import { useAuth } from "@/lib/contexts/auth";
 import { getUserLanguage } from "@/lib/utils/language";
@@ -15,7 +13,8 @@ import { isDevelopment } from "@/lib/core/env-validation";
 import { usePOIDetails } from "@/lib/hooks/usePOIDetails";
 import { usePOIDialogState } from "@/hooks/usePOIDialogState";
 import { getAggregatedPriceLevel } from "@/lib/utils/venue-pricing";
-import { calculatePopupPosition } from "@/lib/utils/popup-position";
+import { POIDialogHeader } from "@/components/poi/POIDialogHeader";
+import { POIDialogBody } from "@/components/poi/POIDialogBody";
 
 interface POIDialogProps {
 	poiData: {
@@ -67,38 +66,32 @@ export default function POIDialog({
 		usePOIDialogState(currentPlaceId);
 
 	// 価格レベルをメモ化
-	const priceLevel = useMemo(
-		() => getAggregatedPriceLevel(aggregatedData),
-		[aggregatedData],
-	);
+	const priceLevel = useMemo(() => {
+		if (!aggregatedData) return null;
+		// AggregatedVenueDataからprice_levelを抽出
+		const priceData = {
+			google: aggregatedData.google
+				? { price_level: aggregatedData.google.price_level }
+				: undefined,
+			tripAdvisor: aggregatedData.tripAdvisor
+				? {
+						details: {
+							price_level: aggregatedData.tripAdvisor.details?.price_level,
+						},
+					}
+				: undefined,
+			foursquare: aggregatedData.foursquare
+				? {
+						details: {
+							price: aggregatedData.foursquare.details?.price,
+						},
+					}
+				: undefined,
+		};
+		return getAggregatedPriceLevel(priceData);
+	}, [aggregatedData]);
 
 	if (!poiData) return null;
-
-	const handleAddToDay = (dayId: string) => {
-		if (onAddToItinerary) {
-			onAddToItinerary(poiData.placeId, dayId);
-			dispatch({ type: "TOGGLE_DAY_SELECTOR" });
-		}
-	};
-
-	const zoomTypes = placeDetails?.types ?? poiData.placeData?.types ?? null;
-	const debugZoomLevel = getZoomForPlaceTypes(zoomTypes);
-	const showZoomDebugInfo = isDevelopment();
-
-	// ポップアップ表示時の位置調整
-	const handleToggleDaySelector = () => {
-		if (!state.showDaySelector) {
-			const position = calculatePopupPosition({
-				buttonElement: buttonRef.current,
-				estimatedPopupHeight: Math.min(
-					(availableDays?.length ?? 0) * 60 + 40,
-					300,
-				),
-			});
-			dispatch({ type: "SET_POPUP_POSITION", position });
-		}
-		dispatch({ type: "TOGGLE_DAY_SELECTOR" });
-	};
 
 	// イメージギャラリーを開く
 	const handleOpenImageGallery = () => {
@@ -131,692 +124,58 @@ export default function POIDialog({
 		t("poi.weekday.saturdayShort", language),
 	];
 
-	// ティアドロップマーカー（地図と同じスタイル）
-	const TeardropMarker = ({ number }: { number?: number }) => (
-		<div
-			className="relative inline-block"
-			style={{ width: "26px", height: "26px" }}
-		>
-			<div
-				className="absolute"
-				style={{
-					width: "26px",
-					height: "26px",
-					backgroundColor: "#006400",
-					borderRadius: "50% 50% 50% 0",
-					transform: "rotate(-45deg)",
-					boxShadow: "1px 1px 3px rgba(0, 0, 0, 0.4)",
-				}}
-			/>
-			{number !== undefined && (
-				<div
-					className="absolute text-white font-bold text-xs"
-					style={{
-						top: "50%",
-						left: "50%",
-						transform: "translate(-50%, -50%)",
-					}}
-				>
-					{number}
-				</div>
-			)}
-		</div>
-	);
+	const zoomTypes = placeDetails?.types ?? poiData.placeData?.types ?? null;
+	const debugZoomLevel = getZoomForPlaceTypes(zoomTypes);
+	const showZoomDebugInfo = isDevelopment();
 
 	return (
 		<div
 			className={`absolute bottom-4 left-4 right-4 zidx-float-modal ${className}`}
 		>
 			<div className="bg-white border-t border-gray-200 shadow-lg rounded-t-lg w-full">
-				{/* ヘッダー */}
-				<div className="flex items-center justify-between p-4 border-b border-gray-200">
-					<div className="flex items-center space-x-2 flex-1 min-w-0">
-						<div className="flex-shrink-0">
-							<TeardropMarker number={poiData.orderNumber} />
-						</div>
-						<div
-							className={`flex-1 min-w-0 ${!placeDetails?.vicinity ? "flex items-center" : ""}`}
-						>
-							<div>
-								<h3 className="text-xl font-bold text-gray-900 leading-tight">
-									{poiData.name}
-								</h3>
-								{placeDetails?.vicinity && (
-									<p className="text-sm text-gray-600 mt-0.5">
-										{placeDetails.vicinity}
-									</p>
-								)}
-							</div>
-						</div>
-					</div>
-					<div className="flex items-center space-x-1 ml-2">
-						{onAddToItinerary && availableDays && availableDays.length > 0 && (
-							<div className="relative">
-								<button
-									type="button"
-									ref={buttonRef}
-									onClick={handleToggleDaySelector}
-									className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm"
-									aria-label={t("poi.addToItinerary")}
-								>
-									<svg
-										className="w-4 h-4"
-										fill="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-									</svg>
-									<span>{t("poi.addToItinerary")}</span>
-								</button>
-								{showDaySelector && (
-									<div
-										ref={popupRef}
-										className={`absolute right-0 bg-white border border-gray-200 rounded-lg shadow-lg zidx-float-modal-content min-w-[200px] max-h-[300px] overflow-y-auto scrollbar-hide ${
-											popupPosition === "bottom"
-												? "top-full mt-1"
-												: "bottom-full mb-1"
-										}`}
-									>
-										<div className="p-2">
-											<div className="text-xs font-medium text-gray-500 px-2 py-1 sticky top-0 bg-white border-b border-gray-100">
-												{t("poi.daySelector.title")}
-											</div>
-											<div className="max-h-[240px] overflow-y-auto scrollbar-hide">
-												{availableDays.map((day) => (
-													<button
-														type="button"
-														key={day.id}
-														onClick={() => handleAddToDay(day.id)}
-														className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 rounded transition-colors"
-													>
-														<div className="font-medium text-gray-900">
-															{day.date}
-														</div>
-														{day.title && (
-															<div className="text-xs text-gray-600">
-																{day.title}
-															</div>
-														)}
-													</button>
-												))}
-											</div>
-										</div>
-									</div>
-								)}
-							</div>
-						)}
-						<button
-							type="button"
-							onClick={onClose}
-							className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-							aria-label={t("common.close")}
-						>
-							<svg
-								className="w-5 h-5 text-gray-500"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M6 18L18 6M6 6l12 12"
-								/>
-							</svg>
-						</button>
-					</div>
-				</div>
+				<POIDialogHeader
+					name={poiData.name}
+					vicinity={placeDetails?.vicinity}
+					orderNumber={poiData.orderNumber}
+					onClose={onClose}
+					onAddToItinerary={onAddToItinerary}
+					availableDays={availableDays}
+					showDaySelector={state.showDaySelector}
+					popupPosition={state.popupPosition}
+					buttonRef={buttonRef}
+					popupRef={popupRef}
+					dispatch={dispatch}
+					placeId={poiData.placeId}
+					language={language}
+				/>
 
-				{/* コンテンツ */}
-				<div className="p-5 max-h-80 overflow-y-auto scrollbar-hide rounded-b-lg">
-					{loading ? (
-						<div className="flex items-center justify-center py-8">
-							<div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-							<span className="ml-2 text-sm text-gray-600">
-								{t("poi.loadingInfo")}
-							</span>
-						</div>
-					) : error ? (
-						<div className="text-center py-8">
-							<div className="text-red-500 text-sm">
-								{t("poi.errorMessage")}
-							</div>
-						</div>
-					) : placeDetails ? (
-						<div className="flex gap-4">
-							{/* メインコンテンツ */}
-							<div className="flex-1 space-y-4 text-sm">
-								{/* 価格帯と評価 */}
-								<div className="flex items-center flex-wrap gap-4">
-									{/* 統合された評価情報 */}
-									{aggregatedData?.aggregatedRating ? (
-										<div className="flex items-center space-x-1.5">
-											<div className="flex items-center">
-												{[...Array(5)].map((_, i) => (
-													<svg
-														key={i}
-														className={`w-3.5 h-3.5 ${
-															i <
-															Math.floor(
-																aggregatedData.aggregatedRating!.averageRating,
-															)
-																? "text-yellow-400"
-																: "text-gray-300"
-														}`}
-														fill="currentColor"
-														viewBox="0 0 20 20"
-													>
-														<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-													</svg>
-												))}
-											</div>
-											<span className="text-gray-700 font-medium">
-												{aggregatedData.aggregatedRating.averageRating.toFixed(
-													1,
-												)}
-											</span>
-											<span className="text-gray-500 text-xs">
-												(
-												{t("poi.reviewCount", language).replace(
-													"{count}",
-													aggregatedData.aggregatedRating.totalReviews.toLocaleString(),
-												)}
-												)
-											</span>
-											<div className="flex items-center gap-1 ml-1">
-												{aggregatedData.aggregatedRating.sources.map(
-													(source, idx) => (
-														<span
-															key={idx}
-															className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600"
-															title={`${source.source}: ${source.rating} ${t("poi.reviewCount", language).replace("{count}", source.reviewCount.toString())}`}
-														>
-															{source.source === "google" && (
-																<svg
-																	className="w-3.5 h-3.5"
-																	viewBox="0 0 24 24"
-																	fill="none"
-																	stroke="currentColor"
-																>
-																	<path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
-																	<path d="M8.9 4.4v12.9" />
-																	<path d="M14.1 6.5v12.9" />
-																</svg>
-															)}
-															{source.source === "tripadvisor" && "🦉"}
-															{source.source === "foursquare" && (
-																<svg
-																	className="w-3.5 h-3.5"
-																	viewBox="0 0 24 24"
-																	fill="none"
-																	stroke="currentColor"
-																>
-																	<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-																	<circle
-																		cx="12"
-																		cy="9"
-																		r="2"
-																		fill="currentColor"
-																	/>
-																</svg>
-															)}
-														</span>
-													),
-												)}
-											</div>
-										</div>
-									) : (
-										placeDetails.rating && (
-											<div className="flex items-center space-x-1.5">
-												<div className="flex items-center">
-													{[...Array(5)].map((_, i) => (
-														<svg
-															key={i}
-															className={`w-3.5 h-3.5 ${
-																i < Math.floor(placeDetails.rating)
-																	? "text-yellow-400"
-																	: "text-gray-300"
-															}`}
-															fill="currentColor"
-															viewBox="0 0 20 20"
-														>
-															<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-														</svg>
-													))}
-												</div>
-												<span className="text-gray-700 font-medium">
-													{placeDetails.rating}
-												</span>
-												{placeDetails.user_ratings_total && (
-													<span className="text-gray-500 text-xs">
-														(
-														{t("poi.reviewCount", language).replace(
-															"{count}",
-															placeDetails.user_ratings_total.toLocaleString(),
-														)}
-														)
-													</span>
-												)}
-											</div>
-										)
-									)}
-
-									{/* 統合された価格情報 */}
-									{priceLevel && (
-										<span className="text-gray-700 font-medium">
-											{"¥".repeat(priceLevel)}
-										</span>
-									)}
-								</div>
-
-								{/* タグ（Types） */}
-								{placeDetails.types && placeDetails.types.length > 0 && (
-									<div className="flex flex-wrap gap-2">
-										{placeDetails.types
-											.filter((type: string) => type !== "point_of_interest") // point_of_interestを除外
-											.slice(0, 5)
-											.map((type: string, index: number) => (
-												<span
-													key={index}
-													className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
-												>
-													{type.replace(/_/g, " ")}
-												</span>
-											))}
-									</div>
-								)}
-
-								{/* 概要（Editorial Summary） */}
-								{placeDetails.editorial_summary?.overview && (
-									<p className="text-gray-700 leading-relaxed">
-										{placeDetails.editorial_summary.overview}
-									</p>
-								)}
-
-								{/* 営業時間 */}
-								{openingHoursInfo && (
-									<div className="relative">
-										<div
-											className="flex items-center space-x-2 text-xs cursor-pointer"
-											onMouseEnter={() =>
-												dispatch({ type: "SHOW_ALL_HOURS", show: true })
-											}
-											onMouseLeave={() =>
-												dispatch({ type: "SHOW_ALL_HOURS", show: false })
-											}
-										>
-											<span
-												className={
-													openingHoursInfo.isOpen
-														? "text-green-600 font-medium"
-														: openingHoursInfo.openingSoon
-															? "text-orange-600 font-medium"
-															: "text-red-600 font-medium"
-												}
-											>
-												{openingHoursInfo.isOpen
-													? t("poi.openingHours.open", language)
-													: openingHoursInfo.openingSoon
-														? t("poi.openingHours.openingSoon", language)
-														: t("poi.openingHours.closed", language)}
-											</span>
-											{openingHoursInfo.currentHours && (
-												<span className="text-gray-600">
-													{openingHoursInfo.currentHours}
-												</span>
-											)}
-											<span className="text-gray-400">|</span>
-											<div className="flex space-x-1 font-mono text-xs">
-												{dayLabels.map((day, index) => {
-													// Google APIは月曜始まりなので、インデックスを調整
-													const apiIndex = index === 0 ? 6 : index - 1;
-													const isOpen = openingHoursInfo.openDays[apiIndex];
-													return (
-														<span
-															key={index}
-															className={`${isOpen ? "text-gray-700" : "text-gray-300"}`}
-														>
-															{day}
-														</span>
-													);
-												})}
-											</div>
-										</div>
-
-										{/* ホバー時に全営業時間を表示 */}
-										{state.showAllHours && (
-											<div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg p-2 zidx-float-modal-content min-w-[200px] z-50">
-												<div className="space-y-0.5 text-xs text-gray-700">
-													{openingHoursInfo.weekdayText.map(
-														(day: string, index: number) => (
-															<div key={index}>{day}</div>
-														),
-													)}
-												</div>
-											</div>
-										)}
-									</div>
-								)}
-
-								{/* 営業状況（business_status） */}
-								{placeDetails.business_status &&
-									placeDetails.business_status !== "OPERATIONAL" && (
-										<div className="flex items-center space-x-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-											<svg
-												className="w-3.5 h-3.5 text-yellow-600"
-												fill="currentColor"
-												viewBox="0 0 20 20"
-											>
-												<path
-													fillRule="evenodd"
-													d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-													clipRule="evenodd"
-												/>
-											</svg>
-											<span className="text-yellow-800">
-												{placeDetails.business_status ===
-													"CLOSED_TEMPORARILY" &&
-													t("poi.businessStatus.temporarilyClosed", language)}
-												{placeDetails.business_status ===
-													"CLOSED_PERMANENTLY" &&
-													t("poi.businessStatus.permanentlyClosed", language)}
-											</span>
-										</div>
-									)}
-
-								{/* 統合レビュー（Google + TripAdvisor + Foursquare） */}
-								{unifiedReviews.length > 0 && (
-									<div className="space-y-3">
-										<div className="flex items-center justify-between">
-											<h4 className="text-xs font-semibold text-gray-700">
-												{t("poi.reviewsAndTips")}
-											</h4>
-											{unifiedReviews.length > 3 && (
-												<button
-													type="button"
-													onClick={() =>
-														dispatch({
-															type: "SHOW_REVIEWS",
-															show: !state.showAllReviews,
-														})
-													}
-													className="text-xs text-blue-600 hover:text-blue-700"
-												>
-													{state.showAllReviews
-														? t("poi.showPartial")
-														: t("poi.showAll").replace(
-																"{count}",
-																unifiedReviews.length.toString(),
-															)}
-												</button>
-											)}
-										</div>
-										{(state.showAllReviews
-											? unifiedReviews
-											: unifiedReviews.slice(0, 3)
-										).map((review) => (
-											<div
-												key={review.id}
-												className="text-xs border-l-2 border-gray-200 pl-3 py-1"
-											>
-												<div className="flex items-center justify-between mb-1.5">
-													<div className="flex items-center gap-1.5">
-														<span className="font-medium text-gray-900">
-															{review.author}
-														</span>
-														<span className="text-xs text-gray-400">
-															{review.source === "google" && (
-																<svg
-																	className="w-3 h-3"
-																	viewBox="0 0 24 24"
-																	fill="none"
-																	stroke="currentColor"
-																>
-																	<path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
-																	<path d="M8.9 4.4v12.9" />
-																	<path d="M14.1 6.5v12.9" />
-																</svg>
-															)}
-															{review.source === "tripadvisor" && "🦉"}
-															{review.source === "foursquare" && (
-																<svg
-																	className="w-3 h-3"
-																	viewBox="0 0 24 24"
-																	fill="none"
-																	stroke="currentColor"
-																>
-																	<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-																	<circle
-																		cx="12"
-																		cy="9"
-																		r="2"
-																		fill="currentColor"
-																	/>
-																</svg>
-															)}
-														</span>
-													</div>
-													{review.rating && (
-														<div className="flex items-center space-x-0.5">
-															<svg
-																className="w-3 h-3 text-yellow-400"
-																fill="currentColor"
-																viewBox="0 0 20 20"
-															>
-																<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-															</svg>
-															<span className="text-gray-600">
-																{review.rating}
-															</span>
-														</div>
-													)}
-												</div>
-												<p className="text-gray-700 line-clamp-2 leading-relaxed">
-													{review.text}
-												</p>
-												{review.helpful_votes && review.helpful_votes > 0 && (
-													<div className="mt-1 text-xs text-gray-500">
-														👍{" "}
-														{t("poi.helpfulVotes").replace(
-															"{count}",
-															review.helpful_votes.toString(),
-														)}
-													</div>
-												)}
-											</div>
-										))}
-									</div>
-								)}
-							</div>
-
-							{/* 画像・連絡先エリア（右サイド） */}
-							<div className="w-36 flex-shrink-0 space-y-3">
-								{/* 画像 */}
-								{placeDetails.photos && placeDetails.photos.length > 0 && (
-									<>
-										<div
-											className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group hover:opacity-90 transition-opacity"
-											onClick={handleOpenImageGallery}
-										>
-											{cachedImages[state.currentPhotoIndex] ? (
-												<Image
-													src={cachedImages[state.currentPhotoIndex].url}
-													alt={t("poi.photoOf").replace("{name}", poiData.name)}
-													width={144}
-													height={144}
-													className="w-full h-full object-cover"
-													unoptimized
-													onError={(e) => {
-														// キャッシュされた画像が読み込めない場合は、元のGoogle Photo URLにフォールバック
-														const target = e.target as HTMLImageElement;
-														target.src = placesApiHelpers.getPhotoUrl(
-															placeDetails.photos[state.currentPhotoIndex]
-																.photo_reference,
-															300,
-														);
-													}}
-												/>
-											) : (
-												<div className="w-full h-full flex items-center justify-center">
-													{imageLoading ? (
-														<div className="text-gray-500 text-xs">
-															{t("poi.loading")}
-														</div>
-													) : (
-														<Image
-															src={placesApiHelpers.getPhotoUrl(
-																placeDetails.photos[state.currentPhotoIndex]
-																	.photo_reference,
-																300,
-															)}
-															alt={t("poi.photoOf").replace(
-																"{name}",
-																poiData.name,
-															)}
-															width={144}
-															height={144}
-															className="w-full h-full object-cover"
-															unoptimized
-														/>
-													)}
-												</div>
-											)}
-											{placeDetails.photos.length > 1 && (
-												<div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-													{t("gallery.photoCount", language).replace(
-														"{count}",
-														(placeDetails.photos.length - 1).toString(),
-													)}
-												</div>
-											)}
-											{/* キャッシュ状態インジケーター */}
-											{cachedImages[state.currentPhotoIndex]?.cached && (
-												<div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-													{t("poi.cached")}
-												</div>
-											)}
-											{/* クリック可能インジケーター */}
-											<div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center">
-												<div className="opacity-0 group-hover:opacity-100 transition-opacity">
-													<svg
-														className="w-6 h-6 text-white drop-shadow-lg"
-														fill="none"
-														stroke="currentColor"
-														viewBox="0 0 24 24"
-													>
-														<path
-															strokeLinecap="round"
-															strokeLinejoin="round"
-															strokeWidth={2}
-															d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
-														/>
-													</svg>
-												</div>
-											</div>
-										</div>
-										{showZoomDebugInfo && (
-											<div className="mt-2 text-[11px] text-gray-500 leading-snug">
-												Debug zoom: {debugZoomLevel}
-											</div>
-										)}
-									</>
-								)}
-
-								{/* 連絡先（画像の下） */}
-								<div className="flex flex-col gap-2">
-									{placeDetails.formatted_phone_number && (
-										<button
-											type="button"
-											onClick={() =>
-												window.open(
-													`tel:${placeDetails.formatted_phone_number}`,
-													"_self",
-												)
-											}
-											className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-											title={placeDetails.formatted_phone_number}
-										>
-											<svg
-												className="w-3.5 h-3.5 flex-shrink-0"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-											>
-												<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.9.3 1.77.54 2.61a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.47-1.07a2 2 0 012.11-.45c.84.24 1.71.42 2.61.54A2 2 0 0122 16.92z" />
-											</svg>
-											<span className="truncate text-gray-700">
-												{placeDetails.formatted_phone_number}
-											</span>
-										</button>
-									)}
-									{placeDetails.website && (
-										<button
-											type="button"
-											onClick={() =>
-												window.open(
-													placeDetails.website,
-													"_blank",
-													"noopener,noreferrer",
-												)
-											}
-											className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-											title={placeDetails.website}
-										>
-											<svg
-												className="w-3.5 h-3.5 flex-shrink-0"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-											>
-												<circle cx="12" cy="12" r="10" />
-												<path d="M2 12h20" />
-												<path d="M12 2a15.3 15.3 0 010 20" />
-												<path d="M12 2a15.3 15.3 0 000 20" />
-											</svg>
-											<span className="truncate text-gray-700">
-												{(() => {
-													try {
-														const url = new URL(placeDetails.website);
-														return url.hostname.replace("www.", "");
-													} catch {
-														return t("poi.website");
-													}
-												})()}
-											</span>
-										</button>
-									)}
-									{placeDetails.url && (
-										<button
-											type="button"
-											onClick={() =>
-												window.open(
-													placeDetails.url,
-													"_blank",
-													"noopener,noreferrer",
-												)
-											}
-											className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-											title="Google Maps"
-										>
-											<svg
-												className="w-3.5 h-3.5 flex-shrink-0"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-											>
-												<path d="M3.5 6.5l5.4-2.1 5.2 2.1 5.4-2.1v12.9l-5.4 2.1-5.2-2.1-5.4 2.1V6.5z" />
-												<path d="M8.9 4.4v12.9" />
-												<path d="M14.1 6.5v12.9" />
-											</svg>
-											<span className="truncate text-gray-700">Maps</span>
-										</button>
-									)}
-								</div>
-							</div>
-						</div>
-					) : null}
-				</div>
+				<POIDialogBody
+					loading={loading}
+					error={error}
+					placeDetails={placeDetails}
+					aggregatedData={
+						aggregatedData
+							? {
+									aggregatedRating: aggregatedData.aggregatedRating,
+								}
+							: null
+					}
+					unifiedReviews={unifiedReviews}
+					priceLevel={priceLevel}
+					openingHoursInfo={openingHoursInfo}
+					dayLabels={dayLabels}
+					cachedImages={cachedImages}
+					currentPhotoIndex={state.currentPhotoIndex}
+					imageLoading={imageLoading}
+					showAllHours={state.showAllHours}
+					showAllReviews={state.showAllReviews}
+					dispatch={dispatch}
+					placeName={poiData.name}
+					onOpenImageGallery={handleOpenImageGallery}
+					debugZoomLevel={debugZoomLevel}
+					showZoomDebugInfo={showZoomDebugInfo}
+					language={language}
+				/>
 			</div>
 
 			{/* イメージギャラリーモーダル */}
