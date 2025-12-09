@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import TripCard from "@/components/tripcard/TripCard";
 import CreateTripDialog from "@/components/common/CreateTripDialog";
 import { Button } from "@/components/common/Button";
-import NextTripMap from "./NextTripMap";
 import { useUserData } from "@/lib/contexts/user-data";
 import {
 	RestrictionProvider,
@@ -14,6 +13,7 @@ import {
 import { IconRenderer } from "@/components/common/icons/IconRenderer";
 import type { Trip } from "@/lib/core/types";
 import { t } from "@/lib/i18n";
+import { NextTripStaticMap } from "./NextTripStaticMap";
 
 interface NextTripCardProps {
 	nextTrip?: Trip;
@@ -115,7 +115,7 @@ export default function NextTripCard({
 					{/* マップエリア - 4/10の幅 */}
 					<div className="md:col-span-2 min-h-[300px]">
 						{nextTrip ? (
-							<NextTripMap trip={nextTrip} />
+							<NextTripStaticMap trip={nextTrip} />
 						) : (
 							<div className="bg-gray-100 flex items-center justify-center h-full">
 								<div className="text-center">

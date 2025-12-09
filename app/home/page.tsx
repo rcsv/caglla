@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/lib/contexts/auth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import HomeHeader from "@/components/common/HomeHeader";
 import HomeFooter from "@/components/common/HomeFooter";
 import { useUserData } from "@/lib/contexts/user-data";
@@ -21,6 +21,11 @@ import { useRecentTrips } from "@/hooks/useRecentTrips";
 import { useMyShares } from "@/hooks/useMyShares";
 import { HomeWelcomeRow } from "@/components/home/HomeWelcomeRow";
 import { HomeMainTabs } from "@/components/home/HomeMainTabs";
+import NextTripCard from "@/components/tripcard/NextTripCard";
+import {
+	filterUpcomingTrips,
+	sortTripsByStartDate,
+} from "@/lib/travel/trip-filters";
 
 /**
  * v3.0.0 Home Page - シンプルなレイアウト構造
@@ -53,6 +58,18 @@ export default function HomePage() {
 		setGlobalUserData(userData);
 	}, [userData]);
 
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+	const tomorrow = new Date(today);
+	tomorrow.setDate(tomorrow.getDate() + 1);
+
+	const nextTrip = useMemo(() => {
+		const upcoming = sortTripsByStartDate(
+			filterUpcomingTrips(trips, tomorrow),
+		);
+		return upcoming[0];
+	}, [trips, tomorrow]);
+
 	// ローディング状態の表示
 	if (loading || userDataLoading) {
 		return <Loading fullScreen size="lg" />;
@@ -76,11 +93,6 @@ export default function HomePage() {
 		await refreshTrips();
 	};
 
-	const today = new Date();
-	today.setHours(0, 0, 0, 0);
-	const tomorrow = new Date(today);
-	tomorrow.setDate(tomorrow.getDate() + 1);
-
 	return (
 		<div className="min-h-screen bg-gray-50">
 			{/* Header */}
@@ -99,6 +111,10 @@ export default function HomePage() {
 					onOpenCreateTrip={() => setIsCreateTripDialogOpen(true)}
 					onOpenQuickPlan={() => setIsQuickPlanModalOpen(true)}
 				/>
+
+				<div className="mb-8">
+					<NextTripCard nextTrip={nextTrip} onTripCreated={handleTripCreated} />
+				</div>
 
 				{/* メインコンテンツエリア（/home-v2 のタブ付きフィードを移植） */}
 				<div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
