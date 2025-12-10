@@ -16,12 +16,58 @@ import LikeButton from "@/components/social/LikeButton";
 import TripCommentModal from "@/components/modals/TripCommentModal";
 import { formatRelativeTime } from "@/lib/utils/date";
 import { isTripActive } from "@/lib/utils/trip-status";
+import { searchTrips } from "@/lib/utils/trip-search";
+import { useMemo } from "react";
 
-export function FriendsTimeline() {
+interface FriendsTimelineProps {
+	searchQuery?: string;
+	filter?: string | null;
+}
+
+export function FriendsTimeline({
+	searchQuery = "",
+	filter = null,
+}: FriendsTimelineProps) {
 	const { trips, loading, error } = useFollowingFeed(20);
 	const { userData } = useUserData();
 	const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
 	const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+
+	// 検索とフィルタを適用
+	const filteredTrips = useMemo(() => {
+		if (!trips) return [];
+
+		let result = [...trips];
+
+		// 検索
+		if (searchQuery.trim()) {
+			result = searchTrips(result, searchQuery, [
+				"title",
+				"destination",
+				"description",
+				"creator.name",
+			]);
+		}
+
+		// フィルタ
+		if (filter) {
+			const filterKey = filter.toLowerCase();
+			if (filterKey.includes("active")) {
+				result = result.filter((trip) => isTripActive(trip));
+			} else if (filterKey.includes("recent")) {
+				result = result.sort((a, b) => {
+					const dateA = toDateOrNull(a.created_at);
+					const dateB = toDateOrNull(b.created_at);
+					if (!dateA || !dateB) return 0;
+					return dateB.getTime() - dateA.getTime();
+				});
+			} else if (filterKey.includes("template")) {
+				result = result.filter((trip) => trip.is_template === true);
+			}
+		}
+
+		return result;
+	}, [trips, searchQuery, filter]);
 
 	if (loading) {
 		return (
@@ -53,6 +99,18 @@ export function FriendsTimeline() {
 		);
 	}
 
+	if (filteredTrips.length === 0) {
+		return (
+			<section className="space-y-4">
+				<p className="text-sm text-slate-500">
+					{searchQuery || filter
+						? t("home.mainTabs.friends.noResults")
+						: t("home.mainTabs.friends.empty")}
+				</p>
+			</section>
+		);
+	}
+
 	const handleCommentClick = (trip: Trip) => {
 		setSelectedTrip(trip);
 		setIsCommentModalOpen(true);
@@ -61,7 +119,7 @@ export function FriendsTimeline() {
 	return (
 		<>
 			<section className="space-y-6">
-				{trips.map((trip) => {
+				{filteredTrips.map((trip) => {
 					const creator = trip.creator;
 					const creatorName = creator?.name || "Unknown User";
 					const userSlug = creator?.slug;

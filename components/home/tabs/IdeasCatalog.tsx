@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,10 +12,41 @@ import { useUserData } from "@/lib/contexts/user-data";
 import { isSameUser } from "@/lib/auth/client-identity-helpers";
 import FollowButton from "@/components/social/FollowButton";
 import LikeButton from "@/components/social/LikeButton";
+import { searchTrips } from "@/lib/utils/trip-search";
 
-export function IdeasCatalog() {
+interface IdeasCatalogProps {
+	searchQuery?: string;
+	filter?: string | null;
+}
+
+export function IdeasCatalog({
+	searchQuery = "",
+	filter = null,
+}: IdeasCatalogProps) {
 	const { trips, loading, error } = useTemplates(20, true); // excludeMyTrips = true
 	const { userData } = useUserData();
+
+	// 検索とフィルタを適用
+	const filteredTrips = useMemo(() => {
+		if (!trips) return [];
+
+		let result = [...trips];
+
+		// 検索
+		if (searchQuery.trim()) {
+			result = searchTrips(result, searchQuery, [
+				"title",
+				"destination",
+				"description",
+				"creator.name",
+			]);
+		}
+
+		// フィルタ（Ideas Catalogのフィルタは将来実装）
+		// 現時点では検索のみ対応
+
+		return result;
+	}, [trips, searchQuery, filter]);
 
 	if (loading) {
 		return (
@@ -47,9 +79,21 @@ export function IdeasCatalog() {
 		);
 	}
 
+	if (filteredTrips.length === 0) {
+		return (
+			<section className="space-y-4">
+				<p className="text-sm text-slate-500">
+					{searchQuery || filter
+						? t("home.mainTabs.ideas.noResults")
+						: t("home.mainTabs.ideas.empty")}
+				</p>
+			</section>
+		);
+	}
+
 	return (
 		<section className="grid gap-4 md:grid-cols-2">
-			{trips.map((trip) => {
+			{filteredTrips.map((trip) => {
 				const creator = trip.creator;
 				const creatorName = creator?.name || "Unknown Creator";
 				const creatorAvatar =

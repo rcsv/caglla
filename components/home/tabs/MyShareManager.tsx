@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Icon } from "@iconify/react";
 import { t } from "@/lib/i18n";
 import type { Trip } from "@/lib/core/types";
@@ -9,6 +9,7 @@ import { resolveSocialStats } from "@/lib/social/trip-social-utils";
 import { TripStatsRow } from "@/components/tripcard/TripStatsRow";
 import { TripSocialStatsRow } from "@/components/tripcard/TripSocialStatsRow";
 import TripShareSettingsModal from "@/components/modals/TripShareSettingsModal";
+import { searchTrips } from "@/lib/utils/trip-search";
 
 type MyShareView = {
 	id: string;
@@ -114,20 +115,55 @@ interface MyShareManagerProps {
 	trips?: Trip[] | null;
 	loading: boolean;
 	onRefresh?: () => void;
+	searchQuery?: string;
+	filter?: string | null;
 }
 
 export function MyShareManager({
 	trips,
 	loading,
 	onRefresh,
+	searchQuery = "",
+	filter = null,
 }: MyShareManagerProps) {
 	const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
 	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	const hasRealTrips = trips && trips.length > 0;
 
+	// 検索とフィルタを適用
+	const filteredTrips = useMemo(() => {
+		if (!hasRealTrips) return [];
+
+		let result = [...trips!];
+
+		// 検索
+		if (searchQuery.trim()) {
+			result = searchTrips(result, searchQuery, [
+				"title",
+				"destination",
+				"description",
+			]);
+		}
+
+		// フィルタ
+		if (filter) {
+			const filterKey = filter.toLowerCase();
+			if (filterKey.includes("public")) {
+				result = result.filter((trip) => trip.access_level === "public");
+			} else if (filterKey.includes("follower")) {
+				result = result.filter((trip) => trip.access_level === "private");
+			} else if (filterKey.includes("link") || filterKey.includes("unlisted")) {
+				result = result.filter((trip) => trip.access_level === "unlisted");
+			}
+			// expires フィルタは将来実装
+		}
+
+		return result;
+	}, [trips, hasRealTrips, searchQuery, filter]);
+
 	const viewTrips: MyShareView[] = hasRealTrips
-		? trips!.map(mapTripToMyShareView)
+		? filteredTrips.map(mapTripToMyShareView)
 		: MY_SHARED_TRIPS.map((trip) => ({
 				id: trip.id,
 				title: trip.title,
@@ -166,6 +202,14 @@ export function MyShareManager({
 				{!loading && !hasRealTrips && (
 					<p className="text-xs text-slate-500">
 						{t("home.mainTabs.shares.empty")}
+					</p>
+				)}
+
+				{hasRealTrips && filteredTrips.length === 0 && (
+					<p className="text-xs text-slate-500">
+						{searchQuery || filter
+							? t("home.mainTabs.shares.noResults")
+							: t("home.mainTabs.shares.empty")}
 					</p>
 				)}
 
