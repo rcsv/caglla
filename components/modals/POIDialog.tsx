@@ -1,20 +1,20 @@
 "use client";
 
 import { useMemo } from "react";
-import type { PlaceData } from "@/lib/core/types";
-import { useAuth } from "@/lib/contexts/auth";
-import { getUserLanguage } from "@/lib/utils/language";
 import { useTrip } from "@/app/(planner)/[userSlug]/[tripSlug]/TripProvider";
-import ImageGalleryModal from "./ImageGalleryModal";
-import { t } from "@/lib/i18n";
-import { parseOpeningHours } from "./utils/parse-opening-hours";
-import { getZoomForPlaceTypes } from "@/lib/travel/map-zoom";
-import { isDevelopment } from "@/lib/core/env-validation";
-import { usePOIDetails } from "@/lib/hooks/usePOIDetails";
-import { usePOIDialogState } from "@/hooks/usePOIDialogState";
-import { getAggregatedPriceLevel } from "@/lib/utils/venue-pricing";
-import { POIDialogHeader } from "@/components/poi/POIDialogHeader";
 import { POIDialogBody } from "@/components/poi/POIDialogBody";
+import { POIDialogHeader } from "@/components/poi/POIDialogHeader";
+import { usePOIDialogState } from "@/hooks/usePOIDialogState";
+import { useAuth } from "@/lib/contexts/auth";
+import { isDevelopment } from "@/lib/core/env-validation";
+import type { PlaceData } from "@/lib/core/types";
+import { usePOIDetails } from "@/lib/hooks/usePOIDetails";
+import { t } from "@/lib/i18n";
+import { getZoomForPlaceTypes } from "@/lib/travel/map-zoom";
+import { getUserLanguage } from "@/lib/utils/language";
+import { getAggregatedPriceLevel } from "@/lib/utils/venue-pricing";
+import ImageGalleryModal from "./ImageGalleryModal";
+import { parseOpeningHours } from "./utils/parse-opening-hours";
 
 interface POIDialogProps {
 	poiData: {
@@ -146,7 +146,6 @@ export default function POIDialog({
 					popupRef={popupRef}
 					dispatch={dispatch}
 					placeId={poiData.placeId}
-					language={language}
 				/>
 
 				<POIDialogBody

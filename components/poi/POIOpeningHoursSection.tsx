@@ -1,7 +1,8 @@
 "use client";
 
-import { t } from "@/lib/i18n";
 import type { POIDialogAction } from "@/hooks/usePOIDialogState";
+import type { SupportedLanguage } from "@/lib/core/types";
+import { t } from "@/lib/i18n";
 
 interface OpeningHoursInfo {
 	isOpen: boolean;
@@ -16,7 +17,7 @@ interface POIOpeningHoursSectionProps {
 	showAllHours: boolean;
 	dayLabels: string[];
 	dispatch: React.Dispatch<POIDialogAction>;
-	language: string;
+	language: SupportedLanguage;
 }
 
 export function POIOpeningHoursSection({
@@ -28,7 +29,8 @@ export function POIOpeningHoursSection({
 }: POIOpeningHoursSectionProps) {
 	return (
 		<div className="relative">
-			<div
+			<button
+				type="button"
 				className="flex items-center space-x-2 text-xs cursor-pointer"
 				onMouseEnter={() => dispatch({ type: "SHOW_ALL_HOURS", show: true })}
 				onMouseLeave={() => dispatch({ type: "SHOW_ALL_HOURS", show: false })}
@@ -49,9 +51,7 @@ export function POIOpeningHoursSection({
 							: t("poi.openingHours.closed", language)}
 				</span>
 				{openingHoursInfo.currentHours && (
-					<span className="text-gray-600">
-						{openingHoursInfo.currentHours}
-					</span>
+					<span className="text-gray-600">{openingHoursInfo.currentHours}</span>
 				)}
 				<span className="text-gray-400">|</span>
 				<div className="flex space-x-1 font-mono text-xs">
@@ -61,7 +61,7 @@ export function POIOpeningHoursSection({
 						const isOpen = openingHoursInfo.openDays[apiIndex];
 						return (
 							<span
-								key={index}
+								key={day}
 								className={`${isOpen ? "text-gray-700" : "text-gray-300"}`}
 							>
 								{day}
@@ -69,14 +69,14 @@ export function POIOpeningHoursSection({
 						);
 					})}
 				</div>
-			</div>
+			</button>
 
 			{/* ホバー時に全営業時間を表示 */}
 			{showAllHours && (
 				<div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg p-2 zidx-float-modal-content min-w-[200px] z-50">
 					<div className="space-y-0.5 text-xs text-gray-700">
-						{openingHoursInfo.weekdayText.map((day: string, index: number) => (
-							<div key={index}>{day}</div>
+						{openingHoursInfo.weekdayText.map((day: string) => (
+							<div key={day}>{day}</div>
 						))}
 					</div>
 				</div>
@@ -84,4 +84,3 @@ export function POIOpeningHoursSection({
 		</div>
 	);
 }
-

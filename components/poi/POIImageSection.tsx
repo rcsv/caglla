@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { placesApiHelpers } from "@/lib/api/google/places";
 import { t } from "@/lib/i18n";
-import type { POIDialogAction } from "@/hooks/usePOIDialogState";
+import type { SupportedLanguage } from "@/lib/core/types";
 
 interface Photo {
 	photo_reference: string;
@@ -25,7 +25,7 @@ interface POIImageSectionProps {
 	onOpenGallery: () => void;
 	debugZoomLevel?: number;
 	showZoomDebugInfo?: boolean;
-	language: string;
+	language: SupportedLanguage;
 }
 
 export function POIImageSection({
@@ -43,17 +43,10 @@ export function POIImageSection({
 
 	return (
 		<>
-			<div
+			<button
+				type="button"
 				className="relative aspect-square bg-gray-200 rounded overflow-hidden cursor-pointer group hover:opacity-90 transition-opacity"
 				onClick={onOpenGallery}
-				role="button"
-				tabIndex={0}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						onOpenGallery();
-					}
-				}}
 			>
 				{cachedImages[currentPhotoIndex] ? (
 					<Image
@@ -75,9 +68,7 @@ export function POIImageSection({
 				) : (
 					<div className="w-full h-full flex items-center justify-center">
 						{imageLoading ? (
-							<div className="text-gray-500 text-xs">
-								{t("poi.loading")}
-							</div>
+							<div className="text-gray-500 text-xs">{t("poi.loading")}</div>
 						) : (
 							<Image
 								src={placesApiHelpers.getPhotoUrl(
@@ -116,7 +107,12 @@ export function POIImageSection({
 							stroke="currentColor"
 							viewBox="0 0 24 24"
 						>
-							<title>{t("gallery.open", language)}</title>
+							<title>
+								{t(
+									"poi.openGallery" as unknown as Parameters<typeof t>[0],
+									language,
+								)}
+							</title>
 							<path
 								strokeLinecap="round"
 								strokeLinejoin="round"
@@ -126,7 +122,7 @@ export function POIImageSection({
 						</svg>
 					</div>
 				</div>
-			</div>
+			</button>
 			{showZoomDebugInfo && debugZoomLevel !== undefined && (
 				<div className="mt-2 text-[11px] text-gray-500 leading-snug">
 					Debug zoom: {debugZoomLevel}
@@ -135,4 +131,3 @@ export function POIImageSection({
 		</>
 	);
 }
-

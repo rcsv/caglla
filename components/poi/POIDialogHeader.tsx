@@ -1,10 +1,10 @@
 "use client";
 
-import { t } from "@/lib/i18n";
 import type { AvailableDay } from "@/app/(planner)/[userSlug]/[tripSlug]/TripProvider";
-import { calculatePopupPosition } from "@/lib/utils/popup-position";
-import type { POIDialogAction } from "@/hooks/usePOIDialogState";
 import { TeardropMarker } from "@/components/common/TeardropMarker";
+import type { POIDialogAction } from "@/hooks/usePOIDialogState";
+import { t } from "@/lib/i18n";
+import { calculatePopupPosition } from "@/lib/utils/popup-position";
 
 interface POIDialogHeaderProps {
 	name: string;
@@ -19,7 +19,6 @@ interface POIDialogHeaderProps {
 	popupRef: React.RefObject<HTMLDivElement>;
 	dispatch: React.Dispatch<POIDialogAction>;
 	placeId: string;
-	language: string;
 }
 
 export function POIDialogHeader({
@@ -35,7 +34,6 @@ export function POIDialogHeader({
 	popupRef,
 	dispatch,
 	placeId: _placeId,
-	language,
 }: POIDialogHeaderProps) {
 	const handleToggleDaySelector = () => {
 		if (!showDaySelector) {
@@ -161,4 +159,3 @@ export function POIDialogHeader({
 		</div>
 	);
 }
-

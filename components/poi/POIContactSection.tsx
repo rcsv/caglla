@@ -1,12 +1,13 @@
 "use client";
 
 import { t } from "@/lib/i18n";
+import type { SupportedLanguage } from "@/lib/core/types";
 
 interface POIContactSectionProps {
 	formattedPhoneNumber?: string;
 	website?: string;
 	googleMapsUrl?: string;
-	language: string;
+	language: SupportedLanguage;
 }
 
 export function POIContactSection({
@@ -20,9 +21,7 @@ export function POIContactSection({
 			{formattedPhoneNumber && (
 				<button
 					type="button"
-					onClick={() =>
-						window.open(`tel:${formattedPhoneNumber}`, "_self")
-					}
+					onClick={() => window.open(`tel:${formattedPhoneNumber}`, "_self")}
 					className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
 					title={formattedPhoneNumber}
 				>
@@ -32,20 +31,21 @@ export function POIContactSection({
 						fill="none"
 						stroke="currentColor"
 					>
-						<title>{t("common.phone", language)}</title>
+						<title>
+							{t(
+								"poi.phone" as unknown as Parameters<typeof t>[0],
+								language,
+							)}
+						</title>
 						<path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.12.9.3 1.77.54 2.61a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.47-1.07a2 2 0 012.11-.45c.84.24 1.71.42 2.61.54A2 2 0 0122 16.92z" />
 					</svg>
-					<span className="truncate text-gray-700">
-						{formattedPhoneNumber}
-					</span>
+					<span className="truncate text-gray-700">{formattedPhoneNumber}</span>
 				</button>
 			)}
 			{website && (
 				<button
 					type="button"
-					onClick={() =>
-						window.open(website, "_blank", "noopener,noreferrer")
-					}
+					onClick={() => window.open(website, "_blank", "noopener,noreferrer")}
 					className="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
 					title={website}
 				>
@@ -55,7 +55,12 @@ export function POIContactSection({
 						fill="none"
 						stroke="currentColor"
 					>
-						<title>{t("common.website", language)}</title>
+						<title>
+							{t(
+								"poi.website" as unknown as Parameters<typeof t>[0],
+								language,
+							)}
+						</title>
 						<circle cx="12" cy="12" r="10" />
 						<path d="M2 12h20" />
 						<path d="M12 2a15.3 15.3 0 010 20" />
@@ -66,9 +71,12 @@ export function POIContactSection({
 							try {
 								const url = new URL(website);
 								return url.hostname.replace("www.", "");
-													} catch {
-														return t("common.website", language);
-													}
+							} catch {
+								return t(
+									"poi.website" as unknown as Parameters<typeof t>[0],
+									language,
+								);
+							}
 						})()}
 					</span>
 				</button>
@@ -99,4 +107,3 @@ export function POIContactSection({
 		</div>
 	);
 }
-

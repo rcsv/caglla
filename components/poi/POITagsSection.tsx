@@ -15,9 +15,9 @@ export function POITagsSection({ types }: POITagsSectionProps) {
 
 	return (
 		<div className="flex flex-wrap gap-2">
-			{filteredTypes.map((type, index) => (
+			{filteredTypes.map((type) => (
 				<span
-					key={`${type}-${index}`}
+					key={type}
 					className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"
 				>
 					{type.replace(/_/g, " ")}
@@ -26,4 +26,3 @@ export function POITagsSection({ types }: POITagsSectionProps) {
 		</div>
 	);
 }
-

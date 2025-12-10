@@ -1,13 +1,14 @@
 "use client";
 
-import { t } from "@/lib/i18n";
-import { POIPriceSection } from "./POIPriceSection";
-import { POITagsSection } from "./POITagsSection";
-import { POIOpeningHoursSection } from "./POIOpeningHoursSection";
-import { POIReviewSection } from "./POIReviewSection";
-import { POIImageSection } from "./POIImageSection";
-import { POIContactSection } from "./POIContactSection";
 import type { POIDialogAction } from "@/hooks/usePOIDialogState";
+import type { SupportedLanguage } from "@/lib/core/types";
+import { t } from "@/lib/i18n";
+import { POIContactSection } from "./POIContactSection";
+import { POIImageSection } from "./POIImageSection";
+import { POIOpeningHoursSection } from "./POIOpeningHoursSection";
+import { POIPriceSection } from "./POIPriceSection";
+import { POIReviewSection } from "./POIReviewSection";
+import { POITagsSection } from "./POITagsSection";
 
 interface PlaceDetails {
 	rating?: number;
@@ -86,7 +87,7 @@ interface POIDialogBodyProps {
 	onOpenImageGallery: () => void;
 	debugZoomLevel?: number;
 	showZoomDebugInfo?: boolean;
-	language: string;
+	language: SupportedLanguage;
 }
 
 export function POIDialogBody({
@@ -187,7 +188,6 @@ export function POIDialogBody({
 							unifiedReviews={unifiedReviews}
 							showAllReviews={showAllReviews}
 							dispatch={dispatch}
-							language={language}
 						/>
 					</div>
 
@@ -221,4 +221,3 @@ export function POIDialogBody({
 		</div>
 	);
 }
-

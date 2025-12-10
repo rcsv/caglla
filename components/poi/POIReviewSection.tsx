@@ -1,7 +1,7 @@
 "use client";
 
-import { t } from "@/lib/i18n";
 import type { POIDialogAction } from "@/hooks/usePOIDialogState";
+import { t } from "@/lib/i18n";
 
 interface UnifiedReview {
 	id: string;
@@ -17,14 +17,12 @@ interface POIReviewSectionProps {
 	unifiedReviews: UnifiedReview[];
 	showAllReviews: boolean;
 	dispatch: React.Dispatch<POIDialogAction>;
-	language: string;
 }
 
 export function POIReviewSection({
 	unifiedReviews,
 	showAllReviews,
 	dispatch,
-	language,
 }: POIReviewSectionProps) {
 	if (unifiedReviews.length === 0) return null;
 
@@ -126,4 +124,3 @@ export function POIReviewSection({
 		</div>
 	);
 }
-
