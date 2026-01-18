@@ -5,7 +5,11 @@ import {
 } from "@/lib/core/types";
 import { toDate, toDateOrNull } from "@/lib/firebase/timestamp-utils";
 import { t } from "@/lib/i18n";
-import { ClientReservationInfoSchema } from "@/lib/schemas/reservation";
+import {
+	ClientReservationInfoSchema,
+	FlightNumberSchema,
+	AirportCodeSchema,
+} from "@/lib/schemas/reservation";
 import { z } from "zod";
 
 /**
@@ -183,6 +187,7 @@ export function getReservationSiteLabel(site: ReservationSite): string {
 		kayak: t("reservation.site.kayak"),
 		skyscanner: t("reservation.site.skyscanner"),
 		tripadvisor: t("reservation.site.tripadvisor"),
+		trip_com: t("reservation.site.tripCom"),
 		opentable: t("reservation.site.opentable"),
 		tabelog: t("reservation.site.tabelog"),
 		hot_pepper: t("reservation.site.hotPepper"),

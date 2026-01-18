@@ -31,6 +31,7 @@ export type ReservationSite =
 	| "kayak"
 	| "skyscanner"
 	| "tripadvisor"
+	| "trip_com" // Trip.com
 	| "opentable"
 	| "tabelog"
 	| "hot_pepper" // hot-pepper

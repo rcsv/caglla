@@ -1839,6 +1839,7 @@ const ja: Dictionary = {
 	"reservation.site.kayak": "Kayak",
 	"reservation.site.skyscanner": "Skyscanner",
 	"reservation.site.tripadvisor": "TripAdvisor",
+	"reservation.site.tripCom": "Trip.com",
 	"reservation.site.opentable": "OpenTable",
 	"reservation.site.tabelog": "食べログ",
 	"reservation.site.hotPepper": "ホットペッパー",

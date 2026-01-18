@@ -41,6 +41,53 @@ export default function VenueDistance({
 	const [error, setError] = useState<string | null>(null);
 	const lastPlacesKeyRef = useRef<string | null>(null);
 
+	// Distance APIエラー抑制のためのキー（sessionStorage）
+	const DISTANCE_API_ERROR_KEY = "distance_api_error_suppressed";
+	const ERROR_SUPPRESSION_DURATION = 5 * 60 * 1000; // 5分間（ミリ秒）
+
+	// Distance APIエラーが抑制されているかチェック
+	const isApiSuppressed = (): boolean => {
+		if (typeof window === "undefined") return false;
+
+		try {
+			const errorTimestamp = sessionStorage.getItem(DISTANCE_API_ERROR_KEY);
+			if (!errorTimestamp) return false;
+
+			const timestamp = parseInt(errorTimestamp, 10);
+			const now = Date.now();
+			const elapsed = now - timestamp;
+
+			// エラー発生から5分以内の場合はAPI呼び出しを抑制
+			if (elapsed < ERROR_SUPPRESSION_DURATION) {
+				logger.debug(
+					`🛑 VenueDistance: API call suppressed (error occurred ${Math.round(elapsed / 1000)}s ago)`,
+				);
+				return true;
+			}
+
+			// 5分経過したら抑制状態をクリア
+			sessionStorage.removeItem(DISTANCE_API_ERROR_KEY);
+			return false;
+		} catch (e) {
+			logger.error("Error checking API suppression state:", e);
+			return false;
+		}
+	};
+
+	// Distance APIエラーを記録
+	const recordApiError = (): void => {
+		if (typeof window === "undefined") return;
+
+		try {
+			sessionStorage.setItem(DISTANCE_API_ERROR_KEY, Date.now().toString());
+			logger.debug(
+				"🔴 VenueDistance: Distance API error recorded, suppressing calls for 5 minutes",
+			);
+		} catch (e) {
+			logger.error("Error recording API error state:", e);
+		}
+	};
+
 	// 場所の座標をメモ化して、不要な再計算を防ぐ
 	const placesKey = useMemo(() => {
 		if (!fromPlace?.geometry?.location || !toPlace?.geometry?.location) {
@@ -89,6 +136,14 @@ export default function VenueDistance({
 				return;
 			}
 
+			// Distance APIエラーが抑制されている場合はAPI呼び出しをスキップ
+			if (isApiSuppressed()) {
+				logger.debug("🛑 VenueDistance: Skipping API call due to error suppression");
+				setError(null);
+				setDistanceInfo(null);
+				return;
+			}
+
 			setIsLoading(true);
 			setError(null);
 
@@ -113,6 +168,8 @@ export default function VenueDistance({
 			} catch (err) {
 				logger.error("❌ Error calculating distance:", err);
 				setError(t("venueDistance.calculationFailed"));
+				// エラーを記録して、以降5分間API呼び出しを抑制
+				recordApiError();
 				// エラー時にキャッシュをクリアして、再試行を可能にする
 				lastPlacesKeyRef.current = null;
 			} finally {

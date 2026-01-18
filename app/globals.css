@@ -399,23 +399,59 @@ body {
 	/* ===== Tropical Joy Form Elements ===== */
 	/* Input */
 	.tj-input {
-		@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition disabled:bg-gray-100 disabled:text-gray-500;
+		@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition disabled:bg-gray-100 disabled:text-gray-500;
+		color: #1f2937; /* text-gray-800 を明示的に指定（Safari対応） */
 	}
 	.tj-input:hover {
 		@apply border-emerald-400;
 	}
+	/* Safariの自動補完スタイルを上書き */
+	.tj-input:-webkit-autofill,
+	.tj-input:-webkit-autofill:hover,
+	.tj-input:-webkit-autofill:focus,
+	.tj-input:-webkit-autofill:active {
+		-webkit-text-fill-color: #1f2937 !important; /* text-gray-800 */
+		-webkit-box-shadow: 0 0 0px 1000px white inset !important;
+		box-shadow: 0 0 0px 1000px white inset !important;
+		background-color: white !important;
+		color: #1f2937 !important;
+	}
 
 	/* Select */
 	.tj-select {
-		@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 appearance-none bg-no-repeat focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
+		@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 appearance-none bg-no-repeat focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
+		color: #1f2937; /* text-gray-800 を明示的に指定（Safari対応） */
 		background-image: url("data:image/svg+xml;utf8,<svg fill='none' stroke='%2334d399' stroke-width='2' viewBox='0 0 24 24'><path d='M6 9l6 6 6-6'/></svg>");
 		background-position: right 0.75rem center;
 		background-size: 1rem 1rem;
 	}
+	/* Safariの自動補完スタイルを上書き */
+	.tj-select:-webkit-autofill,
+	.tj-select:-webkit-autofill:hover,
+	.tj-select:-webkit-autofill:focus,
+	.tj-select:-webkit-autofill:active {
+		-webkit-text-fill-color: #1f2937 !important; /* text-gray-800 */
+		-webkit-box-shadow: 0 0 0px 1000px white inset !important;
+		box-shadow: 0 0 0px 1000px white inset !important;
+		background-color: white !important;
+		color: #1f2937 !important;
+	}
 
 	/* Textarea */
 	.tj-textarea {
-		@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 text-gray-800 resize-y focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
+		@apply w-full rounded-lg border border-emerald-300 bg-white px-3 py-2 resize-y focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 hover:border-emerald-400;
+		color: #1f2937; /* text-gray-800 を明示的に指定（Safari対応） */
+	}
+	/* Safariの自動補完スタイルを上書き */
+	.tj-textarea:-webkit-autofill,
+	.tj-textarea:-webkit-autofill:hover,
+	.tj-textarea:-webkit-autofill:focus,
+	.tj-textarea:-webkit-autofill:active {
+		-webkit-text-fill-color: #1f2937 !important; /* text-gray-800 */
+		-webkit-box-shadow: 0 0 0px 1000px white inset !important;
+		box-shadow: 0 0 0px 1000px white inset !important;
+		background-color: white !important;
+		color: #1f2937 !important;
 	}
 
 	/* Toggle */
@@ -443,12 +479,32 @@ body {
 	.dark .tj-input,
 	.dark .tj-select,
 	.dark .tj-textarea {
-		@apply bg-slate-800 text-gray-100 border-slate-600 placeholder-gray-500;
+		@apply bg-slate-800 border-slate-600 placeholder-gray-500;
+		color: #f3f4f6; /* text-gray-100 を明示的に指定（Safari対応） */
 	}
 	.dark .tj-input:focus,
 	.dark .tj-select:focus,
 	.dark .tj-textarea:focus {
 		@apply border-emerald-400 ring-emerald-400;
+	}
+	/* Safariの自動補完スタイルを上書き（ダークモード） */
+	.dark .tj-input:-webkit-autofill,
+	.dark .tj-input:-webkit-autofill:hover,
+	.dark .tj-input:-webkit-autofill:focus,
+	.dark .tj-input:-webkit-autofill:active,
+	.dark .tj-select:-webkit-autofill,
+	.dark .tj-select:-webkit-autofill:hover,
+	.dark .tj-select:-webkit-autofill:focus,
+	.dark .tj-select:-webkit-autofill:active,
+	.dark .tj-textarea:-webkit-autofill,
+	.dark .tj-textarea:-webkit-autofill:hover,
+	.dark .tj-textarea:-webkit-autofill:focus,
+	.dark .tj-textarea:-webkit-autofill:active {
+		-webkit-text-fill-color: #f3f4f6 !important; /* text-gray-100 */
+		-webkit-box-shadow: 0 0 0px 1000px #1e293b inset !important; /* bg-slate-800 */
+		box-shadow: 0 0 0px 1000px #1e293b inset !important;
+		background-color: #1e293b !important;
+		color: #f3f4f6 !important;
 	}
 }
 

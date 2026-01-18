@@ -40,7 +40,8 @@ export function InlineCostEditor({
 							onCancel();
 						}
 					}}
-					className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-24"
+					className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-24 bg-white text-gray-800"
+					style={{ color: "#1f2937" }} /* text-gray-800 を明示的に指定（Safari/Edge対応） */
 					placeholder="0"
 					min="0"
 					step="0.01"
@@ -52,7 +53,8 @@ export function InlineCostEditor({
 				<select
 					value={currency}
 					onChange={(e) => onCurrencyChange(e.target.value)}
-					className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+					className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-gray-800"
+					style={{ color: "#1f2937" }} /* text-gray-800 を明示的に指定（Safari/Edge対応） */
 				>
 					{currencyUtils.getAvailableCurrencies().map((curr) => (
 						<option key={curr.code} value={curr.code}>

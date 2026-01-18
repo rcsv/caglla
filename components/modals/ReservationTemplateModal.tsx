@@ -51,6 +51,7 @@ const getReservationSites = (): { value: ReservationSite; label: string }[] => [
 	{ value: "agoda", label: t("reservation.site.agoda") },
 	{ value: "airbnb", label: t("reservation.site.airbnb") },
 	{ value: "skyscanner", label: t("reservation.site.skyscanner") },
+	{ value: "trip_com", label: t("reservation.site.tripCom") },
 	{ value: "ana", label: t("reservation.site.ana") },
 	{ value: "jal", label: t("reservation.site.jal") },
 	{ value: "rakuten_travel", label: t("reservation.site.rakutenTravel") },

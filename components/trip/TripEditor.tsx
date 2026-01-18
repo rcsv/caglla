@@ -428,7 +428,8 @@ export default function TripEditor({
 										value={formData.description}
 										onChange={handleInputChange}
 										rows={3}
-										className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+										className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-800"
+										style={{ color: "#1f2937" }} /* text-gray-800 を明示的に指定（Safari/Edge対応） */
 									/>
 								</div>
 
