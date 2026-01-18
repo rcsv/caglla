@@ -64,6 +64,7 @@ const getReservationSites = (): { value: ReservationSite; label: string }[] => [
 	{ value: "kayak", label: t("reservation.site.kayak") },
 	{ value: "skyscanner", label: t("reservation.site.skyscanner") },
 	{ value: "tripadvisor", label: t("reservation.site.tripadvisor") },
+	{ value: "trip_com", label: t("reservation.site.tripCom") },
 	{ value: "opentable", label: t("reservation.site.opentable") },
 	{ value: "tabelog", label: t("reservation.site.tabelog") },
 	{ value: "hot_pepper", label: t("reservation.site.hotPepper") },
