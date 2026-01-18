@@ -141,6 +141,7 @@ export default function TripMap({
 	const markersRef = useRef<any[]>([]);
 	const [directionsService, setDirectionsService] = useState<any>(null);
 	const [directionsRenderer, setDirectionsRenderer] = useState<any>(null);
+	const flightPolylinesRef = useRef<any[]>([]); // 飛行機ルート用のPolyline
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const { user } = useAuth();
@@ -743,6 +744,14 @@ export default function TripMap({
 
 		markersRef.current = newMarkers;
 
+		// 既存の飛行機ルートPolylineをクリア
+		flightPolylinesRef.current.forEach((polyline) => {
+			if (polyline) {
+				polyline.setMap(null);
+			}
+		});
+		flightPolylinesRef.current = [];
+
 		// ルートを描画（2つ以上の地点がある場合）
 		if (validItineraries.length >= 2) {
 			const waypoints = validItineraries.slice(1, -1).map((itinerary) => ({
@@ -815,6 +824,95 @@ export default function TripMap({
 			// DirectionsRendererを再表示
 			if (directionsRenderer) {
 				directionsRenderer.setMap(map);
+			}
+
+			// Dayモードの場合、飛行機ルートをPolylineで描画（前後のitineraryの座標を使用）
+			// TODO: 将来的には空港コードから座標を取得する機能を追加
+			for (let i = 0; i < validItineraries.length - 1; i++) {
+				const currentItinerary = validItineraries[i];
+				const nextItinerary = validItineraries[i + 1];
+
+				// 現在のitineraryに飛行機予約がある場合
+				if (
+					currentItinerary.reservation?.type === "flight" &&
+					currentItinerary.reservation?.departure_airport &&
+					currentItinerary.reservation?.arrival_airport
+				) {
+					const originLocation =
+						currentItinerary.place_data?.geometry?.location;
+					const destinationLocation =
+						nextItinerary.place_data?.geometry?.location;
+
+					// 前後のitineraryの座標が両方揃っている場合のみ描画
+					if (originLocation && destinationLocation) {
+						const flightPath = new window.google.maps.Polyline({
+							path: [
+								{
+									lat: originLocation.lat,
+									lng: originLocation.lng,
+								},
+								{
+									lat: destinationLocation.lat,
+									lng: destinationLocation.lng,
+								},
+							],
+							geodesic: true, // 大円経路を描画
+							strokeColor: "#4285F4", // Google Mapsの青色
+							strokeOpacity: 0.6,
+							strokeWeight: 3,
+							icons: [
+								{
+									icon: {
+										path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+										scale: 4,
+									},
+									offset: "50%",
+								},
+							],
+						});
+
+						flightPath.setMap(map);
+						flightPolylinesRef.current.push(flightPath);
+					}
+				}
+			}
+
+			// Dayモードの場合、1->2->3...の順番でDirections APIでルートを描画（陸路）
+			if (validItineraries.length >= 2) {
+				// sort_number順にソート（念のため）
+				const sortedItineraries = [...validItineraries].sort(
+					(a, b) => a.sort_number - b.sort_number,
+				);
+
+				const waypoints = sortedItineraries.slice(1, -1).map((itinerary) => ({
+					location: {
+						lat: itinerary.place_data!.geometry!.location.lat,
+						lng: itinerary.place_data!.geometry!.location.lng,
+					},
+				}));
+
+				// Directions Serviceを直接呼び出し（optimizeWaypoints: falseで順番を保持）
+				const request = {
+					origin: {
+						lat: sortedItineraries[0].place_data!.geometry!.location.lat,
+						lng: sortedItineraries[0].place_data!.geometry!.location.lng,
+					},
+					destination: {
+						lat: sortedItineraries[sortedItineraries.length - 1].place_data!
+							.geometry!.location.lat,
+						lng: sortedItineraries[sortedItineraries.length - 1].place_data!
+							.geometry!.location.lng,
+					},
+					waypoints,
+					travelMode: window.google.maps.TravelMode.DRIVING,
+					optimizeWaypoints: false, // 順番を保持するためにfalseに設定
+				};
+
+				directionsService.route(request, (result: any, status: any) => {
+					if (status === "OK") {
+						directionsRenderer.setDirections(result);
+					}
+				});
 			}
 
 			// 選択されたDayの全てのPOIを含むboundsを作成

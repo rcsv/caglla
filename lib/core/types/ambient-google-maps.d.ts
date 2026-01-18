@@ -46,8 +46,16 @@ declare namespace google {
 		class LatLngBounds {
 			extend(latLng: LatLngLiteral): void;
 		}
+		class Polyline {
+			constructor(opts?: any);
+			setMap(map: Map | null): void;
+			setPath(path: LatLngLiteral[]): void;
+		}
 		const ControlPosition: any;
 		const TravelMode: { DRIVING: any };
+		namespace SymbolPath {
+			const FORWARD_CLOSED_ARROW: any;
+		}
 		class InfoWindow {
 			constructor(opts?: any);
 			open(map: Map, anchor?: any): void;
