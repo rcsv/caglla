@@ -244,6 +244,47 @@ export default function TripReservationDisplay({
 										)
 									: null;
 
+								// 到着空港名を取得（到着空港コードに一致するitineraryを探す）
+								let arrivalAirportName: string | undefined;
+								if (
+									type === "flight" &&
+									reservation.arrival_airport
+								) {
+									// 同じ日の次のitinerary、または到着空港コードを含むitineraryを探す
+									const currentIndex = itineraries.findIndex(
+										(it) => it.id === itinerary.id,
+									);
+									// まずは次のitineraryをチェック
+									if (
+										currentIndex >= 0 &&
+										currentIndex < itineraries.length - 1
+									) {
+										const nextItinerary = itineraries[currentIndex + 1];
+										if (nextItinerary?.title) {
+											arrivalAirportName = nextItinerary.title;
+										}
+									}
+									// 次のitineraryが見つからない場合、到着空港コードに一致するitineraryを探す
+									if (!arrivalAirportName) {
+										const matchingItinerary = itineraries.find(
+											(it) =>
+												it.place_data?.name
+													?.toUpperCase()
+													.includes(
+														reservation.arrival_airport.toUpperCase(),
+													) ||
+												it.title
+													?.toUpperCase()
+													.includes(
+														reservation.arrival_airport.toUpperCase(),
+													),
+										);
+										if (matchingItinerary?.title) {
+											arrivalAirportName = matchingItinerary.title;
+										}
+									}
+								}
+
 								return (
 									<div
 										key={itinerary.id}
@@ -335,7 +376,7 @@ export default function TripReservationDisplay({
 																		{reservation.arrival_airport}
 																	</div>
 																	<div className="text-xs text-gray-500 min-h-[1rem]">
-																		Destination
+																		{arrivalAirportName || "Destination"}
 																	</div>
 																</div>
 															</div>
