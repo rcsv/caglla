@@ -364,11 +364,16 @@ export default function ReservationInfoModal({
 								<button
 									key={type.value}
 									onClick={() => handleTypeChange(type.value)}
-									className={`p-3 border rounded-lg text-left transition-colors ${
+									className={`p-3 border rounded-lg text-left transition-colors bg-white ${
 										reservation.type === type.value
 											? "border-emerald-500 bg-emerald-50 text-emerald-700"
-											: "border-gray-300 hover:border-gray-400"
+											: "border-gray-300 hover:border-gray-400 text-gray-900"
 									}`}
+									style={
+										reservation.type !== type.value
+											? { color: "#111827" } /* text-gray-900 を明示的に指定（Safari/Edge対応） */
+											: undefined
+									}
 								>
 									<div className="flex items-center">
 										<span className="text-lg mr-2">{type.icon}</span>
