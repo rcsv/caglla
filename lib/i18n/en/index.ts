@@ -1438,6 +1438,7 @@ const other = {
 	"reservation.site.kayak": "Kayak",
 	"reservation.site.skyscanner": "Skyscanner",
 	"reservation.site.tripadvisor": "TripAdvisor",
+	"reservation.site.tripCom": "Trip.com",
 	"reservation.site.opentable": "OpenTable",
 	"reservation.site.tabelog": "Tabelog",
 	"reservation.site.hotPepper": "Hot Pepper",

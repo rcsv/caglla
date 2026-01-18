@@ -52,6 +52,7 @@ export const ReservationSiteSchema = z.enum([
 	"kayak",
 	"skyscanner",
 	"tripadvisor",
+	"trip_com",
 	"opentable",
 	"tabelog",
 	"hot_pepper",
