@@ -136,7 +136,8 @@ export default function DayEditor({
 					onBlur={handleBlur}
 					onKeyDown={handleKeyDown}
 					placeholder={itinerarySummary || t("dayEditor.placeholder")}
-					className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+					className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-800"
+					style={{ color: "#1f2937" }} /* text-gray-800 を明示的に指定（Safari/Edge対応） */
 					rows={3}
 					autoFocus
 				/>
