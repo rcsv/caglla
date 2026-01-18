@@ -810,6 +810,26 @@ export default function TripMap({
 			return; // 個別フォーカスモードの場合はここで終了
 		}
 
+		// focusMode === 'day'の場合は、選択されたDayの全てのPOIを画面に収める
+		if (focusMode === "day" && selectedDayId && validItineraries.length > 0) {
+			// DirectionsRendererを再表示
+			if (directionsRenderer) {
+				directionsRenderer.setMap(map);
+			}
+
+			// 選択されたDayの全てのPOIを含むboundsを作成
+			const bounds = new window.google.maps.LatLngBounds();
+			validItineraries.forEach((itinerary) => {
+				bounds.extend({
+					lat: itinerary.place_data!.geometry!.location.lat,
+					lng: itinerary.place_data!.geometry!.location.lng,
+				});
+			});
+			// パディングを追加してマーカーが端に隠れないようにする
+			map.fitBounds(bounds, { padding: 50 });
+			return; // Dayフォーカスモードの場合はここで終了
+		}
+
 		// スクロール連動が停止中は地図位置を自動で動かさない（全体表示モードの場合のみ）
 		if (!scrollSyncEnabled) {
 			return;
