@@ -1,32 +1,35 @@
 {
-	"firestore": {
-		"rules": "firestore.rules",
-		"indexes": "firestore.indexes.json"
-	},
-	"storage": {
-		"rules": "storage.rules"
-	},
-	"emulators": {
-		"firestore": {
-			"port": 8080
-		},
-		"auth": {
-			"port": 9099
-		},
-		"ui": {
-			"enabled": true,
-			"port": 4000
-		}
-	},
-	"apphosting": {
-		"backendId": "caglla",
-		"rootDir": "/",
-		"ignore": [
-			"node_modules",
-			".git",
-			"firebase-debug.log",
-			"firebase-debug.*.log",
-			"functions"
-		]
-	}
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json",
+    "database": "(default)"
+  },
+  "storage": {
+    "rules": "storage.rules",
+    "bucket": "caglla-fb.firebasestorage.app"
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "auth": {
+      "port": 9099
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  },
+  "apphosting": {
+    "backendId": "caglla",
+    "rootDir": "/",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "functions"
+    ],
+    "alwaysDeployFromSource": false
+  }
 }

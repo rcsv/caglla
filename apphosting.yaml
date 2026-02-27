@@ -41,7 +41,7 @@ env:
 
   # firebase auth-domain
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: caglla-fb.firebaseapp.com
+    value: caglla.travel
     availability:
       - BUILD
       - RUNTIME
